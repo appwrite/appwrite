@@ -12,7 +12,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Swoole\Timer;
 
-const FUNCTION_VALIDATION_TIMER = 180; //seconds
+const FUNCTION_UPDATE_TIMER = 60; //seconds
 const FUNCTION_ENQUEUE_TIMER = 60; //seconds
 const ENQUEUE_TIME_FRAME = 60 * 5; // 5 min
 sleep(4); // Todo prevent PDOException
@@ -61,7 +61,7 @@ $cli
         foreach ($queue as $slot => $schedule) {
             foreach ($schedule as $function) {
                 if ($scheduleId === $function['resourceId']) {
-                    Console::error("Unsetting :{$function['resourceId']} from queue slot $slot");
+                    Console::info("Unsetting :{$function['resourceId']} from queue slot $slot");
                     unset($queue[$slot][$function['resourceId']]);
                 }
             }
@@ -105,14 +105,14 @@ $cli
     Console::error("{$total} functions where loaded in " . ($loadEnd - $loadStart) . " seconds");
 
     $createQueue();
-    $lastUpdate =  DateTime::addSeconds(new \DateTime(), -FUNCTION_VALIDATION_TIMER);
+    $lastUpdate =  DateTime::addSeconds(new \DateTime(), -FUNCTION_UPDATE_TIMER);
 
     /**
      * The timer updates $functions from db on last resourceUpdatedAt attr in X-min.
      */
     Co\run(
         function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
-            Timer::tick(FUNCTION_VALIDATION_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
+            Timer::tick(FUNCTION_UPDATE_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
                 $time = DateTime::now();
                 $limit = 200;
                 $sum = $limit;
@@ -139,10 +139,10 @@ $cli
                         $org = isset($functions[$document['resourceId']]) ? strtotime($functions[$document['resourceId']]['resourceUpdatedAt']) : null;
                         $new = strtotime($document['resourceUpdatedAt']);
                         if ($document['active'] === false) {
-                            Console::error("Removing:  {$document['resourceId']}");
+                            Console::info("Removing:  {$document['resourceId']}");
                             unset($functions[$document['resourceId']]);
                         } elseif ($new > $org) {
-                            Console::error("Updating:  {$document['resourceId']}");
+                            Console::info("Updating:  {$document['resourceId']}");
                             $functions[$document['resourceId']] =  [
                                 'resourceId' => $document->getAttribute('resourceId'),
                                 'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),

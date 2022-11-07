@@ -471,8 +471,13 @@ App::put('/v1/functions/:functionId')
 
         $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
+        $active = !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment'));
+
+        if ($active) {
+            $log->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt']);
+        }
+
         $log
-            ->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt'])
             ->setAttribute('schedule', $function['schedule'])
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
 
