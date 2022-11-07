@@ -647,7 +647,7 @@ services:
     <<: *x-logging
     container_name: appwrite-volume-sync
     image: appwrite-dev
-    restart: unless-stopped
+    restart: on-failure:4
     command:
       - --source=/data/src/ --destination=/data/dest/ --interval=10
     networks:
