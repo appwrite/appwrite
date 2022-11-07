@@ -85,7 +85,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
     depends_on:
-      - mariadb
+      - mysql
       - redis
       # - clamav
     entrypoint: 
@@ -208,7 +208,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - mysql
       - redis
     environment:
       - _APP_ENV
@@ -244,7 +244,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mysql
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -276,7 +276,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mysql
       - request-catcher
     environment:
       - _APP_ENV
@@ -299,7 +299,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - mysql
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -362,7 +362,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mysql
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -394,7 +394,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mysql
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -425,7 +425,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - mysql
     volumes: 
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -465,7 +465,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mysql
       - appwrite-executor
     environment:
       - _APP_ENV
@@ -510,7 +510,7 @@ services:
       - /tmp:/tmp:rw
     depends_on:
       - redis
-      - mariadb
+      - mysql
       - appwrite
     environment:
       - _APP_ENV
@@ -642,6 +642,19 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
 
+  appwrite-volume-sync:
+    entrypoint: volume-sync
+    <<: *x-logging
+    container_name: appwrite-volume-sync
+    image: appwrite-dev
+    command:
+      - --source=/data/src/ --destination=/data/dest/ --interval=10
+    networks:
+      - appwrite
+    # volumes: # Mount the rsync source and destination directories  
+    #   - /nfs/config:/data/src 
+    #   - /storage/config:/data/dest
+
   appwrite-usage-timeseries:
     entrypoint:
       - usage
@@ -657,7 +670,7 @@ services:
       - ./dev:/usr/local/dev
     depends_on:
       - influxdb
-      - mariadb
+      - mysql
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -695,7 +708,7 @@ services:
       - ./dev:/usr/local/dev
     depends_on:
       - influxdb
-      - mariadb
+      - mysql
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -738,14 +751,14 @@ services:
       - _APP_REDIS_PASS
       - _APP_CONNECTIONS_QUEUE
 
-  mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
+  mysql:
+    image: mysql:8.0.28-oracle # fix issues when upgrading using: mysql_upgrade -u root -p
+    container_name: appwrite-mysql
     <<: *x-logging
     networks:
       - appwrite
     volumes:
-      - appwrite-mariadb:/var/lib/mysql:rw
+      - appwrite-mysql:/var/lib/mysql:rw
     ports:
       - "3306:3306"
     environment:
@@ -904,7 +917,7 @@ networks:
   runtimes:
 
 volumes:
-  appwrite-mariadb:
+  appwrite-mysql:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
