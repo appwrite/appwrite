@@ -96,7 +96,7 @@ App::post('/v1/functions')
                 'resourceId' => $function->getId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
-                'schedule'  => $function['schedule'],
+                'schedule'  => $function->getAttribute('schedule'),
                 'active' => false,
             ]))
         );
@@ -478,8 +478,8 @@ App::put('/v1/functions/:functionId')
         }
 
         $log
-            ->setAttribute('schedule', $function['schedule'])
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', $active);
 
         $dbForConsole->updateDocument('schedules', $log->getId(), $log);
 
