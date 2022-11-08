@@ -5,7 +5,8 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Exception;
+use Exception;
+use Utopia\Database\Exception as DatabaseException;
 
 require_once __DIR__ . '/../init.php';
 
@@ -27,11 +28,11 @@ class DatabaseV1 extends Worker
         $database = new Document($this->args['database'] ?? []);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection');
+            throw new DatabaseException('Missing collection');
         }
 
         if ($document->isEmpty()) {
-            throw new Exception('Missing document');
+            throw new DatabaseException('Missing document');
         }
 
         switch (strval($type)) {
@@ -94,10 +95,10 @@ class DatabaseV1 extends Worker
 
         try {
             if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                throw new Exception('Failed to create Attribute');
+                throw new DatabaseException('Failed to create Attribute');
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
-        } catch (Exception $e) {
+        } catch (DatabaseException $e) {
             Console::error($e->getMessage());
             $dbForProject->updateDocument(
                 'attributes',
@@ -106,14 +107,13 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'failed')
                 ->setAttribute('error', $e->getMessage())
             );
-        } catch (\Throwable $th) {
-            Console::error('Internal Error');
+        } catch (Exception $e) {
                 $dbForProject->updateDocument(
                     'attributes',
                     $attribute->getId(),
                     $attribute
                     ->setAttribute('status', 'failed')
-                    ->setAttribute('error', 'Internal Error')
+                    ->setAttribute('error', '')
                 );
         } finally {
             $target = Realtime::fromPayload(
@@ -169,10 +169,10 @@ class DatabaseV1 extends Worker
         // - stuck: attribute was available but cannot be removed
         try {
             if ($status !== 'failed' && !$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                throw new Exception('Failed to delete Attribute');
+                throw new DatabaseException('Failed to delete Attribute');
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
-        } catch (Exception $e) {
+        } catch (DatabaseException $e) {
             Console::error($e->getMessage());
             $dbForProject->updateDocument(
                 'attributes',
@@ -181,14 +181,13 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'stuck')
                 ->setAttribute('error', $e->getMessage())
             );
-        } catch (\Throwable $th) {
-            Console::error('Internal Error');
+        } catch (Exception $e) {
             $dbForProject->updateDocument(
                 'attributes',
                 $attribute->getId(),
                 $attribute
                 ->setAttribute('status', 'stuck')
-                ->setAttribute('error', 'Internal Error')
+                ->setAttribute('error', '')
             );
         } finally {
             $target = Realtime::fromPayload(
@@ -294,10 +293,10 @@ class DatabaseV1 extends Worker
 
         try {
             if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
-                throw new Exception('Failed to create Index');
+                throw new DatabaseException('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
-        } catch (Exception $e) {
+        } catch (DatabaseException $e) {
             Console::error($e->getMessage());
             $dbForProject->updateDocument(
                 'indexes',
@@ -306,14 +305,13 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'failed')
                 ->setAttribute('error', $e->getMessage())
             );
-        } catch (\Throwable $th) {
-            Console::Error('Internal Error');
+        } catch (Exception $e) {
             $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
                 $index
                 ->setAttribute('status', 'failed')
-                ->setAttribute('error', 'Internal Error')
+                ->setAttribute('error', '')
             );
         } finally {
             $target = Realtime::fromPayload(
@@ -362,10 +360,10 @@ class DatabaseV1 extends Worker
 
         try {
             if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                throw new Exception('Failed to delete index');
+                throw new DatabaseException('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
-        } catch (Exception $e) {
+        } catch (DatabaseException $e) {
             Console::error($e->getMessage());
             $dbForProject->updateDocument(
                 'indexes',
@@ -374,14 +372,13 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'stuck')
                 ->setAttribute('error', $e->getMessage())
             );
-        } catch (\Throwable $th) {
-            Console::error('Internal Error');
+        } catch (Exception $e) {
             $dbForProject->updateDocument(
                 'indexes',
                 $index->getId(),
                 $index
                 ->setAttribute('status', 'stuck')
-                ->setAttribute('error', 'Internal Error')
+                ->setAttribute('error', '')
             );
         } finally {
             $target = Realtime::fromPayload(
