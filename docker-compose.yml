@@ -633,29 +633,45 @@ services:
     stop_signal: SIGINT
     image: openruntimes/executor:0.1.0
     networks:
-      - appwrite
       - openruntimes-runtimes
+      - openruntimes-executors
     ports:
       - 9900:80
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./app:/usr/local/app:rw
-      - ./src:/usr/local/src:rw
       - openruntimes-builds:/storage/builds:rw
       - openruntimes-functions:/storage/functions:rw
       - /tmp:/tmp:rw
-      - ./tests/resources/functions:/storage/functions:rw
     environment:
-      - OPR_EXECUTOR_RUNTIMES
       - OPR_EXECUTOR_CONNECTION_STORAGE
       - OPR_EXECUTOR_INACTIVE_TRESHOLD
       - OPR_EXECUTOR_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD
       - OPR_EXECUTOR_ENV=$_APP_ENV
-      - OPR_EXECUTOR_SECRET=_APP_EXECUTOR_SECRET
+      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
+      - OPR_EXECUTOR_SECRET=$OPR_PROXY_EXECUTOR_SECRET
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
+
+  openruntimes-proxy:
+    container_name: openruntimes-proxy
+    hostname: proxy1
+    <<: *x-logging
+    image: openruntimes/proxy:0.3.0
+    networks:
+      - appwrite
+      - openruntimes-executors
+    environment:
+      - OPR_PROXY_ALGORITHM
+      - OPR_PROXY_EXECUTORS
+      - OPR_PROXY_HEALTHCHECK
+      - OPR_PROXY_HEALTHCHECK_INTERVAL
+      - OPR_PROXY_EXECUTOR_SECRET
+      - OPR_PROXY_ENV=$_APP_ENV
+      - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
+      - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
+      - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
@@ -827,6 +843,8 @@ networks:
   appwrite:
   openruntimes-runtimes:
     name: openruntimes-runtimes
+  openruntimes-executors:
+    name: openruntimes-executors
 
 volumes:
   appwrite-mariadb:

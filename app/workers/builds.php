@@ -171,13 +171,16 @@ class BuildsV1 extends Worker
                 ]
             );
 
+            $endTime = new \DateTime();
+            $endTime->setTimestamp($response['endTimeUnix']);
+
             /** Update the build document */
-            $build->setAttribute('endTime', $response['endTime']);
-            $build->setAttribute('duration', $response['duration']);
+            $build->setAttribute('endTime', DateTime::format($endTime));
+            $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['response']);
+            $build->setAttribute('stdout', $response['stdout']);
 
             Console::success("Build id: $buildId created");
 
