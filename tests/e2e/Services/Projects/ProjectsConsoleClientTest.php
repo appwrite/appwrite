@@ -342,7 +342,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['network']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['documents']);
-        $this->assertIsArray($response['body']['collections']);
+        $this->assertIsArray($response['body']['databases']);
+        $this->assertIsArray($response['body']['buckets']);
         $this->assertIsArray($response['body']['users']);
         $this->assertIsArray($response['body']['storage']);
 
