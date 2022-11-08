@@ -701,7 +701,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
-                'description' => 'The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
                 'introduction' => '0.7.0',
                 'default' => '10',
                 'required' => false,
@@ -710,7 +710,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CPUS',
-                'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -719,7 +719,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY',
-                'description' => 'The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The maximum amount of memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, memory limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -728,7 +728,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -782,7 +782,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
                 'introduction' => '0.13.0',
                 'default' => '60',
                 'required' => false,
@@ -791,7 +791,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
-                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -800,7 +800,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
-                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -809,7 +809,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_EMAIL',
-                'description' => 'The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -818,7 +818,7 @@ return [
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'Deprecated since 1.1.0. Use Open Runtimes Executor instead. The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,

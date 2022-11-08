@@ -150,20 +150,17 @@ class BuildsV1 extends Worker
             return $carry;
         }, []);
 
-        $baseImage = $runtime['image'];
-
         try {
             $response = $this->executor->createRuntime(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
-                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                vars: $vars,
-                runtime: $key,
-                baseImage: $baseImage,
-                workdir: '/usr/code',
+                image: $runtime['image'],
                 remove: true,
+                entrypoint: $deployment->getAttribute('entrypoint'),
+                workdir: '/usr/code',
+                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                variables: $vars,
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \
@@ -171,13 +168,16 @@ class BuildsV1 extends Worker
                 ]
             );
 
+            $endTime = new \DateTime();
+            $endTime->setTimestamp($response['endTimeUnix']);
+
             /** Update the build document */
-            $build->setAttribute('endTime', $response['endTime']);
-            $build->setAttribute('duration', $response['duration']);
+            $build->setAttribute('endTime', DateTime::format($endTime));
+            $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['response']);
+            $build->setAttribute('stdout', $response['stdout']);
 
             Console::success("Build id: $buildId created");
 
