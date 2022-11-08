@@ -66,13 +66,15 @@ class Executor
         array $variables = [],
         array $commands = []
     ) {
+        $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'x-opr-runtime-id' => $runtimeId
         ];
         $params = [
-            'runtimeId' => "$projectId-$deploymentId",
+            'runtimeId' => $runtimeId,
             'source' => $source,
             'destination' => $destination,
             'image' => $image,
@@ -125,7 +127,8 @@ class Executor
         $route = '/runtimes/' . $runtimeId . '/execution';
         $headers = [
             'content-type' =>  'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'x-opr-runtime-id' => $runtimeId
         ];
         $params = [
             'runtimeId' => $runtimeId,
