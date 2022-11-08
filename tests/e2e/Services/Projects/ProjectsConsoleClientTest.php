@@ -335,7 +335,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 8);
+        $this->assertEquals(count($response['body']), 9);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['requests']);
