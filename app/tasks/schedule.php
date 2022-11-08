@@ -52,14 +52,14 @@ $cli
             }
         }
         $loadEnd = \microtime(true);
-        Console::error("Queue was built in " . ($loadEnd - $loadStart) . " seconds");
+        Console::success("Queue was built in " . ($loadEnd - $loadStart) . " seconds");
     };
 
     $removeFromQueue = function ($scheduleId) use (&$queue) {
         foreach ($queue as $slot => $schedule) {
             foreach ($schedule as $function) {
                 if ($scheduleId === $function['resourceId']) {
-                    Console::info("Unsetting :{$function['resourceId']} from queue slot $slot");
+                    Console::error("Unsetting :{$function['resourceId']} from queue slot $slot");
                     unset($queue[$slot][$function['resourceId']]);
                 }
             }
@@ -91,8 +91,8 @@ $cli
         foreach ($results as $document) {
             $functions[$document['resourceId']] = [
                 'resourceId' => $document->getAttribute('resourceId'),
-                'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
                 'schedule' => $document->getAttribute('schedule'),
+                'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
             ];
         }
 
@@ -100,8 +100,7 @@ $cli
     }
 
     $loadEnd = \microtime(true);
-    Console::error("{$total} functions where loaded in " . ($loadEnd - $loadStart) . " seconds");
-
+    Console::success("{$total} functions where loaded in " . ($loadEnd - $loadStart) . " seconds");
     $createQueue();
     $lastUpdate =  DateTime::addSeconds(new \DateTime(), -FUNCTION_UPDATE_TIMER);
 
@@ -112,13 +111,13 @@ $cli
         function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
             Timer::tick(FUNCTION_UPDATE_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
                 $time = DateTime::now();
-                $limit = 200;
+                $limit = 1000;
                 $sum = $limit;
                 $total = 0;
                 $latestDocument = null;
                 $timerStart = \microtime(true);
 
-                Console::info("Update proc run at: $time last update was at $lastUpdate");
+                Console::warning("Update proc started at: $time last update was at $lastUpdate");
 
                 while ($sum === $limit) {
                     $paginationQueries = [Query::limit($limit)];
@@ -137,14 +136,14 @@ $cli
                         $org = isset($functions[$document['resourceId']]) ? strtotime($functions[$document['resourceId']]['resourceUpdatedAt']) : null;
                         $new = strtotime($document['resourceUpdatedAt']);
                         if ($document['active'] === false) {
-                            Console::info("Removing:  {$document['resourceId']}");
+                            Console::warning("Removing:  {$document['resourceId']}");
                             unset($functions[$document['resourceId']]);
                         } elseif ($new > $org) {
-                            Console::info("Updating:  {$document['resourceId']}");
+                            Console::warning("Updating:  {$document['resourceId']}");
                             $functions[$document['resourceId']] =  [
                                 'resourceId' => $document->getAttribute('resourceId'),
-                                'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
                                 'schedule' => $document->getAttribute('schedule'),
+                                'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
                             ];
                         }
                         $removeFromQueue($document['resourceId']);
@@ -157,7 +156,7 @@ $cli
                 $createQueue();
                 $timerEnd = \microtime(true);
 
-                Console::error("Update timer: {$total} functions where updated in " . ($timerEnd - $timerStart) . " seconds");
+                Console::warning("Update timer: {$total} functions where updated in " . ($timerEnd - $timerStart) . " seconds");
             });
 
             /**
@@ -169,18 +168,11 @@ $cli
                 $timeFrame =  DateTime::addSeconds(new \DateTime(), ENQUEUE_TIME_FRAME); /** 5 min */
                 $slot = (new \DateTime())->format('Y-m-d H:i:00.000');
 
-                Console::info("Enqueue proc run at: $time");
-                // Debug
-        //                foreach ($queue as $slot => $schedule) {
-        //                    Console::log("Slot: $slot");
-        //                    foreach ($schedule as $function) {
-        //                            Console::log("{$function['resourceId']} {$function['schedule']}");
-        //                    }
-        //                }
+                Console::info("Enqueue proc started at: $time");
 
                 if (array_key_exists($slot, $queue)) {
                     $schedule = $queue[$slot];
-                    console::log("Number of function sent to worker (" . count($schedule));
+                    console::info(count($schedule) . "  functions sent to worker  for time slot " . $slot);
 
                     foreach ($schedule as $function) {
                     /**
@@ -199,7 +191,6 @@ $cli
                             !empty($functions[$function['resourceId']] &&
                             $function['schedule'] === $functions[$function['resourceId']]['schedule'])
                         ) {
-                            //Console::warning("re-enqueueing :{$function['resourceId']}");
                             $queue[$next][$function['resourceId']] = $function;
                         }
                         unset($queue[$slot][$function['resourceId']]); /** removing function from slot */
@@ -207,7 +198,7 @@ $cli
                     unset($queue[$slot]); /** removing slot */
                 }
                 $timerEnd = \microtime(true);
-                Console::error("Queue timer: finished in " . ($timerEnd - $timerStart) . " seconds");
+                Console::info("Queue timer: finished in " . ($timerEnd - $timerStart) . " seconds");
             });
         }
     );

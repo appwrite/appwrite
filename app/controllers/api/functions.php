@@ -471,15 +471,17 @@ App::put('/v1/functions/:functionId')
 
         $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
-        $active = !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment'));
-
-        if ($active) {
+        /**
+         * In case we want to clear the schedule
+         */
+        if (!empty($function->getAttribute('deployment'))) {
             $log->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt']);
         }
 
         $log
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', $active);
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
 
         $dbForConsole->updateDocument('schedules', $log->getId(), $log);
 
