@@ -14,7 +14,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.9
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -33,6 +33,17 @@ services:
       - 8080:80
       - 443:443
       - 9500:8080
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
+    sysctls:
+      - net.core.somaxconn=1024
+      - net.ipv4.tcp_rmem=1024 4096 16384
+      - net.ipv4.tcp_wmem=1024 4096 16384
+      - net.ipv4.tcp_moderate_rcvbuf=0
+      - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
