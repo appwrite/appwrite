@@ -159,7 +159,6 @@ class BuildsV1 extends Worker
                 source: $source,
                 image: $runtime['image'],
                 remove: true,
-
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 workdir: '/usr/code',
                 destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",

@@ -26,6 +26,10 @@ class Executor
         'content-type' => '',
     ];
 
+    protected int $cpus = 2;
+
+    protected int $memory = 512;
+
     public function __construct(string $endpoint)
     {
         if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
@@ -77,9 +81,8 @@ class Executor
             'variables' => $variables,
             'remove' => $remove,
             'commands' => $commands,
-            'timeout' => 600,
-            'cpus' => 1,
-            'memory' => 128,
+            'cpus' => $this->cpus,
+            'memory' => $this->memory,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
@@ -114,7 +117,6 @@ class Executor
         string $payload,
         array $variables,
         int $timeout,
-
         string $image,
         string $source,
         string $entrypoint,
@@ -134,8 +136,8 @@ class Executor
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
-            'cpus' => 1,
-            'memory' => 128,
+            'cpus' => $this->cpus,
+            'memory' => $this->memory,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);

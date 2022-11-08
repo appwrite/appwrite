@@ -292,7 +292,6 @@ class FunctionsV1 extends Worker
                 payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
-
                 image: $runtime['image'],
                 source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
