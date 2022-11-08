@@ -267,7 +267,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
@@ -504,7 +504,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
