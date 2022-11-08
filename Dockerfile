@@ -236,13 +236,8 @@ ENV _APP_SERVER=swoole \
     _APP_SMS_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
-    _APP_FUNCTIONS_CONTAINERS=10 \
-    _APP_FUNCTIONS_CPUS=1 \
-    _APP_FUNCTIONS_MEMORY=128 \
-    _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
     _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
-    _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
@@ -336,7 +331,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
-    chmod +x /usr/local/bin/executor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \

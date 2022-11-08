@@ -465,16 +465,17 @@ class DeletesV1 extends Worker
 
         /**
          * Request executor to delete all deployment containers
+         * TODO: Re-enable. Disabled for now because of proxy. Container killed after inactivity automatically.
          */
-        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        foreach ($deploymentIds as $deploymentId) {
-            try {
-                $executor->deleteRuntime($projectId, $deploymentId);
-            } catch (Throwable $th) {
-                Console::error($th->getMessage());
-            }
-        }
+        // Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
+        // $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        // foreach ($deploymentIds as $deploymentId) {
+        //     try {
+        //         $executor->deleteRuntime($projectId, $deploymentId);
+        //     } catch (Throwable $th) {
+        //         Console::error($th->getMessage());
+        //     }
+        // }
     }
 
     /**
@@ -514,15 +515,16 @@ class DeletesV1 extends Worker
         });
 
         /**
-         * Request executor to delete the deployment container
+         * Request executor to delete the deployment container.
+         * TODO: Re-enable. Disabled for now because of proxy. Container killed after inactivity automatically.
          */
-        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-            $executor->deleteRuntime($projectId, $deploymentId);
-        } catch (Throwable $th) {
-            Console::error($th->getMessage());
-        }
+        // Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
+        // try {
+        //     $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        //     $executor->deleteRuntime($projectId, $deploymentId);
+        // } catch (Throwable $th) {
+        //     Console::error($th->getMessage());
+        // }
     }
 
 

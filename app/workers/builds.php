@@ -152,20 +152,18 @@ class BuildsV1 extends Worker
             return $carry;
         }, []);
 
-        $baseImage = $runtime['image'];
-
         try {
             $response = $this->executor->createRuntime(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
-                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                vars: $vars,
-                runtime: $key,
-                baseImage: $baseImage,
-                workdir: '/usr/code',
+                image: $runtime['image'],
                 remove: true,
+
+                entrypoint: $deployment->getAttribute('entrypoint'),
+                workdir: '/usr/code',
+                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                variables: $vars,
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \

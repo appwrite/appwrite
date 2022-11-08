@@ -42,45 +42,44 @@ class Executor
      * @param string $deploymentId
      * @param string $projectId
      * @param string $source
-     * @param string $runtime
-     * @param string $baseImage
+     * @param string $image
      * @param bool $remove
      * @param string $entrypoint
      * @param string $workdir
-     * @param string $destinaction
-     * @param string $network
-     * @param array $vars
+     * @param string $destination
+     * @param array $variables
      * @param array $commands
      */
     public function createRuntime(
         string $deploymentId,
         string $projectId,
         string $source,
-        string $runtime,
-        string $baseImage,
+        string $image,
         bool $remove = false,
         string $entrypoint = '',
         string $workdir = '',
         string $destination = '',
-        array $vars = [],
+        array $variables = [],
         array $commands = []
     ) {
         $route = "/runtimes";
         $headers = [
             'content-type' => 'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', '')
         ];
         $params = [
             'runtimeId' => "$projectId-$deploymentId",
             'source' => $source,
             'destination' => $destination,
-            'runtime' => $runtime,
-            'baseImage' => $baseImage,
+            'image' => $image,
             'entrypoint' => $entrypoint,
             'workdir' => $workdir,
-            'vars' => $vars,
+            'variables' => $variables,
             'remove' => $remove,
-            'commands' => $commands
+            'commands' => $commands,
+            'timeout' => 600,
+            'cpus' => 1,
+            'memory' => 128,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
@@ -96,25 +95,52 @@ class Executor
     }
 
     /**
-     * Delete Runtime
-     *
-     * Deletes a runtime and cleans up any containers remaining.
+     * Create an execution
      *
      * @param string $projectId
      * @param string $deploymentId
+     * @param string $payload
+     * @param array $variables
+     * @param int $timeout
+     * @param string $image
+     * @param string $source
+     * @param string $entrypoint
+     *
+     * @return array
      */
-    public function deleteRuntime(string $projectId, string $deploymentId)
-    {
+    public function createExecution(
+        string $projectId,
+        string $deploymentId,
+        string $payload,
+        array $variables,
+        int $timeout,
+
+        string $image,
+        string $source,
+        string $entrypoint,
+    ) {
         $runtimeId = "$projectId-$deploymentId";
-        $route = "/runtimes/$runtimeId";
+        $route = '/runtimes/' . $runtimeId . '/execution';
         $headers = [
             'content-type' =>  'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
+            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', '')
+        ];
+        $params = [
+            'runtimeId' => $runtimeId,
+            'variables' => $variables,
+            'payload' => $payload,
+            'timeout' => $timeout,
+
+            'image' => $image,
+            'source' => $source,
+            'entrypoint' => $entrypoint,
+            'cpus' => 1,
+            'memory' => 128,
         ];
 
-        $params = [];
+        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_DELETE, $route, $headers, $params, true, 30);
+        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -122,93 +148,6 @@ class Executor
         }
 
         return $response['body'];
-    }
-
-    /**
-     * Create an execution
-     *
-     * @param string $projectId
-     * @param string $deploymentId
-     * @param string $path
-     * @param array $vars
-     * @param string $entrypoint
-     * @param string $data
-     * @param string runtime
-     * @param string $baseImage
-     * @param int $timeout
-     *
-     * @return array
-     */
-    public function createExecution(
-        string $projectId,
-        string $deploymentId,
-        string $path,
-        array $vars,
-        string $entrypoint,
-        string $data,
-        string $runtime,
-        string $baseImage,
-        $timeout
-    ) {
-        $route = "/execution";
-        $headers = [
-            'content-type' =>  'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ];
-        $params = [
-            'runtimeId' => "$projectId-$deploymentId",
-            'vars' => $vars,
-            'data' => $data,
-            'timeout' => $timeout,
-        ];
-
-        /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
-        $requestTimeout  = $timeout + 2;
-
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-        $status = $response['headers']['status-code'];
-
-        for ($attempts = 0; $attempts < 10; $attempts++) {
-            try {
-                switch (true) {
-                    case $status < 400:
-                        return $response['body'];
-                    case $status === 404:
-                        $response = $this->createRuntime(
-                            deploymentId: $deploymentId,
-                            projectId: $projectId,
-                            source: $path,
-                            runtime: $runtime,
-                            baseImage: $baseImage,
-                            vars: $vars,
-                            entrypoint: $entrypoint,
-                            commands: []
-                        );
-                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-                        $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
-                        break;
-                    case $status === 406:
-                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-                        $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
-                        break;
-                    default:
-                        throw new \Exception($response['body']['message'], $status);
-                }
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage(), $e->getCode());
-            }
-            sleep(2);
-        }
-
-        throw new Exception($response['body']['message'], 503);
     }
 
     /**

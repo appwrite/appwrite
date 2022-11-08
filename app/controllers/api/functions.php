@@ -1150,13 +1150,13 @@ App::post('/v1/functions/:functionId/executions')
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                path: $build->getAttribute('outputPath', ''),
-                vars: $vars,
-                data: $data,
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                runtime: $function->getAttribute('runtime', ''),
+                payload: $data,
+                variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
-                baseImage: $runtime['image']
+
+                image: $runtime['image'],
+                source: $build->getAttribute('outputPath', ''),
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
             /** Update execution status */
