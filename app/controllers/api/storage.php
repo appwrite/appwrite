@@ -584,7 +584,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLVersion', $openSSLVersion ?? null)
                         ->setAttribute('openSSLCipher', $openSSLCipher ?? null)
                         ->setAttribute('openSSLTag', $openSSLTag ?? null)
-                        ->setAttribute('openSSLIV', $openSSLIV)
+                        ->setAttribute('openSSLIV', $openSSLIV ?? null)
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
