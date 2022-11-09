@@ -5,7 +5,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -14,6 +13,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Usage\Stats;
+use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -41,6 +41,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Queue\Client as queue;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -1040,8 +1041,6 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->noContent();
     });
 
-
-
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
@@ -1067,7 +1066,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('events')
     ->inject('usage')
     ->inject('mode')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode) {
+    ->inject('pools')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Group $pools) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1155,17 +1155,18 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $event = new Func();
-            $event
-                ->setType('http')
-                ->setExecution($execution)
-                ->setFunction($function)
-                ->setData($data)
-                ->setJWT($jwt)
-                ->setProject($project)
-                ->setUser($user);
-
-            $event->trigger();
+            $queue = new queue(Event::FUNCTIONS_QUEUE_NAME, $pools->get('queue')->pop()->getResource());
+            $queue->enqueue([
+                'type' => 'http',
+                    'value' => [
+                    'type' => 'http',
+                    'execution' => $execution,
+                    'function' => $function,
+                    'data' => $data,
+                    'jwt' => $jwt,
+                    'project' => $project,
+                    'user' => $user
+                ]]);
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1198,11 +1199,11 @@ App::post('/v1/functions/:functionId/executions')
                 deploymentId: $deployment->getId(),
                 path: $build->getAttribute('outputPath', ''),
                 vars: $vars,
-                data: $data,
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
+                data: $data,
                 runtime: $function->getAttribute('runtime', ''),
-                timeout: $function->getAttribute('timeout', 0),
-                baseImage: $runtime['image']
+                baseImage: $runtime['image'],
+                timeout: $function->getAttribute('timeout', 0)
             );
 
             /** Update execution status */

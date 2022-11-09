@@ -3,12 +3,14 @@
 global $cli;
 global $register;
 
+use Appwrite\Event\Event;
 use Cron\CronExpression;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Swoole\Timer;
+use Utopia\Queue\Client as worker;
 
 const FUNCTION_UPDATE_TIMER = 60; //seconds
 const FUNCTION_ENQUEUE_TIMER = 60; //seconds
@@ -108,7 +110,7 @@ $cli
      * The timer updates $functions from db on last resourceUpdatedAt attr in X-min.
      */
     Co\run(
-        function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
+        function () use ($register, $removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
             Timer::tick(FUNCTION_UPDATE_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
                 $time = DateTime::now();
                 $limit = 1000;
@@ -162,7 +164,7 @@ $cli
             /**
              * The timer sends to worker every 1 min and re-enqueue matched functions.
              */
-            Timer::tick(FUNCTION_ENQUEUE_TIMER * 1000, function () use ($dbForConsole, &$functions, &$queue) {
+            Timer::tick(FUNCTION_ENQUEUE_TIMER * 1000, function () use ($register, $dbForConsole, &$functions, &$queue) {
                 $timerStart = \microtime(true);
                 $time = DateTime::now();
                 $timeFrame =  DateTime::addSeconds(new \DateTime(), ENQUEUE_TIME_FRAME); /** 5 min */
@@ -175,9 +177,17 @@ $cli
                     console::info(count($schedule) . "  functions sent to worker  for time slot " . $slot);
 
                     foreach ($schedule as $function) {
-                    /**
-                     * Enqueue function (here should be the Enqueue call
-                     */
+                        $pools = $register->get('pools');
+                        $worker = new worker(Event::FUNCTIONS_QUEUE_NAME, $pools->get('queue')->pop()->getResource());
+                        $project = $dbForConsole->getDocument('projects', $function['projectId']);
+                        $worker
+                            ->enqueue([
+                                'type' => 'schedule',
+                                'value' => [
+                                    'project' =>  $project,
+                                    'function' => getProjectDB($project)->getDocument('functions', $function['projectId']),
+                                ]
+                            ]);
                         //Console::warning("Enqueueing :{$function['resourceId']}");
                         $cron = new CronExpression($function['schedule']);
                         $next = DateTime::format($cron->getNextRunDate());

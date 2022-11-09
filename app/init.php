@@ -38,6 +38,8 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Utopia\Queue\Client as SyncOut;
+use Utopia\Queue\Connection\Redis as QueueRedis;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
@@ -75,6 +77,7 @@ use Ahc\Jwt\JWTException;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Queue;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -497,6 +500,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
+
 $register->set('pools', function () {
 
     $group = new Group();
@@ -522,30 +526,35 @@ $register->set('pools', function () {
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
+            'useResource' => true,
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
+            'useResource' => true,
         ],
         'queue' => [
             'type' => 'queue',
             'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
+            'useResource' => false,
         ],
         'pubsub' => [
             'type' => 'pubsub',
             'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
+            'useResource' => true,
         ],
         'cache' => [
             'type' => 'cache',
             'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
             'multiple' => true,
             'schemes' => ['redis'],
+            'useResource' => true,
         ],
     ];
 
@@ -554,6 +563,7 @@ $register->set('pools', function () {
         $dsns = $connection['dsns'] ?? '';
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
+        $useResource = $connection['useResource'] ?? true;
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
 
@@ -576,7 +586,7 @@ $register->set('pools', function () {
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getDatabase();
 
-            if (!in_array($dsnScheme, $schemes)) {
+            if (!in_array($dsnScheme, $schemes) && $useResource) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -635,13 +645,15 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDefaultDatabase($dsn->getDatabase());
-
-                        break;
-                    case 'queue':
-                        $adapter = $resource();
                         break;
                     case 'pubsub':
+                        break;
                         $adapter = $resource();
+                    case 'queue':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                            default => 'bla'
+                        };
                         break;
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
@@ -662,12 +674,6 @@ $register->set('pools', function () {
         }
 
         Config::setParam('pools-' . $key, $config);
-    }
-
-    try {
-        $group->fill();
-    } catch (\Throwable $th) {
-        Console::error('Connection failure: ' . $th->getMessage());
     }
 
     return $group;
@@ -847,8 +853,7 @@ App::setResource('messaging', fn() => new Phone());
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-
-App::setResource('clients', function ($request, $console, $project) {
+App::setResource('clients', function ($request, $console, $project) use ($register) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
@@ -1022,6 +1027,24 @@ App::setResource('console', function () {
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
     ]);
+}, []);
+
+App::setResource('queue', function () {
+
+    $fallbackForRedis = AppwriteURL::unparse([
+    'scheme' => 'redis',
+    'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+    'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+    'user' => App::getEnv('_APP_REDIS_USER', ''),
+    'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+    ]);
+
+    $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
+
+    $dsns = explode(',', $connection ?? '');
+    $dsn = explode('=', $dsns[0]);
+    $dsn = $dsn[1] ?? '';
+    return  new DSN($dsn);
 }, []);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
