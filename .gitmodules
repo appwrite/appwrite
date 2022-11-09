@@ -1,0 +1,4 @@
+[submodule "app/console"]
+	path = app/console
+	url = https://github.com/app/console
+	branch = main
