@@ -1006,6 +1006,26 @@ function getDevice($root): Device
     }
 }
 
+/**
+ * Get database connection pool size for worker processes.
+ *
+ * @return int
+ * @throws \Exception
+ */
+function getWorkerPoolSize(): int
+{
+    $reservedConnections = APP_DATABASE_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 1001);
+    $workerConnections = $maxConnections - $reservedConnections;
+
+    if ($workerCount > $workerConnections) {
+        throw new \Exception('Worker pool size is too small. Increase the number of allowed database connections or decrease the number of workers.');
+    }
+
+    return (int)($workerConnections / $workerCount);
+}
+
 App::setResource('mode', function ($request) {
     /** @var Appwrite\Utopia\Request $request */
 
