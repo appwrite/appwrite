@@ -102,7 +102,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $cheaders);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['users']));
         $this->assertEquals($usersCount, $res['users'][array_key_last($res['users'])]['value']);
@@ -267,7 +267,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
@@ -504,13 +504,13 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-        $this->assertEquals($collectionsCount, $res['collections'][array_key_last($res['collections'])]['value']);
-        $this->validateDates($res['collections']);
+        $this->assertEquals($databasesCount, $res['databases'][array_key_last($res['databases'])]['value']);
+        $this->validateDates($res['databases']);
         $this->assertEquals($documentsCount, $res['documents'][array_key_last($res['documents'])]['value']);
         $this->validateDates($res['documents']);
 
