@@ -14,7 +14,6 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
-
 COPY app/console /usr/local/src/console
 
 WORKDIR /usr/local/src/console
@@ -311,7 +310,6 @@ COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./public/fonts /usr/src/code/public/fonts
 COPY ./public/images /usr/src/code/public/images
-COPY ./console /usr/src/code/console
 COPY ./src /usr/src/code/src
 
 # Set Volumes
