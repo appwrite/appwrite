@@ -565,10 +565,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => $chunksUploaded,
-                        'openSSLVersion' => $openSSLVersion,
-                        'openSSLCipher' => $openSSLCipher,
-                        'openSSLTag' => $openSSLTag,
-                        'openSSLIV' => $openSSLIV,
+                        'openSSLVersion' => $openSSLVersion ?? null,
+                        'openSSLCipher' => $openSSLCipher ?? null,
+                        'openSSLTag' => $openSSLTag ?? null,
+                        'openSSLIV' => $openSSLIV ?? null,
                         'search' => implode(' ', [$fileId, $fileName]),
                         'metadata' => $metadata,
                     ]);
@@ -581,9 +581,9 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('mimeType', $mimeType)
                         ->setAttribute('sizeActual', $sizeActual)
                         ->setAttribute('algorithm', $algorithm)
-                        ->setAttribute('openSSLVersion', $openSSLVersion)
-                        ->setAttribute('openSSLCipher', $openSSLCipher)
-                        ->setAttribute('openSSLTag', $openSSLTag)
+                        ->setAttribute('openSSLVersion', $openSSLVersion ?? null)
+                        ->setAttribute('openSSLCipher', $openSSLCipher ?? null)
+                        ->setAttribute('openSSLTag', $openSSLTag ?? null)
                         ->setAttribute('openSSLIV', $openSSLIV)
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);

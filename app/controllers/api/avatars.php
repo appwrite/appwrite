@@ -242,8 +242,8 @@ App::get('/v1/avatars/favicon')
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (int) $size[0] ?? 0;
-                            $sizeHeight = (int) $size[1] ?? 0;
+                            $sizeWidth = (int) ($size[0] ?? 0);
+                            $sizeHeight = (int) ($size[1] ?? 0);
 
                             if (($sizeWidth * $sizeHeight) >= $space) {
                                 $space = $sizeWidth * $sizeHeight;
