@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d8785bcc235caa7fe9312614f053d0cd",
+    "content-hash": "d4c95720bc6ef857dd6bc6dbbdc2dc44",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,15 +115,15 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.11.0",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "547fc026e11c0946846a8ac690898f5bf53be101"
+                "reference": "9d74a477ba3333cbcfac565c46fcf19606b7b603"
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/system": "0.4.*"
+                "utopia-php/system": "0.6.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-08-15T14:03:36+00:00"
+            "time": "2022-11-07T16:45:52+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -300,16 +300,16 @@
         },
         {
             "name": "colinmollenhour/credis",
-            "version": "v1.13.1",
+            "version": "v1.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/colinmollenhour/credis.git",
-                "reference": "85df015088e00daf8ce395189de22c8eb45c8d49"
+                "reference": "dccc8a46586475075fbb012d8bd523b8a938c2dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/85df015088e00daf8ce395189de22c8eb45c8d49",
-                "reference": "85df015088e00daf8ce395189de22c8eb45c8d49",
+                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/dccc8a46586475075fbb012d8bd523b8a938c2dc",
+                "reference": "dccc8a46586475075fbb012d8bd523b8a938c2dc",
                 "shasum": ""
             },
             "require": {
@@ -341,9 +341,9 @@
             "homepage": "https://github.com/colinmollenhour/credis",
             "support": {
                 "issues": "https://github.com/colinmollenhour/credis/issues",
-                "source": "https://github.com/colinmollenhour/credis/tree/v1.13.1"
+                "source": "https://github.com/colinmollenhour/credis/tree/v1.14.0"
             },
-            "time": "2022-06-20T22:56:59+00:00"
+            "time": "2022-11-09T01:18:39+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -930,6 +930,72 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/1.6.0"
             },
             "time": "2021-02-04T16:20:16+00:00"
+        },
+        {
+            "name": "laravel/pint",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pint.git",
+                "reference": "1d276e4c803397a26cc337df908f55c2a4e90d86"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/1d276e4c803397a26cc337df908f55c2a4e90d86",
+                "reference": "1d276e4c803397a26cc337df908f55c2a4e90d86",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-tokenizer": "*",
+                "ext-xml": "*",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.11.0",
+                "illuminate/view": "^9.27",
+                "laravel-zero/framework": "^9.1.3",
+                "mockery/mockery": "^1.5.0",
+                "nunomaduro/larastan": "^2.2",
+                "nunomaduro/termwind": "^1.14.0",
+                "pestphp/pest": "^1.22.1"
+            },
+            "bin": [
+                "builds/pint"
+            ],
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "App\\": "app/",
+                    "Database\\Seeders\\": "database/seeders/",
+                    "Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "An opinionated code formatter for PHP.",
+            "homepage": "https://laravel.com",
+            "keywords": [
+                "format",
+                "formatter",
+                "lint",
+                "linter",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel/pint/issues",
+                "source": "https://github.com/laravel/pint"
+            },
+            "time": "2022-09-13T15:07:15+00:00"
         },
         {
             "name": "matomo/device-detector",
@@ -2172,16 +2238,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-feat-multiple-aliases",
+            "version": "0.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "37637cb22a30e6660a0886befef4d6a5e657fc48"
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/37637cb22a30e6660a0886befef4d6a5e657fc48",
-                "reference": "37637cb22a30e6660a0886befef4d6a5e657fc48",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c524f681254255c8204fbf7919c53bf3b4982636",
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636",
                 "shasum": ""
             },
             "require": {
@@ -2209,9 +2275,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/feat-multiple-aliases"
+                "source": "https://github.com/utopia-php/framework/tree/0.25.0"
             },
-            "time": "2022-10-20T21:06:21+00:00"
+            "time": "2022-11-02T09:49:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2709,23 +2775,25 @@
         },
         {
             "name": "utopia-php/system",
-            "version": "0.4.0",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "67c92c66ce8f0cc925a00bca89f7a188bf9183c0"
+                "reference": "289c4327713deadc9c748b5317d248133a02f245"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/67c92c66ce8f0cc925a00bca89f7a188bf9183c0",
-                "reference": "67c92c66ce8f0cc925a00bca89f7a188bf9183c0",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/289c4327713deadc9c748b5317d248133a02f245",
+                "reference": "289c4327713deadc9c748b5317d248133a02f245",
                 "shasum": ""
             },
             "require": {
+                "laravel/pint": "1.2.*",
                 "php": ">=7.4"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
                 "vimeo/psalm": "4.0.1"
             },
             "type": "library",
@@ -2758,9 +2826,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.4.0"
+                "source": "https://github.com/utopia-php/system/tree/0.6.0"
             },
-            "time": "2021-02-04T14:14:49+00:00"
+            "time": "2022-11-07T13:51:59+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5405,18 +5473,9 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-feat-multiple-aliases",
-            "alias": "0.22.9",
-            "alias_normalized": "0.22.9.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
