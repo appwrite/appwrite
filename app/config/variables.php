@@ -306,6 +306,15 @@ return [
                 'question' => '',
                 'filter' => 'password'
             ],
+            [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'MariaDB server maximum connections.',
+                'introduction' => '1.2.0',
+                'default' => 1001,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
