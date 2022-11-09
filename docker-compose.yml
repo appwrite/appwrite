@@ -645,6 +645,19 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
 
+  appwrite-volume-sync:
+    entrypoint: volume-sync
+    <<: *x-logging
+    container_name: appwrite-volume-sync
+    image: appwrite-dev
+    command:
+      - --source=/data/src/ --destination=/data/dest/ --interval=10
+    networks:
+      - appwrite
+    # volumes: # Mount the rsync source and destination directories  
+    #   - /nfs/config:/data/src 
+    #   - /storage/config:/data/dest
+
   appwrite-usage:
     entrypoint: usage
     <<: *x-logging
@@ -702,7 +715,7 @@ services:
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
+    container_name: mariadb
     <<: *x-logging
     networks:
       - appwrite
