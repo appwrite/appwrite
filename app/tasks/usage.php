@@ -2,10 +2,6 @@
 
 global $cli, $register;
 
-use Appwrite\Stats\Usage;
-use Appwrite\Stats\UsageDB;
-use Appwrite\Usage\Calculators\Aggregator;
-use Appwrite\Usage\Calculators\Database;
 use Appwrite\Usage\Calculators\TimeSeries;
 use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
@@ -114,65 +110,29 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
     Console::warning($error->getTraceAsString());
 };
 
-
-function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
-{
-    $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
-    $region = App::getEnv('region', 'default');
-    $usage = new TimeSeries($region, $database, $influxDB, $logError);
-
-    Console::loop(function () use ($interval, $usage) {
-        $now = date('d-m-Y H:i:s', time());
-        Console::info("[{$now}] Aggregating Timeseries Usage data every {$interval} seconds");
-        $loopStart = microtime(true);
-
-        $usage->collect();
-
-        $loopTook = microtime(true) - $loopStart;
-        $now = date('d-m-Y H:i:s', time());
-        Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-    }, $interval);
-}
-
-function aggregateDatabase(UtopiaDatabase $database, callable $logError): void
-{
-    $interval = (int) App::getEnv('_APP_USAGE_DATABASE_INTERVAL', '900'); // 15 minutes (by default)
-    $region = App::getEnv('region', 'default');
-    $usage = new Database($region, $database, $logError);
-    $aggregrator = new Aggregator($region, $database, $logError);
-
-    Console::loop(function () use ($interval, $usage, $aggregrator) {
-        $now = date('d-m-Y H:i:s', time());
-        Console::info("[{$now}] Aggregating database usage every {$interval} seconds.");
-        $loopStart = microtime(true);
-        $usage->collect();
-        $aggregrator->collect();
-        $loopTook = microtime(true) - $loopStart;
-        $now = date('d-m-Y H:i:s', time());
-
-        Console::info("[{$now}] Aggregation took {$loopTook} seconds");
-    }, $interval);
-}
-
 $cli
     ->task('usage')
-    ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
-    ->action(function (string $type) use ($register, $logError) {
+    ->action(function () use ($register, $logError) {
         Console::title('Usage Aggregation V1');
         Console::success(APP_NAME . ' usage aggregation process v1 has started');
 
         $database = getDatabase($register, '_console');
         $influxDB = getInfluxDB($register);
 
-        switch ($type) {
-            case 'timeseries':
-                aggregateTimeseries($database, $influxDB, $logError);
-                break;
-            case 'database':
-                aggregateDatabase($database, $logError);
-                break;
-            default:
-                Console::error("Unsupported usage aggregation type");
-        }
+        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
+        $region = App::getEnv('region', 'default');
+        $usage = new TimeSeries($region, $database, $influxDB, $logError);
+
+        Console::loop(function () use ($interval, $usage) {
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregating Timeseries Usage data every {$interval} seconds");
+            $loopStart = microtime(true);
+
+            $usage->collect();
+
+            $loopTook = microtime(true) - $loopStart;
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Aggregation took {$loopTook} seconds");
+        }, $interval);
     });
