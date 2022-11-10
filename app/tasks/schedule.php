@@ -15,6 +15,7 @@ const FUNCTION_ENQUEUE_TIMER = 60; //seconds
 const FUNCTION_ENQUEUE_TIMEFRAME = 60 * 5; // 5 min
 
 sleep(4);
+
 /**
  * 1. first load from db with limit+offset
  * 2. creating a 5-min offset array ($queue)
@@ -106,7 +107,8 @@ $cli
     /**
      * The timer updates $functions from db on last resourceUpdatedAt attr in X-min.
      */
-
+    Co\run(
+        function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
             Timer::tick(FUNCTION_UPDATE_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
                 $time = DateTime::now();
                 $limit = 1000;
@@ -197,6 +199,6 @@ $cli
                 $timerEnd = \microtime(true);
                 Console::info("Queue timer: finished in " . ($timerEnd - $timerStart) . " seconds");
             });
-
-
+        }
+    );
 });
