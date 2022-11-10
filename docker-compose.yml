@@ -34,7 +34,6 @@ services:
       - 443:443
       - 9500:8080
     ulimits:
-      nproc: 65535
       nofile:
         soft: 65535
         hard: 65535
