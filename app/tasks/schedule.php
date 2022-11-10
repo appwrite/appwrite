@@ -12,20 +12,19 @@ use Swoole\Timer;
 
 const FUNCTION_UPDATE_TIMER = 60; //seconds
 const FUNCTION_ENQUEUE_TIMER = 60; //seconds
-const ENQUEUE_TIME_FRAME = 60 * 5; // 5 min
-sleep(4); // Todo prevent PDOException
+const FUNCTION_ENQUEUE_TIMEFRAME = 60 * 5; // 5 min
 
-
+sleep(4);
 /**
- * 1. first load from db with limit+offset --line 82--
- * 2. creating a 5-min offset array ($queue) --line 102--
+ * 1. first load from db with limit+offset
+ * 2. creating a 5-min offset array ($queue)
  * 3. First timer runs every minute, looping over $queue time slots (each slot is 1-min delta)
  *    if the function matches the current minute it should be dispatched to the functions worker.
  *    Then another translation is made to the cron pattern if it is in the next 5-min window
- *    it is assigned again to the  $queue. --line 172--.
+ *    it is assigned again to the  $queue. .
  * 4. Second timer  runs every X min and updates the $functions (large) list.
  *    The query fetches only functions that [resourceUpdatedAt] attr changed from the
- *    last time the timer that was fired (X min) --line 120--
+ *    last time the timer that was fired (X min)
  *    If the function was deleted it is unsets from the list ($functions) and the $queue.
  *    In the end of the timer the $queue is created again.
  *
@@ -43,7 +42,7 @@ $cli
         /**
          * Creating smaller functions list containing 5-min timeframe.
          */
-        $timeFrame = DateTime::addSeconds(new \DateTime(), ENQUEUE_TIME_FRAME);
+        $timeFrame = DateTime::addSeconds(new \DateTime(), FUNCTION_ENQUEUE_TIMEFRAME);
         foreach ($functions as $function) {
             $cron = new CronExpression($function['schedule']);
             $next = DateTime::format($cron->getNextRunDate());
@@ -107,8 +106,7 @@ $cli
     /**
      * The timer updates $functions from db on last resourceUpdatedAt attr in X-min.
      */
-    Co\run(
-        function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
+
             Timer::tick(FUNCTION_UPDATE_TIMER * 1000, function () use ($removeFromQueue, $createQueue, $dbForConsole, &$functions, &$queue, &$lastUpdate) {
                 $time = DateTime::now();
                 $limit = 1000;
@@ -165,7 +163,7 @@ $cli
             Timer::tick(FUNCTION_ENQUEUE_TIMER * 1000, function () use ($dbForConsole, &$functions, &$queue) {
                 $timerStart = \microtime(true);
                 $time = DateTime::now();
-                $timeFrame =  DateTime::addSeconds(new \DateTime(), ENQUEUE_TIME_FRAME); /** 5 min */
+                $timeFrame =  DateTime::addSeconds(new \DateTime(), FUNCTION_ENQUEUE_TIMEFRAME);
                 $slot = (new \DateTime())->format('Y-m-d H:i:00.000');
 
                 Console::info("Enqueue proc started at: $time");
@@ -175,17 +173,16 @@ $cli
                     console::info(count($schedule) . "  functions sent to worker  for time slot " . $slot);
 
                     foreach ($schedule as $function) {
-                    /**
-                     * Enqueue function (here should be the Enqueue call
-                     */
-                        //Console::warning("Enqueueing :{$function['resourceId']}");
+                        /**
+                         * Enqueue function (here should be the Enqueue call
+                         */
                         $cron = new CronExpression($function['schedule']);
                         $next = DateTime::format($cron->getNextRunDate());
 
-                    /**
-                    * If next schedule is in 5-min timeframe
-                    * and it was not removed or changed, re-enqueue the function.
-                    */
+                        /**
+                        * If next schedule is in 5-min timeframe
+                        * and it was not removed or changed, re-enqueue the function.
+                        */
                         if (
                             $next < $timeFrame &&
                             !empty($functions[$function['resourceId']] &&
@@ -200,6 +197,6 @@ $cli
                 $timerEnd = \microtime(true);
                 Console::info("Queue timer: finished in " . ($timerEnd - $timerStart) . " seconds");
             });
-        }
-    );
+
+
 });

@@ -89,7 +89,7 @@ App::post('/v1/functions')
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
 
-        $log = Authorization::skip(
+        $schedule = Authorization::skip(
             fn() => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION'), // Todo replace with projects region
                 'resourceType' => 'function',
@@ -101,7 +101,7 @@ App::post('/v1/functions')
             ]))
         );
 
-        $function->setAttribute('scheduleId', $log->getId());
+        $function->setAttribute('scheduleId', $schedule->getId());
         $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -469,21 +469,21 @@ App::put('/v1/functions/:functionId')
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
         /**
          * In case we want to clear the schedule
          */
         if (!empty($function->getAttribute('deployment'))) {
-            $log->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt']);
+            $schedule->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt']);
         }
 
-        $log
+        $schedule
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
 
 
-        $dbForConsole->updateDocument('schedules', $log->getId(), $log);
+        $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -537,18 +537,18 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             'deployment' => $deployment->getId()
         ])));
 
-        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
         $active = !empty($function->getAttribute('schedule'));
 
         if ($active) {
-            $log->setAttribute('resourceUpdatedAt', datetime::now());
+            $schedule->setAttribute('resourceUpdatedAt', datetime::now());
         }
 
-        $log->setAttribute('active', $active);
+        $schedule->setAttribute('active', $active);
 
-        Authorization::skip(function () use ($dbForConsole, $log) {
-            $dbForConsole->updateDocument('schedules', $log->getId(), $log);
+        Authorization::skip(function () use ($dbForConsole, $schedule) {
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         });
 
         $events
@@ -590,15 +590,15 @@ App::delete('/v1/functions/:functionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
-        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
-        $log
+        $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('active', false)
         ;
 
-        Authorization::skip(function () use ($dbForConsole, $log) {
-            $dbForConsole->updateDocument('schedules', $log->getId(), $log);
+        Authorization::skip(function () use ($dbForConsole, $schedule) {
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         });
 
         $deletes
@@ -794,18 +794,18 @@ App::post('/v1/functions/:functionId/deployments')
          * TODO Should we update also the function collection with the scheduleUpdatedAt attr?
          */
 
-        $log = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
 
         $active = !empty($function->getAttribute('schedule'));
 
         if ($active) {
-            $log->setAttribute('resourceUpdatedAt', datetime::now());
+            $schedule->setAttribute('resourceUpdatedAt', datetime::now());
         }
 
-        $log->setAttribute('active', $active);
+        $schedule->setAttribute('active', $active);
 
-        Authorization::skip(function () use ($dbForConsole, $log) {
-            $dbForConsole->updateDocument('schedules', $log->getId(), $log);
+        Authorization::skip(function () use ($dbForConsole, $schedule) {
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         });
 
         $metadata = null;
