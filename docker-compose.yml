@@ -84,7 +84,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
-
     depends_on:
       - mariadb
       - redis
@@ -362,7 +361,6 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -620,7 +618,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
     environment:
@@ -646,6 +643,19 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
+
+  appwrite-volume-sync:
+    entrypoint: volume-sync
+    <<: *x-logging
+    container_name: appwrite-volume-sync
+    image: appwrite-dev
+    command:
+      - --source=/data/src/ --destination=/data/dest/ --interval=10
+    networks:
+      - appwrite
+    # volumes: # Mount the rsync source and destination directories  
+    #   - /nfs/config:/data/src 
+    #   - /storage/config:/data/dest
 
   appwrite-usage:
     entrypoint: usage
@@ -704,7 +714,7 @@ services:
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
+    container_name: mariadb
     <<: *x-logging
     networks:
       - appwrite
