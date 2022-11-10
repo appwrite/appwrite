@@ -104,6 +104,7 @@ const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
+const APP_DATABASE_DEFAULT_POOL_SIZE = 64;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -495,7 +496,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-$register->set('dbPool', function () {
+$register->set('dbPool', function ($size = APP_DATABASE_DEFAULT_POOL_SIZE) {
  // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
@@ -519,12 +520,12 @@ $register->set('dbPool', function () {
             PDO::ATTR_EMULATE_PREPARES => true,
             PDO::ATTR_STRINGIFY_FETCHES => true,
         ]),
-        64
+        $size
     );
 
     return $pool;
 });
-$register->set('redisPool', function () {
+$register->set('redisPool', function ($size = APP_DATABASE_DEFAULT_POOL_SIZE) {
     $redisHost = App::getEnv('_APP_REDIS_HOST', '');
     $redisPort = App::getEnv('_APP_REDIS_PORT', '');
     $redisUser = App::getEnv('_APP_REDIS_USER', '');
@@ -541,7 +542,7 @@ $register->set('redisPool', function () {
         ->withPort($redisPort)
         ->withAuth($redisAuth)
         ->withDbIndex(0),
-        64
+        $size
     );
 
     return $pool;
@@ -1004,6 +1005,26 @@ function getDevice($root): Device
             $wasabiAcl = 'private';
             return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
+}
+
+/**
+ * Get database connection pool size for worker processes.
+ *
+ * @return int
+ * @throws \Exception
+ */
+function getWorkerPoolSize(): int
+{
+    $reservedConnections = APP_DATABASE_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 1001);
+    $workerConnections = $maxConnections - $reservedConnections;
+
+    if ($workerCount > $workerConnections) {
+        throw new \Exception('Worker pool size is too small. Increase the number of allowed database connections or decrease the number of workers.');
+    }
+
+    return (int)($workerConnections / $workerCount);
 }
 
 App::setResource('mode', function ($request) {
