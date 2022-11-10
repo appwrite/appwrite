@@ -783,6 +783,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('cache', true)
+    ->label('cache.resourceType', 'bucket/{request.bucketId}')
     ->label('cache.resource', 'file/{request.fileId}')
     ->label('usage.metric', 'files.{scope}.requests.read')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
@@ -839,9 +840,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
-
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
