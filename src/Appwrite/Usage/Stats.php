@@ -91,8 +91,8 @@ class Stats
             $this->statsd->increment('project.{scope}.network.requests' . $tags . ',method=' . \strtolower($httpMethod));
         }
 
-        $inbound = $this->params['networkRequestSize'] ?? 0;
-        $outbound = $this->params['networkResponseSize'] ?? 0;
+        $inbound = $this->params['project.{scope}.network.inbound'] ?? 0;
+        $outbound = $this->params['project.{scope}.network.outbound'] ?? 0;
         $this->statsd->count('project.{scope}.network.inbound' . $tags, $inbound);
         $this->statsd->count('project.{scope}.network.outbound' . $tags, $outbound);
         $this->statsd->count('project.{scope}.network.bandwidth' . $tags, $inbound + $outbound);
