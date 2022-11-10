@@ -1,5 +1,8 @@
 # Version 1.1.0
 
+## Features
+- Added Keycloak OAuth2 provider [#4653](https://github.com/appwrite/appwrite/issues/4653)
+
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 - Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
