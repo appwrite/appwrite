@@ -35,8 +35,8 @@ services:
       - 9500:8080
     ulimits:
       nofile:
-        soft: 65535
-        hard: 65535
+        soft: 655350
+        hard: 655350
     sysctls:
       - net.core.somaxconn=1024
       - net.ipv4.tcp_rmem=1024 4096 16384
