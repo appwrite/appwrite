@@ -30,6 +30,11 @@
           "clientSecret": "oauth2AuthentikClientSecret",
           "authentikDomain": "oauth2AuthentikDomain"
         },
+        "Keycloak": {
+          "clientSecret": "oauth2KeycloakClientSecret",
+          "keycloakDomain": "oauth2KeycloakDomain",
+          "keycloakRealm": "oauth2KeycloakRealm"
+        },
         "Gitlab": {
           "endpoint": "oauth2GitlabEndpoint",
           "clientSecret": "oauth2GitlabClientSecret",
