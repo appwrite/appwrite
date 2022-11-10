@@ -73,7 +73,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
-        $headers = array_merge($this->headers, [ 'x-opr-runtime-id' => $runtimeId ]);
+        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -126,7 +126,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
-        $headers = array_merge($this->headers, [ 'x-opr-runtime-id' => $runtimeId ]);
+        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
