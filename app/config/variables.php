@@ -701,7 +701,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
-                'description' => 'Deprecated since 1.2.0. Runtimes now timeout by inactivity using \'OPR_EXECUTOR_INACTIVE_TRESHOLD\'.',
+                'description' => 'Deprecated since 1.2.0. Runtimes now timeout by inactivity using \'_APP_FUNCTIONS_INACTIVE_THRESHOLD\'.',
                 'introduction' => '0.7.0',
                 'default' => '10',
                 'required' => false,
@@ -782,7 +782,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'Deprecated with 1.2.0, use \'OPR_EXECUTOR_INACTIVE_TRESHOLD\' instead!',
+                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds.',
                 'introduction' => '0.13.0',
                 'default' => '60',
                 'required' => false,
@@ -791,7 +791,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
-                'description' => 'Deprecated with 1.2.0, use \'OPR_EXECUTOR_DOCKER_HUB_USERNAME\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead!',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -800,7 +800,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
-                'description' => 'Deprecated with 1.2.0, use \'OPR_EXECUTOR_DOCKER_HUB_PASSWORD\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead!',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -818,7 +818,7 @@ return [
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
-                'description' => 'Deprecated with 1.2.0, use \'OPR_EXECUTOR_NETWORK\' instead!',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
                 'required' => false,
@@ -826,25 +826,16 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => 'OPR_EXECUTOR_INACTIVE_TRESHOLD',
-                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
-                'introduction' => '1.2.0',
-                'default' => '60',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => 'OPR_EXECUTOR_NETWORK',
+                'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
                 'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
                 'introduction' => '1.2.0',
-                'default' => 'appwrite_runtimes',
+                'default' => 'openruntimes-runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
             [
-                'name' => 'OPR_EXECUTOR_DOCKER_HUB_USERNAME',
+                'name' => '_APP_DOCKER_HUB_USERNAME',
                 'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '1.2.0',
                 'default' => '',
@@ -853,7 +844,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => 'OPR_EXECUTOR_DOCKER_HUB_PASSWORD',
+                'name' => '_APP_DOCKER_HUB_PASSWORD',
                 'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
                 'introduction' => '1.2.0',
                 'default' => '',
@@ -862,7 +853,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => 'OPR_EXECUTOR_CONNECTION_STORAGE',
+                'name' => '_APP_FUNCTIONS_CONNECTION_STORAGE',
                 'description' => 'DSN record of storage driver where Open Runtimes Executor stores output of Appwrite Function Deployment builds.',
                 'introduction' => '1.2.0',
                 'default' => '',

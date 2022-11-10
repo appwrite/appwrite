@@ -18,13 +18,11 @@ class Executor
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    private $endpoint;
+    private bool $selfSigned = false;
 
-    private $selfSigned = false;
+    private string $endpoint;
 
-    protected $headers = [
-        'content-type' => '',
-    ];
+    protected array $headers;
 
     protected int $cpus;
 
@@ -39,6 +37,10 @@ class Executor
         $this->endpoint = $endpoint;
         $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
         $this->memory = intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->headers = [
+            'content-type' => 'application/json',
+            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+        ];
     }
 
     /**
@@ -71,11 +73,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
-        $headers = [
-            'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
-            'x-opr-runtime-id' => $runtimeId
-        ];
+        $headers = array_merge($this->headers, [ 'x-opr-runtime-id' => $runtimeId ]);
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -128,11 +126,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
-        $headers = [
-            'content-type' =>  'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
-            'x-opr-runtime-id' => $runtimeId
-        ];
+        $headers = array_merge($this->headers, [ 'x-opr-runtime-id' => $runtimeId ]);
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
