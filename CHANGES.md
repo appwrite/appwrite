@@ -3,6 +3,7 @@
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 - Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
+- Fix Deletes worker using incorrect device to delete files from [#4662](https://github.com/appwrite/appwrite/pull/4662)
 
 # Version 1.0.3
 ## Bugs
