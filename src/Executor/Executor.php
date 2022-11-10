@@ -26,16 +26,19 @@ class Executor
         'content-type' => '',
     ];
 
-    protected int $cpus = 2;
+    protected int $cpus;
 
-    protected int $memory = 512;
+    protected int $memory;
 
     public function __construct(string $endpoint)
     {
         if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
             throw new Exception('Unsupported endpoint');
         }
+
         $this->endpoint = $endpoint;
+        $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $this->memory = intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
     }
 
     /**
