@@ -690,55 +690,9 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.1.1
-    networks:
-      # - appwrite # If not using OPR proxy, uncomment this
-      - openruntimes-executors
-      - openruntimes-runtimes
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - openruntimes-builds:/storage/builds:rw
-      - openruntimes-functions:/storage/functions:rw
-      - /tmp:/tmp:rw
-    environment:
-      - OPR_EXECUTOR_CONNECTION_STORAGE
-      - OPR_EXECUTOR_INACTIVE_TRESHOLD
-      - OPR_EXECUTOR_NETWORK
-      - OPR_EXECUTOR_DOCKER_HUB_USERNAME
-      - OPR_EXECUTOR_DOCKER_HUB_PASSWORD
-      - OPR_EXECUTOR_ENV=$_APP_ENV
-      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
-      - OPR_EXECUTOR_SECRET=$OPR_PROXY_EXECUTOR_SECRET # If not using OPR proxy, set to $_APP_EXECUTOR_SECRET
-      - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
-      - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-
-  openruntimes-proxy:
-    container_name: openruntimes-proxy
-    hostname: proxy1
-    <<: *x-logging
-    image: openruntimes/proxy:0.2.2
+    image: openruntimes/executor:0.1.3
     networks:
       - appwrite
-      - openruntimes-executors
-    environment:
-      - OPR_PROXY_ALGORITHM
-      - OPR_PROXY_EXECUTORS
-      - OPR_PROXY_HEALTHCHECK
-      - OPR_PROXY_HEALTHCHECK_INTERVAL
-      - OPR_PROXY_EXECUTOR_SECRET
-      - OPR_PROXY_ENV=$_APP_ENV
-      - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
-      - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
-      - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-
-  openruntimes-executor2:
-    container_name: openruntimes-executor2
-    hostname: exc2
-    <<: *x-logging
-    stop_signal: SIGINT
-    image: openruntimes/executor:0.1.1
-    networks:
-      - openruntimes-executors
       - openruntimes-runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -753,7 +707,7 @@ services:
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
-      - OPR_EXECUTOR_SECRET=$OPR_PROXY_EXECUTOR_SECRET
+      - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
@@ -919,11 +873,11 @@ services:
 
 networks:
   gateway:
+    name: gateway
   appwrite:
+    name: appwrite
   openruntimes-runtimes:
     name: openruntimes-runtimes
-  openruntimes-executors:
-    name: openruntimes-executors
 
 volumes:
   appwrite-mariadb:

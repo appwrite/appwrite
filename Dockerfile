@@ -246,8 +246,10 @@ ENV _APP_SERVER=swoole \
     _APP_SMS_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
+    _APP_FUNCTIONS_CPUS=1 \
+    _APP_FUNCTIONS_MEMORY=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
-    _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
+    _APP_EXECUTOR_HOST=http://exc1/v1 \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
@@ -260,7 +262,11 @@ ENV _APP_SERVER=swoole \
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
     _APP_MAINTENANCE_INTERVAL=86400 \
     _APP_LOGGING_PROVIDER= \
-    _APP_LOGGING_CONFIG=
+    OPR_EXECUTOR_CONNECTION_STORAGE=file://localhost \
+    OPR_EXECUTOR_INACTIVE_TRESHOLD=600 \
+    OPR_EXECUTOR_NETWORK=openruntimes-runtimes \
+    OPR_EXECUTOR_DOCKER_HUB_USERNAME= \
+    OPR_EXECUTOR_DOCKER_HUB_PASSWORD=
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

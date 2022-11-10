@@ -66,7 +66,7 @@ services:
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - appwrite-functions:/storage/functions:rw
+      - openruntimes-functions:/storage/functions:rw
     depends_on:
       - mariadb
       - redis
@@ -259,8 +259,8 @@ services:
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
+      - openruntimes-functions:/storage/functions:rw
+      - openruntimes-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
@@ -637,8 +637,13 @@ services:
 
 networks:
   gateway:
+    name: gateway
   appwrite:
-  runtimes:
+    name: appwrite
+  openruntimes-runtimes:
+    name: openruntimes-runtimes
+  openruntimes-executors:
+    name: openruntimes-executors
 
 volumes:
   appwrite-mariadb:
@@ -646,7 +651,7 @@ volumes:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:
-  appwrite-functions:
-  appwrite-builds:
   appwrite-influxdb:
   appwrite-config:
+  openruntimes-functions:
+  openruntimes-builds:
