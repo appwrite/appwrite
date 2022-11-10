@@ -65,7 +65,6 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
@@ -498,7 +497,6 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 $register->set('pools', function () {
-
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -662,12 +660,6 @@ $register->set('pools', function () {
         }
 
         Config::setParam('pools-' . $key, $config);
-    }
-
-    try {
-        $group->fill();
-    } catch (\Throwable $th) {
-        Console::error('Connection failure: ' . $th->getMessage());
     }
 
     return $group;
