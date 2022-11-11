@@ -32,7 +32,7 @@
     "emails.certificate.body": "Das Zertifikat für Ihre Domain '{{domain}}' konnte nicht generiert werden. Dies ist der {{attempt}}. Versuch. Fehlermeldung: {{error}}",
     "emails.certificate.footer": "Ihr bisheriges Zertifikat ist noch 30 Tage nach Auftreten des ersten Fehlers gültig. Wir empfehlen dringend, diesen Vorfall zu untersuchen, da eine sichere Kommunikation mit Ihrer Domain nach Ablauf des Zertifikats nicht mehr möglich sein wird.",
     "emails.certificate.thanks": "Danke",
-    "emails.certificate.signature": "{{project}}-Team",
+    "emails.certificate.signature": "{{project}} Team",
     "locale.country.unknown": "Unbekannt",
     "countries.af": "Afghanistan",
     "countries.ao": "Angola",
