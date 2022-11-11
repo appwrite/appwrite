@@ -967,12 +967,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
-App::setResource('project', function ($dbForConsole, $request, $console) {
-    /** @var Appwrite\Utopia\Request $request */
+App::setResource('project', function ($dbForConsole, $request, $console, $hook) {
     /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Document $console */
+    /** @var Utopia\Route $route */
 
+    var_dump("Route", $request->getURI());
+    var_dump("Hook Params", $hook->getParamsValues());
+    var_dump("Get Param Project", $request->getParam('project'));
+    var_dump("Get Param ProjectId", $request->getParam('projectId'));
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    var_dump("Final ProjectId", $projectId);
 
     if ($projectId === 'console') {
         return $console;
@@ -981,7 +987,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForConsole', 'request', 'console']);
+}, ['dbForConsole', 'request', 'console', 'hook']);
 
 App::setResource('console', function () {
     return new Document([
