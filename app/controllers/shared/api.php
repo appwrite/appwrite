@@ -161,7 +161,7 @@ App::init()
         $useCache = $route->getLabel('cache', false);
 
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
@@ -408,7 +408,7 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams()));
+                $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
                 $data = json_encode([
                 'resourceType' => $resourceType,
                 'resource' => $resource,
