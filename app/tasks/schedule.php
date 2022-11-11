@@ -55,13 +55,11 @@ $cli
         Console::success("Queue was built in " . ($loadEnd - $loadStart) . " seconds");
     };
 
-    $removeFromQueue = function ($scheduleId) use (&$queue) {
+    $removeFromQueue = function ($resourceId) use (&$queue) {
         foreach ($queue as $slot => $schedule) {
-            foreach ($schedule as $function) {
-                if ($scheduleId === $function['resourceId']) {
-                    Console::error("Unsetting :{$function['resourceId']} from queue slot $slot");
-                    unset($queue[$slot][$function['resourceId']]);
-                }
+            if (array_key_exists($resourceId, $schedule)) {
+                Console::error("Unsetting :{$resourceId} from queue slot $slot");
+                unset($queue[$slot][$resourceId]);
             }
         }
     };
