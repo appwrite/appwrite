@@ -12,7 +12,7 @@ Service.CHUNK_SIZE=5*1024*1024;class Query{}
 Query.equal=(attribute,value)=>Query.addQuery(attribute,"equal",value);Query.notEqual=(attribute,value)=>Query.addQuery(attribute,"notEqual",value);Query.lessThan=(attribute,value)=>Query.addQuery(attribute,"lessThan",value);Query.lessThanEqual=(attribute,value)=>Query.addQuery(attribute,"lessThanEqual",value);Query.greaterThan=(attribute,value)=>Query.addQuery(attribute,"greaterThan",value);Query.greaterThanEqual=(attribute,value)=>Query.addQuery(attribute,"greaterThanEqual",value);Query.search=(attribute,value)=>Query.addQuery(attribute,"search",value);Query.orderDesc=(attribute)=>`orderDesc("${attribute}")`;Query.orderAsc=(attribute)=>`orderAsc("${attribute}")`;Query.cursorAfter=(documentId)=>`cursorAfter("${documentId}")`;Query.cursorBefore=(documentId)=>`cursorBefore("${documentId}")`;Query.limit=(limit)=>`limit(${limit})`;Query.offset=(offset)=>`offset(${offset})`;Query.addQuery=(attribute,method,value)=>value instanceof Array?`${method}("${attribute}", [${value
         .map((v) => Query.parseValues(v))
         .join(",")}])`:`${method}("${attribute}", [${Query.parseValues(value)}])`;Query.parseValues=(value)=>typeof value==="string"||value instanceof String?`"${value}"`:`${value}`;class AppwriteException extends Error{constructor(message,code=0,type='',response=''){super(message);this.name='AppwriteException';this.message=message;this.code=code;this.type=type;this.response=response;}}
-class Client{constructor(){this.config={endpoint:'https://HOSTNAME/v1',endpointRealtime:'',project:'',key:'',jwt:'',locale:'',mode:'',};this.headers={'x-sdk-name':'Console','x-sdk-platform':'console','x-sdk-language':'web','x-sdk-version':'7.0.0','X-Appwrite-Response-Format':'1.0.0',};this.realtime={socket:undefined,timeout:undefined,url:'',channels:new Set(),subscriptions:new Map(),subscriptionsCounter:0,reconnect:true,reconnectAttempts:0,lastMessage:undefined,connect:()=>{clearTimeout(this.realtime.timeout);this.realtime.timeout=window===null||window===void 0?void 0:window.setTimeout(()=>{this.realtime.createSocket();},50);},getTimeout:()=>{switch(true){case this.realtime.reconnectAttempts<5:return 1000;case this.realtime.reconnectAttempts<15:return 5000;case this.realtime.reconnectAttempts<100:return 10000;default:return 60000;}},createSocket:()=>{var _a,_b;if(this.realtime.channels.size<1)
+class Client{constructor(){this.config={endpoint:'https://HOSTNAME/v1',endpointRealtime:'',project:'',key:'',jwt:'',locale:'',mode:'',};this.headers={'x-sdk-name':'Console','x-sdk-platform':'console','x-sdk-language':'web','x-sdk-version':'7.2.0','X-Appwrite-Response-Format':'1.0.0',};this.realtime={socket:undefined,timeout:undefined,url:'',channels:new Set(),subscriptions:new Map(),subscriptionsCounter:0,reconnect:true,reconnectAttempts:0,lastMessage:undefined,connect:()=>{clearTimeout(this.realtime.timeout);this.realtime.timeout=window===null||window===void 0?void 0:window.setTimeout(()=>{this.realtime.createSocket();},50);},getTimeout:()=>{switch(true){case this.realtime.reconnectAttempts<5:return 1000;case this.realtime.reconnectAttempts<15:return 5000;case this.realtime.reconnectAttempts<100:return 10000;default:return 60000;}},createSocket:()=>{var _a,_b;if(this.realtime.channels.size<1)
 return;const channels=new URLSearchParams();channels.set('project',this.config.project);this.realtime.channels.forEach(channel=>{channels.append('channels[]',channel);});const url=this.config.endpointRealtime+'/realtime?'+channels.toString();if(url!==this.realtime.url||!this.realtime.socket||((_a=this.realtime.socket)===null||_a===void 0?void 0:_a.readyState)>WebSocket.OPEN){if(this.realtime.socket&&((_b=this.realtime.socket)===null||_b===void 0?void 0:_b.readyState)<WebSocket.CLOSING){this.realtime.reconnect=false;this.realtime.socket.close();}
 this.realtime.url=url;this.realtime.socket=new WebSocket(url);this.realtime.socket.addEventListener('message',this.realtime.onMessage);this.realtime.socket.addEventListener('open',_event=>{this.realtime.reconnectAttempts=0;});this.realtime.socket.addEventListener('close',event=>{var _a,_b,_c;if(!this.realtime.reconnect||(((_b=(_a=this.realtime)===null||_a===void 0?void 0:_a.lastMessage)===null||_b===void 0?void 0:_b.type)==='error'&&((_c=this.realtime)===null||_c===void 0?void 0:_c.lastMessage.data).code===1008)){this.realtime.reconnect=true;return;}
 const timeout=this.realtime.getTimeout();console.error(`Realtime got disconnected. Reconnect will be attempted in ${timeout / 1000} seconds.`,event.reason);setTimeout(()=>{this.realtime.reconnectAttempts++;this.realtime.createSocket();},timeout);});}},onMessage:(event)=>{var _a,_b;try{const message=JSON.parse(event.data);this.realtime.lastMessage=message;switch(message.type){case'connected':const cookie=JSON.parse((_a=window.localStorage.getItem('cookieFallback'))!==null&&_a!==void 0?_a:'{}');const session=cookie===null||cookie===void 0?void 0:cookie[`a_session_${this.config.project}`];const messageData=message.data;if(session&&!messageData.user){(_b=this.realtime.socket)===null||_b===void 0?void 0:_b.send(JSON.stringify({type:'authentication',data:{session}}));}
@@ -458,7 +458,7 @@ let path='/functions/{functionId}/deployments/{deploymentId}'.replace('{function
 deleteDeployment(functionId,deploymentId){return __awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
 if(typeof deploymentId==='undefined'){throw new AppwriteException('Missing required parameter: "deploymentId"');}
 let path='/functions/{functionId}/deployments/{deploymentId}'.replace('{functionId}',functionId).replace('{deploymentId}',deploymentId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('delete',uri,{'content-type':'application/json',},payload);});}
-retryBuild(functionId,deploymentId,buildId){return __awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
+createBuild(functionId,deploymentId,buildId){return __awaiter(this,void 0,void 0,function*(){if(typeof functionId==='undefined'){throw new AppwriteException('Missing required parameter: "functionId"');}
 if(typeof deploymentId==='undefined'){throw new AppwriteException('Missing required parameter: "deploymentId"');}
 if(typeof buildId==='undefined'){throw new AppwriteException('Missing required parameter: "buildId"');}
 let path='/functions/{functionId}/deployments/{deploymentId}/builds/{buildId}'.replace('{functionId}',functionId).replace('{deploymentId}',deploymentId).replace('{buildId}',buildId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
@@ -501,6 +501,8 @@ get(){return __awaiter(this,void 0,void 0,function*(){let path='/health';let pay
 getAntivirus(){return __awaiter(this,void 0,void 0,function*(){let path='/health/anti-virus';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 getCache(){return __awaiter(this,void 0,void 0,function*(){let path='/health/cache';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 getDB(){return __awaiter(this,void 0,void 0,function*(){let path='/health/db';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+getPubSub(){return __awaiter(this,void 0,void 0,function*(){let path='/health/pubsub';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
+getQueue(){return __awaiter(this,void 0,void 0,function*(){let path='/health/queue';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 getQueueCertificates(){return __awaiter(this,void 0,void 0,function*(){let path='/health/queue/certificates';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 getQueueFunctions(){return __awaiter(this,void 0,void 0,function*(){let path='/health/queue/functions';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 getQueueLogs(){return __awaiter(this,void 0,void 0,function*(){let path='/health/queue/logs';let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
@@ -534,6 +536,7 @@ if(typeof legalState!=='undefined'){payload['legalState']=legalState;}
 if(typeof legalCity!=='undefined'){payload['legalCity']=legalCity;}
 if(typeof legalAddress!=='undefined'){payload['legalAddress']=legalAddress;}
 if(typeof legalTaxId!=='undefined'){payload['legalTaxId']=legalTaxId;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 get(projectId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
@@ -549,25 +552,30 @@ if(typeof legalState!=='undefined'){payload['legalState']=legalState;}
 if(typeof legalCity!=='undefined'){payload['legalCity']=legalCity;}
 if(typeof legalAddress!=='undefined'){payload['legalAddress']=legalAddress;}
 if(typeof legalTaxId!=='undefined'){payload['legalTaxId']=legalTaxId;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 delete(projectId,password){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof password==='undefined'){throw new AppwriteException('Missing required parameter: "password"');}
 let path='/projects/{projectId}'.replace('{projectId}',projectId);let payload={};if(typeof password!=='undefined'){payload['password']=password;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('delete',uri,{'content-type':'application/json',},payload);});}
 updateAuthLimit(projectId,limit){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof limit==='undefined'){throw new AppwriteException('Missing required parameter: "limit"');}
 let path='/projects/{projectId}/auth/limit'.replace('{projectId}',projectId);let payload={};if(typeof limit!=='undefined'){payload['limit']=limit;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 updateAuthStatus(projectId,method,status){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof method==='undefined'){throw new AppwriteException('Missing required parameter: "method"');}
 if(typeof status==='undefined'){throw new AppwriteException('Missing required parameter: "status"');}
 let path='/projects/{projectId}/auth/{method}'.replace('{projectId}',projectId).replace('{method}',method);let payload={};if(typeof status!=='undefined'){payload['status']=status;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 listDomains(projectId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/domains'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 createDomain(projectId,domain){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof domain==='undefined'){throw new AppwriteException('Missing required parameter: "domain"');}
 let path='/projects/{projectId}/domains'.replace('{projectId}',projectId);let payload={};if(typeof domain!=='undefined'){payload['domain']=domain;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getDomain(projectId,domainId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof domainId==='undefined'){throw new AppwriteException('Missing required parameter: "domainId"');}
@@ -586,6 +594,7 @@ if(typeof scopes==='undefined'){throw new AppwriteException('Missing required pa
 let path='/projects/{projectId}/keys'.replace('{projectId}',projectId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof scopes!=='undefined'){payload['scopes']=scopes;}
 if(typeof expire!=='undefined'){payload['expire']=expire;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getKey(projectId,keyId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof keyId==='undefined'){throw new AppwriteException('Missing required parameter: "keyId"');}
@@ -597,6 +606,7 @@ if(typeof scopes==='undefined'){throw new AppwriteException('Missing required pa
 let path='/projects/{projectId}/keys/{keyId}'.replace('{projectId}',projectId).replace('{keyId}',keyId);let payload={};if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof scopes!=='undefined'){payload['scopes']=scopes;}
 if(typeof expire!=='undefined'){payload['expire']=expire;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deleteKey(projectId,keyId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof keyId==='undefined'){throw new AppwriteException('Missing required parameter: "keyId"');}
@@ -606,6 +616,7 @@ if(typeof provider==='undefined'){throw new AppwriteException('Missing required 
 let path='/projects/{projectId}/oauth2'.replace('{projectId}',projectId);let payload={};if(typeof provider!=='undefined'){payload['provider']=provider;}
 if(typeof appId!=='undefined'){payload['appId']=appId;}
 if(typeof secret!=='undefined'){payload['secret']=secret;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 listPlatforms(projectId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/platforms'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
@@ -617,6 +628,7 @@ if(typeof name!=='undefined'){payload['name']=name;}
 if(typeof key!=='undefined'){payload['key']=key;}
 if(typeof store!=='undefined'){payload['store']=store;}
 if(typeof hostname!=='undefined'){payload['hostname']=hostname;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getPlatform(projectId,platformId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof platformId==='undefined'){throw new AppwriteException('Missing required parameter: "platformId"');}
@@ -628,6 +640,7 @@ let path='/projects/{projectId}/platforms/{platformId}'.replace('{projectId}',pr
 if(typeof key!=='undefined'){payload['key']=key;}
 if(typeof store!=='undefined'){payload['store']=store;}
 if(typeof hostname!=='undefined'){payload['hostname']=hostname;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deletePlatform(projectId,platformId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof platformId==='undefined'){throw new AppwriteException('Missing required parameter: "platformId"');}
@@ -637,9 +650,11 @@ if(typeof service==='undefined'){throw new AppwriteException('Missing required p
 if(typeof status==='undefined'){throw new AppwriteException('Missing required parameter: "status"');}
 let path='/projects/{projectId}/service'.replace('{projectId}',projectId);let payload={};if(typeof service!=='undefined'){payload['service']=service;}
 if(typeof status!=='undefined'){payload['status']=status;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}
 getUsage(projectId,range){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/usage'.replace('{projectId}',projectId);let payload={};if(typeof range!=='undefined'){payload['range']=range;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
 listWebhooks(projectId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/webhooks'.replace('{projectId}',projectId);let payload={};const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('get',uri,{'content-type':'application/json',},payload);});}
@@ -654,6 +669,7 @@ if(typeof url!=='undefined'){payload['url']=url;}
 if(typeof security!=='undefined'){payload['security']=security;}
 if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('post',uri,{'content-type':'application/json',},payload);});}
 getWebhook(projectId,webhookId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
@@ -670,6 +686,7 @@ if(typeof url!=='undefined'){payload['url']=url;}
 if(typeof security!=='undefined'){payload['security']=security;}
 if(typeof httpUser!=='undefined'){payload['httpUser']=httpUser;}
 if(typeof httpPass!=='undefined'){payload['httpPass']=httpPass;}
+if(typeof projectId!=='undefined'){payload['projectId']=projectId;}
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('put',uri,{'content-type':'application/json',},payload);});}
 deleteWebhook(projectId,webhookId){return __awaiter(this,void 0,void 0,function*(){if(typeof projectId==='undefined'){throw new AppwriteException('Missing required parameter: "projectId"');}
 if(typeof webhookId==='undefined'){throw new AppwriteException('Missing required parameter: "webhookId"');}
@@ -957,12 +974,14 @@ let path='/users/{userId}/verification/phone'.replace('{userId}',userId);let pay
 const uri=new URL(this.client.config.endpoint+path);return yield this.client.call('patch',uri,{'content-type':'application/json',},payload);});}}
 class Permission{}
 Permission.read=(role)=>{return`read("${role}")`;};Permission.write=(role)=>{return`write("${role}")`;};Permission.create=(role)=>{return`create("${role}")`;};Permission.update=(role)=>{return`update("${role}")`;};Permission.delete=(role)=>{return`delete("${role}")`;};class Role{static any(){return'any';}
-static user(id){return`user:${id}`;}
-static users(){return'users';}
+static user(id,status=''){if(status===''){return`user:${id}`;}
+return`user:${id}/${status}`;}
+static users(status=''){if(status===''){return'users';}
+return`users/${status}`;}
 static guests(){return'guests';}
 static team(id,role=''){if(role===''){return`team:${id}`;}
 return`team:${id}/${role}`;}
-static status(status){return`status:${status}`;}}
+static member(id){return`member:${id}`;}}
 class ID{static custom(id){return id;}
 static unique(){return'unique()';}}
 exports.Account=Account;exports.AppwriteException=AppwriteException;exports.Avatars=Avatars;exports.Client=Client;exports.Databases=Databases;exports.Functions=Functions;exports.Health=Health;exports.ID=ID;exports.Locale=Locale;exports.Permission=Permission;exports.Projects=Projects;exports.Query=Query;exports.Role=Role;exports.Storage=Storage;exports.Teams=Teams;exports.Users=Users;Object.defineProperty(exports,'__esModule',{value:true});})(this.Appwrite=this.Appwrite||{},null,window);(function(global,factory){typeof exports==='object'&&typeof module!=='undefined'?module.exports=factory():typeof define==='function'&&define.amd?define(factory):(global=typeof globalThis!=='undefined'?globalThis:global||self,global.Chart=factory());})(this,(function(){'use strict';function noop(){}

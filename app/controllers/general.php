@@ -283,6 +283,11 @@ App::init()
         $roles = Config::getParam('roles', []);
         $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
         $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+        // var_dump("-------------------_ROLES ------------------------");
+        // var_dump($role);
+        // var_dump($scope);
+        // var_dump($roles[$role]['scopes']);
+        // var_dump("-------------------_ROLES ------------------------");
 
         $authKey = $request->getHeader('x-appwrite-key', '');
 

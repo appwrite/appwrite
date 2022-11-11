@@ -96,7 +96,7 @@
                 'x-sdk-name': 'Console',
                 'x-sdk-platform': 'console',
                 'x-sdk-language': 'web',
-                'x-sdk-version': '7.0.0',
+                'x-sdk-version': '7.2.0',
                 'X-Appwrite-Response-Format': '1.0.0',
             };
             this.realtime = {
@@ -500,7 +500,7 @@
             });
         }
         /**
-         * Update Account Email
+         * Update Email
          *
          * Update currently logged in user account email address. After changing user
          * address, the user confirmation status will get reset. A new confirmation
@@ -539,7 +539,7 @@
             });
         }
         /**
-         * Create Account JWT
+         * Create JWT
          *
          * Use this endpoint to create a JSON Web Token. You can use the resulting JWT
          * to authenticate on behalf of the current user when working with the
@@ -561,7 +561,7 @@
             });
         }
         /**
-         * List Account Logs
+         * List Logs
          *
          * Get currently logged in user list of latest security activity logs. Each
          * log returns user IP address, location and date and time of log.
@@ -584,7 +584,7 @@
             });
         }
         /**
-         * Update Account Name
+         * Update Name
          *
          * Update currently logged in user account name.
          *
@@ -609,7 +609,7 @@
             });
         }
         /**
-         * Update Account Password
+         * Update Password
          *
          * Update currently logged in user password. For validation, user is required
          * to pass in the new password, and the old password. For users created with
@@ -640,7 +640,7 @@
             });
         }
         /**
-         * Update Account Phone
+         * Update Phone
          *
          * Update the currently logged in user's phone number. After updating the
          * phone number, the phone verification status will be reset. A confirmation
@@ -694,7 +694,7 @@
             });
         }
         /**
-         * Update Account Preferences
+         * Update Preferences
          *
          * Update currently logged in user account preferences. The object you pass is
          * stored as is, and replaces any previous value. The maximum allowed prefs
@@ -814,7 +814,7 @@
             });
         }
         /**
-         * List Account Sessions
+         * List Sessions
          *
          * Get currently logged in user list of active sessions across different
          * devices.
@@ -833,7 +833,7 @@
             });
         }
         /**
-         * Delete All Account Sessions
+         * Delete Sessions
          *
          * Delete all sessions from the user account and remove any sessions cookies
          * from the end client.
@@ -875,7 +875,7 @@
             });
         }
         /**
-         * Create Account Session with Email
+         * Create Email Session
          *
          * Allow the user to login into their account by providing a valid email and
          * password combination. This route will create a new session for the user.
@@ -996,7 +996,7 @@
             });
         }
         /**
-         * Create Account Session with OAuth2
+         * Create OAuth2 Session
          *
          * Allow the user to login to their account using the OAuth2 provider of their
          * choice. Each OAuth2 provider should be enabled from the Appwrite console
@@ -1119,7 +1119,7 @@
             });
         }
         /**
-         * Get Session By ID
+         * Get Session
          *
          * Use this endpoint to get a logged in user's session using a Session ID.
          * Inputting 'current' will return the current session being used.
@@ -1142,7 +1142,7 @@
             });
         }
         /**
-         * Update Session (Refresh Tokens)
+         * Update OAuth Session (Refresh Tokens)
          *
          * Access tokens have limited lifespan and expire to mitigate security risks.
          * If session was created using an OAuth provider, this route can be used to
@@ -1166,7 +1166,7 @@
             });
         }
         /**
-         * Delete Account Session
+         * Delete Session
          *
          * Use this endpoint to log out the currently logged in user from all their
          * account sessions across all of their different devices. When using the
@@ -1191,7 +1191,7 @@
             });
         }
         /**
-         * Update Account Status
+         * Update Status
          *
          * Block the currently logged in user account. Behind the scene, the user
          * record is not deleted but permanently blocked from any access. To
@@ -2527,9 +2527,7 @@
          * List Documents
          *
          * Get a list of all the user's documents in a given collection. You can use
-         * the query params to filter your results. On admin mode, this endpoint will
-         * return a list of all of documents belonging to the provided collectionId.
-         * [Learn more about different API modes](/docs/admin).
+         * the query params to filter your results.
          *
          * @param {string} databaseId
          * @param {string} collectionId
@@ -3413,7 +3411,7 @@
             });
         }
         /**
-         * Retry Build
+         * Create Build
          *
          *
          * @param {string} functionId
@@ -3422,7 +3420,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        retryBuild(functionId, deploymentId, buildId) {
+        createBuild(functionId, deploymentId, buildId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof functionId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "functionId"');
@@ -3445,9 +3443,7 @@
          * List Executions
          *
          * Get a list of all the current user function execution logs. You can use the
-         * query params to filter your results. On admin mode, this endpoint will
-         * return a list of all of the project's executions. [Learn more about
-         * different API modes](/docs/admin).
+         * query params to filter your results.
          *
          * @param {string} functionId
          * @param {string[]} queries
@@ -3751,7 +3747,7 @@
         /**
          * Get Cache
          *
-         * Check the Appwrite in-memory cache server is up and connection is
+         * Check the Appwrite in-memory cache servers are up and connection is
          * successful.
          *
          * @throws {AppwriteException}
@@ -3770,7 +3766,7 @@
         /**
          * Get DB
          *
-         * Check the Appwrite database server is up and connection is successful.
+         * Check the Appwrite database servers are up and connection is successful.
          *
          * @throws {AppwriteException}
          * @returns {Promise}
@@ -3778,6 +3774,43 @@
         getDB() {
             return __awaiter(this, void 0, void 0, function* () {
                 let path = '/health/db';
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Get PubSub
+         *
+         * Check the Appwrite pub-sub servers are up and connection is successful.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getPubSub() {
+            return __awaiter(this, void 0, void 0, function* () {
+                let path = '/health/pubsub';
+                let payload = {};
+                const uri = new URL(this.client.config.endpoint + path);
+                return yield this.client.call('get', uri, {
+                    'content-type': 'application/json',
+                }, payload);
+            });
+        }
+        /**
+         * Get Queue
+         *
+         * Check the Appwrite queue messaging servers are up and connection is
+         * successful.
+         *
+         * @throws {AppwriteException}
+         * @returns {Promise}
+         */
+        getQueue() {
+            return __awaiter(this, void 0, void 0, function* () {
+                let path = '/health/queue';
                 let payload = {};
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -4145,6 +4178,9 @@
                 if (typeof legalTaxId !== 'undefined') {
                     payload['legalTaxId'] = legalTaxId;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
                     'content-type': 'application/json',
@@ -4230,6 +4266,9 @@
                 if (typeof legalTaxId !== 'undefined') {
                     payload['legalTaxId'] = legalTaxId;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
                     'content-type': 'application/json',
@@ -4258,6 +4297,9 @@
                 if (typeof password !== 'undefined') {
                     payload['password'] = password;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('delete', uri, {
                     'content-type': 'application/json',
@@ -4285,6 +4327,9 @@
                 let payload = {};
                 if (typeof limit !== 'undefined') {
                     payload['limit'] = limit;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
@@ -4317,6 +4362,9 @@
                 let payload = {};
                 if (typeof status !== 'undefined') {
                     payload['status'] = status;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
@@ -4366,6 +4414,9 @@
                 let payload = {};
                 if (typeof domain !== 'undefined') {
                     payload['domain'] = domain;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -4502,6 +4553,9 @@
                 if (typeof expire !== 'undefined') {
                     payload['expire'] = expire;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
                     'content-type': 'application/json',
@@ -4570,6 +4624,9 @@
                 if (typeof expire !== 'undefined') {
                     payload['expire'] = expire;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('put', uri, {
                     'content-type': 'application/json',
@@ -4630,6 +4687,9 @@
                 }
                 if (typeof secret !== 'undefined') {
                     payload['secret'] = secret;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
@@ -4698,6 +4758,9 @@
                 }
                 if (typeof hostname !== 'undefined') {
                     payload['hostname'] = hostname;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -4768,6 +4831,9 @@
                 if (typeof hostname !== 'undefined') {
                     payload['hostname'] = hostname;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('put', uri, {
                     'content-type': 'application/json',
@@ -4828,6 +4894,9 @@
                 if (typeof status !== 'undefined') {
                     payload['status'] = status;
                 }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
+                }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('patch', uri, {
                     'content-type': 'application/json',
@@ -4852,6 +4921,9 @@
                 let payload = {};
                 if (typeof range !== 'undefined') {
                     payload['range'] = range;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('get', uri, {
@@ -4930,6 +5002,9 @@
                 }
                 if (typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('post', uri, {
@@ -5016,6 +5091,9 @@
                 }
                 if (typeof httpPass !== 'undefined') {
                     payload['httpPass'] = httpPass;
+                }
+                if (typeof projectId !== 'undefined') {
+                    payload['projectId'] = projectId;
                 }
                 const uri = new URL(this.client.config.endpoint + path);
                 return yield this.client.call('put', uri, {
@@ -5280,8 +5358,7 @@
          * List Files
          *
          * Get a list of all the user files. You can use the query params to filter
-         * your results. On admin mode, this endpoint will return a list of all of the
-         * project's files. [Learn more about different API modes](/docs/admin).
+         * your results.
          *
          * @param {string} bucketId
          * @param {string[]} queries
@@ -5682,9 +5759,6 @@
          *
          * Get a list of all the teams in which the current user is a member. You can
          * use the parameters to filter your results.
-         *
-         * In admin mode, this endpoint returns a list of all the teams in the current
-         * project. [Learn more about different API modes](/docs/admin).
          *
          * @param {string[]} queries
          * @param {string} search
@@ -7002,11 +7076,17 @@
         static any() {
             return 'any';
         }
-        static user(id) {
-            return `user:${id}`;
+        static user(id, status = '') {
+            if (status === '') {
+                return `user:${id}`;
+            }
+            return `user:${id}/${status}`;
         }
-        static users() {
-            return 'users';
+        static users(status = '') {
+            if (status === '') {
+                return 'users';
+            }
+            return `users/${status}`;
         }
         static guests() {
             return 'guests';
@@ -7017,8 +7097,8 @@
             }
             return `team:${id}/${role}`;
         }
-        static status(status) {
-            return `status:${status}`;
+        static member(id) {
+            return `member:${id}`;
         }
     }
 

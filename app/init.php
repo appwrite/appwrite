@@ -899,6 +899,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         )
     );// Get fallback session from old clients (no SameSite support)
 
+    // var_dump("SESSION : " , $session);
+    // var_dump("COOKIR_NAME : " , Auth::$cookieName);
+    // var_dump("COOKIE : " ,  $request->getCookie(Auth::$cookieName,'blaaaahhh_default'));
+    // var_dump("COOKIE : " ,  $request->getCookie(Auth::$cookieName . '_legacy','blaaaahhh_legacy_default'));
+
     // Get fallback session from clients who block 3rd-party cookies
     if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
@@ -967,18 +972,12 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
-App::setResource('project', function ($dbForConsole, $request, $console, $hook) {
+App::setResource('project', function ($dbForConsole, $request, $console) { // Project for Auth and obtaining cookies
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Document $console */
-    /** @var Utopia\Route $route */
 
-    var_dump("Route", $request->getURI());
-    var_dump("Hook Params", $hook->getParamsValues());
-    var_dump("Get Param Project", $request->getParam('project'));
-    var_dump("Get Param ProjectId", $request->getParam('projectId'));
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    var_dump("Final ProjectId", $projectId);
 
     if ($projectId === 'console') {
         return $console;
@@ -987,7 +986,35 @@ App::setResource('project', function ($dbForConsole, $request, $console, $hook) 
     $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForConsole', 'request', 'console', 'hook']);
+}, ['dbForConsole', 'request', 'console']);
+
+App::setResource('projectForDB', function ($dbForConsole, $request, $console) { // project for setting the database 
+    /** @var Utopia\Database\Database $dbForConsole */
+    /** @var Appwrite\Utopia\Request $request */
+    /** @var Utopia\Database\Document $console */
+    
+    var_dump("Route : ", $request->getURI());
+    $projectId = $request->getParam('project',  null);
+    var_dump("Project ID from project param : ", $request->getParam('project',  null));
+    var_dump("Project ID from projectId param : ", $request->getParam('projectId',  null));
+    var_dump("Project ID from Header : ", $request->getHeader('x-appwrite-project', 'console'));
+
+    if ($projectId == null || $projectId === 'console') {
+        $projectId = $request->getParam('projectId', $request->getHeader('x-appwrite-project', 'console'));
+    }
+
+    var_dump("Final Project Id: ", $projectId);
+
+    if ($projectId === null || $projectId === 'console') {
+        return $console;
+    }
+
+    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+
+    var_dump("Project : ", $project);
+
+    return $project;
+}, ['dbForConsole', 'request', 'console']);
 
 App::setResource('console', function () {
     return new Document([
@@ -1022,22 +1049,22 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
-    if ($project->isEmpty() || $project->getId() === 'console') {
+App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $projectForDB) {
+    if ($projectForDB->isEmpty() || $projectForDB->getId() === 'console') {
         return $dbForConsole;
     }
 
     $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
+        ->get($projectForDB->getAttribute('database'))
         ->pop()
         ->getResource()
     ;
 
     $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_' . $project->getInternalId());
+    $database->setNamespace('_' . $projectForDB->getInternalId());
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
+}, ['pools', 'dbForConsole', 'cache', 'projectForDB']);
 
 App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools

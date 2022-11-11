@@ -162,7 +162,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '7.1.0',
+                'version' => '7.2.0',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -172,7 +172,7 @@ return [
                 'family' => APP_PLATFORM_CONSOLE,
                 'prism' => 'console',
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
-                'gitUrl' => null,
+                'gitUrl' => '',
                 'gitBranch' => null,
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
