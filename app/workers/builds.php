@@ -188,11 +188,14 @@ class BuildsV1 extends Worker
             }
 
             /** Update function schedule */
+            // TODO: @Meldiron refactor scheduler here
+            /*
             $schedule = $function->getAttribute('schedule', '');
             $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
             $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
             $function->setAttribute('scheduleNext', $next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+            */
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));

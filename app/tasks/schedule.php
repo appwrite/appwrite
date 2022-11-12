@@ -95,6 +95,7 @@ $cli
                 'resourceId' => $document->getAttribute('resourceId'),
                 'schedule' => $document->getAttribute('schedule'),
                 'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
+                'projectId' => $document->getAttribute('projectId')
             ];
         }
 

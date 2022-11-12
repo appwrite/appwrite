@@ -27,7 +27,7 @@ Authorization::setDefaultStatus(false);
 global $client;
 global $workerNumber;
 
-$executor = new Executor(App::getEnv('_APP_FUNCTIONS_PROXY_HOST'));
+$executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
 $execute = function (
     Document $project,

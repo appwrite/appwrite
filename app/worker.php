@@ -9,13 +9,13 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 
 
 global $register;
-
-
 
 Server::setResource('register', fn() => $register);
 
@@ -32,6 +32,27 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
 
     return $database;
 }, ['cache', 'register']);
+
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Database $dbForConsole) {
+    $args = $message->getPayload()['value'] ?? [];
+    $project = new Document($args['project'] ?? []);
+
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForConsole;
+    }
+
+    $pools = $register->get('pools');
+    $dbAdapter = $pools
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource()
+    ;
+
+    $database = new Database($dbAdapter, $cache);
+    $database->setNamespace('_' . $project->getInternalId());
+
+    return $database;
+}, ['cache', 'register', 'message', 'dbForConsole']);
 
 Server::setResource('cache', function (Registry $register) {
     $pools = $register->get('pools');
