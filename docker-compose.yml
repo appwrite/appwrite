@@ -464,6 +464,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - openruntimes-executor
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
