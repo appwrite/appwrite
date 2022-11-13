@@ -37,7 +37,8 @@ function getConsoleDB(): Database
 {
     global $register;
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+    /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools', args: [getWorkerPoolSize()]);
 
     $dbAdapter = $pools
         ->get('console')
@@ -56,7 +57,8 @@ function getProjectDB(Document $project): Database
 {
     global $register;
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+    /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools', args: [getWorkerPoolSize()]);
 
     if ($project->isEmpty() || $project->getId() === 'console') {
         return getConsoleDB();
@@ -95,9 +97,6 @@ function getCache(): Cache
 }
 
 $realtime = new Realtime();
-
-$dbPool = $register->get('dbPool', args: [getWorkerPoolSize()]);
-$redisPool = $register->get('redisPool');
 
 /**
  * Table for statistics across all workers.
@@ -166,7 +165,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($dbPool, $redisPool, $containerId, &$statsDocument) {
+    go(function () use ($register, $containerId, &$statsDocument) {
         $attempts = 0;
         $database = getConsoleDB();
 
@@ -195,7 +194,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     /**
      * Save current connections to the Database every 5 seconds.
      */
-    Timer::tick(5000, function () use ($dbPool, $redisPool, $stats, &$statsDocument, $logError) {
+    Timer::tick(5000, function () use ($register, $stats, &$statsDocument, $logError) {
         $payload = [];
         foreach ($stats as $projectId => $value) {
             $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
@@ -220,13 +219,13 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
     });
 });
 
-$server->onWorkerStart(function (int $workerId) use ($server, $dbPool, $redisPool, $stats, $realtime, $logError) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $logError) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $attempts = 0;
     $start = time();
 
-    Timer::tick(5000, function () use ($server, $dbPool, $redisPool, $realtime, $stats, $logError) {
+    Timer::tick(5000, function () use ($server, $register, $realtime, $stats, $logError) {
         /**
          * Sending current connections to project channels on the console project every 5 seconds.
          */
@@ -321,7 +320,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $dbPool, $redisPoo
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $dbPool, $redisPool, $realtime) {
+            $redis->subscribe(['realtime'], function (Redis $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime) {
                 $event = json_decode($payload, true);
 
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
@@ -368,19 +367,18 @@ $server->onWorkerStart(function (int $workerId) use ($server, $dbPool, $redisPoo
             call_user_func($logError, $th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
-            $register->get('pools')->reclaim();
             $attempts++;
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
-            $redisPool->put($redis);
+            $register->get('pools')->reclaim();
         }
     }
 
     Console::error('Failed to restart pub/sub...');
 });
 
-$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $dbPool, $redisPool, $stats, &$realtime, $logError) {
+$server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
     $app = new App('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
@@ -487,7 +485,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $dbPool, $redisPool, $realtime, $containerId) {
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
@@ -562,7 +560,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $db
 
             default:
                 throw new Exception('Message type is not valid.', 1003);
-                break;
         }
     } catch (\Throwable $th) {
         $response = [
