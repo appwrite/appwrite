@@ -88,15 +88,15 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -184,13 +184,15 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
@@ -209,15 +211,15 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -263,15 +265,15 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -312,15 +314,15 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -340,15 +342,15 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -372,15 +374,15 @@ services:
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -399,15 +401,15 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -535,15 +537,15 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -571,14 +573,14 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_USAGE_TIMESERIES_INTERVAL
-      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -603,14 +605,14 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_USAGE_TIMESERIES_INTERVAL
-      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 

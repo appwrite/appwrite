@@ -29,6 +29,8 @@ use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Utopia\Cache\Cache;
+use Utopia\Pools\Group;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -55,7 +57,7 @@ App::post('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
@@ -69,8 +71,10 @@ App::post('/v1/projects')
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->inject('cache')
+    ->inject('pools')
+    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -85,6 +89,8 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+        $databases = Config::getParam('pools-database', []);
+        $database = $databases[array_rand($databases)];
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -120,10 +126,10 @@ App::post('/v1/projects')
             'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
+            'database' => $database,
         ]));
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
 
+        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
 
@@ -132,6 +138,9 @@ App::post('/v1/projects')
 
         $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {

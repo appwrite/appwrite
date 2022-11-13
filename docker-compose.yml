@@ -109,15 +109,20 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
+      - _APP_CONNECTIONS_PUBSUB
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -210,13 +215,19 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_PUBSUB
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
@@ -237,15 +248,19 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -271,6 +286,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -295,15 +311,19 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -340,22 +360,25 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -377,15 +400,19 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -410,15 +437,19 @@ services:
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -439,15 +470,19 @@ services:
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -539,6 +574,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_QUEUE
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -565,6 +601,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_QUEUE
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_LOGGING_PROVIDER
@@ -580,7 +617,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
     environment:
@@ -588,20 +624,36 @@ services:
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+
+  appwrite-volume-sync:
+    entrypoint: volume-sync
+    <<: *x-logging
+    container_name: appwrite-volume-sync
+    image: appwrite-dev
+    command:
+      - --source=/data/src/ --destination=/data/dest/ --interval=10
+    networks:
+      - appwrite
+    # volumes: # Mount the rsync source and destination directories  
+    #   - /nfs/config:/data/src 
+    #   - /storage/config:/data/dest
 
   appwrite-usage-timeseries:
     entrypoint:
@@ -627,14 +679,17 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_USAGE_TIMESERIES_INTERVAL
-      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
   
@@ -662,14 +717,17 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_USAGE_TIMESERIES_INTERVAL
-      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -691,10 +749,11 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_QUEUE
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
+    container_name: mariadb
     <<: *x-logging
     networks:
       - appwrite
@@ -713,7 +772,6 @@ services:
   # smtp:
   #   image: appwrite/smtp:1.2.0
   #   container_name: appwrite-smtp
-  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   environment:
@@ -800,7 +858,6 @@ services:
     image: adminer
     container_name: appwrite-adminer
     <<: *x-logging
-    restart: always
     ports:
       - 9506:8080
     networks:
@@ -808,7 +865,6 @@ services:
 
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
-  #   restart: unless-stopped
   #   networks:
   #   - appwrite
   #   environment:
@@ -818,7 +874,6 @@ services:
 
   # resque:
   #   image: appwrite/resque-web:1.1.0
-  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   ports:
@@ -832,7 +887,6 @@ services:
   # chronograf:
   #   image: chronograf:1.6
   #   container_name: appwrite-chronograf
-  #   restart: unless-stopped
   #   networks:
   #   - appwrite
   #   volumes:

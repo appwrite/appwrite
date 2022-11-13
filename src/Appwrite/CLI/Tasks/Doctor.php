@@ -8,6 +8,7 @@ use Appwrite\ClamAV\Network;
 use Utopia\Logger\Logger;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
@@ -36,7 +37,7 @@ class Doctor extends Action
 
         Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . App::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
 
-        Console::log('Checking for production best practices...');
+        Console::log('[Settings]');
 
         $domain = new Domain(App::getEnv('_APP_DOMAIN'));
 
@@ -92,7 +93,6 @@ class Doctor extends Action
             Console::log('🟢 HTTPS force option is enabled');
         }
 
-
         $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
@@ -105,30 +105,55 @@ class Doctor extends Action
         \sleep(0.2);
 
         try {
-            Console::log("\n" . 'Checking connectivity...');
+            Console::log("\n" . '[Connectivity]');
         } catch (\Throwable $th) {
             //throw $th;
         }
 
-        try {
-            $register->get('db'); /* @var $db PDO */
-            Console::success('Database............connected 👍');
-        } catch (\Throwable $th) {
-            Console::error('Database.........disconnected 👎');
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
+        $configs = [
+            'Console.DB' => Config::getParam('pools-console'),
+            'Projects.DB' => Config::getParam('pools-database'),
+        ];
+
+        foreach ($configs as $key => $config) {
+            foreach ($config as $database) {
+                try {
+                    $adapter = $pools->get($database)->pop()->getResource();
+
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
+                    } else {
+                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
+                    }
+                } catch (\Throwable $th) {
+                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
+                }
+            }
         }
 
-        try {
-            $register->get('cache');
-            Console::success('Queue...............connected 👍');
-        } catch (\Throwable $th) {
-            Console::error('Queue............disconnected 👎');
-        }
+        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $configs = [
+            'Cache' => Config::getParam('pools-cache'),
+            'Queue' => Config::getParam('pools-queue'),
+            'PubSub' => Config::getParam('pools-pubsub'),
+        ];
 
-        try {
-            $register->get('cache');
-            Console::success('Cache...............connected 👍');
-        } catch (\Throwable $th) {
-            Console::error('Cache............disconnected 👎');
+        foreach ($configs as $key => $config) {
+            foreach ($config as $pool) {
+                try {
+                    $adapter = $pools->get($pool)->pop()->getResource();
+
+                    if ($adapter->ping()) {
+                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
+                    } else {
+                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                    }
+                } catch (\Throwable $th) {
+                    Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
+                }
+            }
         }
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
@@ -139,12 +164,12 @@ class Doctor extends Action
                 );
 
                 if ((@$antivirus->ping())) {
-                    Console::success('Antivirus...........connected 👍');
+                    Console::success('🟢 ' . str_pad("Antivirus", 50, '.') . 'connected');
                 } else {
-                    Console::error('Antivirus........disconnected 👎');
+                    Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
                 }
             } catch (\Throwable $th) {
-                Console::error('Antivirus........disconnected 👎');
+                Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
             }
         }
 
@@ -157,35 +182,35 @@ class Doctor extends Action
             $mail->AltBody = 'Hello World';
 
             $mail->send();
-            Console::success('SMTP................connected 👍');
+            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
         } catch (\Throwable $th) {
-            Console::error('SMTP.............disconnected 👎');
+            Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
 
         $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
         $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
         if ($fp = @\fsockopen('udp://' . $host, $port, $errCode, $errStr, 2)) {
-            Console::success('StatsD..............connected 👍');
+            Console::success('🟢 ' . str_pad("StatsD", 50, '.') . 'connected');
             \fclose($fp);
         } else {
-            Console::error('StatsD...........disconnected 👎');
+            Console::error('🔴 ' . str_pad("StatsD", 47, '.') . 'disconnected');
         }
 
         $host = App::getEnv('_APP_INFLUXDB_HOST', '');
         $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
         if ($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)) {
-            Console::success('InfluxDB............connected 👍');
+            Console::success('🟢 ' . str_pad("InfluxDB", 50, '.') . 'connected');
             \fclose($fp);
         } else {
-            Console::error('InfluxDB.........disconnected 👎');
+            Console::error('🔴 ' . str_pad("InfluxDB", 47, '.') . 'disconnected');
         }
 
         \sleep(0.2);
 
         Console::log('');
-        Console::log('Checking volumes...');
+        Console::log('[Volumes]');
 
         foreach (
             [
@@ -213,7 +238,7 @@ class Doctor extends Action
         \sleep(0.2);
 
         Console::log('');
-        Console::log('Checking disk space usage...');
+        Console::log('[Disk Space]');
 
         foreach (
             [

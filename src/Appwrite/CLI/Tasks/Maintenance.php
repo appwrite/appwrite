@@ -6,13 +6,10 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 

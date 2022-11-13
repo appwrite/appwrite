@@ -25,7 +25,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Appwrite\Utopia\Database\Validator\Queries\Variables;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -33,7 +32,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -61,7 +59,7 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')

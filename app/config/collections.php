@@ -535,6 +535,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('database'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('logo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -992,7 +1003,7 @@ $collections = [
                 '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 512, // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
+                'size' => 512, // Output of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
                 'signed' => true,
                 'required' => true,
                 'default' => null,

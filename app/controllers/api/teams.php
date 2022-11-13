@@ -20,7 +20,6 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -36,9 +35,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\Text;
-use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -54,7 +51,7 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
     ->inject('response')

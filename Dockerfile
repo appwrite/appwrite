@@ -35,6 +35,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
+    PHP_MEMCACHED_VERSION=v3.2.0 \
     PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 "
 
 RUN \
@@ -52,6 +53,7 @@ RUN \
   imagemagick \
   imagemagick-dev \
   libmaxminddb-dev \
+  libmemcached-dev \
   zstd-dev
 
 RUN docker-php-ext-install sockets
@@ -125,6 +127,15 @@ RUN \
   ./configure && \
   make && make install
 
+# Memcached Extension
+FROM compile as memcached
+RUN \
+  git clone --depth 1 --branch $PHP_MEMCACHED_VERSION https://github.com/php-memcached-dev/php-memcached.git && \
+  cd php-memcached && \
+  phpize && \
+  ./configure && \
+  make && make install
+
 # Zstd Compression
 FROM compile as zstd
 RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
@@ -133,7 +144,6 @@ RUN git clone --recursive -n https://github.com/kjdev/php-ext-zstd.git \
   && phpize \
   && ./configure --with-libzstd \
   && make && make install
-
 
 # Rust Extensions Compile Image
 FROM php:8.0.18-cli as rust_compile
@@ -271,6 +281,7 @@ RUN \
   && apk add --no-cache \
   libstdc++ \
   certbot \
+  rsync \
   brotli-dev \
   yaml-dev \
   imagemagick \
@@ -304,6 +315,7 @@ COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imag
 COPY --from=yaml /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yaml.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=maxmind /usr/local/lib/php/extensions/no-debug-non-zts-20200930/maxminddb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=mongodb /usr/local/lib/php/extensions/no-debug-non-zts-20200930/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
+COPY --from=memcached /usr/local/lib/php/extensions/no-debug-non-zts-20200930/memcached.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=scrypt  /usr/local/lib/php/extensions/php-scrypt/target/libphp_scrypt.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 
@@ -332,6 +344,7 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
+    chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
