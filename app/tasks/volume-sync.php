@@ -18,6 +18,11 @@ $cli
         Console::title('RSync V1');
         Console::success(APP_NAME . ' rsync process v1 has started');
 
+        if (!file_exists($source)) {
+            Console::error('Source directory does not exist. Exiting ... ');
+            Console::exit(0);
+        }
+
         Console::loop(function () use ($interval, $source, $destination) {
             $time = DateTime::now();
 
