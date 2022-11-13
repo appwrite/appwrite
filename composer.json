@@ -44,7 +44,7 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.11.*",
         "utopia-php/platform": "0.3.*",
-        "utopia-php/framework": "0.22.*",
+        "utopia-php/framework": "0.25.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/abuse": "0.16.*",
         "utopia-php/analytics": "0.2.*",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87af69017761fb788e8be70ab5c37bba",
+    "content-hash": "bd99fe9f008b3bf3a68b1e3d0b515cc9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1945,16 +1945,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.22.1",
+            "version": "0.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df"
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
-                "reference": "9f35d36ed4b8fa1c92962c77ef02b49c2f5919df",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c524f681254255c8204fbf7919c53bf3b4982636",
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636",
                 "shasum": ""
             },
             "require": {
@@ -1974,12 +1974,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple, light and advanced PHP framework",
             "keywords": [
                 "framework",
@@ -1988,9 +1982,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.22.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.25.0"
             },
-            "time": "2022-10-07T14:51:40+00:00"
+            "time": "2022-11-02T09:49:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2212,16 +2206,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "9cebec37b96e9f38c1cc0a68a793304606423897"
+                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/9cebec37b96e9f38c1cc0a68a793304606423897",
-                "reference": "9cebec37b96e9f38c1cc0a68a793304606423897",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/fe9f64420957dc8fb6201d22b499572f021411e4",
+                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4",
                 "shasum": ""
             },
             "require": {
@@ -2229,7 +2223,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.14.*",
-                "utopia-php/framework": "0.22.*"
+                "utopia-php/framework": "0.25.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2255,9 +2249,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.3.0"
+                "source": "https://github.com/utopia-php/platform/tree/0.3.1"
             },
-            "time": "2022-10-28T07:26:09+00:00"
+            "time": "2022-11-10T07:04:24+00:00"
         },
         {
             "name": "utopia-php/pools",
