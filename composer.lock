@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6c9a067a247f45ee7c5c224577201d75",
+    "content-hash": "164c92299614df333e6ab5a45672bc97",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1733,16 +1733,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.13.0",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "69e68f8ed525fe162fae950a0507ed28a0f179bc"
+                "reference": "c30ef985a4e739758a0d95eb0706b357b6d8c086"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/69e68f8ed525fe162fae950a0507ed28a0f179bc",
-                "reference": "69e68f8ed525fe162fae950a0507ed28a0f179bc",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c30ef985a4e739758a0d95eb0706b357b6d8c086",
+                "reference": "c30ef985a4e739758a0d95eb0706b357b6d8c086",
                 "shasum": ""
             },
             "require": {
@@ -1751,7 +1751,7 @@
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "squizlabs/php_codesniffer": "^3.6"
             },
             "type": "library",
             "autoload": {
@@ -1780,9 +1780,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.13.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.14.0"
             },
-            "time": "2022-04-26T08:41:22+00:00"
+            "time": "2022-10-09T10:19:07+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2157,21 +2157,21 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "0.6.0",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "94263976413871efb6b16157a7101a81df3b6d78"
+                "reference": "1d4f66684b8c4927f31b695817eae6d84aafd172"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/94263976413871efb6b16157a7101a81df3b6d78",
-                "reference": "94263976413871efb6b16157a7101a81df3b6d78",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/1d4f66684b8c4927f31b695817eae6d84aafd172",
+                "reference": "1d4f66684b8c4927f31b695817eae6d84aafd172",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/cli": "0.13.*"
+                "utopia-php/cli": "0.14.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2187,12 +2187,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "Lite & fast micro PHP abstraction library for container orchestration",
             "keywords": [
                 "docker",
@@ -2206,34 +2200,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.6.0"
+                "source": "https://github.com/utopia-php/orchestration/tree/0.9.0"
             },
-            "time": "2022-07-13T16:47:18+00:00"
+            "time": "2022-11-09T17:38:00+00:00"
         },
         {
             "name": "utopia-php/pools",
-            "version": "dev-feat-optimize-filling",
+            "version": "dev-feat-remove-dependencies",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "be603898142f55df9db5058f81a610ead7769d7d"
+                "reference": "bdc023b98023fc6a5978ee99cc750256acaeb194"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/be603898142f55df9db5058f81a610ead7769d7d",
-                "reference": "be603898142f55df9db5058f81a610ead7769d7d",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/bdc023b98023fc6a5978ee99cc750256acaeb194",
+                "reference": "bdc023b98023fc6a5978ee99cc750256acaeb194",
                 "shasum": ""
             },
             "require": {
-                "ext-mongodb": "*",
-                "ext-pdo": "*",
-                "ext-redis": "*",
-                "php": ">=8.0",
-                "utopia-php/cli": "^0.13.0"
+                "php": ">=8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.4",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -2260,9 +2251,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/feat-optimize-filling"
+                "source": "https://github.com/utopia-php/pools/tree/feat-remove-dependencies"
             },
-            "time": "2022-11-03T18:50:28+00:00"
+            "time": "2022-11-13T22:14:50+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -2954,16 +2945,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.15.1",
+            "version": "v4.15.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "0ef6c55a3f47f89d7a374e6f835197a0b5fcf900"
+                "reference": "f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/0ef6c55a3f47f89d7a374e6f835197a0b5fcf900",
-                "reference": "0ef6c55a3f47f89d7a374e6f835197a0b5fcf900",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc",
+                "reference": "f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc",
                 "shasum": ""
             },
             "require": {
@@ -3004,9 +2995,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.15.1"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.15.2"
             },
-            "time": "2022-09-04T07:30:47+00:00"
+            "time": "2022-11-12T15:38:23+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -4836,16 +4827,16 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.26.0",
+            "version": "v1.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
-                "reference": "6fd1b9a79f6e3cf65f9e679b23af304cd9e010d4"
+                "reference": "5bbc823adecdae860bb64756d639ecfec17b050a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/6fd1b9a79f6e3cf65f9e679b23af304cd9e010d4",
-                "reference": "6fd1b9a79f6e3cf65f9e679b23af304cd9e010d4",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/5bbc823adecdae860bb64756d639ecfec17b050a",
+                "reference": "5bbc823adecdae860bb64756d639ecfec17b050a",
                 "shasum": ""
             },
             "require": {
@@ -4860,7 +4851,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.26-dev"
+                    "dev-main": "1.27-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -4898,7 +4889,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.26.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.27.0"
             },
             "funding": [
                 {
@@ -4914,20 +4905,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-05-24T11:49:31+00:00"
+            "time": "2022-11-03T14:55:06+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.26.0",
+            "version": "v1.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "9344f9cb97f3b19424af1a21a3b0e75b0a7d8d7e"
+                "reference": "8ad114f6b39e2c98a8b0e3bd907732c207c2b534"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/9344f9cb97f3b19424af1a21a3b0e75b0a7d8d7e",
-                "reference": "9344f9cb97f3b19424af1a21a3b0e75b0a7d8d7e",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/8ad114f6b39e2c98a8b0e3bd907732c207c2b534",
+                "reference": "8ad114f6b39e2c98a8b0e3bd907732c207c2b534",
                 "shasum": ""
             },
             "require": {
@@ -4942,7 +4933,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.26-dev"
+                    "dev-main": "1.27-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -4981,7 +4972,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.26.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.27.0"
             },
             "funding": [
                 {
@@ -4997,7 +4988,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-05-24T11:49:31+00:00"
+            "time": "2022-11-03T14:55:06+00:00"
         },
         {
             "name": "textalk/websocket",
@@ -5177,6 +5168,12 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/pools",
+            "version": "dev-feat-remove-dependencies",
+            "alias": "0.4.0",
+            "alias_normalized": "0.4.0.0"
+        },
+        {
             "package": "utopia-php/registry",
             "version": "dev-feat-allow-params",
             "alias": "0.5.0",
@@ -5185,7 +5182,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/pools": 20
+        "utopia-php/pools": 20,
         "utopia-php/registry": 20
     },
     "prefer-stable": false,
