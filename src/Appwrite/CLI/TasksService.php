@@ -13,6 +13,7 @@ use Appwrite\CLI\Tasks\SSL;
 use Appwrite\CLI\Tasks\Usage;
 use Appwrite\CLI\Tasks\Vars;
 use Appwrite\CLI\Tasks\Version;
+use VolumeSync;
 
 class TasksService extends Service
 {
@@ -29,6 +30,7 @@ class TasksService extends Service
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
+            ->addAction(VolumeSync::getName(), new VolumeSync())
             ->addAction(Specs::getName(), new Specs());
     }
 }
