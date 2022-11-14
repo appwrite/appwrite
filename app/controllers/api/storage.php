@@ -542,6 +542,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $sizeActual = $deviceFiles->getFileSize($path);
             $fileHash = $deviceFiles->getFileHash($path);
 
+            $openSSLVersion = null;
+            $openSSLCipher = null;
+            $openSSLTag = null;
+            $openSSLIV = null;
+
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
@@ -565,10 +570,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         'comment' => '',
                         'chunksTotal' => $chunks,
                         'chunksUploaded' => $chunksUploaded,
-                        'openSSLVersion' => $openSSLVersion ?? null,
-                        'openSSLCipher' => $openSSLCipher ?? null,
-                        'openSSLTag' => $openSSLTag ?? null,
-                        'openSSLIV' => $openSSLIV ?? null,
+                        'openSSLVersion' => $openSSLVersion,
+                        'openSSLCipher' => $openSSLCipher,
+                        'openSSLTag' => $openSSLTag,
+                        'openSSLIV' => $openSSLIV,
                         'search' => implode(' ', [$fileId, $fileName]),
                         'metadata' => $metadata,
                     ]);
@@ -581,10 +586,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('mimeType', $mimeType)
                         ->setAttribute('sizeActual', $sizeActual)
                         ->setAttribute('algorithm', $algorithm)
-                        ->setAttribute('openSSLVersion', $openSSLVersion ?? null)
-                        ->setAttribute('openSSLCipher', $openSSLCipher ?? null)
-                        ->setAttribute('openSSLTag', $openSSLTag ?? null)
-                        ->setAttribute('openSSLIV', $openSSLIV ?? null)
+                        ->setAttribute('openSSLVersion', $openSSLVersion)
+                        ->setAttribute('openSSLCipher', $openSSLCipher)
+                        ->setAttribute('openSSLTag', $openSSLTag)
+                        ->setAttribute('openSSLIV', $openSSLIV)
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
