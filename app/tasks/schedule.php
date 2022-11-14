@@ -12,7 +12,7 @@ use Utopia\Database\Query;
 use Swoole\Timer;
 
 const FUNCTION_UPDATE_TIMER = 10; //seconds
-const FUNCTION_ENQUEUE_TIMER = 10; //seconds
+const FUNCTION_ENQUEUE_TIMER = 60; //seconds
 
 /**
  * 1. Load all documents from 'schedules' collection to create local copy
@@ -76,11 +76,9 @@ $cli
         $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
     }
 
-    $loadEnd = \microtime(true);
-    Console::success("{$total} schedules where loaded in " . ($loadEnd - $loadStart) . " seconds");
+    Console::success("{$total} functions where loaded in " . (microtime(true) - $loadStart) . " seconds");
 
-    $time = DateTime::now();
-    Console::success("Starting timers at {$time}");
+    Console::success("Starting timers at " . DateTime::now());
 
     Co\run(
         function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule) {
