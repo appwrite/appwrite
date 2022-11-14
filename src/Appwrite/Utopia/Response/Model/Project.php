@@ -246,6 +246,7 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? 0);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

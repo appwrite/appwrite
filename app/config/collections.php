@@ -634,17 +634,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('authDuration'),
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 32,
-                'signed' => true,
-                'required' => false,
-                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('services'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
