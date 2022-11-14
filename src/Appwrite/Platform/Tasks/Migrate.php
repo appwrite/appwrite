@@ -25,7 +25,7 @@ class Migrate extends Action
             ->desc('Migrate Appwrite to new version')
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
             ->inject('register')
-            ->callback(fn ($version, $register) => $this->action($version, $register));
+            ->callback($this->action);
     }
 
     public function action(string $version, Registry $register)

@@ -36,7 +36,7 @@ class SDKs extends Action
     {
         $this
             ->desc('Generate Appwrite SDKs')
-            ->callback(fn () => $this->action());
+            ->callback($this->action);
     }
 
     public function action(): void

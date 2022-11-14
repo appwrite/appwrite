@@ -28,7 +28,7 @@ class Usage extends Action
             ->inject('dbForConsole')
             ->inject('influxdb')
             ->inject('logError')
-            ->callback(fn ($type, $dbForConsole, $influxDB, $logError) => $this->action($type, $dbForConsole, $influxDB, $logError));
+            ->callback($this->action);
     }
 
     protected function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
