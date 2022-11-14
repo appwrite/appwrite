@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform;
 
+use Appwrite\Platform\Services\Tasks;
 use Utopia\Platform\Platform;
 
 class Appwrite extends Platform

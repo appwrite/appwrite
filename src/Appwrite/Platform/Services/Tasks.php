@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform;
+namespace Appwrite\Platform\Services;
 
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
