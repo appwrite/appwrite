@@ -22,7 +22,7 @@ class VolumeSync extends Action
             ->param('source', null, new Text(255), 'Source path to sync from.', false)
             ->param('destination', null, new Text(255), 'Destination path to sync to.', false)
             ->param('interval', null, new Integer(true), 'Interval to run rsync', false)
-            ->callback($this->action);
+            ->callback(fn ($source, $destination, $interval) => $this->action($source, $destination, $interval));
     }
 
     public function action(string $source, string $destination, int $interval)
