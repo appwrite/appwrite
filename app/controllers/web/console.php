@@ -3,7 +3,7 @@
 use Appwrite\Utopia\Response;
 use Utopia\App;
 
-App::get('/console/*')
+App::get('/console')
     ->alias('/')
     ->alias('/invite')
     ->alias('/login')
