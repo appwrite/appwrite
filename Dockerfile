@@ -14,6 +14,11 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
+ARG CONSOLE_ANALYTICS
+ARG CONSOLE_LOGGER
+ENV VITE_GOOGLE_ANALYTICS=$CONSOLE_ANALYTICS
+ENV VITE_SENTRY_DSN=$CONSOLE_LOGGER
+
 COPY app/console /usr/local/src/console
 
 WORKDIR /usr/local/src/console
@@ -32,7 +37,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 "
+    PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9"
 
 RUN \
   apk add --no-cache --virtual .deps \
