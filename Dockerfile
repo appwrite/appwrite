@@ -308,8 +308,6 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public/fonts /usr/src/code/public/fonts
-COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes
