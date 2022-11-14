@@ -2,7 +2,6 @@
 
 namespace Appwrite\Usage\Calculators;
 
-use Utopia\App;
 use Appwrite\Usage\Calculator;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -11,54 +10,12 @@ use DateTime;
 
 class TimeSeries extends Calculator
 {
-    /**
-     * InfluxDB
-     *
-     * @var InfluxDatabase
-     */
     protected InfluxDatabase $influxDB;
-
-    /**
-     * Utopia Database
-     *
-     * @var Database
-     */
     protected Database $database;
-
-    /**
-     * Error Handler Callback
-     *
-     * @var callable
-     */
     protected $errorHandler;
-
-    /**
-     * Latest times for metric that was synced to the database
-     *
-     * @var array
-     */
     private array $latestTime = [];
 
-    /**
-     * Periods the metrics are collected for
-     * @var array
-     */
-    protected array $periods = [
-        [
-            'key' => '1h',
-            'startTime' => '-24 hours'
-        ],
-        [
-            'key' => '1d',
-            'startTime' => '-30 days'
-        ]
-    ];
-
-    /**
-     * All the metrics that we are collecting
-     *
-     * @var array
-     */
+    // all the mertics that we are collecting
     protected array $metrics = [
         'project.$all.network.requests' => [
             'table' => 'appwrite_usage_project_{scope}_network_requests',
@@ -232,6 +189,12 @@ class TimeSeries extends Calculator
         'executions.$all.compute.total' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
         ],
+        'builds.$all.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+        ],
+        'executions.$all.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+        ],
         'builds.$all.compute.total' => [
             'table' => 'appwrite_usage_builds_{scope}_compute',
         ],
@@ -267,7 +230,14 @@ class TimeSeries extends Calculator
             'table' => 'appwrite_usage_builds_{scope}_compute',
             'groupBy' => ['functionId'],
         ],
-
+        'executions.functionId.compute.time' => [
+            'table' => 'appwrite_usage_executions_{scope}_compute_time',
+            'groupBy' => ['functionId'],
+        ],
+        'builds.functionId.compute.time' => [
+            'table' => 'appwrite_usage_builds_{scope}_compute_time',
+            'groupBy' => ['functionId'],
+        ],
         'executions.functionId.compute.failure' => [
             'table' => 'appwrite_usage_executions_{scope}_compute',
             'groupBy' => ['functionId'],
@@ -297,94 +267,19 @@ class TimeSeries extends Calculator
             ],
         ],
 
-        // counters
-        'users.$all.count.total' => [
-            'table' => 'appwrite_usage_users_{scope}_count_total',
-        ],
-        'buckets.$all.count.total' => [
-            'table' => 'appwrite_usage_buckets_{scope}_count_total',
-        ],
-        'files.$all.count.total' => [
-            'table' => 'appwrite_usage_files_{scope}_count_total',
-        ],
-        'files.bucketId.count.total' => [
-            'table' => 'appwrite_usage_files_{scope}_count_total',
-            'groupBy' => ['bucketId']
-        ],
-        'databases.$all.count.total' => [
-            'table' => 'appwrite_usage_databases_{scope}_count_total',
-        ],
-        'collections.$all.count.total' => [
-            'table' => 'appwrite_usage_collections_{scope}_count_total',
-        ],
-        'documents.$all.count.total' => [
-            'table' => 'appwrite_usage_documents_{scope}_count_total',
-        ],
-        'collections.databaseId.count.total' => [
-            'table' => 'appwrite_usage_collections_{scope}_count_total',
-            'groupBy' => ['databaseId']
-        ],
-        'documents.databaseId.count.total' => [
-            'table' => 'appwrite_usage_documents_{scope}_count_total',
-            'groupBy' => ['databaseId']
-        ],
-        'documents.databaseId/collectionId.count.total' => [
-            'table' => 'appwrite_usage_documents_{scope}_count_total',
-            'groupBy' => ['databaseId', 'collectionId']
-        ],
-        'deployments.$all.storage.size' => [
-            'table' => 'appwrite_usage_deployments_{scope}_storage_size',
-        ],
-        'project.$all.storage.size' => [
-            'table' => 'appwrite_usage_project_{scope}_storage_size',
-        ],
-        'files.$all.storage.size' => [
-            'table' => 'appwrite_usage_files_{scope}_storage_size',
-        ],
-        'files.$bucketId.storage.size' => [
-            'table' => 'appwrite_usage_files_{scope}_storage_size',
-            'groupBy' => ['bucketId']
-        ],
-
-        'builds.$all.compute.time' => [
-            'table' => 'appwrite_usage_executions_{scope}_compute_time',
-        ],
-        'executions.$all.compute.time' => [
-            'table' => 'appwrite_usage_executions_{scope}_compute_time',
-        ],
-
-        'executions.functionId.compute.time' => [
-            'table' => 'appwrite_usage_executions_{scope}_compute_time',
-            'groupBy' => ['functionId'],
-        ],
-        'builds.functionId.compute.time' => [
-            'table' => 'appwrite_usage_builds_{scope}_compute_time',
-            'groupBy' => ['functionId'],
-        ],
-
         'project.$all.compute.time' => [ // Built time + execution time
             'table' => 'appwrite_usage_project_{scope}_compute_time',
             'groupBy' => ['functionId'],
         ],
-
-        'deployments.$all.storage.size' => [
-            'table' => 'appwrite_usage_deployments_{scope}_storage_size'
-        ],
-        'project.$all.storage.size' => [
-            'table' => 'appwrite_usage_project_{scope}_storage_size'
-        ],
-        'files.$all.storage.size' => [
-            'table' => 'appwrite_usage_files_{scope}_storage_size'
-        ],
-        'files.bucketId.storage.size' => [
-            'table' => 'appwrite_usage_files_{scope}_storage_size',
-            'groupBy' => ['bucketId']
-        ]
     ];
 
-    public function __construct(string $region, Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
+    protected array $period = [
+        'key' => '30m',
+        'startTime' => '-24 hours',
+    ];
+
+    public function __construct(Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
     {
-        parent::__construct($region);
         $this->database = $database;
         $this->influxDB = $influxDB;
         $this->errorHandler = $errorHandler;
@@ -406,7 +301,9 @@ class TimeSeries extends Calculator
     private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
-        $this->database->setNamespace('_' . $projectId);
+        $this->database->setNamespace('_console');
+        $project = $this->database->getDocument('projects', $projectId);
+        $this->database->setNamespace('_' . $project->getInternalId());
 
         try {
             $document = $this->database->getDocument('stats', $id);
@@ -418,7 +315,6 @@ class TimeSeries extends Calculator
                     'metric' => $metric,
                     'value' => $value,
                     'type' => $type,
-                    'region' => $this->region,
                 ]));
             } else {
                 $this->database->updateDocument(
@@ -469,7 +365,7 @@ class TimeSeries extends Calculator
         $query .= "WHERE \"time\" > '{$start}' ";
         $query .= "AND \"time\" < '{$end}' ";
         $query .= "AND \"metric_type\"='counter' {$filters} ";
-        $query .= "GROUP BY time({$period['key']}), \"projectId\", \"projectInternalId\" {$groupBy} ";
+        $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
         $query .= "FILL(null)";
 
         try {
@@ -491,11 +387,9 @@ class TimeSeries extends Calculator
                     }
 
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
-                    if (empty($point['projectInternalId'] ?? null)) {
-                        return;
-                    }
+
                     $this->createOrUpdateMetric(
-                        $point['projectInternalId'],
+                        $projectId,
                         $point['time'],
                         $period['key'],
                         $metricUpdated,
@@ -522,16 +416,14 @@ class TimeSeries extends Calculator
      */
     public function collect(): void
     {
-        foreach ($this->periods as $period) {
-            foreach ($this->metrics as $metric => $options) { //for each metrics
-                try {
-                    $this->syncFromInfluxDB($metric, $options, $period);
-                } catch (\Exception $e) {
-                    if (is_callable($this->errorHandler)) {
-                        call_user_func($this->errorHandler, $e);
-                    } else {
-                        throw $e;
-                    }
+        foreach ($this->metrics as $metric => $options) { //for each metrics
+            try {
+                $this->syncFromInfluxDB($metric, $options, $this->period);
+            } catch (\Exception $e) {
+                if (is_callable($this->errorHandler)) {
+                    call_user_func($this->errorHandler, $e);
+                } else {
+                    throw $e;
                 }
             }
         }

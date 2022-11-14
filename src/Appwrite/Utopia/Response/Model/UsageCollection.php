@@ -17,38 +17,38 @@ class UsageCollection extends Model
                 'example' => '30d',
             ])
             ->addRule('documentsCount', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('documentsCreate', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents created.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('documentsRead', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents read.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('documentsUpdate', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents updated.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('documentsDelete', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for documents deleted.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
         ;

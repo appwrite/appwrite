@@ -171,7 +171,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
 
@@ -603,12 +602,13 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
 
-  appwrite-usage:
-    entrypoint: usage
+  appwrite-usage-timeseries:
+    entrypoint:
+      - usage
+      - --type=timeseries
     <<: *x-logging
-    container_name: appwrite-usage
+    container_name: appwrite-usage-timeseries
     image: appwrite-dev
     networks:
       - appwrite
@@ -629,7 +629,43 @@ services:
       - _APP_DB_PASS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
-      - _APP_USAGE_AGGREGATION_INTERVAL
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+  
+  appwrite-usage-database:
+    entrypoint:
+      - usage
+      - --type=database
+    <<: *x-logging
+    container_name: appwrite-usage-database
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
+    depends_on:
+      - influxdb
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_TIMESERIES_INTERVAL
+      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER

@@ -78,11 +78,12 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $usageStatsRetentionHourly)
+        function notifyDeleteUsageStats(int $interval30m, int $interval1d)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
-                ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
+                ->setDateTime1d(DateTime::addSeconds(new \DateTime(), -1 * $interval1d))
+                ->setDateTime30m(DateTime::addSeconds(new \DateTime(), -1 * $interval30m))
                 ->trigger();
         }
 
@@ -143,11 +144,11 @@ $cli
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
-        $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
-
+        $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
+        $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetentionHourly, $cacheRetention) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
             $database = getConsoleDB();
 
             $time = DateTime::now();
@@ -156,7 +157,7 @@ $cli
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
             notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteUsageStats($usageStatsRetentionHourly);
+            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
             renewCertificates($database);

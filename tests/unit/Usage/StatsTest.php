@@ -38,12 +38,10 @@ class StatsTest extends TestCase
     {
         $this->object
             ->setParam('projectId', 'appwrite_test')
-            ->setParam('projectInternalId', 1)
             ->setParam('networkRequestSize', 100)
         ;
 
         $this->assertEquals('appwrite_test', $this->object->getParam('projectId'));
-        $this->assertEquals(1, $this->object->getParam('projectInternalId'));
         $this->assertEquals(100, $this->object->getParam('networkRequestSize'));
 
         $this->object->submit();

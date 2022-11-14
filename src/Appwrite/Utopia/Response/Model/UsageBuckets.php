@@ -17,45 +17,45 @@ class UsageBuckets extends Model
                 'example' => '30d',
             ])
             ->addRule('filesCount', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('filesStorage', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for total storage of files in this bucket.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('filesCreate', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files created.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('filesRead', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files read.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('filesUpdate', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files updated.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('filesDelete', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for files deleted.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
         ;

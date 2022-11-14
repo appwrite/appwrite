@@ -17,59 +17,52 @@ class UsageProject extends Model
                 'example' => '30d',
             ])
             ->addRule('requests', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of requests.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('network', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for consumed bandwidth.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('executions', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('documents', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of documents.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
-            ->addRule('databases', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for number of databases.',
+            ->addRule('collections', [
+                'type' => Response::MODEL_METRIC_LIST,
+                'description' => 'Aggregated stats for number of collections.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('users', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for number of users.',
                 'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
             ->addRule('storage', [
-                'type' => Response::MODEL_METRIC,
+                'type' => Response::MODEL_METRIC_LIST,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('buckets', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for number of buckets.',
-                'default' => [],
-                'example' => [],
+                'example' => new \stdClass(),
                 'array' => true
             ])
         ;

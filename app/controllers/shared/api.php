@@ -16,7 +16,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -48,47 +47,6 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Stats $usage) {
-    $multiplier = 1;
-    if ($event === Database::EVENT_DOCUMENT_DELETE) {
-        $multiplier = -1;
-    }
-
-    $collection = $document->getCollection();
-    switch ($collection) {
-        case 'users':
-            $usage->setParam('users.{scope}.count.total', 1 * $multiplier);
-            break;
-        case 'databases':
-            $usage->setParam('databases.{scope}.count.total', 1 * $multiplier);
-            break;
-        case 'buckets':
-            $usage->setParam('buckets.{scope}.count.total', 1 * $multiplier);
-            break;
-        case 'deployments':
-            $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size') * $multiplier);
-            break;
-        default:
-            if (strpos($collection, 'bucket_') === 0) {
-                $usage
-                    ->setParam('bucketId', $document->getAttribute('bucketId'))
-                    ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal') * $multiplier)
-                    ->setParam('files.{scope}.count.total', 1 * $multiplier);
-            } elseif (strpos($collection, 'database_') === 0) {
-                $usage
-                    ->setParam('databaseId', $document->getAttribute('databaseId'));
-                if (strpos($collection, '_collection_') !== false) {
-                    $usage
-                        ->setParam('collectionId', $document->getAttribute('$collectionId'))
-                        ->setParam('documents.{scope}.count.total', 1 * $multiplier);
-                } else {
-                    $usage->setParam('collections.{scope}.count.total', 1 * $multiplier);
-                }
-            }
-            break;
-    }
-};
-
 App::init()
     ->groups(['api'])
     ->inject('utopia')
@@ -104,7 +62,7 @@ App::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) {
 
         $route = $utopia->match($request);
 
@@ -191,7 +149,6 @@ App::init()
             ->setUser($user);
 
         $usage
-            ->setParam('projectInternalId', $project->getInternalId())
             ->setParam('projectId', $project->getId())
             ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())
@@ -200,10 +157,6 @@ App::init()
 
         $deletes->setProject($project);
         $database->setProject($project);
-
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
-
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
 
         $useCache = $route->getLabel('cache', false);
 
@@ -451,6 +404,7 @@ App::shutdown()
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
+            && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');

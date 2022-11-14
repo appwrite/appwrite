@@ -4084,7 +4084,6 @@
          * @param {string} projectId
          * @param {string} name
          * @param {string} teamId
-         * @param {string} region
          * @param {string} description
          * @param {string} logo
          * @param {string} url
@@ -4097,7 +4096,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        create(projectId, name, teamId, region, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
+        create(projectId, name, teamId, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof projectId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "projectId"');
@@ -4107,9 +4106,6 @@
                 }
                 if (typeof teamId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "teamId"');
-                }
-                if (typeof region === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "region"');
                 }
                 let path = '/projects';
                 let payload = {};
@@ -4121,9 +4117,6 @@
                 }
                 if (typeof teamId !== 'undefined') {
                     payload['teamId'] = teamId;
-                }
-                if (typeof region !== 'undefined') {
-                    payload['region'] = region;
                 }
                 if (typeof description !== 'undefined') {
                     payload['description'] = description;
@@ -4185,7 +4178,6 @@
          *
          * @param {string} projectId
          * @param {string} name
-         * @param {string} region
          * @param {string} description
          * @param {string} logo
          * @param {string} url
@@ -4198,7 +4190,7 @@
          * @throws {AppwriteException}
          * @returns {Promise}
          */
-        update(projectId, name, region, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
+        update(projectId, name, description, logo, url, legalName, legalCountry, legalState, legalCity, legalAddress, legalTaxId) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (typeof projectId === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "projectId"');
@@ -4206,16 +4198,10 @@
                 if (typeof name === 'undefined') {
                     throw new AppwriteException('Missing required parameter: "name"');
                 }
-                if (typeof region === 'undefined') {
-                    throw new AppwriteException('Missing required parameter: "region"');
-                }
                 let path = '/projects/{projectId}'.replace('{projectId}', projectId);
                 let payload = {};
                 if (typeof name !== 'undefined') {
                     payload['name'] = name;
-                }
-                if (typeof region !== 'undefined') {
-                    payload['region'] = region;
                 }
                 if (typeof description !== 'undefined') {
                     payload['description'] = description;

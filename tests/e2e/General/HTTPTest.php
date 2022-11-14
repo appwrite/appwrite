@@ -163,8 +163,7 @@ class HTTPTest extends Scope
 
             $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);
-            // looks like recent change in the validator
-            $this->assertTrue(empty($response['body']['schemaValidationMessages']));
+            $this->assertEmpty($response['body']['schemaValidationMessages']);
         }
     }
 

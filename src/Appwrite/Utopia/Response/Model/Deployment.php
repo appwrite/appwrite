@@ -82,12 +82,6 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'enabled',
             ])
-            ->addRule('buildTime', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The current build time in seconds.',
-                'default' => 0,
-                'example' => 128,
-            ])
         ;
     }
 
