@@ -32,7 +32,6 @@ class Usage extends Task
             ->callback(fn ($type, $dbForConsole, $influxDB, $logError) => $this->action($type, $dbForConsole, $influxDB, $logError));
     }
 
-
     protected function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
     {
         $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
