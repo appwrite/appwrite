@@ -28,7 +28,7 @@ class Install extends Action
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
-            ->callback($this->action);
+            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive));
     }
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void

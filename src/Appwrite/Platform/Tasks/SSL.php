@@ -21,7 +21,7 @@ class SSL extends Action
         $this
             ->desc('Validate server certificates')
             ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
-            ->callback($this->action);
+            ->callback(fn ($domain) => $this->action($domain));
     }
 
     public function action(string $domain): void

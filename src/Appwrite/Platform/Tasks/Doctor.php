@@ -25,7 +25,7 @@ class Doctor extends Action
         $this
             ->desc('Validate server health')
             ->inject('register')
-            ->callback($this->action);
+            ->callback(fn (Registry $register) => $this->action($register));
     }
 
     public function action(Registry $register): void

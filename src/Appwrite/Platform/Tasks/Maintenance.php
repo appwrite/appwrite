@@ -25,7 +25,7 @@ class Maintenance extends Action
         $this
             ->desc('Schedules maintenance tasks and publishes them to resque')
             ->inject('dbForConsole')
-            ->callback($this->action);
+            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
     }
 
     public function action(Database $dbForConsole): void
