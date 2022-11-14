@@ -105,7 +105,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($this->args['dateTime1d'], $this->args['dateTime30m']);
+                $this->deleteUsageStats($this->args['dateTime1d'], $this->args['hourlyUsageRetentionDatetime']);
                 break;
 
             case DELETE_TYPE_CACHE_BY_RESOURCE:
@@ -215,21 +215,15 @@ class DeletesV1 extends Worker
 
     /**
      * @param string $datetime1d
-     * @param string $datetime30m
+     * @param string $hourlyUsageRetentionDatetime
      */
-    protected function deleteUsageStats(string $datetime1d, string $datetime30m)
+    protected function deleteUsageStats(string $hourlyUsageRetentionDatetime)
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($datetime1d, $datetime30m) {
+        $this->deleteForProjectIds(function (string $projectId) use ($hourlyUsageRetentionDatetime) {
             $dbForProject = $this->getProjectDB($projectId);
-            // Delete Usage stats
             $this->deleteByGroup('stats', [
-                Query::lessThan('time', $datetime1d),
-                Query::equal('period', ['1d']),
-            ], $dbForProject);
-
-            $this->deleteByGroup('stats', [
-                Query::lessThan('time', $datetime30m),
-                Query::equal('period', ['30m']),
+                Query::lessThan('time', $hourlyUsageRetentionDatetime),
+                Query::equal('period', ['1h']),
             ], $dbForProject);
         });
     }
