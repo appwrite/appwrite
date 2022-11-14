@@ -1,3 +1,7 @@
+# Version 1.2.0
+
+- Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
+
 # Version 1.1.0
 
 ## Bugs

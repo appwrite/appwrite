@@ -289,13 +289,12 @@ class FunctionsV1 extends Worker
             $executionResponse = $this->executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
-                path: $build->getAttribute('outputPath', ''),
-                vars: $vars,
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                data: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
-                runtime: $function->getAttribute('runtime', ''),
+                payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
+                variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
-                baseImage: $runtime['image']
+                image: $runtime['image'],
+                source: $build->getAttribute('outputPath', ''),
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
             /** Update execution status */
