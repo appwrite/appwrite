@@ -764,7 +764,7 @@ services:
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: mariadb
+    container_name: appwrite-mariadb
     <<: *x-logging
     networks:
       - appwrite
