@@ -9,52 +9,75 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Logger\Log;
+use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
 
 CLI::setResource('register', fn()=>$register);
 
-CLI::setResource('db', function (Registry $register) {
-    $attempts = 0;
-    $max = 10;
-    $sleep = 1;
-    do {
-        try {
-            $attempts++;
-            $db = $register->get('db');
-            break; // leave the do-while if successful
-        } catch (\Exception $e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep($sleep);
-        }
-    } while ($attempts < $max);
-    return $db;
+CLI::setResource('cache', function ($pools) {
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}, ['pools']);
+
+CLI::setResource('pools', function (Registry $register) {
+    return $register->get('pools');
 }, ['register']);
 
-CLI::setResource('cache', fn ($register) => $register->get('cache'), ['register']);
+CLI::setResource('dbForConsole', function ($pools, $cache) {
+    $dbAdapter = $pools
+        ->get('console')
+        ->pop()
+        ->getResource()
+    ;
 
-CLI::setResource('dbForConsole', function ($db, $cache) {
-    $cache = new Cache(new RedisCache($cache));
+    $database = new Database($dbAdapter, $cache);
 
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_console');
+    $database->setNamespace('console');
 
     return $database;
-}, ['db', 'cache']);
+}, ['pools', 'cache']);
+
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, $cache);
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+
+    return $getProjectDB;
+}, ['pools', 'dbForConsole', 'cache']);
 
 CLI::setResource('influxdb', function (Registry $register) {
-    /** @var InfluxDB\Client $client */
-    $client = $register->get('influxdb');
+    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
     $attempts = 0;
     $max = 10;
     $sleep = 1;
@@ -66,7 +89,7 @@ CLI::setResource('influxdb', function (Registry $register) {
             if (in_array('telegraf', $client->listDatabases())) {
                 break; // leave the do-while if successful
             }
-        } catch (\Throwable$th) {
+        } catch (\Throwable $th) {
             Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('InfluxDB database not ready yet');
