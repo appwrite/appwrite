@@ -497,7 +497,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     });
 
 
-App::patch('/v1/projects/:projectId/auth/authDuration')
+App::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update Project Authentication Duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
