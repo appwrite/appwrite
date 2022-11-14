@@ -101,6 +101,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
+            ->addRule('authDuration', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Session duration in seconds.',
+                'default' => '',
+                'example' => '30',
+            ])
             ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
@@ -225,6 +231,7 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? 0);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
