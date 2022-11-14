@@ -3,7 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
-use Appwrite\CLI\Tasks;
+use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
@@ -113,8 +113,8 @@ CLI::setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
-$cliPlatform = new Tasks();
-$cliPlatform->init(Service::TYPE_CLI);
+$platform = new Appwrite();
+$platform->init(Service::TYPE_CLI);
 
-$cli = $cliPlatform->getCli();
+$cli = $platform->getCli();
 $cli->run();
