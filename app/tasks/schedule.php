@@ -147,6 +147,8 @@ $cli
 
                 $total = 0;
 
+                $delayedExecutions = []; // Group executions with same delay to share one coroutine
+
                 foreach ($schedules as $key => $schedule) {
                     $cron = new CronExpression($schedule['schedule']);
                     $nextDate = $cron->getNextRunDate();
@@ -164,15 +166,27 @@ $cli
                     $executionStart = $nextDate->getTimestamp(); // in seconds
                     $executionSleep = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
 
-                    \go(function() use ($executionSleep, $key, $schedules) {
-                        \usleep($executionSleep * 1000000); // in microseconds
+                    $delay = \intval($executionSleep);
+                    
+                    if(!isset($delayedExecutions[$delay])) {
+                        $delayedExecutions[$delay] = [];
+                    }
 
-                        // Ensure schedule was not deleted
-                        if(!isset($schedules[$key])) {
-                            return;
+                    $delayedExecutions[$delay][] = $key;
+                }
+
+                foreach($delayedExecutions as $delay => $scheduleKeys) {
+                    \go(function() use ($delay, $schedules, $scheduleKeys) {
+                        \sleep($delay); // in seconds
+
+                        foreach($scheduleKeys as $scheduleKey) {
+                            // Ensure schedule was not deleted
+                            if(!isset($schedules[$scheduleKey])) {
+                                return;
+                            }
+
+                            Console::success("Executing function at " . DateTime::now()); // TODO: Send to worker queue
                         }
-
-                        Console::success("Executing function at " . DateTime::now()); // TODO: Send to worker queue
                     });
                 }
 
