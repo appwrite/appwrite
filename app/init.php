@@ -835,7 +835,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
-    $authDuration = $project->getAttribute('auths', [])['authDuration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (
         $user->isEmpty() // Check a document has been found in the DB

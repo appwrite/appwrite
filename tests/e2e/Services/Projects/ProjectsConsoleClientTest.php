@@ -403,13 +403,12 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/authDuration', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'projectId' => ID::unique(),
-            'name' => 'Project Test 2',
-            'authDuration' => '1', // Set session duration to 1 minute
+            'duration' => '2', // Set session duration to 2 minutes
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -418,7 +417,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertEquals(60, $response['body']['authDuration']);
+        $this->assertEquals(60, $response['body']['auths']['duration']);
 
         $projectId = $response['body']['$id'];
 
@@ -490,7 +489,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(31536000, $response['body']['authDuration']); // 1 Year
+        $this->assertEquals(31536000, $response['body']['duration']); // 1 Year
 
         return ['projectId' => $projectId];
     }

@@ -509,10 +509,10 @@ App::patch('/v1/projects/:projectId/auth/authDuration')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('authDuration', 525600, new Range(0, 525600), 'Project session length in minutes. Max length: 525600 minutes.')
+    ->param('duration', 525600, new Range(0, 525600), 'Project session length in minutes. Max length: 525600 minutes.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, int $authDuration, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, int $duration, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -521,7 +521,7 @@ App::patch('/v1/projects/:projectId/auth/authDuration')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['authDuration'] = $authDuration * 60;
+        $auths['duration'] = $duration * 60;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));

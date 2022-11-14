@@ -536,7 +536,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 Auth::$secret = $session['secret'] ?? '';
 
                 $user = $database->getDocument('users', Auth::$unique);
-                $authDuration = $project->getAttribute('auths', [])['authDuration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
