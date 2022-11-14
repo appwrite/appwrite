@@ -1,6 +1,6 @@
 <?php
 
-global $cli;
+namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;

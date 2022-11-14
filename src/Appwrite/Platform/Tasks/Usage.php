@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\CLI\Tasks;
+namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Platform\Task;
 use Appwrite\Usage\Calculators\Aggregator;

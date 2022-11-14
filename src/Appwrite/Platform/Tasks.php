@@ -1,21 +1,21 @@
 <?php
 
-namespace Appwrite\CLI;
+namespace Appwrite\Platform;
 
 use Utopia\Platform\Service;
-use Appwrite\CLI\Tasks\Doctor;
-use Appwrite\CLI\Tasks\Install;
-use Appwrite\CLI\Tasks\Maintenance;
-use Appwrite\CLI\Tasks\Migrate;
-use Appwrite\CLI\Tasks\SDKs;
-use Appwrite\CLI\Tasks\Specs;
-use Appwrite\CLI\Tasks\SSL;
-use Appwrite\CLI\Tasks\Usage;
-use Appwrite\CLI\Tasks\Vars;
-use Appwrite\CLI\Tasks\Version;
-use VolumeSync;
+use Appwrite\Platform\Tasks\Doctor;
+use Appwrite\Platform\Tasks\Install;
+use Appwrite\Platform\Tasks\Maintenance;
+use Appwrite\Platform\Tasks\Migrate;
+use Appwrite\Platform\Tasks\SDKs;
+use Appwrite\Platform\Tasks\Specs;
+use Appwrite\Platform\Tasks\SSL;
+use Appwrite\Platform\Tasks\Usage;
+use Appwrite\Platform\Tasks\Vars;
+use Appwrite\Platform\Tasks\Version;
+use Appwrite\Platform\Tasks\VolumeSync;
 
-class TasksService extends Service
+class Tasks extends Service
 {
     public function __construct()
     {

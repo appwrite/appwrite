@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\CLI\Tasks;
+namespace Appwrite\Platform\Tasks;
 
 use Utopia\Platform\Action;
 use Utopia\Validator\Text;
