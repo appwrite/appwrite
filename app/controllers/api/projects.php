@@ -496,7 +496,6 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-
 App::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update Project Authentication Duration')
     ->groups(['api', 'projects'])
