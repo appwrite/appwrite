@@ -520,8 +520,11 @@ App::patch('/v1/projects/:projectId/auth/authDuration')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        $auths = $project->getAttribute('auths', []);
+        $auths['authDuration'] = $authDuration * 60;
+
         $dbForConsole->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('authDuration', $authDuration * 60));
+            ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

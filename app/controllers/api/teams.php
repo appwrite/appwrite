@@ -732,7 +732,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $authDuration = $project->getAttribute('authDuration', Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $authDuration = $project->getAttribute('auths', [])['authDuration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
