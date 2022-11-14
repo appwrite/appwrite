@@ -127,7 +127,7 @@ App::post('/v1/projects')
         $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
@@ -271,8 +271,8 @@ App::get('/v1/projects/:projectId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -295,9 +295,10 @@ App::get('/v1/projects/:projectId/usage')
                 'project.$all.network.bandwidth',
                 'project.$all.storage.size',
                 'users.$all.count.total',
-                'collections.$all.count.total',
+                'databases.$all.count.total',
                 'documents.$all.count.total',
                 'executions.$all.compute.total',
+                'buckets.$all.count.total'
             ];
 
             $stats = [];
@@ -327,7 +328,7 @@ App::get('/v1/projects/:projectId/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
@@ -346,9 +347,10 @@ App::get('/v1/projects/:projectId/usage')
                 'network' => $stats[$metrics[1]] ?? [],
                 'storage' => $stats[$metrics[2]] ?? [],
                 'users' => $stats[$metrics[3]] ?? [],
-                'collections' => $stats[$metrics[4]] ?? [],
+                'databases' => $stats[$metrics[4]] ?? [],
                 'documents' => $stats[$metrics[5]] ?? [],
                 'executions' => $stats[$metrics[6]] ?? [],
+                'buckets' => $stats[$metrics[7]] ?? [],
             ]);
         }
 
