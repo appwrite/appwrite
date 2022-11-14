@@ -18,7 +18,7 @@ class Vars extends Action
     {
         $this
             ->desc('List all the server environment variables')
-            ->callback($this->action);
+            ->callback(fn () => $this->action());
     }
 
     public function action(): void
