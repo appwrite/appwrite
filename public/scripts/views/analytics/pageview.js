@@ -19,7 +19,13 @@
         },
         body: JSON.stringify({
           action: 'pageview',
-          url: window.location.href
+          url: window.location.href,
+          data: {
+            "screenWidth": window.screen.width,
+            "screenHeight": window.screen.height,
+            "viewportSize": window.innerWidth + 'x' + window.innerHeight,
+            "referrer": document.referrer,
+          },
         })
       });
     }

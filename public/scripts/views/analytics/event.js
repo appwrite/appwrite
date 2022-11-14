@@ -27,7 +27,12 @@
             action: action,
             label: label,
             version: null,
-            additionalData: null,
+            data: {
+              "screenWidth": window.screen.width,
+              "screenHeight": window.screen.height,
+              "viewportSize": window.innerWidth + 'x' + window.innerHeight,
+              "referrer": document.referrer,
+            },
             url: window.location.href
           })
         });
