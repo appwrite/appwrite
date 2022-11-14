@@ -113,7 +113,6 @@ App::post('/v1/projects')
             'legalCity' => $legalCity,
             'legalAddress' => $legalAddress,
             'legalTaxId' => ID::custom($legalTaxId),
-            'authDuration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG / 60,
             'services' => new stdClass(),
             'platforms' => null,
             'authProviders' => [],
