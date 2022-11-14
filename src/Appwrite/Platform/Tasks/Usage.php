@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Platform\Task;
 use Appwrite\Usage\Calculators\Aggregator;
 use Appwrite\Usage\Calculators\Database;
 use Appwrite\Usage\Calculators\TimeSeries;
@@ -12,9 +11,9 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Validator\WhiteList;
 use Throwable;
-use Utopia\Registry\Registry;
+use Utopia\Platform\Action;
 
-class Usage extends Task
+class Usage extends Action
 {
     public static function getName(): string
     {
