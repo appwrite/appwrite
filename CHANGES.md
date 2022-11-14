@@ -1,3 +1,14 @@
+# Version 1.1.0
+
+## Bugs
+- Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
+
+# Version 1.0.3
+## Bugs
+- Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
+- Fix attribute and index deletion when deleting a collection [#4429](https://github.com/appwrite/appwrite/pull/4429)
+
 # Version 1.0.2
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)

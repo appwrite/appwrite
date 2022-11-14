@@ -95,7 +95,7 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.0.2';
+const APP_VERSION_STABLE = '1.0.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -282,7 +282,7 @@ Database::addFilter(
             ->find('attributes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getAttributeLimit()),
+                Query::limit($database->getLimitForAttributes()),
             ]);
     }
 );
