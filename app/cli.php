@@ -3,20 +3,80 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
-use Utopia\App;
+use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Service;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Validator\Authorization;
-use InfluxDB\Database as InfluxDatabase;
+use Utopia\Database\Document;
+use Utopia\Logger\Log;
+use Utopia\Pools\Group;
+use Utopia\Registry\Registry;
 
-function getInfluxDB(): InfluxDatabase
-{
-    global $register;
+Authorization::disable();
 
+CLI::setResource('register', fn()=>$register);
+
+CLI::setResource('cache', function ($pools) {
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}, ['pools']);
+
+CLI::setResource('pools', function (Registry $register) {
+    return $register->get('pools');
+}, ['register']);
+
+CLI::setResource('dbForConsole', function ($pools, $cache) {
+    $dbAdapter = $pools
+        ->get('console')
+        ->pop()
+        ->getResource()
+    ;
+
+    $database = new Database($dbAdapter, $cache);
+
+    $database->setNamespace('console');
+
+    return $database;
+}, ['pools', 'cache']);
+
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource()
+        ;
+
+        $database = new Database($dbAdapter, $cache);
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+
+    return $getProjectDB;
+}, ['pools', 'dbForConsole', 'cache']);
+
+CLI::setResource('influxdb', function (Registry $register) {
     $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
     $attempts = 0;
     $max = 10;
@@ -38,76 +98,46 @@ function getInfluxDB(): InfluxDatabase
         }
     } while ($attempts < $max);
     return $database;
-}
+}, ['register']);
 
-function getConsoleDB(): Database
-{
-    global $register;
+CLI::setResource('logError', function (Registry $register) {
+    return function (Throwable $error, string $namespace, string $action) use ($register) {
+        $logger = $register->get('logger');
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        if ($logger) {
+            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+            $log = new Log();
+            $log->setNamespace($namespace);
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
 
-    $database = new Database($dbAdapter, getCache());
+            $log->addTag('code', $error->getCode());
+            $log->addTag('verboseType', get_class($error));
 
-    $database->setNamespace('console');
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
 
-    return $database;
-}
+            $log->setAction($action);
 
-function getCache(): Cache
-{
-    global $register;
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource()
-        ;
-    }
-
-    return new Cache(new Sharding($adapters));
-}
-
-Authorization::disable();
-
-$cli = new CLI();
-
-include 'tasks/doctor.php';
-include 'tasks/maintenance.php';
-include 'tasks/volume-sync.php';
-include 'tasks/install.php';
-include 'tasks/migrate.php';
-include 'tasks/sdks.php';
-include 'tasks/specs.php';
-include 'tasks/ssl.php';
-include 'tasks/vars.php';
-include 'tasks/usage.php';
-
-$cli
-    ->task('version')
-    ->desc('Get the server version')
-    ->action(function () {
-        Console::log(App::getEnv('_APP_VERSION', 'UNKNOWN'));
-    });
-
-$cli
-    ->error(function ($error) {
-        if (App::getEnv('_APP_ENV', 'development')) {
-            Console::error($error);
-        } else {
-            Console::error($error->getMessage());
+            $responseCode = $logger->addLog($log);
+            Console::info('Usage stats log pushed with status code: ' . $responseCode);
         }
-    });
 
+        Console::warning("Failed: {$error->getMessage()}");
+        Console::warning($error->getTraceAsString());
+    };
+}, ['register']);
+
+$platform = new Appwrite();
+$platform->init(Service::TYPE_CLI);
+
+$cli = $platform->getCli();
 $cli->run();

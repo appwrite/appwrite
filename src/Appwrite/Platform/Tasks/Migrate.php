@@ -1,19 +1,35 @@
 <?php
 
-global $cli, $register;
+namespace Appwrite\Platform\Tasks;
 
+use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
-$cli
-    ->task('migrate')
-    ->param('version', APP_VERSION_STABLE, new Text(32), 'Version to migrate to.', true)
-    ->action(function ($version) use ($register) {
+class Migrate extends Action
+{
+    public static function getName(): string
+    {
+        return 'migrate';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Migrate Appwrite to new version')
+            ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->inject('register')
+            ->callback(fn ($version, $register) => $this->action($version, $register));
+    }
+
+    public function action(string $version, Registry $register)
+    {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
@@ -87,4 +103,5 @@ $cli
         Swoole\Event::wait(); // Wait for Coroutines to finish
         $redis->flushAll();
         Console::success('Data Migration Completed');
-    });
+    }
+}

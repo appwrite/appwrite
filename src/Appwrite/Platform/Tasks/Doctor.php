@@ -1,20 +1,35 @@
 <?php
 
-global $cli;
+namespace Appwrite\Platform\Tasks;
 
+use Utopia\App;
+use Utopia\CLI\Console;
 use Appwrite\ClamAV\Network;
 use Utopia\Logger\Logger;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
-use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
 
-$cli
-    ->task('doctor')
-    ->desc('Validate server health')
-    ->action(function () use ($register) {
+class Doctor extends Action
+{
+    public static function getName(): string
+    {
+        return 'doctor';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Validate server health')
+            ->inject('register')
+            ->callback(fn (Registry $register) => $this->action($register));
+    }
+
+    public function action(Registry $register): void
+    {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
@@ -265,4 +280,5 @@ $cli
         } catch (\Throwable $th) {
             Console::error('Failed to check for a newer version' . "\n");
         }
-    });
+    }
+}
