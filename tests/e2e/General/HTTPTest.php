@@ -190,4 +190,50 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-ruby']);
         $this->assertIsString($body['console-cli']);
     }
+
+    public function testCors()
+    {
+        /**
+         * Test for SUCCESS
+         */
+
+        $endpoint = '/v1/projects'; // Can be any non-404 route
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://localhost',
+        ]);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://appwrite.io',
+        ]);
+
+        $this->assertEquals('http://appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'https://appwrite.io',
+        ]);
+
+        $this->assertEquals('https://appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://cloud.appwrite.io',
+        ]);
+
+        $this->assertEquals('http://cloud.appwrite.io', $response['headers']['access-control-allow-origin']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, $endpoint, [
+            'origin' => 'http://google.com',
+        ]);
+
+        $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
+    }
 }
