@@ -113,6 +113,13 @@ class Project extends Model
                 'default' => 0,
                 'example' => 100,
             ])
+            ->addRule('providers', [
+                'type' => Response::MODEL_PROVIDER,
+                'description' => 'List of Providers.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
+            ])
             ->addRule('platforms', [
                 'type' => Response::MODEL_PLATFORM,
                 'description' => 'List of Platforms.',
@@ -144,31 +151,7 @@ class Project extends Model
         ;
 
         $services = Config::getParam('services', []);
-        $providers = Config::getParam('providers', []);
         $auth = Config::getParam('auth', []);
-
-        foreach ($providers as $index => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $name = (isset($provider['name'])) ? $provider['name'] : 'Unknown';
-
-            $this
-                ->addRule('provider' . \ucfirst($index) . 'Appid', [
-                    'type' => self::TYPE_STRING,
-                    'description' => $name . ' OAuth app ID.',
-                    'example' => '123247283472834787438',
-                    'default' => '',
-                ])
-                ->addRule('provider' . \ucfirst($index) . 'Secret', [
-                    'type' => self::TYPE_STRING,
-                    'description' => $name . ' OAuth secret ID.',
-                    'example' => 'djsgudsdsewe43434343dd34...',
-                    'default' => '',
-                ])
-            ;
-        }
 
         foreach ($auth as $index => $method) {
             $name = $method['name'] ?? '';
@@ -230,6 +213,7 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
+        // Services
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
@@ -242,6 +226,7 @@ class Project extends Model
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
 
+        // Auth
         $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
@@ -254,17 +239,27 @@ class Project extends Model
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
+        // Providers
         $providers = Config::getParam('providers', []);
         $providerValues = $document->getAttribute('authProviders', []);
+        $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
             if (!$provider['enabled']) {
+                // Disabled by Appwrite configuration, exclude from response
                 continue;
             }
-            $appId = $providerValues[$key . 'Appid'] ?? '';
-            $secret = $providerValues[$key . 'Secret'] ?? '';
-            $document->setAttribute('provider' . ucfirst($key) . 'Appid', $appId)->setAttribute('provider' . ucfirst($key) . 'Secret', $secret);
+
+            $projectProviders[] = new Document([
+                'name' => ucfirst($key),
+                'appId' => $providerValues[$key . 'Appid'] ?? '',
+                'secret' => $providerValues[$key . 'Secret'] ?? '',
+                'enabled' => $providerValues[$key . 'Enabled'] ?? false,
+            ]);
         }
+
+        $document->setAttribute("providers", $projectProviders);
+
         return $document;
     }
 }

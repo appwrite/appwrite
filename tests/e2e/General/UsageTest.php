@@ -85,7 +85,7 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(35);
+        sleep(10);
 
         $projectId = $data['projectId'];
         $headers = $data['headers'];
@@ -102,7 +102,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $cheaders);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['users']));
         $this->assertEquals($usersCount, $res['users'][array_key_last($res['users'])]['value']);
@@ -114,6 +114,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
         $this->validateDates($res['usersCreate']);
@@ -255,7 +256,7 @@ class UsageTest extends Scope
         $filesCreate = $data['filesCreate'];
         $filesDelete = $data['filesDelete'];
 
-        sleep(35);
+        sleep(10);
 
         // console request
         $headers = [
@@ -267,7 +268,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
@@ -279,6 +280,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
@@ -303,6 +305,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
         $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
@@ -493,7 +496,7 @@ class UsageTest extends Scope
         $documentsRead = $data['documentsRead'];
         $documentsDelete = $data['documentsDelete'];
 
-        sleep(35);
+        sleep(10);
 
         // check datbase stats
         $headers = [
@@ -504,13 +507,13 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-        $this->assertEquals($collectionsCount, $res['collections'][array_key_last($res['collections'])]['value']);
-        $this->validateDates($res['collections']);
+        $this->assertEquals($databasesCount, $res['databases'][array_key_last($res['databases'])]['value']);
+        $this->validateDates($res['databases']);
         $this->assertEquals($documentsCount, $res['documents'][array_key_last($res['documents'])]['value']);
         $this->validateDates($res['documents']);
 
@@ -701,7 +704,7 @@ class UsageTest extends Scope
         $executions = $data['executions'];
         $failures = $data['failures'];
 
-        sleep(25);
+        sleep(10);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', $headers, [
             'range' => '30d'
