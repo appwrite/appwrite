@@ -60,8 +60,8 @@ class Schedule extends Action
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
                 'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-                'project' => $project,
-                'function' => $function,
+                'project' => $project, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
+                'function' => $function, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
             ];
         };
 
