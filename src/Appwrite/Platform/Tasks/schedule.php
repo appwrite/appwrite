@@ -12,6 +12,8 @@ use Utopia\Database\Query;
 use Swoole\Timer;
 use Utopia\Database\Database;
 
+use function Swoole\Coroutine\run;
+
 class Schedule extends Action
 {
     const FUNCTION_UPDATE_TIMER = 10; //seconds
@@ -96,7 +98,7 @@ class Schedule extends Action
     
         Console::success("Starting timers at " . DateTime::now());
     
-        Co\run(
+        run(
             function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule) {
                 /**
                  * The timer synchronize $schedules copy with database collection.
