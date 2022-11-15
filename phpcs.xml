@@ -7,6 +7,8 @@
     <ini name="memory_limit" value="4096M"/>
     <!-- Exclude SDK's for performance reasons -->
     <exclude-pattern>./app/sdks</exclude-pattern>
+    <!-- Exclude console -->
+    <exclude-pattern>./app/console</exclude-pattern>
     <!-- Ignore max line width -->
     <rule ref="Generic.Files.LineLength">
         <exclude-pattern>*</exclude-pattern>
