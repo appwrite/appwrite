@@ -434,7 +434,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => '1', // Set session duration to 2 minutes
+            'duration' => 60, // Set session duration to 2 minutes
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -484,8 +484,21 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        // Check session doesn't expire too soon.
+
+        sleep(30);
+
+        // Get User
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'Cookie' => $sessionCookie,
+        ]));
+    
+        $this->assertEquals(200, $response['headers']['status-code']);
+
         // Wait just over a minute
-        sleep(65);
+        sleep(35);
 
         // Get User
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
@@ -501,7 +514,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => 525600,
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -514,7 +527,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(31536000, $response['body']['authDuration']); // 1 Year
+        $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
 
         return ['projectId' => $projectId];
     }
