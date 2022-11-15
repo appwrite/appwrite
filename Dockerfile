@@ -14,11 +14,6 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
-ARG CONSOLE_ANALYTICS
-ARG CONSOLE_LOGGER
-ENV VITE_GOOGLE_ANALYTICS=$CONSOLE_ANALYTICS
-ENV VITE_SENTRY_DSN=$CONSOLE_LOGGER
-
 COPY app/console /usr/local/src/console
 
 WORKDIR /usr/local/src/console
