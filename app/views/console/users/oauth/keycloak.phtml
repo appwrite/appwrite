@@ -6,8 +6,8 @@ $provider = $this->getParam('provider', '');
 <input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="Client ID" />
 <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>ClientSecret">Client Secret <span class="tooltip" data-tooltip="Provided in the Provider you created in Keycloak"><i class="icon-info-circled"></i></span></label>
 <input name="clientSecret" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>ClientSecret" type="password" autocomplete="off" placeholder="Client Secret" />
-<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Domain">Keycloak Base-Domain<span class="tooltip" data-tooltip="Your Keycloak Base-Domain (with 'https://' or 'http://')"><i class="icon-info-circled"></i></span></label>
-<input name="keycloakDomain" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Domain" type="text" autocomplete="off" placeholder="auth.example.com" />
+<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Endpoint">Keycloak Endpoint<span class="tooltip" data-tooltip="Your Keycloak Endpoint (with 'https://' or 'http://')"><i class="icon-info-circled"></i></span></label>
+<input name="keycloakEndpoint" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Endpoint" type="text" autocomplete="off" placeholder="https://auth.example.com" />
 <label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Realm">Keycloak Realm<span class="tooltip" data-tooltip="Your Keycloak Realm"><i class="icon-info-circled"></i></span></label>
 <input name="keycloakRealm" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Realm" type="text" autocomplete="off" placeholder="test-realm" />
 <?php /*Hidden input for the final secret. Gets filled with a JSON via JS. */ ?>

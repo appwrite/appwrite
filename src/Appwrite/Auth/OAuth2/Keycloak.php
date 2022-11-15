@@ -42,7 +42,7 @@ class Keycloak extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://' . $this->getKeycloakDomain() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/auth?' . \http_build_query([
+        return $this->getKeycloakEndpoint() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/auth?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
@@ -62,7 +62,7 @@ class Keycloak extends OAuth2
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://' . $this->getKeycloakDomain() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/token',
+                $this->getKeycloakEndpoint() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/token',
                 $headers,
                 \http_build_query([
                     'code' => $code,
@@ -88,7 +88,7 @@ class Keycloak extends OAuth2
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://' . $this->getKeycloakDomain() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/token',
+            $this->getKeycloakEndpoint() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/token',
             $headers,
             \http_build_query([
                 'refresh_token' => $refreshToken,
@@ -180,7 +180,7 @@ class Keycloak extends OAuth2
     {
         if (empty($this->user)) {
             $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
-            $user = $this->request('GET', 'https://' . $this->getKeycloakDomain() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/userinfo', $headers);
+            $user = $this->request('GET', $this->getKeycloakEndpoint() . '/realms/' . $this->getKeycloakRealm() . '/protocol/openid-connect/userinfo', $headers);
             $this->user = \json_decode($user, true);
         }
 
@@ -204,10 +204,10 @@ class Keycloak extends OAuth2
      *
      * @return string
      */
-    protected function getKeycloakDomain(): string
+    protected function getKeycloakEndpoint(): string
     {
         $secret = $this->getAppSecret();
-        return $secret['keycloakDomain'] ?? '';
+        return $secret['keycloakEndpoint'] ?? '';
     }
 
      /**

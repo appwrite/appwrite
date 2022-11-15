@@ -32,7 +32,7 @@
         },
         "Keycloak": {
           "clientSecret": "oauth2KeycloakClientSecret",
-          "keycloakDomain": "oauth2KeycloakDomain",
+          "keycloakEndpoint": "oauth2KeycloakEndpoint",
           "keycloakRealm": "oauth2KeycloakRealm"
         },
         "Gitlab": {
