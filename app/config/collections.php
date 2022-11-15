@@ -1104,7 +1104,7 @@ $collections = [
                 '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 512, // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
+                'size' => 512, // Output of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -2272,7 +2272,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('scheduleUpdatedAt'), // Used to fix duplicate executions bug. Can be removed once new queue library is used
+                '$id' => ID::custom('scheduleUpdatedAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,
@@ -2310,14 +2310,14 @@ $collections = [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [2048],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [2048],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2331,21 +2331,21 @@ $collections = [
                 '$id' => ID::custom('_key_runtime'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['runtime'],
-                'lengths' => [2048],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_deployment'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deployment'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_schedule'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['schedule'],
-                'lengths' => [128],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2490,14 +2490,14 @@ $collections = [
                 '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceId'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_resource_type'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2511,7 +2511,7 @@ $collections = [
                 '$id' => ID::custom('_key_entrypoint'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['entrypoint'],
-                'lengths' => [2048],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -2525,7 +2525,7 @@ $collections = [
                 '$id' => ID::custom('_key_buildId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['buildId'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3026,14 +3026,14 @@ $collections = [
                 '$id' => ID::custom('_fulltext_name'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['name'],
-                'lengths' => [1024],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [2048],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3047,7 +3047,7 @@ $collections = [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [128],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3470,7 +3470,7 @@ $collections = [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
-                'lengths' => [2048],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -3484,21 +3484,21 @@ $collections = [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['name'],
-                'lengths' => [2048],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_signature'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['signature'],
-                'lengths' => [2048],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_mimeType'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['mimeType'],
-                'lengths' => [127],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [

@@ -368,6 +368,11 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = 'password';
                         break;
+                    case 'Appwrite\Auth\Validator\Phone':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'phone';
+                        $node['schema']['x-example'] = '+12065550100'; // In the US, 555 is reserved like example.com
+                        break;
                     case 'Utopia\Validator\Range':
                         /** @var \Utopia\Validator\Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();

@@ -59,7 +59,7 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -548,9 +548,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $schedule->setAttribute('active', $active);
 
-        Authorization::skip(function () use ($dbForConsole, $schedule) {
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-        });
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $events
             ->setParam('functionId', $function->getId())
@@ -598,9 +596,7 @@ App::delete('/v1/functions/:functionId')
             ->setAttribute('active', false)
         ;
 
-        Authorization::skip(function () use ($dbForConsole, $schedule) {
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-        });
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -805,9 +801,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $schedule->setAttribute('active', $active);
 
-        Authorization::skip(function () use ($dbForConsole, $schedule) {
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-        });
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $metadata = null;
 
@@ -1197,13 +1191,12 @@ App::post('/v1/functions/:functionId/executions')
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                path: $build->getAttribute('outputPath', ''),
-                vars: $vars,
+                payload: $data,
+                variables: $vars,
+                timeout: $function->getAttribute('timeout', 0),
+                image: $runtime['image'],
+                source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
-                data: $data,
-                runtime: $function->getAttribute('runtime', ''),
-                baseImage: $runtime['image'],
-                timeout: $function->getAttribute('timeout', 0)
             );
 
             /** Update execution status */

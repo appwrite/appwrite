@@ -61,7 +61,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
-
         $pools = $register->get('pools'); /** @var Group $pools */
         App::setResource('pools', fn() => $pools);
 
@@ -93,7 +92,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $cache = $app->getResource('cache'); /** @var Utopia\Cache\Cache $cache */
             $cache->flush();
             Console::success('[Setup] - Creating database: appwrite...');
-            $dbForConsole->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $dbForConsole->create();
         } catch (\Exception $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
@@ -119,7 +118,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             /**
              * Skip to prevent 0.16 migration issues.
              */
-            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
                 continue;
             }
 
@@ -155,7 +154,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),

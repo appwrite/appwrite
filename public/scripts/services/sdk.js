@@ -14,6 +14,7 @@
 
         return {
             client: client,
+            project: new Appwrite.Project(client),
             account: new Appwrite.Account(client),
             avatars: new Appwrite.Avatars(client),
             databases: new Appwrite.Databases(client),

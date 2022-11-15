@@ -20,7 +20,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
-use Utopia\Queue\Client as QueueClient;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
