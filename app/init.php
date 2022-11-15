@@ -598,7 +598,8 @@ $register->set('pools', function ($size = APP_DATABASE_DEFAULT_POOL_SIZE) {
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                                 PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
                                 PDO::ATTR_EMULATE_PREPARES => true,
-                                PDO::ATTR_STRINGIFY_FETCHES => true
+                                PDO::ATTR_STRINGIFY_FETCHES => true,
+                                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
                             ));
                         });
                     };
