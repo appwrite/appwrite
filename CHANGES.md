@@ -1,5 +1,6 @@
 # TBD
 
+- Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
 - Add `_APP_DB_MAX_CONNECTIONS` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Update Traefik 2.7 -> 2.9 [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)

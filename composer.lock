@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "164c92299614df333e6ab5a45672bc97",
+    "content-hash": "41e3fe329598c2a3b4eb303f6605258d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1945,16 +1945,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.23.4",
+            "version": "0.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "97f64aa1732af92b967c3576f16967dc762ad47b"
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/97f64aa1732af92b967c3576f16967dc762ad47b",
-                "reference": "97f64aa1732af92b967c3576f16967dc762ad47b",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c524f681254255c8204fbf7919c53bf3b4982636",
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636",
                 "shasum": ""
             },
             "require": {
@@ -1982,9 +1982,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.23.4"
+                "source": "https://github.com/utopia-php/framework/tree/0.25.0"
             },
-            "time": "2022-10-31T11:57:14+00:00"
+            "time": "2022-11-02T09:49:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2203,6 +2203,55 @@
                 "source": "https://github.com/utopia-php/orchestration/tree/0.9.0"
             },
             "time": "2022-11-09T17:38:00+00:00"
+        },
+        {
+            "name": "utopia-php/platform",
+            "version": "0.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/platform.git",
+                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/fe9f64420957dc8fb6201d22b499572f021411e4",
+                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-redis": "*",
+                "php": ">=8.0",
+                "utopia-php/cli": "0.14.*",
+                "utopia-php/framework": "0.25.*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Platform\\": "src/Platform"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Light and Fast Platform Library",
+            "keywords": [
+                "cache",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/platform/issues",
+                "source": "https://github.com/utopia-php/platform/tree/0.3.1"
+            },
+            "time": "2022-11-10T07:04:24+00:00"
         },
         {
             "name": "utopia-php/pools",

@@ -1,12 +1,14 @@
 <?php
 
-global $cli;
+namespace Appwrite\Platform\Tasks;
 
+use Utopia\Platform\Action;
 use Utopia\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
+use Exception;
 use Swoole\Http\Response as HttpResponse;
 use Utopia\App;
 use Utopia\Cache\Adapter\None;
@@ -15,14 +17,31 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Registry\Registry;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;
 
-$cli
-    ->task('specs')
-    ->param('version', 'latest', new Text(16), 'Spec version', true)
-    ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
-    ->action(function ($version, $mode) use ($register) {
+class Specs extends Action
+{
+    public static function getName(): string
+    {
+        return 'specs';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Generate Appwrite API specifications')
+            ->param('version', 'latest', new Text(16), 'Spec version', true)
+            ->param('mode', 'normal', new WhiteList(['normal', 'mocks']), 'Spec Mode', true)
+            ->inject('register')
+            ->callback(fn (string $version, string $mode, Registry $register) => $this->action($version, $mode, $register));
+    }
+
+    public function action(string $version, string $mode, Registry $register): void
+    {
+        $db = $register->get('db');
+        $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
@@ -247,7 +266,7 @@ $cli
                     continue;
                 }
 
-                $path = __DIR__ . '/../config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+                $path = __DIR__ . '/../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
                 if (!file_put_contents($path, json_encode($specs->parse()))) {
                     throw new Exception('Failed to save spec file: ' . $path);
@@ -256,4 +275,5 @@ $cli
                 Console::success('Saved spec file: ' . realpath($path));
             }
         }
-    });
+    }
+}
