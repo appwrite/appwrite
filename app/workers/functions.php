@@ -5,6 +5,7 @@ require_once __DIR__ . '/../worker.php';
 use Utopia\Queue;
 use Utopia\Queue\Message;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -33,6 +34,7 @@ $execute = function (
     Document $project,
     Document $function,
     Database $dbForProject,
+    Func $functions,
     string $trigger,
     string $executionId = null,
     string $event = null,
@@ -206,9 +208,13 @@ $execute = function (
         ->trigger();
 
     /** Trigger Functions */
-    $executionUpdate
-        ->setClass(Event::FUNCTIONS_CLASS_NAME)
-        ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+    $functions
+        ->setData($data)
+        ->setProject($project)
+        ->setUser($user)
+        ->setEvent('functions.[functionId].executions.[executionId].update')
+        ->setParam('functionId', $function->getId())
+        ->setParam('executionId', $execution->getId())
         ->trigger();
 
     /** Trigger realtime event */
@@ -259,9 +265,10 @@ $server   = new Queue\Server($adapter);
 $server->job()
     ->inject('message')
     ->inject('dbForProject')
-    ->action(function (Message $message, Database $dbForProject) use ($execute) {
-        $args = $message->getPayload()['value'] ?? [];
-        $type = $message->getPayload()['type'] ?? '';
+    ->inject('functions')
+    ->action(function (Message $message, Database $dbForProject, Func $functions) use ($execute) {
+        $args = $message->getPayload() ?? [];
+        $type = $args['type'] ?? '';
         $events = $args['events'] ?? [];
         $project = new Document($args['project'] ?? []);
         $user = new Document($args['user'] ?? []);
@@ -317,34 +324,20 @@ $server->job()
         /**
          * Handle Schedule and HTTP execution.
          */
-        $user = new Document($args['user'] ?? []);
         $project = new Document($args['project'] ?? []);
-        $execution = new Document($args['execution'] ?? []);
         $function = new Document($args['function'] ?? []);
 
         switch ($type) {
             case 'http':
                 $jwt = $args['jwt'] ?? '';
                 $data = $args['data'] ?? '';
+                $execution = new Document($args['execution'] ?? []);
+                $user = new Document($args['user'] ?? []);
                 $function = $dbForProject->getDocument('functions', $execution->getAttribute('functionId'));
-                call_user_func($execute, $project, $function, $dbForProject, 'http', $execution->getId(), null, null, $data, $user, $jwt);
+                call_user_func($execute, $project, $function, $dbForProject, $functions, 'http', $execution->getId(), null, null, $data, $user, $jwt);
                 break;
-
             case 'schedule':
-                /*
-                 * 1. Get Original Task
-                 * 2. Check for updates
-                 *  If has updates skip task and don't reschedule
-                 *  If status not equal to play skip task
-                 * 3. Check next run date, update task and add new job at the given date
-                 * 4. Execute task (set optional timeout)
-                 * 5. Update task response to log
-                 *      On success reset error count
-                 *      On failure add error count
-                 *      If error count bigger than allowed change status to pause
-                 */
-
-                call_user_func($execute, $project, $function, $dbForProject, 'schedule', null, null, null, null, null, null);
+                call_user_func($execute, $project, $function, $dbForProject, $functions, 'schedule', null, null, null, null, null, null);
                 break;
         }
     });

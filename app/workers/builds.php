@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -105,6 +106,8 @@ class BuildsV1 extends Worker
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
+        $data = $deployment->getArrayCopy(array_keys($deploymentModel->getRules()));
+
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
 
@@ -114,14 +117,22 @@ class BuildsV1 extends Worker
             ->setEvent('functions.[functionId].deployments.[deploymentId].update')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId())
-            ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
+            ->setPayload($data)
             ->trigger();
 
         /** Trigger Functions */
-        $deploymentUpdate
-            ->setClass(Event::FUNCTIONS_CLASS_NAME)
-            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+        global $register;
+        $pools = $register->get('pools');
+        $connection = $pools->get('queue')->pop();
+        $functions = new Func($connection->getResource());
+        $functions
+            ->setData(\json_encode($data))
+            ->setProject($project)
+            ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId())
             ->trigger();
+        $connection->reclaim();
 
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [

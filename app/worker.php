@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Event\Func;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -68,7 +69,12 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
-App::setResource('logger', function ($register) {
+Server::setResource('functions', function (Registry $register) {
+    $pools = $register->get('pools');
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['register']);
+
+Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 

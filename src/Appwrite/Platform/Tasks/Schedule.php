@@ -14,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Utopia\Queue\Client as Worker;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 
 use function Swoole\Coroutine\run;
 
@@ -203,6 +204,9 @@ class Schedule extends Action
                         \go(function () use ($delay, $schedules, $scheduleKeys, $pools) {
                             \sleep($delay); // in seconds
 
+                            $queue = $pools->get('queue')->pop();
+                            $connection = $queue->getResource();
+
                             foreach ($scheduleKeys as $scheduleKey) {
                                 // Ensure schedule was not deleted
                                 if (!isset($schedules[$scheduleKey])) {
@@ -211,20 +215,16 @@ class Schedule extends Action
 
                                 $schedule = $schedules[$scheduleKey];
 
-                                $queue = $pools->get('queue')->pop();
+                                $functions = new Func($connection);
 
-                                $worker = new Worker(Event::FUNCTIONS_QUEUE_NAME, $queue->getResource());
-                                $worker
-                                    ->enqueue([
-                                        'type' => 'schedule',
-                                        'value' => [
-                                            'project' =>  $schedule['project'],
-                                            'function' => $schedule['function'],
-                                        ]
-                                    ]);
-
-                                $queue->reclaim();
+                                $functions
+                                    ->setType('schedule')
+                                    ->setFunction($schedule['function'])
+                                    ->setProject($schedule['project'])
+                                    ->trigger();
                             }
+
+                            $queue->reclaim();
                         });
                     }
 

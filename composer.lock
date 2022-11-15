@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3e24f0f02ec826898d50e4119f9eb226",
+    "content-hash": "f2faa670abaa356f9b14e4f1c3542b33",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2359,16 +2359,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "dev-upgrade-libs",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "310aaac74d2287d3d9450a532658247cdfe5e72c"
+                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/310aaac74d2287d3d9450a532658247cdfe5e72c",
-                "reference": "310aaac74d2287d3d9450a532658247cdfe5e72c",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0b69ede484a04c567cbb202f592d8e5e3cd2433e",
+                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e",
                 "shasum": ""
             },
             "require": {
@@ -2414,9 +2414,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/upgrade-libs"
+                "source": "https://github.com/utopia-php/queue/tree/0.4.1"
             },
-            "time": "2022-11-15T16:35:56+00:00"
+            "time": "2022-11-15T16:56:37+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5278,12 +5278,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/queue",
-            "version": "dev-upgrade-libs",
-            "alias": "0.4.1",
-            "alias_normalized": "0.4.1.0"
-        },
-        {
             "package": "utopia-php/registry",
             "version": "dev-feat-allow-params",
             "alias": "0.5.0",
@@ -5292,7 +5286,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/queue": 20,
         "utopia-php/registry": 20
     },
     "prefer-stable": false,

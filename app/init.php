@@ -71,6 +71,7 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -843,6 +844,9 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
+App::setResource('functions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -1023,13 +1027,12 @@ App::setResource('console', function () {
 }, []);
 
 App::setResource('queue', function () {
-
     $fallbackForRedis = AppwriteURL::unparse([
-    'scheme' => 'redis',
-    'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-    'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-    'user' => App::getEnv('_APP_REDIS_USER', ''),
-    'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+        'scheme' => 'redis',
+        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+        'user' => App::getEnv('_APP_REDIS_USER', ''),
+        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
     ]);
 
     $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);

@@ -5,6 +5,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -41,7 +42,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Queue\Client as QueueClient;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -1061,7 +1061,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('usage')
     ->inject('mode')
     ->inject('pools')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Group $pools) {
+    ->inject('functions')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Group $pools, Func $functions) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1149,18 +1150,15 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $queueForFunctions = new QueueClient(Event::FUNCTIONS_QUEUE_NAME, $pools->get('queue')->pop()->getResource());
-            $queueForFunctions->enqueue([
-                'type'  => 'http',
-                'value' => [
-                    'type' => 'http',
-                    'execution' => $execution,
-                    'function' => $function,
-                    'data' => $data,
-                    'jwt' => $jwt,
-                    'project' => $project,
-                    'user' => $user
-                ]]);
+            $functions
+                ->setType('http')
+                ->setExecution($execution)
+                ->setFunction($function)
+                ->setData($data)
+                ->setJWT($jwt)
+                ->setProject($project)
+                ->setUser($user)
+                ->trigger();
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

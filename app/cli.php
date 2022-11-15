@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -108,6 +109,10 @@ CLI::setResource('influxdb', function (Registry $register) {
     } while ($attempts < $max);
     return $database;
 }, ['register']);
+
+CLI::setResource('functions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

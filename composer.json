@@ -53,7 +53,7 @@
         "utopia-php/domains": "1.1.*",
         "utopia-php/framework": "0.25.*",
         "utopia-php/image": "0.5.*",
-        "utopia-php/queue": "dev-upgrade-libs as 0.4.1",
+        "utopia-php/queue": "0.4.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/orchestration": "0.9.*",

@@ -6,6 +6,8 @@ use DateTime;
 use Resque;
 use ResqueScheduler;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Func extends Event
 {
@@ -15,7 +17,7 @@ class Func extends Event
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
         parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
     }
@@ -143,36 +145,16 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'function' => $this->function,
-            'execution' => $this->execution,
-            'type' => $this->type,
-            'jwt' => $this->jwt,
-            'payload' => $this->payload,
-            'data' => $this->data
-        ]);
-    }
+        $queue = new Client(Event::FUNCTIONS_QUEUE_NAME, $this->connection);
 
-    /**
-     * Schedules the function event and schedules it in the functions worker queue.
-     *
-     * @param \DateTime|int $at
-     * @return void
-     * @throws \Resque_Exception
-     * @throws \ResqueScheduler_InvalidTimestampException
-     */
-    public function schedule(DateTime|int $at): void
-    {
-        ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'function' => $this->function,
-            'execution' => $this->execution,
+        return $queue->enqueue([
             'type' => $this->type,
-            'payload' => $this->payload,
-            'data' => $this->data
+            'execution' => $this->execution,
+            'function' => $this->function,
+            'data' => $this->data,
+            'jwt' => $this->jwt,
+            'project' => $this->project,
+            'user' => $this->user
         ]);
     }
 }
