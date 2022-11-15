@@ -139,6 +139,8 @@ class Maintenance extends Action
             notifyDeleteExpiredSessions();
             renewCertificates($dbForConsole);
             notifyDeleteCache($cacheRetention);
+
+            // TODO: @Meldiron Every probably 24h, look for schedules with active=false, that doesnt have function anymore. Dlete such schedule
         }, $interval);
     }
 }
