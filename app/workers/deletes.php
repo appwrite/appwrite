@@ -419,11 +419,6 @@ class DeletesV1 extends Worker
         $functionId = $document->getId();
 
         /**
-         * Delete Schedule
-         */
-        // TODO: DeleteDocument schedules collection
-
-        /**
          * Delete Variables
          */
         Console::info("Deleting variables for function " . $functionId);
