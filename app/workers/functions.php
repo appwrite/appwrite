@@ -164,14 +164,13 @@ $execute = function (
     try {
         $executionResponse = $executor->createExecution(
             projectId: $project->getId(),
-            deploymentId: $deploymentId,
-            path: $build->getAttribute('outputPath', ''),
-            vars: $vars,
+            deploymentId: $deployment->getId(),
+            payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
+            variables: $vars,
+            timeout: $function->getAttribute('timeout', 0),
+            image: $runtime['image'],
+            source: $build->getAttribute('outputPath', ''),
             entrypoint: $deployment->getAttribute('entrypoint', ''),
-            data: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
-            runtime: $function->getAttribute('runtime', ''),
-            baseImage: $runtime['image'],
-            timeout: $function->getAttribute('timeout', 0)
         );
 
         /** Update execution status */
