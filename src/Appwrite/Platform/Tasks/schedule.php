@@ -77,7 +77,7 @@ class Schedule extends Action
         while ($sum === $limit) {
             $paginationQueries = [Query::limit($limit)];
             if ($latestDocument !== null) {
-                $paginationQueries[] =  Query::cursorAfter($latestDocument);
+                $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                 Query::equal('region', [App::getEnv('_APP_REGION')]),
@@ -93,7 +93,7 @@ class Schedule extends Action
 
             $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
         }
-        
+
         $pools->reclaim();
 
         Console::success("{$total} functions where loaded in " . (microtime(true) - $loadStart) . " seconds");
