@@ -1133,7 +1133,7 @@ function getWorkerPoolSize(): int
 {
     $reservedConnections = APP_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
     $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-    $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 1001);
+    $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 251);
     $workerConnections = $maxConnections - $reservedConnections;
 
     if ($workerCount > $workerConnections) {
