@@ -49,7 +49,10 @@ class Schedule extends Action
          */
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
-            $function = $getProjectDB($project)->getDocument('functions', $schedule->getAttribute('resourceId'));
+
+            [ $database, $reclaim ] = $getProjectDB($project);
+            $function = $database->getDocument('functions', $schedule->getAttribute('resourceId'));
+            $reclaim();
     
             return [
                 'resourceId' => $schedule->getAttribute('resourceId'),

@@ -61,16 +61,16 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             return $dbForConsole;
         }
 
-        $dbAdapter = $pools
+        $connection = $pools
             ->get($project->getAttribute('database'))
-            ->pop()
-            ->getResource()
-        ;
+            ->pop();
+
+        $dbAdapter = $connection->getResource();
 
         $database = new Database($dbAdapter, $cache);
         $database->setNamespace('_' . $project->getInternalId());
 
-        return $database;
+        return [ $database, fn() => $connection->claim() ];
     };
 
     return $getProjectDB;
