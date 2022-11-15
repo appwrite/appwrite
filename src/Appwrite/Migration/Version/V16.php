@@ -77,6 +77,7 @@ class V16 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'_key_team' from {$id}: {$th->getMessage()}");
                     }
+                    break;
 
                 default:
                     break;
