@@ -492,7 +492,7 @@ class TimeSeries extends Calculator
 
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
                     if (empty($point['projectInternalId'] ?? null)) {
-                        return;
+                        continue;
                     }
                     $this->createOrUpdateMetric(
                         $point['projectInternalId'],

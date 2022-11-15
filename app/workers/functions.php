@@ -368,6 +368,7 @@ class FunctionsV1 extends Worker
             $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())
+                ->setParam('projectInternalId', $project->getInternalId())
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
