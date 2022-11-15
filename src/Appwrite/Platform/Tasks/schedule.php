@@ -184,7 +184,7 @@ class Schedule extends Action
                         $executionStart = $nextDate->getTimestamp(); // in seconds
                         $executionSleep = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
     
-                        $delay = \intval($executionSleep);
+                        $delay = \ceil(\intval($executionSleep));
                         
                         if(!isset($delayedExecutions[$delay])) {
                             $delayedExecutions[$delay] = [];

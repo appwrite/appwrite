@@ -70,7 +70,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $database = new Database($dbAdapter, $cache);
         $database->setNamespace('_' . $project->getInternalId());
 
-        return [ $database, fn() => $connection->claim() ];
+        return [ $database, fn() => $connection->reclaim() ];
     };
 
     return $getProjectDB;
