@@ -41,7 +41,6 @@ services:
       - net.core.somaxconn=1024
       - net.ipv4.tcp_rmem=1024 4096 16384
       - net.ipv4.tcp_wmem=1024 4096 16384
-      - net.ipv4.tcp_moderate_rcvbuf=0
       - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
