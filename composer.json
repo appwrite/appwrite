@@ -57,7 +57,7 @@
         "utopia-php/logger": "0.3.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.3.*",
-        "utopia-php/pools": "dev-feat-remove-dependencies as 0.4.0",
+        "utopia-php/pools": "0.4.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/registry": "dev-feat-allow-params as 0.5.0",
         "utopia-php/storage": "0.11.*",

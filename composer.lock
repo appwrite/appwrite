@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "41e3fe329598c2a3b4eb303f6605258d",
+    "content-hash": "b125039c64ae4cbe0d2a1b57322d0ebe",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2255,16 +2255,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "dev-feat-remove-dependencies",
+            "version": "0.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "bdc023b98023fc6a5978ee99cc750256acaeb194"
+                "reference": "c8f96a33e7fbf58c1145eb6cf0f2c00cbe319979"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/bdc023b98023fc6a5978ee99cc750256acaeb194",
-                "reference": "bdc023b98023fc6a5978ee99cc750256acaeb194",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/c8f96a33e7fbf58c1145eb6cf0f2c00cbe319979",
+                "reference": "c8f96a33e7fbf58c1145eb6cf0f2c00cbe319979",
                 "shasum": ""
             },
             "require": {
@@ -2300,9 +2300,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/feat-remove-dependencies"
+                "source": "https://github.com/utopia-php/pools/tree/0.4.1"
             },
-            "time": "2022-11-13T22:14:50+00:00"
+            "time": "2022-11-15T08:55:16+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5217,12 +5217,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/pools",
-            "version": "dev-feat-remove-dependencies",
-            "alias": "0.4.0",
-            "alias_normalized": "0.4.0.0"
-        },
-        {
             "package": "utopia-php/registry",
             "version": "dev-feat-allow-params",
             "alias": "0.5.0",
@@ -5231,7 +5225,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/pools": 20,
         "utopia-php/registry": 20
     },
     "prefer-stable": false,
