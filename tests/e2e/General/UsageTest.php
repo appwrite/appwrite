@@ -85,7 +85,7 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(10);
+        sleep(20);
 
         $projectId = $data['projectId'];
         $headers = $data['headers'];
@@ -256,7 +256,7 @@ class UsageTest extends Scope
         $filesCreate = $data['filesCreate'];
         $filesDelete = $data['filesDelete'];
 
-        sleep(10);
+        sleep(20);
 
         // console request
         $headers = [
@@ -414,7 +414,7 @@ class UsageTest extends Scope
         $this->assertEquals('name', $res['body']['key']);
         $collectionsUpdate++;
         $requestsCount++;
-        sleep(10);
+        sleep(20);
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
@@ -496,7 +496,7 @@ class UsageTest extends Scope
         $documentsRead = $data['documentsRead'];
         $documentsDelete = $data['documentsDelete'];
 
-        sleep(10);
+        sleep(20);
 
         // check datbase stats
         $headers = [
@@ -704,7 +704,7 @@ class UsageTest extends Scope
         $executions = $data['executions'];
         $failures = $data['failures'];
 
-        sleep(10);
+        sleep(20);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', $headers, [
             'range' => '30d'
