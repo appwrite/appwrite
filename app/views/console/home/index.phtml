@@ -34,13 +34,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                     data-analytics-event="click"
                     data-analytics-category="console"
                     data-analytics-label="Usage 24h"
-                    data-service="projects.getUsage"
                     data-event="submit"
-                    data-scope="console"
+                    data-service="project.getUsage"
                     data-name="usage"
-                    data-param-project-id="{{router.params.project}}"
                     data-param-range="24h"
-                    data-scope="console">
+                    data-scope="sdk">
                     <button class="tick">24h</button>
                 </form>
 
@@ -51,12 +49,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                     data-analytics-event="click"
                     data-analytics-category="console"
                     data-analytics-label="Usage 30d"
-                    data-service="projects.getUsage"
+                    data-service="project.getUsage"
                     data-event="submit"
-                    data-scope="console"
                     data-name="usage"
-                    data-param-project-id="{{router.params.project}}"
-                    data-scope="console">
+                    data-param-range="30d"
+                    data-scope="sdk">
                     <button class="tick">30d</button>
                 </form>
 
@@ -67,13 +64,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
                     data-analytics-event="click"
                     data-analytics-category="console"
                     data-analytics-label="Usage 90d"
-                    data-service="projects.getUsage"
+                    data-service="project.getUsage"
                     data-event="submit"
-                    data-scope="console"
                     data-name="usage"
-                    data-param-project-id="{{router.params.project}}"
                     data-param-range="90d"
-                    data-scope="console">
+                    data-scope="sdk">
                     <button class="tick">90d</button>
                 </form>
 
@@ -82,12 +77,11 @@ $usageStatsEnabled = $this->getParam('usageStatsEnabled', true);
         <?php endif;?>
     </div>
     <div
-        data-service="projects.getUsage"
+        data-service="project.getUsage"
         data-event="load"
-        data-scope="console"
         data-name="usage"
-        data-param-project-id="{{router.params.project}}"
-        data-param-range="30d">
+        data-param-range="30d"
+        data-scope="sdk">
             <?php if (!$graph && $usageStatsEnabled): ?>
             <div class="box dashboard">
                 <div class="row responsive">

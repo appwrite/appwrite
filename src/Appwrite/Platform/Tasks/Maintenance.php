@@ -1,20 +1,35 @@
 <?php
 
-global $cli;
+namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Platform\Action;
 
-$cli
-    ->task('maintenance')
-    ->desc('Schedules maintenance tasks and publishes them to resque')
-    ->action(function () {
+class Maintenance extends Action
+{
+    public static function getName(): string
+    {
+        return 'maintenance';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Schedules maintenance tasks and publishes them to resque')
+            ->inject('dbForConsole')
+            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
+    }
+
+    public function action(Database $dbForConsole): void
+    {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
@@ -112,9 +127,7 @@ $cli
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
-            $database = getConsoleDB();
-
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -124,9 +137,10 @@ $cli
             notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
-            renewCertificates($database);
+            renewCertificates($dbForConsole);
             notifyDeleteCache($cacheRetention);
 
             // TODO: @Meldiron Every probably 24h, look for schedules with active=false, that doesnt have function anymore. Dlete such schedule
         }, $interval);
-    });
+    }
+}
