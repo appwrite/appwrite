@@ -65,7 +65,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databaseName = $project->getAttribute('database');
 
-        if(isset($databases[$databaseName])) {
+        if (isset($databases[$databaseName])) {
             return $databases[$databaseName];
         }
 
