@@ -417,6 +417,15 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
+        // Check defaults
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
+
         /**
          * Test for SUCCESS
          */

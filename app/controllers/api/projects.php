@@ -81,7 +81,7 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0];
+        $auths = ['limit' => 0, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
