@@ -97,6 +97,7 @@ const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
 const APP_VERSION_STABLE = '1.0.3';
+const APP_DEFAULT_POOL_SIZE = 64;
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -105,7 +106,6 @@ const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
-const APP_DATABASE_DEFAULT_POOL_SIZE = 64;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -497,7 +497,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-$register->set('pools', function ($size = APP_DATABASE_DEFAULT_POOL_SIZE) {
+$register->set('pools', function ($size = APP_DEFAULT_POOL_SIZE) {
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -1131,7 +1131,7 @@ function getDevice($root): Device
  */
 function getWorkerPoolSize(): int
 {
-    $reservedConnections = APP_DATABASE_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
+    $reservedConnections = APP_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
     $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
     $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 1001);
     $workerConnections = $maxConnections - $reservedConnections;
