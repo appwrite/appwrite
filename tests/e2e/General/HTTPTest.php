@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\General;
 
-use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectNone;
 use Tests\E2E\Scopes\Scope;
