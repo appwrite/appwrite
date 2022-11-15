@@ -309,30 +309,30 @@ return [
             [
                 'name' => '_APP_DB_MAX_CONNECTIONS',
                 'description' => 'MariaDB server maximum connections.',
-                'introduction' => '1.2.0',
-                'default' => 1001,
+                'introduction' => 'TBD',
+                'default' => 251,
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
-            // [
-            //     'name' => '_APP_CONNECTIONS_DB_PROJECT',
-            //     'description' => 'A list of comma-separated key value pairs representing Project DBs where key is the database name and value is the DSN connection string.',
-            //     'introduction' => 'TBD',
-            //     'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
-            //     'required' => true,
-            //     'question' => '',
-            //     'filter' => ''
-            // ],
-            // [
-            //     'name' => '_APP_CONNECTIONS_DB_CONSOLE',
-            //     'description' => 'A key value pair representing the Console DB where key is the database name and value is the DSN connection string.',
-            //     'introduction' => 'TBD',
-            //     'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
-            //     'required' => true,
-            //     'question' => '',
-            //     'filter' => ''
-            // ]
+             [
+                 'name' => '_APP_CONNECTIONS_DB_PROJECT',
+                 'description' => 'A list of comma-separated key value pairs representing Project DBs where key is the database name and value is the DSN connection string.',
+                 'introduction' => 'TBD',
+                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
+                 'required' => true,
+                 'question' => '',
+                 'filter' => ''
+             ],
+             [
+                 'name' => '_APP_CONNECTIONS_DB_CONSOLE',
+                 'description' => 'A key value pair representing the Console DB where key is the database name and value is the DSN connection string.',
+                 'introduction' => 'TBD',
+                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
+                 'required' => true,
+                 'question' => '',
+                 'filter' => ''
+             ]
         ],
     ],
     [
