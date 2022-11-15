@@ -494,7 +494,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'Cookie' => $sessionCookie,
         ]));
-    
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Wait just over a minute
