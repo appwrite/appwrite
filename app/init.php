@@ -1137,7 +1137,7 @@ function getWorkerPoolSize(): int
     $workerConnections = $maxConnections - $reservedConnections;
 
     if ($workerCount > $workerConnections) {
-        throw new \Exception('Worker pool size is too small. Increase the number of allowed database connections or decrease the number of workers.');
+        throw new \Exception('Worker pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
     return (int)($workerConnections / $workerCount);
