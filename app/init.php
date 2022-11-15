@@ -497,7 +497,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-$register->set('pools', function ($size = APP_DEFAULT_POOL_SIZE) {
+$register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -621,7 +621,175 @@ $register->set('pools', function ($size = APP_DEFAULT_POOL_SIZE) {
                     break;
             }
 
-            $pool = new Pool($name, $size, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, APP_DEFAULT_POOL_SIZE, function () use ($type, $resource, $dsn) {
+                // Get Adapter
+                $adapter = null;
+
+                switch ($type) {
+                    case 'database':
+                        $adapter = match ($dsn->getScheme()) {
+                            'mariadb' => new MariaDB($resource()),
+                            'mysql' => new MySQL($resource()),
+                            default => null
+                        };
+
+                        $adapter->setDefaultDatabase($dsn->getDatabase());
+
+                        break;
+                    case 'queue':
+                        $adapter = $resource();
+                        break;
+                    case 'pubsub':
+                        $adapter = $resource();
+                        break;
+                    case 'cache':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new RedisCache($resource()),
+                            default => null
+                        };
+                        break;
+
+                    default:
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
+                        break;
+                }
+
+                return $adapter;
+            });
+
+            $group->add($pool);
+        }
+
+        Config::setParam('pools-' . $key, $config);
+    }
+
+    return $group;
+});
+$register->set('workerPools', function () {
+    $group = new Group();
+
+    $fallbackForDB = AppwriteURL::unparse([
+        'scheme' => 'mariadb',
+        'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
+        'port' => App::getEnv('_APP_DB_PORT', '3306'),
+        'user' => App::getEnv('_APP_DB_USER', ''),
+        'pass' => App::getEnv('_APP_DB_PASS', ''),
+    ]);
+    $fallbackForRedis = AppwriteURL::unparse([
+        'scheme' => 'redis',
+        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+        'user' => App::getEnv('_APP_REDIS_USER', ''),
+        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+    ]);
+
+    $connections = [
+        'console' => [
+            'type' => 'database',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'multiple' => false,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'database' => [
+            'type' => 'database',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'multiple' => true,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'queue' => [
+            'type' => 'queue',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'pubsub' => [
+            'type' => 'pubsub',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'cache' => [
+            'type' => 'cache',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'multiple' => true,
+            'schemes' => ['redis'],
+        ],
+    ];
+
+    foreach ($connections as $key => $connection) {
+        $type = $connection['type'] ?? '';
+        $dsns = $connection['dsns'] ?? '';
+        $multipe = $connection['multiple'] ?? false;
+        $schemes = $connection['schemes'] ?? [];
+        $config = [];
+        $dsns = explode(',', $connection['dsns'] ?? '');
+
+        foreach ($dsns as &$dsn) {
+            $dsn = explode('=', $dsn);
+            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
+            $dsn = $dsn[1] ?? '';
+            $config[] = $name;
+
+            if (empty($dsn)) {
+                //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
+                continue;
+            }
+
+            $dsn = new DSN($dsn);
+            $dsnHost = $dsn->getHost();
+            $dsnPort = $dsn->getPort();
+            $dsnUser = $dsn->getUser();
+            $dsnPass = $dsn->getPassword();
+            $dsnScheme = $dsn->getScheme();
+            $dsnDatabase = $dsn->getDatabase();
+
+            if (!in_array($dsnScheme, $schemes)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
+            }
+
+            /**
+             * Get Resource
+             *
+             * Creation could be reused accross connection types like database, cache, queue, etc.
+             *
+             * Resource assignment to an adapter will happen below.
+             */
+
+            switch ($dsnScheme) {
+                case 'mysql':
+                case 'mariadb':
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                                PDO::ATTR_TIMEOUT => 3, // Seconds
+                                PDO::ATTR_PERSISTENT => true,
+                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                                PDO::ATTR_EMULATE_PREPARES => true,
+                                PDO::ATTR_STRINGIFY_FETCHES => true
+                            ));
+                        });
+                    };
+                    break;
+                case 'redis':
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
+                        $redis = new Redis();
+                        @$redis->pconnect($dsnHost, (int)$dsnPort);
+                        if ($dsnPass) {
+                            $redis->auth($dsnPass);
+                        }
+                        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+                        return $redis;
+                    };
+                    break;
+
+                default:
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
+                    break;
+            }
+
+            $pool = new Pool($name, getWorkerPoolSize(), function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
 
