@@ -106,10 +106,10 @@ class BuildsV1 extends Worker
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
-        $data = $deployment->getArrayCopy(array_keys($deploymentModel->getRules()));
-
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
+
+        $data = $deployment->getArrayCopy(array_keys($deploymentModel->getRules()));
 
         $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $deploymentUpdate

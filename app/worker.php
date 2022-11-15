@@ -33,7 +33,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
 }, ['cache', 'register']);
 
 Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Database $dbForConsole) {
-    $args = $message->getPayload()['value'] ?? [];
+    $args = $message->getPayload() ?? [];
     $project = new Document($args['project'] ?? []);
 
     if ($project->isEmpty() || $project->getId() === 'console') {

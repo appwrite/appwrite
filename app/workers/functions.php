@@ -43,10 +43,10 @@ $execute = function (
     ?Document $user = null,
     string $jwt = null
 ) use ($executor, $register) {
-
     $user ??= new Document();
     $functionId = $function->getId();
     $deploymentId = $function->getAttribute('deployment', '');
+
 
     /** Check if deployment exists */
     $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -209,7 +209,7 @@ $execute = function (
 
     /** Trigger Functions */
     $functions
-        ->setData($data)
+        ->setData($data ?? '')
         ->setProject($project)
         ->setUser($user)
         ->setEvent('functions.[functionId].executions.[executionId].update')
@@ -333,7 +333,7 @@ $server->job()
                 $data = $args['data'] ?? '';
                 $execution = new Document($args['execution'] ?? []);
                 $user = new Document($args['user'] ?? []);
-                $function = $dbForProject->getDocument('functions', $execution->getAttribute('functionId'));
+                // $function = $dbForProject->getDocument('functions', $execution->getAttribute('functionId'));
                 call_user_func($execute, $project, $function, $dbForProject, $functions, 'http', $execution->getId(), null, null, $data, $user, $jwt);
                 break;
             case 'schedule':
