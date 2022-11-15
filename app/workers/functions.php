@@ -20,11 +20,12 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
+use Utopia\Queue\Client as QueueClient;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-global $client;
+global $connection;
 global $workerNumber;
 
 $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
@@ -40,7 +41,7 @@ $execute = function (
     string $data = null,
     ?Document $user = null,
     string $jwt = null
-) use ($executor) {
+) use ($executor, $register) {
 
     $user ??= new Document();
     $functionId = $function->getId();
@@ -50,28 +51,28 @@ $execute = function (
     $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
     if ($deployment->getAttribute('resourceId') !== $functionId) {
-        throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
+        throw new Exception('Deployment not found. Create deployment before trying to execute a function');
     }
 
     if ($deployment->isEmpty()) {
-        throw new Exception('Deployment not found. Create deployment before trying to execute a function', 404);
+        throw new Exception('Deployment not found. Create deployment before trying to execute a function');
     }
 
     /** Check if build has exists */
     $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
     if ($build->isEmpty()) {
-        throw new Exception('Build not found', 404);
+        throw new Exception('Build not found');
     }
 
     if ($build->getAttribute('status') !== 'ready') {
-        throw new Exception('Build not ready', 400);
+        throw new Exception('Build not ready');
     }
 
     /** Check if  runtime is supported */
     $runtimes = Config::getParam('runtimes', []);
 
     if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
-        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
+        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
     }
 
     $runtime = $runtimes[$function->getAttribute('runtime')];
@@ -102,14 +103,14 @@ $execute = function (
     $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
     if ($build->getAttribute('status') !== 'ready') {
-        throw new Exception('Build not ready', 400);
+        throw new Exception('Build not ready');
     }
 
     /** Check if  runtime is supported */
     $runtimes = Config::getParam('runtimes', []);
 
     if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
-        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
+        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
     }
 
     $runtime = $runtimes[$function->getAttribute('runtime')];
@@ -254,7 +255,7 @@ $execute = function (
     }
 };
 
-$adapter  = new Queue\Adapter\Swoole($client, $workerNumber, Event::FUNCTIONS_QUEUE_NAME);
+$adapter  = new Queue\Adapter\Swoole($connection, $workerNumber, Event::FUNCTIONS_QUEUE_NAME);
 $server   = new Queue\Server($adapter);
 
 $server->job()

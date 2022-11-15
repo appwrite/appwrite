@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/init.php';
 
-
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -13,7 +12,6 @@ use Utopia\Database\Document;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-
 
 global $register;
 
@@ -76,7 +74,7 @@ App::setResource('logger', function ($register) {
 
 
 $pools = $register->get('pools');
-$client = $pools->get('queue')->pop()->getResource();
+$connection = $pools->get('queue')->pop()->getResource();
 
 
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));

@@ -41,7 +41,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Queue\Client as queue;
+use Utopia\Queue\Client as QueueClient;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -1155,10 +1155,10 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $queue = new queue(Event::FUNCTIONS_QUEUE_NAME, $pools->get('queue')->pop()->getResource());
-            $queue->enqueue([
-                'type' => 'http',
-                    'value' => [
+            $queueForFunctions = new QueueClient(Event::FUNCTIONS_QUEUE_NAME, $pools->get('queue')->pop()->getResource());
+            $queueForFunctions->enqueue([
+                'type'  => 'http',
+                'value' => [
                     'type' => 'http',
                     'execution' => $execution,
                     'function' => $function,

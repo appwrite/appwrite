@@ -38,8 +38,6 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Utopia\Queue\Client as SyncOut;
-use Utopia\Queue\Connection\Redis as QueueRedis;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
@@ -67,7 +65,6 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
@@ -526,35 +523,30 @@ $register->set('pools', function () {
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
-            'useResource' => true,
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
-            'useResource' => true,
         ],
         'queue' => [
             'type' => 'queue',
             'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
-            'useResource' => false,
         ],
         'pubsub' => [
             'type' => 'pubsub',
             'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
-            'useResource' => true,
         ],
         'cache' => [
             'type' => 'cache',
             'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
             'multiple' => true,
             'schemes' => ['redis'],
-            'useResource' => true,
         ],
     ];
 
@@ -586,7 +578,7 @@ $register->set('pools', function () {
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getDatabase();
 
-            if (!in_array($dsnScheme, $schemes) && $useResource) {
+            if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -647,12 +639,12 @@ $register->set('pools', function () {
                         $adapter->setDefaultDatabase($dsn->getDatabase());
                         break;
                     case 'pubsub':
-                        break;
                         $adapter = $resource();
+                        break;
                     case 'queue':
                         $adapter = match ($dsn->getScheme()) {
                             'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
-                            default => 'bla'
+                            default => null
                         };
                         break;
                     case 'cache':
@@ -678,6 +670,7 @@ $register->set('pools', function () {
 
     return $group;
 });
+
 $register->set('influxdb', function () {
  // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -853,7 +846,7 @@ App::setResource('messaging', fn() => new Phone());
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-App::setResource('clients', function ($request, $console, $project) use ($register) {
+App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
