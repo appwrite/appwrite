@@ -51,25 +51,6 @@ class HTTPTest extends Scope
         // $this->assertEquals('dev', $response['body']['version']);
     }
 
-    public function testManifest()
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/manifest.json', \array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-        ]), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('Appwrite', $response['body']['name']);
-        $this->assertEquals('Appwrite', $response['body']['short_name']);
-        $this->assertEquals('.', $response['body']['start_url']);
-        $this->assertEquals('.', $response['body']['start_url']);
-        $this->assertEquals('https://appwrite.io/', $response['body']['url']);
-        $this->assertEquals('standalone', $response['body']['display']);
-    }
-
     public function testHumans()
     {
         /**
