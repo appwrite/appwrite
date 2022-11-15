@@ -15,7 +15,7 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.9
     container_name: appwrite-traefik
     <<: *x-logging
     command:
@@ -30,6 +30,15 @@ services:
     ports:
       - <?php echo $httpPort; ?>:80
       - <?php echo $httpsPort; ?>:443
+    ulimits:
+      nofile:
+        soft: 655350
+        hard: 655350
+    sysctls:
+      - net.core.somaxconn=1024
+      - net.ipv4.tcp_rmem=1024 4096 16384
+      - net.ipv4.tcp_wmem=1024 4096 16384
+      - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -93,6 +102,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_MAX_CONNECTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -187,6 +197,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_MAX_CONNECTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -611,7 +622,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_DB_MAX_CONNECTIONS}'
 
   redis:
     image: redis:7.0.4-alpine

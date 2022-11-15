@@ -14,7 +14,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.9
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -33,6 +33,15 @@ services:
       - 8080:80
       - 443:443
       - 9500:8080
+    ulimits:
+      nofile:
+        soft: 655350
+        hard: 655350
+    sysctls:
+      - net.core.somaxconn=1024
+      - net.ipv4.tcp_rmem=1024 4096 16384
+      - net.ipv4.tcp_wmem=1024 4096 16384
+      - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -114,6 +123,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_MAX_CONNECTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -218,6 +228,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_MAX_CONNECTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -730,8 +741,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
-    # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
+    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_DB_MAX_CONNECTIONS}'
 
   # smtp:
   #   image: appwrite/smtp:1.2.0
