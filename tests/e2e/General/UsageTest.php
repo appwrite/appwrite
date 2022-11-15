@@ -688,7 +688,7 @@ class UsageTest extends Scope
             'async' => true,
         ]);
 
-        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertEquals($functionId, $execution['body']['functionId']);
 
