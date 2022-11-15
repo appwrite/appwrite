@@ -97,6 +97,7 @@ const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
 const APP_VERSION_STABLE = '1.0.3';
+const APP_DEFAULT_POOL_SIZE = 64;
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -496,7 +497,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-$register->set('pools', function () {
+$register->set('pools', function ($size = APP_DEFAULT_POOL_SIZE) {
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -620,7 +621,7 @@ $register->set('pools', function () {
                     break;
             }
 
-            $pool = new Pool($name, 64, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, $size, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
 
@@ -1120,6 +1121,26 @@ function getDevice($root): Device
             $wasabiAcl = 'private';
             return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
+}
+
+/**
+ * Get database connection pool size for worker processes.
+ *
+ * @return int
+ * @throws \Exception
+ */
+function getWorkerPoolSize(): int
+{
+    $reservedConnections = APP_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 251);
+    $workerConnections = $maxConnections - $reservedConnections;
+
+    if ($workerCount > $workerConnections) {
+        throw new \Exception('Worker pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
+    }
+
+    return (int)($workerConnections / $workerCount);
 }
 
 App::setResource('mode', function ($request) {

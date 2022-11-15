@@ -1,15 +1,28 @@
 <?php
 
-global $cli;
+namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\CLI\Console;
+use Utopia\Platform\Action;
 
-$cli
-    ->task('vars')
-    ->desc('List all the server environment variables')
-    ->action(function () {
+class Vars extends Action
+{
+    public static function getName(): string
+    {
+        return 'vars';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('List all the server environment variables')
+            ->callback(fn () => $this->action());
+    }
+
+    public function action(): void
+    {
         $config = Config::getParam('variables', []);
         $vars = [];
 
@@ -22,4 +35,5 @@ $cli
         foreach ($vars as $key => $value) {
             Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
         }
-    });
+    }
+}
