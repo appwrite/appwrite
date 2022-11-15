@@ -547,9 +547,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $schedule->setAttribute('active', $active);
 
-        Authorization::skip(function () use ($dbForConsole, $schedule) {
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-        });
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $events
             ->setParam('functionId', $function->getId())
@@ -597,9 +595,7 @@ App::delete('/v1/functions/:functionId')
             ->setAttribute('active', false)
         ;
 
-        Authorization::skip(function () use ($dbForConsole, $schedule) {
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-        });
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -804,9 +800,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $schedule->setAttribute('active', $active);
 
-        Authorization::skip(function () use ($dbForConsole, $schedule) {
-            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-        });
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $metadata = null;
 
