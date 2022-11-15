@@ -11,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Swoole\Timer;
 use Utopia\Database\Database;
+use Utopia\Pools\Group;
 
 use function Swoole\Coroutine\run;
 
@@ -28,9 +29,10 @@ class Schedule extends Action
     {
         $this
             ->desc('Execute functions scheduled in Appwrite')
+            ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
-            ->callback(fn (Database $dbForConsole, callable $getProjectDB) => $this->action($dbForConsole, $getProjectDB));
+            ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
     }
 
     /**
@@ -38,7 +40,7 @@ class Schedule extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutime sleeps until exact time before sending request to worker.
     */
-    public function action(Database $dbForConsole, callable $getProjectDB): void
+    public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         Console::title('Scheduler V1');
         Console::success(APP_NAME . ' Scheduler v1 has started');
@@ -52,9 +54,7 @@ class Schedule extends Action
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
             $project = $dbForConsole->getDocument('projects', $schedule->getAttribute('projectId'));
 
-            [ $database, $reclaim ] = $getProjectDB($project);
-            $function = $database->getDocument('functions', $schedule->getAttribute('resourceId'));
-            $reclaim();
+            $function = $getProjectDB($project)->getDocument('functions', $schedule->getAttribute('resourceId'));
 
             return [
                 'resourceId' => $schedule->getAttribute('resourceId'),
@@ -93,17 +93,19 @@ class Schedule extends Action
 
             $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
         }
+        
+        $pools->reclaim();
 
         Console::success("{$total} functions where loaded in " . (microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
 
         run(
-            function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule) {
+            function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule, $pools) {
                 /**
                  * The timer synchronize $schedules copy with database collection.
                  */
-                Timer::tick(self::FUNCTION_UPDATE_TIMER * 1000, function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule) {
+                Timer::tick(self::FUNCTION_UPDATE_TIMER * 1000, function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule, $pools) {
                     $time = DateTime::now();
                     $timerStart = \microtime(true);
 
@@ -146,6 +148,8 @@ class Schedule extends Action
 
                     $lastSyncUpdate = $time;
                     $timerEnd = \microtime(true);
+
+                    $pools->reclaim();
 
                     Console::log("Sync tick: {$total} schedules where updates in " . ($timerEnd - $timerStart) . " seconds");
                 });
