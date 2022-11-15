@@ -38,7 +38,7 @@ class HTTPTest extends Scope
         /**
          * Test for SUCCESS
          */
-        //TODO: Add after Console
+        $this->markTestIncomplete('This test needs to be updated for the new console.');
         // $response = $this->client->call(Client::METHOD_GET, '/error', \array_merge([
         //     'origin' => 'http://localhost',
         //     'content-type' => 'application/json',
