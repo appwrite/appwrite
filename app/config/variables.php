@@ -924,7 +924,7 @@ return [
             [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
                 'description' => 'Schedules deletion interval ( in seconds ) ',
-                'introduction' => '1.2.0',
+                'introduction' => 'TBD',
                 'default' => '86400',
                 'required' => false,
                 'question' => '',
