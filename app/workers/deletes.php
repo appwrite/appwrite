@@ -133,39 +133,32 @@ class DeletesV1 extends Worker
     protected function deleteSchedules(string $datetime): void
     {
 
-        $sum = $limit = 50;
-        $offset = 0;
-        /** @var Document[] $functions */
-        while ($sum >= $limit) {
-            $schedules = $this->getConsoleDB()->find('schedules', [
+        $this->deleteByGroup(
+            'schedules',
+            [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', ['function']),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
-                Query::limit($limit),
-                Query::offset($offset),
-            ]);
-
-            $sum = \count($schedules);
-            $offset = $offset + $limit;
-
-            foreach ($schedules as $schedule) {
-                    Console::info('Querying schedule for function ' . $schedule->getAttribute('resourceId'));
-                    $project = $this->getConsoleDB()->getDocument('projects', $schedule->getAttribute('projectId'));
+            ],
+            $this->getConsoleDB(),
+            function (Document $document) {
+                Console::info('Querying schedule for function ' . $document->getAttribute('resourceId'));
+                $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
-                    Console::success('Deleting schedule for function ' . $schedule->getAttribute('resourceId'));
-                    continue;
+                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                    return;
                 }
 
-                $function = $this->getProjectDB($project)->getDocument('functions', $schedule->getAttribute('resourceId'));
+                $function = $this->getProjectDB($project)->getDocument('functions', $document->getAttribute('resourceId'));
 
                 if ($function->isEmpty()) {
-                    $this->getConsoleDB()->deleteDocument('schedules', $schedule->getId());
-                    Console::success('Deleting schedule for function ' . $schedule->getAttribute('resourceId'));
+                    $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
                 }
             }
-        }
+        );
     }
 
     /**
