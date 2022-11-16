@@ -1,10 +1,10 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Cron\CronExpression;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Utopia\Database\DateTime;
@@ -14,6 +14,7 @@ use Utopia\Database\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -57,6 +58,8 @@ class BuildsV1 extends Worker
 
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
+        global $register;
+
         $dbForProject = $this->getProjectDB($project);
 
         $function = $dbForProject->getDocument('functions', $function->getId());
@@ -118,10 +121,13 @@ class BuildsV1 extends Worker
             ->trigger();
 
         /** Trigger Functions */
-        $deploymentUpdate
-            ->setClass(Event::FUNCTIONS_CLASS_NAME)
-            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+        $pools = $register->get('pools');
+        $connection = $pools->get('queue')->pop();
+        $functions = new Func($connection->getResource());
+        $functions
+            ->from($deploymentUpdate)
             ->trigger();
+        $connection->reclaim();
 
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
@@ -145,7 +151,7 @@ class BuildsV1 extends Worker
 
         $source = $deployment->getAttribute('path');
 
-        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
             return $carry;
         }, []);
@@ -181,6 +187,8 @@ class BuildsV1 extends Worker
 
             Console::success("Build id: $buildId created");
 
+            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
+
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deployment', $deployment->getId());
@@ -188,11 +196,16 @@ class BuildsV1 extends Worker
             }
 
             /** Update function schedule */
-            $schedule = $function->getAttribute('schedule', '');
-            $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
-            $function->setAttribute('scheduleNext', $next);
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+            $dbForConsole = $this->getConsoleDB();
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+
+            $schedule
+                ->setAttribute('schedule', $function->getAttribute('schedule'))
+                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
+
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
@@ -222,7 +235,6 @@ class BuildsV1 extends Worker
             );
 
             /** Update usage stats */
-            global $register;
             if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
                 $statsd = $register->get('statsd');
                 $usage = new Stats($statsd);

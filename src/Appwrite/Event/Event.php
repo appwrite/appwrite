@@ -337,8 +337,6 @@ class Event
             default => false
         };
 
-
-
         return [
             'type' => $type,
             'resource' => $resource,

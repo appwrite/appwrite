@@ -3,15 +3,16 @@
 namespace Appwrite\Platform\Tasks;
 
 use Cron\CronExpression;
+use Swoole\Timer;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Swoole\Timer;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Appwrite\Event\Func;
 
 use function Swoole\Coroutine\run;
 
@@ -96,7 +97,7 @@ class Schedule extends Action
 
         $pools->reclaim();
 
-        Console::success("{$total} functions where loaded in " . (microtime(true) - $loadStart) . " seconds");
+        Console::success("{$total} functions were loaded in " . (microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
 
@@ -151,14 +152,14 @@ class Schedule extends Action
 
                     $pools->reclaim();
 
-                    Console::log("Sync tick: {$total} schedules where updates in " . ($timerEnd - $timerStart) . " seconds");
+                    Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
                 });
 
                 /**
                  * The timer to prepare soon-to-execute schedules.
                  */
                 $lastEnqueueUpdate = null;
-                $enqueueFunctions = function () use (&$schedules, $lastEnqueueUpdate) {
+                $enqueueFunctions = function () use (&$schedules, $lastEnqueueUpdate, $pools) {
                     $timerStart = \microtime(true);
                     $time = DateTime::now();
 
@@ -184,11 +185,9 @@ class Schedule extends Action
 
                         $total++;
 
-                        $promiseStart = \microtime(true); // in seconds
+                        $promiseStart = \time(); // in seconds
                         $executionStart = $nextDate->getTimestamp(); // in seconds
-                        $executionSleep = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
-
-                        $delay = \ceil(\intval($executionSleep));
+                        $delay = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
 
                         if (!isset($delayedExecutions[$delay])) {
                             $delayedExecutions[$delay] = [];
@@ -198,8 +197,11 @@ class Schedule extends Action
                     }
 
                     foreach ($delayedExecutions as $delay => $scheduleKeys) {
-                        \go(function () use ($delay, $schedules, $scheduleKeys) {
+                        \go(function () use ($delay, $schedules, $scheduleKeys, $pools) {
                             \sleep($delay); // in seconds
+
+                            $queue = $pools->get('queue')->pop();
+                            $connection = $queue->getResource();
 
                             foreach ($scheduleKeys as $scheduleKey) {
                                 // Ensure schedule was not deleted
@@ -207,14 +209,24 @@ class Schedule extends Action
                                     return;
                                 }
 
-                                Console::success("Executing function at " . DateTime::now()); // TODO: Send to worker queue
+                                $schedule = $schedules[$scheduleKey];
+
+                                $functions = new Func($connection);
+
+                                $functions
+                                    ->setType('schedule')
+                                    ->setFunction($schedule['function'])
+                                    ->setProject($schedule['project'])
+                                    ->trigger();
                             }
+
+                            $queue->reclaim();
                         });
                     }
 
                     $timerEnd = \microtime(true);
                     $lastEnqueueUpdate = $timerStart;
-                    Console::log("Enqueue tick: {$total} executions where enqueued in " . ($timerEnd - $timerStart) . " seconds");
+                    Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
                 };
 
                 Timer::tick(self::FUNCTION_ENQUEUE_TIMER * 1000, fn() => $enqueueFunctions());

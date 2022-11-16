@@ -71,9 +71,11 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Queue;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -644,13 +646,15 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDefaultDatabase($dsn->getDatabase());
-
-                        break;
-                    case 'queue':
-                        $adapter = $resource();
                         break;
                     case 'pubsub':
                         $adapter = $resource();
+                        break;
+                    case 'queue':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                            default => null
+                        };
                         break;
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
@@ -675,6 +679,7 @@ $register->set('pools', function () {
 
     return $group;
 });
+
 $register->set('influxdb', function () {
  // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -847,10 +852,12 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
+App::setResource('queueForFunctions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
