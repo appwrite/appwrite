@@ -469,13 +469,13 @@ App::put('/v1/functions/:functionId')
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
 
         /**
          * In case we want to clear the schedule
          */
         if (!empty($function->getAttribute('deployment'))) {
-            $schedule->setAttribute('resourceUpdatedAt', $function['scheduleUpdatedAt']);
+            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
         }
 
         $schedule
@@ -537,7 +537,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             'deployment' => $deployment->getId()
         ])));
 
-        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
 
         $active = !empty($function->getAttribute('schedule'));
 
@@ -588,7 +588,7 @@ App::delete('/v1/functions/:functionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
-        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
 
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -790,7 +790,7 @@ App::post('/v1/functions/:functionId/deployments')
          * TODO Should we update also the function collection with the scheduleUpdatedAt attr?
          */
 
-        $schedule = $dbForConsole->getDocument('schedules', $function['scheduleId']);
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
 
         $active = !empty($function->getAttribute('schedule'));
 
@@ -1059,8 +1059,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('events')
     ->inject('usage')
     ->inject('mode')
-    ->inject('functions')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $functions) {
+    ->inject('queueForFunctions')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1148,7 +1148,7 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $functions
+            $queueForFunctions
                 ->setType('http')
                 ->setExecution($execution)
                 ->setFunction($function)
@@ -1162,7 +1162,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []);

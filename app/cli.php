@@ -110,7 +110,7 @@ CLI::setResource('influxdb', function (Registry $register) {
     return $database;
 }, ['register']);
 
-CLI::setResource('functions', function (Group $pools) {
+CLI::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());
 }, ['pools']);
 

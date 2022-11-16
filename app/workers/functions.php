@@ -29,6 +29,7 @@ Authorization::setDefaultStatus(false);
 
 global $connection;
 global $workerNumber;
+
 $adapter  = new Swoole($connection, $workerNumber, Event::FUNCTIONS_QUEUE_NAME);
 $server   = new Server($adapter);
 
@@ -145,7 +146,7 @@ Server::setResource('execute', function () {
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
-        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
             return $carry;
         }, []);

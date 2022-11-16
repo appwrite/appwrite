@@ -252,8 +252,8 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->inject('functions')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $functions) use ($parseLabel) {
+    ->inject('queueForFunctions')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -264,10 +264,8 @@ App::shutdown()
             /**
              * Trigger functions.
              */
-            $functions
+            $queueForFunctions
                 ->from($events)
-                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
-                ->setClass(Event::FUNCTIONS_CLASS_NAME)
                 ->trigger();
 
             /**

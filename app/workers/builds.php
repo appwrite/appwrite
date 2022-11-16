@@ -15,6 +15,7 @@ use Utopia\Database\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -156,7 +157,7 @@ class BuildsV1 extends Worker
 
         $source = $deployment->getAttribute('path');
 
-        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
             return $carry;
         }, []);
@@ -192,6 +193,8 @@ class BuildsV1 extends Worker
 
             Console::success("Build id: $buildId created");
 
+            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
+
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deployment', $deployment->getId());
@@ -199,14 +202,15 @@ class BuildsV1 extends Worker
             }
 
             /** Update function schedule */
-            // TODO: @Meldiron refactor scheduler here
-            /*
-            $schedule = $function->getAttribute('schedule', '');
-            $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
-            $function->setAttribute('scheduleNext', $next);
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-            */
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+
+            $schedule
+                ->setAttribute('schedule', $function->getAttribute('schedule'))
+                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+    
+    
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));

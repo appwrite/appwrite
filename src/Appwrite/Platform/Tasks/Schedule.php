@@ -3,17 +3,15 @@
 namespace Appwrite\Platform\Tasks;
 
 use Cron\CronExpression;
+use Swoole\Timer;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Swoole\Timer;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
-use Utopia\Queue\Client as Worker;
-use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 
 use function Swoole\Coroutine\run;
