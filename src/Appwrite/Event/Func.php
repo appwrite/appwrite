@@ -156,7 +156,7 @@ class Func extends Event
             'execution' => $this->execution,
             'type' => $this->type,
             'jwt' => $this->jwt,
-            'payload' => '',
+            'payload' => $this->payload,
             'events' => $events,
             'data' => $this->data,
         ]);

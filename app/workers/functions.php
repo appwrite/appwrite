@@ -27,18 +27,18 @@ Authorization::setDefaultStatus(false);
 
 Server::setResource('execute', function () {
     return function (
+        Func $queueForFunctions,
+        Database $dbForProject,
+        Client $statsd,
         Document $project,
         Document $function,
-        Database $dbForProject,
-        Func $queueForFunctions,
         string $trigger,
-        string $executionId = null,
-        string $event = null,
-        string $eventData = null,
         string $data = null,
         ?Document $user = null,
         string $jwt = null,
-        Client $statsd
+        string $event = null,
+        string $eventData = null,
+        string $executionId = null,
     ) {
         $user ??= new Document();
         $functionId = $function->getId();
@@ -124,11 +124,11 @@ Server::setResource('execute', function () {
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
-            $executionResponse = $executor->createExecution(
+            $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executionResponse = $client->createExecution(
                 projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
+                deploymentId: $deploymentId,
                 payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
@@ -171,12 +171,7 @@ Server::setResource('execute', function () {
 
         /** Trigger Functions */
         $queueForFunctions
-            ->setData($data ?? '')
-            ->setProject($project)
-            ->setUser($user)
-            ->setEvent('functions.[functionId].executions.[executionId].update')
-            ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
+            ->from($executionUpdate)
             ->trigger();
 
         /** Trigger realtime event */
