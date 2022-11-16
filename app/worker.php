@@ -76,7 +76,7 @@ Server::setResource('functions', function (Registry $register) {
             ->get('queue')
             ->pop()
             ->getResource()
-        );
+    );
 }, ['register']);
 
 Server::setResource('logger', function ($register) {

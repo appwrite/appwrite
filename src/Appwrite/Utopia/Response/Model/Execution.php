@@ -6,7 +6,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Role;
 
-
 class Execution extends Model
 {
     public function __construct()

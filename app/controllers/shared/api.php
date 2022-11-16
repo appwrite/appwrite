@@ -129,9 +129,9 @@ App::init()
             }
         }
 
-    /*
-     * Background Jobs
-     */
+        /*
+        * Background Jobs
+        */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -265,12 +265,9 @@ App::shutdown()
              * Trigger functions.
              */
             $functions
-                ->setData(\json_encode($events->getPayload()))
-                ->setProject($events->getProject())
-                ->setUser($events->getUser())
-                ->setEvent($events->getEvent())
-                ->setParam('functionId', $events->getParam('functionId'))
-                ->setParam('executionId', $events->getParam('executionId'))
+                ->from($events)
+                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+                ->setClass(Event::FUNCTIONS_CLASS_NAME)
                 ->trigger();
 
             /**

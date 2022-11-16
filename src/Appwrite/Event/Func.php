@@ -145,16 +145,36 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
-        $queue = new Client(Event::FUNCTIONS_QUEUE_NAME, $this->connection);
+        $client = new Client($this->queue, $this->connection);
 
-        return $queue->enqueue([
-            'type' => $this->type,
-            'execution' => $this->execution,
-            'function' => $this->function,
-            'data' => $this->data,
-            'jwt' => $this->jwt,
+        return $client->enqueue([
             'project' => $this->project,
-            'user' => $this->user
+            'user' => $this->user,
+            'function' => $this->function,
+            'execution' => $this->execution,
+            'type' => $this->type,
+            'jwt' => $this->jwt,
+            'payload' => '',
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'data' => $this->data,
         ]);
+    }
+
+    /**
+     * Generate a function event from a base event
+     *
+     * @param Event $event
+     *
+     * @return self
+     *
+     */
+    public function from(Event $event): self
+    {
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        return $this;
     }
 }

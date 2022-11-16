@@ -52,37 +52,37 @@ Server::setResource('execute', function () {
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
         var_dump("Deployment ID : ", $deploymentId);
-    
+
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-    
+
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
         }
-    
+
         if ($deployment->isEmpty()) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
         }
-    
+
         /** Check if build has exists */
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         if ($build->isEmpty()) {
             throw new Exception('Build not found');
         }
-    
+
         if ($build->getAttribute('status') !== 'ready') {
             throw new Exception('Build not ready');
         }
-    
+
         /** Check if  runtime is supported */
         $runtimes = Config::getParam('runtimes', []);
-    
+
         if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
-    
+
         $runtime = $runtimes[$function->getAttribute('runtime')];
-    
+
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
@@ -100,27 +100,27 @@ Server::setResource('execute', function () {
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
             ]));
-    
+
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
         }
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-    
+
         if ($build->getAttribute('status') !== 'ready') {
             throw new Exception('Build not ready');
         }
-    
+
         /** Check if  runtime is supported */
         $runtimes = Config::getParam('runtimes', []);
-    
+
         if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
-    
+
         $runtime = $runtimes[$function->getAttribute('runtime')];
-    
+
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
@@ -138,19 +138,19 @@ Server::setResource('execute', function () {
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
             ]));
-    
+
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
         }
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-    
+
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
             return $carry;
         }, []);
-    
+
         /** Collect environment variables */
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
@@ -166,7 +166,7 @@ Server::setResource('execute', function () {
             'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
             'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
-    
+
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
@@ -180,7 +180,7 @@ Server::setResource('execute', function () {
                 source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
-    
+
             /** Update execution status */
             $execution
                 ->setAttribute('status', $executionResponse['status'])
@@ -198,9 +198,9 @@ Server::setResource('execute', function () {
                 ->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
         }
-    
+
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-    
+
         /** Trigger Webhook */
         $executionModel = new Execution();
         $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
@@ -212,7 +212,7 @@ Server::setResource('execute', function () {
             ->setParam('executionId', $execution->getId())
             ->setPayload($execution->getArrayCopy(array_keys($executionModel->getRules())))
             ->trigger();
-    
+
         /** Trigger Functions */
         $functions
             ->setData($data ?? '')
@@ -222,7 +222,7 @@ Server::setResource('execute', function () {
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
             ->trigger();
-    
+
         /** Trigger realtime event */
         $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
             'functionId' => $function->getId(),
@@ -247,7 +247,7 @@ Server::setResource('execute', function () {
             channels: $target['channels'],
             roles: $target['roles']
         );
-    
+
         /** Update usage stats */
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $usage = new Stats($statsd);
@@ -282,6 +282,7 @@ $server->job()
         $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
         $data = $payload['data'] ?? '';
+        $eventData = $payload['payload'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
         $user = new Document($payload['user'] ?? []);
@@ -320,14 +321,14 @@ $server->job()
                     $execute(
                         statsd: $statsd,
                         dbForProject: $dbForProject,
-                        project: $project, 
+                        project: $project,
                         function: $function,
-                        trigger: 'event', 
-                        event: $events[0], 
-                        eventData: $payload, 
+                        trigger: 'event',
+                        event: $events[0],
+                        eventData: $eventData,
                         user: $user,
-                        data: null, 
-                        executionId: null, 
+                        data: null,
+                        executionId: null,
                         jwt: null
                     );
                     Console::success('Triggered function: ' . $events[0]);
@@ -346,15 +347,15 @@ $server->job()
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $execute(
-                    project: $project, 
+                    project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
                     functions: $functions,
                     trigger: 'http',
-                    executionId: $execution->getId(), 
-                    event: null, 
+                    executionId: $execution->getId(),
+                    event: null,
                     eventData: null,
-                    data: $data, 
+                    data: $data,
                     user: $user,
                     jwt: $jwt,
                     statsd: $statsd,
@@ -362,15 +363,15 @@ $server->job()
                 break;
             case 'schedule':
                 $execute(
-                    project: $project, 
+                    project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
                     functions: $functions,
                     trigger: 'http',
-                    executionId: null, 
-                    event: null, 
+                    executionId: null,
+                    event: null,
                     eventData: null,
-                    data: null, 
+                    data: null,
                     user: null,
                     jwt: null,
                     statsd: $statsd,
