@@ -154,4 +154,52 @@ $platform = new Appwrite();
 $platform->init(Service::TYPE_CLI);
 
 $cli = $platform->getCli();
+
+$cli
+    ->error()
+    ->inject('error')
+    ->action(function (Throwable $error) {
+        Console::error($error->getMessage());
+    });
+
+$cli
+    ->init()
+    ->inject('pools')
+    ->inject('cache')
+    ->action(function (Group $pools, Cache $cache) {
+        $maxAttempts = 5;
+        $sleep = 3;
+
+        $attempts = 0;
+        $ready = false;
+
+        do {
+            $attempts++;
+
+            // Prepare database connection
+            $dbAdapter = $pools
+                ->get('console')
+                ->pop()
+                ->getResource();
+
+            $dbForConsole = new Database($dbAdapter, $cache);
+            $dbForConsole->setNamespace('console');
+
+            // Ensure tables exist
+            $collections = Config::getParam('collections', []);
+            $last = \array_key_last($collections);
+
+            if ($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last)) {
+                $ready = true;
+                break;
+            }
+
+            sleep($sleep);
+        } while ($attempts < $maxAttempts);
+
+        if (!$ready) {
+            throw new Exception("Console is not ready yet. Please try again later.");
+        }
+    });
+
 $cli->run();
