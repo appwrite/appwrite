@@ -20,18 +20,10 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Server;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
-
-global $connection;
-global $workerNumber;
-
-$adapter  = new Swoole($connection, $workerNumber, Event::FUNCTIONS_QUEUE_NAME);
-$server   = new Server($adapter);
 
 Server::setResource('execute', function () {
     return function (
@@ -378,50 +370,6 @@ $server->job()
                 );
                 break;
         }
-    });
-
-$server
-    ->error()
-    ->inject('error')
-    ->inject('logger')
-    ->inject('register')
-    ->action(function ($error, $logger, $register) {
-
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
-        if ($error->getCode() >= 500 || $error->getCode() === 0) {
-            $log = new Log();
-
-            $log->setNamespace("appwrite-worker");
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-worker-functions');
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
-
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $logger->addLog($log);
-        }
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-
-        $register->get('pools')->reclaim();
     });
 
 $server->workerStart();

@@ -7,12 +7,17 @@ use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
+use Utopia\Logger\Log;
+
+Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 global $register;
 
@@ -91,4 +96,53 @@ $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
-Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+if(empty(App::getEnv('QUEUE'))) {
+    throw new Exception('Please configure "QUEUE" environemnt variable.');
+}
+
+$adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
+$server = new Server($adapter);
+
+$server
+    ->error()
+    ->inject('error')
+    ->inject('logger')
+    ->inject('register')
+    ->action(function ($error, $logger, $register) {
+
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        if ($error instanceof PDOException) {
+            throw $error;
+        }
+
+        if ($error->getCode() >= 500 || $error->getCode() === 0) {
+            $log = new Log();
+
+            $log->setNamespace("appwrite-worker");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+            $log->setAction('appwrite-worker-functions');
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $logger->addLog($log);
+        }
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
+
+        $register->get('pools')->reclaim();
+    });
