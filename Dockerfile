@@ -14,12 +14,9 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
-WORKDIR /usr/local/src/
+COPY app/console /usr/local/src/console
 
-COPY package-lock.json /usr/local/src/
-COPY package.json /usr/local/src/
-COPY gulpfile.js /usr/local/src/
-COPY public /usr/local/src/public
+WORKDIR /usr/local/src/console
 
 RUN npm ci
 RUN npm run build
@@ -35,7 +32,7 @@ ENV PHP_REDIS_VERSION=5.3.7 \
     PHP_IMAGICK_VERSION=3.7.0 \
     PHP_YAML_VERSION=2.2.2 \
     PHP_MAXMINDDB_VERSION=v1.11.0 \
-    PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9 "
+    PHP_ZSTD_VERSION="4504e4186e79b197cfcb75d4d09aa47ef7d92fe9"
 
 RUN \
   apk add --no-cache --virtual .deps \
@@ -297,7 +294,7 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=node /usr/local/src/public/dist /usr/src/code/public/dist
+COPY --from=node /usr/local/src/console/build /usr/src/code/console
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -311,8 +308,6 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public/fonts /usr/src/code/public/fonts
-COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes
