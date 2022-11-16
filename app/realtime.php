@@ -37,7 +37,7 @@ function getConsoleDB(): Database
     global $register;
 
     /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('workerPools');
+    $pools = $register->get('pools');
 
     $dbAdapter = $pools
         ->get('console')
@@ -57,7 +57,7 @@ function getProjectDB(Document $project): Database
     global $register;
 
     /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('workerPools');
+    $pools = $register->get('pools');
 
     if ($project->isEmpty() || $project->getId() === 'console') {
         return getConsoleDB();
@@ -79,7 +79,7 @@ function getCache(): Cache
 {
     global $register;
 
-    $pools = $register->get('workerPools'); /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -187,7 +187,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 sleep(DATABASE_RECONNECT_SLEEP);
             }
         } while (true);
-        $register->get('workerPools')->reclaim();
+        $register->get('pools')->reclaim();
     });
 
     /**
@@ -213,7 +213,7 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
         } catch (\Throwable $th) {
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
-            $register->get('workerPools')->reclaim();
+            $register->get('pools')->reclaim();
         }
     });
 });
@@ -274,7 +274,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]));
             }
 
-            $register->get('workerPools')->reclaim();
+            $register->get('pools')->reclaim();
         }
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
@@ -309,7 +309,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
             $start = time();
 
-            $redis = $register->get('workerPools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
+            $redis = $register->get('pools')->get('pubsub')->pop()->getResource(); /** @var Redis $redis */
             $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
             if ($redis->ping(true)) {
@@ -338,7 +338,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
-                        $register->get('workerPools')->reclaim();
+                        $register->get('pools')->reclaim();
                     }
                 }
 
@@ -370,7 +370,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
         } finally {
-            $register->get('workerPools')->reclaim();
+            $register->get('pools')->reclaim();
         }
     }
 
@@ -384,7 +384,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('pools', fn() => $register->get('workerPools'));
+    App::setResource('pools', fn() => $register->get('pools'));
     App::setResource('request', fn() => $request);
     App::setResource('response', fn() => $response);
 
@@ -480,7 +480,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             Console::error('[Error] Message: ' . $response['data']['message']);
         }
     } finally {
-        $register->get('workerPools')->reclaim();
+        $register->get('pools')->reclaim();
     }
 });
 
@@ -575,7 +575,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
             $server->close($connection, $th->getCode());
         }
     } finally {
-        $register->get('workerPools')->reclaim();
+        $register->get('pools')->reclaim();
     }
 });
 
