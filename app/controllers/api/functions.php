@@ -1155,7 +1155,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->setData($data)
                 ->setJWT($jwt)
                 ->setProject($project)
-                ->setUser($user);
+                ->setUser($user)
+                ->trigger();
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
