@@ -1026,23 +1026,6 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('queue', function () {
-    $fallbackForRedis = AppwriteURL::unparse([
-        'scheme' => 'redis',
-        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => App::getEnv('_APP_REDIS_USER', ''),
-        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
-    ]);
-
-    $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
-
-    $dsns = explode(',', $connection ?? '');
-    $dsn = explode('=', $dsns[0]);
-    $dsn = $dsn[1] ?? '';
-    return  new DSN($dsn);
-}, []);
-
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;

@@ -14,7 +14,6 @@ use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Usage\Stats;
-use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
@@ -1060,9 +1059,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('events')
     ->inject('usage')
     ->inject('mode')
-    ->inject('pools')
     ->inject('functions')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Group $pools, Func $functions) {
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $functions) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
