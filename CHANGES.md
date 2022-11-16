@@ -8,6 +8,7 @@
 - Fix missing `status`, `buildStderr` and `buildStderr` from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
 - Fix project pagination in DB usage aggregation [#4517](https://github.com/appwrite/appwrite/pull/4517)
 - Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
+- Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
 
 # Features
 - Added Auth Duration API to allow users to set the duration of their sessions. [#4618](https://github.com/appwrite/appwrite/pull/4618)
