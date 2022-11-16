@@ -179,25 +179,29 @@ $cli
         do {
             $attempts++;
 
-            // Prepare database connection
-            $dbAdapter = $pools
-                ->get('console')
-                ->pop()
-                ->getResource();
+            try {
+                // Prepare database connection
+                $dbAdapter = $pools
+                    ->get('console')
+                    ->pop()
+                    ->getResource();
 
-            $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('console');
+                $dbForConsole = new Database($dbAdapter, $cache);
+                $dbForConsole->setNamespace('console');
 
-            // Ensure tables exist
-            $collections = Config::getParam('collections', []);
-            $last = \array_key_last($collections);
+                // Ensure tables exist
+                $collections = Config::getParam('collections', []);
+                $last = \array_key_last($collections);
 
-            if ($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last)) {
+                if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) {
+                    throw new Exception('Tables not ready yet.');
+                }
+
                 $ready = true;
-                break;
+            } catch (\Exception $err) {
+                Console::warning($err->getMessage());
+                sleep($sleep);
             }
-
-            sleep($sleep);
         } while ($attempts < $maxAttempts);
 
         if (!$ready) {
