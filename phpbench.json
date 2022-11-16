@@ -10,7 +10,7 @@
   "report.generators": {
     "appwrite": {
       "extends": "aggregate",
-      "cols": ["benchmark", "subject", "revs", "its", "worst", "best", "mean", "mode", "rstdev"],
+      "cols": ["benchmark", "subject", "set" ,"revs", "its", "worst", "best", "mean", "mode", "rstdev"],
       "break": ["benchmark"]
     }
   }
