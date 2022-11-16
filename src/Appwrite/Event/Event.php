@@ -137,7 +137,7 @@ class Event
     }
 
     /**
-     * Get project for this event.
+     * Get user responsible for triggering this event.
      *
      * @return ?Document
      */
