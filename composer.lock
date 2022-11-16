@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f2faa670abaa356f9b14e4f1c3542b33",
+    "content-hash": "bf3e2ed6ee8e49ab74af97b368b89a63",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2358,78 +2358,17 @@
             "time": "2020-10-24T07:04:59+00:00"
         },
         {
-            "name": "utopia-php/queue",
-            "version": "0.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/queue.git",
-                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0b69ede484a04c567cbb202f592d8e5e3cd2433e",
-                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0",
-                "utopia-php/cli": "0.14.*",
-                "utopia-php/framework": "0.*.*"
-            },
-            "require-dev": {
-                "laravel/pint": "^0.2.3",
-                "phpstan/phpstan": "^1.8",
-                "phpunit/phpunit": "^9.5.5",
-                "swoole/ide-helper": "4.8.8",
-                "workerman/workerman": "^4.0"
-            },
-            "suggest": {
-                "ext-swoole": "Needed to support Swoole.",
-                "workerman/workerman": "Needed to support Workerman."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Queue\\": "src/Queue"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
-            "description": "A powerful task queue.",
-            "keywords": [
-                "Tasks",
-                "framework",
-                "php",
-                "queue",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.4.1"
-            },
-            "time": "2022-11-15T16:56:37+00:00"
-        },
-        {
             "name": "utopia-php/registry",
-            "version": "dev-feat-allow-params",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "6c571f8f4127094b3af8909d1b595fd6b937255d"
+                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/6c571f8f4127094b3af8909d1b595fd6b937255d",
-                "reference": "6c571f8f4127094b3af8909d1b595fd6b937255d",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/bedc4ed54527b2803e6dfdccc39449f98522b70d",
+                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d",
                 "shasum": ""
             },
             "require": {
@@ -2466,9 +2405,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/registry/issues",
-                "source": "https://github.com/utopia-php/registry/tree/feat-allow-params"
+                "source": "https://github.com/utopia-php/registry/tree/0.5.0"
             },
-            "time": "2022-11-09T02:23:35+00:00"
+            "time": "2021-03-10T10:45:22+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -5276,18 +5215,9 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/registry",
-            "version": "dev-feat-allow-params",
-            "alias": "0.5.0",
-            "alias_normalized": "0.5.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/registry": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
