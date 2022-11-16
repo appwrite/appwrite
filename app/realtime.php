@@ -37,7 +37,7 @@ function getConsoleDB(): Database
     global $register;
 
     /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools', args: [getWorkerPoolSize()]);
+    $pools = $register->get('pools');
 
     $dbAdapter = $pools
         ->get('console')
@@ -57,7 +57,7 @@ function getProjectDB(Document $project): Database
     global $register;
 
     /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools', args: [getWorkerPoolSize()]);
+    $pools = $register->get('pools');
 
     if ($project->isEmpty() || $project->getId() === 'console') {
         return getConsoleDB();
