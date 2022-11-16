@@ -1217,10 +1217,10 @@ App::post('/v1/functions/:functionId/executions')
 
         // TODO revise this later using route label
         $usage
-        ->setParam('functionId', $function->getId())
-        ->setParam('executions.{scope}.compute', 1)
-        ->setParam('executionStatus', $execution->getAttribute('status', ''))
-        ->setParam('executionTime', $execution->getAttribute('duration')); // ms
+            ->setParam('functionId', $function->getId())
+            ->setParam('executions.{scope}.compute', 1)
+            ->setParam('executionStatus', $execution->getAttribute('status', ''))
+            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);

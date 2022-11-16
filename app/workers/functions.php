@@ -2,13 +2,13 @@
 
 require_once __DIR__ . '/../worker.php';
 
-use Utopia\Queue;
 use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
+use Domnikl\Statsd\Client;
 use Executor\Executor;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -21,14 +21,16 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
+use Utopia\Queue\Adapter\Swoole;
+use Utopia\Queue\Server;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
 global $connection;
 global $workerNumber;
-
-$executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+$adapter  = new Swoole($connection, $workerNumber, Event::FUNCTIONS_QUEUE_NAME);
+$server   = new Server($adapter);
 
 $execute = function (
     Document $project,
@@ -41,12 +43,14 @@ $execute = function (
     string $eventData = null,
     string $data = null,
     ?Document $user = null,
-    string $jwt = null
-) use ($executor, $register) {
+    string $jwt = null,
+    Client $statsd
+) {
+
     $user ??= new Document();
     $functionId = $function->getId();
     $deploymentId = $function->getAttribute('deployment', '');
-
+    var_dump("Deployment ID : ", $deploymentId);
 
     /** Check if deployment exists */
     $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -163,6 +167,7 @@ $execute = function (
     ]);
 
     /** Execute function */
+    $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
     try {
         $executionResponse = $executor->createExecution(
             projectId: $project->getId(),
@@ -223,7 +228,7 @@ $execute = function (
         'executionId' => $execution->getId()
     ]);
     $target = Realtime::fromPayload(
-    // Pass first, most verbose event pattern
+        // Pass first, most verbose event pattern
         event: $allEvents[0],
         payload: $execution
     );
@@ -243,12 +248,11 @@ $execute = function (
     );
 
     /** Update usage stats */
-    global $register;
     if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-        $statsd = $register->get('statsd');
         $usage = new Stats($statsd);
         $usage
             ->setParam('projectId', $project->getId())
+            ->setParam('projectInternalId', $project->getInternalId())
             ->setParam('functionId', $function->getId())
             ->setParam('executions.{scope}.compute', 1)
             ->setParam('executionStatus', $execution->getAttribute('status', ''))
@@ -259,21 +263,25 @@ $execute = function (
     }
 };
 
-$adapter  = new Queue\Adapter\Swoole($connection, $workerNumber, Event::FUNCTIONS_QUEUE_NAME);
-$server   = new Queue\Server($adapter);
-
 $server->job()
     ->inject('message')
     ->inject('dbForProject')
     ->inject('functions')
-    ->action(function (Message $message, Database $dbForProject, Func $functions) use ($execute) {
-        $args = $message->getPayload() ?? [];
-        $type = $args['type'] ?? '';
-        $events = $args['events'] ?? [];
-        $project = new Document($args['project'] ?? []);
-        $user = new Document($args['user'] ?? []);
-        // Where $payload comes from
-        $payload = json_encode($args['payload'] ?? []);
+    ->inject('statsd')
+    ->action(function (Message $message, Database $dbForProject, Func $functions, Client $statsd) use ($execute) {
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        var_dump(json_encode($payload));
+
+        $type = $payload['type'] ?? '';
+        $events = $payload['events'] ?? [];
+        $project = new Document($payload['project'] ?? []);
+        $data = $payload['data'] ?? '';
+        $user = new Document($payload['user'] ?? []);
 
         if ($project->getId() === 'console') {
             return;
@@ -284,38 +292,31 @@ $server->job()
          */
         if (!empty($events)) {
             $limit = 30;
-            $sum = $limit;
-            $total = 0;
-            $latestDocument = null;
+            $sum = 30;
+            $offset = 0;
+            $functions = [];
+            /** @var Document[] $functions */
 
-            while ($sum === $limit) {
-                $paginationQueries = [Query::limit($limit)];
-                if ($latestDocument !== null) {
-                    $paginationQueries[] =  Query::cursorAfter($latestDocument);
-                }
-                $results = $dbForProject->find('functions', \array_merge($paginationQueries, [
-                    Query::orderAsc('name')
-                ]));
+            while ($sum >= $limit) {
+                $functions = $dbForProject->find('functions', [
+                    Query::limit($limit),
+                    Query::offset($offset),
+                    Query::orderAsc('name'),
+                ]);
 
-                $sum = count($results);
-                $total = $total + $sum;
+                $sum = \count($functions);
+                $offset = $offset + $limit;
 
                 Console::log('Fetched ' . $sum . ' functions...');
 
-                foreach ($results as $function) {
+                foreach ($functions as $function) {
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
-
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
-
-                    // As event, pass first, most verbose event pattern
-                    call_user_func($execute, $project, $function, $dbForProject, 'event', null, $events[0], $payload, null, $user, null);
-
+                    call_user_func($execute, $project, $function, $dbForProject, 'event', null, $events[0], $payload, null, $user, null, $statsd);
                     Console::success('Triggered function: ' . $events[0]);
                 }
-
-                $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
             }
 
             return;
@@ -324,20 +325,18 @@ $server->job()
         /**
          * Handle Schedule and HTTP execution.
          */
-        $project = new Document($args['project'] ?? []);
-        $function = new Document($args['function'] ?? []);
+        $function = new Document($payload['function'] ?? []);
+        var_dump($function);
 
         switch ($type) {
             case 'http':
-                $jwt = $args['jwt'] ?? '';
-                $data = $args['data'] ?? '';
-                $execution = new Document($args['execution'] ?? []);
-                $user = new Document($args['user'] ?? []);
-                // $function = $dbForProject->getDocument('functions', $execution->getAttribute('functionId'));
-                call_user_func($execute, $project, $function, $dbForProject, $functions, 'http', $execution->getId(), null, null, $data, $user, $jwt);
+                $jwt = $payload['jwt'] ?? '';
+                $execution = new Document($payload['execution'] ?? []);
+                $user = new Document($payload['user'] ?? []);
+                call_user_func($execute, $project, $function, $dbForProject, $functions, 'http', $execution->getId(), null, null, $data, $user, $jwt, $statsd);
                 break;
             case 'schedule':
-                call_user_func($execute, $project, $function, $dbForProject, $functions, 'schedule', null, null, null, null, null, null);
+                call_user_func($execute, $project, $function, $dbForProject, $functions, 'schedule', null, null, null, null, null, null, $statsd);
                 break;
         }
     });

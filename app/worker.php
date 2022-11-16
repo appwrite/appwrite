@@ -20,37 +20,37 @@ Server::setResource('register', fn() => $register);
 
 Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
-    $dbAdapter = $pools
+    $database = $pools
         ->get('console')
         ->pop()
         ->getResource()
     ;
 
-    $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('console');
+    $adapter = new Database($database, $cache);
+    $adapter->setNamespace('console');
 
-    return $database;
+    return $adapter;
 }, ['cache', 'register']);
 
 Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Database $dbForConsole) {
-    $args = $message->getPayload() ?? [];
-    $project = new Document($args['project'] ?? []);
+    $payload = $message->getPayload() ?? [];
+    $project = new Document($payload['project'] ?? []);
 
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
     $pools = $register->get('pools');
-    $dbAdapter = $pools
+    $database = $pools
         ->get($project->getAttribute('database'))
         ->pop()
         ->getResource()
     ;
 
-    $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_' . $project->getInternalId());
+    $adapter = new Database($database, $cache);
+    $adapter->setNamespace('_' . $project->getInternalId());
 
-    return $database;
+    return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
 Server::setResource('cache', function (Registry $register) {
@@ -71,17 +71,24 @@ Server::setResource('cache', function (Registry $register) {
 
 Server::setResource('functions', function (Registry $register) {
     $pools = $register->get('pools');
-    return new Func($pools->get('queue')->pop()->getResource());
+    return new Func(
+        $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+        );
 }, ['register']);
 
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
+Server::setResource('statsd', function ($register) {
+    return $register->get('statsd');
+}, ['register']);
 
 $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
-
 
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 $workerNumber = 1;
