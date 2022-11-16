@@ -97,7 +97,6 @@ const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
 const APP_VERSION_STABLE = '1.0.3';
-const APP_DEFAULT_POOL_SIZE = 64;
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -548,173 +547,16 @@ $register->set('pools', function () {
         ],
     ];
 
-    foreach ($connections as $key => $connection) {
-        $type = $connection['type'] ?? '';
-        $dsns = $connection['dsns'] ?? '';
-        $multipe = $connection['multiple'] ?? false;
-        $schemes = $connection['schemes'] ?? [];
-        $config = [];
-        $dsns = explode(',', $connection['dsns'] ?? '');
+    $instances = 2; // REST, Realtime
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX_CONNECTIONS', 251);
+    $instanceConnections = $maxConnections / $instances;
 
-        foreach ($dsns as &$dsn) {
-            $dsn = explode('=', $dsn);
-            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
-            $dsn = $dsn[1] ?? '';
-            $config[] = $name;
-
-            if (empty($dsn)) {
-                //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
-                continue;
-            }
-
-            $dsn = new DSN($dsn);
-            $dsnHost = $dsn->getHost();
-            $dsnPort = $dsn->getPort();
-            $dsnUser = $dsn->getUser();
-            $dsnPass = $dsn->getPassword();
-            $dsnScheme = $dsn->getScheme();
-            $dsnDatabase = $dsn->getDatabase();
-
-            if (!in_array($dsnScheme, $schemes)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
-            }
-
-            /**
-             * Get Resource
-             *
-             * Creation could be reused accross connection types like database, cache, queue, etc.
-             *
-             * Resource assignment to an adapter will happen below.
-             */
-
-            switch ($dsnScheme) {
-                case 'mysql':
-                case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                                PDO::ATTR_TIMEOUT => 3, // Seconds
-                                PDO::ATTR_PERSISTENT => true,
-                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-                                PDO::ATTR_EMULATE_PREPARES => true,
-                                PDO::ATTR_STRINGIFY_FETCHES => true
-                            ));
-                        });
-                    };
-                    break;
-                case 'redis':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
-                        $redis = new Redis();
-                        @$redis->pconnect($dsnHost, (int)$dsnPort);
-                        if ($dsnPass) {
-                            $redis->auth($dsnPass);
-                        }
-                        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-                        return $redis;
-                    };
-                    break;
-
-                default:
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
-                    break;
-            }
-
-            $pool = new Pool($name, APP_DEFAULT_POOL_SIZE, function () use ($type, $resource, $dsn) {
-                // Get Adapter
-                $adapter = null;
-
-                switch ($type) {
-                    case 'database':
-                        $adapter = match ($dsn->getScheme()) {
-                            'mariadb' => new MariaDB($resource()),
-                            'mysql' => new MySQL($resource()),
-                            default => null
-                        };
-
-                        $adapter->setDefaultDatabase($dsn->getDatabase());
-
-                        break;
-                    case 'queue':
-                        $adapter = $resource();
-                        break;
-                    case 'pubsub':
-                        $adapter = $resource();
-                        break;
-                    case 'cache':
-                        $adapter = match ($dsn->getScheme()) {
-                            'redis' => new RedisCache($resource()),
-                            default => null
-                        };
-                        break;
-
-                    default:
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-                        break;
-                }
-
-                return $adapter;
-            });
-
-            $group->add($pool);
-        }
-
-        Config::setParam('pools-' . $key, $config);
+    if ($workerCount > $instanceConnections) {
+        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    return $group;
-});
-$register->set('workerPools', function () {
-    $group = new Group();
-
-    $fallbackForDB = AppwriteURL::unparse([
-        'scheme' => 'mariadb',
-        'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
-        'port' => App::getEnv('_APP_DB_PORT', '3306'),
-        'user' => App::getEnv('_APP_DB_USER', ''),
-        'pass' => App::getEnv('_APP_DB_PASS', ''),
-    ]);
-    $fallbackForRedis = AppwriteURL::unparse([
-        'scheme' => 'redis',
-        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-        'user' => App::getEnv('_APP_REDIS_USER', ''),
-        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
-    ]);
-
-    $connections = [
-        'console' => [
-            'type' => 'database',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
-            'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
-        ],
-        'database' => [
-            'type' => 'database',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
-            'multiple' => true,
-            'schemes' => ['mariadb', 'mysql'],
-        ],
-        'queue' => [
-            'type' => 'queue',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
-            'multiple' => false,
-            'schemes' => ['redis'],
-        ],
-        'pubsub' => [
-            'type' => 'pubsub',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
-            'multiple' => false,
-            'schemes' => ['redis'],
-        ],
-        'cache' => [
-            'type' => 'cache',
-            'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
-            'multiple' => true,
-            'schemes' => ['redis'],
-        ],
-    ];
+    $poolSize = (int)($instanceConnections / $workerCount);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -789,7 +631,7 @@ $register->set('workerPools', function () {
                     break;
             }
 
-            $pool = new Pool($name, getWorkerPoolSize(), function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
 
@@ -1289,26 +1131,6 @@ function getDevice($root): Device
             $wasabiAcl = 'private';
             return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
-}
-
-/**
- * Get database connection pool size for worker processes.
- *
- * @return int
- * @throws \Exception
- */
-function getWorkerPoolSize(): int
-{
-    $reservedConnections = APP_DEFAULT_POOL_SIZE; // Pool of default size is reserved for the HTTP API
-    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-    $maxConnections = App::getenv('_APP_DB_MAX_CONNECTIONS', 251);
-    $workerConnections = $maxConnections - $reservedConnections;
-
-    if ($workerCount > $workerConnections) {
-        throw new \Exception('Worker pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
-    }
-
-    return (int)($workerConnections / $workerCount);
 }
 
 App::setResource('mode', function ($request) {
