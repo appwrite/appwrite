@@ -930,7 +930,6 @@ return [
             'question' => '',
             'filter' => ''
             ]
-
         ],
     ],
 ];
