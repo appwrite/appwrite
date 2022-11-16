@@ -44,9 +44,9 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('collections', [
+            ->addRule('databases', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for number of collections.',
+                'description' => 'Aggregated stats for number of databases.',
                 'default' => [],
                 'example' => [],
                 'array' => true
@@ -61,6 +61,13 @@ class UsageProject extends Model
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('buckets', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated stats for number of buckets.',
                 'default' => [],
                 'example' => [],
                 'array' => true

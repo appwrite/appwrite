@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -100,6 +101,12 @@ class Project extends Model
                 'description' => 'Company Tax ID.',
                 'default' => '',
                 'example' => '131102020',
+            ])
+            ->addRule('authDuration', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Session duration in seconds.',
+                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'example' => 60,
             ])
             ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
@@ -225,6 +232,7 @@ class Project extends Model
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
