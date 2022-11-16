@@ -89,7 +89,6 @@ Server::setResource('statsd', function ($register) {
 
 $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
-
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
