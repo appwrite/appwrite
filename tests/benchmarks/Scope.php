@@ -10,4 +10,5 @@ use Tests\E2E\Scopes\Scope as E2EScope;
 #[AfterMethods(['tearDown'])]
 abstract class Scope extends E2EScope
 {
+    protected $endpoint = 'http://localhost/v1';
 }
