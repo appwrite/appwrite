@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a673091aa6bd8ef01380b63245427c93",
+    "content-hash": "56cd96524e05cf30210256539cd7cb6a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2359,16 +2359,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.4.1",
+            "version": "dev-feat-connection-ping",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e"
+                "reference": "42e47dc8b40b2040ea9b70c644799d7d7a097520"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0b69ede484a04c567cbb202f592d8e5e3cd2433e",
-                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/42e47dc8b40b2040ea9b70c644799d7d7a097520",
+                "reference": "42e47dc8b40b2040ea9b70c644799d7d7a097520",
                 "shasum": ""
             },
             "require": {
@@ -2414,9 +2414,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.4.1"
+                "source": "https://github.com/utopia-php/queue/tree/feat-connection-ping"
             },
-            "time": "2022-11-15T16:56:37+00:00"
+            "time": "2022-11-16T17:12:06+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5276,9 +5276,18 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/queue",
+            "version": "dev-feat-connection-ping",
+            "alias": "0.4.0",
+            "alias_normalized": "0.4.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/queue": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -116,9 +116,9 @@ class Event
     /**
      * Get project for this event.
      *
-     * @return Document
+     * @return ?Document
      */
-    public function getProject(): Document
+    public function getProject(): ?Document
     {
         return $this->project;
     }
@@ -139,9 +139,9 @@ class Event
     /**
      * Get project for this event.
      *
-     * @return Document
+     * @return ?Document
      */
-    public function getUser(): Document
+    public function getUser(): ?Document
     {
         return $this->user;
     }

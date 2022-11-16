@@ -276,30 +276,29 @@ class DeletesV1 extends Worker
     {
         $userId = $document->getId();
 
+        $dbForProject = $this->getProjectDB($project);
+
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
             Query::equal('userId', [$userId])
-        ], $this->getProjectDB($project));
+        ], $dbForProject);
 
-        $this->getProjectDB($project)->deleteCachedDocument('users', $userId);
+        $dbForProject->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             Query::equal('userId', [$userId])
-        ], $this->getProjectDB($project), function (Document $document) use ($project) {
-
+        ], $dbForProject, function (Document $document) use ($dbForProject) {
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
-                $team = $this->getProjectDB($project)->getDocument('teams', $teamId);
+                $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $this
-                        ->getProjectDB($project)
-                        ->updateDocument(
-                            'teams',
-                            $teamId,
-                            // Ensure that total >= 0
+                    $team = $dbForProject->updateDocument(
+                        'teams',
+                        $teamId,
+                        // Ensure that total >= 0
                             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
-                        );
+                    );
                 }
             }
         });
@@ -307,7 +306,7 @@ class DeletesV1 extends Worker
         // Delete tokens
         $this->deleteByGroup('tokens', [
             Query::equal('userId', [$userId])
-        ], $this->getProjectDB($project));
+        ], $dbForProject);
     }
 
     /**

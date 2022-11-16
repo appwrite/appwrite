@@ -76,6 +76,7 @@ use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\Queue;
+use Utopia\Queue\Connection;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -852,9 +853,12 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
-App::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+App::setResource('queueConnection', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('queueForFunctions', function (Connection $queueConnection) {
+    return new Func($queueConnection);
+}, ['queueConnection']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);

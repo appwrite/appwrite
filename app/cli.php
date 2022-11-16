@@ -67,7 +67,9 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $databaseName = $project->getAttribute('database');
 
         if (isset($databases[$databaseName])) {
-            return $databases[$databaseName];
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
         }
 
         $dbAdapter = $pools
@@ -76,9 +78,10 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-        $database->setNamespace('_' . $project->getInternalId());
 
         $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
 
         return $database;
     };
@@ -158,7 +161,7 @@ $cli = $platform->getCli();
 $cli
     ->error()
     ->inject('error')
-    ->action(function(Throwable $error) {
+    ->action(function (Throwable $error) {
         Console::error($error->getMessage());
     });
 
@@ -166,7 +169,7 @@ $cli
     ->init()
     ->inject('pools')
     ->inject('cache')
-    ->action(function(Group $pools, Cache $cache) {
+    ->action(function (Group $pools, Cache $cache) {
         $maxAttempts = 5;
         $sleep = 3;
 
@@ -189,7 +192,7 @@ $cli
             $collections = Config::getParam('collections', []);
             $last = \array_key_last($collections);
 
-            if($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last)) {
+            if ($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last)) {
                 $ready = true;
                 break;
             }
@@ -197,7 +200,7 @@ $cli
             sleep($sleep);
         } while ($attempts < $maxAttempts);
 
-        if(!$ready) {
+        if (!$ready) {
             throw new Exception("Console is not ready yet. Please try again later.");
         }
     });
