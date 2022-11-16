@@ -208,8 +208,8 @@ class BuildsV1 extends Worker
             $schedule
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-    
-    
+
+
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
