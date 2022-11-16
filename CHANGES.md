@@ -1,11 +1,14 @@
 # Version 1.1.0
 ## Features
+- Added support for the new Appwrite Console [#4655](https://github.com/appwrite/appwrite/pull/4655)
 - Added new property to projects configuration: `authDuration` which allows you to alter the duration of signed in sessions for your project. [#4618](https://github.com/appwrite/appwrite/pull/4618)
 
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 - Fix missing `status`, `buildStderr` and `buildStderr` from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
 - Fix project pagination in DB usage aggregation [#4517](https://github.com/appwrite/appwrite/pull/4517)
+- Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
+- Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
 
 # Features
 - Added Auth Duration API to allow users to set the duration of their sessions. [#4618](https://github.com/appwrite/appwrite/pull/4618)
