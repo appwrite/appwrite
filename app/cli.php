@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -56,19 +57,28 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
 }, ['pools', 'cache']);
 
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache) {
+    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
 
+        $databaseName = $project->getAttribute('database');
+
+        if (isset($databases[$databaseName])) {
+            return $databases[$databaseName];
+        }
+
         $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
+            ->get($databaseName)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
 
         $database = new Database($dbAdapter, $cache);
         $database->setNamespace('_' . $project->getInternalId());
+
+        $databases[$databaseName] = $database;
 
         return $database;
     };
@@ -99,6 +109,10 @@ CLI::setResource('influxdb', function (Registry $register) {
     } while ($attempts < $max);
     return $database;
 }, ['register']);
+
+CLI::setResource('queueForFunctions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
