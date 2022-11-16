@@ -40,7 +40,6 @@ Server::setResource('execute', function () {
         string $jwt = null,
         Client $statsd
     ) {
-
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
@@ -93,48 +92,13 @@ Server::setResource('execute', function () {
                 'search' => implode(' ', [$functionId, $executionId]),
             ]));
 
-            if ($execution->isEmpty()) {
-                throw new Exception('Failed to create or read execution');
-            }
-        }
-        $execution->setAttribute('status', 'processing');
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-
-        if ($build->getAttribute('status') !== 'ready') {
-            throw new Exception('Build not ready');
-        }
-
-        /** Check if  runtime is supported */
-        $runtimes = Config::getParam('runtimes', []);
-
-        if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
-        }
-
-        $runtime = $runtimes[$function->getAttribute('runtime')];
-
-        /** Create execution or update execution status */
-        $execution = $dbForProject->getDocument('executions', $executionId ?? '');
-        if ($execution->isEmpty()) {
-            $executionId = ID::unique();
-            $execution = $dbForProject->createDocument('executions', new Document([
-                '$id' => $executionId,
-                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionId' => $functionId,
-                'deploymentId' => $deploymentId,
-                'trigger' => $trigger,
-                'status' => 'waiting',
-                'statusCode' => 0,
-                'response' => '',
-                'stderr' => '',
-                'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
-            ]));
+            // TODO: @Meldiron Trigger executions.create event here
 
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
         }
+
         $execution->setAttribute('status', 'processing');
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
@@ -311,7 +275,7 @@ $server->job()
                         project: $project,
                         function: $function,
                         queueForFunctions: $queueForFunctions,
-                        trigger: $type,
+                        trigger: 'event',
                         event: $events[0],
                         eventData: $eventData,
                         user: $user,
@@ -322,6 +286,7 @@ $server->job()
                     Console::success('Triggered function: ' . $events[0]);
                 }
             }
+            return;
         }
 
         /**
@@ -337,7 +302,7 @@ $server->job()
                     function: $function,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    trigger: $type,
+                    trigger: 'http',
                     executionId: $execution->getId(),
                     event: null,
                     eventData: null,
@@ -353,7 +318,7 @@ $server->job()
                     function: $function,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    trigger: $type,
+                    trigger: 'schedule',
                     executionId: null,
                     event: null,
                     eventData: null,
