@@ -16,6 +16,7 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -107,9 +108,7 @@ $server
     ->error()
     ->inject('error')
     ->inject('logger')
-    ->inject('register')
-    ->action(function ($error, $logger, $register) {
-
+    ->action(function (Throwable $error, Logger $logger) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -124,7 +123,7 @@ $server
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-worker-functions');
+            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());
@@ -143,6 +142,4 @@ $server
         Console::error('[Error] Message: ' . $error->getMessage());
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
-
-        $register->get('pools')->reclaim();
     });

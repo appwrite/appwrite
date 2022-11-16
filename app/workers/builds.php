@@ -111,15 +111,13 @@ class BuildsV1 extends Worker
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
 
-        $data = $deployment->getArrayCopy(array_keys($deploymentModel->getRules()));
-
         $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $deploymentUpdate
             ->setProject($project)
             ->setEvent('functions.[functionId].deployments.[deploymentId].update')
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId())
-            ->setPayload($data)
+            ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
             ->trigger();
 
         /** Trigger Functions */
@@ -127,11 +125,7 @@ class BuildsV1 extends Worker
         $connection = $pools->get('queue')->pop();
         $functions = new Func($connection->getResource());
         $functions
-            ->setData(\json_encode($data))
-            ->setProject($project)
-            ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId())
+            ->from($deploymentUpdate)
             ->trigger();
         $connection->reclaim();
 

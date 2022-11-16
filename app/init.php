@@ -565,7 +565,6 @@ $register->set('pools', function () {
         $dsns = $connection['dsns'] ?? '';
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
-        $useResource = $connection['useResource'] ?? true;
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
 
