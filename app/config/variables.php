@@ -922,13 +922,13 @@ return [
                 'filter' => ''
             ],
             [
-            'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
-            'description' => 'Schedules deletion interval ( in seconds ) ',
-            'introduction' => '1.2.0',
-            'default' => '86400',
-            'required' => false,
-            'question' => '',
-            'filter' => ''
+                'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
+                'description' => 'Schedules deletion interval ( in seconds ) ',
+                'introduction' => '1.2.0',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
