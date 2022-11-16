@@ -17,73 +17,73 @@ class UsageDatabase extends Model
                 'example' => '30d',
             ])
             ->addRule('documentsCount', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('collectionsCount', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of collections.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('documentsCreate', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents created.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('documentsRead', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents read.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('documentsUpdate', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents updated.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('documentsDelete', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents deleted.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('collectionsCreate', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for collections created.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('collectionsRead', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for collections read.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('collectionsUpdate', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for collections updated.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
             ->addRule('collectionsDelete', [
-                'type' => Response::MODEL_METRIC_LIST,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for collections delete.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [],
                 'array' => true
             ])
         ;
