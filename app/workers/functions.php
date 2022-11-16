@@ -37,7 +37,7 @@ Server::setResource('execute', function () {
         Document $project,
         Document $function,
         Database $dbForProject,
-        Func $functions,
+        Func $queueForFunctions,
         string $trigger,
         string $executionId = null,
         string $event = null,
@@ -213,7 +213,7 @@ Server::setResource('execute', function () {
             ->trigger();
 
         /** Trigger Functions */
-        $functions
+        $queueForFunctions
             ->setData($data ?? '')
             ->setProject($project)
             ->setUser($user)
@@ -267,10 +267,10 @@ Server::setResource('execute', function () {
 $server->job()
     ->inject('message')
     ->inject('dbForProject')
-    ->inject('functions')
+    ->inject('queueForFunctions')
     ->inject('statsd')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $functions, Client $statsd, callable $execute) {
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -321,6 +321,7 @@ $server->job()
                         dbForProject: $dbForProject,
                         project: $project,
                         function: $function,
+                        queueForFunctions: $queueForFunctions,
                         trigger: 'event',
                         event: $events[0],
                         eventData: $eventData,
@@ -348,7 +349,7 @@ $server->job()
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
-                    functions: $functions,
+                    queueForFunctions: $queueForFunctions,
                     trigger: 'http',
                     executionId: $execution->getId(),
                     event: null,
@@ -364,7 +365,7 @@ $server->job()
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
-                    functions: $functions,
+                    queueForFunctions: $queueForFunctions,
                     trigger: 'http',
                     executionId: null,
                     event: null,

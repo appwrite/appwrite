@@ -69,7 +69,7 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
-Server::setResource('functions', function (Registry $register) {
+Server::setResource('queueForFunctions', function (Registry $register) {
     $pools = $register->get('pools');
     return new Func(
         $pools
