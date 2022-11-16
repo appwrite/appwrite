@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Benchmarks\Storage;
+namespace Tests\Benchmarks\Services\Storage;
 
 use Tests\E2E\Scopes\SideServer;
 

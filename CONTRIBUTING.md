@@ -389,9 +389,21 @@ docker compose exec appwrite test tests/e2e/Services/[ServiceName]
 
 Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied.
 
-Because benchmarking is dependent on the resources available to the server, results will vary from machine to machine. To combat this, you should first run a benchmark to set a baseline using your machine before making any changes, then run a comparison once you are finished.
+To run all benchmarks manually, run the following command:
 
-To create the baseline benchmark, run the following command:
+```bash
+composer benchmark
+```
+
+To run benchmarks for a specific service, run the following command:
+
+```bash
+composer benchmark tests/benchmarks/Services/[ServiceName]
+```
+
+Because benchmarking is dependent on the resources available to the server, results will vary from machine to machine. To combat this, you should first run a benchmark to set a baseline using your machine before making any changes, then run a comparison after you've completed your changes.
+
+To create a baseline benchmark, run the following command:
 
 ```bash
 composer benchmark-tag

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Benchmarks;
+namespace Tests\Benchmarks\Scopes;
 
 use PhpBench\Attributes\AfterMethods;
 use PhpBench\Attributes\BeforeMethods;

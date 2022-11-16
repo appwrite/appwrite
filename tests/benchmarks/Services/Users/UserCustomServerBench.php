@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\Benchmarks\Users;
+namespace Tests\Benchmarks\Services\Users;
 
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\ParamProviders;
-use Tests\Benchmarks\Scope;
+use Tests\Benchmarks\Scopes\Scope;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideServer;

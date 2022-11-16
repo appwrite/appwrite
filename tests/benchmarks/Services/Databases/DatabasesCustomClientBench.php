@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Benchmarks\Database;
+namespace Tests\Benchmarks\Services\Databases;
 
 use Tests\E2E\Scopes\SideClient;
 

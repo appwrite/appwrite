@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Benchmarks\Functions;
+namespace Tests\Benchmarks\Services\Functions;
 
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Iterations;

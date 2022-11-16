@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Benchmarks\Storage;
+namespace Tests\Benchmarks\Services\Storage;
 
 use CURLFile;
 use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\ParamProviders;
-use Tests\Benchmarks\Scope;
+use Tests\Benchmarks\Scopes\Scope;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Utopia\Database\ID;

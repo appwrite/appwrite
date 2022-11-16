@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\Benchmarks\Functions;
+namespace Tests\Benchmarks\Services\Functions;
 
 use CURLFile;
 use PhpBench\Attributes\BeforeMethods;
-use Tests\Benchmarks\Scope;
+use Tests\Benchmarks\Scopes\Scope;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Utopia\CLI\Console;
