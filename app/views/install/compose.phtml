@@ -102,7 +102,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_MAX_CONNECTIONS
+      - _APP_CONNECTIONS_MAX_CONNECTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -197,7 +197,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_DB_MAX_CONNECTIONS
+      - _APP_CONNECTIONS_MAX_CONNECTIONS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -622,7 +622,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_DB_MAX_CONNECTIONS}'
+    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_CONNECTIONS_MAX_CONNECTIONS}'
 
   redis:
     image: redis:7.0.4-alpine

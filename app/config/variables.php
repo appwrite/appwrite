@@ -307,7 +307,7 @@ return [
                 'filter' => 'password'
             ],
             [
-                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'name' => '_APP_CONNECTIONS_MAX_CONNECTIONS',
                 'description' => 'MariaDB server maximum connections.',
                 'introduction' => 'TBD',
                 'default' => 251,
