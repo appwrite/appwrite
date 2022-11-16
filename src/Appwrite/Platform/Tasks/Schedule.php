@@ -97,7 +97,7 @@ class Schedule extends Action
 
         $pools->reclaim();
 
-        Console::success("{$total} functions where loaded in " . (microtime(true) - $loadStart) . " seconds");
+        Console::success("{$total} functions were loaded in " . (microtime(true) - $loadStart) . " seconds");
 
         Console::success("Starting timers at " . DateTime::now());
 
@@ -152,7 +152,7 @@ class Schedule extends Action
 
                     $pools->reclaim();
 
-                    Console::log("Sync tick: {$total} schedules where updates in " . ($timerEnd - $timerStart) . " seconds");
+                    Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
                 });
 
                 /**
@@ -185,11 +185,14 @@ class Schedule extends Action
 
                         $total++;
 
-                        $promiseStart = \microtime(true); // in seconds
+                        $promiseStart = \time(); // in seconds
                         $executionStart = $nextDate->getTimestamp(); // in seconds
                         $executionSleep = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
+                        $delay = $executionSleep;
 
-                        $delay = \ceil(\intval($executionSleep));
+                        \var_dump($delay);
+                        \var_dump(\time());
+                        \var_dump('---');
 
                         if (!isset($delayedExecutions[$delay])) {
                             $delayedExecutions[$delay] = [];
@@ -228,7 +231,7 @@ class Schedule extends Action
 
                     $timerEnd = \microtime(true);
                     $lastEnqueueUpdate = $timerStart;
-                    Console::log("Enqueue tick: {$total} executions where enqueued in " . ($timerEnd - $timerStart) . " seconds");
+                    Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
                 };
 
                 Timer::tick(self::FUNCTION_ENQUEUE_TIMER * 1000, fn() => $enqueueFunctions());

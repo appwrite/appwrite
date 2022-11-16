@@ -5,7 +5,6 @@ use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Cron\CronExpression;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Utopia\Database\DateTime;
@@ -59,6 +58,8 @@ class BuildsV1 extends Worker
 
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
+        global $register;
+
         $dbForProject = $this->getProjectDB($project);
 
         $function = $dbForProject->getDocument('functions', $function->getId());
@@ -122,7 +123,6 @@ class BuildsV1 extends Worker
             ->trigger();
 
         /** Trigger Functions */
-        global $register;
         $pools = $register->get('pools');
         $connection = $pools->get('queue')->pop();
         $functions = new Func($connection->getResource());
@@ -202,6 +202,7 @@ class BuildsV1 extends Worker
             }
 
             /** Update function schedule */
+            $dbForConsole = $this->getConsoleDB();
             $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
             $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
 
@@ -240,7 +241,6 @@ class BuildsV1 extends Worker
             );
 
             /** Update usage stats */
-            global $register;
             if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
                 $statsd = $register->get('statsd');
                 $usage = new Stats($statsd);

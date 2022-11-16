@@ -270,7 +270,6 @@ $server->job()
             throw new Exception('Missing payload');
         }
 
-        var_dump(json_encode($payload));
         $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
         $data = $payload['data'] ?? '';
@@ -280,53 +279,6 @@ $server->job()
         $user = new Document($payload['user'] ?? []);
 
         if ($project->getId() === 'console') {
-            return;
-        }
-
-        /**
-         * Handle Event execution.
-         */
-        if (!empty($events)) {
-            $limit = 30;
-            $sum = 30;
-            $offset = 0;
-            $functions = [];
-            /** @var Document[] $functions */
-            while ($sum >= $limit) {
-                $functions = $dbForProject->find('functions', [
-                    Query::limit($limit),
-                    Query::offset($offset),
-                    Query::orderAsc('name'),
-                ]);
-
-                $sum = \count($functions);
-                $offset = $offset + $limit;
-
-                Console::log('Fetched ' . $sum . ' functions...');
-
-                foreach ($functions as $function) {
-                    if (!array_intersect($events, $function->getAttribute('events', []))) {
-                        continue;
-                    }
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
-                    $execute(
-                        statsd: $statsd,
-                        dbForProject: $dbForProject,
-                        project: $project,
-                        function: $function,
-                        queueForFunctions: $queueForFunctions,
-                        trigger: 'event',
-                        event: $events[0],
-                        eventData: $eventData,
-                        user: $user,
-                        data: null,
-                        executionId: null,
-                        jwt: null
-                    );
-                    Console::success('Triggered function: ' . $events[0]);
-                }
-            }
-
             return;
         }
 
@@ -343,7 +295,7 @@ $server->job()
                     function: $function,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    trigger: 'http',
+                    trigger: $type,
                     executionId: $execution->getId(),
                     event: null,
                     eventData: null,
@@ -359,7 +311,7 @@ $server->job()
                     function: $function,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    trigger: 'http',
+                    trigger: $type,
                     executionId: null,
                     event: null,
                     eventData: null,
@@ -368,6 +320,49 @@ $server->job()
                     jwt: null,
                     statsd: $statsd,
                 );
+                break;
+            case 'event':
+                if (!empty($events)) {
+                    $limit = 30;
+                    $sum = 30;
+                    $offset = 0;
+                    $functions = [];
+                    /** @var Document[] $functions */
+                    while ($sum >= $limit) {
+                        $functions = $dbForProject->find('functions', [
+                            Query::limit($limit),
+                            Query::offset($offset),
+                            Query::orderAsc('name'),
+                        ]);
+        
+                        $sum = \count($functions);
+                        $offset = $offset + $limit;
+        
+                        Console::log('Fetched ' . $sum . ' functions...');
+        
+                        foreach ($functions as $function) {
+                            if (!array_intersect($events, $function->getAttribute('events', []))) {
+                                continue;
+                            }
+                            Console::success('Iterating function: ' . $function->getAttribute('name'));
+                            $execute(
+                                statsd: $statsd,
+                                dbForProject: $dbForProject,
+                                project: $project,
+                                function: $function,
+                                queueForFunctions: $queueForFunctions,
+                                trigger: $type,
+                                event: $events[0],
+                                eventData: $eventData,
+                                user: $user,
+                                data: null,
+                                executionId: null,
+                                jwt: null
+                            );
+                            Console::success('Triggered function: ' . $events[0]);
+                        }
+                    }
+                }
                 break;
         }
     });
