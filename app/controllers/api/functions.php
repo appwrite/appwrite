@@ -484,7 +484,7 @@ App::put('/v1/functions/:functionId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
 
 
-        $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -1157,8 +1157,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->setData($data)
                 ->setJWT($jwt)
                 ->setProject($project)
-                ->setUser($user)
-                ->trigger();
+                ->setUser($user);
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1218,10 +1217,10 @@ App::post('/v1/functions/:functionId/executions')
 
         // TODO revise this later using route label
         $usage
-            ->setParam('functionId', $function->getId())
-            ->setParam('executions.{scope}.compute', 1)
-            ->setParam('executionStatus', $execution->getAttribute('status', ''))
-            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
+        ->setParam('functionId', $function->getId())
+        ->setParam('executions.{scope}.compute', 1)
+        ->setParam('executionStatus', $execution->getAttribute('status', ''))
+        ->setParam('executionTime', $execution->getAttribute('duration')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
