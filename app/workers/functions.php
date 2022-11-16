@@ -279,9 +279,11 @@ $server->job()
 
         $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
-        $project = new Document($payload['project'] ?? []);
         $data = $payload['data'] ?? '';
+        $project = new Document($payload['project'] ?? []);
+        $function = new Document($payload['function'] ?? []);
         $user = new Document($payload['user'] ?? []);
+        var_dump("Function : ", $function);
 
         if ($project->getId() === 'console') {
             return;
@@ -325,9 +327,6 @@ $server->job()
         /**
          * Handle Schedule and HTTP execution.
          */
-        $function = new Document($payload['function'] ?? []);
-        var_dump($function);
-
         switch ($type) {
             case 'http':
                 $jwt = $payload['jwt'] ?? '';
