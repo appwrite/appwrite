@@ -51,7 +51,6 @@ Server::setResource('execute', function () {
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
-        var_dump("Deployment ID : ", $deploymentId);
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -286,7 +285,6 @@ $server->job()
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
         $user = new Document($payload['user'] ?? []);
-        var_dump("Function : ", $function);
 
         if ($project->getId() === 'console') {
             return;

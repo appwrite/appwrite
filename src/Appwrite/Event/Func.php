@@ -147,6 +147,8 @@ class Func extends Event
     {
         $client = new Client($this->queue, $this->connection);
 
+        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
+
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
@@ -155,7 +157,7 @@ class Func extends Event
             'type' => $this->type,
             'jwt' => $this->jwt,
             'payload' => '',
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'events' => $events,
             'data' => $this->data,
         ]);
     }
