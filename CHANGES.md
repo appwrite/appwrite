@@ -1,3 +1,8 @@
+# Version TBD
+
+## Bugs
+- Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
+
 # Version 1.1.0
 ## Features
 - Added support for the new Appwrite Console [#4655](https://github.com/appwrite/appwrite/pull/4655)

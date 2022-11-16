@@ -253,7 +253,7 @@ class DeletesV1 extends Worker
         $this->getProjectDB($projectId)->delete($projectId);
 
         // Delete all storage directories
-        $uploads = new Local(APP_STORAGE_UPLOADS . '/app-' . $document->getId());
+        $uploads = $this->getFilesDevice($document->getId());
         $cache = new Local(APP_STORAGE_CACHE . '/app-' . $document->getId());
 
         $uploads->delete($uploads->getRoot(), true);
@@ -419,7 +419,7 @@ class DeletesV1 extends Worker
          * Delete Deployments
          */
         Console::info("Deleting deployments for function " . $functionId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = $this->getFunctionsDevice($projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceId', [$functionId])
@@ -436,7 +436,7 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for function " . $functionId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $storageBuilds = $this->getBuildsDevice($projectId);
         foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
                 Query::equal('deploymentId', [$deploymentId])
@@ -485,7 +485,7 @@ class DeletesV1 extends Worker
          * Delete deployment files
          */
         Console::info("Deleting deployment files for deployment " . $deploymentId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = $this->getFunctionsDevice($projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
             Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
         } else {
@@ -496,7 +496,7 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $storageBuilds = $this->getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
             Query::equal('deploymentId', [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
@@ -665,7 +665,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
     }
