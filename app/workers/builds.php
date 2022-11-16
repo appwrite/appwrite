@@ -123,10 +123,12 @@ class BuildsV1 extends Worker
         /** Trigger Functions */
         $pools = $register->get('pools');
         $connection = $pools->get('queue')->pop();
+        
         $functions = new Func($connection->getResource());
         $functions
             ->from($deploymentUpdate)
             ->trigger();
+
         $connection->reclaim();
 
         /** Trigger Realtime */
