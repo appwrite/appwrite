@@ -118,6 +118,15 @@ class Maintenance extends Action
                 ->trigger();
         }
 
+        function notifyDeleteSchedules($interval)
+        {
+
+            (new Delete())
+                ->setType(DELETE_TYPE_SCHEDULES)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+                ->trigger();
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -126,8 +135,9 @@ class Maintenance extends Action
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '360'); //Todo One day gap???
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $dbForConsole) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $schedulesDeletionRetention, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -139,8 +149,7 @@ class Maintenance extends Action
             notifyDeleteExpiredSessions();
             renewCertificates($dbForConsole);
             notifyDeleteCache($cacheRetention);
-
-            // TODO: @Meldiron Every probably 24h, look for schedules with active=false, that doesnt have function anymore. Dlete such schedule
+            notifyDeleteSchedules($schedulesDeletionRetention);
         }, $interval);
     }
 }

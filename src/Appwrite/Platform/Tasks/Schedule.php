@@ -81,7 +81,7 @@ class Schedule extends Action
                 $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [App::getEnv('_APP_REGION')]),
+                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', ['function']),
                 Query::equal('active', [true]),
             ]));
@@ -123,7 +123,7 @@ class Schedule extends Action
                             $paginationQueries[] =  Query::cursorAfter($latestDocument);
                         }
                         $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                            Query::equal('region', [App::getEnv('_APP_REGION')]),
+                            Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
                             Query::equal('resourceType', ['function']),
                             Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                         ]));
