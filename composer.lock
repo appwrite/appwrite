@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b125039c64ae4cbe0d2a1b57322d0ebe",
+    "content-hash": "bf3e2ed6ee8e49ab74af97b368b89a63",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2359,16 +2359,16 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "dev-feat-allow-params",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "6c571f8f4127094b3af8909d1b595fd6b937255d"
+                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/6c571f8f4127094b3af8909d1b595fd6b937255d",
-                "reference": "6c571f8f4127094b3af8909d1b595fd6b937255d",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/bedc4ed54527b2803e6dfdccc39449f98522b70d",
+                "reference": "bedc4ed54527b2803e6dfdccc39449f98522b70d",
                 "shasum": ""
             },
             "require": {
@@ -2405,9 +2405,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/registry/issues",
-                "source": "https://github.com/utopia-php/registry/tree/feat-allow-params"
+                "source": "https://github.com/utopia-php/registry/tree/0.5.0"
             },
-            "time": "2022-11-09T02:23:35+00:00"
+            "time": "2021-03-10T10:45:22+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -5215,18 +5215,9 @@
             "time": "2022-09-28T08:42:51+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/registry",
-            "version": "dev-feat-allow-params",
-            "alias": "0.5.0",
-            "alias_normalized": "0.5.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/registry": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
