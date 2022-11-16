@@ -492,7 +492,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertTrue(in_array('Test 1', $names));
         $this->assertTrue(in_array('Test 2', $names));
-        
+
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1149,7 +1149,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         sleep(1);
-        
+
         // $this->assertEquals(400, $tooWide['headers']['status-code']);
         // $this->assertEquals('Attribute limit exceeded', $tooWide['body']['message']);
     }
@@ -1166,7 +1166,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         sleep(1);
-        
+
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
 

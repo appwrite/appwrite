@@ -81,7 +81,7 @@ class DatabasesCustomClientTest extends Scope
                 Permission::write(Role::user($this->getUser()['$id'])),
             ]
         ]);
-        
+
         sleep(1);
 
         // var_dump("\n###################\n");
@@ -111,7 +111,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         sleep(1);
-        
+
         $this->assertEquals(400, $document2['headers']['status-code']);
     }
 

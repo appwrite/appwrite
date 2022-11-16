@@ -510,8 +510,9 @@ $register->set('dbPool', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pool = new ConnectionPool(constructor: fn () => 
-        new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, true), 
+    $pool = new ConnectionPool(
+        constructor: fn () =>
+        new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, true),
         size: 64
     );
 

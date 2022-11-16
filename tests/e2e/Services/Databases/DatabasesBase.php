@@ -1183,7 +1183,7 @@ trait DatabasesBase
         ]);
 
         // var_dump($documents);
-        
+
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body']['documents'][2]['$id'], $documents['body']['documents'][0]['$id']);
         $this->assertCount(1, $documents['body']['documents']);
