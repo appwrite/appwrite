@@ -121,7 +121,9 @@ class V16 extends Migration
                     'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
 
-
+                /**
+                 * Enable OAuth providers with data
+                 */
                 $authProviders = $document->getAttribute('authProviders', []);
 
                 foreach (Config::getParam('providers') as $provider => $value) {
@@ -130,9 +132,15 @@ class V16 extends Migration
                     }
 
                     if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
+                        if (array_key_exists($provider . 'Enabled', $authProviders)) {
+                            continue;
+                        }
+
                         $authProviders[$provider . 'Enabled'] = true;
                     }
                 }
+
+                $document->setAttribute('authProviders', $authProviders);
 
                 break;
         }
