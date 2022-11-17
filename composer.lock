@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0dacd7c199b3e618c53bf42b2eb436ff",
+    "content-hash": "7994ecac84ccf66f20e64441c03d186b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1945,16 +1945,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.23.4",
+            "version": "0.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "97f64aa1732af92b967c3576f16967dc762ad47b"
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/97f64aa1732af92b967c3576f16967dc762ad47b",
-                "reference": "97f64aa1732af92b967c3576f16967dc762ad47b",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/c524f681254255c8204fbf7919c53bf3b4982636",
+                "reference": "c524f681254255c8204fbf7919c53bf3b4982636",
                 "shasum": ""
             },
             "require": {
@@ -1982,9 +1982,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.23.4"
+                "source": "https://github.com/utopia-php/framework/tree/0.25.0"
             },
-            "time": "2022-10-31T11:57:14+00:00"
+            "time": "2022-11-02T09:49:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2722,12 +2722,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "c240f93972eeea57443c97974d33811db585d537"
+                "reference": "4fb2026472cd4d2f456c9f1a338b6d4d91da9f09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c240f93972eeea57443c97974d33811db585d537",
-                "reference": "c240f93972eeea57443c97974d33811db585d537",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/4fb2026472cd4d2f456c9f1a338b6d4d91da9f09",
+                "reference": "4fb2026472cd4d2f456c9f1a338b6d4d91da9f09",
                 "shasum": ""
             },
             "require": {
@@ -2765,7 +2765,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-graphql"
             },
-            "time": "2022-11-16T02:54:18+00:00"
+            "time": "2022-11-17T07:17:20+00:00"
         },
         {
             "name": "doctrine/instantiator",

@@ -566,32 +566,6 @@ App::error()
         );
     });
 
-App::get('/manifest.json')
-    ->desc('Progressive app manifest file')
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $response->json([
-            'name' => APP_NAME,
-            'short_name' => APP_NAME,
-            'start_url' => '.',
-            'url' => 'https://appwrite.io/',
-            'display' => 'standalone',
-            'background_color' => '#fff',
-            'theme_color' => '#f02e65',
-            'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
-            'icons' => [
-                [
-                    'src' => 'images/favicon.png',
-                    'sizes' => '256x256',
-                    'type' => 'image/png',
-                ],
-            ],
-        ]);
-    });
-
 App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')

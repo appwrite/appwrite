@@ -398,8 +398,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
+        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
