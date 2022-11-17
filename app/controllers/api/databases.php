@@ -47,7 +47,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
-use Utopia\Database\Adapter\MariaDB;
 
 /**
  * Create attribute of varying type
