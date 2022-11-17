@@ -1,56 +1,35 @@
 <?php
 
-global $cli;
-global $register;
+namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Platform\Action;
 
-function getConsoleDB(): Database
+class Maintenance extends Action
 {
-    global $register;
+    public static function getName(): string
+    {
+        return 'maintenance';
+    }
 
-    $attempts = 0;
+    public function __construct()
+    {
+        $this
+            ->desc('Schedules maintenance tasks and publishes them to resque')
+            ->inject('dbForConsole')
+            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
+    }
 
-    do {
-        try {
-            $attempts++;
-            $cache = new Cache(new RedisCache($register->get('cache')));
-            $database = new Database(new MariaDB($register->get('db')), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-            $database->setNamespace('_console'); // Main DB
-
-            if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
-                throw new \Exception('Console project not ready');
-            }
-
-            break; // leave loop if successful
-        } catch (\Exception $e) {
-            Console::warning("Database not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-            }
-            sleep(DATABASE_RECONNECT_SLEEP);
-        }
-    } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
-
-    return $database;
-}
-
-$cli
-    ->task('maintenance')
-    ->desc('Schedules maintenance tasks and publishes them to resque')
-    ->action(function () {
+    public function action(Database $dbForConsole): void
+    {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
@@ -139,6 +118,15 @@ $cli
                 ->trigger();
         }
 
+        function notifyDeleteSchedules($interval)
+        {
+
+            (new Delete())
+                ->setType(DELETE_TYPE_SCHEDULES)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+                ->trigger();
+        }
+
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
@@ -147,10 +135,9 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
-            $database = getConsoleDB();
-
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $schedulesDeletionRetention, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -160,7 +147,9 @@ $cli
             notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
-            renewCertificates($database);
+            renewCertificates($dbForConsole);
             notifyDeleteCache($cacheRetention);
+            notifyDeleteSchedules($schedulesDeletionRetention);
         }, $interval);
-    });
+    }
+}

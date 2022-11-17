@@ -1,22 +1,35 @@
 <?php
 
-global $cli, $register;
+namespace Appwrite\Platform\Tasks;
 
+use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Database;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
-$cli
-    ->task('migrate')
-    ->param('version', APP_VERSION_STABLE, new Text(32), 'Version to migrate to.', true)
-    ->action(function ($version) use ($register) {
+class Migrate extends Action
+{
+    public static function getName(): string
+    {
+        return 'migrate';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Migrate Appwrite to new version')
+            ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
+            ->inject('register')
+            ->callback(fn ($version, $register) => $this->action($version, $register));
+    }
+
+    public function action(string $version, Registry $register)
+    {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
@@ -28,17 +41,13 @@ $cli
 
         Console::success('Starting Data Migration to version ' . $version);
 
-        $db = $register->get('db', true);
+        $dbPool = $register->get('dbPool', true);
         $redis = $register->get('cache', true);
         $redis->flushAll();
         $cache = new Cache(new RedisCache($redis));
 
-        $projectDB = new Database(new MariaDB($db), $cache);
-        $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-
-        $consoleDB = new Database(new MariaDB($db), $cache);
-        $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $consoleDB->setNamespace('_project_console');
+        $dbForConsole = $dbPool->getDB('console', $cache);
+        $dbForConsole->setNamespace('_project_console');
 
         $console = $app->getResource('console');
 
@@ -52,10 +61,10 @@ $cli
         $count = 0;
 
         try {
-            $totalProjects = $consoleDB->count('projects') + 1;
+            $totalProjects = $dbForConsole->count('projects') + 1;
         } catch (\Throwable $th) {
-            $consoleDB->setNamespace('_console');
-            $totalProjects = $consoleDB->count('projects') + 1;
+            $dbForConsole->setNamespace('_console');
+            $totalProjects = $dbForConsole->count('projects') + 1;
         }
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
@@ -71,8 +80,10 @@ $cli
                 }
 
                 try {
+                    // TODO: Iterate through all project DBs
+                    $projectDB = $dbPool->getDB($project->getId(), $cache);
                     $migration
-                        ->setProject($project, $projectDB, $consoleDB)
+                        ->setProject($project, $projectDB, $dbForConsole)
                         ->execute();
                 } catch (\Throwable $th) {
                     throw $th;
@@ -81,7 +92,7 @@ $cli
             }
 
             $sum = \count($projects);
-            $projects = $consoleDB->find('projects', [Query::limit($limit), Query::offset($offset)]);
+            $projects = $dbForConsole->find('projects', limit: $limit, offset: $offset);
 
             $offset = $offset + $limit;
             $count = $count + $sum;
@@ -92,4 +103,5 @@ $cli
         Swoole\Event::wait(); // Wait for Coroutines to finish
         $redis->flushAll();
         Console::success('Data Migration Completed');
-    });
+    }
+}

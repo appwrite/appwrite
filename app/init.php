@@ -18,9 +18,6 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Appwrite\Extend\PDO;
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\SMS\Adapter\Mock;
@@ -31,41 +28,31 @@ use Appwrite\SMS\Adapter\Msg91;
 use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
+use Appwrite\Event\Delete;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
+use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 use Utopia\Database\ID;
+use Utopia\Database\Document;
+use Utopia\Database\Database;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Structure;
 use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
-use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Document;
-use Utopia\Database\Database;
-use Utopia\Database\Validator\Structure;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Swoole\Database\PDOConfig;
-use Swoole\Database\PDOPool;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
-use Utopia\CLI\Console;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\DatetimeValidator;
-use Utopia\DSN\DSN;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Backblaze;
@@ -74,6 +61,20 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
+use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
+use Appwrite\Event\Func;
+use MaxMind\Db\Reader;
+use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Database\PDOProxy;
+use Utopia\Queue;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -153,6 +154,7 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
+const DELETE_TYPE_SCHEDULES = 'schedules';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -496,57 +498,188 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-$register->set('dbPool', function () {
- // Register DB connection
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbPort = App::getEnv('_APP_DB_PORT', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+$register->set('pools', function () {
+    $group = new Group();
 
-    $pool = new PDOPool(
-        (new PDOConfig())
-        ->withHost($dbHost)
-        ->withPort($dbPort)
-        ->withDbName($dbScheme)
-        ->withCharset('utf8mb4')
-        ->withUsername($dbUser)
-        ->withPassword($dbPass)
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => true,
-        ]),
-        64
-    );
+    $fallbackForDB = AppwriteURL::unparse([
+        'scheme' => 'mariadb',
+        'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
+        'port' => App::getEnv('_APP_DB_PORT', '3306'),
+        'user' => App::getEnv('_APP_DB_USER', ''),
+        'pass' => App::getEnv('_APP_DB_PASS', ''),
+    ]);
+    $fallbackForRedis = AppwriteURL::unparse([
+        'scheme' => 'redis',
+        'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+        'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+        'user' => App::getEnv('_APP_REDIS_USER', ''),
+        'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+    ]);
 
-    return $pool;
-});
-$register->set('redisPool', function () {
-    $redisHost = App::getEnv('_APP_REDIS_HOST', '');
-    $redisPort = App::getEnv('_APP_REDIS_PORT', '');
-    $redisUser = App::getEnv('_APP_REDIS_USER', '');
-    $redisPass = App::getEnv('_APP_REDIS_PASS', '');
-    $redisAuth = '';
+    $connections = [
+        'console' => [
+            'type' => 'database',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'multiple' => false,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'database' => [
+            'type' => 'database',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'multiple' => true,
+            'schemes' => ['mariadb', 'mysql'],
+        ],
+        'queue' => [
+            'type' => 'queue',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'pubsub' => [
+            'type' => 'pubsub',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
+            'multiple' => false,
+            'schemes' => ['redis'],
+        ],
+        'cache' => [
+            'type' => 'cache',
+            'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
+            'multiple' => true,
+            'schemes' => ['redis'],
+        ],
+    ];
 
-    if ($redisUser && $redisPass) {
-        $redisAuth = $redisUser . ':' . $redisPass;
+    $instances = 2; // REST, Realtime
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
+    $instanceConnections = $maxConnections / $instances;
+
+    if ($workerCount > $instanceConnections) {
+        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    $pool = new RedisPool(
-        (new RedisConfig())
-        ->withHost($redisHost)
-        ->withPort($redisPort)
-        ->withAuth($redisAuth)
-        ->withDbIndex(0),
-        64
-    );
+    $poolSize = (int)($instanceConnections / $workerCount);
 
-    return $pool;
+    foreach ($connections as $key => $connection) {
+        $type = $connection['type'] ?? '';
+        $dsns = $connection['dsns'] ?? '';
+        $multipe = $connection['multiple'] ?? false;
+        $schemes = $connection['schemes'] ?? [];
+        $config = [];
+        $dsns = explode(',', $connection['dsns'] ?? '');
+
+        foreach ($dsns as &$dsn) {
+            $dsn = explode('=', $dsn);
+            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
+            $dsn = $dsn[1] ?? '';
+            $config[] = $name;
+
+            if (empty($dsn)) {
+                //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
+                continue;
+            }
+
+            $dsn = new DSN($dsn);
+            $dsnHost = $dsn->getHost();
+            $dsnPort = $dsn->getPort();
+            $dsnUser = $dsn->getUser();
+            $dsnPass = $dsn->getPassword();
+            $dsnScheme = $dsn->getScheme();
+            $dsnDatabase = $dsn->getDatabase();
+
+            if (!in_array($dsnScheme, $schemes)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
+            }
+
+            /**
+             * Get Resource
+             *
+             * Creation could be reused accross connection types like database, cache, queue, etc.
+             *
+             * Resource assignment to an adapter will happen below.
+             */
+
+            switch ($dsnScheme) {
+                case 'mysql':
+                case 'mariadb':
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                                PDO::ATTR_TIMEOUT => 3, // Seconds
+                                PDO::ATTR_PERSISTENT => true,
+                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                                PDO::ATTR_EMULATE_PREPARES => true,
+                                PDO::ATTR_STRINGIFY_FETCHES => true
+                            ));
+                        });
+                    };
+                    break;
+                case 'redis':
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
+                        $redis = new Redis();
+                        @$redis->pconnect($dsnHost, (int)$dsnPort);
+                        if ($dsnPass) {
+                            $redis->auth($dsnPass);
+                        }
+                        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+
+                        return $redis;
+                    };
+                    break;
+
+                default:
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
+                    break;
+            }
+
+            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
+                // Get Adapter
+                $adapter = null;
+
+                switch ($type) {
+                    case 'database':
+                        $adapter = match ($dsn->getScheme()) {
+                            'mariadb' => new MariaDB($resource()),
+                            'mysql' => new MySQL($resource()),
+                            default => null
+                        };
+
+                        $adapter->setDefaultDatabase($dsn->getDatabase());
+                        break;
+                    case 'pubsub':
+                        $adapter = $resource();
+                        break;
+                    case 'queue':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                            default => null
+                        };
+                        break;
+                    case 'cache':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new RedisCache($resource()),
+                            default => null
+                        };
+                        break;
+
+                    default:
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
+                        break;
+                }
+
+                return $adapter;
+            });
+
+            $group->add($pool);
+        }
+
+        Config::setParam('pools-' . $key, $config);
+    }
+
+    return $group;
 });
+
 $register->set('influxdb', function () {
  // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -562,7 +695,7 @@ $register->set('influxdb', function () {
     return $client;
 });
 $register->set('statsd', function () {
- // Register DB connection
+    // Register DB connection
     $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
     $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
@@ -601,33 +734,6 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-06.mmdb');
-});
-$register->set('db', function () {
- // This is usually for our workers or CLI commands scope
-    $dbHost = App::getEnv('_APP_DB_HOST', '');
-    $dbPort = App::getEnv('_APP_DB_PORT', '');
-    $dbUser = App::getEnv('_APP_DB_USER', '');
-    $dbPass = App::getEnv('_APP_DB_PASS', '');
-    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
-
-    $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::ATTR_TIMEOUT => 3, // Seconds
-        PDO::ATTR_PERSISTENT => true,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_EMULATE_PREPARES => true,
-        PDO::ATTR_STRINGIFY_FETCHES => true,
-    ));
-
-    return $pdo;
-});
-$register->set('cache', function () {
- // This is usually for our workers or CLI commands scope
-    $redis = new Redis();
-    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
-    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
-
-    return $redis;
 });
 
 /*
@@ -746,10 +852,12 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
+App::setResource('queueForFunctions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -926,26 +1034,51 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('dbForProject', function ($db, $cache, Document $project) {
-    $cache = new Cache(new RedisCache($cache));
+App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForConsole;
+    }
 
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace("_{$project->getInternalId()}");
+    $dbAdapter = $pools
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource()
+    ;
 
-    return $database;
-}, ['db', 'cache', 'project']);
-
-App::setResource('dbForConsole', function ($db, $cache) {
-    $cache = new Cache(new RedisCache($cache));
-
-    $database = new Database(new MariaDB($db), $cache);
-    $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-    $database->setNamespace('_console');
+    $database = new Database($dbAdapter, $cache);
+    $database->setNamespace('_' . $project->getInternalId());
 
     return $database;
-}, ['db', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'project']);
 
+App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
+    $dbAdapter = $pools
+        ->get('console')
+        ->pop()
+        ->getResource()
+    ;
+
+    $database = new Database($dbAdapter, $cache);
+
+    $database->setNamespace('console');
+
+    return $database;
+}, ['pools', 'cache']);
+
+App::setResource('cache', function (Group $pools) {
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource()
+        ;
+    }
+
+    return new Cache(new Sharding($adapters));
+}, ['pools']);
 
 App::setResource('deviceLocal', function () {
     return new Local();

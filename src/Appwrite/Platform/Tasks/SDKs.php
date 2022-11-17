@@ -1,5 +1,8 @@
 <?php
 
+namespace Appwrite\Platform\Tasks;
+
+use Utopia\Platform\Action;
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
@@ -19,10 +22,25 @@ use Appwrite\SDK\Language\Kotlin;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\SwiftClient;
+use Exception;
+use Throwable;
 
-$cli
-    ->task('sdks')
-    ->action(function () {
+class SDKs extends Action
+{
+    public static function getName(): string
+    {
+        return 'sdks';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Generate Appwrite SDKs')
+            ->callback(fn () => $this->action());
+    }
+
+    public function action(): void
+    {
         $platforms = Config::getParam('platforms');
         $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version = Console::confirm('Choose an Appwrite version');
@@ -47,19 +65,19 @@ $cli
 
                 Console::info('Fetching API Spec for ' . $language['name'] . ' for ' . $platform['name'] . ' (version: ' . $version . ')');
 
-                $spec = file_get_contents(__DIR__ . '/../config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
+                $spec = file_get_contents(__DIR__ . '/../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
                 $cover = 'https://appwrite.io/images/github.png';
-                $result = \realpath(__DIR__ . '/..') . '/sdks/' . $key . '-' . $language['key'];
-                $resultExamples = \realpath(__DIR__ . '/../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
-                $target = \realpath(__DIR__ . '/..') . '/sdks/git/' . $language['key'] . '/';
-                $readme = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/README.md');
+                $result = \realpath(__DIR__ . '/../../../app') . '/sdks/' . $key . '-' . $language['key'];
+                $resultExamples = \realpath(__DIR__ . '/../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
+                $target = \realpath(__DIR__ . '/../../../app') . '/sdks/git/' . $language['key'] . '/';
+                $readme = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
+                $gettingStarted = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
-                $examples = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
+                $examples = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
+                $changelog = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';
@@ -255,4 +273,5 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
         }
 
         Console::exit();
-    });
+    }
+}

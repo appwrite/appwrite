@@ -25,7 +25,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Appwrite\Utopia\Database\Validator\Queries\Variables;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -33,12 +32,10 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
-use Cron\CronExpression;
 use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
@@ -61,7 +58,7 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
@@ -74,10 +71,8 @@ App::post('/v1/functions')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
-
-        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
-        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -90,22 +85,24 @@ App::post('/v1/functions')
             'events' => $events,
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
-            'schedulePrevious' => null,
-            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
 
-        if ($next) {
-            // Async task reschedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setFunction($function)
-                ->setType('schedule')
-                ->setUser($user)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
+        $schedule = Authorization::skip(
+            fn() => $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'resourceType' => 'function',
+                'resourceId' => $function->getId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $function->getAttribute('schedule'),
+                'active' => false,
+            ]))
+        );
+
+        $function->setAttribute('scheduleId', $schedule->getId());
+        $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -450,16 +447,14 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
-
-        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
-        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $enabled ??= $function->getAttribute('enabled', true);
 
@@ -469,22 +464,26 @@ App::put('/v1/functions/:functionId')
             'events' => $events,
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
-            'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        if ($next) {
-            // Async task reschedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setFunction($function)
-                ->setType('schedule')
-                ->setUser($user)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+
+        /**
+         * In case we want to clear the schedule
+         */
+        if (!empty($function->getAttribute('deployment'))) {
+            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
         }
+
+        $schedule
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
+
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -511,7 +510,8 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $events) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $events, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -536,6 +536,18 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deployment' => $deployment->getId()
         ])));
+
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+
+        $active = !empty($function->getAttribute('schedule'));
+
+        if ($active) {
+            $schedule->setAttribute('resourceUpdatedAt', datetime::now());
+        }
+
+        $schedule->setAttribute('active', $active);
+
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $events
             ->setParam('functionId', $function->getId())
@@ -562,7 +574,9 @@ App::delete('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('deletes')
     ->inject('events')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events) {
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Document $project, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -573,6 +587,15 @@ App::delete('/v1/functions/:functionId')
         if (!$dbForProject->deleteDocument('functions', $function->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
+
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('active', false)
+        ;
+
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -610,7 +633,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -761,6 +785,22 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
             }
         }
+
+        /**
+         * TODO Should we update also the function collection with the scheduleUpdatedAt attr?
+         */
+
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+
+        $active = !empty($function->getAttribute('schedule'));
+
+        if ($active) {
+            $schedule->setAttribute('resourceUpdatedAt', datetime::now());
+        }
+
+        $schedule->setAttribute('active', $active);
+
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $metadata = null;
 
@@ -994,8 +1034,6 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->noContent();
     });
 
-
-
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
@@ -1021,7 +1059,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('events')
     ->inject('usage')
     ->inject('mode')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode) {
+    ->inject('queueForFunctions')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1109,24 +1148,22 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
-            $event = new Func();
-            $event
+            $queueForFunctions
                 ->setType('http')
                 ->setExecution($execution)
                 ->setFunction($function)
                 ->setData($data)
                 ->setJWT($jwt)
                 ->setProject($project)
-                ->setUser($user);
-
-            $event->trigger();
+                ->setUser($user)
+                ->trigger();
 
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                 ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []);
@@ -1150,13 +1187,12 @@ App::post('/v1/functions/:functionId/executions')
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                path: $build->getAttribute('outputPath', ''),
-                vars: $vars,
-                data: $data,
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                runtime: $function->getAttribute('runtime', ''),
+                payload: $data,
+                variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
-                baseImage: $runtime['image']
+                image: $runtime['image'],
+                source: $build->getAttribute('outputPath', ''),
+                entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
             /** Update execution status */
