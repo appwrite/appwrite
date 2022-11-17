@@ -121,7 +121,9 @@ class V16 extends Migration
                     'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
 
-
+                /**
+                 * Enable OAuth providers with data
+                 */
                 $authProviders = $document->getAttribute('authProviders', []);
 
                 foreach (Config::getParam('providers') as $provider => $value) {
