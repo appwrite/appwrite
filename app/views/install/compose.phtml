@@ -461,13 +461,12 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
 
-  appwrite-usage-timeseries:
+  appwrite-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint:
-      - usage
-      - --type=timeseries
-    container_name: appwrite-usage-timeseries
+    entrypoint: usage
+    container_name: appwrite-usage
     <<: *x-logging
     restart: unless-stopped
     networks:

@@ -196,6 +196,9 @@ class BuildsV1 extends Worker
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
+            /* Also update the deployment buildTime */
+            $deployment->setAttribute('buildTime', $response['duration']);
+
             Console::success("Build id: $buildId created");
 
             $function->setAttribute('scheduleUpdatedAt', DateTime::now());
