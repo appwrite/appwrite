@@ -140,6 +140,8 @@ class V16 extends Migration
                     }
                 }
 
+                $document->setAttribute('authProviders', $authProviders);
+
                 break;
         }
 
