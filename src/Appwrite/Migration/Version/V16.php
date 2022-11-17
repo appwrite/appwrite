@@ -50,7 +50,7 @@ class V16 extends Migration
                 case 'sessions':
                     try {
                         /**
-                         * Create 'compression' attribute
+                         * Create 'expire' attribute
                          */
                         $this->projectDB->deleteAttribute($id, 'expire');
                     } catch (\Throwable $th) {
@@ -76,6 +76,17 @@ class V16 extends Migration
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_team');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_team' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'stats':
+                    try {
+                        /**
+                         * Create 'region' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'region');
+                    } catch (\Throwable $th) {
+                        Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
                     break;
 
