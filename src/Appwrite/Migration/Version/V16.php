@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -50,7 +51,7 @@ class V16 extends Migration
                 case 'sessions':
                     try {
                         /**
-                         * Create 'compression' attribute
+                         * Create 'expire' attribute
                          */
                         $this->projectDB->deleteAttribute($id, 'expire');
                     } catch (\Throwable $th) {
@@ -76,6 +77,17 @@ class V16 extends Migration
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_team');
                     } catch (\Throwable $th) {
                         Console::warning("'_key_team' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'stats':
+                    try {
+                        /**
+                         * Create 'region' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'region');
+                    } catch (\Throwable $th) {
+                        Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
                     break;
 
@@ -108,6 +120,20 @@ class V16 extends Migration
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
                     'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
+
+
+                $authProviders = $document->getAttribute('authProviders', []);
+
+                foreach (Config::getParam('providers') as $provider => $value) {
+                    if (!$value['enabled']) {
+                        continue;
+                    }
+
+                    if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
+                        $authProviders[$provider . 'Enabled'] = true;
+                    }
+                }
+
                 break;
         }
 

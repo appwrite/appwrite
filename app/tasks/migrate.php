@@ -9,9 +9,19 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Text;
+
+function clearProjectsCache(Redis $redis, Document $project)
+{
+    try {
+        $redis->del($redis->keys("cache-_{$project->getInternalId()}:*"));
+    } catch (\Throwable $th) {
+        Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
+    }
+}
 
 $cli
     ->task('migrate')
@@ -30,7 +40,7 @@ $cli
 
         $db = $register->get('db', true);
         $redis = $register->get('cache', true);
-        $redis->flushAll();
+
         $cache = new Cache(new RedisCache($redis));
 
         $projectDB = new Database(new MariaDB($db), $cache);
@@ -70,6 +80,8 @@ $cli
                     continue;
                 }
 
+                clearProjectsCache($redis, $project);
+
                 try {
                     $migration
                         ->setProject($project, $projectDB, $consoleDB)
@@ -78,6 +90,8 @@ $cli
                     throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
                 }
+
+                clearProjectsCache($redis, $project);
             }
 
             $sum = \count($projects);
@@ -90,6 +104,5 @@ $cli
         }
 
         Swoole\Event::wait(); // Wait for Coroutines to finish
-        $redis->flushAll();
         Console::success('Data Migration Completed');
     });

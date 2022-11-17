@@ -394,11 +394,10 @@ App::error()
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
-    ->inject('layout')
     ->inject('project')
     ->inject('logger')
     ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
@@ -538,23 +537,16 @@ App::error()
         $template = ($route) ? $route->getLabel('error', null) : null;
 
         if ($template) {
-            $comp = new View($template);
+            $layout = new View($template);
 
-            $comp
+            $layout
+                ->setParam('title', $project->getAttribute('name') . ' - Error')
                 ->setParam('development', App::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
                 ->setParam('trace', $trace)
-            ;
-
-            $layout
-                ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('description', 'No Description')
-                ->setParam('body', $comp)
-                ->setParam('version', $version)
-                ->setParam('litespeed', false)
             ;
 
             $response->html($layout->render());
@@ -637,7 +629,6 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
-include_once __DIR__ . '/shared/web.php';
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];

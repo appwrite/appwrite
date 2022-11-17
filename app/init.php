@@ -730,13 +730,6 @@ App::setResource('loggerBreadcrumbs', function () {
 
 App::setResource('register', fn() => $register);
 
-App::setResource('layout', function ($locale) {
-    $layout = new View(__DIR__ . '/views/layouts/default.phtml');
-    $layout->setParam('locale', $locale);
-
-    return $layout;
-}, ['locale']);
-
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues

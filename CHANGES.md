@@ -1,7 +1,11 @@
-# Version TBD
+# Version 1.1.1
 
 ## Bugs
 - Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
+- Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Migration stopping scheduled functions [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Migration enabling OAuth providers with data by default [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Error pages when OAuth providers are disabled [#4704](https://github.com/appwrite/appwrite/pull/4704)
 
 # Version 1.1.0
 ## Features
