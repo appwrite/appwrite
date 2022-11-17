@@ -32,7 +32,6 @@ class Usage extends Action
 
     protected function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
     {
-        
     }
 
     public function action(UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, Registry $register, callable $getProjectDB, callable $logError)
