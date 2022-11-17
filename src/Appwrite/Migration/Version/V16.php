@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -119,6 +120,20 @@ class V16 extends Migration
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
                     'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
                 ]));
+
+
+                $authProviders = $document->getAttribute('authProviders', []);
+
+                foreach (Config::getParam('providers') as $provider => $value) {
+                    if (!$value['enabled']) {
+                        continue;
+                    }
+
+                    if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
+                        $authProviders[$provider . 'Enabled'] = true;
+                    }
+                }
+
                 break;
         }
 
