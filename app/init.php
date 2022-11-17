@@ -26,7 +26,6 @@ use Appwrite\SMS\Adapter\TextMagic;
 use Appwrite\SMS\Adapter\Twilio;
 use Appwrite\SMS\Adapter\Msg91;
 use Appwrite\SMS\Adapter\Vonage;
-use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
@@ -56,6 +55,7 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
@@ -160,6 +160,13 @@ const DELETE_TYPE_SCHEDULES = 'schedules';
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
+// Storage Device Types
+const STORAGE_DEVICE_LOCAL = 'file';
+const STORAGE_DEVICE_S3 = 's3';
+const STORAGE_DEVICE_DO_SPACES = 'dospaces';
+const STORAGE_DEVICE_BACKBLAZE = 'backblaze';
+const STORAGE_DEVICE_LINODE = 'linode';
+const STORAGE_DEVICE_WASABI = 'wasabi';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -1099,45 +1106,41 @@ App::setResource('deviceBuilds', function ($project) {
 
 function getDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
-        case Storage::DEVICE_LOCAL:
+    $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
+
+    $acl = 'private';
+    $device = STORAGE_DEVICE_LOCAL;
+    $accessKey = '';
+    $accessSecret = '';
+    $bucket = '';
+    $region = '';
+
+    try {
+        $dsn = new DSN($connection);
+        $device = $dsn->getScheme();
+        $accessKey = $dsn->getUser();
+        $accessSecret = $dsn->getPassword();
+        $bucket = $dsn->getPath();
+        $region = $dsn->getParam('region');
+    } catch (\Exception $e) {
+        Console::eor($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
+        $device = STORAGE_DEVICE_LOCAL;
+    }
+
+    switch ($device) {
+        case STORAGE_DEVICE_S3:
+            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_DO_SPACES:
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_BACKBLAZE:
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_LINODE:
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_WASABI:
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_LOCAL:
         default:
             return new Local($root);
-        case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
-            $s3Acl = 'private';
-            return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-        case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-            $doSpacesAcl = 'private';
-            return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
-        case Storage::DEVICE_BACKBLAZE:
-            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
-            $backblazeAcl = 'private';
-            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
-        case Storage::DEVICE_LINODE:
-            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
-            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
-            $linodeAcl = 'private';
-            return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
-        case Storage::DEVICE_WASABI:
-            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
-            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
-            $wasabiAcl = 'private';
-            return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
 }
 
