@@ -55,6 +55,7 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
