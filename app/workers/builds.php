@@ -85,7 +85,8 @@ class BuildsV1 extends Worker
         try {
             $dsn = new DSN($connection);
             $device = $dsn->getScheme();
-        } catch (\Exception $e) {;
+        } catch (\Exception $e) {
+            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
