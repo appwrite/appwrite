@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a673091aa6bd8ef01380b63245427c93",
+    "content-hash": "9c2365876e32662c9c62e3a4c738fafe",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1942,6 +1942,53 @@
                 "source": "https://github.com/utopia-php/domains/tree/master"
             },
             "time": "2020-02-23T07:40:02+00:00"
+        },
+        {
+            "name": "utopia-php/dsn",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/dsn.git",
+                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\DSN\\": "src/DSN"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for parsing and managing Data Source Names ( DSNs )",
+            "keywords": [
+                "dsn",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/dsn/issues",
+                "source": "https://github.com/utopia-php/dsn/tree/0.1.0"
+            },
+            "time": "2022-10-26T10:06:20+00:00"
         },
         {
             "name": "utopia-php/framework",

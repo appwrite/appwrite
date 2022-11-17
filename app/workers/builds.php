@@ -11,7 +11,7 @@ use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\ID;
-use Utopia\Storage\Storage;
+use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;

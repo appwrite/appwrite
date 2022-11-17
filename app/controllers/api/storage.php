@@ -41,6 +41,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
 
 App::post('/v1/storage/buckets')

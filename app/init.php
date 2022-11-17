@@ -54,7 +54,6 @@ use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
 use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
@@ -75,6 +74,7 @@ use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\CLI\Console;
 use Utopia\Queue;
 
 const APP_NAME = 'Appwrite';
@@ -593,7 +593,7 @@ $register->set('pools', function () {
             $dsnUser = $dsn->getUser();
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getScheme();
-            $dsnDatabase = $dsn->getDatabase();
+            $dsnDatabase = $dsn->getPath();
 
             if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
@@ -653,7 +653,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setDefaultDatabase($dsn->getDatabase());
+                        $adapter->setDefaultDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
                         $adapter = $resource();
@@ -1035,6 +1035,7 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
+            'invites' => false,
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
@@ -1123,7 +1124,7 @@ function getDevice($root): Device
         $bucket = $dsn->getPath();
         $region = $dsn->getParam('region');
     } catch (\Exception $e) {
-        Console::eor($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
+        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
         $device = STORAGE_DEVICE_LOCAL;
     }
 

@@ -6,7 +6,7 @@ use Appwrite\SMS\Adapter\TextMagic;
 use Appwrite\SMS\Adapter\Twilio;
 use Appwrite\SMS\Adapter\Msg91;
 use Appwrite\SMS\Adapter\Vonage;
-use Appwrite\DSN\DSN;
+use Utopia\DSN\DSN;
 use Appwrite\Resque\Worker;
 use Appwrite\SMS\Adapter;
 use Utopia\App;
