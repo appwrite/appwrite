@@ -130,6 +130,10 @@ class V16 extends Migration
                     }
 
                     if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
+                        if (array_key_exists($provider . 'Enabled', $authProviders)) {
+                            continue;
+                        }
+
                         $authProviders[$provider . 'Enabled'] = true;
                     }
                 }
