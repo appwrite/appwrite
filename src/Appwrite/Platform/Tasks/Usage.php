@@ -2,14 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Usage\Calculators\Aggregator;
-use Appwrite\Usage\Calculators\Database;
 use Appwrite\Usage\Calculators\TimeSeries;
 use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
-use Utopia\Validator\WhiteList;
 use Throwable;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
