@@ -1,24 +1,39 @@
 <?php
 
-global $cli;
+namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
+use Utopia\Platform\Action;
 
-$cli
-    ->task('maintenance')
-    ->desc('Schedules maintenance tasks and publishes them to resque')
-    ->action(function () {
+class Maintenance extends Action
+{
+    public static function getName(): string
+    {
+        return 'maintenance';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->desc('Schedules maintenance tasks and publishes them to resque')
+            ->inject('dbForConsole')
+            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
+    }
+
+    public function action(Database $dbForConsole): void
+    {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        function notifyDeleteExecutionLogs(int $interval): void
+        function notifyDeleteExecutionLogs(int $interval)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_EXECUTIONS)
@@ -26,7 +41,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteAbuseLogs(int $interval): void
+        function notifyDeleteAbuseLogs(int $interval)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_ABUSE)
@@ -34,7 +49,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteAuditLogs(int $interval): void
+        function notifyDeleteAuditLogs(int $interval)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_AUDIT)
@@ -42,7 +57,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $interval30m, int $interval1d): void
+        function notifyDeleteUsageStats(int $interval30m, int $interval1d)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
@@ -51,7 +66,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteConnections(): void
+        function notifyDeleteConnections()
         {
             (new Delete())
                 ->setType(DELETE_TYPE_REALTIME)
@@ -59,7 +74,7 @@ $cli
                 ->trigger();
         }
 
-        function notifyDeleteExpiredSessions(): void
+        function notifyDeleteExpiredSessions()
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
@@ -67,7 +82,7 @@ $cli
                 ->trigger();
         }
 
-        function renewCertificates($dbForConsole): void
+        function renewCertificates($dbForConsole)
         {
             $time = DateTime::now();
 
@@ -103,8 +118,16 @@ $cli
                 ->trigger();
         }
 
+        function notifyDeleteSchedules($interval)
+        {
 
-         // # of days in seconds (1 day = 86400s)
+            (new Delete())
+                ->setType(DELETE_TYPE_SCHEDULES)
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+                ->trigger();
+        }
+
+        // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
@@ -112,10 +135,9 @@ $cli
         $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
         $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention) {
-            $database = getConsoleDB();
-
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $schedulesDeletionRetention, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -125,7 +147,9 @@ $cli
             notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
-            renewCertificates($database);
+            renewCertificates($dbForConsole);
             notifyDeleteCache($cacheRetention);
+            notifyDeleteSchedules($schedulesDeletionRetention);
         }, $interval);
-    });
+    }
+}

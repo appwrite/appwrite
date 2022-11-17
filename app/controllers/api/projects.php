@@ -22,11 +22,9 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Cache\Cache;
@@ -57,7 +55,7 @@ App::post('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
@@ -131,8 +129,7 @@ App::post('/v1/projects')
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-
-        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
@@ -249,118 +246,6 @@ App::get('/v1/projects/:projectId')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects/:projectId/usage')
-    ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->inject('register')
-    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            $dbForProject->setNamespace("_{$project->getInternalId()}");
-
-            $metrics = [
-                'project.$all.network.requests',
-                'project.$all.network.bandwidth',
-                'project.$all.storage.size',
-                'users.$all.count.total',
-                'collections.$all.count.total',
-                'documents.$all.count.total',
-                'executions.$all.compute.total',
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'requests' => $stats[$metrics[0]] ?? [],
-                'network' => $stats[$metrics[1]] ?? [],
-                'storage' => $stats[$metrics[2]] ?? [],
-                'users' => $stats[$metrics[3]] ?? [],
-                'collections' => $stats[$metrics[4]] ?? [],
-                'documents' => $stats[$metrics[5]] ?? [],
-                'executions' => $stats[$metrics[6]] ?? [],
-            ]);
-        }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')

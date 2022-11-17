@@ -32,12 +32,12 @@ require_once __DIR__ . '/init.php';
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-
 function getConsoleDB(): Database
 {
     global $register;
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+    /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools');
 
     $dbAdapter = $pools
         ->get('console')
@@ -56,7 +56,8 @@ function getProjectDB(Document $project): Database
 {
     global $register;
 
-    $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+    /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools');
 
     if ($project->isEmpty() || $project->getId() === 'console') {
         return getConsoleDB();
@@ -366,10 +367,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             call_user_func($logError, $th, "pubSubConnection");
 
             Console::error('Pub/sub error: ' . $th->getMessage());
-            $register->get('pools')->reclaim();
             $attempts++;
             sleep(DATABASE_RECONNECT_SLEEP);
             continue;
+        } finally {
+            $register->get('pools')->reclaim();
         }
     }
 
@@ -558,7 +560,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
             default:
                 throw new Exception('Message type is not valid.', 1003);
-                break;
         }
     } catch (\Throwable $th) {
         $response = [

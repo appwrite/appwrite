@@ -26,7 +26,6 @@ use Appwrite\SMS\Adapter\TextMagic;
 use Appwrite\SMS\Adapter\Twilio;
 use Appwrite\SMS\Adapter\Msg91;
 use Appwrite\SMS\Adapter\Vonage;
-use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
@@ -38,8 +37,6 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Utopia\Queue\Client as SyncOut;
-use Utopia\Queue\Connection\Redis as QueueRedis;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
@@ -58,6 +55,7 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Storage;
+use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
@@ -67,13 +65,13 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -157,10 +155,18 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
+const DELETE_TYPE_SCHEDULES = 'schedules';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
+// Storage Device Types
+const STORAGE_DEVICE_LOCAL = 'file';
+const STORAGE_DEVICE_S3 = 's3';
+const STORAGE_DEVICE_DO_SPACES = 'dospaces';
+const STORAGE_DEVICE_BACKBLAZE = 'backblaze';
+const STORAGE_DEVICE_LINODE = 'linode';
+const STORAGE_DEVICE_WASABI = 'wasabi';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -501,9 +507,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
-
 $register->set('pools', function () {
-
     $group = new Group();
 
     $fallbackForDB = AppwriteURL::unparse([
@@ -553,6 +557,17 @@ $register->set('pools', function () {
             'schemes' => ['redis'],
         ],
     ];
+
+    $instances = 2; // REST, Realtime
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
+    $instanceConnections = $maxConnections / $instances;
+
+    if ($workerCount > $instanceConnections) {
+        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
+    }
+
+    $poolSize = (int)($instanceConnections / $workerCount);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -627,7 +642,7 @@ $register->set('pools', function () {
                     break;
             }
 
-            $pool = new Pool($name, 64, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
 
@@ -846,10 +861,13 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
+App::setResource('queueForFunctions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-App::setResource('clients', function ($request, $console, $project) use ($register) {
+App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
@@ -1026,24 +1044,6 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('queue', function () {
-
-    $fallbackForRedis = AppwriteURL::unparse([
-    'scheme' => 'redis',
-    'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-    'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-    'user' => App::getEnv('_APP_REDIS_USER', ''),
-    'pass' => App::getEnv('_APP_REDIS_PASS', ''),
-    ]);
-
-    $connection = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
-
-    $dsns = explode(',', $connection ?? '');
-    $dsn = explode('=', $dsns[0]);
-    $dsn = $dsn[1] ?? '';
-    return  new DSN($dsn);
-}, []);
-
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
@@ -1069,6 +1069,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     ;
 
     $database = new Database($dbAdapter, $cache);
+
     $database->setNamespace('console');
 
     return $database;
@@ -1127,45 +1128,41 @@ App::setResource('deviceBuilds', function ($project) {
 
 function getDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
-        case Storage::DEVICE_LOCAL:
+    $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
+
+    $acl = 'private';
+    $device = STORAGE_DEVICE_LOCAL;
+    $accessKey = '';
+    $accessSecret = '';
+    $bucket = '';
+    $region = '';
+
+    try {
+        $dsn = new DSN($connection);
+        $device = $dsn->getScheme();
+        $accessKey = $dsn->getUser();
+        $accessSecret = $dsn->getPassword();
+        $bucket = $dsn->getPath();
+        $region = $dsn->getParam('region');
+    } catch (\Exception $e) {
+        Console::eor($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
+        $device = STORAGE_DEVICE_LOCAL;
+    }
+
+    switch ($device) {
+        case STORAGE_DEVICE_S3:
+            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_DO_SPACES:
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_BACKBLAZE:
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_LINODE:
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_WASABI:
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_LOCAL:
         default:
             return new Local($root);
-        case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
-            $s3Acl = 'private';
-            return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
-        case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
-            $doSpacesAcl = 'private';
-            return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
-        case Storage::DEVICE_BACKBLAZE:
-            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
-            $backblazeAcl = 'private';
-            return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
-        case Storage::DEVICE_LINODE:
-            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
-            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
-            $linodeAcl = 'private';
-            return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
-        case Storage::DEVICE_WASABI:
-            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
-            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
-            $wasabiAcl = 'private';
-            return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
 }
 

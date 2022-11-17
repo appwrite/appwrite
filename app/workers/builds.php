@@ -1,10 +1,10 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Cron\CronExpression;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Utopia\Database\DateTime;
@@ -14,6 +14,7 @@ use Utopia\Database\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization;
 
 require_once __DIR__ . '/../init.php';
 
@@ -57,6 +58,8 @@ class BuildsV1 extends Worker
 
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
+        global $register;
+
         $dbForProject = $this->getProjectDB($project);
 
         $function = $dbForProject->getDocument('functions', $function->getId());
@@ -76,6 +79,15 @@ class BuildsV1 extends Worker
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
+        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
+        $device = STORAGE_DEVICE_LOCAL;
+        try {
+            $dsn = new DSN($connection);
+            $device = $dsn->getScheme();
+        } catch (\Exception $e) {
+            $device = STORAGE_DEVICE_LOCAL;
+        }
+
         $buildId = $deployment->getAttribute('buildId', '');
         $startTime = DateTime::now();
         if (empty($buildId)) {
@@ -89,7 +101,7 @@ class BuildsV1 extends Worker
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
-                'sourceType' => App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL),
+                'sourceType' => $device,
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,
@@ -118,10 +130,15 @@ class BuildsV1 extends Worker
             ->trigger();
 
         /** Trigger Functions */
-        $deploymentUpdate
-            ->setClass(Event::FUNCTIONS_CLASS_NAME)
-            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+        $pools = $register->get('pools');
+        $connection = $pools->get('queue')->pop();
+
+        $functions = new Func($connection->getResource());
+        $functions
+            ->from($deploymentUpdate)
             ->trigger();
+
+        $connection->reclaim();
 
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
@@ -145,25 +162,22 @@ class BuildsV1 extends Worker
 
         $source = $deployment->getAttribute('path');
 
-        $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
             return $carry;
         }, []);
-
-        $baseImage = $runtime['image'];
 
         try {
             $response = $this->executor->createRuntime(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
-                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                vars: $vars,
-                runtime: $key,
-                baseImage: $baseImage,
-                workdir: '/usr/code',
+                image: $runtime['image'],
                 remove: true,
+                entrypoint: $deployment->getAttribute('entrypoint'),
+                workdir: '/usr/code',
+                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                variables: $vars,
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \
@@ -171,15 +185,20 @@ class BuildsV1 extends Worker
                 ]
             );
 
+            $endTime = new \DateTime();
+            $endTime->setTimestamp($response['endTimeUnix']);
+
             /** Update the build document */
-            $build->setAttribute('endTime', $response['endTime']);
-            $build->setAttribute('duration', $response['duration']);
+            $build->setAttribute('endTime', DateTime::format($endTime));
+            $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['response']);
+            $build->setAttribute('stdout', $response['stdout']);
 
             Console::success("Build id: $buildId created");
+
+            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
@@ -188,11 +207,16 @@ class BuildsV1 extends Worker
             }
 
             /** Update function schedule */
-            $schedule = $function->getAttribute('schedule', '');
-            $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
-            $function->setAttribute('scheduleNext', $next);
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+            $dbForConsole = $this->getConsoleDB();
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+
+            $schedule
+                ->setAttribute('schedule', $function->getAttribute('schedule'))
+                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
+
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
@@ -222,7 +246,6 @@ class BuildsV1 extends Worker
             );
 
             /** Update usage stats */
-            global $register;
             if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
                 $statsd = $register->get('statsd');
                 $usage = new Stats($statsd);

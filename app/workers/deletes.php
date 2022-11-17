@@ -114,6 +114,9 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
                 $this->deleteCacheByDate();
                 break;
+            case DELETE_TYPE_SCHEDULES:
+                $this->deleteSchedules($this->args['datetime']);
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -122,6 +125,40 @@ class DeletesV1 extends Worker
 
     public function shutdown(): void
     {
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function deleteSchedules(string $datetime): void
+    {
+
+        $this->deleteByGroup(
+            'schedules',
+            [
+                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::equal('resourceType', ['function']),
+                Query::lessThanEqual('resourceUpdatedAt', $datetime),
+                Query::equal('active', [false]),
+            ],
+            $this->getConsoleDB(),
+            function (Document $document) {
+                Console::info('Querying schedule for function ' . $document->getAttribute('resourceId'));
+                $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
+
+                if ($project->isEmpty()) {
+                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
+                    return;
+                }
+
+                $function = $this->getProjectDB($project)->getDocument('functions', $document->getAttribute('resourceId'));
+
+                if ($function->isEmpty()) {
+                    $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                }
+            }
+        );
     }
 
     /**
@@ -468,18 +505,7 @@ class DeletesV1 extends Worker
             Query::equal('functionId', [$functionId])
         ], $dbForProject);
 
-        /**
-         * Request executor to delete all deployment containers
-         */
-        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        foreach ($deploymentIds as $deploymentId) {
-            try {
-                $executor->deleteRuntime($projectId, $deploymentId);
-            } catch (Throwable $th) {
-                Console::error($th->getMessage());
-            }
-        }
+        // TODO: Request executor to delete runtime
     }
 
     /**
@@ -519,16 +545,7 @@ class DeletesV1 extends Worker
             }
         });
 
-        /**
-         * Request executor to delete the deployment container
-         */
-        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-            $executor->deleteRuntime($projectId, $deploymentId);
-        } catch (Throwable $th) {
-            Console::error($th->getMessage());
-        }
+        // TODO: Request executor to delete runtime
     }
 
 
