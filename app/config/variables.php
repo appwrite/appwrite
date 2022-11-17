@@ -846,7 +846,7 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
                 'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
                 'introduction' => '1.2.0',
-                'default' => 'openruntimes-runtimes',
+                'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
