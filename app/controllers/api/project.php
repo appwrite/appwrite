@@ -23,7 +23,8 @@ App::get('/v1/project/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
-
+        var_dump("Getting usage");
+        var_dump($range);
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
