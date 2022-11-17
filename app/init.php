@@ -1108,7 +1108,7 @@ function getDevice($root): Device
     $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     $acl = 'private';
-    $device = '';
+    $device = STORAGE_DEVICE_LOCAL;
     $accessKey = '';
     $accessSecret = '';
     $bucket = '';
@@ -1123,7 +1123,7 @@ function getDevice($root): Device
         $region = $dsn->getParam('region');
     } catch (\Exception $e) {
         Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
-        $device = 'Local';
+        $device = STORAGE_DEVICE_LOCAL;
     }
 
     switch ($device) {

@@ -280,7 +280,7 @@ abstract class Worker
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
         $acl = 'private';
-        $device = '';
+        $device = STORAGE_DEVICE_LOCAL;
         $accessKey = '';
         $accessSecret = '';
         $bucket = '';
@@ -295,7 +295,7 @@ abstract class Worker
             $region = $dsn->getParam('region');
         } catch (\Exception $e) {
             Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
-            $device = 'file';
+            $device = STORAGE_DEVICE_LOCAL;
         }
 
         switch ($device) {
