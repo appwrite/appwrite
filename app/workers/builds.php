@@ -79,7 +79,7 @@ class BuildsV1 extends Worker
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
         $device = STORAGE_DEVICE_LOCAL;
         try {
             $dsn = new DSN($connection);
