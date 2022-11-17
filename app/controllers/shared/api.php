@@ -5,6 +5,7 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
@@ -170,9 +171,9 @@ App::init()
             }
         }
 
-    /*
-     * Background Jobs
-     */
+        /*
+        * Background Jobs
+        */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -298,7 +299,8 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
+    ->inject('queueForFunctions')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -309,9 +311,8 @@ App::shutdown()
             /**
              * Trigger functions.
              */
-            $events
-                ->setClass(Event::FUNCTIONS_CLASS_NAME)
-                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            $queueForFunctions
+                ->from($events)
                 ->trigger();
 
             /**

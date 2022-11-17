@@ -15,7 +15,7 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.9
     container_name: appwrite-traefik
     <<: *x-logging
     command:
@@ -30,6 +30,15 @@ services:
     ports:
       - <?php echo $httpPort; ?>:80
       - <?php echo $httpsPort; ?>:443
+    ulimits:
+      nofile:
+        soft: 655350
+        hard: 655350
+    sysctls:
+      - net.core.somaxconn=1024
+      - net.ipv4.tcp_rmem=1024 4096 16384
+      - net.ipv4.tcp_wmem=1024 4096 16384
+      - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -66,7 +75,7 @@ services:
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - appwrite-functions:/storage/functions:rw
+      - openruntimes-functions:/storage/functions:rw
     depends_on:
       - mariadb
       - redis
@@ -93,6 +102,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_CONNECTIONS_MAX
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -134,10 +144,8 @@ services:
       - _APP_FUNCTIONS_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
       - _APP_FUNCTIONS_RUNTIMES
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -151,6 +159,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
+      - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
 
@@ -190,6 +199,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_CONNECTIONS_MAX
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -260,8 +270,8 @@ services:
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
+      - openruntimes-functions:/storage/functions:rw
+      - openruntimes-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
@@ -398,7 +408,7 @@ services:
     depends_on:
       - redis
       - mariadb
-      - appwrite-executor
+      - openruntimes-executor
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -415,66 +425,6 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
-
-  appwrite-executor:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: executor
-    <<: *x-logging
-    container_name: appwrite-executor
-    restart: unless-stopped
-    stop_signal: SIGINT
-    networks:
-      appwrite:
-      runtimes:
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
-      - /tmp:/tmp:rw
-    depends_on:
-      - redis
-      - mariadb
-      - appwrite
-    environment:
-      - _APP_ENV
-      - _APP_VERSION
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_RUNTIMES
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_INACTIVE_THRESHOLD
-      - _APP_EXECUTOR_SECRET
-      - OPEN_RUNTIMES_NETWORK
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
 
   appwrite-worker-mails:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -600,6 +550,32 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
 
+  openruntimes-executor:
+    container_name: openruntimes-executor
+    hostname: exc1
+    <<: *x-logging
+    stop_signal: SIGINT
+    image: openruntimes/executor:0.1.4
+    networks:
+      - appwrite
+      - openruntimes-runtimes
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - openruntimes-builds:/storage/builds:rw
+      - openruntimes-functions:/storage/functions:rw
+      - /tmp:/tmp:rw
+    environment:
+      - OPR_EXECUTOR_CONNECTION_STORAGE=$_APP_FUNCTIONS_CONNECTION_STORAGE
+      - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
+      - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
+      - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
+      - OPR_EXECUTOR_ENV=$_APP_ENV
+      - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
+      - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
+      - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
+      - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
+
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
@@ -614,7 +590,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_CONNECTIONS_MAX}'
 
   redis:
     image: redis:7.0.4-alpine
@@ -663,8 +639,13 @@ services:
 
 networks:
   gateway:
+    name: gateway
   appwrite:
-  runtimes:
+    name: appwrite
+  openruntimes-runtimes:
+    name: openruntimes-runtimes
+  openruntimes-executors:
+    name: openruntimes-executors
 
 volumes:
   appwrite-mariadb:
@@ -672,8 +653,7 @@ volumes:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:
-  appwrite-functions:
-  appwrite-builds:
   appwrite-influxdb:
   appwrite-config:
-  appwrite-executor:
+  openruntimes-functions:
+  openruntimes-builds:

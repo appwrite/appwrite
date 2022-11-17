@@ -22,14 +22,13 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Cache\Cache;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Group;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -265,8 +264,7 @@ App::get('/v1/projects/:projectId/usage')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->inject('register')
-    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
+    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 

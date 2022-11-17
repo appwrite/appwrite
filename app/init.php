@@ -71,9 +71,11 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Queue;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -153,6 +155,7 @@ const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
+const DELETE_TYPE_SCHEDULES = 'schedules';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -547,6 +550,17 @@ $register->set('pools', function () {
         ],
     ];
 
+    $instances = 2; // REST, Realtime
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
+    $instanceConnections = $maxConnections / $instances;
+
+    if ($workerCount > $instanceConnections) {
+        throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
+    }
+
+    $poolSize = (int)($instanceConnections / $workerCount);
+
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
         $dsns = $connection['dsns'] ?? '';
@@ -620,7 +634,7 @@ $register->set('pools', function () {
                     break;
             }
 
-            $pool = new Pool($name, 64, function () use ($type, $resource, $dsn) {
+            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
 
@@ -633,13 +647,15 @@ $register->set('pools', function () {
                         };
 
                         $adapter->setDefaultDatabase($dsn->getDatabase());
-
-                        break;
-                    case 'queue':
-                        $adapter = $resource();
                         break;
                     case 'pubsub':
                         $adapter = $resource();
+                        break;
+                    case 'queue':
+                        $adapter = match ($dsn->getScheme()) {
+                            'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
+                            default => null
+                        };
                         break;
                     case 'cache':
                         $adapter = match ($dsn->getScheme()) {
@@ -664,6 +680,7 @@ $register->set('pools', function () {
 
     return $group;
 });
+
 $register->set('influxdb', function () {
  // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
@@ -836,10 +853,12 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
+App::setResource('queueForFunctions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
-
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
