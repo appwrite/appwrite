@@ -1,7 +1,8 @@
-# Version TBD
+# Version 1.1.1
 
 ## Bugs
 - Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
+- Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)
 
 # Version 1.1.0
 ## Features
