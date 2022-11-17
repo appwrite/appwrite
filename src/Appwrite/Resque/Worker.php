@@ -285,7 +285,7 @@ abstract class Worker
      */
     public function getDevice($root): Device
     {
-        $connection = App::getEnv('_APP_STORAGE_CONNECTION', '');
+        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
         try {
             $dsn = new DSN($connection);

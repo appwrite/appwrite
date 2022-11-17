@@ -489,7 +489,7 @@ return [
                 'question' => '',
             ],
             [
-                'name' => '_APP_STORAGE_CONNECTION',
+                'name' => '_APP_CONNECTIONS_STORAGE',
                 'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty.',
                 'introduction' => '1.1.0',
                 'default' => '',

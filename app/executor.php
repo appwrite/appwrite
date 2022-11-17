@@ -120,7 +120,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 function getStorageDevice($root): Device
 {
-    $connection = App::getEnv('_APP_STORAGE_CONNECTION', '');
+    $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     try {
         $dsn = new DSN($connection);
