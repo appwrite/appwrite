@@ -38,7 +38,6 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
-use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -99,7 +98,7 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.0.3';
+const APP_VERSION_STABLE = '1.1.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -193,6 +192,7 @@ Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
 Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
+Config::load('regions', __DIR__ . '/config/regions.php'); // List of available regions
 Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
 Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
@@ -735,7 +735,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
 });
 
 /*
@@ -838,13 +838,6 @@ App::setResource('loggerBreadcrumbs', function () {
 
 App::setResource('register', fn() => $register);
 
-App::setResource('layout', function ($locale) {
-    $layout = new View(__DIR__ . '/views/layouts/default.phtml');
-    $layout->setParam('locale', $locale);
-
-    return $layout;
-}, ['locale']);
-
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
@@ -946,9 +939,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
     ) { // Validate user has valid login token
         $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
     }
@@ -1031,6 +1026,7 @@ App::setResource('console', function () {
         'auths' => [
             'invites' => false,
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

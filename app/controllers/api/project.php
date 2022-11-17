@@ -23,7 +23,8 @@ App::get('/v1/project/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
-
+        var_dump("Getting usage");
+        var_dump($range);
         $usage = [];
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
@@ -50,9 +51,10 @@ App::get('/v1/project/usage')
                 'project.$all.network.bandwidth',
                 'project.$all.storage.size',
                 'users.$all.count.total',
-                'collections.$all.count.total',
+                'databases.$all.count.total',
                 'documents.$all.count.total',
                 'executions.$all.compute.total',
+                'buckets.$all.count.total'
             ];
 
             $stats = [];
@@ -101,10 +103,12 @@ App::get('/v1/project/usage')
                 'network' => $stats[$metrics[1]] ?? [],
                 'storage' => $stats[$metrics[2]] ?? [],
                 'users' => $stats[$metrics[3]] ?? [],
-                'collections' => $stats[$metrics[4]] ?? [],
+                'databases' => $stats[$metrics[4]] ?? [],
                 'documents' => $stats[$metrics[5]] ?? [],
                 'executions' => $stats[$metrics[6]] ?? [],
+                'buckets' => $stats[$metrics[7]] ?? [],
             ]);
+
         }
 
         $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);

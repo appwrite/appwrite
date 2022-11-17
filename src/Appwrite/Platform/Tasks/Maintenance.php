@@ -57,12 +57,11 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $interval30m, int $interval1d)
+        function notifyDeleteUsageStats(int $usageStatsRetentionHourly)
         {
             (new Delete())
                 ->setType(DELETE_TYPE_USAGE)
-                ->setDateTime1d(DateTime::addSeconds(new \DateTime(), -1 * $interval1d))
-                ->setDateTime30m(DateTime::addSeconds(new \DateTime(), -1 * $interval30m))
+                ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                 ->trigger();
         }
 
@@ -78,7 +77,7 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
-                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG))
+                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG)) //TODO: Update to use project session expiration instead of default.
                 ->trigger();
         }
 
@@ -132,19 +131,19 @@ class Maintenance extends Action
         $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
-        $usageStatsRetention30m = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_30M', '129600'); //36 hours
-        $usageStatsRetention1d = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_1D', '8640000'); // 100 days
+        $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
+
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetention30m, $usageStatsRetention1d, $cacheRetention, $schedulesDeletionRetention, $dbForConsole) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetentionHourly, $cacheRetention, $schedulesDeletionRetention, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
             notifyDeleteExecutionLogs($executionLogsRetention);
             notifyDeleteAbuseLogs($abuseLogsRetention);
             notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteUsageStats($usageStatsRetention30m, $usageStatsRetention1d);
+            notifyDeleteUsageStats($usageStatsRetentionHourly);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
             renewCertificates($dbForConsole);

@@ -2203,6 +2203,60 @@
             "time": "2022-03-18T10:56:57+00:00"
         },
         {
+            "name": "utopia-php/messaging",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/messaging.git",
+                "reference": "501272fad666f06bec8f130076862e7981a73f8c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/501272fad666f06bec8f130076862e7981a73f8c",
+                "reference": "501272fad666f06bec8f130076862e7981a73f8c",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=8.0.0"
+            },
+            "require-dev": {
+                "phpmailer/phpmailer": "6.6.*",
+                "phpunit/phpunit": "9.5.*",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Messaging\\": "src/Utopia/Messaging"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jake Barnby",
+                    "email": "jake@appwrite.io"
+                }
+            ],
+            "description": "A simple, light and advanced PHP messaging library",
+            "keywords": [
+                "library",
+                "messaging",
+                "php",
+                "upf",
+                "utopia",
+                "utopia-php"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/messaging/issues",
+                "source": "https://github.com/utopia-php/messaging/tree/0.1.0"
+            },
+            "time": "2022-09-29T11:22:48+00:00"
+        },
+        {
             "name": "utopia-php/orchestration",
             "version": "0.9.0",
             "source": {

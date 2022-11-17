@@ -163,10 +163,11 @@ App::post('/v1/account/sessions/email')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -183,9 +184,11 @@ App::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
@@ -195,7 +198,6 @@ App::post('/v1/account/sessions/email')
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -242,6 +244,7 @@ App::post('/v1/account/sessions/email')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('expire', $expire)
         ;
 
         $events
@@ -448,7 +451,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -523,10 +527,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge([
             '$id' => ID::unique(),
@@ -538,7 +543,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'providerRefreshToken' => $refreshToken,
             'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -568,6 +572,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $session->setAttribute('expire', $expire);
 
         $events
             ->setParam('userId', $user->getId())
@@ -757,10 +763,11 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
 
         /** @var Utopia\Database\Document $user */
 
@@ -776,10 +783,11 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
@@ -788,7 +796,6 @@ App::put('/v1/account/sessions/magic-url')
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -848,6 +855,7 @@ App::put('/v1/account/sessions/magic-url')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -994,10 +1002,11 @@ App::put('/v1/account/sessions/phone')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
 
         $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
@@ -1011,10 +1020,11 @@ App::put('/v1/account/sessions/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
@@ -1023,7 +1033,6 @@ App::put('/v1/account/sessions/phone')
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_PHONE,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -1081,6 +1090,7 @@ App::put('/v1/account/sessions/phone')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1162,11 +1172,11 @@ App::post('/v1/account/sessions/anonymous')
         ])));
 
         // Create session token
-
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
@@ -1175,7 +1185,6 @@ App::post('/v1/account/sessions/anonymous')
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_ANONYMOUS,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expire,
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -1215,6 +1224,7 @@ App::post('/v1/account/sessions/anonymous')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
+            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1322,10 +1332,12 @@ App::get('/v1/account/sessions')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->action(function (Response $response, Document $user, Locale $locale) {
+    ->inject('project')
+    ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
-        $current = Auth::sessionVerify($sessions, Auth::$secret);
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1420,11 +1432,13 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('locale')
     ->inject('dbForProject')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject) {
+    ->inject('project')
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -1434,6 +1448,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
+                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -1700,11 +1715,13 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('events')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events) {
+    ->inject('project')
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Document $project) {
 
         $protocol = $request->getProtocol();
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1775,9 +1792,9 @@ App::patch('/v1/account/sessions/:sessionId')
     ->inject('locale')
     ->inject('events')
     ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $events) {
-
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1817,6 +1834,10 @@ App::patch('/v1/account/sessions/:sessionId')
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
+
+                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+
+                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration));
 
                 $events
                     ->setParam('userId', $user->getId())
@@ -1871,6 +1892,7 @@ App::delete('/v1/account/sessions')
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
+                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
                  // If current session delete the cookies too
                 $response
