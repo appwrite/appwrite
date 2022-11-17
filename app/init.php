@@ -164,7 +164,7 @@ const COMPRESSION_TYPE_ZSTD = 'zstd';
 const STORAGE_DEVICE_LOCAL = 'file';
 const STORAGE_DEVICE_S3 = 's3';
 const STORAGE_DEVICE_DO_SPACES = 'dospaces';
-const STORAGE_DEVICE_BACKBLAZE= 'backblaze';
+const STORAGE_DEVICE_BACKBLAZE = 'backblaze';
 const STORAGE_DEVICE_LINODE = 'linode';
 const STORAGE_DEVICE_WASABI = 'wasabi';
 // Mail Types

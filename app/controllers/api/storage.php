@@ -494,7 +494,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($chunksUploaded === $chunks) {
-            
             $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
             $device = STORAGE_DEVICE_LOCAL;
             try {
