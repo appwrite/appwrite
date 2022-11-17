@@ -13,6 +13,8 @@ jobs:
         # We must fetch at least the immediate parents so that if this is
         # a pull request then we can checkout the head.
         fetch-depth: 2
+        # Fetch submodules
+        submodules: recursive
 
     # If this run was triggered by a pull request event, then checkout
     # the head of the pull request instead of the merge commit.
@@ -28,8 +30,8 @@ jobs:
         export COMPOSE_DOCKER_CLI_BUILD=1
         export BUILDKIT_PROGRESS=plain
         docker pull composer:2.0
-        docker compose -f docker-compose.yml -f docker-compose.ci.yml build appwrite
-        docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+        docker compose build appwrite
+        docker compose up -d
         sleep 30
     - name: Doctor
       run: docker compose exec -T appwrite doctor
