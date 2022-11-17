@@ -15,6 +15,7 @@ use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Storage\Storage;
 
 require_once __DIR__ . '/../init.php';
 
@@ -80,12 +81,11 @@ class BuildsV1 extends Worker
         }
 
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
-        $device = STORAGE_DEVICE_LOCAL;
+        $device = Storage::DEVICE_LOCAL;
         try {
             $dsn = new DSN($connection);
             $device = $dsn->getScheme();
-        } catch (\Exception $e) {
-            $device = STORAGE_DEVICE_LOCAL;
+        } catch (\Exception $e) {;
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
