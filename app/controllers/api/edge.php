@@ -33,7 +33,7 @@ App::post('/v1/edge/sync')
     ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
-    ->inject('pools')
+    ->inject('queueForCacheSyncOut')
     ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncOut) {
 
         if (empty($keys)) {

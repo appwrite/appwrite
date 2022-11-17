@@ -645,6 +645,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/cli:/usr/src/code/vendor/utopia-php/cli
     depends_on:
       - mariadb
       - redis
@@ -665,6 +666,7 @@ services:
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
+      - _APP_WORKER_PER_CORE
 
   appwrite-usage-timeseries:
     entrypoint:

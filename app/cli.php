@@ -17,6 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Client;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
@@ -112,6 +113,10 @@ CLI::setResource('influxdb', function (Registry $register) {
 
 CLI::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
+
+CLI::setResource('queueForCacheSyncOut', function (Group $pools) {
+    return new Client('v1-sync-out', $pools->get('queue')->pop()->getResource());
 }, ['pools']);
 
 CLI::setResource('logError', function (Registry $register) {

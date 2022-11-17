@@ -1,30 +1,40 @@
 <?php
 
-global $cli;
-global $register;
+namespace Appwrite\Platform\Tasks;
 
-use Appwrite\DSN\DSN;
-use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
+use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
-use Utopia\Queue;
-use Utopia\Queue\Client as SyncOut;
+use Utopia\Database\Database;
+use Utopia\Pools\Group;
+use Utopia\Queue\Client;
 
-$cli
-    ->task('edge-sync')
-    ->desc('Schedules edge sync tasks')
-    ->action(function () use ($register) {
-        Console::title('Syncs edges V1');
-        Console::success(APP_NAME . ' Sync failed cache purge process v1 has started');
+class EdgeSync extends Action
+{
+    public static function getName(): string
+    {
+        return 'edge-sync';
+    }
 
-        $pools = $register->get('pools');
-        $client = new SyncOut('syncOut', $pools->get('queue')->pop()->getResource());
-        $database = getConsoleDB();
+    public function __construct()
+    {
+        $this
+            ->desc('Schedules edge sync tasks')
+            ->inject('pools')
+            ->inject('dbForConsole')
+            ->inject('queueForCacheSyncOut')
+            ->callback(fn (Group $pools, Database $dbForConsole, Client $queueForCacheSyncOut) => $this->action($pools, $dbForConsole, $queueForCacheSyncOut));
+    }
+
+    public function action(Group $pools, Database $dbForConsole, Client $queueForCacheSyncOut): void
+    {
+        Console::title('Edge-sync V1');
+        Console::success(APP_NAME . ' Edge-sync v1 has started');
 
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
-          Console::loop(function () use ($interval, $database, $register, $client) {
+        Console::loop(function () use ($interval, $dbForConsole, $queueForCacheSyncOut) {
 
             $time = DateTime::now();
             $count = 0;
@@ -37,7 +47,7 @@ $cli
             while ($sum === $limit) {
                 $chunk++;
 
-                $results = $database->find('syncs', [
+                $results = $dbForConsole->find('syncs', [
                     Query::equal('region', [App::getEnv('_APP_REGION')]),
                     Query::limit($limit)
                 ]);
@@ -46,7 +56,7 @@ $cli
                 if ($sum > 0) {
                     foreach ($results as $document) {
                         Console::info("[{$time}] Enqueueing  keys chunk {$count} to {$document->getAttribute('target')}");
-                        $client
+                        $queueForCacheSyncOut
                             ->enqueue([
                                 'value' => [
                                     'region' => $document->getAttribute('target'),
@@ -54,12 +64,13 @@ $cli
                                 ]
                             ]);
 
-                        $database->deleteDocument('syncs', $document->getId());
+                        $dbForConsole->deleteDocument('syncs', $document->getId());
                         $count++;
                     }
                 } else {
                     Console::info("[{$time}] No cache keys where found.");
                 }
             }
-          }, $interval);
-    });
+        }, $interval);
+    }
+}

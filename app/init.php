@@ -595,7 +595,7 @@ $register->set('pools', function () {
             $dsnUser = $dsn->getUser();
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getScheme();
-            $dsnDatabase = $dsn->getDatabase();
+            $dsnPath = $dsn->getPath();
 
             if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
@@ -612,9 +612,9 @@ $register->set('pools', function () {
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnPath) {
+                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnPath) {
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnPath};charset=utf8mb4", $dsnUser, $dsnPass, array(
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -655,7 +655,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setDefaultDatabase($dsn->getDatabase());
+                        $adapter->setDefaultDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
                         $adapter = $resource();
@@ -1113,7 +1113,7 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     });
 
     return $cache;
-}, ['pools']);
+}, ['pools', 'queueForCacheSyncOut']);
 
 App::setResource('deviceLocal', function () {
     return new Local();
