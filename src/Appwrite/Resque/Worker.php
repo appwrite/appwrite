@@ -279,6 +279,13 @@ abstract class Worker
     {
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
+        $acl = 'private';
+        $device = '';
+        $accessKey = '';
+        $accessSecret = '';
+        $bucket = '';
+        $region = '';
+
         try {
             $dsn = new DSN($connection);
             $device = $dsn->getScheme();
@@ -286,24 +293,23 @@ abstract class Worker
             $accessSecret = $dsn->getPassword();
             $bucket = $dsn->getPath();
             $region = $dsn->getParam('region');
-            $acl = 'private';
         } catch (\Exception $e) {
-            Console::error($e->getMessage() . 'Defaulting to Local storage.');
-            $device = 'Local';
+            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
+            $device = 'file';
         }
 
         switch ($device) {
-            case Storage::DEVICE_S3:
+            case STORAGE_DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_DO_SPACES:
+            case STORAGE_DEVICE_DO_SPACES:
                 return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_BACKBLAZE:
+            case STORAGE_DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LINODE:
+            case STORAGE_DEVICE_LINODE:
                 return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_WASABI:
+            case STORAGE_DEVICE_WASABI:
                 return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LOCAL:
+            case STORAGE_DEVICE_LOCAL:
             default:
                 return new Local($root);
         }

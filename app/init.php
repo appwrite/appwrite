@@ -159,6 +159,13 @@ const DELETE_TYPE_SCHEDULES = 'schedules';
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
+// Storage Device Types
+const STORAGE_DEVICE_LOCAL = 'file';
+const STORAGE_DEVICE_S3 = 's3';
+const STORAGE_DEVICE_DO_SPACES = 'dospaces';
+const STORAGE_DEVICE_BACKBLAZE= 'backblaze';
+const STORAGE_DEVICE_LINODE = 'linode';
+const STORAGE_DEVICE_WASABI = 'wasabi';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -1100,6 +1107,13 @@ function getDevice($root): Device
 {
     $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
+    $acl = 'private';
+    $device = '';
+    $accessKey = '';
+    $accessSecret = '';
+    $bucket = '';
+    $region = '';
+
     try {
         $dsn = new DSN($connection);
         $device = $dsn->getScheme();
@@ -1107,26 +1121,25 @@ function getDevice($root): Device
         $accessSecret = $dsn->getPassword();
         $bucket = $dsn->getPath();
         $region = $dsn->getParam('region');
-        $acl = 'private';
     } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Defaulting to Local storage.');
+        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
         $device = 'Local';
     }
 
     switch ($device) {
-        case Storage::DEVICE_LOCAL:
+        case STORAGE_DEVICE_S3:
+            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_DO_SPACES:
+            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_BACKBLAZE:
+            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_LINODE:
+            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_WASABI:
+            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+        case STORAGE_DEVICE_LOCAL:
         default:
             return new Local($root);
-        case Storage::DEVICE_S3:
-            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_DO_SPACES:
-            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_BACKBLAZE:
-            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_LINODE:
-            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_WASABI:
-            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
     }
 }
 
