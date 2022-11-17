@@ -527,35 +527,30 @@ $register->set('pools', function () {
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
-            'useResource' => true,
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
-            'useResource' => true,
         ],
         'queue' => [
             'type' => 'queue',
             'dsns' => App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
-            'useResource' => false,
         ],
         'pubsub' => [
             'type' => 'pubsub',
             'dsns' => App::getEnv('_APP_CONNECTIONS_PUBSUB', $fallbackForRedis),
             'multiple' => false,
             'schemes' => ['redis'],
-            'useResource' => true,
         ],
         'cache' => [
             'type' => 'cache',
             'dsns' => App::getEnv('_APP_CONNECTIONS_CACHE', $fallbackForRedis),
             'multiple' => true,
             'schemes' => ['redis'],
-            'useResource' => true,
         ],
     ];
 
@@ -564,7 +559,6 @@ $register->set('pools', function () {
         $dsns = $connection['dsns'] ?? '';
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
-        $useResource = $connection['useResource'] ?? true;
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
 
@@ -587,7 +581,7 @@ $register->set('pools', function () {
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getDatabase();
 
-            if (!in_array($dsnScheme, $schemes) && $useResource) {
+            if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
             }
 
@@ -648,12 +642,12 @@ $register->set('pools', function () {
                         $adapter->setDefaultDatabase($dsn->getDatabase());
                         break;
                     case 'pubsub':
-                        break;
                         $adapter = $resource();
+                        break;
                     case 'queue':
                         $adapter = match ($dsn->getScheme()) {
                             'redis' => new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort()),
-                            default => 'bla'
+                            default => null
                         };
                         break;
                     case 'cache':
