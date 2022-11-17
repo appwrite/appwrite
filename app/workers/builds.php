@@ -79,6 +79,15 @@ class BuildsV1 extends Worker
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
+        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        $device = STORAGE_DEVICE_LOCAL;
+        try {
+            $dsn = new DSN($connection);
+            $device = $dsn->getScheme();
+        } catch (\Exception $e) {
+            $device = STORAGE_DEVICE_LOCAL;
+        }
+
         $buildId = $deployment->getAttribute('buildId', '');
         $startTime = DateTime::now();
         if (empty($buildId)) {
@@ -92,7 +101,7 @@ class BuildsV1 extends Worker
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
-                'sourceType' => App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL), // TODO : fetch from DSN
+                'sourceType' => $device,
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,

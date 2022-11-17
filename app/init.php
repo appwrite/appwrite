@@ -1123,7 +1123,7 @@ function getDevice($root): Device
         $bucket = $dsn->getPath();
         $region = $dsn->getParam('region');
     } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
+        Console::eor($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
         $device = STORAGE_DEVICE_LOCAL;
     }
 

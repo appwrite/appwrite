@@ -494,7 +494,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($chunksUploaded === $chunks) {
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) === Storage::DEVICE_LOCAL) { // TODO : fetch from DSN
+            
+            $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
+            $device = STORAGE_DEVICE_LOCAL;
+            try {
+                $dsn = new DSN($connection);
+                $device = $dsn->getScheme();
+            } catch (\Exception $e) {
+                $device = STORAGE_DEVICE_LOCAL;
+            }
+
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $device === STORAGE_DEVICE_LOCAL) {
                 $antivirus = new Network(
                     App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                     (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
