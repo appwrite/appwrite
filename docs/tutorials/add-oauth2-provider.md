@@ -1,6 +1,6 @@
 # Adding a new OAuth2 provider 🛡
 
-This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/appwrite/blob/master/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
+This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md) and the [Contributing Guide](https://github.com/appwrite/appwrite/blob/master/CONTRIBUTING.md).
 
 ## Getting started
 
@@ -14,7 +14,7 @@ It's really easy to contribute to an open source project, but when using GitHub,
 
 > If you are experienced with GitHub or have made a pull request before, you can skip to [Implement new provider](#2-implement-new-provider).
 
-###  1.1 Fork the Appwrite repository
+### 1.1 Fork the Appwrite repository
 
 Before making any changes, you will need to fork Appwrite's repository to keep branches on the official repo clean. To do that, visit the [Appwrite Github repository](https://github.com/appwrite/appwrite) and click on the fork button.
 
@@ -42,10 +42,10 @@ app/config/providers.php
 
 Make sure to fill in all data needed and that your provider array key name:
 
-- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format 
+- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format
 - has no spaces or special characters
 
->  Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
+> Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
 
 ### 2.2 Add Provider Logo
 
@@ -56,6 +56,7 @@ Add a logo image to your new provider in this path: `public/images/users`. Your 
 Once you have finished setting up all the metadata for the new provider, you need to start coding.
 
 Create a new file `XXX.php` where `XXX` is the name of the OAuth provider in [`PascalCase`](https://stackoverflow.com/a/41769355/7659504) in this location
+
 ```bash
 src/Appwrite/Auth/OAuth2/XXX.php
 ```
@@ -212,6 +213,7 @@ $provider = $this->getParam('provider', '');
 ```
 
 2. Add the config for creating the JSON in `public/scripts/views/forms/oauth-custom.js` using this template
+
 ```js
 {
     "[Provider]":{
