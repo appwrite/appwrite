@@ -322,7 +322,7 @@ RUN mkdir -p /storage/uploads && \
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/sync-edge && \
+    chmod +x /usr/local/bin/edge-sync && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \

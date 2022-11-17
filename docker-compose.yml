@@ -635,10 +635,10 @@ services:
     #   - /nfs/config:/data/src 
     #   - /storage/config:/data/dest
 
-  appwrite-sync-edge:
-    entrypoint: sync-edge
+  appwrite-edge-sync:
+    entrypoint: edge-sync
     <<: *x-logging
-    container_name: appwrite-sync-edge
+    container_name: appwrite-edge-sync
     image: appwrite-dev
     networks:
       - appwrite

@@ -10,10 +10,10 @@ use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
-global $client;
+global $connection;
 global $workerNumber;
 
-$adapter    = new Queue\Adapter\Swoole($client, $workerNumber, 'syncIn');
+$adapter    = new Queue\Adapter\Swoole($connection, $workerNumber, 'syncIn');
 $server     = new Queue\Server($adapter);
 
 $server->job()
@@ -23,10 +23,12 @@ $server->job()
         $time = DateTime::now();
         $payload = $message->getPayload()['value'];
         $cache->setDisableListeners(true);
+
         foreach ($payload['keys'] ?? [] as $key) {
             Console::info("[{$time}] Purging  {$key}");
             $cache->purge($key);
         }
+
         $cache->setDisableListeners(false);
     });
 

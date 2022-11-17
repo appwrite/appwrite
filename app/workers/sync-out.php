@@ -17,7 +17,7 @@ use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Message;
 
-global $client;
+global $connection;
 global $workerNumber;
 
 $regions = array_filter(
@@ -102,9 +102,6 @@ function handle($dbForConsole, $regions, $stack): void
         }
     }
 }
-
-$adapter  = new Queue\Adapter\Swoole($client, $workerNumber, 'syncOut');
-$server   = new Queue\Server($adapter);
 
 $server->job()
     ->inject('message')

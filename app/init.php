@@ -40,6 +40,7 @@ use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
+use Utopia\Queue\Client;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\ID;
@@ -864,6 +865,12 @@ App::setResource('messaging', fn() => new Phone());
 App::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());
 }, ['pools']);
+App::setResource('queueForCacheSyncOut', function (Group $pools) {
+    return new Client('v1-sync-out', $pools->get('queue')->pop()->getResource());
+}, ['pools']);
+App::setResource('queueForCacheSyncIn', function (Group $pools) {
+    return new Client('v1-sync-in', $pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -1075,7 +1082,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools) {
+App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -1088,22 +1095,20 @@ App::setResource('cache', function (Group $pools) {
     }
     $cache  = new Cache(new Sharding($adapters));
 
-    $client = new SyncOut('syncOut', new QueueRedis(App::getEnv('_APP_REDIS_HOST', 'redis'), App::getEnv('_APP_REDIS_PORT', '6379')));
-
-    $cache->on(cache::EVENT_SAVE, function ($key) use ($client) {
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForCacheSyncOut) {
         //Todo fix cache re-invoked
         if ($key === 'cache-console:_metadata:users') {
             return;
         }
-        $client
+        $queueForCacheSyncOut
             ->enqueue(['value' => ['key' => $key]]);
     });
 
-    $cache->on(cache::EVENT_PURGE, function ($key) use ($client) {
+    $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForCacheSyncOut) {
         if ($key === 'cache-console:_metadata:users') {
             return;
         }
-        $client
+        $queueForCacheSyncOut
             ->enqueue(['value' => ['key' => $key]]);
     });
 

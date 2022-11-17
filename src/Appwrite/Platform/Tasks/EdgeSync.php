@@ -13,7 +13,7 @@ use Utopia\Queue;
 use Utopia\Queue\Client as SyncOut;
 
 $cli
-    ->task('sync-edge')
+    ->task('edge-sync')
     ->desc('Schedules edge sync tasks')
     ->action(function () use ($register) {
         Console::title('Syncs edges V1');
@@ -22,10 +22,6 @@ $cli
         $pools = $register->get('pools');
         $client = new SyncOut('syncOut', $pools->get('queue')->pop()->getResource());
         $database = getConsoleDB();
-
-        // Todo fix pdo  PDOException
-        // Table 'appwrite.console__metadata' doesn't exist
-        sleep(4);
 
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
           Console::loop(function () use ($interval, $database, $register, $client) {

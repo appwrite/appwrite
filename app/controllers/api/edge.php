@@ -2,15 +2,12 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\DSN\DSN;
 use Appwrite\Extend\Exception;
-use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Document;
-use Utopia\Pools\Group;
-use Utopia\Queue\Client as SyncIn;
+use Utopia\Queue\Client;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
@@ -37,15 +34,14 @@ App::post('/v1/edge/sync')
     ->inject('request')
     ->inject('response')
     ->inject('pools')
-    ->action(function (array $keys, Request $request, Response $response, Group $pools) {
+    ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncOut) {
 
         if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $client = new SyncIn('syncIn', $pools->get('queue')->pop()->getResource());
-
-        $client->enqueue(['value' => ['keys' => $keys]]);
+        $queueForCacheSyncOut
+            ->enqueue(['value' => ['keys' => $keys]]);
 
         $response->dynamic(new Document([
             'keys' => $keys
