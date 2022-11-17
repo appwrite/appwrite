@@ -75,6 +75,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\CLI\Console;
 use Utopia\Queue;
+use Utopia\Storage\Storage;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -159,13 +160,6 @@ const DELETE_TYPE_SCHEDULES = 'schedules';
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
-// Storage Device Types
-const STORAGE_DEVICE_LOCAL = 'file';
-const STORAGE_DEVICE_S3 = 's3';
-const STORAGE_DEVICE_DO_SPACES = 'dospaces';
-const STORAGE_DEVICE_BACKBLAZE = 'backblaze';
-const STORAGE_DEVICE_LINODE = 'linode';
-const STORAGE_DEVICE_WASABI = 'wasabi';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -1030,6 +1024,7 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
+            'invites' => false,
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],
@@ -1105,7 +1100,7 @@ function getDevice($root): Device
     $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     $acl = 'private';
-    $device = STORAGE_DEVICE_LOCAL;
+    $device = Storage::DEVICE_LOCAL;
     $accessKey = '';
     $accessSecret = '';
     $bucket = '';
@@ -1119,22 +1114,21 @@ function getDevice($root): Device
         $bucket = $dsn->getPath();
         $region = $dsn->getParam('region');
     } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
-        $device = STORAGE_DEVICE_LOCAL;
+        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
     }
 
     switch ($device) {
-        case STORAGE_DEVICE_S3:
+        case Storage::DEVICE_S3:
             return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_DO_SPACES:
+        case STORAGE::DEVICE_DO_SPACES:
             return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_BACKBLAZE:
+        case Storage::DEVICE_BACKBLAZE:
             return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_LINODE:
+        case Storage::DEVICE_LINODE:
             return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_WASABI:
+        case Storage::DEVICE_WASABI:
             return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_LOCAL:
+        case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
     }

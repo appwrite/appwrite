@@ -41,6 +41,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
 
 App::post('/v1/storage/buckets')
@@ -494,16 +495,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($chunksUploaded === $chunks) {
-            $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
-            $device = STORAGE_DEVICE_LOCAL;
-            try {
-                $dsn = new DSN($connection);
-                $device = $dsn->getScheme();
-            } catch (\Exception $e) {
-                $device = STORAGE_DEVICE_LOCAL;
-            }
-
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $device === STORAGE_DEVICE_LOCAL) {
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceFiles->getType() === Storage::DEVICE_LOCAL) {
                 $antivirus = new Network(
                     App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                     (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
