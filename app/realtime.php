@@ -486,6 +486,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
+        $app = new App('UTC');
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'];
         $database = getConsoleDB();
@@ -532,10 +533,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 Auth::$secret = $session['secret'] ?? '';
 
                 $user = $database->getDocument('users', Auth::$unique);
+                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception('Session is not valid.', 1003);

@@ -170,8 +170,8 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Deprecated since 1.0.0, use `_APP_USAGE_TIMESERIES_INTERVAL` and `_APP_USAGE_DATABASE_INTERVAL` instead.',
-                'introduction' => '0.10.0',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
+                'introduction' => '1.1.0',
                 'default' => '30',
                 'required' => false,
                 'question' => '',
@@ -179,7 +179,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Appwrite Database from Timeseries Database. The default value is 30 seconds.',
+                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
                 'introduction' => '1.0.0',
                 'default' => '30',
                 'required' => false,
@@ -188,7 +188,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_DATABASE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats from data in Appwrite Database. The default value is 15 minutes.',
+                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
                 'introduction' => '1.0.0',
                 'default' => '900',
                 'required' => false,
@@ -508,8 +508,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONNECTIONS_STORAGE',
+                'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty. Available devices are local, s3, dospaces, linode, backblaze and wasabi.',
+                'introduction' => '1.1.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\', \'DOSpaces\', \'Backblaze\', \'Linode\' and \'Wasabi\'.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => 'Local',
                 'required' => false,
@@ -517,7 +525,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_ACCESS_KEY',
-                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -525,7 +533,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_SECRET',
-                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -533,7 +541,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_REGION',
-                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -541,7 +549,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_BUCKET',
-                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -549,7 +557,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
-                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -557,7 +565,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_SECRET',
-                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -565,7 +573,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_REGION',
-                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -573,7 +581,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
-                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -581,7 +589,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_ACCESS_KEY',
-                'description' => 'Backblaze access key. Required when the storage adapter is set to Backblaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -589,7 +597,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_SECRET',
-                'description' => 'Backblaze secret key. Required when the storage adapter is set to Backblaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -597,7 +605,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_REGION',
-                'description' => 'Backblaze region. Required when storage adapter is set to Backblaze. You can find your region info from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => 'us-west-004',
                 'required' => false,
@@ -605,7 +613,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_BUCKET',
-                'description' => 'Backblaze bucket. Required when storage adapter is set to Backblaze. You can create your bucket from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -613,7 +621,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_ACCESS_KEY',
-                'description' => 'Linode object storage access key. Required when the storage adapter is set to Linode. You can get your access key from your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -621,7 +629,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_SECRET',
-                'description' => 'Linode object storage secret key. Required when the storage adapter is set to Linode. You can get your secret key from your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -629,7 +637,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_REGION',
-                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info from your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -637,7 +645,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_BUCKET',
-                'description' => 'Linode object storage bucket. Required when storage adapter is set to Linode. You can create buckets in your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -645,7 +653,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_ACCESS_KEY',
-                'description' => 'Wasabi access key. Required when the storage adapter is set to Wasabi. You can get your access key from your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -653,7 +661,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_SECRET',
-                'description' => 'Wasabi secret key. Required when the storage adapter is set to Wasabi. You can get your secret key from your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -661,7 +669,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_REGION',
-                'description' => 'Wasabi region. Required when storage adapter is set to Wasabi. You can find your region info from your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -669,7 +677,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_BUCKET',
-                'description' => 'Wasabi bucket. Required when storage adapter is set to Wasabi. You can create buckets in your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -838,7 +846,7 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
                 'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
                 'introduction' => '1.2.0',
-                'default' => 'openruntimes-runtimes',
+                'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -855,15 +863,6 @@ return [
             [
                 'name' => '_APP_DOCKER_HUB_PASSWORD',
                 'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
-                'introduction' => '1.2.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_FUNCTIONS_CONNECTION_STORAGE',
-                'description' => 'DSN record of storage driver where Open Runtimes Executor stores output of Appwrite Function Deployment builds.',
                 'introduction' => '1.2.0',
                 'default' => '',
                 'required' => false,

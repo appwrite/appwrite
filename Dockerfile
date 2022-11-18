@@ -14,12 +14,9 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
-WORKDIR /usr/local/src/
+COPY app/console /usr/local/src/console
 
-COPY package-lock.json /usr/local/src/
-COPY package.json /usr/local/src/
-COPY gulpfile.js /usr/local/src/
-COPY public /usr/local/src/public
+WORKDIR /usr/local/src/console
 
 RUN npm ci
 RUN npm run build
@@ -205,27 +202,7 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_STORAGE_ANTIVIRUS_HOST=clamav \
     _APP_STORAGE_ANTIVIRUS_PORT=3310 \
-    _APP_STORAGE_DEVICE=Local \
-    _APP_STORAGE_S3_ACCESS_KEY= \
-    _APP_STORAGE_S3_SECRET= \
-    _APP_STORAGE_S3_REGION= \
-    _APP_STORAGE_S3_BUCKET= \
-    _APP_STORAGE_DO_SPACES_ACCESS_KEY= \
-    _APP_STORAGE_DO_SPACES_SECRET= \
-    _APP_STORAGE_DO_SPACES_REGION= \
-    _APP_STORAGE_DO_SPACES_BUCKET= \
-    _APP_STORAGE_BACKBLAZE_ACCESS_KEY= \
-    _APP_STORAGE_BACKBLAZE_SECRET= \
-    _APP_STORAGE_BACKBLAZE_REGION= \
-    _APP_STORAGE_BACKBLAZE_BUCKET= \
-    _APP_STORAGE_LINODE_ACCESS_KEY= \
-    _APP_STORAGE_LINODE_SECRET= \
-    _APP_STORAGE_LINODE_REGION= \
-    _APP_STORAGE_LINODE_BUCKET= \
-    _APP_STORAGE_WASABI_ACCESS_KEY= \
-    _APP_STORAGE_WASABI_SECRET= \
-    _APP_STORAGE_WASABI_REGION= \
-    _APP_STORAGE_WASABI_BUCKET= \
+    _APP_CONNECTIONS_STORAGE= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -253,13 +230,12 @@ ENV _APP_SERVER=swoole \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
-    _APP_USAGE_TIMESERIES_INTERVAL=30 \
-    _APP_USAGE_DATABASE_INTERVAL=900 \
     # 14 Days = 1209600 s
     _APP_MAINTENANCE_RETENTION_EXECUTION=1209600 \
     _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
     # 1 Day = 86400 s
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
+    _APP_MAINTENANCE_RETENTION_USAGE_HOURLY=8640000 \
     _APP_MAINTENANCE_INTERVAL=86400 \
     _APP_LOGGING_PROVIDER= \
     _APP_LOGGING_CONFIG=
@@ -305,7 +281,7 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=node /usr/local/src/public/dist /usr/src/code/public/dist
+COPY --from=node /usr/local/src/console/build /usr/src/code/console
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -320,8 +296,6 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public/fonts /usr/src/code/public/fonts
-COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes
