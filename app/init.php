@@ -75,6 +75,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
 use Utopia\CLI\Console;
 use Utopia\Queue;
+use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 
 const APP_NAME = 'Appwrite';
@@ -847,9 +848,12 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
-App::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+App::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -1024,7 +1028,7 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
-            'invites' => false,
+            'invites' => App::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],

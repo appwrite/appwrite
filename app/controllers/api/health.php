@@ -8,6 +8,8 @@ use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
@@ -396,10 +398,11 @@ App::get('/v1/health/queue/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('queue')
     ->inject('response')
-    ->action(function (Response $response) {
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::FUNCTIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    ->action(function (Connection $queue, Response $response) {
+        $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
+        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/storage/local')

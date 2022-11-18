@@ -203,7 +203,16 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
+            [
+                'name' => '_APP_CONSOLE_INVITES',
+                'description' => 'This option allows you to disable the invitation of new users to the Appwrite console. When enabled, console users are allowed to invite new users to a project. By default this option is enabled.',
+                'introduction' => '1.2.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

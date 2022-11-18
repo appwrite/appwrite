@@ -279,6 +279,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
 
         $protocol = $request->getProtocol();
+
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';

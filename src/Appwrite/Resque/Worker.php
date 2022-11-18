@@ -171,6 +171,7 @@ abstract class Worker
      * @param Document $project
      * @return Database
      */
+    protected static $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
     protected function getProjectDB(Document $project): Database
     {
         global $register;
@@ -181,6 +182,14 @@ abstract class Worker
             return $this->getConsoleDB();
         }
 
+        $databaseName = $project->getAttribute('database');
+
+        if (isset(self::$databases[$databaseName])) {
+            $database = self::$databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
+        }
+
         $dbAdapter = $pools
             ->get($project->getAttribute('database'))
             ->pop()
@@ -188,6 +197,9 @@ abstract class Worker
         ;
 
         $database = new Database($dbAdapter, $this->getCache());
+
+        self::$databases[$databaseName] = $database;
+
         $database->setNamespace('_' . $project->getInternalId());
 
         return $database;

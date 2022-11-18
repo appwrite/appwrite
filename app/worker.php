@@ -17,6 +17,7 @@ use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
+use Utopia\Pools\Group;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -55,7 +56,6 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('_' . $project->getInternalId());
-
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
@@ -93,6 +93,10 @@ Server::setResource('statsd', function ($register) {
     return $register->get('statsd');
 }, ['register']);
 
+Server::setResource('pools', function ($register) {
+    return $register->get('pools');
+}, ['register']);
+
 $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
@@ -103,6 +107,13 @@ if (empty(App::getEnv('QUEUE'))) {
 
 $adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
 $server = new Server($adapter);
+
+$server
+    ->shutdown()
+    ->inject('pools')
+    ->action(function (Group $pools) {
+        $pools->reclaim();
+    });
 
 $server
     ->error()

@@ -67,7 +67,9 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $databaseName = $project->getAttribute('database');
 
         if (isset($databases[$databaseName])) {
-            return $databases[$databaseName];
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
         }
 
         $dbAdapter = $pools
@@ -76,9 +78,10 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-        $database->setNamespace('_' . $project->getInternalId());
 
         $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
 
         return $database;
     };
@@ -176,25 +179,31 @@ $cli
         do {
             $attempts++;
 
-            // Prepare database connection
-            $dbAdapter = $pools
-                ->get('console')
-                ->pop()
-                ->getResource();
+            try {
+                $pools->get('console')->reclaim();
 
-            $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('console');
+                // Prepare database connection
+                $dbAdapter = $pools
+                    ->get('console')
+                    ->pop()
+                    ->getResource();
 
-            // Ensure tables exist
-            $collections = Config::getParam('collections', []);
-            $last = \array_key_last($collections);
+                $dbForConsole = new Database($dbAdapter, $cache);
+                $dbForConsole->setNamespace('console');
 
-            if ($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last)) {
+                // Ensure tables exist
+                $collections = Config::getParam('collections', []);
+                $last = \array_key_last($collections);
+
+                if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) {
+                    throw new Exception('Tables not ready yet.');
+                }
+
                 $ready = true;
-                break;
+            } catch (\Exception $err) {
+                Console::warning($err->getMessage());
+                sleep($sleep);
             }
-
-            sleep($sleep);
         } while ($attempts < $maxAttempts);
 
         if (!$ready) {

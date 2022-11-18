@@ -50,7 +50,7 @@
         "utopia-php/cli": "0.14.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.28.*",
-        "utopia-php/queue": "0.4.*",
+        "utopia-php/queue": "0.5.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.3.*",
         "utopia-php/pools": "0.4.*",
