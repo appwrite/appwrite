@@ -53,14 +53,14 @@ Encontre mais em: [https://appwrite.io](https://appwrite.io)
 - [Primeiros passos](#primeiros-passos)
   - [Funções](#funções)
   - [SDKs](#sdks)
-    - [Cliente](#client)
-    - [Server](#server)
-    - [Comunidade](#community)
-- [Arquitetura](#architecture)
-- [Contribuição](#contributing)
-- [Segurança](#security)
-- [Nos siga](#follow-us)
-- [Licença](#license)
+    - [Cliente](#cliente)
+    - [Servidor](#servidor)
+    - [Comunidade](#comunidade)
+- [Arquitetura](#arquitetura)
+- [Contribuição](#contribuição)
+- [Segurança](#segurança)
+- [Nos siga](#nos-siga)
+- [Licença](#licença)
 
 ## Instalação
 
@@ -145,70 +145,70 @@ Começando com o Appwrite é fácil como criar um novo projeto, escolhendo sua p
 
 ### Funções
 
-- [**Account**](https://appwrite.io/docs/client/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
-- [**Users**](https://appwrite.io/docs/server/users) - Manage and list all project users when building backend integrations with Server SDKs.
-- [**Teams**](https://appwrite.io/docs/client/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
-- [**Databases**](https://appwrite.io/docs/client/databases) - Manage databases, collections and documents. Read, create, update, and delete documents and filter lists of document collections using advanced filters.
-- [**Storage**](https://appwrite.io/docs/client/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
-- [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in a secure, isolated environment. You can trigger your code on any Appwrite system event, manually or using a CRON schedule.
-- [**Realtime**](https://appwrite.io/docs/realtime) - Listen to real-time events for any of your Appwrite services including users, storage, functions, databases and more.
-- [**Locale**](https://appwrite.io/docs/client/locale) - Track your user's location, and manage your app locale-based data.
-- [**Avatars**](https://appwrite.io/docs/client/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols, and generate QR codes.
+- [**Conta**](https://appwrite.io/docs/client/account) - Gerencie a autenticação e a conta do usuário atual. Rastreie e gerencie as sessões do usuário, dispositivos, métodos de login e logs de segurança.
+- [**Usuários**](https://appwrite.io/docs/server/users) - Gerencie e liste todos os usuários do projeto ao criar integrações de back-end com o servidor SDK.
+- [**Grupos**](https://appwrite.io/docs/client/teams) - Gerenciar e agrupar usuários em equipes. Gerencie associações, convites e funções de usuário dentro de uma equipe.
+- [**Banco de Dados**](https://appwrite.io/docs/client/databases) - Gerenciar bancos de dados, coleções e documentos. Leia, crie, atualize e exclua documentos e filtre listas de coleções de documentos usando filtros avançados.
+- [**Armazenamento**](https://appwrite.io/docs/client/storage) - Gerenciar arquivos de armazenamento. Leia, crie, exclua e visualize arquivos. Manipule a pré-visualização de seus arquivos para caber perfeitamente em seu aplicativo. Todos os arquivos são escaneados pelo ClamAV e armazenados de forma segura e criptografada.
+- [**Funções**](https://appwrite.io/docs/server/functions) - Personalize seu servidor Appwrite executando seu código personalizado em um ambiente seguro e isolado. Você pode acionar seu código em qualquer evento do sistema Appwrite, manualmente ou usando uma programação CRON.
+- [**Ao Vivo**](https://appwrite.io/docs/realtime) - Veja eventos em tempo real para qualquer um dos seus serviços Appwrite, incluindo usuários, armazenamento, funções, bancos de dados e muito mais.
+- [**Localização**](https://appwrite.io/docs/client/locale) - Rastreie a localização do seu usuário e gerencie os dados baseados na localidade do seu aplicativo.
+- [**Avatares**](https://appwrite.io/docs/client/avatars) - Gerencie os avatares de seus usuários, bandeiras de países, ícones de navegador, símbolos de cartão de crédito e gere códigos QR.
 
 Para uma documentação completa do API, visite [https://appwrite.io/docs](https://appwrite.io/docs). Para mais tutoriais, novidades e anúncios acesse nosso [blog](https://medium.com/appwrite-io) e [Servidor do Discord](https://discord.gg/GSeTUeA).
 
 ### SDKs
 
-Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
+Abaixo está uma lista de plataformas e idiomas atualmente suportados. Se você deseja nos ajudar a adicionar suporte à sua plataforma de escolha, acesse nosso [Gerador SDK](https://github.com/appwrite/sdk-generator), projete e veja nosso [guia de contribuição](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
-#### Client
+#### Cliente
 
-- ✅ &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
+- ✅ &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Mantido pela Equipe Appwrite)
 
-#### Server
+#### Servidor
 
-- ✅ &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
+- ✅ &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Mantido pela Equipe Appwrite)Mantido pela Equipe Appwrite
+- ✅ &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Mantido pela Equipe Appwrite)
+- ✅ &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Mantido pela Equipe Appwrite)
 
-#### Community
+#### Comunidade
 
-- ✅ &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))
-- ✅ &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Maintained by [fenix-hub @GodotNuts](https://github.com/fenix-hub))
+- ✅ &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Mantido por [Michael Gangolf](https://github.com/m1ga/))
+- ✅ &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Mantido por [fenix-hub @GodotNuts](https://github.com/fenix-hub))
 
-Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
+Buscando por mais SDKs? - Ajude-nos contribuindo com um pull request para o nosso [Gerador SDK](https://github.com/appwrite/sdk-generator)!
 
-## Architecture
+## Arquitetura
 
-![Appwrite Architecture](docs/specs/overview.drawio.svg)
+![Arquitetura do Appwrite](docs/specs/overview.drawio.svg)
 
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs (REST, WebSocket, and GraphQL-soon) to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
+Appwrite usa uma arquitetura de microsserviços projetada para facilitar o dimensionamento e a delegação de responsabilidades. Além disso, o Appwrite oferece suporte a várias APIs (REST, WebSocket e GraphQL-em breve) para permitir que você interaja com seus recursos, aproveitando seu conhecimento existente e os protocolos de sua escolha.
 
-The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
+A camada da API do Appwrite foi projetada para ser extremamente rápida, aproveitando o cache na memória e delegando qualquer tarefa pesada aos trabalhadores de segundo plano do Appwrite. Os trabalhadores em segundo plano também permitem que você controle com precisão sua capacidade de computação e custos usando uma fila de mensagens para lidar com a carga. Você pode aprender mais sobre nossa arquitetura no [guia de contribuição](CONTRIBUTING.md#architecture-1).
 
-## Contributing
+## Contribuição
 
-All code contributions - including those of people having commit access - must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
+Todas as contribuições de código - incluindo aqueles de pessoas que têm acesso confirmado - deve passar por um pull request e ser aprovado por um desenvolvedor principal antes de ser mesclado. Isso é para garantir uma revisão adequada de todo o código.
 
-We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
+Nós realmente ❤️ pull requests! Se você deseja ajudar, você pode aprender como contribuir com esse projeto no [guia de contribuição](CONTRIBUTING.md).
 
-## Security
+## Segurança
 
-For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
+Por questões de segurança, envie-nos um e-mail para [security@appwrite.io](mailto:security@appwrite.io) em vez de postar um problema público no GitHub.
 
-## Follow Us
+## Nos Siga
 
-Join our growing community around the world! See our official [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/), [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
+Junte-se à nossa crescente comunidade em todo o mundo! Veja nosso [Blog](https://medium.com/appwrite-io) oficial. Nos siga no [Twitter](https://twitter.com/appwrite), [página do Facebook](https://www.facebook.com/appwrite.io), [grupo do Facebook](https://www.facebook.com/groups/appwrite.developers/), [Comunidade Desenvolvedora](https://dev.to/appwrite) ou se junte ao nosso [servidor do Discord](https://discord.gg/GSeTUeA) para mais ajuda, idéias e discussões.
 
-## License
+## Licença
 
-This repository is available under the [BSD 3-Clause License](./LICENSE).
+Este repositório está disponível sob a [Licença de 3 Cláusulas BSD](./LICENSE).
