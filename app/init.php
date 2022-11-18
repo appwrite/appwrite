@@ -551,7 +551,7 @@ $register->set('pools', function () {
         ],
     ];
 
-    $instances = 2; // REST, Realtime
+    $instances = 3; // REST, Realtime, CLI
     $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
     $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
     $instanceConnections = $maxConnections / $instances;
