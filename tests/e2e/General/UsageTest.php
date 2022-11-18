@@ -161,7 +161,6 @@ class UsageTest extends Scope
                     Permission::delete(Role::any()),
                 ],
             ]);
-            \var_dump($res['body']);
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
             $bucketId = $res['body']['$id'];
