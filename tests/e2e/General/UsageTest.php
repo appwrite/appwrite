@@ -97,6 +97,8 @@ class UsageTest extends Scope
             'origin' => 'http://localhost',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
         ];
 
         $res = $this->client->call(Client::METHOD_GET, '/project/usage?range=30d', $headers);
@@ -146,11 +148,20 @@ class UsageTest extends Scope
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' bucket';
-            $res = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            $res = $this->client->call(Client::METHOD_POST, '/storage/buckets', \array_merge($headers, [
+                'content-type' => 'application/json'
+            ]), [
                 'bucketId' => 'unique()',
                 'name' => $name,
-                'permission' => 'bucket'
+                'fileSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
             ]);
+            \var_dump($res['body']);
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
             $bucketId = $res['body']['$id'];
@@ -263,9 +274,11 @@ class UsageTest extends Scope
             'origin' => 'http://localhost',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
         ];
 
-        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
+        $res = $this->client->call(Client::METHOD_GET, '/project/usage?range=30d', $headers);
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
@@ -503,8 +516,11 @@ class UsageTest extends Scope
             'origin' => 'http://localhost',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
         ];
-        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
+
+        $res = $this->client->call(Client::METHOD_GET, '/project/usage?range=30d', $headers);
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
