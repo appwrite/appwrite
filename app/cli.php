@@ -180,6 +180,8 @@ $cli
             $attempts++;
 
             try {
+                $pools->get('console')->reclaim();
+                
                 // Prepare database connection
                 $dbAdapter = $pools
                     ->get('console')
