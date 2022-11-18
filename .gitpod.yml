@@ -1,7 +1,7 @@
 tasks:
   - name: Run Appwrite Docker Stack
     init: |
-      git pull --recurse-submodules
+      git submodule update --init
       docker compose build
       docker compose pull
       docker pull composer
