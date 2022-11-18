@@ -398,10 +398,10 @@ App::get('/v1/health/queue/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queueConnection')
+    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queueConnection, Response $response) {
-        $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queueConnection);
+    ->action(function (Connection $queue, Response $response) {
+        $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
         $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
