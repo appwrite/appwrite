@@ -93,13 +93,13 @@ class UsageTest extends Scope
         $requestsCount = $data['requestsCount'];
 
         // console request
-        $cheaders = [
+        $headers = [
             'origin' => 'http://localhost',
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
 
-        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $cheaders);
+        $res = $this->client->call(Client::METHOD_GET, '/project/usage?range=30d', $headers);
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
@@ -110,7 +110,7 @@ class UsageTest extends Scope
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
 
-        $res = $this->client->call(Client::METHOD_GET, '/users/usage?range=30d', array_merge($cheaders, [
+        $res = $this->client->call(Client::METHOD_GET, '/users/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
