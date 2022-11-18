@@ -106,7 +106,6 @@ App::get('/v1/project/usage')
                 'executions' => $stats[$metrics[6]] ?? [],
                 'buckets' => $stats[$metrics[7]] ?? [],
             ]);
-
         }
 
         $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
