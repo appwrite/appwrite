@@ -769,6 +769,19 @@ services:
       - 9506:8080
     networks:
       - appwrite
+  
+  # appwrite-volume-sync:
+  #   entrypoint: volume-sync
+  #   <<: *x-logging
+  #   container_name: appwrite-volume-sync
+  #   image: appwrite-dev
+  #   command:
+  #     - --source=/data/src/ --destination=/data/dest/ --interval=10
+  #   networks:
+  #     - appwrite
+  #   # volumes: # Mount the rsync source and destination directories  
+  #   #   - /nfs/config:/data/src 
+  #   #   - /storage/config:/data/dest
 
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
