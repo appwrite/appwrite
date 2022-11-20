@@ -25,7 +25,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Appwrite 1.0 has been released! Learn what's new!**](https://appwrite.io/1.0)
+[**Appwrite Console 2.0 has been released! Learn what's new!**](https://medium.com/appwrite-io/announcing-console-2-0-2e0e96891cb0?source=friends_link&sk=7a82b4069778e3adc165dc026e960fe1)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -75,7 +75,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.0.3
+    appwrite/appwrite:1.1.1
 ```
 
 ### Windows
@@ -87,7 +87,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.0.3
+    appwrite/appwrite:1.1.1
 ```
 
 #### PowerShell
@@ -97,7 +97,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.0.3
+    appwrite/appwrite:1.1.1
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after installation completes.

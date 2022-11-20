@@ -170,8 +170,8 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Deprecated since 1.0.0, use `_APP_USAGE_TIMESERIES_INTERVAL` and `_APP_USAGE_DATABASE_INTERVAL` instead.',
-                'introduction' => '0.10.0',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
+                'introduction' => '1.1.0',
                 'default' => '30',
                 'required' => false,
                 'question' => '',
@@ -179,7 +179,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Appwrite Database from Timeseries Database. The default value is 30 seconds.',
+                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
                 'introduction' => '1.0.0',
                 'default' => '30',
                 'required' => false,
@@ -188,7 +188,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_DATABASE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats from data in Appwrite Database. The default value is 15 minutes.',
+                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
                 'introduction' => '1.0.0',
                 'default' => '900',
                 'required' => false,
@@ -203,7 +203,16 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
+            [
+                'name' => '_APP_CONSOLE_INVITES',
+                'description' => 'This option allows you to disable the invitation of new users to the Appwrite console. When enabled, console users are allowed to invite new users to a project. By default this option is enabled.',
+                'introduction' => '1.2.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -509,7 +518,7 @@ return [
             ],
             [
                 'name' => '_APP_CONNECTIONS_STORAGE',
-                'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty. Available devices are file, s3, dospaces, linode, backblaze and wasabi.',
+                'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty. Available devices are local, s3, dospaces, linode, backblaze and wasabi.',
                 'introduction' => '1.1.0',
                 'default' => '',
                 'required' => false,
@@ -846,7 +855,7 @@ return [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
                 'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
                 'introduction' => '1.2.0',
-                'default' => 'openruntimes-runtimes',
+                'default' => 'runtimes',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

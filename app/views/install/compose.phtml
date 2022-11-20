@@ -75,7 +75,7 @@ services:
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - openruntimes-functions:/storage/functions:rw
+      - appwrite-functions:/storage/functions:rw
     depends_on:
       - mariadb
       - redis
@@ -88,6 +88,7 @@ services:
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_WHITELIST_IPS
+      - _APP_CONSOLE_INVITES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -249,8 +250,8 @@ services:
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
-      - openruntimes-functions:/storage/functions:rw
-      - openruntimes-builds:/storage/builds:rw
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
@@ -461,13 +462,12 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
 
-  appwrite-usage-timeseries:
+  appwrite-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint:
-      - usage
-      - --type=timeseries
-    container_name: appwrite-usage-timeseries
+    entrypoint: usage
+    container_name: appwrite-usage
     <<: *x-logging
     restart: unless-stopped
     networks:
@@ -490,7 +490,6 @@ services:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_TIMESERIES_INTERVAL
-      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -522,7 +521,6 @@ services:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_TIMESERIES_INTERVAL
-      - _APP_USAGE_DATABASE_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -551,11 +549,11 @@ services:
     image: openruntimes/executor:0.1.4
     networks:
       - appwrite
-      - openruntimes-runtimes
+      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - openruntimes-builds:/storage/builds:rw
-      - openruntimes-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
+      - appwrite-functions:/storage/functions:rw
       - /tmp:/tmp:rw
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=$_APP_CONNECTIONS_STORAGE
@@ -635,10 +633,8 @@ networks:
     name: gateway
   appwrite:
     name: appwrite
-  openruntimes-runtimes:
-    name: openruntimes-runtimes
-  openruntimes-executors:
-    name: openruntimes-executors
+  runtimes:
+    name: runtimes
 
 volumes:
   appwrite-mariadb:
@@ -648,5 +644,5 @@ volumes:
   appwrite-certificates:
   appwrite-influxdb:
   appwrite-config:
-  openruntimes-functions:
-  openruntimes-builds:
+  appwrite-functions:
+  appwrite-builds:

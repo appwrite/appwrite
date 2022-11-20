@@ -8,6 +8,7 @@ use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
@@ -23,9 +24,19 @@ class Migrate extends Action
     {
         $this
             ->desc('Migrate Appwrite to new version')
+            /** @TODO APP_VERSION_STABLE needs to be defined */
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
             ->inject('register')
             ->callback(fn ($version, $register) => $this->action($version, $register));
+    }
+
+    private function clearProjectsCache(Redis $redis, Document $project)
+    {
+        try {
+            $redis->del($redis->keys("cache-_{$project->getInternalId()}:*"));
+        } catch (\Throwable $th) {
+            Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
+        }
     }
 
     public function action(string $version, Registry $register)
@@ -43,7 +54,7 @@ class Migrate extends Action
 
         $dbPool = $register->get('dbPool', true);
         $redis = $register->get('cache', true);
-        $redis->flushAll();
+
         $cache = new Cache(new RedisCache($redis));
 
         $dbForConsole = $dbPool->getDB('console', $cache);
@@ -79,6 +90,8 @@ class Migrate extends Action
                     continue;
                 }
 
+                $this->clearProjectsCache($redis, $project);
+
                 try {
                     // TODO: Iterate through all project DBs
                     $projectDB = $dbPool->getDB($project->getId(), $cache);
@@ -89,6 +102,8 @@ class Migrate extends Action
                     throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
                 }
+
+                $this->clearProjectsCache($redis, $project);
             }
 
             $sum = \count($projects);
@@ -101,7 +116,6 @@ class Migrate extends Action
         }
 
         Swoole\Event::wait(); // Wait for Coroutines to finish
-        $redis->flushAll();
         Console::success('Data Migration Completed');
     }
 }

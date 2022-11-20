@@ -41,6 +41,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
 
 App::post('/v1/storage/buckets')
@@ -494,16 +495,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($chunksUploaded === $chunks) {
-            $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
-            $device = STORAGE_DEVICE_LOCAL;
-            try {
-                $dsn = new DSN($connection);
-                $device = $dsn->getScheme();
-            } catch (\Exception $e) {
-                $device = STORAGE_DEVICE_LOCAL;
-            }
-
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $device === STORAGE_DEVICE_LOCAL) {
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceFiles->getType() === Storage::DEVICE_LOCAL) {
                 $antivirus = new Network(
                     App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                     (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
@@ -792,6 +784,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('cache', true)
+    ->label('cache.resourceType', 'bucket/{request.bucketId}')
     ->label('cache.resource', 'file/{request.fileId}')
     ->label('usage.metric', 'files.{scope}.requests.read')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
@@ -848,9 +841,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $inputs = Config::getParam('storage-inputs');
         $outputs = Config::getParam('storage-outputs');
         $fileLogos = Config::getParam('storage-logos');
-
-        $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT'; // 45 days cache
-        $key = \md5($fileId . $width . $height . $gravity . $quality . $borderWidth . $borderColor . $borderRadius . $opacity . $rotation . $background . $output);
 
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
@@ -1463,8 +1453,8 @@ App::get('/v1/storage/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -1522,7 +1512,7 @@ App::get('/v1/storage/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
@@ -1580,8 +1570,8 @@ App::get('/v1/storage/:bucketId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -1633,7 +1623,7 @@ App::get('/v1/storage/:bucketId/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [

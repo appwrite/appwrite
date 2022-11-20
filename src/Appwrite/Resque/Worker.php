@@ -7,9 +7,9 @@ use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Cache\Adapter\Sharding;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
@@ -19,6 +19,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Storage\Storage;
 
 abstract class Worker
 {
@@ -170,6 +171,7 @@ abstract class Worker
      * @param Document $project
      * @return Database
      */
+    protected static $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
     protected function getProjectDB(Document $project): Database
     {
         global $register;
@@ -180,6 +182,14 @@ abstract class Worker
             return $this->getConsoleDB();
         }
 
+        $databaseName = $project->getAttribute('database');
+
+        if (isset(self::$databases[$databaseName])) {
+            $database = self::$databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
+        }
+
         $dbAdapter = $pools
             ->get($project->getAttribute('database'))
             ->pop()
@@ -187,6 +197,9 @@ abstract class Worker
         ;
 
         $database = new Database($dbAdapter, $this->getCache());
+
+        self::$databases[$databaseName] = $database;
+
         $database->setNamespace('_' . $project->getInternalId());
 
         return $database;
@@ -280,7 +293,7 @@ abstract class Worker
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
         $acl = 'private';
-        $device = STORAGE_DEVICE_LOCAL;
+        $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
         $accessSecret = '';
         $bucket = '';
@@ -294,22 +307,21 @@ abstract class Worker
             $bucket = $dsn->getPath();
             $region = $dsn->getParam('region');
         } catch (\Exception $e) {
-            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
-            $device = STORAGE_DEVICE_LOCAL;
+            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
         switch ($device) {
-            case STORAGE_DEVICE_S3:
+            case Storage::DEVICE_S3:
                 return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE_DEVICE_DO_SPACES:
+            case STORAGE::DEVICE_DO_SPACES:
                 return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE_DEVICE_BACKBLAZE:
+            case Storage::DEVICE_BACKBLAZE:
                 return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE_DEVICE_LINODE:
+            case Storage::DEVICE_LINODE:
                 return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE_DEVICE_WASABI:
+            case Storage::DEVICE_WASABI:
                 return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE_DEVICE_LOCAL:
+            case Storage::DEVICE_LOCAL:
             default:
                 return new Local($root);
         }

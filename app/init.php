@@ -38,7 +38,6 @@ use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
-use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Queue\Client;
 use Utopia\Validator\Range;
@@ -55,7 +54,6 @@ use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
 use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
@@ -76,7 +74,10 @@ use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\CLI\Console;
 use Utopia\Queue;
+use Utopia\Queue\Connection;
+use Utopia\Storage\Storage;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -99,7 +100,7 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.0.3';
+const APP_VERSION_STABLE = '1.1.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -161,13 +162,6 @@ const DELETE_TYPE_SCHEDULES = 'schedules';
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
-// Storage Device Types
-const STORAGE_DEVICE_LOCAL = 'file';
-const STORAGE_DEVICE_S3 = 's3';
-const STORAGE_DEVICE_DO_SPACES = 'dospaces';
-const STORAGE_DEVICE_BACKBLAZE = 'backblaze';
-const STORAGE_DEVICE_LINODE = 'linode';
-const STORAGE_DEVICE_WASABI = 'wasabi';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -200,7 +194,7 @@ Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
 Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
-Config::load('regions', __DIR__ . '/config/regions.php'); // List of cloud regions
+Config::load('regions', __DIR__ . '/config/regions.php'); // List of available regions
 Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
 Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
@@ -559,7 +553,7 @@ $register->set('pools', function () {
         ],
     ];
 
-    $instances = 2; // REST, Realtime
+    $instances = 3; // REST, Realtime, CLI
     $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
     $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
     $instanceConnections = $maxConnections / $instances;
@@ -595,7 +589,7 @@ $register->set('pools', function () {
             $dsnUser = $dsn->getUser();
             $dsnPass = $dsn->getPassword();
             $dsnScheme = $dsn->getScheme();
-            $dsnPath = $dsn->getPath();
+            $dsnDatabase = $dsn->getPath();
 
             if (!in_array($dsnScheme, $schemes)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
@@ -743,7 +737,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/db/DBIP/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
 });
 
 /*
@@ -845,13 +839,6 @@ App::setResource('loggerBreadcrumbs', function () {
 });
 
 App::setResource('register', fn() => $register);
-
-App::setResource('layout', function ($locale) {
-    $layout = new View(__DIR__ . '/views/layouts/default.phtml');
-    $layout->setParam('locale', $locale);
-
-    return $layout;
-}, ['locale']);
 
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
@@ -961,9 +948,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
 
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
     ) { // Validate user has valid login token
         $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
     }
@@ -1044,7 +1033,9 @@ App::setResource('console', function () {
         'legalAddress' => '',
         'legalTaxId' => '',
         'auths' => [
+            'invites' => App::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
@@ -1140,7 +1131,7 @@ function getDevice($root): Device
     $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
     $acl = 'private';
-    $device = STORAGE_DEVICE_LOCAL;
+    $device = Storage::DEVICE_LOCAL;
     $accessKey = '';
     $accessSecret = '';
     $bucket = '';
@@ -1154,22 +1145,21 @@ function getDevice($root): Device
         $bucket = $dsn->getPath();
         $region = $dsn->getParam('region');
     } catch (\Exception $e) {
-        Console::eor($e->getMessage() . 'Invalid DSN. Defaulting to Local storage.');
-        $device = STORAGE_DEVICE_LOCAL;
+        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
     }
 
     switch ($device) {
-        case STORAGE_DEVICE_S3:
+        case Storage::DEVICE_S3:
             return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_DO_SPACES:
+        case STORAGE::DEVICE_DO_SPACES:
             return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_BACKBLAZE:
+        case Storage::DEVICE_BACKBLAZE:
             return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_LINODE:
+        case Storage::DEVICE_LINODE:
             return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_WASABI:
+        case Storage::DEVICE_WASABI:
             return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE_DEVICE_LOCAL:
+        case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
     }
