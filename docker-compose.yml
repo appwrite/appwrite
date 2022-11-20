@@ -655,7 +655,7 @@ services:
       - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
       - _APP_WORKER_PER_CORE
-      -
+
   appwrite-usage:
     entrypoint: usage
     <<: *x-logging
