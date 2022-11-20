@@ -33,15 +33,17 @@ App::post('/v1/edge/sync')
     ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
-    ->inject('queueForCacheSyncOut')
-    ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncOut) {
+    ->inject('queueForCacheSyncIn')
+    ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncIn) {
 
         if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $queueForCacheSyncOut
-            ->enqueue(['value' => ['keys' => $keys]]);
+        $queueForCacheSyncIn
+            ->enqueue([
+                'keys' => $keys
+            ]);
 
         $response->dynamic(new Document([
             'keys' => $keys

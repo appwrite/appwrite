@@ -13,8 +13,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
-use Utopia\Logger\Log;
-use Utopia\Queue;
 use Utopia\Queue\Message;
 
 global $connection;
@@ -107,7 +105,7 @@ $server->job()
     ->inject('message')
     ->action(function (Message $message) use (&$stack, &$failures) {
 
-        $payload = $message->getPayload()['value'] ?? [];
+        $payload = $message->getPayload() ?? [];
 
         if (!empty($payload['keys'])) {
             $regions = array_filter(
@@ -127,51 +125,6 @@ $server->job()
                 $stack['keys'][] = $payload['key'];
             }
         }
-    });
-
-$server
-    ->error()
-    ->inject('error')
-    ->inject('logger')
-    ->inject('register')
-    ->action(function ($error, $logger, $register) {
-
-        // Todo better job of abstracting the error log
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
-        if ($error->getCode() >= 500 || $error->getCode() === 0) {
-            $log = new Log();
-
-            $log->setNamespace("appwrite-worker");
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-worker-sync-out');
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
-
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $logger->addLog($log);
-        }
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-
-        $register->get('pools')->reclaim();
     });
 
 $server
@@ -200,7 +153,7 @@ $server
 
             $chunk = array_slice($stack['keys'], 0, CHUNK_MAX_KEYS);
             array_splice($stack['keys'], 0, CHUNK_MAX_KEYS);
-            Console::info("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
+            Console::log("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
             handle($dbForConsole, $stack['regions'], $chunk);
             $chunk = [];
         });

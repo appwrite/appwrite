@@ -58,10 +58,8 @@ class EdgeSync extends Action
                         Console::info("[{$time}] Enqueueing  keys chunk {$count} to {$document->getAttribute('target')}");
                         $queueForCacheSyncOut
                             ->enqueue([
-                                'value' => [
                                     'region' => $document->getAttribute('target'),
                                     'keys' => $document->getAttribute('keys')
-                                ]
                             ]);
 
                         $dbForConsole->deleteDocument('syncs', $document->getId());
