@@ -8,11 +8,11 @@ If you are worried or don’t know where to start, check out our next section ex
 
 ## Code of Conduct
 
-Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDUCT.md).
+Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/https://github.com/appwrite/.github/blob/main/CODE_OF_CONDUCT.md).
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as following
+Branch naming convention is as follows
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
@@ -30,7 +30,7 @@ When `TYPE` can be:
 - **fix** - a bug fix
 - **refactor** - code change that neither fixes a bug nor adds a feature
 
-**All PRs must include a commit message with the changes description!**
+**All PRs must include a commit message with the description of the changes made!**
 
 For the initial start, fork the project and use git clone command to download the repository to your computer. A standard procedure for working on an issue would be to:
 
@@ -48,7 +48,7 @@ $ git checkout -b [name_of_your_new_branch]
 
 3. Work - commit - repeat ( be sure to be in your branch )
 
-4. Before you push your changes, make sure your code follows the `PSR12` coding standards , which is the standard Appwrite follows currently. You can easily do this by running the formatter.
+4. Before you push your changes, make sure your code follows the `PSR12` coding standards, which is the standard Appwrite follows currently. You can easily do this by running the formatter.
 
 ```bash
 composer format <your file path>
@@ -60,7 +60,7 @@ Now, go a step further by running the linter by the following command to manuall
 composer lint <your file path>
 ```
 
-This will give you a list of errors for you to rectify , if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
+This will give you a list of errors for you to rectify, if there is an instance you need more information on the errors being displayed you can pass in additional command line arguments. More list of available arguments can be found [here](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage). A very useful command line argument is `--report=diff`. This will give you the expected changes by the linter for easy fixing of formatting issues.
 
 ```bash
 composer lint --report=diff <your file path>
@@ -93,6 +93,7 @@ git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
+docker compose build
 docker compose up -d
 ```
 
@@ -116,7 +117,7 @@ After finishing the installation process, you can start writing and editing code
 
 #### Advanced Topics
 
-We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advance topics that will help you master the Appwrite codebase.
+We love to create issues that are good for beginners and label them as `good first issue` or `hacktoberfest`, but some more advanced topics might require extra knowledge. Below is a list of links you can use to learn more about some of the more advanced topics that will help you master the Appwrite codebase.
 
 ##### Tools and Libs
 
@@ -338,7 +339,7 @@ Things to remember when releasing SDKs
 
 Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension or if you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection.
 
-First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and there change the IP address to your development machine's IP. Without the proper IP address debugger wont connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+First, you need to create an init file. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php** and then change the IP address to your development machine's IP. Without the proper IP address debugger won't connect. And you also need to set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
@@ -378,7 +379,7 @@ To run end-2-end tests use:
 docker compose exec appwrite test /usr/src/code/tests/e2e
 ```
 
-To run end-2-end tests for a spcific service use:
+To run end-2-end tests for a specific service use:
 
 ```bash
 docker compose exec appwrite test /usr/src/code/tests/e2e/Services/[ServiceName]

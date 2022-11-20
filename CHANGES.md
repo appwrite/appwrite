@@ -1,6 +1,47 @@
+# Version 1.1.1
+
+## Bugs
+- Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
+- Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Migration stopping scheduled functions [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Migration enabling OAuth providers with data by default [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Error pages when OAuth providers are disabled [#4704](https://github.com/appwrite/appwrite/pull/4704)
+
+# Version 1.1.0
+## Features
+- Added support for the new Appwrite Console [#4655](https://github.com/appwrite/appwrite/pull/4655)
+- Added new property to projects configuration: `authDuration` which allows you to alter the duration of signed in sessions for your project. [#4618](https://github.com/appwrite/appwrite/pull/4618)
+
+## Bugs
+- Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix missing `status`, `buildStderr` and `buildStderr` from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
+- Fix project pagination in DB usage aggregation [#4517](https://github.com/appwrite/appwrite/pull/4517)
+- Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
+- Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
+
+# Features
+- Added Auth Duration API to allow users to set the duration of their sessions. [#4618](https://github.com/appwrite/appwrite/pull/4618)
+
+# Version 1.0.3
+## Bugs
+- Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
+- Fix attribute and index deletion when deleting a collection [#4429](https://github.com/appwrite/appwrite/pull/4429)
+
+# Version 1.0.2
+## Bugs
+- Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)
+- Fixed migration for audit by migrating the `time` attribute [#4038](https://github.com/appwrite/appwrite/pull/4038)
+- Fixed default value for creating Boolean Attribute [#4040](https://github.com/appwrite/appwrite/pull/4040)
+- Fixed phone authentication code to be hashed in the internal database [#3906](https://github.com/appwrite/appwrite/pull/3906)
+- Fixed `/v1/teams/:teamId/memberships/:membershipId` response [#3883](https://github.com/appwrite/appwrite/pull/3883)
+- Fixed removing variables when function is deleted [#3884](https://github.com/appwrite/appwrite/pull/3884)
+- Fixed scheduled function not being triggered [#3908](https://github.com/appwrite/appwrite/pull/3908)
+- Fixed Phone Provider configuration [#3862](https://github.com/appwrite/appwrite/pull/3883)
+- Fixed Queries with `0` values [utopia-php/database#194](https://github.com/utopia-php/database/pull/194)
+
 # Version 1.0.1
 ## Bugs
-- Fixed migration for abuse by migrating the `time` attribute [3839](https://github.com/appwrite/appwrite/pull/3839)
+- Fixed migration for abuse by migrating the `time` attribute [#3839](https://github.com/appwrite/appwrite/pull/3839)
 
 # Version 1.0.0
 ## BREAKING CHANGES

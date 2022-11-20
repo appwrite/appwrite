@@ -373,7 +373,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
-        sleep(30);
+        sleep(60);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
@@ -550,6 +550,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
+        $this->assertGreaterThanOrEqual(2, $function['body']['deployments'][0]['buildTime']);
 
         return $data;
     }
@@ -568,6 +569,10 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals(0, $function['body']['buildTime']);
+        $this->assertNotEmpty($function['body']['status']);
+        $this->assertNotEmpty($function['body']['buildStdout']);
+        $this->assertArrayHasKey('buildStderr', $function['body']);
 
         /**
          * Test for FAILURE
@@ -610,7 +615,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['duration']);
 
-        sleep(5);
+        sleep(10);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -637,7 +642,7 @@ class FunctionsCustomServerTest extends Scope
          * Test for FAILURE
          */
 
-        sleep(10);
+        sleep(20);
 
         return array_merge($data, ['executionId' => $executionId]);
     }
@@ -881,7 +886,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(20);
+        sleep(40);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -894,7 +899,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -965,7 +970,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        sleep(20);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -988,7 +993,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1087,7 +1092,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        sleep(20);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1103,7 +1108,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1200,7 +1205,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(30);
+        sleep(60);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1216,7 +1221,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(30);
+        sleep(60);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1314,7 +1319,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(40);
+        sleep(80);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1330,7 +1335,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1428,7 +1433,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(30);
+        sleep(60);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1444,7 +1449,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
