@@ -1,3 +1,5 @@
+- Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
+
 # Version 1.1.1
 
 ## Bugs
