@@ -1133,7 +1133,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $execution->setAttribute('status', 'processing');
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
