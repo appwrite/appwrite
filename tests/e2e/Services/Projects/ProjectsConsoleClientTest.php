@@ -335,14 +335,15 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 8);
+        $this->assertEquals(count($response['body']), 9);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
         $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['documents']);
-        $this->assertIsArray($response['body']['collections']);
+        $this->assertIsArray($response['body']['databases']);
+        $this->assertIsArray($response['body']['buckets']);
         $this->assertIsArray($response['body']['users']);
         $this->assertIsArray($response['body']['storage']);
 
@@ -407,6 +408,126 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        return ['projectId' => $projectId];
+    }
+
+    /** @depends testGetProjectUsage */
+    public function testUpdateProjectAuthDuration($data): array
+    {
+        $id = $data['projectId'];
+
+        // Check defaults
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => 60, // Set session duration to 2 minutes
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Project Test 2', $response['body']['name']);
+        $this->assertArrayHasKey('platforms', $response['body']);
+        $this->assertArrayHasKey('webhooks', $response['body']);
+        $this->assertArrayHasKey('keys', $response['body']);
+        $this->assertEquals(60, $response['body']['authDuration']);
+
+        $projectId = $response['body']['$id'];
+
+        // Create New User
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => 'test' . rand(0, 9999) . '@example.com',
+            'password' => 'password',
+            'name' => 'Test User',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $userEmail = $response['body']['email'];
+
+        // Create New User Session
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $userEmail,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $sessionCookie = $response['headers']['set-cookie'];
+
+        // Test for SUCCESS
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'Cookie' => $sessionCookie,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Check session doesn't expire too soon.
+
+        sleep(30);
+
+        // Get User
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'Cookie' => $sessionCookie,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Wait just over a minute
+        sleep(35);
+
+        // Get User
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'Cookie' => $sessionCookie,
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Return project back to normal
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $projectId = $response['body']['$id'];
+
+        // Check project is back to normal
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(Auth::TOKEN_EXPIRATION_LOGIN_LONG, $response['body']['authDuration']); // 1 Year
 
         return ['projectId' => $projectId];
     }
