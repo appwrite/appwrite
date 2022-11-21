@@ -668,14 +668,12 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
 
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
-        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $dbForProject->deleteCollection('bucket_' . $document->getInternalId() . '_video_renditions');
+
+        $device = $this->getFilesDevice($projectId);
         $device->deletePath($document->getId());
 
-        $dbForProject->deleteCollection('bucket_' . $document->getInternalId() . '_video_renditions');
-        $device = $this->getDevice(APP_STORAGE_VIDEOS . '/app-' . $projectId);
-        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
-        $device = $this->getFilesDevice($projectId);
-
+        $device = $this->getVideoDevice($projectId);
         $device->deletePath($document->getId());
     }
 
