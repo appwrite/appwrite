@@ -877,7 +877,16 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
+                'description' => 'Interval how often executor checks for inactive runimes. The default value is 60 seconds.',
+                'introduction' => '1.2.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
