@@ -1080,7 +1080,7 @@ App::post('/v1/functions/:functionId/executions')
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' => 'waiting', // waiting / processing / completed / failed
+            'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
@@ -1131,9 +1131,6 @@ App::post('/v1/functions/:functionId/executions')
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                 ->dynamic($execution, Response::MODEL_EXECUTION);
         }
-
-        $execution->setAttribute('status', 'processing');
-        Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
