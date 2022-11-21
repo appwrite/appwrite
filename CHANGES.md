@@ -1,3 +1,5 @@
+- Fix admin-mode session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
+
 # Version 1.1.1
 
 ## Bugs
