@@ -1132,6 +1132,9 @@ App::post('/v1/functions/:functionId/executions')
                 ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
+        $execution->setAttribute('status', 'processing');
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
