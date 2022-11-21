@@ -1,0 +1,18 @@
+import { Client, Teams } from "packageName";
+
+const client = new Client();
+
+const teams = new Teams(client);
+
+client
+    .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2') // Your project ID
+;
+
+const promise = teams.createMembership('[TEAM_ID]', 'email@example.com', [], 'https://example.com');
+
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});
