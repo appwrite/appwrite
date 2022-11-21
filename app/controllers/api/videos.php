@@ -33,7 +33,7 @@ use Utopia\Swoole\Request;
  * @return Document $file
  * @throws Exception
  */
-function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode, Document $user): Document
+function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode): Document
 {
 
     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
@@ -76,11 +76,10 @@ App::post('/v1/videos')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('user')
     ->inject('mode')
-    ->action(action: function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, Document $user, string $mode) {
+    ->action(action: function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode) {
 
-        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
 
         $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
             return $dbForProject->createDocument('videos', new Document([
@@ -111,9 +110,8 @@ App::delete('/v1/videos/:videoId')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
     ->inject('deletes')
-    ->action(function (string $videoId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user, Delete $deletes) {
+    ->action(function (string $videoId, Response $response, Document $project, Database $dbForProject, string $mode, Delete $deletes) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
@@ -123,7 +121,7 @@ App::delete('/v1/videos/:videoId')
         $deleted = $dbForProject->deleteDocument('videos', $videoId);
 
         if (!$deleted) {
-            throw new Exception('Failed to remove video from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR);
         }
 
         $deletes
@@ -152,15 +150,14 @@ App::put('/v1/videos/:videoId')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, $bucketId, $fileId, Response $response, Document $project, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, $bucketId, $fileId, Response $response, Document $project, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
         $video = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $file) {
             return $dbForProject->updateDocument('videos', $videoId, new Document([
                 'bucketId'  => $bucketId,
@@ -206,7 +203,7 @@ App::get('/v1/videos/:videoId')
     });
 
 App::get('/v1/videos')
-    ->desc('Get video project list ')
+    ->desc('Get video list')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -265,17 +262,16 @@ App::post('/v1/videos/:videoId/subtitles')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('user')
     ->inject('mode')
-    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, Document $user, string $mode) {
+    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
-        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
+        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
 
         $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
             return $dbForProject->createDocument('videos_subtitles', new Document([
@@ -349,16 +345,15 @@ App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('user')
     ->inject('mode')
-    ->action(function (string $videoId, string $subtitleId, Response $response, Database $dbForProject, Document $user, string $mode) {
+    ->action(function (string $videoId, string $subtitleId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $subtitle = Authorization::skip(fn() => $dbForProject->getDocument('videos_subtitles', $subtitleId));
         if ($subtitle->isEmpty()) {
@@ -375,7 +370,7 @@ App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
     });
 
 App::get('/v1/videos/:videoId/subtitles')
-    ->desc('Get all video subtitles')
+    ->desc('Get video subtitles')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -424,16 +419,15 @@ App::post('/v1/videos/:videoId/rendition')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('user')
     ->inject('mode')
-    ->action(action: function (string $videoId, string $profileId, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, string $mode) {
+    ->action(action: function (string $videoId, string $profileId, Request $request, Response $response, Database $dbForProject, Document $project, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video->getAttribute('bucketId'), $video->getAttribute('fileId'), $mode, $user);
+        validateFilePermissions($dbForProject, $video->getAttribute('bucketId'), $video->getAttribute('fileId'), $mode);
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
         if ($profile->isEmpty()) {
@@ -442,7 +436,6 @@ App::post('/v1/videos/:videoId/rendition')
 
         $transcoder = new Transcoding();
         $transcoder
-            ->setUser($user)
             ->setProject($project)
             ->setVideoId($video->getId())
             ->setProfileId($profile->getId())
@@ -468,16 +461,15 @@ App::delete('/v1/videos/:videoId/renditions/:renditionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
     ->inject('deviceVideos')
-    ->action(function (string $videoId, string $renditionId, Response $response, Database $dbForProject, string $mode, Document $user, Device $deviceVideos) {
+    ->action(function (string $videoId, string $renditionId, Response $response, Database $dbForProject, string $mode, Device $deviceVideos) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $rendition = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions', $renditionId));
         if ($rendition->isEmpty()) {
@@ -498,8 +490,8 @@ App::delete('/v1/videos/:videoId/renditions/:renditionId')
         $response->noContent();
     });
 
-App::get('/v1/videos/:videoId/rendition/:renditionId')
-    ->desc('Get all backet\'s videos')
+App::get('/v1/videos/:videoId/renditions/:renditionId')
+    ->desc('Get a single video rendition')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -514,15 +506,14 @@ App::get('/v1/videos/:videoId/rendition/:renditionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
-    ->action(function ($videoId, $renditionId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function ($videoId, $renditionId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
-            throw new Exception('Video not found', 404, Exception::VIDEO_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $rendition = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions', $renditionId));
         if ($rendition->isEmpty()) {
@@ -547,15 +538,14 @@ App::get('/v1/videos/:videoId/renditions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $queries = [
             Query::equal('videoId', [$video->getId()]),
@@ -585,15 +575,14 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, string $protocolId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', [
             Query::equal('videoId', [$video->getId()]),
@@ -747,23 +736,23 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, string $protocolId, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $rendition = Authorization::skip(fn () => $dbForProject->findOne('videos_renditions', [
             Query::equal('_uid', [$renditionId]),
             Query::equal('status', ['ready']),
         ]));
 
-        if (empty($rendition)) {
-            throw new Exception('Rendition  not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
+        if ($rendition->isEmpty() || empty($rendition)) {
+            throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
         $segments = Authorization::skip(fn () => $dbForProject->find('videos_renditions_segments', [
@@ -771,8 +760,8 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
             Query::equal('streamId', [$streamId]),
         ]));
 
-        if (empty($segments)) {
-            throw new Exception('Rendition segments not found', 404, Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
+        if ($segments->isEmpty() || empty($segments)) {
+            throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
         $_segments = [];
@@ -809,13 +798,11 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
-    ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, string $protocolId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos) {
 
         $segment = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions_segments', $segmentId));
-        if (empty($segment)) {
-            throw new Exception('segment not found', 404, Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
+        if ($segment->isEmpty()) {
+            throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
         $output = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
@@ -848,22 +835,21 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, string $protocolId, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $subtitle = Authorization::skip(fn () => $dbForProject->findOne('videos_subtitles', [
             Query::equal('_uid', [$subtitleId]),
             Query::equal('status', ['ready']),
         ]));
 
-        if ($subtitle->isEmpty()) {
+        if ($subtitle->isEmpty() || empty($subtitle)) {
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
@@ -872,7 +858,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
                 Query::equal('subtitleId', [$subtitleId]),
             ]));
 
-            if (empty($segments)) {
+            if ($segments->isEmpty() || empty($segments)) {
                 throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
             }
 
@@ -916,18 +902,17 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId/segmen
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
-    ->inject('user')
-    ->action(function (string $videoId, string $protocolId, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode, Document $user) {
+    ->action(function (string $videoId, string $protocolId, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode, $user);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $segment = Authorization::skip(fn() => $dbForProject->getDocument('videos_subtitles_segments', $segmentId));
-        if (empty($segment)) {
+        if ($segment->isEmpty()) {
             throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
         }
 
@@ -1055,7 +1040,7 @@ App::get('/v1/videos/profiles')
     ->action(function (Response $response, Database $dbForProject) {
 
         $profiles = Authorization::skip(fn () => $dbForProject->find('videos_profiles'));
-        if (empty($profiles)) {
+        if ($profiles->isEmpty() || empty($profiles)) {
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
