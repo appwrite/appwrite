@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a673091aa6bd8ef01380b63245427c93",
+    "content-hash": "7a4830071d4d0c427adc32da23ed1856",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1944,6 +1944,53 @@
             "time": "2020-02-23T07:40:02+00:00"
         },
         {
+            "name": "utopia-php/dsn",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/dsn.git",
+                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\DSN\\": "src/DSN"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for parsing and managing Data Source Names ( DSNs )",
+            "keywords": [
+                "dsn",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/dsn/issues",
+                "source": "https://github.com/utopia-php/dsn/tree/0.1.0"
+            },
+            "time": "2022-10-26T10:06:20+00:00"
+        },
+        {
             "name": "utopia-php/framework",
             "version": "0.25.0",
             "source": {
@@ -2156,6 +2203,60 @@
             "time": "2022-03-18T10:56:57+00:00"
         },
         {
+            "name": "utopia-php/messaging",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/messaging.git",
+                "reference": "501272fad666f06bec8f130076862e7981a73f8c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/501272fad666f06bec8f130076862e7981a73f8c",
+                "reference": "501272fad666f06bec8f130076862e7981a73f8c",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=8.0.0"
+            },
+            "require-dev": {
+                "phpmailer/phpmailer": "6.6.*",
+                "phpunit/phpunit": "9.5.*",
+                "squizlabs/php_codesniffer": "^3.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Messaging\\": "src/Utopia/Messaging"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jake Barnby",
+                    "email": "jake@appwrite.io"
+                }
+            ],
+            "description": "A simple, light and advanced PHP messaging library",
+            "keywords": [
+                "library",
+                "messaging",
+                "php",
+                "upf",
+                "utopia",
+                "utopia-php"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/messaging/issues",
+                "source": "https://github.com/utopia-php/messaging/tree/0.1.0"
+            },
+            "time": "2022-09-29T11:22:48+00:00"
+        },
+        {
             "name": "utopia-php/orchestration",
             "version": "0.9.0",
             "source": {
@@ -2359,16 +2460,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.4.1",
+            "version": "0.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e"
+                "reference": "4b39e1f232b2e619b0d7fb4004f2356df334ddc1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0b69ede484a04c567cbb202f592d8e5e3cd2433e",
-                "reference": "0b69ede484a04c567cbb202f592d8e5e3cd2433e",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/4b39e1f232b2e619b0d7fb4004f2356df334ddc1",
+                "reference": "4b39e1f232b2e619b0d7fb4004f2356df334ddc1",
                 "shasum": ""
             },
             "require": {
@@ -2414,9 +2515,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.4.1"
+                "source": "https://github.com/utopia-php/queue/tree/0.5.1"
             },
-            "time": "2022-11-15T16:56:37+00:00"
+            "time": "2022-11-16T19:47:26+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -2472,16 +2573,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.11.0",
+            "version": "0.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "59802cf281d1976560cf6e353f250a9b870efddc"
+                "reference": "f34c010e4f8394a6b4aff70b6de55041d9a145d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/59802cf281d1976560cf6e353f250a9b870efddc",
-                "reference": "59802cf281d1976560cf6e353f250a9b870efddc",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/f34c010e4f8394a6b4aff70b6de55041d9a145d3",
+                "reference": "f34c010e4f8394a6b4aff70b6de55041d9a145d3",
                 "shasum": ""
             },
             "require": {
@@ -2521,9 +2622,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.11.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.13.0"
             },
-            "time": "2022-08-31T09:17:31+00:00"
+            "time": "2022-11-17T15:10:18+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3454,16 +3555,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.18",
+            "version": "9.2.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "12fddc491826940cf9b7e88ad9664cf51f0f6d0a"
+                "reference": "c77b56b63e3d2031bd8997fcec43c1925ae46559"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/12fddc491826940cf9b7e88ad9664cf51f0f6d0a",
-                "reference": "12fddc491826940cf9b7e88ad9664cf51f0f6d0a",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/c77b56b63e3d2031bd8997fcec43c1925ae46559",
+                "reference": "c77b56b63e3d2031bd8997fcec43c1925ae46559",
                 "shasum": ""
             },
             "require": {
@@ -3519,7 +3620,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.18"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.19"
             },
             "funding": [
                 {
@@ -3527,7 +3628,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-10-27T13:35:33+00:00"
+            "time": "2022-11-18T07:47:47+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",

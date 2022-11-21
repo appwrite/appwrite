@@ -293,7 +293,7 @@ class DeletesV1 extends Worker
         $this->getProjectDB($document)->delete($projectId);
 
         // Delete all storage directories
-        $uploads = new Local(APP_STORAGE_UPLOADS . '/app-' . $document->getId());
+        $uploads = $this->getFilesDevice($document->getId());
         $cache = new Local(APP_STORAGE_CACHE . '/app-' . $document->getId());
 
         $uploads->delete($uploads->getRoot(), true);
@@ -308,30 +308,29 @@ class DeletesV1 extends Worker
     {
         $userId = $document->getId();
 
+        $dbForProject = $this->getProjectDB($project);
+
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
             Query::equal('userId', [$userId])
-        ], $this->getProjectDB($project));
+        ], $dbForProject);
 
-        $this->getProjectDB($project)->deleteCachedDocument('users', $userId);
+        $dbForProject->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
             Query::equal('userId', [$userId])
-        ], $this->getProjectDB($project), function (Document $document) use ($project) {
-
+        ], $dbForProject, function (Document $document) use ($dbForProject) {
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
-                $team = $this->getProjectDB($project)->getDocument('teams', $teamId);
+                $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $this
-                        ->getProjectDB($project)
-                        ->updateDocument(
-                            'teams',
-                            $teamId,
-                            // Ensure that total >= 0
+                    $team = $dbForProject->updateDocument(
+                        'teams',
+                        $teamId,
+                        // Ensure that total >= 0
                             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
-                        );
+                    );
                 }
             }
         });
@@ -339,7 +338,7 @@ class DeletesV1 extends Worker
         // Delete tokens
         $this->deleteByGroup('tokens', [
             Query::equal('userId', [$userId])
-        ], $this->getProjectDB($project));
+        ], $dbForProject);
     }
 
     /**
@@ -462,7 +461,7 @@ class DeletesV1 extends Worker
          * Delete Deployments
          */
         Console::info("Deleting deployments for function " . $functionId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = $this->getFunctionsDevice($projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceId', [$functionId])
@@ -479,7 +478,7 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for function " . $functionId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $storageBuilds = $this->getBuildsDevice($projectId);
         foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
                 Query::equal('deploymentId', [$deploymentId])
@@ -518,7 +517,7 @@ class DeletesV1 extends Worker
          * Delete deployment files
          */
         Console::info("Deleting deployment files for deployment " . $deploymentId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = $this->getFunctionsDevice($projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
             Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
         } else {
@@ -529,7 +528,7 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $storageBuilds = $this->getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
             Query::equal('deploymentId', [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
@@ -688,7 +687,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($project);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
     }

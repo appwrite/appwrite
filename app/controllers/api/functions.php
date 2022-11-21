@@ -872,6 +872,7 @@ App::get('/v1/functions/:functionId/deployments')
             $result->setAttribute('status', $build->getAttribute('status', 'processing'));
             $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
             $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+            $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
         }
 
         $response->dynamic(new Document([
@@ -912,6 +913,11 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
+
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+        $deployment->setAttribute('status', $build->getAttribute('status', 'processing'));
+        $deployment->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
+        $deployment->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });

@@ -1,16 +1,17 @@
 <?php
 
-use Appwrite\SMS\Adapter\Mock;
-use Appwrite\SMS\Adapter\Telesign;
-use Appwrite\SMS\Adapter\TextMagic;
-use Appwrite\SMS\Adapter\Twilio;
-use Appwrite\SMS\Adapter\Msg91;
-use Appwrite\SMS\Adapter\Vonage;
-use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
-use Appwrite\SMS\Adapter;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\DSN\DSN;
+use Utopia\Messaging\Adapter;
+use Utopia\Messaging\Adapters\SMS\Mock;
+use Utopia\Messaging\Adapters\SMS\Msg91;
+use Utopia\Messaging\Adapters\SMS\Telesign;
+use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Twilio;
+use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Messaging\Messages\SMS;
 
 require_once __DIR__ . '/../init.php';
 
@@ -58,11 +59,14 @@ class MessagingV1 extends Worker
             return;
         }
 
-        $recipient = $this->args['recipient'];
-        $message = $this->args['message'];
+        $message = new SMS(
+            to: [$this->args['recipient']],
+            content: $this->args['message'],
+            from: $this->from,
+        );
 
         try {
-            $this->sms->send($this->from, $recipient, $message);
+            $this->sms->send($message);
         } catch (\Exception $error) {
             throw new Exception('Error sending message: ' . $error->getMessage(), 500);
         }

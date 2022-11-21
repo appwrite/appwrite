@@ -43,17 +43,44 @@ CLI::setResource('pools', function (Registry $register) {
 }, ['register']);
 
 CLI::setResource('dbForConsole', function ($pools, $cache) {
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+    $sleep = 3;
+    $maxAttempts = 5;
+    $attempts = 0;
+    $ready = false;
 
-    $database = new Database($dbAdapter, $cache);
+    do {
+        $attempts++;
+        try {
+            // Prepare database connection
+            $dbAdapter = $pools
+                ->get('console')
+                ->pop()
+                ->getResource();
 
-    $database->setNamespace('console');
+            $dbForConsole = new Database($dbAdapter, $cache);
+            $dbForConsole->setNamespace('console');
 
-    return $database;
+            // Ensure tables exist
+            $collections = Config::getParam('collections', []);
+            $last = \array_key_last($collections);
+
+            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
+                throw new Exception('Tables not ready yet.');
+            }
+
+            $ready = true;
+        } catch (\Exception $err) {
+            Console::warning($err->getMessage());
+            $pools->get('console')->reclaim();
+            sleep($sleep);
+        }
+    } while ($attempts < $maxAttempts);
+
+    if (!$ready) {
+        throw new Exception("Console is not ready yet. Please try again later.");
+    }
+
+    return $dbForConsole;
 }, ['pools', 'cache']);
 
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
@@ -67,7 +94,9 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $databaseName = $project->getAttribute('database');
 
         if (isset($databases[$databaseName])) {
-            return $databases[$databaseName];
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
         }
 
         $dbAdapter = $pools
@@ -76,9 +105,10 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-        $database->setNamespace('_' . $project->getInternalId());
 
         $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
 
         return $database;
     };
@@ -160,46 +190,6 @@ $cli
     ->inject('error')
     ->action(function (Throwable $error) {
         Console::error($error->getMessage());
-    });
-
-$cli
-    ->init()
-    ->inject('pools')
-    ->inject('cache')
-    ->action(function (Group $pools, Cache $cache) {
-        $maxAttempts = 5;
-        $sleep = 3;
-
-        $attempts = 0;
-        $ready = false;
-
-        do {
-            $attempts++;
-
-            // Prepare database connection
-            $dbAdapter = $pools
-                ->get('console')
-                ->pop()
-                ->getResource();
-
-            $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('console');
-
-            // Ensure tables exist
-            $collections = Config::getParam('collections', []);
-            $last = \array_key_last($collections);
-
-            if ($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last)) {
-                $ready = true;
-                break;
-            }
-
-            sleep($sleep);
-        } while ($attempts < $maxAttempts);
-
-        if (!$ready) {
-            throw new Exception("Console is not ready yet. Please try again later.");
-        }
     });
 
 $cli->run();

@@ -246,7 +246,6 @@ trait TeamsBaseServer
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Arsenal', $response['body']['name']);

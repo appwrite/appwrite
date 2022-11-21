@@ -14,12 +14,9 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
-WORKDIR /usr/local/src/
+COPY app/console /usr/local/src/console
 
-COPY package-lock.json /usr/local/src/
-COPY package.json /usr/local/src/
-COPY gulpfile.js /usr/local/src/
-COPY public /usr/local/src/public
+WORKDIR /usr/local/src/console
 
 RUN npm ci
 RUN npm run build
@@ -186,18 +183,11 @@ ENV DOCKER_COMPOSE_VERSION=v2.5.0
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_LOCALE=en \
-    _APP_WORKER_PER_CORE= \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
     _APP_CONSOLE_WHITELIST_ROOT=enabled \
-    _APP_CONSOLE_WHITELIST_EMAILS= \
-    _APP_CONSOLE_WHITELIST_IPS= \
-    _APP_SYSTEM_EMAIL_NAME= \
-    _APP_SYSTEM_EMAIL_ADDRESS= \
-    _APP_SYSTEM_RESPONSE_FORMAT= \
-    _APP_SYSTEM_SECURITY_EMAIL_ADDRESS= \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
@@ -205,27 +195,6 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_STORAGE_ANTIVIRUS_HOST=clamav \
     _APP_STORAGE_ANTIVIRUS_PORT=3310 \
-    _APP_STORAGE_DEVICE=Local \
-    _APP_STORAGE_S3_ACCESS_KEY= \
-    _APP_STORAGE_S3_SECRET= \
-    _APP_STORAGE_S3_REGION= \
-    _APP_STORAGE_S3_BUCKET= \
-    _APP_STORAGE_DO_SPACES_ACCESS_KEY= \
-    _APP_STORAGE_DO_SPACES_SECRET= \
-    _APP_STORAGE_DO_SPACES_REGION= \
-    _APP_STORAGE_DO_SPACES_BUCKET= \
-    _APP_STORAGE_BACKBLAZE_ACCESS_KEY= \
-    _APP_STORAGE_BACKBLAZE_SECRET= \
-    _APP_STORAGE_BACKBLAZE_REGION= \
-    _APP_STORAGE_BACKBLAZE_BUCKET= \
-    _APP_STORAGE_LINODE_ACCESS_KEY= \
-    _APP_STORAGE_LINODE_SECRET= \
-    _APP_STORAGE_LINODE_REGION= \
-    _APP_STORAGE_LINODE_BUCKET= \
-    _APP_STORAGE_WASABI_ACCESS_KEY= \
-    _APP_STORAGE_WASABI_SECRET= \
-    _APP_STORAGE_WASABI_REGION= \
-    _APP_STORAGE_WASABI_BUCKET= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -237,13 +206,6 @@ ENV _APP_SERVER=swoole \
     _APP_INFLUXDB_PORT=8086 \
     _APP_STATSD_HOST=telegraf \
     _APP_STATSD_PORT=8125 \
-    _APP_SMTP_HOST= \
-    _APP_SMTP_PORT= \
-    _APP_SMTP_SECURE= \
-    _APP_SMTP_USERNAME= \
-    _APP_SMTP_PASSWORD= \
-    _APP_SMS_PROVIDER= \
-    _APP_SMS_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CPUS=1 \
@@ -253,16 +215,13 @@ ENV _APP_SERVER=swoole \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
-    _APP_USAGE_AGGREGATION_INTERVAL=30 \
     # 14 Days = 1209600 s
     _APP_MAINTENANCE_RETENTION_EXECUTION=1209600 \
     _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
     # 1 Day = 86400 s
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
     _APP_MAINTENANCE_RETENTION_USAGE_HOURLY=8640000 \
-    _APP_MAINTENANCE_INTERVAL=86400 \
-    _APP_LOGGING_PROVIDER= \
-    _APP_LOGGING_CONFIG=
+    _APP_MAINTENANCE_INTERVAL=86400
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -305,7 +264,7 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=node /usr/local/src/public/dist /usr/src/code/public/dist
+COPY --from=node /usr/local/src/console/build /usr/src/code/console
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -320,8 +279,6 @@ COPY --from=zstd /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zstd.so
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public/fonts /usr/src/code/public/fonts
-COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes

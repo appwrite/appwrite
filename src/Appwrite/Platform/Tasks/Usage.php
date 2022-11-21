@@ -42,7 +42,8 @@ class Usage extends Action
         $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($error, "usage", $action);
 
         $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
-        $usage = new TimeSeries($dbForConsole, $influxDB, $getProjectDB, $register, $errorLogger);
+        $region = App::getEnv('region', 'default');
+        $usage = new TimeSeries($region, $dbForConsole, $influxDB, $getProjectDB, $register, $errorLogger);
 
         Console::loop(function () use ($interval, $usage) {
             $now = date('d-m-Y H:i:s', time());
