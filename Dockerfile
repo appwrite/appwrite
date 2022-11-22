@@ -18,6 +18,9 @@ COPY app/console /usr/local/src/console
 
 WORKDIR /usr/local/src/console
 
+ARG VITE_GA_PROJECT=""
+ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
+
 RUN npm ci
 RUN npm run build
 
