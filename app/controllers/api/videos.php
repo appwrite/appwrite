@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Transcoding;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -10,14 +9,12 @@ use Appwrite\Utopia\View;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
 use Utopia\Storage\Device;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;

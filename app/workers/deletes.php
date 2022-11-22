@@ -692,19 +692,9 @@ class DeletesV1 extends Worker
         $videoId = $document->getId();
         $dbForProject = $this->getProjectDB($projectId);
         $renditions = $dbForProject->find('videos_renditions', [
-            new Query('videoId', Query::TYPE_EQUAL, [$videoId])]);
+            new Query('videoId', Query::TYPE_EQUAL, [$videoId])
+        ]);
         foreach ($renditions as $rendition) {
-            $subtitles = $dbForProject->find('videos_subtitles', [
-                new Query('videoId', Query::TYPE_EQUAL, [$videoId])]);
-            foreach ($subtitles as $subtitle) {
-                $segments = fn() => $dbForProject->find('videos_subtitles_segments', [
-                    new Query('subtitleId', Query::TYPE_EQUAL, [$subtitle->getId()])]);
-                foreach ($segments as $segment) {
-                    $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
-                }
-                $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId());
-            }
-
             $this->deleteByGroup('videos_renditions_segments', [
                 new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()])
             ], $dbForProject);
@@ -712,8 +702,22 @@ class DeletesV1 extends Worker
             $dbForProject->deleteDocument('videos_renditions', $rendition->getId());
         }
 
+        $subtitles = $dbForProject->find('videos_subtitles', [
+            new Query('videoId', Query::TYPE_EQUAL, [$videoId])
+        ]);
+
+        foreach ($subtitles as $subtitle) {
+            $segments = $dbForProject->find('videos_subtitles_segments', [
+                new Query('subtitleId', Query::TYPE_EQUAL, [$subtitle->getId()])
+            ]);
+            foreach ($segments as $segment) {
+                $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
+            }
+            $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId());
+        }
+
         $videosDevice = $this->getVideoDevice($projectId);
-        $videosPath = $videosDevice->getPath($videoId);
+        $videosPath   = $videosDevice->getPath($videoId);
         if ($videosDevice->deletePath($videosPath)) {
             Console::success('Deleted video directory: ' . $videosPath);
         } else {
