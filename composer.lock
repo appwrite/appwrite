@@ -2356,16 +2356,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.4.1",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "c8f96a33e7fbf58c1145eb6cf0f2c00cbe319979"
+                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/c8f96a33e7fbf58c1145eb6cf0f2c00cbe319979",
-                "reference": "c8f96a33e7fbf58c1145eb6cf0f2c00cbe319979",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/d2870ab74b31b7f4027799f082e85122154f8bed",
+                "reference": "d2870ab74b31b7f4027799f082e85122154f8bed",
                 "shasum": ""
             },
             "require": {
@@ -2401,9 +2401,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.4.1"
+                "source": "https://github.com/utopia-php/pools/tree/0.4.2"
             },
-            "time": "2022-11-15T08:55:16+00:00"
+            "time": "2022-11-22T07:55:45+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5403,5 +5403,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.3.0"
 }
