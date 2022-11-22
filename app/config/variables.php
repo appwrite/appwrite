@@ -939,6 +939,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_HOURLY',
+                'description' => 'The maximum duration (in seconds) upto which to retain hourly usage metrics. The default value is 8640000 seconds (100 days).',
+                'introduction' => '',
+                'default' => '8640000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => 'TBD',

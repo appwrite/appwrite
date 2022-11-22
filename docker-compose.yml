@@ -93,6 +93,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
+
     depends_on:
       - mariadb
       - redis
@@ -586,6 +587,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
   appwrite-usage:
@@ -615,6 +617,7 @@ services:
       - _APP_DB_PASS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
+      - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -622,7 +625,6 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_CACHE
-      - _APP_USAGE_TIMESERIES_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
