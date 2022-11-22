@@ -557,7 +557,7 @@ $register->set('pools', function () {
 
     $multiprocessing = App::getenv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
-    if($multiprocessing) {
+    if ($multiprocessing) {
         $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
     } else {
         $workerCount = 1;
