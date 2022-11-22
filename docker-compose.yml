@@ -126,6 +126,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -214,6 +215,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -277,6 +279,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -308,6 +312,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -344,6 +350,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -377,6 +385,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -415,6 +425,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -452,6 +464,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -490,6 +504,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -521,6 +537,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -546,6 +564,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_OPENSSL_KEY_V1
@@ -585,6 +605,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -620,6 +642,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
