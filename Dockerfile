@@ -19,7 +19,10 @@ COPY app/console /usr/local/src/console
 WORKDIR /usr/local/src/console
 
 ARG VITE_GA_PROJECT
+ARG VITE_CONSOLE_MODE
+
 ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
+ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
 
 RUN npm ci
 RUN npm run build
