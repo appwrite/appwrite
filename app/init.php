@@ -552,10 +552,10 @@ $register->set('pools', function () {
         ],
     ];
 
-    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 151);
-    $instanceConnections = $maxConnections / App::getenv('_APP_POOL_CLIENTS', 14);
+    $maxConnections = App::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / App::getEnv('_APP_POOL_CLIENTS', 14);
 
-    $multiprocessing = App::getenv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
+    $multiprocessing = App::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
 
     if ($multiprocessing) {
         $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
