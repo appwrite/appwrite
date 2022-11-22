@@ -260,6 +260,7 @@ class DeletesV1 extends Worker
     {
         $this->deleteForProjectIds(function (Document $project) use ($hourlyUsageRetentionDatetime) {
             $dbForProject = $this->getProjectDB($project);
+            // Delete Usage stats
             $this->deleteByGroup('stats', [
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::equal('period', ['1h']),

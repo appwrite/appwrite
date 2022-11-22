@@ -552,10 +552,16 @@ $register->set('pools', function () {
         ],
     ];
 
-    $instances = 3; // REST, Realtime, CLI
-    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
-    $instanceConnections = $maxConnections / $instances;
+    $maxConnections = App::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / App::getEnv('_APP_POOL_CLIENTS', 14);
+
+    $multiprocessing = App::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
+
+    if ($multiprocessing) {
+        $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    } else {
+        $workerCount = 1;
+    }
 
     if ($workerCount > $instanceConnections) {
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);

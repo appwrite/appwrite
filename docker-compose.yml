@@ -93,6 +93,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
+
     depends_on:
       - mariadb
       - redis
@@ -105,6 +106,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_SERVER_MULTIPROCESS=enabled
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
@@ -125,6 +127,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -204,6 +207,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_SERVER_MULTIPROCESS=enabled
       - _APP_OPTIONS_ABUSE
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
@@ -212,6 +216,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -275,6 +280,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -306,6 +313,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -342,6 +351,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -375,6 +386,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -413,6 +426,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -450,6 +465,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -488,6 +505,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -519,6 +538,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -544,6 +565,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_OPENSSL_KEY_V1
@@ -564,6 +587,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_CACHE
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
+      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
   appwrite-usage:
@@ -583,6 +607,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -591,6 +617,7 @@ services:
       - _APP_DB_PASS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
+      - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -598,7 +625,6 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_CACHE
-      - _APP_USAGE_TIMESERIES_INTERVAL
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -618,6 +644,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -638,7 +666,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.1.4
+    image: openruntimes/executor:0.1.6
     networks:
       - appwrite
       - runtimes
@@ -650,6 +678,7 @@ services:
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=$_APP_CONNECTIONS_STORAGE
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_FUNCTIONS_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
@@ -769,6 +798,19 @@ services:
       - 9506:8080
     networks:
       - appwrite
+  
+  # appwrite-volume-sync:
+  #   entrypoint: volume-sync
+  #   <<: *x-logging
+  #   container_name: appwrite-volume-sync
+  #   image: appwrite-dev
+  #   command:
+  #     - --source=/data/src/ --destination=/data/dest/ --interval=10
+  #   networks:
+  #     - appwrite
+  #   # volumes: # Mount the rsync source and destination directories  
+  #   #   - /nfs/config:/data/src 
+  #   #   - /storage/config:/data/dest
 
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
