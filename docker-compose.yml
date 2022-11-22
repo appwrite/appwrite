@@ -106,6 +106,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_SERVER_MULTIPROCESS=enabled
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
@@ -205,6 +206,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_SERVER_MULTIPROCESS=enabled
       - _APP_OPTIONS_ABUSE
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
@@ -640,7 +642,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.1.4
+    image: openruntimes/executor:0.1.6
     networks:
       - appwrite
       - runtimes
@@ -652,6 +654,7 @@ services:
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=$_APP_CONNECTIONS_STORAGE
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_FUNCTIONS_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
