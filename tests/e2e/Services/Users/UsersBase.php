@@ -644,6 +644,19 @@ trait UsersBase
         $this->assertIsInt($users['body']['total']);
         $this->assertGreaterThan(0, $users['body']['total']);
 
+        
+        /** 
+          * Test for FAILURE 
+          */ 
+         $response = $this->client->call(Client::METHOD_GET, '/users' . $data['userId'], array_merge([ 
+             'content-type' => 'application/json', 
+             'x-appwrite-project' => $this->getProject()['$id'], 
+         ], $this->getHeaders()), [ 
+             'queries' => ['cursorAfter("unknown")'] 
+         ]); 
+  
+         $this->assertEquals(400, $response['headers']['status-code']); 
+        
         return $data;
     }
 
