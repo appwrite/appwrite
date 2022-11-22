@@ -668,7 +668,12 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
 
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
-        $dbForProject->deleteCollection('bucket_' . $document->getInternalId() . '_video_renditions');
+        $dbForProject->deleteCollection('videos_' . $document->getInternalId());
+        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_renditions');
+        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_renditions_segments');
+        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_subtitles');
+        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_subtitles_segments');
+        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_profiles');
 
         $device = $this->getFilesDevice($projectId);
         $device->deletePath($document->getId());
@@ -686,25 +691,25 @@ class DeletesV1 extends Worker
 
         $videoId = $document->getId();
         $dbForProject = $this->getProjectDB($projectId);
-        $renditions = Authorization::skip(fn() => $dbForProject->find('videos_renditions', [
-            new Query('videoId', Query::TYPE_EQUAL, [$videoId])]));
+        $renditions = $dbForProject->find('videos_renditions', [
+            new Query('videoId', Query::TYPE_EQUAL, [$videoId])]);
         foreach ($renditions as $rendition) {
-            $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
-                new Query('videoId', Query::TYPE_EQUAL, [$videoId])]));
+            $subtitles = $dbForProject->find('videos_subtitles', [
+                new Query('videoId', Query::TYPE_EQUAL, [$videoId])]);
             foreach ($subtitles as $subtitle) {
-                $segments = Authorization::skip(fn() => $dbForProject->find('videos_subtitles_segments', [
-                    new Query('subtitleId', Query::TYPE_EQUAL, [$subtitle->getId()])]));
+                $segments = fn() => $dbForProject->find('videos_subtitles_segments', [
+                    new Query('subtitleId', Query::TYPE_EQUAL, [$subtitle->getId()])]);
                 foreach ($segments as $segment) {
-                    Authorization::skip(fn() => $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId()));
+                    $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
                 }
-                Authorization::skip(fn() => $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId()));
+                $dbForProject->deleteDocument('videos_subtitles', $subtitle->getId());
             }
 
             $this->deleteByGroup('videos_renditions_segments', [
                 new Query('renditionId', Query::TYPE_EQUAL, [$rendition->getId()])
             ], $dbForProject);
 
-            Authorization::skip(fn() => $dbForProject->deleteDocument('videos_renditions', $rendition->getId()));
+            $dbForProject->deleteDocument('videos_renditions', $rendition->getId());
         }
 
         $videosDevice = $this->getVideoDevice($projectId);

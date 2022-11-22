@@ -1,5 +1,6 @@
 <?php
 
+ini_set('memory_limit', -1);
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
@@ -14,7 +15,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
 use Captioning\Format\SubripFile;
@@ -56,7 +56,7 @@ class TranscodingV1 extends Worker
 
     public function getName(): string
     {
-        return "Transcoding";
+        return "Transcoder v1";
     }
 
     public function init(): void
@@ -75,34 +75,28 @@ class TranscodingV1 extends Worker
         $project = new Document($this->args['project']);
         $this->database = $this->getProjectDB($project->getId());
 
-        $sourceVideo =  Authorization::skip(fn() =>  $this->database->findOne('videos', [
+        $sourceVideo =  $this->database->findOne('videos', [
             Query::equal('_uid', [$this->args['videoId']]),
-        ]));
+        ]);
 
         if (empty($sourceVideo)) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        $profile =  Authorization::skip(fn() =>  $this->database->findOne('videos_profiles', [
+        $profile =  $this->database->findOne('videos_profiles', [
             Query::equal('_uid', [$this->args['profileId']]),
-        ]));
+        ]);
 
         if (empty($profile)) {
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
-        $bucket = Authorization::skip(
-            fn() => $this->database->getDocument('buckets', $sourceVideo->getAttribute('bucketId'))
-        );
-
-        $file = Authorization::skip(
-            fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo->getAttribute('fileId'))
-        );
-
+        $bucket = $this->database->getDocument('buckets', $sourceVideo->getAttribute('bucketId'));
+        $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $sourceVideo->getAttribute('fileId'));
         $path = basename($file->getAttribute('path'));
         $inPath = $this->inDir . $path;
-
         $result = $this->writeData($project, $file);
+
         if (empty($result)) {
             throw new Exception(Exception::GENERAL_UNKNOWN);
         }
@@ -126,6 +120,7 @@ class TranscodingV1 extends Worker
         $audioStreamCount = $ffprobe->streams($inPath)->audios()->count();
         $videoStreamCount = $ffprobe->streams($inPath)->videos()->count();
         $streams = $ffprobe->streams($inPath);
+
         $sourceVideo
             ->setAttribute('duration', $videoStreamCount > 0 ? $streams->videos()->first()->get('duration') : null)
             ->setAttribute('height', $videoStreamCount > 0 ? $streams->videos()->first()->get('height') : null)
@@ -137,36 +132,32 @@ class TranscodingV1 extends Worker
             ->setAttribute('audioSamplerate', $audioStreamCount > 0 ? $streams->audios()->first()->get('sample_rate') : null)
             ->setAttribute('audioBitrate', $audioStreamCount > 0 ? $streams->audios()->first()->get('bit_rate') : null)
             ;
-            Authorization::skip(fn() => $this->database->updateDocument(
+
+            $this->database->updateDocument(
                 'videos',
                 $sourceVideo->getId(),
                 $sourceVideo
-            ));
+            );
 
         $video = $ffmpeg->open($inPath);
         $this->setRenditionName($profile);
 
         $subs = [];
-        $subtitles =  Authorization::skip(fn() =>  $this->database->find('videos_subtitles', [
+        $subtitles =  $this->database->find('videos_subtitles', [
             Query::equal('videoId', [$this->args['videoId']]),
             Query::equal('status', ['']),
-        ]));
+        ]);
 
         foreach ($subtitles as $subtitle) {
             $subtitle->setAttribute('status', self::STATUS_START);
-            Authorization::skip(fn() => $this->database->updateDocument(
+            $this->database->updateDocument(
                 'videos_subtitles',
                 $subtitle->getId(),
                 $subtitle
-            ));
-
-            $bucket = Authorization::skip(
-                fn() => $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId'))
             );
 
-            $file = Authorization::skip(
-                fn() => $this->database->getDocument('bucket_' . $bucket->getInternalId(), $subtitle->getAttribute('fileId'))
-            );
+            $bucket = $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId'));
+            $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $subtitle->getAttribute('fileId'));
 
             $path = basename($file->getAttribute('path'));
             $this->writeData($project, $file);
@@ -185,8 +176,7 @@ class TranscodingV1 extends Worker
             ];
         }
 
-        $query = Authorization::skip(function () use ($profile) {
-            return $this->database->createDocument('videos_renditions', new Document([
+        $query = $this->database->createDocument('videos_renditions', new Document([
                'videoId'  => $this->args['videoId'],
                'profileId' => $profile->getId(),
                'name'      => $this->getRenditionName(),
@@ -194,7 +184,6 @@ class TranscodingV1 extends Worker
                'status'    => self::STATUS_START,
                'protocol'  => $profile->getAttribute('protocol'),
             ]));
-        });
 
         $renditionRootPath = $this->getVideoDevice($project->getId())->getPath($this->args['videoId']) . '/';
         $renditionPath = $renditionRootPath . $this->getRenditionName() . '-' . $query->getId() .  '/';
@@ -210,11 +199,11 @@ class TranscodingV1 extends Worker
             $format->on('progress', function ($video, $format, $percentage) use ($query) {
                 if ($percentage % 3 === 0) {
                     $query->setAttribute('progress', (string)$percentage);
-                    Authorization::skip(fn() => $this->database->updateDocument(
+                    $this->database->updateDocument(
                         'videos_renditions',
                         $query->getId(),
                         $query
-                    ));
+                    );
                 }
             });
 
@@ -231,15 +220,13 @@ class TranscodingV1 extends Worker
                     $m3u8 = $this->getHlsSegments($this->outDir . $stream['path']);
                     if (!empty($m3u8['segments'])) {
                         foreach ($m3u8['segments'] as $segment) {
-                            Authorization::skip(function () use ($segment, $project, $query, $renditionPath, $stream) {
-                                return $this->database->createDocument('videos_renditions_segments', new Document([
+                            $this->database->createDocument('videos_renditions_segments', new Document([
                                     'renditionId' => $query->getId(),
                                     'streamId' => (int)$stream['id'],
                                     'fileName' => $segment['fileName'],
                                     'path' => $renditionPath,
                                     'duration' => $segment['duration'],
                                 ]));
-                            });
                         }
                     }
 
@@ -250,15 +237,13 @@ class TranscodingV1 extends Worker
                 $mpd = $this->getDashSegments($this->outPath . '.mpd');
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
-                        Authorization::skip(function () use ($segment, $project, $query, $renditionPath) {
-                            return $this->database->createDocument('videos_renditions_segments', new Document([
+                            $this->database->createDocument('videos_renditions_segments', new Document([
                                 'renditionId' => $query->getId(),
                                 'streamId' => $segment['streamId'],
                                 'fileName' => $segment['fileName'],
                                 'path' => $renditionPath,
                                 'isInit' => $segment['isInit'],
                                 ]));
-                        });
                     }
                 }
 
@@ -269,20 +254,18 @@ class TranscodingV1 extends Worker
 
             $query->setAttribute('status', self::STATUS_END);
             $query->setAttribute('endedAt', DateTime::now());
-            Authorization::skip(fn() => $this->database->updateDocument('videos_renditions', $query->getId(), $query));
+            $this->database->updateDocument('videos_renditions', $query->getId(), $query);
 
             foreach ($subtitles ?? [] as $subtitle) {
                 if ($profile->getAttribute('protocol') === 'hls') {
                     $m3u8 = $this->getHlsSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                     foreach ($m3u8['segments'] ?? [] as $segment) {
-                        Authorization::skip(function () use ($segment, $project, $subtitle, $renditionRootPath) {
-                            return $this->database->createDocument('videos_subtitles_segments', new Document([
+                            $this->database->createDocument('videos_subtitles_segments', new Document([
                                 'subtitleId'  =>  $subtitle->getId(),
                                 'fileName'  => $segment['fileName'],
                                 'path'  => $renditionRootPath ,
                                 'duration' => $segment['duration'],
                             ]));
-                        });
                     }
                     $subtitle->setAttribute('targetDuration', $m3u8['targetDuration']);
                 } else {
@@ -291,11 +274,11 @@ class TranscodingV1 extends Worker
 
                 $subtitle->setAttribute('status', self::STATUS_READY);
                 $subtitle->setAttribute('path', $renditionRootPath);
-                Authorization::skip(fn() => $this->database->updateDocument(
+                $this->database->updateDocument(
                     'videos_subtitles',
                     $subtitle->getId(),
                     $subtitle
-                ));
+                );
             }
 
          /** Upload & cleanup **/
@@ -318,14 +301,14 @@ class TranscodingV1 extends Worker
                     $query->setAttribute('progress', '100');
                     $query->setAttribute('status', self::STATUS_UPLOADING);
                     $query->setAttribute('path', $renditionPath);
-                    Authorization::skip(fn() => $this->database->updateDocument('videos_renditions', $query->getId(), $query));
+                    $this->database->updateDocument('videos_renditions', $query->getId(), $query);
                     $start = 1;
                 }
                 //@unlink($this->outDir . $fileName);
             }
 
             $query->setAttribute('status', self::STATUS_READY);
-            Authorization::skip(fn() => $this->database->updateDocument('videos_renditions', $query->getId(), $query));
+            $this->database->updateDocument('videos_renditions', $query->getId(), $query);
         } catch (\Throwable $th) {
             $query->setAttribute('metadata', json_encode([
             'code' => $th->getCode(),
@@ -333,7 +316,7 @@ class TranscodingV1 extends Worker
             ]));
 
             $query->setAttribute('status', self::STATUS_ERROR);
-            Authorization::skip(fn() => $this->database->updateDocument('videos_renditions', $query->getId(), $query));
+            $this->database->updateDocument('videos_renditions', $query->getId(), $query);
             throw new Exception($th->getMessage(), 500, Exception::GENERAL_UNKNOWN);
         }
     }
@@ -348,6 +331,7 @@ class TranscodingV1 extends Worker
      */
     private function transcode(string $protocol, Media $video, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
+
 //        $video->filters()
 //            ->framerate(new FFMpeg\Coordinate\FrameRate(24), 2)
 //            ;
@@ -401,6 +385,7 @@ class TranscodingV1 extends Worker
      */
     private function getDashSegments(string $path): array
     {
+
         $segments = [];
         $metadata = null;
         $handle = fopen($path, "r");
@@ -437,6 +422,7 @@ class TranscodingV1 extends Worker
      */
     private function getHlsSegmentsUrls(string $path): array
     {
+
         $files = [];
         $handle = fopen($path, "r");
         if ($handle) {
@@ -482,6 +468,7 @@ class TranscodingV1 extends Worker
      */
     private function getHlsSegments(string $path): array
     {
+
         $segments = [];
         $targetDuration = 0;
         $handle = fopen($path, "r");
@@ -518,6 +505,7 @@ class TranscodingV1 extends Worker
      */
     private function getVideoStreamInfo(array $metadata, RepresentationInterface $representation): array
     {
+
         $info = [];
 //        if (!empty($metadata['stream']['resolutions'][0])) {
 //            $general = $metadata['stream']['resolutions'][0];
@@ -548,7 +536,6 @@ class TranscodingV1 extends Worker
      */
     private function writeData(Document $project, Document $file): bool
     {
-
 
         $fullPath = $file->getAttribute('path');
         $path = basename($file->getAttribute('path'));

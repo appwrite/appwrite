@@ -158,8 +158,8 @@ App::put('/v1/videos/:videoId')
         }
 
         $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
-        $video = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $file) {
-            return $dbForProject->updateDocument('videos', $videoId, new Document([
+        $video = Authorization::skip(fn() =>
+            $dbForProject->updateDocument('videos', $videoId, new Document([
                 'bucketId'  => $bucketId,
                 'fileId'    => $file->getId(),
                 'size'      => $file->getAttribute('sizeOriginal'),
@@ -172,8 +172,7 @@ App::put('/v1/videos/:videoId')
                 'audioCodec' =>  null,
                 'audioBitrate' =>  null,
                 'audioSamplerate' => null,
-            ]));
-        });
+            ])));
 
         $response->dynamic($video, Response::MODEL_VIDEO);
     });
@@ -273,16 +272,15 @@ App::post('/v1/videos/:videoId/subtitles')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
         validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
 
-        $subtitle = Authorization::skip(function () use ($dbForProject, $videoId, $bucketId, $fileId, $name, $code, $default) {
-            return $dbForProject->createDocument('videos_subtitles', new Document([
+        $subtitle = Authorization::skip(fn() =>
+            $dbForProject->createDocument('videos_subtitles', new Document([
                 'videoId'   => $videoId,
                 'bucketId'  => $bucketId,
                 'fileId'    => $fileId,
                 'name'      => $name,
                 'code'      => $code,
                 'default'   => $default,
-            ]));
-        });
+            ])));
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($subtitle, Response::MODEL_SUBTITLE);
@@ -465,6 +463,7 @@ App::delete('/v1/videos/:videoId/renditions/:renditionId')
     ->action(function (string $videoId, string $renditionId, Response $response, Database $dbForProject, string $mode, Device $deviceVideos) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
@@ -509,6 +508,7 @@ App::get('/v1/videos/:videoId/renditions/:renditionId')
     ->action(function ($videoId, $renditionId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
@@ -516,6 +516,7 @@ App::get('/v1/videos/:videoId/renditions/:renditionId')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $rendition = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions', $renditionId));
+
         if ($rendition->isEmpty()) {
             throw new Exception('Video rendition not found', 404, Exception::VIDEO_RENDITION_NOT_FOUND);
         }
@@ -541,6 +542,7 @@ App::get('/v1/videos/:videoId/renditions')
     ->action(function (string $videoId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
@@ -578,6 +580,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
     ->action(function (string $videoId, string $protocolId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
@@ -730,7 +733,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
     // TODO: Response model
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('protocolId', '', new WhiteList(['hls']), 'protocol name')
+    ->param('protocolId', '', new WhiteList(['hls']), 'protocol name.')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
     ->param('streamId', '', new Range(0, 10), 'Stream id.')
     ->inject('response')
@@ -760,7 +763,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
             Query::equal('streamId', [$streamId]),
         ]));
 
-        if ($segments->isEmpty() || empty($segments)) {
+        if (empty($segments)) {
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
@@ -778,7 +781,6 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
         $response->setContentType('application/x-mpegurl')
             ->send($template->render(false));
     });
-
 
 App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segments/:segmentId')
     ->desc('Get video rendition segment')
@@ -815,7 +817,6 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
                 ->send($output);
         }
     });
-
 
 App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
     ->desc('Get video subtitle')
@@ -858,7 +859,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
                 Query::equal('subtitleId', [$subtitleId]),
             ]));
 
-            if ($segments->isEmpty() || empty($segments)) {
+            if (empty($segments)) {
                 throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
             }
 
@@ -881,7 +882,6 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
                 ->send($output);
         }
     });
-
 
 App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId/segments/:segmentId')
     ->desc('Get video subtitle segment')
@@ -1040,7 +1040,7 @@ App::get('/v1/videos/profiles')
     ->action(function (Response $response, Database $dbForProject) {
 
         $profiles = Authorization::skip(fn () => $dbForProject->find('videos_profiles'));
-        if ($profiles->isEmpty() || empty($profiles)) {
+        if (empty($profiles)) {
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
