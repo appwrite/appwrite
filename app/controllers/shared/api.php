@@ -192,7 +192,6 @@ App::init()
             ->setUser($user);
 
         $usage
-            ->setParam('projectInternalId', $project->getInternalId())
             ->setParam('projectId', $project->getId())
             ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())

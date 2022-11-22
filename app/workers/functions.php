@@ -152,6 +152,10 @@ Server::setResource('execute', function () {
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
+
+            Console::error($th->getTraceAsString());
+            Console::error($th->getFile());
+            Console::error($th->getLine());
             Console::error($th->getMessage());
         }
 
@@ -204,7 +208,6 @@ Server::setResource('execute', function () {
             $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())
-                ->setParam('projectInternalId', $project->getInternalId())
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
