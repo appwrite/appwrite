@@ -1,4 +1,4 @@
-import { Client, Teams } from "packageName";
+import { Client, Teams } from "appwrite";
 
 const client = new Client();
 
