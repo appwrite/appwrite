@@ -14,6 +14,7 @@
         "lint": "vendor/bin/phpcs",
         "format": "vendor/bin/phpcbf"
     },
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Appwrite\\": "src/Appwrite",
@@ -49,7 +50,9 @@
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.28.*",
+        "utopia-php/database": "dev-main as 0.28.999999",
+        "utopia-php/locale": "0.4.*",
+        "utopia-php/registry": "0.5.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/framework": "0.25.*",
@@ -74,6 +77,10 @@
     "repositories": [
         {
             "url": "https://github.com/appwrite/runtimes.git",
+            "type": "git"
+        },
+        {
+            "url": "https://github.com/utopia-php/mongo.git",
             "type": "git"
         }
     ],

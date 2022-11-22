@@ -50,6 +50,7 @@ use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\ConnectionPool;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
@@ -63,6 +64,8 @@ use Swoole\Database\PDOConfig;
 use Swoole\Database\PDOPool;
 use Swoole\Database\RedisConfig;
 use Swoole\Database\RedisPool;
+use Utopia\Mongo\Client;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Storage\Device;
@@ -421,13 +424,15 @@ Database::addFilter(
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
-        return json_encode([
+        $result = json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
             'version' => '1',
         ]);
+
+        return $result;
     },
     function (mixed $value) {
         if (is_null($value)) {
@@ -435,8 +440,9 @@ Database::addFilter(
         }
         $value = json_decode($value, true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $result = OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
 
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+        return $result;
     }
 );
 
@@ -504,23 +510,10 @@ $register->set('dbPool', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pool = new PDOPool(
-        (new PDOConfig())
-        ->withHost($dbHost)
-        ->withPort($dbPort)
-        ->withDbName($dbScheme)
-        ->withCharset('utf8mb4')
-        ->withUsername($dbUser)
-        ->withPassword($dbPass)
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => true,
-        ]),
-        64
+    $pool = new ConnectionPool(
+        constructor: fn () =>
+        new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, true),
+        size: 64
     );
 
     return $pool;
@@ -610,16 +603,9 @@ $register->set('db', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::ATTR_TIMEOUT => 3, // Seconds
-        PDO::ATTR_PERSISTENT => true,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_EMULATE_PREPARES => true,
-        PDO::ATTR_STRINGIFY_FETCHES => true,
-    ));
+    $client = new Client($dbScheme, $dbHost, (int) $dbPort, $dbUser, $dbPass, false);
 
-    return $pdo;
+    return $client;
 });
 $register->set('cache', function () {
  // This is usually for our workers or CLI commands scope
@@ -925,7 +911,7 @@ App::setResource('console', function () {
 App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new Mongo($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
 
@@ -935,7 +921,7 @@ App::setResource('dbForProject', function ($db, $cache, Document $project) {
 App::setResource('dbForConsole', function ($db, $cache) {
     $cache = new Cache(new RedisCache($cache));
 
-    $database = new Database(new MariaDB($db), $cache);
+    $database = new Database(new Mongo($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace('_console');
 

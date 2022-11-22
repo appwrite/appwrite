@@ -31,6 +31,8 @@ class DatabasesCustomClientTest extends Scope
             'name' => 'Test Database'
         ]);
 
+        sleep(1);
+
         $databaseId = $database['body']['$id'];
 
         // Collection aliases write to create, update, delete
@@ -40,12 +42,13 @@ class DatabasesCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'collectionId' => ID::unique(),
-            'name' => 'Movies',
+            'name' => 'movies',
             'documentSecurity' => true,
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
             ],
         ]);
+
 
         $moviesId = $movies['body']['$id'];
 
@@ -79,6 +82,12 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
+        sleep(1);
+
+        // var_dump("\n###################\n");
+        // var_dump($document1['body']);
+        // var_dump("\n###################\n");
+
         $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
@@ -100,6 +109,8 @@ class DatabasesCustomClientTest extends Scope
                 Permission::create(Role::user($this->getUser()['$id'])),
             ]
         ]);
+
+        sleep(1);
 
         $this->assertEquals(400, $document2['headers']['status-code']);
     }

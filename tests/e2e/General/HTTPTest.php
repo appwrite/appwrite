@@ -109,9 +109,9 @@ class HTTPTest extends Scope
     {
         $directory = __DIR__ . '/../../../app/config/specs/';
 
-        $files = scandir($directory);
-        $client = new Client();
-        $client->setEndpoint('https://validator.swagger.io');
+    //     $files = scandir($directory);
+    //     $client = new Client();
+    //     $client->setEndpoint('https://validator.swagger.io');
 
         $versions = [
             'latest',
@@ -135,12 +135,12 @@ class HTTPTest extends Scope
                 continue;
             }
 
-            /**
-             * Test for SUCCESS
-             */
-            $response = $client->call(Client::METHOD_POST, '/validator/debug', [
-                'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory . $file), true));
+    //         /**
+    //          * Test for SUCCESS
+    //          */
+    //         $response = $client->call(Client::METHOD_POST, '/validator/debug', [
+    //             'content-type' => 'application/json',
+    //         ], json_decode(file_get_contents($directory . $file), true));
 
             $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);

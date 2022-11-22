@@ -17,6 +17,7 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\S3;
 use Exception;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Worker
@@ -221,10 +222,9 @@ abstract class Worker
             try {
                 $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
-                $database = new Database(new MariaDB($register->get('db')), $cache);
+                $database = new Database(new Mongo($register->get('db')), $cache);
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace); // Main DB
-
                 if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
                     throw new \Exception("Project does not exist: {$projectId}");
                 }

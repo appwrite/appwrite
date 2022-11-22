@@ -8,6 +8,7 @@ use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -43,10 +44,10 @@ $cli
 
         $cache = new Cache(new RedisCache($redis));
 
-        $projectDB = new Database(new MariaDB($db), $cache);
+        $projectDB = new Database(new Mongo($db), $cache);
         $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
-        $consoleDB = new Database(new MariaDB($db), $cache);
+        $consoleDB = new Database(new Mongo($db), $cache);
         $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $consoleDB->setNamespace('_project_console');
 

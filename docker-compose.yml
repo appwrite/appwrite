@@ -83,9 +83,10 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
+      # - ./debug:/tmp
       - ./dev:/usr/local/dev
     depends_on:
-      - mariadb
+      - mongo
       - redis
       # - clamav
     entrypoint: 
@@ -204,7 +205,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - mongo
       - redis
     environment:
       - _APP_ENV
@@ -234,7 +235,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mongo
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -262,7 +263,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mongo
       - request-catcher
     environment:
       - _APP_ENV
@@ -284,7 +285,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - mongo
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -341,10 +342,9 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
-      - mariadb
+      - mongo
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -372,7 +372,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mongo
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -399,7 +399,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - mongo
     volumes: 
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -435,7 +435,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - mongo
       - appwrite-executor
     environment:
       - _APP_ENV
@@ -476,7 +476,7 @@ services:
       - /tmp:/tmp:rw
     depends_on:
       - redis
-      - mariadb
+      - mongo
       - appwrite
     environment:
       - _APP_ENV
@@ -581,7 +581,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
     environment:
@@ -618,7 +617,7 @@ services:
       - ./dev:/usr/local/dev
     depends_on:
       - influxdb
-      - mariadb
+      - mongo
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1
@@ -656,36 +655,17 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
 
-  mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
-    <<: *x-logging
+  mongo:
+    image: mongo:5.0
+    container_name: appwrite-mongodb
     networks:
       - appwrite
-    volumes:
-      - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-      - "3306:3306"
+      - "27017:27017"
     environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=${_APP_DB_USER}
-      - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
-    # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
+      - MONGO_INITDB_ROOT_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_PASS}
 
-  # smtp:
-  #   image: appwrite/smtp:1.2.0
-  #   container_name: appwrite-smtp
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   environment:
-  #     - LOCAL_DOMAINS=@
-  #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
-  #     - SMARTHOST_HOST=smtp
-  #     - SMARTHOST_PORT=587
-  
   redis:
     image: redis:7.0.4-alpine
     <<: *x-logging
