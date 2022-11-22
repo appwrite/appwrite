@@ -651,11 +651,9 @@ trait UsersBase
          $response = $this->client->call(Client::METHOD_GET, '/users' . $data['userId'], array_merge([ 
              'content-type' => 'application/json', 
              'x-appwrite-project' => $this->getProject()['$id'], 
-         ], $this->getHeaders()), [ 
-             'queries' => ['cursorAfter("unknown")'] 
-         ]); 
+         ], $this->getHeaders())); 
   
-         $this->assertEquals(400, $response['headers']['status-code']); 
+         $this->assertEquals(404, $response['headers']['status-code']); 
         
         return $data;
     }
