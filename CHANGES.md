@@ -2,7 +2,9 @@
 ## Changes
 - Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+
 ## Bugs
+- Fix default oauth paths [#4725](https://github.com/appwrite/appwrite/pull/4725)
 - Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
 - Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
 - Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
