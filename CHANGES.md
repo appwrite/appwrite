@@ -6,7 +6,7 @@
 - Fix Migration stopping scheduled functions [#4704](https://github.com/appwrite/appwrite/pull/4704)
 - Fix Migration enabling OAuth providers with data by default [#4704](https://github.com/appwrite/appwrite/pull/4704)
 - Fix Error pages when OAuth providers are disabled [#4704](https://github.com/appwrite/appwrite/pull/4704)
-- Fix Locale API returning Unknown Content [#4761](https://github.com/appwrite/appwrite/pull/4761)
+- Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
 
 # Version 1.1.0
 ## Features
