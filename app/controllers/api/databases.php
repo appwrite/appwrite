@@ -126,7 +126,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     }
 
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -834,8 +833,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
-
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($collection)
@@ -1489,7 +1486,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         }
 
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1656,8 +1652,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::INDEX_ALREADY_EXISTS);
         }
-
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $database
             ->setType(DATABASE_TYPE_CREATE_INDEX)

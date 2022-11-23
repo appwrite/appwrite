@@ -234,7 +234,6 @@ class DatabaseV1 extends Worker
         }
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
     }
 
     /**

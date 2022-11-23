@@ -218,8 +218,7 @@ App::post('/v1/account/sessions/email')
             $dbForProject->updateDocument('users', $profile->getId(), $profile);
         }
 
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
-
+        
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($profile->getId())),
             Permission::update(Role::user($profile->getId())),
@@ -458,7 +457,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $currentDocument = $dbForProject->getDocument('sessions', $current);
             if (!$currentDocument->isEmpty()) {
                 $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->deleteCachedDocument('users', $user->getId());
             }
         }
 
@@ -570,8 +568,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
         ]));
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $session->setAttribute('expire', $expire);
 
@@ -705,7 +701,7 @@ App::post('/v1/account/sessions/magic-url')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        ;
 
         if (empty($url)) {
             $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
@@ -814,8 +810,6 @@ App::put('/v1/account/sessions/magic-url')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
         $tokens = $user->getAttribute('tokens', []);
 
         /**
@@ -823,7 +817,6 @@ App::put('/v1/account/sessions/magic-url')
          *  the recovery token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('emailVerification', true);
 
@@ -1058,7 +1051,6 @@ App::put('/v1/account/sessions/phone')
          *  the recovery token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('phoneVerification', true);
 
@@ -1752,7 +1744,6 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $events
                     ->setParam('userId', $user->getId())
@@ -1904,8 +1895,6 @@ App::delete('/v1/account/sessions')
             }
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
         $events
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId());
@@ -1986,8 +1975,6 @@ App::post('/v1/account/recovery')
                 Permission::update(Role::user($profile->getId())),
                 Permission::delete(Role::user($profile->getId())),
             ]));
-
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
@@ -2228,7 +2215,6 @@ App::put('/v1/account/verification')
          *  the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verification);
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
             ->setParam('userId', $user->getId())
@@ -2370,7 +2356,6 @@ App::put('/v1/account/verification/phone')
          * We act like we're updating and validating the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verification);
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
             ->setParam('userId', $user->getId())

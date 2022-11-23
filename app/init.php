@@ -279,6 +279,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedCollection('database_' . $document->getInternalId() . '_collection_' . $document->getInternalId());
         return $database
             ->find('attributes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
@@ -309,6 +310,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('projects', $document->getId());
         return $database
             ->find('platforms', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
@@ -323,6 +325,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return $database
             ->find('domains', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
@@ -337,6 +340,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('projects', $document->getId());
         return $database
             ->find('keys', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
@@ -351,6 +355,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('projects', $document->getId());
         return $database
             ->find('webhooks', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
@@ -365,6 +370,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -378,6 +384,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn() => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
@@ -392,6 +399,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn() => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
