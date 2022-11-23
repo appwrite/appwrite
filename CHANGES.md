@@ -1,11 +1,20 @@
 # TBD
-
 - Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
 - Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Update Traefik 2.7 -> 2.9 [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
-# Version 1.1.1
 
+# Version 1.1.2
+## Changes
+- Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+
+## Bugs
+- Fix default oauth paths [#4725](https://github.com/appwrite/appwrite/pull/4725)
+- Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
+- Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
+- Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
+
+# Version 1.1.1
 ## Bugs
 - Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
 - Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)

@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -13,6 +14,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
+use Utopia\Database\DateTime;
 
 require_once __DIR__ . '/../init.php';
 
@@ -96,7 +98,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_SESSIONS:
-                $this->deleteExpiredSessions($this->args['datetime']);
+                $this->deleteExpiredSessions();
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
@@ -105,7 +107,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($this->args['dateTime1d'], $this->args['hourlyUsageRetentionDatetime']);
+                $this->deleteUsageStats($this->args['hourlyUsageRetentionDatetime']);
                 break;
 
             case DELETE_TYPE_CACHE_BY_RESOURCE:
@@ -253,7 +255,6 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param string $datetime1d
      * @param string $hourlyUsageRetentionDatetime
      */
     protected function deleteUsageStats(string $hourlyUsageRetentionDatetime)
@@ -355,16 +356,13 @@ class DeletesV1 extends Worker
         });
     }
 
-    /**
-     * @param string $datetime
-     */
-    protected function deleteExpiredSessions(string $datetime): void
+    protected function deleteExpiredSessions(): void
     {
         $this->deleteForProjectIds(function (Document $project) use ($datetime) {
             $dbForProject = $this->getProjectDB($project);
             // Delete Sessions
             $this->deleteByGroup('sessions', [
-                Query::lessThan('expire', $datetime)
+                Query::lessThan('$createdAt', $expired)
             ], $dbForProject);
         });
     }
