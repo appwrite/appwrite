@@ -489,7 +489,7 @@ class TimeSeries extends Calculator
         $query .= "WHERE \"time\" > '{$start}' ";
         $query .= "AND \"time\" < '{$end}' ";
         $query .= "AND \"metric_type\"='counter' {$filters} ";
-        $query .= "GROUP BY time({$period['key']}), \"projectId\", \"projectInternalId\" {$groupBy} ";
+        $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
         $query .= "FILL(null)";
 
         try {
@@ -511,12 +511,9 @@ class TimeSeries extends Calculator
                     }
 
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
-                    if (empty($point['projectInternalId'] ?? null)) {
-                        continue;
-                    }
 
                     $this->createOrUpdateMetric(
-                        $point['projectInternalId'],
+                        $point['projectId'],
                         $point['time'],
                         $period['key'],
                         $metricUpdated,
