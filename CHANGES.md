@@ -4,6 +4,7 @@
 ## Bugs
 - Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
 - Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
+- Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
 
 # Version 1.1.1
 ## Bugs
