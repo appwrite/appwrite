@@ -8,7 +8,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
@@ -17,7 +16,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -49,7 +47,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Stats $usage) {
+$databaseListener = function (string $event, Document $document) {
     $multiplier = 1;
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
         $multiplier = -1;
@@ -58,34 +56,34 @@ $databaseListener = function (string $event, Document $document, Stats $usage) {
     $collection = $document->getCollection();
     switch ($collection) {
         case 'users':
-            $usage->setParam('users.{scope}.count.total', 1 * $multiplier);
+            // $usage->setParam('users.{scope}.count.total', 1 * $multiplier);
             break;
         case 'databases':
-            $usage->setParam('databases.{scope}.count.total', 1 * $multiplier);
+            // $usage->setParam('databases.{scope}.count.total', 1 * $multiplier);
             break;
         case 'buckets':
-            $usage->setParam('buckets.{scope}.count.total', 1 * $multiplier);
+            // $usage->setParam('buckets.{scope}.count.total', 1 * $multiplier);
             break;
         case 'deployments':
-            $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size') * $multiplier);
+            // $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size') * $multiplier);
             break;
         default:
-            if (strpos($collection, 'bucket_') === 0) {
-                $usage
-                    ->setParam('bucketId', $document->getAttribute('bucketId'))
-                    ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal') * $multiplier)
-                    ->setParam('files.{scope}.count.total', 1 * $multiplier);
-            } elseif (strpos($collection, 'database_') === 0) {
-                $usage
-                    ->setParam('databaseId', $document->getAttribute('databaseId'));
-                if (strpos($collection, '_collection_') !== false) {
-                    $usage
-                        ->setParam('collectionId', $document->getAttribute('$collectionId'))
-                        ->setParam('documents.{scope}.count.total', 1 * $multiplier);
-                } else {
-                    $usage->setParam('collections.{scope}.count.total', 1 * $multiplier);
-                }
-            }
+            // if (strpos($collection, 'bucket_') === 0) {
+            //     $usage
+            //         ->setParam('bucketId', $document->getAttribute('bucketId'))
+            //         ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal') * $multiplier)
+            //         ->setParam('files.{scope}.count.total', 1 * $multiplier);
+            // } elseif (strpos($collection, 'database_') === 0) {
+            //     $usage
+            //         ->setParam('databaseId', $document->getAttribute('databaseId'));
+            //     if (strpos($collection, '_collection_') !== false) {
+            //         $usage
+            //             ->setParam('collectionId', $document->getAttribute('$collectionId'))
+            //             ->setParam('documents.{scope}.count.total', 1 * $multiplier);
+            //     } else {
+            //         $usage->setParam('collections.{scope}.count.total', 1 * $multiplier);
+            //     }
+            // }
             break;
     }
 };
@@ -100,12 +98,11 @@ App::init()
     ->inject('events')
     ->inject('audits')
     ->inject('mails')
-    ->inject('usage')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -191,13 +188,13 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-        $usage
-            ->setParam('projectInternalId', $project->getInternalId())
-            ->setParam('projectId', $project->getId())
-            ->setParam('project.{scope}.network.requests', 1)
-            ->setParam('httpMethod', $request->getMethod())
-            ->setParam('project.{scope}.network.inbound', 0)
-            ->setParam('project.{scope}.network.outbound', 0);
+        // $usage
+        //     ->setParam('projectInternalId', $project->getInternalId())
+        //     ->setParam('projectId', $project->getId())
+        //     ->setParam('project.{scope}.network.requests', 1)
+        //     ->setParam('httpMethod', $request->getMethod())
+        //     ->setParam('project.{scope}.network.inbound', 0)
+        //     ->setParam('project.{scope}.network.outbound', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -327,13 +324,11 @@ App::shutdown()
     ->inject('project')
     ->inject('events')
     ->inject('audits')
-    ->inject('usage')
     ->inject('deletes')
     ->inject('database')
-    ->inject('mode')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -494,30 +489,16 @@ App::shutdown()
             && $project->getId()
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
-            $metric = $route->getLabel('usage.metric', '');
-            $usageParams = $route->getLabel('usage.params', []);
-
-            if (!empty($metric)) {
-                $usage->setParam($metric, 1);
-                foreach ($usageParams as $param) {
-                    $param = $parseLabel($param, $responsePayload, $requestParams, $user);
-                    $parts = explode(':', $param);
-                    if (count($parts) != 2) {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
-                    }
-                    $usage->setParam($parts[0], $parts[1]);
-                }
-            }
-
+            
             $fileSize = 0;
             $file = $request->getFiles('file');
             if (!empty($file)) {
                 $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
             }
 
-            $usage
-                ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
-                ->setParam('project.{scope}.network.outbound', $response->getSize())
-                ->submit();
+            // $usage
+            //     ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
+            //     ->setParam('project.{scope}.network.outbound', $response->getSize())
+            //     ->submit();
         }
     });

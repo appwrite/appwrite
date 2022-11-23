@@ -6,7 +6,6 @@ use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Domnikl\Statsd\Client;
 use Executor\Executor;
@@ -205,17 +204,17 @@ Server::setResource('execute', function () {
 
         /** Update usage stats */
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $usage = new Stats($statsd);
-            $usage
-                ->setParam('projectId', $project->getId())
-                ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
-                ->setParam('executions.{scope}.compute', 1)
-                ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('duration'))
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0)
-                ->submit();
+            // $usage = new Stats($statsd);
+            // $usage
+            //     ->setParam('projectId', $project->getId())
+            //     ->setParam('projectInternalId', $project->getInternalId())
+            //     ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
+            //     ->setParam('executions.{scope}.compute', 1)
+            //     ->setParam('executionStatus', $execution->getAttribute('status', ''))
+            //     ->setParam('executionTime', $execution->getAttribute('duration'))
+            //     ->setParam('networkRequestSize', 0)
+            //     ->setParam('networkResponseSize', 0)
+            //     ->submit();
         }
     };
 });

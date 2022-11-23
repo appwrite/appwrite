@@ -37,7 +37,6 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -689,30 +688,6 @@ $register->set('pools', function () {
     return $group;
 });
 
-$register->set('influxdb', function () {
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
-});
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -860,9 +835,6 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
