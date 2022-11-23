@@ -1,9 +1,12 @@
 # Version 1.1.2
+## Changes
+- Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
 ## Bugs
+- Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
+- Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
 - Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
 
 # Version 1.1.1
-
 ## Bugs
 - Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
 - Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)

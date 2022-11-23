@@ -426,8 +426,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
 
-        $state['failure'] = null;
-
         $accessToken = $oauth2->getAccessToken($code);
         $refreshToken = $oauth2->getRefreshToken($code);
         $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
