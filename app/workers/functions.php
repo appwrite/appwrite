@@ -84,7 +84,7 @@ Server::setResource('execute', function () {
                 'functionId' => $functionId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
-                'status' => 'processing',
+                'status' => 'waiting',
                 'statusCode' => 0,
                 'response' => '',
                 'stderr' => '',
@@ -98,6 +98,9 @@ Server::setResource('execute', function () {
                 throw new Exception('Failed to create or read execution');
             }
         }
+
+        $execution->setAttribute('status', 'processing');
+        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
