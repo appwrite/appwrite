@@ -1,6 +1,7 @@
 # Version 1.1.2
 ## Changes
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+- Add security headers to the console endpoint [#4758](https://github.com/appwrite/appwrite/pull/4758)
 
 # Version 1.1.1
 ## Bugs
