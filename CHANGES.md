@@ -1,6 +1,8 @@
+
 # Version 1.1.2
 ## Changes
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+- Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
 
 # Version 1.1.1
 ## Bugs
