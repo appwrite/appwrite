@@ -41,8 +41,8 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/v1/auth/oauth2/success';
-$oauthDefaultFailure = '/v1/auth/oauth2/failure';
+$oauthDefaultSuccess = '/auth/oauth2/success';
+$oauthDefaultFailure = '/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
