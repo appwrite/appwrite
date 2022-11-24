@@ -92,7 +92,7 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        if (\empty($region)) {
+        if (empty($region)) {
             $region = App::getEnv('_APP_REGION', 'default');
         }
 
