@@ -1,3 +1,5 @@
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+
 # Version 1.1.2
 ## Changes
 - Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
