@@ -61,6 +61,7 @@ $collections = [
             ],
         ],
     ],
+    
     'collections' => [
         '$collection' => ID::custom('databases'),
         '$id' => ID::custom('collections'),
@@ -3234,6 +3235,7 @@ $collections = [
             ],
         ]
     ],
+
     'cache' => [
         '$collection' => Database::METADATA,
         '$id' => 'cache',
@@ -3290,6 +3292,7 @@ $collections = [
             ],
         ],
     ],
+
     'files' => [
         '$collection' => ID::custom('buckets'),
         '$id' => ID::custom('files'),

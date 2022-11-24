@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
@@ -47,25 +48,64 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document) {
-    $multiplier = 1;
+$databaseListener = function (string $event, Document $document, Document $project, Usage $usage) {
+    $value = 1;
+
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
-        $multiplier = -1;
+        $value = -1;
     }
 
-    $collection = $document->getCollection();
-    switch ($collection) {
+    switch ($document->getCollection()) {
         case 'users':
-            // $usage->setParam('users.{scope}.count.total', 1 * $multiplier);
+            $usage->addMetric("{$project->getId()}", "users", $value); // per project
+            break;
+        case 'teams':
+            $usage->addMetric("{$project->getId()}", "teams", $value); // per project
+            break;
+        case 'sessions':
+            $usage->addMetric("{$project->getId()}", "sessions", $value); // per project
             break;
         case 'databases':
-            // $usage->setParam('databases.{scope}.count.total', 1 * $multiplier);
+            $usage->addMetric("{$project->getId()}", "databases", $value); // per project
+            break;
+        case 'collections':
+            $usage->addMetric("{$project->getId()}.[DATABASE_ID]", "collections", $value); // per database
+            $usage->addMetric("{$project->getId()}", "collections", $value); // per project
+            break;
+        case 'documents':
+            $usage->addMetric("{$project->getId()}.[DATABASE_ID].[COLLECTION_ID]", "documents", $value);  // per collection
+            $usage->addMetric("{$project->getId()}.[DATABASE_ID]", "documents", $value);  // per database
+            $usage->addMetric("{$project->getId()}", "documents", $value); // per project
             break;
         case 'buckets':
-            // $usage->setParam('buckets.{scope}.count.total', 1 * $multiplier);
+            $usage->addMetric("{$project->getId()}", "buckets", $value); // per project
+            break;
+        case 'files':
+            $usage->addMetric("{$project->getId()}.[BUCKET_ID]", "files", $value); // per bucket
+            $usage->addMetric("{$project->getId()}.[BUCKET_ID]", "files.storage", $document->getAttribute('sizeOriginal') * $value); // per bucket
+            $usage->addMetric("{$project->getId()}", "files", $value); // per project
+            $usage->addMetric("{$project->getId()}", "files.storage", $document->getAttribute('sizeOriginal') * $value); // per project
+            break;
+        case 'functions':
+            $usage->addMetric("{$project->getId()}", "functions", $value); // per project
             break;
         case 'deployments':
-            // $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size') * $multiplier);
+            $usage->addMetric("{$project->getId()}.[FUNCTION_ID]", "deployments", $value); // per function
+            $usage->addMetric("{$project->getId()}.[FUNCTION_ID]", "deployments.storage", $document->getAttribute('size') * $value); // per function
+            $usage->addMetric("{$project->getId()}", "deployments", $value); // per project
+            $usage->addMetric("{$project->getId()}", "deployments.storage", $document->getAttribute('size') * $value); // per project
+            break;
+        case 'builds':
+            $usage->addMetric("{$project->getId()}.[FUNCTION_ID]", "builds", $value); // per function
+            $usage->addMetric("{$project->getId()}.[FUNCTION_ID]", "builds.storage", $document->getAttribute('size') * $value); // per function
+            $usage->addMetric("{$project->getId()}", "builds", $value); // per project
+            $usage->addMetric("{$project->getId()}", "builds.storage", $document->getAttribute('size') * $value); // per project
+            break;
+        case 'executions':
+            $usage->addMetric("{$project->getId()}.[FUNCTION_ID]", "executions", $value); // per function
+            $usage->addMetric("{$project->getId()}.[FUNCTION_ID]", "executions.compute", $document->getAttribute('duration') * $value); // per function
+            $usage->addMetric("{$project->getId()}", "executions", $value); // per project
+            $usage->addMetric("{$project->getId()}", "executions.compute", $document->getAttribute('duration') * $value); // per project
             break;
         default:
             // if (strpos($collection, 'bucket_') === 0) {
@@ -121,11 +161,11 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
-            ->setParam('{userId}', $user->getId())
-            ->setParam('{userAgent}', $request->getUserAgent(''))
-            ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname() . $route->getPath())
-            ->setParam('{method}', $request->getMethod());
+                ->setParam('{userId}', $user->getId())
+                ->setParam('{userAgent}', $request->getUserAgent(''))
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getHostname() . $route->getPath())
+                ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -199,9 +239,10 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
-
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject
+            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document))
+            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document))
+        ;
 
         $useCache = $route->getLabel('cache', false);
 
@@ -262,60 +303,6 @@ App::init()
         }
     });
 
-App::init()
-    ->groups(['auth'])
-    ->inject('utopia')
-    ->inject('request')
-    ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
-
-        $route = $utopia->match($request);
-
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
-
-        if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
-            return;
-        }
-
-        $auths = $project->getAttribute('auths', []);
-        switch ($route->getLabel('auth.type', '')) {
-            case 'emailPassword':
-                if (($auths['emailPassword'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email / Password authentication is disabled for this project');
-                }
-                break;
-
-            case 'magic-url':
-                if ($project->getAttribute('usersAuthMagicURL', true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
-                }
-                break;
-
-            case 'anonymous':
-                if (($auths['anonymous'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
-                }
-                break;
-
-            case 'invites':
-                if (($auths['invites'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Invites authentication is disabled for this project');
-                }
-                break;
-
-            case 'jwt':
-                if (($auths['JWT'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'JWT authentication is disabled for this project');
-                }
-                break;
-
-            default:
-                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
-                break;
-        }
-    });
-
 App::shutdown()
     ->groups(['api'])
     ->inject('utopia')
@@ -336,6 +323,7 @@ App::shutdown()
             if (empty($events->getPayload())) {
                 $events->setPayload($responsePayload);
             }
+
             /**
              * Trigger functions.
              */
