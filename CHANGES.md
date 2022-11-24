@@ -1,3 +1,5 @@
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+
 # Version 1.1.2
 ## Changes
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
