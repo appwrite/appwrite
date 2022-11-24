@@ -1,3 +1,7 @@
+# Version 1.2.0
+## Changes
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+
 # Version 1.1.2
 ## Changes
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
