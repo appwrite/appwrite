@@ -342,6 +342,15 @@ trait TeamsBaseClient
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
         $data['session'] = $session;
 
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(true, $response['body']['emailVerification']);
+
 
         /** [START] TESTS TO CHECK PASSWORD UPDATE OF NEW USER CREATED USING TEAM INVITE */
         /**
