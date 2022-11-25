@@ -1,4 +1,5 @@
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 
 # Version 1.1.2
 ## Changes
