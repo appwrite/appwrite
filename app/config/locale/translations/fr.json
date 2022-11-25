@@ -17,7 +17,7 @@
     "emails.magicSession.signature": "L'équipe {{project}}",
     "emails.recovery.subject": "Réinitialisation du mot de passe",
     "emails.recovery.hello": "Bonjour {{name}}",
-    "emails.recovery.body": "Suivez ce lien pour réinitialiser votre mot de passe pour {{projet}}.",
+    "emails.recovery.body": "Suivez ce lien pour réinitialiser votre mot de passe pour {{project}}.",
     "emails.recovery.footer": "Si vous n'avez pas demandé à réinitialiser votre mot de passe, vous pouvez ignorer ce message.",
     "emails.recovery.thanks": "Merci",
     "emails.recovery.signature": "L'équipe {{project}}",
