@@ -1,6 +1,7 @@
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
+- Add missing Ukrainian translations [#4777](https://github.com/appwrite/appwrite/pull/4777)
 
 # Version 1.1.2
 ## Changes
