@@ -24,7 +24,7 @@ return [
         'audioBitrate' => 128,
         'width' => 1280,
         'height' => 720,
-        'protocol' => 'hls'
+        'protocol' => 'dash'
     ],
 
 ];

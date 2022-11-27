@@ -7,7 +7,6 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Tests\E2E\Services\Videos\VideoPermissionsScope;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 
@@ -16,7 +15,6 @@ class VideoCustomServerTest extends Scope
     use ProjectCustom;
     use VideoCustom;
     use SideServer;
-    use VideoPermissionsScope;
 
     public function testCreateProfile(): string
     {
@@ -139,8 +137,6 @@ class VideoCustomServerTest extends Scope
             'fileId' => $fileId
         ]);
 
-        var_dump($response['body']);
-        exit;
     }
 
     /**
@@ -522,7 +518,7 @@ class VideoCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/rendition/' . $renditionId, [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

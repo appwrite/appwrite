@@ -7,8 +7,9 @@ use Utopia\Database\Document;
 
 class Transcoding extends Event
 {
-    protected string $videoId = '';
-    protected string $profileId = '';
+    protected Document $video;
+
+    protected Document $profile;
 
     public function __construct()
     {
@@ -16,49 +17,49 @@ class Transcoding extends Event
     }
 
     /**
-     * Sets videoId event.
+     * Sets video.
      *
-     * @param $videoId string
+     * @param Document $video
      * @return self
      */
-    public function setVideoId(string $videoId): self
+    public function setVideo(Document $video): self
     {
-        $this->videoId = $videoId;
+        $this->video = $video;
 
         return $this;
     }
 
     /**
-     * Returns bucketId.
+     * Returns video.
      *
      * @return null|Document
      */
-    public function getVideoId(): ?string
+    public function getVideo(): ?string
     {
-        return $this->videoId;
+        return $this->video;
     }
 
     /**
-     * Sets profileId event.
+     * Sets profile.
      *
-     * @param $profileId string
+     * @param Document $profile
      * @return self
      */
-    public function setProfileId(string $profileId): self
+    public function setProfile(Document $profile): self
     {
-        $this->profileId = $profileId;
+        $this->profile = $profile;
 
         return $this;
     }
 
     /**
-     * Returns profileId.
+     * Returns profile.
      *
      * @return null|Document
      */
-    public function getProfileId(): ?string
+    public function getProfile(): ?Document
     {
-        return $this->profileId;
+        return $this->profile;
     }
 
     /**
@@ -72,8 +73,8 @@ class Transcoding extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'videoId' => $this->videoId,
-            'profileId' => $this->profileId,
+            'video' => $this->video,
+            'profile' => $this->profile,
         ]);
     }
 }
