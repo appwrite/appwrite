@@ -70,7 +70,7 @@ return [
     ],
     Exception::GENERAL_ROUTE_NOT_FOUND => [
         'name' => Exception::GENERAL_ROUTE_NOT_FOUND,
-        'description' => 'The requested route was not found. Please refer to the docs and try again.',
+        'description' => 'The requested route was not found. Please refer to the API docs and try again.',
         'code' => 404,
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
@@ -486,7 +486,7 @@ return [
     ],
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
-        'description' => 'The chosen OAuth provider is unsupported. Please check <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session"> the docs</a> for the complete list of supported OAuth providers.',
+        'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
         'code' => 501,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [

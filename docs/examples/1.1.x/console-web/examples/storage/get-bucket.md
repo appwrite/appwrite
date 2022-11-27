@@ -1,4 +1,4 @@
-import { Client, Storage } from "packageName";
+import { Client, Storage } from "appwrite";
 
 const client = new Client();
 
