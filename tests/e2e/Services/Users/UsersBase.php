@@ -648,7 +648,10 @@ trait UsersBase
         /** 
           * Test for FAILURE 
           */ 
-         $response = $this->client->call(Client::METHOD_GET, '/users' . $data['userId'], array_merge([ 
+        
+         $userId = 'unique()';
+        
+         $response = $this->client->call(Client::METHOD_GET, '/users' . $userId, array_merge([ 
              'content-type' => 'application/json', 
              'x-appwrite-project' => $this->getProject()['$id'], 
          ], $this->getHeaders())); 
