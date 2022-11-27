@@ -41,8 +41,8 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$oauthDefaultSuccess = '/v1/auth/oauth2/success';
-$oauthDefaultFailure = '/v1/auth/oauth2/failure';
+$oauthDefaultSuccess = '/auth/oauth2/success';
+$oauthDefaultFailure = '/auth/oauth2/failure';
 
 App::post('/v1/account')
     ->desc('Create Account')
@@ -425,8 +425,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
-
-        $state['failure'] = null;
 
         $accessToken = $oauth2->getAccessToken($code);
         $refreshToken = $oauth2->getRefreshToken($code);

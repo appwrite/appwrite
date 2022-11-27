@@ -1,12 +1,26 @@
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import io.appwrite.Client
 import io.appwrite.services.Account
 
-val client = Client(context)
-    .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-    .setProject("5df5acd0d48c2") // Your project ID
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-val account = Account(client)
+        val client = Client(applicationContext)
+            .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+            .setProject("5df5acd0d48c2") // Your project ID
 
-val response = account.deleteSession(
-    sessionId = "[SESSION_ID]"
-)
+        val account = Account(client)
+
+        GlobalScope.launch {
+            val response = account.deleteSession(
+                sessionId = "[SESSION_ID]"
+            )
+            val json = response.body?.string()        
+        }
+    }
+}
