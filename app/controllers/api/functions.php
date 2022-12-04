@@ -1117,7 +1117,7 @@ App::post('/v1/functions/:functionId/executions')
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' => 'waiting', // waiting / processing / completed / failed
+            'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
