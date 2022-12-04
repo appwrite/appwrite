@@ -11,11 +11,11 @@ class Usage extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+        parent::__construct(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
     }
 
     /**
-     * Sets function document for the function event.
+     * Add metric.
      *
      * @param string $namespace
      * @param string $key
@@ -34,19 +34,15 @@ class Usage extends Event
     }
 
     /**
-     * Executes the function event and sends it to the functions worker.
+     * Sends metrics to the usage worker.
      *
-     * @return bool
+     * @return string|bool
      */
     public function trigger(): string|bool
     {
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
-            'project' => $this->project,
-            'user' => $this->user,
-            'type' => $this->type,
-            'payload' => $this->payload,
             'metrics' => $this->metrics,
         ]);
     }

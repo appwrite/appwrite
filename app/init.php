@@ -18,6 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\SMS\Adapter\Mock;
@@ -834,6 +835,9 @@ App::setResource('queue', function (Group $pools) {
 }, ['pools']);
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
+}, ['queue']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
 }, ['queue']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
