@@ -677,9 +677,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $events) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $events) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -723,7 +724,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        $user->setAttribute('emailVerification', true);
+        $user = Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
         // Log user in
 
@@ -731,7 +732,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => ID::unique(),
@@ -740,7 +742,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
