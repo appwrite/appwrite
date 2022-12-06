@@ -23,8 +23,7 @@ Server::setResource('execute', function () {
         string $ip,
         Document $user,
         Document $project
-    )
-    {
+    ) {
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
 
