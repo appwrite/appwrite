@@ -576,6 +576,37 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/auth/max-sessions')
+    ->desc('Update Project users limit')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthLimit')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS), 'Set the max number of users allowed in this project. Use 0 for unlimited.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['max-sessions'] = $limit;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::delete('/v1/projects/:projectId')
     ->desc('Delete Project')
     ->groups(['api', 'projects'])
