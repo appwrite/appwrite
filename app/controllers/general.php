@@ -223,7 +223,9 @@ App::init()
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
             }
+        }
 
+        if ($request->getProtocol() === 'https') {
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
 

@@ -796,9 +796,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Authorization::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (APP_MODE_ADMIN === $mode) {
         Auth::setCookieName('a_session_' . $console->getId());
+        $authDuration = Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     }
 
     $session = Auth::decodeSession(
@@ -834,8 +836,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
-
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (
         $user->isEmpty() // Check a document has been found in the DB

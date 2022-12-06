@@ -550,7 +550,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertIsArray($function['body']['deployments']);
         $this->assertCount(2, $function['body']['deployments']);
         $this->assertEquals($function['body']['deployments'][0]['$id'], $data['deploymentId']);
-        $this->assertGreaterThanOrEqual(2, $function['body']['deployments'][0]['buildTime']);
 
         return $data;
     }
