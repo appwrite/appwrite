@@ -40,7 +40,6 @@ App::get('/v1/locale')
             $output['countryCode'] = $record['country']['iso_code'];
             $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = (isset($continents[$record['continent']['code']])) ? $continents[$record['continent']['code']] : $locale->getText('locale.country.unknown');
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
 

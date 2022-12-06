@@ -1,21 +1,46 @@
-import io.appwrite.Client;
-import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.Account;
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import io.appwrite.Client
+import io.appwrite.services.Account
 
-Client client = new Client(context)
-    .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-    .setProject("5df5acd0d48c2"); // Your project ID
+public class MainActivity extends AppCompatActivity {
 
-Account account = new Account(client);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-account.createOAuth2Session(
-    "amazon",
-    new CoroutineCallback<>((result, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
-        }
+        Client client = new Client(getApplicationContext())
+            .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+            .setProject("5df5acd0d48c2"); // Your project ID
 
-        Log.d("Appwrite", result.toString());
-    })
-);
+        Account account = new Account(client);
+
+        account.createOAuth2Session(
+            this,
+            "amazon", 
+            new Continuation<Object>() {
+                @NotNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NotNull Object o) {
+                    String json = "";
+                    try {
+                        if (o instanceof Result.Failure) {
+                            Result.Failure failure = (Result.Failure) o;
+                            throw failure.exception;
+                        }                    
+                    } catch (Throwable th) {
+                        Log.e("ERROR", th.toString());
+                    }
+                }
+            }
+        );
+    }
+}

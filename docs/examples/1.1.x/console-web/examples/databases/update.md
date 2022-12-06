@@ -1,4 +1,4 @@
-import { Client, Databases } from "packageName";
+import { Client, Databases } from "appwrite";
 
 const client = new Client();
 
