@@ -68,7 +68,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
         case $document->getCollection() === 'databases':
             $queueForUsage->addMetric("{$project->getId()}", "databases", $value); // per project
             break;
-        case str_starts_with($document->getCollection(), 'database'): // collections
+        case str_starts_with($document->getCollection(), 'database_'): // collections
             $queueForUsage->addMetric("{$project->getId()}.{$document['databaseId']}", "collections", $value); // per database
             $queueForUsage->addMetric("{$project->getId()}", "collections", $value); // per project
             break;
@@ -80,7 +80,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
         case $document->getCollection() === 'buckets':
             $queueForUsage->addMetric("{$project->getId()}", "buckets", $value); // per project
             break;
-        case $document->getCollection() === 'files':
+        case str_starts_with($document->getCollection(), 'bucket_'): // files
             $queueForUsage->addMetric("{$project->getId()}.{$document['bucketId']}", "files", $value); // per bucket
             $queueForUsage->addMetric("{$project->getId()}.{$document['bucketId']}", "files.storage", $document->getAttribute('sizeOriginal') * $value); // per bucket
             $queueForUsage->addMetric("{$project->getId()}", "files", $value); // per project
@@ -474,16 +474,19 @@ App::shutdown()
             }
         }
 
-        if ($project->getId() && !empty($route->getLabel('sdk.namespace', null))) {
+        if ($project->getId() && $project->getId() !== 'console') {
             $fileSize = 0;
             $file = $request->getFiles('file');
+
             if (!empty($file)) {
                 $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
             }
 
-            $queueForUsage->addMetric("{$project->getId()}", "network.inbound", $request->getSize() + $fileSize);
-            $queueForUsage->addMetric("{$project->getId()}", "network.outbound", $response->getSize());
-            $queueForUsage->trigger();
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric("{$project->getId()}", "network.inbound", $request->getSize() + $fileSize)
+                ->addMetric("{$project->getId()}", "network.outbound", $response->getSize())
+                ->trigger();
 
             // $usage
             //     ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)

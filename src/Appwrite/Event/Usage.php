@@ -43,6 +43,7 @@ class Usage extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'project' => $this->getProject(),
             'metrics' => $this->metrics,
         ]);
     }
