@@ -847,7 +847,9 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 
 // Queues
 App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Audit());
+App::setResource('audits', function (Group $pools) {
+    return new Audit($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());

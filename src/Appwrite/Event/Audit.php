@@ -3,6 +3,8 @@
 namespace Appwrite\Event;
 
 use Resque;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Audit extends Event
 {
@@ -11,7 +13,7 @@ class Audit extends Event
     protected string $userAgent = '';
     protected string $ip = '';
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
         parent::__construct(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
     }
@@ -116,7 +118,9 @@ class Audit extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
