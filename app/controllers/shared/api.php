@@ -55,6 +55,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
         $value = -1;
     }
     var_dump($document->getCollection());
+
     switch (true) {
         case $document->getCollection() === 'users':
             $queueForUsage->addMetric("{$project->getId()}", "users", $value); // per project
@@ -90,8 +91,8 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $queueForUsage->addMetric("{$project->getId()}", "functions", $value); // per project
             break;
         case $document->getCollection() === 'deployments':
-            $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "deployments", $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "deployments.storage", $document->getAttribute('size') * $value); // per function
+            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceId']}", "deployments", $value); // per function
+            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceId']}", "deployments.storage", $document->getAttribute('size') * $value); // per function
             $queueForUsage->addMetric("{$project->getId()}", "deployments", $value); // per project
             $queueForUsage->addMetric("{$project->getId()}", "deployments.storage", $document->getAttribute('size') * $value); // per project
             break;

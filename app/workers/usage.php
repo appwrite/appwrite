@@ -4,6 +4,7 @@ require_once __DIR__ . '/../worker.php';
 
 use Swoole\Table;
 use Swoole\Timer;
+use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -96,7 +97,7 @@ $server
                                         'metric' => $metric['key'],
                                         'value' => $metric['value'],
                                         'type' => 0,
-                                        'region' => 'default',
+                                        'region' => App::getEnv('_APP_REGION', 'default'),
                                     ])));
                                 } else {
                                     $value = $document->getAttribute('value') + $metric['value'];
