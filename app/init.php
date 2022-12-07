@@ -411,6 +411,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('functions', $document->getId());
         return $database
             ->find('variables', [
                 Query::equal('functionInternalId', [$document->getInternalId()]),

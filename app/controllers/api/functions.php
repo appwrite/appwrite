@@ -1374,7 +1374,6 @@ App::post('/v1/functions/:functionId/variables')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1490,8 +1489,6 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
-
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
@@ -1528,7 +1525,6 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
     });
