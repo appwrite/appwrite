@@ -1,10 +1,22 @@
-# Version 1.1.2
+# Unreleased version
 ## Features
 - Added LINE OAuth2 Provider [#4426](https://github.com/appwrite/appwrite/pull/4426)
 
-# Version 1.1.1
+# Version 1.1.2
+## Changes
+- Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
+- Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
 
 ## Bugs
+- Fix default oauth paths [#4725](https://github.com/appwrite/appwrite/pull/4725)
+- Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
+- Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
+- Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
+
+# Version 1.1.1
+## Bugs
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
 - Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)
 - Fix Migration stopping scheduled functions [#4704](https://github.com/appwrite/appwrite/pull/4704)
