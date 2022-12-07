@@ -223,7 +223,9 @@ App::init()
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
             }
+        }
 
+        if ($request->getProtocol() === 'https') {
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
 
@@ -394,19 +396,13 @@ App::error()
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
-    ->inject('layout')
     ->inject('project')
     ->inject('logger')
     ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
-
-        /** Delegate PDO exceptions to the global handler so the database connection can be returned to the pool */
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
 
         if ($logger) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
@@ -543,23 +539,16 @@ App::error()
         $template = ($route) ? $route->getLabel('error', null) : null;
 
         if ($template) {
-            $comp = new View($template);
+            $layout = new View($template);
 
-            $comp
+            $layout
+                ->setParam('title', $project->getAttribute('name') . ' - Error')
                 ->setParam('development', App::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
                 ->setParam('trace', $trace)
-            ;
-
-            $layout
-                ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('description', 'No Description')
-                ->setParam('body', $comp)
-                ->setParam('version', $version)
-                ->setParam('litespeed', false)
             ;
 
             $response->html($layout->render());
@@ -569,32 +558,6 @@ App::error()
             new Document($output),
             $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
-    });
-
-App::get('/manifest.json')
-    ->desc('Progressive app manifest file')
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $response->json([
-            'name' => APP_NAME,
-            'short_name' => APP_NAME,
-            'start_url' => '.',
-            'url' => 'https://appwrite.io/',
-            'display' => 'standalone',
-            'background_color' => '#fff',
-            'theme_color' => '#f02e65',
-            'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
-            'icons' => [
-                [
-                    'src' => 'images/favicon.png',
-                    'sizes' => '256x256',
-                    'type' => 'image/png',
-                ],
-            ],
-        ]);
     });
 
 App::get('/robots.txt')
@@ -668,7 +631,6 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
-include_once __DIR__ . '/shared/web.php';
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];

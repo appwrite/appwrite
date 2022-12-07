@@ -271,17 +271,17 @@ class FunctionsV1 extends Worker
         /** Collect environment variables */
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
             'APPWRITE_FUNCTION_TRIGGER' => $trigger,
-            'APPWRITE_FUNCTION_EVENT' => $event,
-            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
-            'APPWRITE_FUNCTION_DATA' => $data,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
-            'APPWRITE_FUNCTION_JWT' => $jwt,
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_EVENT' => $event ?? '',
+            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData ?? '',
+            'APPWRITE_FUNCTION_DATA' => $data ?? '',
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
+            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
@@ -368,6 +368,7 @@ class FunctionsV1 extends Worker
             $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())
+                ->setParam('projectInternalId', $project->getInternalId())
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))

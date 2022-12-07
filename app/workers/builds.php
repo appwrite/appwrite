@@ -109,6 +109,7 @@ class BuildsV1 extends Worker
 
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
+
         $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $deploymentUpdate
             ->setProject($project)
@@ -179,6 +180,9 @@ class BuildsV1 extends Worker
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['response']);
+
+            /* Also update the deployment buildTime */
+            $deployment->setAttribute('buildTime', $response['duration']);
 
             Console::success("Build id: $buildId created");
 

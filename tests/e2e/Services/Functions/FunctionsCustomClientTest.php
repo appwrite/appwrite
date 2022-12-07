@@ -116,7 +116,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -228,7 +228,7 @@ class FunctionsCustomClientTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
@@ -252,7 +252,7 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
             'content-type' => 'application/json',
@@ -326,7 +326,7 @@ class FunctionsCustomClientTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
@@ -395,7 +395,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
 
-        sleep(10);
+        sleep(20);
 
         $base = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
@@ -556,7 +556,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
