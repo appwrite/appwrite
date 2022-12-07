@@ -17,15 +17,13 @@ class Usage extends Event
     /**
      * Add metric.
      *
-     * @param string $namespace
      * @param string $key
      * @param int $value
      * @return self
      */
-    public function addMetric(string $namespace, string $key, int $value): self
+    public function addMetric(string $key, int $value): self
     {
         $this->metrics[] = [
-            'namespace' => $namespace,
             'key' => $key,
             'value' => $value,
         ];

@@ -1361,8 +1361,7 @@ App::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
-    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1374,12 +1373,12 @@ App::get('/v1/functions/:functionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $project->getId() . '.function.' . $function->getId() . '.deployments',
-            $project->getId() . '.function.' . $function->getId() . '.deployments.storage',
-            $project->getId() . '.' . $function->getId() . '.builds',
-            $project->getId() . '.' . $function->getId() . '.builds.storage',
-            $project->getId() . '.' . $function->getId() . '.executions',
-            $project->getId() . '.' . $function->getId() . '.executions.compute',
+            'function.' . $function->getId() . '.deployments',
+            'function.' . $function->getId() . '.deployments.storage',
+            $function->getId() . '.builds',
+            $function->getId() . '.builds.storage',
+            $function->getId() . '.executions',
+            $function->getId() . '.executions.compute',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -1444,20 +1443,19 @@ App::get('/v1/functions/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
-    ->action(function (string $range, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $project->getId() . '.functions',
-            $project->getId() . '.deployments',
-            $project->getId() . '.deployments.storage',
-            $project->getId() . '.builds',
-            $project->getId() . '.builds.storage',
-            $project->getId() . '.executions',
-            $project->getId() . '.executions.compute',
+            'functions',
+            'deployments',
+            'deployments.storage',
+            'builds',
+            'builds.storage',
+            'executions',
+            'executions.compute',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {

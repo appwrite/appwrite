@@ -58,55 +58,55 @@ $databaseListener = function (string $event, Document $document, Document $proje
 
     switch (true) {
         case $document->getCollection() === 'users':
-            $queueForUsage->addMetric("{$project->getId()}", "users", $value); // per project
+            $queueForUsage->addMetric("users", $value); // per project
             break;
         case $document->getCollection() === 'teams':
-            $queueForUsage->addMetric("{$project->getId()}", "teams", $value); // per project
+            $queueForUsage->addMetric("teams", $value); // per project
             break;
         case $document->getCollection() === 'sessions':
-            $queueForUsage->addMetric("{$project->getId()}", "sessions", $value); // per project
+            $queueForUsage->addMetric("sessions", $value); // per project
             break;
         case $document->getCollection() === 'databases':
-            $queueForUsage->addMetric("{$project->getId()}", "databases", $value); // per project
+            $queueForUsage->addMetric("databases", $value); // per project
             break;
         case str_starts_with($document->getCollection(), 'database_'): // collections
-            $queueForUsage->addMetric("{$project->getId()}.{$document['databaseId']}", "collections", $value); // per database
-            $queueForUsage->addMetric("{$project->getId()}", "collections", $value); // per project
+            $queueForUsage->addMetric("{$document['databaseId']}" . ".collections", $value); // per database
+            $queueForUsage->addMetric("collections", $value); // per project
             break;
         case $document->getCollection() === 'documents':
-            $queueForUsage->addMetric("{$project->getId()}.{$document['databaseId']}.{$document['collectionId']}", "documents", $value);  // per collection
-            $queueForUsage->addMetric("{$project->getId()}.{$document['databaseId']}", "documents", $value);  // per database
-            $queueForUsage->addMetric("{$project->getId()}", "documents", $value); // per project
+            $queueForUsage->addMetric("{$document['databaseId']}" . "." . "{$document['collectionId']}" . ".documents", $value);  // per collection
+            $queueForUsage->addMetric("{$document['databaseId']}" . ".documents", $value);  // per database
+            $queueForUsage->addMetric("documents", $value); // per project
             break;
         case $document->getCollection() === 'buckets':
-            $queueForUsage->addMetric("{$project->getId()}", "buckets", $value); // per project
+            $queueForUsage->addMetric("buckets", $value); // per project
             break;
         case str_starts_with($document->getCollection(), 'bucket_'): // files
-            $queueForUsage->addMetric("{$project->getId()}.{$document['bucketId']}", "files", $value); // per bucket
-            $queueForUsage->addMetric("{$project->getId()}.{$document['bucketId']}", "files.storage", $document->getAttribute('sizeOriginal') * $value); // per bucket
-            $queueForUsage->addMetric("{$project->getId()}", "files", $value); // per project
-            $queueForUsage->addMetric("{$project->getId()}", "files.storage", $document->getAttribute('sizeOriginal') * $value); // per project
+            $queueForUsage->addMetric("{$document['bucketId']}" . ".files", $value); // per bucket
+            $queueForUsage->addMetric("{$document['bucketId']}" . ".files.storage", $document->getAttribute('sizeOriginal') * $value); // per bucket
+            $queueForUsage->addMetric("files", $value); // per project
+            $queueForUsage->addMetric("files.storage", $document->getAttribute('sizeOriginal') * $value); // per project
             break;
         case $document->getCollection() === 'functions':
-            $queueForUsage->addMetric("{$project->getId()}", "functions", $value); // per project
+            $queueForUsage->addMetric("functions", $value); // per project
             break;
         case $document->getCollection() === 'deployments':
-            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceType']}.{$document['resourceId']}", "deployments", $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceType']}.{$document['resourceId']}", "deployments.storage", $document->getAttribute('size') * $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}", "deployments", $value); // per project
-            $queueForUsage->addMetric("{$project->getId()}", "deployments.storage", $document->getAttribute('size') * $value); // per project
+            $queueForUsage->addMetric("{$document['resourceType']}" . "." . "{$document['resourceId']}" . ".deployments", $value); // per function
+            $queueForUsage->addMetric("{$document['resourceType']}" . "." . "{$document['resourceId']}" . ".deployments.storage", $document->getAttribute('size') * $value); // per function
+            $queueForUsage->addMetric("deployments", $value); // per project
+            $queueForUsage->addMetric("deployments.storage", $document->getAttribute('size') * $value); // per project
             break;
         case $document->getCollection() === 'builds': // needs to extract functionId
-            $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "builds", $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "builds.storage", $document->getAttribute('size') * $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}", "builds", $value); // per project
-            $queueForUsage->addMetric("{$project->getId()}", "builds.storage", $document->getAttribute('size') * $value); // per project
+            $queueForUsage->addMetric("{$document['functionId']}" . ".builds", $value); // per function
+            $queueForUsage->addMetric("{$document['functionId']}" . ".builds.storage", $document->getAttribute('size') * $value); // per function
+            $queueForUsage->addMetric("builds", $value); // per project
+            $queueForUsage->addMetric("builds.storage", $document->getAttribute('size') * $value); // per project
             break;
         case $document->getCollection() === 'executions':
-            $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "executions", $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "executions.compute", $document->getAttribute('duration') * $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}", "executions", $value); // per project
-            $queueForUsage->addMetric("{$project->getId()}", "executions.compute", $document->getAttribute('duration') * $value); // per project
+            $queueForUsage->addMetric("{$document['functionId']}" . ".executions", $value); // per function
+            $queueForUsage->addMetric("{$document['functionId']}" . ".executions.compute", $document->getAttribute('duration') * $value); // per function
+            $queueForUsage->addMetric("executions", $value); // per project
+            $queueForUsage->addMetric("executions.compute", $document->getAttribute('duration') * $value); // per project
             break;
         default:
             break;
@@ -213,14 +213,6 @@ App::init()
             ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project)
             ->setUser($user);
-
-        // $usage
-        //     ->setParam('projectInternalId', $project->getInternalId())
-        //     ->setParam('projectId', $project->getId())
-        //     ->setParam('project.{scope}.network.requests', 1)
-        //     ->setParam('httpMethod', $request->getMethod())
-        //     ->setParam('project.{scope}.network.inbound', 0)
-        //     ->setParam('project.{scope}.network.outbound', 0);
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -469,8 +461,8 @@ App::shutdown()
 
             $queueForUsage
                 ->setProject($project)
-                ->addMetric("{$project->getId()}", "network.inbound", $request->getSize() + $fileSize)
-                ->addMetric("{$project->getId()}", "network.outbound", $response->getSize())
+                ->addMetric("network.inbound", $request->getSize() + $fileSize)
+                ->addMetric("network.outbound", $response->getSize())
                 ->trigger();
         }
     });

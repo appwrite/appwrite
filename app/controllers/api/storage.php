@@ -1413,6 +1413,81 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->noContent();
     });
 
+App::get('/v1/storage/:bucketId/usage')
+    ->desc('Get usage stats for storage bucket')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getBucketUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
+    ->param('bucketId', '', new UID(), 'Bucket ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {
+
+        $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+        if ($bucket->isEmpty()) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            $bucket->getId() . '.files',
+            $bucket->getId() . '.files.storage',
+        ];
+
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+        $usage[$metric] = array_reverse($usage[$metric]);
+    }
+
+        $response->dynamic(new Document([
+            'range' => $range,
+            'filesCount' => $usage[$metrics[0]],
+            'filesStorage' => $usage[$metrics[1]],
+        ]), Response::MODEL_USAGE_BUCKETS);
+    });
+
 App::get('/v1/storage/usage')
     ->desc('Get usage stats for storage')
     ->groups(['api', 'storage'])
@@ -1426,16 +1501,15 @@ App::get('/v1/storage/usage')
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
-    ->action(function (string $range, Response $response, Database $dbForProject, Document $project) {
+    ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $project->getId() . '.buckets',
-            $project->getId() . '.files',
-            $project->getId() . '.files.storage',
+            'buckets',
+            'files',
+            'files.storage',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -1482,80 +1556,4 @@ App::get('/v1/storage/usage')
         'filesCount' => $usage[$metrics[1]],
         'filesStorage' => $usage[$metrics[2]],
     ]), Response::MODEL_USAGE_STORAGE);
-    });
-
-App::get('/v1/storage/:bucketId/usage')
-    ->desc('Get usage stats for a storage bucket')
-    ->groups(['api', 'storage'])
-    ->label('scope', 'files.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getBucketUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
-    ->param('bucketId', '', new UID(), 'Bucket ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject, Document $project) {
-
-         $bucket = $dbForProject->getDocument('buckets', $bucketId);
-
-        if ($bucket->isEmpty()) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-        }
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            $project->getId() . '.' . $bucket->getId() . '.files',
-            $project->getId() . '.' . $bucket->getId() . '.files.storage',
-        ];
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric] = [];
-                foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
-        }
-        $usage[$metric] = array_reverse($usage[$metric]);
-    }
-
-    $response->dynamic(new Document([
-        'range' => $range,
-        'filesCount' => $usage[$metrics[0]],
-        'filesStorage' => $usage[$metrics[1]],
-    ]), Response::MODEL_USAGE_BUCKETS);
     });

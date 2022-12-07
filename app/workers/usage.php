@@ -17,12 +17,6 @@ $periods['1h'] = 'Y-m-d H:00';
 $periods['1d'] =  'Y-m-d 00:00';
 $periods['inf'] =  'Y-m-d 00:00';
 
-//$stats = new Table(10000, 1);
-//$stats->column('namespace', Table::TYPE_STRING, 64);
-//$stats->column('key', Table::TYPE_STRING, 64);
-//$stats->column('value', Table::TYPE_INT);
-//$stats->create();
-
 $server->job()
     ->inject('message')
     ->action(function (Message $message) use (&$stats) {
@@ -30,33 +24,20 @@ $server->job()
         $project = new Document($payload['project'] ?? []);
 
         foreach ($payload['metrics'] ?? [] as $metric) {
-            $uniq = md5($metric['namespace'] . $metric['key']);
-
-//            if ($stats->exists($uniq)) {
-//                $stats->incr($uniq, 'value', $metric['value']);
-//                continue;
-//            }
-//
-//            $stats->set($uniq, [
-//                'projectInternalId' => $project->getInternalId(),
-//                'database' => $project->getAttribute('database'),
-//                'key' => $metric['key'],
-//                'value' => $metric['value'],
-//                ]);
-//
+            $uniq = md5($metric['key']);
 
             if (!isset($stats[$uniq])) {
                 $stats[$uniq] = [
                     'projectInternalId' => $project->getInternalId(),
                     'database' => $project->getAttribute('database'),
-                    'key' => $metric['namespace'] . '.' . $metric['key'],
+                    'key' => $metric['key'],
                     'value' => $metric['value']
                 ];
 
                 continue;
             }
 
-                $stats[$uniq]['value'] += $metric['value'];
+            $stats[$uniq]['value'] += $metric['value'];
         }
     });
 
