@@ -91,12 +91,12 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $queueForUsage->addMetric("{$project->getId()}", "functions", $value); // per project
             break;
         case $document->getCollection() === 'deployments':
-            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceId']}", "deployments", $value); // per function
-            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceId']}", "deployments.storage", $document->getAttribute('size') * $value); // per function
+            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceType']}.{$document['resourceId']}", "deployments", $value); // per function
+            $queueForUsage->addMetric("{$project->getId()}.{$document['resourceType']}.{$document['resourceId']}", "deployments.storage", $document->getAttribute('size') * $value); // per function
             $queueForUsage->addMetric("{$project->getId()}", "deployments", $value); // per project
             $queueForUsage->addMetric("{$project->getId()}", "deployments.storage", $document->getAttribute('size') * $value); // per project
             break;
-        case $document->getCollection() === 'builds':
+        case $document->getCollection() === 'builds': // needs to extract functionId
             $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "builds", $value); // per function
             $queueForUsage->addMetric("{$project->getId()}.{$document['functionId']}", "builds.storage", $document->getAttribute('size') * $value); // per function
             $queueForUsage->addMetric("{$project->getId()}", "builds", $value); // per project
@@ -109,22 +109,6 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $queueForUsage->addMetric("{$project->getId()}", "executions.compute", $document->getAttribute('duration') * $value); // per project
             break;
         default:
-            // if (strpos($collection, 'bucket_') === 0) {
-            //     $usage
-            //         ->setParam('bucketId', $document->getAttribute('bucketId'))
-            //         ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal') * $multiplier)
-            //         ->setParam('files.{scope}.count.total', 1 * $multiplier);
-            // } elseif (strpos($collection, 'database_') === 0) {
-            //     $usage
-            //         ->setParam('databaseId', $document->getAttribute('databaseId'));
-            //     if (strpos($collection, '_collection_') !== false) {
-            //         $usage
-            //             ->setParam('collectionId', $document->getAttribute('$collectionId'))
-            //             ->setParam('documents.{scope}.count.total', 1 * $multiplier);
-            //     } else {
-            //         $usage->setParam('collections.{scope}.count.total', 1 * $multiplier);
-            //     }
-            // }
             break;
     }
 };
@@ -488,10 +472,5 @@ App::shutdown()
                 ->addMetric("{$project->getId()}", "network.inbound", $request->getSize() + $fileSize)
                 ->addMetric("{$project->getId()}", "network.outbound", $response->getSize())
                 ->trigger();
-
-            // $usage
-            //     ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
-            //     ->setParam('project.{scope}.network.outbound', $response->getSize())
-            //     ->submit();
         }
     });

@@ -1429,33 +1429,13 @@ App::get('/v1/storage/usage')
     ->inject('project')
     ->action(function (string $range, Response $response, Database $dbForProject, Document $project) {
 
-        $periods = [
-            '24h' => [
-                'period' => '1h',
-                'limit' => 24,
-                'factor' => 3600,
-            ],
-            '7d' => [
-                'period' => '1d',
-                'limit' => 7,
-                'factor' => 86400,
-            ],
-            '30d' => [
-                'period' => '1d',
-                'limit' => 30,
-                'factor' => 86400,
-            ],
-            '90d' => [
-                'period' => '1d',
-                'limit' => 90,
-                'factor' => 86400,
-            ],
-        ];
-
+        $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
             $project->getId() . '.buckets',
+            $project->getId() . '.files',
+            $project->getId() . '.files.storage',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -1489,17 +1469,19 @@ App::get('/v1/storage/usage')
             $leap += $days['factor'];
             $formatDate = date($format, $leap);
             $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate] ?? 0,
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
                 'date' => $formatDate,
             ];
         }
         $usage[$metric] = array_reverse($usage[$metric]);
     }
-     var_dump($usage);
-        $response->noContent();
-//    $response->dynamic(new Document([
-//        $usage
-//    ]), Response::MODEL_USAGE_STORAGE);
+
+    $response->dynamic(new Document([
+        'range' => $range,
+        'buckets' => $usage[$metrics[0]],
+        'filesCount' => $usage[$metrics[1]],
+        'filesStorage' => $usage[$metrics[2]],
+    ]), Response::MODEL_USAGE_STORAGE);
     });
 
 App::get('/v1/storage/:bucketId/usage')
@@ -1525,29 +1507,7 @@ App::get('/v1/storage/:bucketId/usage')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $periods = [
-            '24h' => [
-                'period' => '1h',
-                'limit' => 24,
-                'factor' => 3600,
-            ],
-            '7d' => [
-                'period' => '1d',
-                'limit' => 7,
-                'factor' => 86400,
-            ],
-            '30d' => [
-                'period' => '1d',
-                'limit' => 30,
-                'factor' => 86400,
-            ],
-            '90d' => [
-                'period' => '1d',
-                'limit' => 90,
-                'factor' => 86400,
-            ],
-        ];
-
+        $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
@@ -1586,15 +1546,16 @@ App::get('/v1/storage/:bucketId/usage')
             $leap += $days['factor'];
             $formatDate = date($format, $leap);
             $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate] ?? 0,
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
                 'date' => $formatDate,
             ];
         }
         $usage[$metric] = array_reverse($usage[$metric]);
     }
 
-    var_dump($usage);
     $response->dynamic(new Document([
-        $usage
+        'range' => $range,
+        'filesCount' => $usage[$metrics[0]],
+        'filesStorage' => $usage[$metrics[1]],
     ]), Response::MODEL_USAGE_BUCKETS);
     });

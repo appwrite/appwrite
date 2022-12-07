@@ -189,6 +189,7 @@ Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
