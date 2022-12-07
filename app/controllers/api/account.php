@@ -816,7 +816,6 @@ App::put('/v1/account/sessions/magic-url')
          *  the recovery token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('emailVerification', true);
 
@@ -1049,7 +1048,6 @@ App::put('/v1/account/sessions/phone')
          *  the recovery token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('phoneVerification', true);
 
@@ -1741,8 +1739,6 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
-
                 $events
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
@@ -1890,8 +1886,6 @@ App::delete('/v1/account/sessions')
                 $events->setPayload($response->output($session, Response::MODEL_SESSION));
             }
         }
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
             ->setParam('userId', $user->getId())
@@ -2066,7 +2060,6 @@ App::put('/v1/account/recovery')
          *  the recovery token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $recovery);
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
             ->setParam('userId', $profile->getId())
@@ -2215,7 +2208,6 @@ App::put('/v1/account/verification')
          *  the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verification);
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
             ->setParam('userId', $user->getId())
@@ -2357,7 +2349,6 @@ App::put('/v1/account/verification/phone')
          * We act like we're updating and validating the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verification);
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
             ->setParam('userId', $user->getId())
