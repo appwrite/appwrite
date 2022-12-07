@@ -1,23 +1,37 @@
-import io.appwrite.Client;
-import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.Storage;
+import io.appwrite.Client
+import io.appwrite.services.Storage
 
-Client client = new Client()
-    .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-    .setProject("5df5acd0d48c2") // Your project ID
-    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+public void main() {
+    Client client = Client(context)
+        .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+        .setProject("5df5acd0d48c2") // Your project ID
+        .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-Storage storage = new Storage(client);
+    Storage storage = new Storage(client);
+    storage.updateFile(
+        bucketId = "[BUCKET_ID]",
+        fileId = "[FILE_ID]",
+        new Continuation<Response>() {
+            @NotNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
 
-storage.updateFile(
-    "[BUCKET_ID]",
-    "[FILE_ID]",
-    new CoroutineCallback<>((result, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
+            @Override
+            public void resumeWith(@NotNull Object o) {
+                String json = "";
+                try {
+                    if (o instanceof Result.Failure) {
+                        Result.Failure failure = (Result.Failure) o;
+                        throw failure.exception;
+                    } else {
+                        Response response = (Response) o;
+                    }
+                } catch (Throwable th) {
+                    Log.e("ERROR", th.toString());
+                }
+            }
         }
-
-        System.out.println(result);
-    })
-);
+    );
+}
