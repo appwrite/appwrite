@@ -218,7 +218,6 @@ App::post('/v1/account/sessions/email')
             $dbForProject->updateDocument('users', $profile->getId(), $profile);
         }
 
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($profile->getId())),
@@ -456,7 +455,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $currentDocument = $dbForProject->getDocument('sessions', $current);
             if (!$currentDocument->isEmpty()) {
                 $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->deleteCachedDocument('users', $user->getId());
             }
         }
 
@@ -568,8 +566,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
         ]));
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $session->setAttribute('expire', $expire);
 
@@ -812,7 +808,6 @@ App::put('/v1/account/sessions/magic-url')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $tokens = $user->getAttribute('tokens', []);
 
@@ -1049,8 +1044,6 @@ App::put('/v1/account/sessions/phone')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
@@ -1199,8 +1192,6 @@ App::post('/v1/account/sessions/anonymous')
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ]));
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
             ->setParam('userId', $user->getId())
@@ -1830,8 +1821,6 @@ App::patch('/v1/account/sessions/:sessionId')
                     ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
-
-                $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
