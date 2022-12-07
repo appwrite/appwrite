@@ -279,6 +279,8 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('database_' . $database->getInternalId(), $document['collectionId']);
+        $database->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $document['collectionInternalId']);
         return $database
             ->find('attributes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
@@ -294,6 +296,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('database_' . $document->getInternalId(), $document['collectionId']);
         return $database
             ->find('indexes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
