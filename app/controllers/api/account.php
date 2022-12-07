@@ -699,8 +699,6 @@ App::post('/v1/account/sessions/magic-url')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
         if (empty($url)) {
             $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
         }
@@ -949,8 +947,6 @@ App::post('/v1/account/sessions/phone')
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ]));
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $messaging
             ->setRecipient($phone)

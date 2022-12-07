@@ -397,6 +397,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn() => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
