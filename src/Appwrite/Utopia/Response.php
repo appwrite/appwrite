@@ -404,17 +404,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Returns the model that was used to
-     * parse the currrent payload
-     *
-     * @return string
-     */
-    public function getCurrentModel(): string
-    {
-        return $this->model;
-    }
-
-    /**
      * Validate response objects and outputs
      *  the response according to given format type
      *
