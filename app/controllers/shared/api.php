@@ -48,7 +48,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage) {
+$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject) {
     $value = 1;
 
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -80,6 +80,24 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         case $document->getCollection() === 'buckets':
             $queueForUsage->addMetric("buckets", $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                /**
+                 * Needs to deduct files aggregation from project on bucket deletion scenario.
+                 */
+                $bucketFiles = $dbForProject->getDocument('stats', md5("0_inf_" . "{$document->getId()}" . ".files"));
+                $projectFiles = $dbForProject->getDocument('stats', md5("0_inf_files"));
+                if (!$bucketFiles->isEmpty()) {
+                    $projectFiles->setAttribute('value', $projectFiles['value'] - $bucketFiles['value']);
+                    $dbForProject->updateDocument('stats', $projectFiles->getId(), $projectFiles);
+                }
+
+                $bucketStorage  = $dbForProject->getDocument('stats', md5("0_inf_" . "{$document->getId()}" . ".files.storage"));
+                $projectStorage = $dbForProject->getDocument('stats', md5("0_inf_files.storage"));
+                if (!$bucketStorage->isEmpty()) {
+                    $projectStorage->setAttribute('value', $projectStorage['value'] - $bucketStorage['value']);
+                    $dbForProject->updateDocument('stats', $projectStorage->getId(), $projectStorage);
+                }
+            }
             break;
         case str_starts_with($document->getCollection(), 'bucket_'): // files
             $queueForUsage->addMetric("{$document['bucketId']}" . ".files", $value); // per bucket
@@ -218,8 +236,8 @@ App::init()
         $database->setProject($project);
 
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $project, $queueForUsage))
-            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $project, $queueForUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
         ;
 
         $useCache = $route->getLabel('cache', false);

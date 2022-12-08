@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../worker.php';
 
-use Swoole\Table;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -10,6 +9,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Message;
 use Utopia\CLI\Console;
+
+Authorization::disable();
+Authorization::setDefaultStatus(false);
 
 $stats = [];
 
@@ -55,8 +57,10 @@ $server
                     foreach ($slice as $metric) {
                         foreach ($periods as $period => $format) {
                              $time = date($format, time());
-                             $id = \md5("{$time}_{$period}_{$metric['key']}");
-
+                             $timestamp = $period === 'inf' ? 0 : $time;
+                             $id = \md5("{$timestamp}_{$period}_{$metric['key']}");
+                             var_dump("{$timestamp}_{$period}_{$metric['key']}");
+                             var_dump($id);
                              $adapter = new Database(
                                  $pools
                                  ->get($metric['database'])
@@ -68,10 +72,10 @@ $server
                              $adapter->setNamespace('_' . $metric['projectInternalId']);
 
                             try {
-                                $document = Authorization::skip(fn() =>$adapter->getDocument('stats', $id));
+                                $document = $adapter->getDocument('stats', $id);
                                 if ($document->isEmpty()) {
-                                    console::log("{$period}, {$time}, {$metric['key']}={$metric['value']}");
-                                    Authorization::skip(fn() => $adapter->createDocument('stats', new Document([
+                                    //console::log("{$period}, {$time}, {$metric['key']}={$metric['value']}");
+                                    $adapter->createDocument('stats', new Document([
                                         '$id' => $id,
                                         'period' => $period,
                                         'time' => $time,
@@ -79,11 +83,15 @@ $server
                                         'value' => $metric['value'],
                                         'type' => 0,
                                         'region' => App::getEnv('_APP_REGION', 'default'),
-                                    ])));
+                                    ]));
                                 } else {
                                     $value = $document->getAttribute('value') + $metric['value'];
-                                    console::info("{$document->getAttribute('period')}, {$document->getAttribute('time')}, {$document->getAttribute('metric')} = {$value}");
-                                    Authorization::skip(fn() => $adapter->updateDocument('stats', $document->getId(), $document->setAttribute('value', $value)));
+                                    //console::info("{$document->getAttribute('period')}, {$document->getAttribute('time')}, {$document->getAttribute('metric')} = {$value}");
+                                    $adapter->updateDocument(
+                                        'stats',
+                                        $document->getId(),
+                                        $document->setAttribute('value', $document->getAttribute('value') + $metric['value'])
+                                    );
                                 }
                             } catch (\Exception $e) {
                                 console::error($e->getMessage());
