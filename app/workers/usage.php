@@ -15,9 +15,9 @@ Authorization::setDefaultStatus(false);
 
 $stats = [];
 
-$periods['1h'] = 'Y-m-d H:00';
-$periods['1d'] =  'Y-m-d 00:00';
-$periods['inf'] =  'Y-m-d 00:00';
+$periods['1h']  = 'Y-m-d H:00';
+$periods['1d']  = 'Y-m-d 00:00';
+$periods['inf'] = '0000-00-00 00:00';
 
 $server->job()
     ->inject('message')
@@ -56,11 +56,8 @@ $server
 
                     foreach ($slice as $metric) {
                         foreach ($periods as $period => $format) {
-                             $time = date($format, time());
-                             $timestamp = $period === 'inf' ? 0 : $time;
-                             $id = \md5("{$timestamp}_{$period}_{$metric['key']}");
-                             var_dump("{$timestamp}_{$period}_{$metric['key']}");
-                             var_dump($id);
+                             $time = 'inf' ===  $period ? null : date($format, time());
+                             $id = \md5("{$time}_{$period}_{$metric['key']}");
                              $adapter = new Database(
                                  $pools
                                  ->get($metric['database'])
@@ -95,8 +92,9 @@ $server
                                 }
                             } catch (\Exception $e) {
                                 console::error($e->getMessage());
+                            } finally {
+                                $pools->reclaim();
                             }
-                            $pools->reclaim();
                         }
                     }
                 });

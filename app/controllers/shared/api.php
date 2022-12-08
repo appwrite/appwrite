@@ -68,6 +68,22 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         case $document->getCollection() === 'databases':
             $queueForUsage->addMetric("databases", $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                // Documents
+                $dbDocuments      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".documents"));
+                $projectDocuments = $dbForProject->getDocument('stats', md5("_inf_documents"));
+                if (!$dbDocuments->isEmpty()) {
+                    $projectDocuments->setAttribute('value', $projectDocuments['value'] - $dbDocuments['value']);
+                    $dbForProject->updateDocument('stats', $projectDocuments->getId(), $projectDocuments);
+                }
+                // Collections
+                $dbCollections      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".collections"));
+                $projectCollections = $dbForProject->getDocument('stats', md5("_inf_collections"));
+                if (!$dbCollections->isEmpty()) {
+                    $projectCollections->setAttribute('value', $projectCollections['value'] - $dbCollections['value']);
+                    $dbForProject->updateDocument('stats', $projectCollections->getId(), $projectCollections);
+                }
+            }
             break;
         case str_starts_with($document->getCollection(), 'database_'): // collections
             $queueForUsage->addMetric("{$document['databaseId']}" . ".collections", $value); // per database
@@ -81,18 +97,16 @@ $databaseListener = function (string $event, Document $document, Document $proje
         case $document->getCollection() === 'buckets':
             $queueForUsage->addMetric("buckets", $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                /**
-                 * Needs to deduct files aggregation from project on bucket deletion scenario.
-                 */
-                $bucketFiles = $dbForProject->getDocument('stats', md5("0_inf_" . "{$document->getId()}" . ".files"));
-                $projectFiles = $dbForProject->getDocument('stats', md5("0_inf_files"));
+                // bucket Files
+                $bucketFiles = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files"));
+                $projectFiles = $dbForProject->getDocument('stats', md5("_inf_files"));
                 if (!$bucketFiles->isEmpty()) {
                     $projectFiles->setAttribute('value', $projectFiles['value'] - $bucketFiles['value']);
                     $dbForProject->updateDocument('stats', $projectFiles->getId(), $projectFiles);
                 }
-
-                $bucketStorage  = $dbForProject->getDocument('stats', md5("0_inf_" . "{$document->getId()}" . ".files.storage"));
-                $projectStorage = $dbForProject->getDocument('stats', md5("0_inf_files.storage"));
+                // bucket Storage
+                $bucketStorage  = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files.storage"));
+                $projectStorage = $dbForProject->getDocument('stats', md5("_inf_files.storage"));
                 if (!$bucketStorage->isEmpty()) {
                     $projectStorage->setAttribute('value', $projectStorage['value'] - $bucketStorage['value']);
                     $dbForProject->updateDocument('stats', $projectStorage->getId(), $projectStorage);
@@ -107,6 +121,39 @@ $databaseListener = function (string $event, Document $document, Document $proje
             break;
         case $document->getCollection() === 'functions':
             $queueForUsage->addMetric("functions", $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                // Deployments Storage
+                $functionDeployments = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getId()}" . ".deployments"));
+                $projectDeployments = $dbForProject->getDocument('stats', md5("_inf_deployments"));
+                if (!$functionDeployments->isEmpty()) {
+                    $projectDeployments->setAttribute('value', $projectDeployments['value'] - $functionDeployments['value']);
+                    $projectDeployments->updateDocument('stats', $projectDeployments->getId(), $projectDeployments);
+                }
+                // Deployments Storage
+                $functionDeploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getId()}" . ".deployments.storage"));
+                $projectDeploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_function.deployments.storage"));
+                if (!$functionDeployments->isEmpty()) {
+                    $projectDeploymentsStorage->setAttribute('value', $projectDeploymentsStorage['value'] - $functionDeploymentsStorage['value']);
+                    $projectDeploymentsStorage->updateDocument('stats', $projectDeploymentsStorage->getId(), $projectDeploymentsStorage);
+                }
+
+                //TODO  needs to find a solution for builds
+
+                // Executions
+                $functionExecutions = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".executions"));
+                $projectExecutions = $dbForProject->getDocument('stats', md5("_inf_executions"));
+                if (!$functionExecutions->isEmpty()) {
+                    $projectExecutions->setAttribute('value', $projectExecutions['value'] - $functionExecutions['value']);
+                    $projectExecutions->updateDocument('stats', $projectExecutions->getId(), $projectExecutions);
+                }
+                // Executions Compute
+                $functionExecutionsCompute = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".executions.compute"));
+                $projectExecutionsCompute = $dbForProject->getDocument('stats', md5("_inf_executions.compute"));
+                if (!$functionExecutionsCompute->isEmpty()) {
+                    $projectExecutionsCompute->setAttribute('value', $projectExecutionsCompute['value'] - $functionExecutionsCompute['value']);
+                    $projectExecutionsCompute->updateDocument('stats', $projectExecutionsCompute->getId(), $projectExecutionsCompute);
+                }
+            }
             break;
         case $document->getCollection() === 'deployments':
             $queueForUsage->addMetric("{$document['resourceType']}" . "." . "{$document['resourceId']}" . ".deployments", $value); // per function
