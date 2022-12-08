@@ -151,7 +151,7 @@ class Mapper
                 'description' => 'Additional data',
                 'resolve' => static function ($object, $args, $context, $info) {
                     $data = \array_filter(
-                        $object,
+                        (array)$object,
                         fn($key) => !\str_starts_with($key, '_'),
                         ARRAY_FILTER_USE_KEY
                     );
