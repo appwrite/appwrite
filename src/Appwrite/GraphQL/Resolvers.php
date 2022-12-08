@@ -115,6 +115,7 @@ class Resolvers
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
+     * @param callable $params
      * @return callable
      */
     public static function documentList(
@@ -150,6 +151,7 @@ class Resolvers
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
+     * @param callable $params
      * @return callable
      */
     public static function documentCreate(
@@ -181,6 +183,7 @@ class Resolvers
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
+     * @param callable $params
      * @return callable
      */
     public static function documentUpdate(
@@ -290,7 +293,7 @@ class Resolvers
 
         foreach ($payload as $key => $value) {
             if (\str_starts_with($key, '$')) {
-                $escapedKey = \str_replace('$', '', $key);
+                $escapedKey = \str_replace('$', '_', $key);
                 $payload[$escapedKey] = $value;
                 unset($payload[$key]);
             }

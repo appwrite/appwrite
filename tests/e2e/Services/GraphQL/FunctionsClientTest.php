@@ -41,15 +41,15 @@ class FunctionsClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $function['body']);
 
         $function = $function['body']['data']['functionsCreate'];
-        $functionId = $function['id'];
+        $functionId = $function['_id'];
 
         $query = '
             mutation createVariables($functionId: String!) {
                 var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
-                    id
+                    _id
                 }
                 var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
-                    id
+                    _id
                 }
             }
         ';
@@ -87,7 +87,7 @@ class FunctionsClientTest extends Scope
             'operations' => \json_encode([
                 'query' => $query,
                 'variables' => [
-                    'functionId' => $function['id'],
+                    'functionId' => $function['_id'],
                     'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
@@ -128,7 +128,7 @@ class FunctionsClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -155,7 +155,7 @@ class FunctionsClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -187,8 +187,8 @@ class FunctionsClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
-                'executionId' => $execution['id'],
+                'functionId' => $function['_id'],
+                'executionId' => $execution['_id'],
             ]
         ];
 

@@ -285,7 +285,7 @@ class AccountTest extends Scope
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
         $this->assertIsArray($session['body']['data']['accountGetSession']);
-        $this->assertEquals($this->getUser()['sessionId'], $session['body']['data']['accountGetSession']['id']);
+        $this->assertEquals($this->getUser()['sessionId'], $session['body']['data']['accountGetSession']['_id']);
 
         return $session;
     }

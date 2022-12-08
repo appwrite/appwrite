@@ -131,7 +131,7 @@ class AbuseTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $databaseId = $response['body']['data']['databasesCreate']['id'];
+        $databaseId = $response['body']['data']['databasesCreate']['_id'];
 
         $query = $this->getQuery(self::$CREATE_COLLECTION);
         $gqlPayload = [
@@ -154,7 +154,7 @@ class AbuseTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
-        $collectionId = $response['body']['data']['databasesCreateCollection']['id'];
+        $collectionId = $response['body']['data']['databasesCreateCollection']['_id'];
 
         $query = $this->getQuery(self::$CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [

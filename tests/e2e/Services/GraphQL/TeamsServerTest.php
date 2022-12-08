@@ -50,7 +50,7 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
                 'email' => 'user@appwrite.io',
                 'roles' => ['developer'],
                 'url' => 'http://localhost/membership',
@@ -65,7 +65,7 @@ class TeamsServerTest extends Scope
         $this->assertIsArray($membership['body']['data']);
         $this->assertArrayNotHasKey('errors', $membership['body']);
         $membership = $membership['body']['data']['teamsCreateMembership'];
-        $this->assertEquals($team['id'], $membership['teamId']);
+        $this->assertEquals($team['_id'], $membership['teamId']);
         $this->assertEquals(['developer'], $membership['roles']);
 
         return $membership;
@@ -98,7 +98,7 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
             ],
         ];
 
@@ -123,7 +123,7 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
             ],
         ];
 
@@ -148,8 +148,8 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
-                'membershipId' => $membership['id'],
+                'teamId' => $team['_id'],
+                'membershipId' => $membership['_id'],
             ],
         ];
 
@@ -172,7 +172,7 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
                 'name' => 'New Name',
             ],
         ];
@@ -199,8 +199,8 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
-                'membershipId' => $membership['id'],
+                'teamId' => $team['_id'],
+                'membershipId' => $membership['_id'],
                 'roles' => ['developer', 'admin'],
             ],
         ];
@@ -227,8 +227,8 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
-                'membershipId' => $membership['id'],
+                'teamId' => $team['_id'],
+                'membershipId' => $membership['_id'],
             ],
         ];
 
@@ -250,7 +250,7 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
             ],
         ];
 

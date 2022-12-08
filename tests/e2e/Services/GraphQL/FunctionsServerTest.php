@@ -39,15 +39,15 @@ class FunctionsServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $function['body']);
 
         $function = $function['body']['data']['functionsCreate'];
-        $functionId = $function['id'];
+        $functionId = $function['_id'];
 
         $query = '
             mutation createVariables($functionId: String!) {
                 var1: functionsCreateVariable(functionId: $functionId, key: "name", value: "John Doe") {
-                    id
+                    _id
                 }
                 var2: functionsCreateVariable(functionId: $functionId, key: "age", value: "42") {
-                    id
+                    _id
                 }
             }
         ';
@@ -85,7 +85,7 @@ class FunctionsServerTest extends Scope
             'operations' => \json_encode([
                 'query' => $query,
                 'variables' => [
-                    'functionId' => $function['id'],
+                    'functionId' => $function['_id'],
                     'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
@@ -124,7 +124,7 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -154,8 +154,8 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
-                'deploymentId' => $deployment['id'],
+                'functionId' => $function['_id'],
+                'deploymentId' => $deployment['_id'],
                 'buildId' => $deployment['buildId'],
             ]
         ];
@@ -203,7 +203,7 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -254,7 +254,7 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -285,8 +285,8 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
-                'deploymentId' => $deployment['id'],
+                'functionId' => $function['_id'],
+                'deploymentId' => $deployment['_id'],
             ]
         ];
 
@@ -316,7 +316,7 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 
@@ -348,8 +348,8 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
-                'executionId' => $execution['id'],
+                'functionId' => $function['_id'],
+                'executionId' => $execution['_id'],
             ]
         ];
 
@@ -379,7 +379,7 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
                 'name' => 'Test Function Updated',
                 'execute' => [Role::any()->toString()],
                 'vars' => [
@@ -416,8 +416,8 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
-                'deploymentId' => $deployment['id'],
+                'functionId' => $function['_id'],
+                'deploymentId' => $deployment['_id'],
             ]
         ];
 
@@ -443,7 +443,7 @@ class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => $function['id'],
+                'functionId' => $function['_id'],
             ]
         ];
 

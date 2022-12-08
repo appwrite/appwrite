@@ -106,11 +106,11 @@ class AuthTest extends Scope
 
         // Create collection
         $query = $this->getQuery(self::$CREATE_COLLECTION);
-        $userId = $this->account1['body']['data']['accountCreate']['id'];
+        $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $this->database['body']['data']['databasesCreate']['id'],
+                'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => ID::unique(),
                 'name' => 'Actors',
                 'documentSecurity' => true,
@@ -130,8 +130,8 @@ class AuthTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $this->database['body']['data']['databasesCreate']['id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['id'],
+                'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
+                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -152,12 +152,12 @@ class AuthTest extends Scope
 
         // Create document as account 1
         $query = $this->getQuery(self::$CREATE_DOCUMENT);
-        $userId = $this->account1['body']['data']['accountCreate']['id'];
+        $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $this->database['body']['data']['databasesCreate']['id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['id'],
+                'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
+                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -180,9 +180,9 @@ class AuthTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $this->database['body']['data']['databasesCreate']['id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['id'],
-                'documentId' => $document['body']['data']['databasesCreateDocument']['id'],
+                'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
+                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
+                'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
             ]
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -211,12 +211,12 @@ class AuthTest extends Scope
 
         // Create document as account 1
         $query = $this->getQuery(self::$CREATE_DOCUMENT);
-        $userId = $this->account1['body']['data']['accountCreate']['id'];
+        $userId = $this->account1['body']['data']['accountCreate']['_id'];
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $this->database['body']['data']['databasesCreate']['id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['id'],
+                'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
+                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -239,9 +239,9 @@ class AuthTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $this->database['body']['data']['databasesCreate']['id'],
-                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['id'],
-                'documentId' => $document['body']['data']['databasesCreateDocument']['id'],
+                'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
+                'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
+                'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
             ]
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [

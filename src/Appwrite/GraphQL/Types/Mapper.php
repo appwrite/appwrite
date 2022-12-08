@@ -163,7 +163,7 @@ class Mapper
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            $escapedKey = str_replace('$', '', $key);
+            $escapedKey = str_replace('$', '_', $key);
 
             if (\is_array($rule['type'])) {
                 $type = self::getUnionType($escapedKey, $rule);

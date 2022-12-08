@@ -50,7 +50,7 @@ class TeamsClientTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
                 'email' => 'user@appwrite.io',
                 'roles' => ['developer'],
                 'url' => 'http://localhost/membership',
@@ -66,7 +66,7 @@ class TeamsClientTest extends Scope
         $this->assertIsArray($membership['body']['data']);
         $this->assertArrayNotHasKey('errors', $membership['body']);
         $membership = $membership['body']['data']['teamsCreateMembership'];
-        $this->assertEquals($team['id'], $membership['teamId']);
+        $this->assertEquals($team['_id'], $membership['teamId']);
         $this->assertEquals(['developer'], $membership['roles']);
 
         return $membership;
@@ -99,7 +99,7 @@ class TeamsClientTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
             ],
         ];
 
@@ -124,7 +124,7 @@ class TeamsClientTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
+                'teamId' => $team['_id'],
             ],
         ];
 
@@ -149,8 +149,8 @@ class TeamsClientTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
-                'membershipId' => $membership['id'],
+                'teamId' => $team['_id'],
+                'membershipId' => $membership['_id'],
             ],
         ];
 
@@ -174,8 +174,8 @@ class TeamsClientTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['id'],
-                'membershipId' => $membership['id'],
+                'teamId' => $team['_id'],
+                'membershipId' => $membership['_id'],
             ],
         ];
 

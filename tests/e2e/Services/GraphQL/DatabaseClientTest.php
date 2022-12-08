@@ -52,7 +52,7 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $database['id'],
+                'databaseId' => $database['_id'],
                 'collectionId' => 'actors',
                 'name' => 'Actors',
                 'documentSecurity' => false,
@@ -92,8 +92,8 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
@@ -123,8 +123,8 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
                 'key' => 'age',
                 'min' => 18,
                 'max' => 150,
@@ -158,8 +158,8 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'John Doe',
@@ -202,8 +202,8 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
             ]
         ];
 
@@ -228,9 +228,9 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
-                'documentId' => $data['document']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'documentId' => $data['document']['_id'],
             ]
         ];
 
@@ -255,9 +255,9 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
-                'documentId' => $data['document']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'documentId' => $data['document']['_id'],
                 'data' => [
                     'name' => 'New Document Name',
                 ],
@@ -273,6 +273,7 @@ class DatabaseClientTest extends Scope
         $this->assertIsArray($document['body']['data']);
         $document = $document['body']['data']['databasesUpdateDocument'];
         $this->assertIsArray($document);
+
         $this->assertStringContainsString('New Document Name', $document['data']);
     }
 
@@ -287,9 +288,9 @@ class DatabaseClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => $data['database']['id'],
-                'collectionId' => $data['collection']['id'],
-                'documentId' => $data['document']['id'],
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'documentId' => $data['document']['_id'],
             ]
         ];
 
