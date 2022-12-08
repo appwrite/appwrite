@@ -81,8 +81,9 @@ class Schema
      * schema defining types and resolvers for all response models.
      *
      * @param App $utopia
+     * @param callable $complexity
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     protected static function api(App $utopia, callable $complexity): array
     {
@@ -134,7 +135,10 @@ class Schema
      * queries and mutations for the collections they make up.
      *
      * @param App $utopia
-     * @param callable $getAttributes
+     * @param callable $complexity
+     * @param callable $attributes
+     * @param array $urls
+     * @param array $params
      * @return array
      * @throws \Exception
      */

@@ -17,9 +17,9 @@ class Mapper
     private static array $models = [];
     private static array $args = [];
     private static array $blacklist = [
-        'v1/mock',
-        'v1/graphql',
-        'v1/account/sessions/oauth2',
+        '/v1/mock',
+        '/v1/graphql',
+        '/v1/account/sessions/oauth2',
     ];
 
     public static function init(array $models): void
