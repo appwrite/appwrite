@@ -435,13 +435,19 @@ App::post('/v1/teams/:teamId/memberships')
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
             $mails
-                ->setType(MAIL_TYPE_INVITATION)
                 ->setRecipient($email)
-                ->setUrl($url)
-                ->setName($name)
                 ->setLocale($locale->default)
-                ->setTeam($team)
-                ->setUser($user)
+                ->setParam('url', $url)
+                ->setParam('name', $name)
+                ->setParam('team', $team->getAttribute('name'))
+                ->setParam('owner', $user->getAttribute('name'))
+                ->setParam('subject', \sprintf($locale->getText('email.invitation'), $team->getAttribute('name'), $project->getAttribute('name')))
+                ->setParam('localMessagePrefix', 'email.invitation')
+                ->setParam('hello', $locale->getText('email.invitation.hello'))
+                ->setParam('body', $locale->getText('email.invitation.body'))
+                ->setParam('footer', $locale->getText('email.invitation.footer'))
+                ->setParam('thanks', $locale->getText('email.invitation.thanks'))
+                ->setParam('signature', $locale->getText('email.invitation.signature'))
                 ->trigger()
             ;
         }

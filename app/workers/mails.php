@@ -32,66 +32,29 @@ class MailsV1 extends Worker
             return;
         }
 
-        $project = new Document($this->args['project'] ?? []);
-        $user = new Document($this->args['user'] ?? []);
-        $team = new Document($this->args['team'] ?? []);
-        $payload = $this->args['payload'] ?? [];
-
-        $recipient = $this->args['recipient'];
-        $url = $this->args['url'];
-        $name = $this->args['name'];
-        $type = $this->args['type'];
-        $prefix = $this->getPrefix($type);
+        $template = $this->args['template'] ?? __DIR__ . '/../config/locale/templates/email-base.tpl';
+        $prefix = $this->args['localeMessagePrefix'];
         $locale = new Locale($this->args['locale']);
-        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $recipient = $this->args['recipient'];
+        $name = $this->args['name'];
+        $from = $this->args['from'];
+        $subject = $this->args['subject'];
 
         if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
-
-        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
-        $subject = '';
-        switch ($type) {
-            case MAIL_TYPE_CERTIFICATE:
-                $domain = $payload['domain'];
-                $error = $payload['error'];
-                $attempt = $payload['attempt'];
-
-                $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
-                $body->setParam('{{domain}}', $domain);
-                $body->setParam('{{error}}', $error);
-                $body->setParam('{{attempt}}', $attempt);
-                break;
-            case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
-                break;
-            case MAIL_TYPE_RECOVERY:
-            case MAIL_TYPE_VERIFICATION:
-            case MAIL_TYPE_MAGIC_SESSION:
-                $subject = $locale->getText("$prefix.subject");
-                break;
-            default:
-                throw new Exception('Undefined Mail Type : ' . $type, 500);
+        
+        $body = Template::fromFile($template);
+        foreach ($this->args as $key => $value) {
+            $body->setParam('{{' . $key . '}}', $value);
         }
 
         $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("$prefix.hello"))
-            ->setParam('{{name}}', $name)
-            ->setParam('{{body}}', $locale->getText("$prefix.body"))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
-            ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
-            ->setParam('{{signature}}', $locale->getText("$prefix.signature"))
-            ->setParam('{{project}}', $projectName)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
             ->setParam('{{bg-content}}', '#ffffff')
             ->setParam('{{text-content}}', '#000000');
-
+        
         $body = $body->render();
 
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
