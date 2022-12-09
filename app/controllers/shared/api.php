@@ -319,6 +319,36 @@ App::init()
     });
 
 App::shutdown()
+    ->groups(['auth'])
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function(App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+        // Get user total sessions
+        // check if endpoint is creating new session
+        // && sessions >= $auth['max-sessions']
+        // if yes -> remove oldest active session
+        $route = $utopia->match($request);
+        $event = $route->getLabel('event', '');
+        if($event === 'users.[userId].sessions.[sessionId].create' && $project->getId() != 'console') {
+            $sessionLimit = $project->getAttribute('auth', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS;
+            $session = $response->getPayload();
+            $userId = $session['userId'] ?? '';
+            if(empty($userId)) return;
+            $user = $dbForProject->getDocument('users', $userId);
+            $sessions = $user->getAttribute('sessions', []);
+            $count = \count($sessions);
+            if($count <= $sessionLimit) return;
+            for($i = 0; $i < ($count - $sessionLimit); $i++) {
+                $session = array_pop($sessions);
+                $dbForProject->deleteDocument('sessions', $session->getId());
+            }
+        }
+    });
+
+App::shutdown()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')

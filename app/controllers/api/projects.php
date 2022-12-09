@@ -599,7 +599,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['max-sessions'] = $limit;
+        $auths['maxSessions'] = $limit;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
