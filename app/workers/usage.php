@@ -78,12 +78,16 @@ $server
                                         'time' => $time,
                                         'metric' => $metric['key'],
                                         'value' => $metric['value'],
-                                        'type' => 0,
                                         'region' => App::getEnv('_APP_REGION', 'default'),
                                     ]));
                                 } else {
                                     //console::info("{$document->getAttribute('period')}, {$document->getAttribute('time')}, {$document->getAttribute('metric')} = {$value}");
-                                    $adapter->decreaseDocumentAttribute('stats', $document->getId(), 'value', $metric['value']);
+                                    $adapter->decreaseDocumentAttribute(
+                                        'stats',
+                                        $document->getId(),
+                                        'value',
+                                        $metric['value']
+                                    );
                                 }
                             } catch (\Exception $e) {
                                 console::error($e->getMessage());
