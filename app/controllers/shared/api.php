@@ -326,10 +326,6 @@ App::shutdown()
     ->inject('project')
     ->inject('dbForProject')
     ->action(function(App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
-        // Get user total sessions
-        // check if endpoint is creating new session
-        // && sessions >= $auth['max-sessions']
-        // if yes -> remove oldest active session
         $route = $utopia->match($request);
         $event = $route->getLabel('event', '');
         if($event === 'users.[userId].sessions.[sessionId].create' && $project->getId() != 'console') {
@@ -337,10 +333,14 @@ App::shutdown()
             $session = $response->getPayload();
             $userId = $session['userId'] ?? '';
             if(empty($userId)) return;
+            
             $user = $dbForProject->getDocument('users', $userId);
+            if($user->isEmpty()) return;
+            
             $sessions = $user->getAttribute('sessions', []);
             $count = \count($sessions);
             if($count <= $sessionLimit) return;
+            
             for($i = 0; $i < ($count - $sessionLimit); $i++) {
                 $session = array_pop($sessions);
                 $dbForProject->deleteDocument('sessions', $session->getId());
