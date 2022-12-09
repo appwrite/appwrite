@@ -69,19 +69,18 @@ $databaseListener = function (string $event, Document $document, Document $proje
         case $document->getCollection() === 'databases':
             $queueForUsage->addMetric("databases", $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                // Documents
-                $dbDocuments      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".documents"));
-                $projectDocuments = $dbForProject->getDocument('stats', md5("_inf_documents"));
-                if (!$dbDocuments->isEmpty()) {
-                    $projectDocuments->setAttribute('value', $projectDocuments['value'] - $dbDocuments['value']);
-                    $dbForProject->updateDocument('stats', $projectDocuments->getId(), $projectDocuments);
-                }
                 // Collections
                 $dbCollections      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".collections"));
                 $projectCollections = $dbForProject->getDocument('stats', md5("_inf_collections"));
                 if (!$dbCollections->isEmpty()) {
-                    $projectCollections->setAttribute('value', $projectCollections['value'] - $dbCollections['value']);
-                    $dbForProject->updateDocument('stats', $projectCollections->getId(), $projectCollections);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectCollections->getId(), 'value', $dbCollections['value']);
+                }
+
+                // Documents
+                $dbDocuments      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".documents"));
+                $projectDocuments = $dbForProject->getDocument('stats', md5("_inf_documents"));
+                if (!$dbDocuments->isEmpty()) {
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectDocuments->getId(), 'value', $dbDocuments['value']);
                 }
             }
             break;
@@ -98,18 +97,16 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $queueForUsage->addMetric("buckets", $value); // per project
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 // bucket Files
-                $bucketFiles = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files"));
+                $bucketFiles  = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files"));
                 $projectFiles = $dbForProject->getDocument('stats', md5("_inf_files"));
                 if (!$bucketFiles->isEmpty()) {
-                    $projectFiles->setAttribute('value', $projectFiles['value'] - $bucketFiles['value']);
-                    $dbForProject->updateDocument('stats', $projectFiles->getId(), $projectFiles);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectFiles->getId(), 'value', $bucketFiles['value']);
                 }
                 // bucket Storage
                 $bucketStorage  = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files.storage"));
                 $projectStorage = $dbForProject->getDocument('stats', md5("_inf_files.storage"));
                 if (!$bucketStorage->isEmpty()) {
-                    $projectStorage->setAttribute('value', $projectStorage['value'] - $bucketStorage['value']);
-                    $dbForProject->updateDocument('stats', $projectStorage->getId(), $projectStorage);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectStorage->getId(), 'value', $bucketStorage['value']);
                 }
             }
             break;
@@ -124,34 +121,30 @@ $databaseListener = function (string $event, Document $document, Document $proje
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 // Deployments Storage
                 $functionDeployments = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getId()}" . ".deployments"));
-                $projectDeployments = $dbForProject->getDocument('stats', md5("_inf_deployments"));
+                $projectDeployments  = $dbForProject->getDocument('stats', md5("_inf_deployments"));
                 if (!$functionDeployments->isEmpty()) {
-                    $projectDeployments->setAttribute('value', $projectDeployments['value'] - $functionDeployments['value']);
-                    $projectDeployments->updateDocument('stats', $projectDeployments->getId(), $projectDeployments);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectDeployments->getId(), 'value', $functionDeployments['value']);
                 }
                 // Deployments Storage
                 $functionDeploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getId()}" . ".deployments.storage"));
-                $projectDeploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_function.deployments.storage"));
+                $projectDeploymentsStorage  = $dbForProject->getDocument('stats', md5("_inf_function.deployments.storage"));
                 if (!$functionDeployments->isEmpty()) {
-                    $projectDeploymentsStorage->setAttribute('value', $projectDeploymentsStorage['value'] - $functionDeploymentsStorage['value']);
-                    $projectDeploymentsStorage->updateDocument('stats', $projectDeploymentsStorage->getId(), $projectDeploymentsStorage);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectDeploymentsStorage->getId(), 'value', $functionDeploymentsStorage['value']);
                 }
 
                 //TODO  needs to find a solution for builds
 
                 // Executions
                 $functionExecutions = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".executions"));
-                $projectExecutions = $dbForProject->getDocument('stats', md5("_inf_executions"));
+                $projectExecutions  = $dbForProject->getDocument('stats', md5("_inf_executions"));
                 if (!$functionExecutions->isEmpty()) {
-                    $projectExecutions->setAttribute('value', $projectExecutions['value'] - $functionExecutions['value']);
-                    $projectExecutions->updateDocument('stats', $projectExecutions->getId(), $projectExecutions);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectExecutions->getId(), 'value', $functionExecutions['value']);
                 }
                 // Executions Compute
                 $functionExecutionsCompute = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".executions.compute"));
-                $projectExecutionsCompute = $dbForProject->getDocument('stats', md5("_inf_executions.compute"));
+                $projectExecutionsCompute  = $dbForProject->getDocument('stats', md5("_inf_executions.compute"));
                 if (!$functionExecutionsCompute->isEmpty()) {
-                    $projectExecutionsCompute->setAttribute('value', $projectExecutionsCompute['value'] - $functionExecutionsCompute['value']);
-                    $projectExecutionsCompute->updateDocument('stats', $projectExecutionsCompute->getId(), $projectExecutionsCompute);
+                    $dbForProject->decreaseDocumentAttribute('stats', $projectExecutionsCompute->getId(), 'value', $functionExecutionsCompute['value']);
                 }
             }
             break;
