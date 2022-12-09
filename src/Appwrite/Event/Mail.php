@@ -7,12 +7,10 @@ use Utopia\Database\Document;
 
 class Mail extends Event
 {
-    protected string $recipient = '';
-    protected string $url = '';
+    protected array $params = [];
     protected string $type = '';
-    protected string $name = '';
+    protected string $recipient = '';
     protected string $locale = '';
-    protected ?Document $team = null;
 
     public function __construct()
     {
@@ -27,7 +25,7 @@ class Mail extends Event
      */
     public function setTeam(Document $team): self
     {
-        $this->team = $team;
+        $this->params['team'] = $team;
 
         return $this;
     }
@@ -39,7 +37,7 @@ class Mail extends Event
      */
     public function getTeam(): ?Document
     {
-        return $this->team;
+        return $this->params['team'] ?? null;
     }
 
     /**
@@ -73,7 +71,7 @@ class Mail extends Event
      */
     public function setUrl(string $url): self
     {
-        $this->url = $url;
+        $this->params['url'] = $url;
 
         return $this;
     }
@@ -85,7 +83,7 @@ class Mail extends Event
      */
     public function getURL(): string
     {
-        return $this->url;
+        return $this->params['url'] ?? '';
     }
 
     /**
@@ -119,7 +117,7 @@ class Mail extends Event
      */
     public function setName(string $name): self
     {
-        $this->name = $name;
+        $this->params['name'] = $name;
 
         return $this;
     }
@@ -131,7 +129,7 @@ class Mail extends Event
      */
     public function getName(): string
     {
-        return $this->name;
+        return $this->params['name'] ?? '';
     }
 
     /**
@@ -170,11 +168,11 @@ class Mail extends Event
             'user' => $this->user,
             'payload' => $this->payload,
             'recipient' => $this->recipient,
-            'url' => $this->url,
+            'url' => $this->params['url'] ?? '',
             'locale' => $this->locale,
             'type' => $this->type,
-            'name' => $this->name,
-            'team' => $this->team,
+            'name' => $this->params['name'] ?? '',
+            'team' => $this->params['team'] ?? '',
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
