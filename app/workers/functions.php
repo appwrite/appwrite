@@ -260,7 +260,7 @@ $server->job()
                         queueForFunctions: $queueForFunctions,
                         trigger: 'event',
                         event: $events[0],
-                        eventData: $eventData,
+                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
                         user: $user,
                         data: null,
                         executionId: null,

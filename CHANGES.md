@@ -1,11 +1,13 @@
 # TBD
 - Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
 - Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
-- Update Traefik 2.7 -> 2.9 [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 
 # Version 1.1.2
 ## Changes
+- Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
 
 ## Bugs
