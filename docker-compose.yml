@@ -598,41 +598,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
-  appwrite-usage-database:
-    entrypoint:
-      - usage
-      - --type=database
-    <<: *x-logging
-    container_name: appwrite-usage-database
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - ./dev:/usr/local/dev
-    depends_on:
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHEL
-      - _APP_USAGE_DATABASE_INTERVAL
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-
   appwrite-schedule:
     entrypoint: schedule
     <<: *x-logging
