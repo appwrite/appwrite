@@ -351,6 +351,7 @@ App::shutdown()
                 $session = array_pop($sessions);
                 $dbForProject->deleteDocument('sessions', $session->getId());
             }
+            $dbForProject->deleteCachedDocument('users', $userId);
         }
     });
 
