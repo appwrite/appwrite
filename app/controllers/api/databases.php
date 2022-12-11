@@ -2386,124 +2386,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $response->noContent();
     });
 
-App::get('/v1/databases/usage')
-    ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
-    ->label('scope', 'collections.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
-
-        // $usage = [];
-        // if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-        //     $periods = [
-        //         '24h' => [
-        //             'period' => '1h',
-        //             'limit' => 24,
-        //         ],
-        //         '7d' => [
-        //             'period' => '1d',
-        //             'limit' => 7,
-        //         ],
-        //         '30d' => [
-        //             'period' => '1d',
-        //             'limit' => 30,
-        //         ],
-        //         '90d' => [
-        //             'period' => '1d',
-        //             'limit' => 90,
-        //         ],
-        //     ];
-
-        //     $metrics = [
-        //         'databases.$all.count.total',
-        //         'documents.$all.count.total',
-        //         'collections.$all.count.total',
-        //         'databases.$all.requests.create',
-        //         'databases.$all.requests.read',
-        //         'databases.$all.requests.update',
-        //         'databases.$all.requests.delete',
-        //         'collections.$all.requests.create',
-        //         'collections.$all.requests.read',
-        //         'collections.$all.requests.update',
-        //         'collections.$all.requests.delete',
-        //         'documents.$all.requests.create',
-        //         'documents.$all.requests.read',
-        //         'documents.$all.requests.update',
-        //         'documents.$all.requests.delete'
-        //     ];
-
-        //     $stats = [];
-
-        //     Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-        //         foreach ($metrics as $metric) {
-        //             $limit = $periods[$range]['limit'];
-        //             $period = $periods[$range]['period'];
-
-        //             $requestDocs = $dbForProject->find('stats', [
-        //                 Query::equal('period', [$period]),
-        //                 Query::equal('metric', [$metric]),
-        //                 Query::limit($limit),
-        //                 Query::orderDesc('time'),
-        //             ]);
-
-        //             $stats[$metric] = [];
-        //             foreach ($requestDocs as $requestDoc) {
-        //                 $stats[$metric][] = [
-        //                     'value' => $requestDoc->getAttribute('value'),
-        //                     'date' => $requestDoc->getAttribute('time'),
-        //                 ];
-        //             }
-
-        //             // backfill metrics with empty values for graphs
-        //             $backfill = $limit - \count($requestDocs);
-        //             while ($backfill > 0) {
-        //                 $last = $limit - $backfill - 1; // array index of last added metric
-        //                 $diff = match ($period) { // convert period to seconds for unix timestamp math
-        //                     '1h' => 3600,
-        //                     '1d' => 86400,
-        //                 };
-        //                 $stats[$metric][] = [
-        //                     'value' => 0,
-        //                     'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-        //                 ];
-        //                 $backfill--;
-        //             }
-        //             // Added 3'rd level to Index [period, metric, time] because of order by.
-        //             $stats[$metric] = array_reverse($stats[$metric]);
-        //         }
-        //     });
-
-        //     $usage = new Document([
-        //         'range' => $range,
-        //         'databasesCount' => $stats['databases.$all.count.total'] ?? [],
-        //         'documentsCount' => $stats['documents.$all.count.total'] ?? [],
-        //         'collectionsCount' => $stats['collections.$all.count.total'] ?? [],
-        //         'documentsCreate' =>  $stats['documents.$all.requests.create'] ?? [],
-        //         'documentsRead' =>  $stats['documents.$all.requests.read'] ?? [],
-        //         'documentsUpdate' => $stats['documents.$all.requests.update'] ?? [],
-        //         'documentsDelete' => $stats['documents.$all.requests.delete'] ?? [],
-        //         'collectionsCreate' => $stats['collections.$all.requests.create'] ?? [],
-        //         'collectionsRead' =>  $stats['collections.$all.requests.read'] ?? [],
-        //         'collectionsUpdate' => $stats['collections.$all.requests.update'] ?? [],
-        //         'collectionsDelete' => $stats['collections.$all.requests.delete'] ?? [],
-        //         'databasesCreate' => $stats['databases.$all.requests.create'] ?? [],
-        //         'databasesRead' =>  $stats['databases.$all.requests.read'] ?? [],
-        //         'databasesUpdate' => $stats['databases.$all.requests.update'] ?? [],
-        //         'databasesDelete' => $stats['databases.$all.requests.delete'] ?? [],
-        //     ]);
-        // }
-
-        // $response->dynamic($usage, Response::MODEL_USAGE_DATABASES);
-    });
-
 App::get('/v1/databases/:databaseId/usage')
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
@@ -2520,97 +2402,63 @@ App::get('/v1/databases/:databaseId/usage')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
 
-        // $usage = [];
-        // if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-        //     $periods = [
-        //         '24h' => [
-        //             'period' => '1h',
-        //             'limit' => 24,
-        //         ],
-        //         '7d' => [
-        //             'period' => '1d',
-        //             'limit' => 7,
-        //         ],
-        //         '30d' => [
-        //             'period' => '1d',
-        //             'limit' => 30,
-        //         ],
-        //         '90d' => [
-        //             'period' => '1d',
-        //             'limit' => 90,
-        //         ],
-        //     ];
+        $database =  $dbForProject->getDocument('databases', $databaseId);
 
-        //     $metrics = [
-        //         'collections.' . $databaseId . '.count.total',
-        //         'collections.' . $databaseId . '.requests.create',
-        //         'collections.' . $databaseId . '.requests.read',
-        //         'collections.' . $databaseId . '.requests.update',
-        //         'collections.' . $databaseId . '.requests.delete',
-        //         'documents.' . $databaseId . '.count.total',
-        //         'documents.' . $databaseId . '.requests.create',
-        //         'documents.' . $databaseId . '.requests.read',
-        //         'documents.' . $databaseId . '.requests.update',
-        //         'documents.' . $databaseId . '.requests.delete'
-        //     ];
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
 
-        //     $stats = [];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            $database->getId() . '.collections',
+            $database->getId() . '.documents',
+        ];
 
-        //     Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-        //         foreach ($metrics as $metric) {
-        //             $limit = $periods[$range]['limit'];
-        //             $period = $periods[$range]['period'];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
 
-        //             $requestDocs = $dbForProject->find('stats', [
-        //                 Query::equal('period', [$period]),
-        //                 Query::equal('metric', [$metric]),
-        //                 Query::limit($limit),
-        //                 Query::orderDesc('time'),
-        //             ]);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
 
-        //             $stats[$metric] = [];
-        //             foreach ($requestDocs as $requestDoc) {
-        //                 $stats[$metric][] = [
-        //                     'value' => $requestDoc->getAttribute('value'),
-        //                     'date' => $requestDoc->getAttribute('time'),
-        //                 ];
-        //             }
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+        $usage[$metric] = array_reverse($usage[$metric]);
+    }
 
-        //             // backfill metrics with empty values for graphs
-        //             $backfill = $limit - \count($requestDocs);
-        //             while ($backfill > 0) {
-        //                 $last = $limit - $backfill - 1; // array index of last added metric
-        //                 $diff = match ($period) { // convert period to seconds for unix timestamp math
-        //                     '1h' => 3600,
-        //                     '1d' => 86400,
-        //                 };
-        //                 $stats[$metric][] = [
-        //                     'value' => 0,
-        //                     'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-        //                 ];
-        //                 $backfill--;
-        //             }
-        //             // TODO@kodumbeats explore performance if query is ordered by time ASC
-        //             $stats[$metric] = array_reverse($stats[$metric]);
-        //         }
-        //     });
-
-        //     $usage = new Document([
-        //         'range' => $range,
-        //         'collectionsCount' => $stats["collections.{$databaseId}.count.total"] ?? [],
-        //         'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"] ?? [],
-        //         'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"] ?? [],
-        //         'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"] ?? [],
-        //         'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"] ?? [],
-        //         'documentsCount' => $stats["documents.{$databaseId}.count.total"] ?? [],
-        //         'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"] ?? [],
-        //         'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"] ?? [],
-        //         'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"] ?? [],
-        //         'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"] ?? [],
-        //     ]);
-        // }
-
-        // $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'collectionsCount'   => $usage[$metrics[0]],
+            'documentsCount'   => $usage[$metrics[1]],
+        ]), Response::MODEL_USAGE_DATABASE);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
@@ -2631,93 +2479,132 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
 
-        // $database = $dbForProject->getDocument('databases', $databaseId);
+         $database = $dbForProject->getDocument('databases', $databaseId);
 
-        // $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-        // $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
+         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+         $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
-        // if ($collection->isEmpty()) {
-        //     throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        // }
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
 
-        // $usage = [];
-        // if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-        //     $periods = [
-        //         '24h' => [
-        //             'period' => '1h',
-        //             'limit' => 24,
-        //         ],
-        //         '7d' => [
-        //             'period' => '1d',
-        //             'limit' => 7,
-        //         ],
-        //         '30d' => [
-        //             'period' => '1d',
-        //             'limit' => 30,
-        //         ],
-        //         '90d' => [
-        //             'period' => '1d',
-        //             'limit' => 90,
-        //         ],
-        //     ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            $collection->getId() . '.documents',
+        ];
 
-        //     $metrics = [
-        //         "documents.{$databaseId}/{$collectionId}.count.total",
-        //         "documents.{$databaseId}/{$collectionId}.requests.create",
-        //         "documents.{$databaseId}/{$collectionId}.requests.read",
-        //         "documents.{$databaseId}/{$collectionId}.requests.update",
-        //         "documents.{$databaseId}/{$collectionId}.requests.delete",
-        //     ];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
 
-        //     $stats = [];
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
 
-        //     Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-        //         foreach ($metrics as $metric) {
-        //             $limit = $periods[$range]['limit'];
-        //             $period = $periods[$range]['period'];
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+        $usage[$metric] = array_reverse($usage[$metric]);
+    }
 
-        //             $requestDocs = $dbForProject->find('stats', [
-        //                 Query::equal('period', [$period]),
-        //                 Query::equal('metric', [$metric]),
-        //                 Query::limit($limit),
-        //                 Query::orderDesc('time'),
-        //             ]);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'documentsCount'   => $usage[$metrics[0]],
+        ]), Response::MODEL_USAGE_COLLECTION);
+    });
 
-        //             $stats[$metric] = [];
-        //             foreach ($requestDocs as $requestDoc) {
-        //                 $stats[$metric][] = [
-        //                     'value' => $requestDoc->getAttribute('value'),
-        //                     'date' => $requestDoc->getAttribute('time'),
-        //                 ];
-        //             }
+App::get('/v1/databases/usage')
+    ->desc('Get usage stats for the database')
+    ->groups(['api', 'database'])
+    ->label('scope', 'collections.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
 
-        //             // backfill metrics with empty values for graphs
-        //             $backfill = $limit - \count($requestDocs);
-        //             while ($backfill > 0) {
-        //                 $last = $limit - $backfill - 1; // array index of last added metric
-        //                 $diff = match ($period) { // convert period to seconds for unix timestamp math
-        //                     '1h' => 3600,
-        //                     '1d' => 86400,
-        //                 };
-        //                 $stats[$metric][] = [
-        //                     'value' => 0,
-        //                     'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-        //                 ];
-        //                 $backfill--;
-        //             }
-        //             $stats[$metric] = array_reverse($stats[$metric]);
-        //         }
-        //     });
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            'databases',
+            'collections',
+            'documents',
+        ];
 
-        //     $usage = new Document([
-        //         'range' => $range,
-        //         'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"] ?? [],
-        //         'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"] ?? [],
-        //         'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"] ?? [],
-        //         'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"] ?? [],
-        //         'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete" ?? []]
-        //     ]);
-        // }
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
 
-        // $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+        $usage[$metric] = array_reverse($usage[$metric]);
+    }
+
+        $response->dynamic(new Document([
+            'range' => $range,
+            'databasesCount'   => $usage[$metrics[0]],
+            'collectionsCount' => $usage[$metrics[1]],
+            'documentsCount'   => $usage[$metrics[2]],
+        ]), Response::MODEL_USAGE_DATABASES);
     });

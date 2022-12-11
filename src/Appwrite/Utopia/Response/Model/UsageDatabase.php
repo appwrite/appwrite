@@ -16,13 +16,6 @@ class UsageDatabase extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('documentsCount', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of documents.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
             ->addRule('collectionsCount', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of collections.',
@@ -30,58 +23,9 @@ class UsageDatabase extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('documentsCreate', [
+            ->addRule('documentsCount', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('documentsRead', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('documentsUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('documentsDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents deleted.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('collectionsCreate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for collections created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('collectionsRead', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for collections read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('collectionsUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for collections updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('collectionsDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for collections delete.',
+                'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
                 'example' => [],
                 'array' => true

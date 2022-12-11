@@ -16,13 +16,6 @@ class UsageProject extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('requests', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for number of requests.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
             ->addRule('network', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for consumed bandwidth.',

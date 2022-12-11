@@ -57,11 +57,11 @@ $databaseListener = function (string $event, Document $document, Document $proje
     var_dump($document->getCollection());
 
     switch (true) {
-        case $document->getCollection() === 'users':
-            $queueForUsage->addMetric("users", $value); // per project
-            break;
         case $document->getCollection() === 'teams':
             $queueForUsage->addMetric("teams", $value); // per project
+            break;
+        case $document->getCollection() === 'users':
+            $queueForUsage->addMetric("users", $value); // per project
             break;
         case $document->getCollection() === 'sessions':
             $queueForUsage->addMetric("sessions", $value); // per project
@@ -80,7 +80,6 @@ $databaseListener = function (string $event, Document $document, Document $proje
                         $dbCollections['value']
                     );
                 }
-
                 // Documents
                 $dbDocuments      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".documents"));
                 $projectDocuments = $dbForProject->getDocument('stats', md5("_inf_documents"));
@@ -97,11 +96,24 @@ $databaseListener = function (string $event, Document $document, Document $proje
         case str_starts_with($document->getCollection(), 'database_'): // collections
             $queueForUsage->addMetric("{$document['databaseId']}" . ".collections", $value); // per database
             $queueForUsage->addMetric("collections", $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                // Documents
+                $dbDocuments      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document['databaseId']}" . ".documents"));
+                $projectDocuments = $dbForProject->getDocument('stats', md5("_inf_documents"));
+                if (!$dbDocuments->isEmpty()) {
+                    $dbForProject->decreaseDocumentAttribute(
+                        'stats',
+                        $projectDocuments->getId(),
+                        'value',
+                        $dbDocuments['value']
+                    );
+                }
+            }
             break;
         case $document->getCollection() === 'documents':
             $queueForUsage
-                ->addMetric("{$document['databaseId']}" . "." . "{$document['collectionId']}" . ".documents", $value)  // per collection
                 ->addMetric("{$document['databaseId']}" . ".documents", $value) // per database
+                ->addMetric("{$document['databaseId']}" . "." . "{$document['collectionId']}" . ".documents", $value)  // per collection
                 ->addMetric("documents", $value)  // per project
                 ;
             break;

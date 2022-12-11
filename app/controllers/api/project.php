@@ -2,6 +2,7 @@
 
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -23,90 +24,67 @@ App::get('/v1/project/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
-        // $usage = [];
-        // if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-        //     $periods = [
-        //         '24h' => [
-        //             'period' => '1h',
-        //             'limit' => 24,
-        //         ],
-        //         '7d' => [
-        //             'period' => '1d',
-        //             'limit' => 7,
-        //         ],
-        //         '30d' => [
-        //             'period' => '1d',
-        //             'limit' => 30,
-        //         ],
-        //         '90d' => [
-        //             'period' => '1d',
-        //             'limit' => 90,
-        //         ],
-        //     ];
 
-        //     $metrics = [
-        //         'project.$all.network.requests',
-        //         'project.$all.network.bandwidth',
-        //         'project.$all.storage.size',
-        //         'users.$all.count.total',
-        //         'databases.$all.count.total',
-        //         'documents.$all.count.total',
-        //         'executions.$all.compute.total',
-        //         'buckets.$all.count.total'
-        //     ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            'network.inbound',
+            'network.outbound',
+            'executions',
+            'documents',
+            'databases',
+            'users',
+            'files.storage',
+            'buckets',
+        ];
 
-        //     $stats = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
 
-        //     Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-        //         foreach ($metrics as $metric) {
-        //             $limit = $periods[$range]['limit'];
-        //             $period = $periods[$range]['period'];
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
 
-        //             $requestDocs = $dbForProject->find('stats', [
-        //                 Query::equal('period', [$period]),
-        //                 Query::equal('metric', [$metric]),
-        //                 Query::limit($limit),
-        //                 Query::orderDesc('time'),
-        //             ]);
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+        $usage[$metric] = array_reverse($usage[$metric]);
+    }
 
-        //             $stats[$metric] = [];
-        //             foreach ($requestDocs as $requestDoc) {
-        //                 $stats[$metric][] = [
-        //                     'value' => $requestDoc->getAttribute('value'),
-        //                     'date' => $requestDoc->getAttribute('time'),
-        //                 ];
-        //             }
-
-        //             // backfill metrics with empty values for graphs
-        //             $backfill = $limit - \count($requestDocs);
-        //             while ($backfill > 0) {
-        //                 $last = $limit - $backfill - 1; // array index of last added metric
-        //                 $diff = match ($period) { // convert period to seconds for unix timestamp math
-        //                     '1h' => 3600,
-        //                     '1d' => 86400,
-        //                 };
-        //                 $stats[$metric][] = [
-        //                     'value' => 0,
-        //                     'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-        //                 ];
-        //                 $backfill--;
-        //             }
-        //             $stats[$metric] = array_reverse($stats[$metric]);
-        //         }
-        //     });
-
-        //     $usage = new Document([
-        //         'range' => $range,
-        //         'requests' => $stats[$metrics[0]] ?? [],
-        //         'network' => $stats[$metrics[1]] ?? [],
-        //         'storage' => $stats[$metrics[2]] ?? [],
-        //         'users' => $stats[$metrics[3]] ?? [],
-        //         'databases' => $stats[$metrics[4]] ?? [],
-        //         'documents' => $stats[$metrics[5]] ?? [],
-        //         'executions' => $stats[$metrics[6]] ?? [],
-        //         'buckets' => $stats[$metrics[7]] ?? [],
-        //     ]);
-        // }
-
-        // $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'network' => ($usage[$metrics[0]] + $usage[$metrics[1]]),
+            'executions' => $usage[$metrics[2]],
+            'documents' => $usage[$metrics[3]],
+            'databases' => $usage[$metrics[4]],
+            'users' => $usage[$metrics[5]],
+            'storage' => $usage[$metrics[6]],
+            'buckets' => $usage[$metrics[8]],
+        ]), Response::MODEL_USAGE_PROJECT);
     });
