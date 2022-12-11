@@ -73,10 +73,7 @@ use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\CLI\Console;
 use Utopia\Queue;
-use Utopia\Queue\Connection;
-use Utopia\Storage\Storage;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -577,13 +574,11 @@ $register->set('pools', function () {
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
-
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
-
             if (empty($dsn)) {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
@@ -608,7 +603,6 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
@@ -646,7 +640,6 @@ $register->set('pools', function () {
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
-
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {

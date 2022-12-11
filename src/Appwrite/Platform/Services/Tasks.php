@@ -23,7 +23,6 @@ class Tasks extends Service
         $this->type = self::TYPE_CLI;
         $this
             ->addAction(Version::getName(), new Version())
-            ->addAction(Usage::getName(), new Usage())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(Doctor::getName(), new Doctor())
