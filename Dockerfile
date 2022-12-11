@@ -208,10 +208,6 @@ ENV _APP_SERVER=swoole \
     _APP_DB_USER=root \
     _APP_DB_PASS=password \
     _APP_DB_SCHEMA=appwrite \
-    _APP_INFLUXDB_HOST=influxdb \
-    _APP_INFLUXDB_PORT=8086 \
-    _APP_STATSD_HOST=telegraf \
-    _APP_STATSD_PORT=8125 \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CPUS=1 \
@@ -305,10 +301,10 @@ RUN mkdir -p /storage/uploads && \
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
+    chmod +x /usr/local/bin/executor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \

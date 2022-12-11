@@ -53,26 +53,26 @@ $server
 
                     $slice = array_slice($stats, 0, count($stats));
                     array_splice($stats, 0, count($stats));
-
+                    var_dump($slice);
                     foreach ($slice as $metric) {
                         foreach ($periods as $period => $format) {
                              $time = 'inf' ===  $period ? null : date($format, time());
                              $id = \md5("{$time}_{$period}_{$metric['key']}");
-                             $adapter = new Database(
-                                 $pools
+                            $dbForProject = new Database(
+                                $pools
                                  ->get($metric['database'])
                                  ->pop()
                                  ->getResource(),
-                                 $cache
-                             );
+                                $cache
+                            );
 
-                             $adapter->setNamespace('_' . $metric['projectInternalId']);
+                            $dbForProject->setNamespace('_' . $metric['projectInternalId']);
 
                             try {
-                                $document = $adapter->getDocument('stats', $id);
+                                $document = $dbForProject->getDocument('stats', $id);
                                 if ($document->isEmpty()) {
                                     //console::log("{$period}, {$time}, {$metric['key']}={$metric['value']}");
-                                    $adapter->createDocument('stats', new Document([
+                                    $dbForProject->createDocument('stats', new Document([
                                         '$id' => $id,
                                         'period' => $period,
                                         'time' => $time,
@@ -82,7 +82,7 @@ $server
                                     ]));
                                 } else {
                                     //console::info("{$document->getAttribute('period')}, {$document->getAttribute('time')}, {$document->getAttribute('metric')} = {$value}");
-                                    $adapter->decreaseDocumentAttribute(
+                                    $dbForProject->increaseDocumentAttribute(
                                         'stats',
                                         $document->getId(),
                                         'value',

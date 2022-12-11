@@ -247,22 +247,6 @@ class BuildsV1 extends Worker
                 channels: $target['channels'],
                 roles: $target['roles']
             );
-
-            /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                // $statsd = $register->get('statsd');
-                // $usage = new Stats($statsd);
-                // $usage
-                //     ->setParam('projectInternalId', $project->getInternalId())
-                //     ->setParam('projectId', $project->getId())
-                //     ->setParam('functionId', $function->getId())
-                //     ->setParam('builds.{scope}.compute', 1)
-                //     ->setParam('buildStatus', $build->getAttribute('status', ''))
-                //     ->setParam('buildTime', $build->getAttribute('duration'))
-                //     ->setParam('networkRequestSize', 0)
-                //     ->setParam('networkResponseSize', 0)
-                //     ->submit();
-            }
         }
     }
 

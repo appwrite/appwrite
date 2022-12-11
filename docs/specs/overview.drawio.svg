@@ -589,47 +589,47 @@
         <path d="M 157 520 L 143.37 520" fill="none" stroke="#9673a6" stroke-miterlimit="10" pointer-events="stroke"/>
         <path d="M 138.12 520 L 145.12 516.5 L 143.37 520 L 145.12 523.5 Z" fill="#9673a6" stroke="#9673a6" stroke-miterlimit="10" pointer-events="all"/>
         <rect x="157" y="500" width="120" height="40" fill="#e1d5e7" stroke="#9673a6" pointer-events="all"/>
-        <g transform="translate(-0.5 -0.5)">
-            <switch>
-                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 520px; margin-left: 158px;">
-                        <div data-drawio-colors="color: #000000; " style="box-sizing: border-box; font-size: 0px; text-align: center;">
-                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                StatsD
-                                <br/>
-                                <font style="font-size: 10px">
-                                    (Telegraf)
-                                </font>
-                            </div>
-                        </div>
-                    </div>
-                </foreignObject>
-                <text x="217" y="524" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    StatsD...
-                </text>
-            </switch>
-        </g>
+<!--        <g transform="translate(-0.5 -0.5)">-->
+<!--            <switch>-->
+<!--                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">-->
+<!--                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 520px; margin-left: 158px;">-->
+<!--                        <div data-drawio-colors="color: #000000; " style="box-sizing: border-box; font-size: 0px; text-align: center;">-->
+<!--                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">-->
+<!--                                StatsD-->
+<!--                                <br/>-->
+<!--                                <font style="font-size: 10px">-->
+<!--                                    (Telegraf)-->
+<!--                                </font>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </foreignObject>-->
+<!--                <text x="217" y="524" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">-->
+<!--                    StatsD...-->
+<!--                </text>-->
+<!--            </switch>-->
+<!--        </g>-->
         <rect x="17" y="500" width="120" height="40" fill="#e1d5e7" stroke="#9673a6" pointer-events="all"/>
-        <g transform="translate(-0.5 -0.5)">
-            <switch>
-                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 520px; margin-left: 18px;">
-                        <div data-drawio-colors="color: #000000; " style="box-sizing: border-box; font-size: 0px; text-align: center;">
-                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
-                                TimeSeries
-                                <br/>
-                                <font style="font-size: 10px">
-                                    (InfluxDB)
-                                </font>
-                            </div>
-                        </div>
-                    </div>
-                </foreignObject>
-                <text x="77" y="524" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
-                    TimeSeries...
-                </text>
-            </switch>
-        </g>
+<!--        <g transform="translate(-0.5 -0.5)">-->
+<!--            <switch>-->
+<!--                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">-->
+<!--                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 520px; margin-left: 18px;">-->
+<!--                        <div data-drawio-colors="color: #000000; " style="box-sizing: border-box; font-size: 0px; text-align: center;">-->
+<!--                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">-->
+<!--                                TimeSeries-->
+<!--                                <br/>-->
+<!--                                <font style="font-size: 10px">-->
+<!--                                    (InfluxDB)-->
+<!--                                </font>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </foreignObject>-->
+<!--                <text x="77" y="524" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">-->
+<!--                    TimeSeries...-->
+<!--                </text>-->
+<!--            </switch>-->
+<!--        </g>-->
         <path d="M 977 720 L 977 753.63" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
         <path d="M 977 758.88 L 973.5 751.88 L 977 753.63 L 980.5 751.88 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="all"/>
         <path d="M 977 720 L 977 820 L 297 820 L 297 600 L 460.63 600" fill="none" stroke="#d6b656" stroke-miterlimit="10" pointer-events="stroke"/>

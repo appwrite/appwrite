@@ -201,21 +201,6 @@ Server::setResource('execute', function () {
             channels: $target['channels'],
             roles: $target['roles']
         );
-
-        /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            // $usage = new Stats($statsd);
-            // $usage
-            //     ->setParam('projectId', $project->getId())
-            //     ->setParam('projectInternalId', $project->getInternalId())
-            //     ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
-            //     ->setParam('executions.{scope}.compute', 1)
-            //     ->setParam('executionStatus', $execution->getAttribute('status', ''))
-            //     ->setParam('executionTime', $execution->getAttribute('duration'))
-            //     ->setParam('networkRequestSize', 0)
-            //     ->setParam('networkResponseSize', 0)
-            //     ->submit();
-        }
     };
 });
 

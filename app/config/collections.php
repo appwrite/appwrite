@@ -61,7 +61,7 @@ $collections = [
             ],
         ],
     ],
-    
+
     'collections' => [
         '$collection' => ID::custom('databases'),
         '$id' => ID::custom('collections'),
@@ -3146,17 +3146,6 @@ $collections = [
                 'signed' => true,
                 'required' => true,
                 'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('type'),
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 1,
-                'signed' => false,
-                'required' => true,
-                'default' => 0, // 0 -> count, 1 -> sum
                 'array' => false,
                 'filters' => [],
             ],
