@@ -319,40 +319,36 @@ App::init()
     });
 
 App::shutdown()
-    ->groups(['auth'])
+    ->groups(['session'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
-        $route = $utopia->match($request);
-        $event = $route->getLabel('event', '');
-        if ($event === 'users.[userId].sessions.[sessionId].create' && $project->getId() != 'console') {
-            $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS;
-            $session = $response->getPayload();
-            $userId = $session['userId'] ?? '';
-            if (empty($userId)) {
-                return;
-            }
-
-            $user = $dbForProject->getDocument('users', $userId);
-            if ($user->isEmpty()) {
-                return;
-            }
-
-            $sessions = $user->getAttribute('sessions', []);
-            $count = \count($sessions);
-            if ($count <= $sessionLimit) {
-                return;
-            }
-
-            for ($i = 0; $i < ($count - $sessionLimit); $i++) {
-                $session = array_shift($sessions);
-                $dbForProject->deleteDocument('sessions', $session->getId());
-            }
-            $dbForProject->deleteCachedDocument('users', $userId);
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS;
+        $session = $response->getPayload();
+        $userId = $session['userId'] ?? '';
+        if (empty($userId)) {
+            return;
         }
+
+        $user = $dbForProject->getDocument('users', $userId);
+        if ($user->isEmpty()) {
+            return;
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $count = \count($sessions);
+        if ($count <= $sessionLimit) {
+            return;
+        }
+
+        for ($i = 0; $i < ($count - $sessionLimit); $i++) {
+            $session = array_shift($sessions);
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+        $dbForProject->deleteCachedDocument('users', $userId);
     });
 
 App::shutdown()
