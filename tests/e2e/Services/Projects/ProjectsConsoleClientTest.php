@@ -905,6 +905,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$id']);
 
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -924,7 +925,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
          * create new session
@@ -939,7 +940,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $sessionId1 = $response['body']['$id'];
 
         /**
@@ -955,7 +956,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $sessionCookie = $response['headers']['set-cookie'];
         $sessionId2 = $response['body']['$id'];
 
