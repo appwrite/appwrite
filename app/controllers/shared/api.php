@@ -329,7 +329,7 @@ App::shutdown()
         $route = $utopia->match($request);
         $event = $route->getLabel('event', '');
         if ($event === 'users.[userId].sessions.[sessionId].create' && $project->getId() != 'console') {
-            $sessionLimit = $project->getAttribute('auth', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS;
+            $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS;
             $session = $response->getPayload();
             $userId = $session['userId'] ?? '';
             if (empty($userId)) {
@@ -348,7 +348,7 @@ App::shutdown()
             }
 
             for ($i = 0; $i < ($count - $sessionLimit); $i++) {
-                $session = array_pop($sessions);
+                $session = array_shift($sessions);
                 $dbForProject->deleteDocument('sessions', $session->getId());
             }
             $dbForProject->deleteCachedDocument('users', $userId);

@@ -960,6 +960,9 @@ class ProjectsConsoleClientTest extends Scope
         $sessionCookie = $response['headers']['set-cookie'];
         $sessionId2 = $response['body']['$id'];
 
+        // request was called in parallel and test failed
+        sleep(5);
+
         /**
          * List sessions
          */
@@ -975,7 +978,6 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(1, count($sessions));
         $this->assertEquals($sessionId2, $sessions[0]['$id']);
-
 
         return $data;
     }
