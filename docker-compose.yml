@@ -821,7 +821,7 @@ services:
   
   graphql-explorer:
     container_name: appwrite-graphql-explorer
-    image: appwrite/altair:0.2.0
+    image: appwrite/altair:0.3.0
     restart: unless-stopped
     networks:
       - appwrite
