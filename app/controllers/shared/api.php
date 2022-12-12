@@ -64,6 +64,7 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
             $queueForUsage->addMetric("teams", $value); // per project
             break;
         case $document->getCollection() === 'users':
+            var_dump($document);
             $queueForUsage->addMetric("users", $value); // per project
             break;
         case $document->getCollection() === 'sessions': // Todo sessions count offset issue

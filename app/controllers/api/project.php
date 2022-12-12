@@ -29,6 +29,7 @@ App::get('/v1/project/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
+            'requests',
             'network.inbound',
             'network.outbound',
             'executions',
@@ -79,12 +80,13 @@ App::get('/v1/project/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'network' => ($usage[$metrics[0]] + $usage[$metrics[1]]),
-            'executions' => $usage[$metrics[2]],
-            'documents' => $usage[$metrics[3]],
-            'databases' => $usage[$metrics[4]],
-            'users' => $usage[$metrics[5]],
-            'storage' => $usage[$metrics[6]],
+            'requests' => ($usage[$metrics[0]]),
+            'network' => ($usage[$metrics[1]] + $usage[$metrics[2]]),
+            'executions' => $usage[$metrics[3]],
+            'documents' => $usage[$metrics[4]],
+            'databases' => $usage[$metrics[5]],
+            'users' => $usage[$metrics[6]],
+            'storage' => $usage[$metrics[7]],
             'buckets' => $usage[$metrics[8]],
         ]), Response::MODEL_USAGE_PROJECT);
     });
