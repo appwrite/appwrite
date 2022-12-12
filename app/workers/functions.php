@@ -233,9 +233,7 @@ $server->job()
             throw new Exception('Missing payload');
         }
 
-        $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
-        $data = $payload['data'] ?? '';
         $eventData = $payload['payload'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
@@ -277,7 +275,7 @@ $server->job()
                         trigger: 'event',
                         event: $events[0],
                         eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
-                        user: $user,
+                        user: $user->isEmpty() ? null : $user,
                         data: null,
                         executionId: null,
                         jwt: null
@@ -288,46 +286,28 @@ $server->job()
             return;
         }
 
+        $type = $payload['type'] ?? '';
+        $jwt = $payload['jwt'] ?? null;
+        $data = $payload['data'] ?? null;
+        $execution = new Document($payload['execution'] ?? []);
+
         /**
          * Handle Schedule and HTTP execution.
          */
-        switch ($type) {
-            case 'http':
-                $jwt = $payload['jwt'] ?? '';
-                $execution = new Document($payload['execution'] ?? []);
-                $user = new Document($payload['user'] ?? []);
-                $execute(
-                    project: $project,
-                    function: $function,
-                    dbForProject: $dbForProject,
-                    queueForFunctions: $queueForFunctions,
-                    trigger: 'http',
-                    executionId: $execution->getId(),
-                    event: null,
-                    eventData: null,
-                    data: $data,
-                    user: $user,
-                    jwt: $jwt,
-                    statsd: $statsd,
-                );
-                break;
-            case 'schedule':
-                $execute(
-                    project: $project,
-                    function: $function,
-                    dbForProject: $dbForProject,
-                    queueForFunctions: $queueForFunctions,
-                    trigger: 'schedule',
-                    executionId: null,
-                    event: null,
-                    eventData: null,
-                    data: null,
-                    user: null,
-                    jwt: null,
-                    statsd: $statsd,
-                );
-                break;
-        }
+        $execute(
+            project: $project,
+            function: $function,
+            dbForProject: $dbForProject,
+            queueForFunctions: $queueForFunctions,
+            trigger: $type,
+            executionId: $execution->isEmpty() ? null : $execution->getId(),
+            user: $user->isEmpty() ? null : $user,
+            data: $data,
+            jwt: $jwt,
+            statsd: $statsd,
+            event: null,
+            eventData: null,
+        );
     });
 
 $server->workerStart();
