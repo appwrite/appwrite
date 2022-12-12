@@ -194,6 +194,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
             $build->setAttribute('outputPath', $response['outputPath']);
+            $build->setAttribute('outputSize', $response['outputSize']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
