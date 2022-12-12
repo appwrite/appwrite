@@ -291,23 +291,28 @@ $server->job()
         $data = $payload['data'] ?? null;
         $execution = new Document($payload['execution'] ?? []);
 
-        /**
-         * Handle Schedule and HTTP execution.
-         */
-        $execute(
-            project: $project,
-            function: $function,
-            dbForProject: $dbForProject,
-            queueForFunctions: $queueForFunctions,
-            trigger: $type,
-            executionId: $execution->isEmpty() ? null : $execution->getId(),
-            user: $user->isEmpty() ? null : $user,
-            data: $data,
-            jwt: $jwt,
-            statsd: $statsd,
-            event: null,
-            eventData: null,
-        );
+        switch ($type) {
+            case 'http':
+            case 'schedule':
+                $execute(
+                    project: $project,
+                    function: $function,
+                    dbForProject: $dbForProject,
+                    queueForFunctions: $queueForFunctions,
+                    trigger: $type,
+                    executionId: $execution->isEmpty() ? null : $execution->getId(),
+                    user: $user->isEmpty() ? null : $user,
+                    data: $data,
+                    jwt: $jwt,
+                    statsd: $statsd,
+                    event: null,
+                    eventData: null,
+                );
+                break;
+            default:
+                throw new \Exception('Invalid build type');
+                break;
+        }
     });
 
 $server->workerStart();
