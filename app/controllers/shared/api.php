@@ -64,8 +64,20 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
             $queueForUsage->addMetric("teams", $value); // per project
             break;
         case $document->getCollection() === 'users':
-            var_dump($document);
             $queueForUsage->addMetric("users", $value); // per project
+            // sessions
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $userSessions = (count($document->getAttribute('sessions')));
+                $sessions = $dbForProject->getDocument('stats', md5("_inf_sessions"));
+                if (!empty($userSessions)) {
+                    $dbForProject->decreaseDocumentAttribute(
+                        'stats',
+                        $sessions->getId(),
+                        'value',
+                        $userSessions
+                    );
+                }
+            }
             break;
         case $document->getCollection() === 'sessions': // Todo sessions count offset issue
             $queueForUsage->addMetric("sessions", $value); // per project
@@ -353,7 +365,7 @@ App::init()
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, $args) => $databaseListener($event, $args, $project, $queueForUsage, $dbForProject))
-            //->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document, Document $collection) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, $args) => $databaseListener($event, $args, $project, $queueForUsage, $dbForProject))
         ;
 
         $useCache = $route->getLabel('cache', false);
