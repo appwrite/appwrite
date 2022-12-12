@@ -55,6 +55,7 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
+                    break;
                 default:
                     break;
             }
