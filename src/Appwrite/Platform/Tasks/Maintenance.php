@@ -92,7 +92,7 @@ class Maintenance extends Action
             ]);
 
 
-            if (\count($certificates) > 0 || true) {
+            if (\count($certificates) > 0) {
                 Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
 
                 foreach ($certificates as $certificate) {
