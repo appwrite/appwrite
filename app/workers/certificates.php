@@ -139,7 +139,7 @@ Server::setResource('execute', function () {
  *
  * @return void
  */
-function saveCertificateDocument(string $domain, Document $certificate, Database $dbForConsole) : void
+function saveCertificateDocument(string $domain, Document $certificate, Database $dbForConsole): void
 {
     // Check if update or insert required
     $certificateDocument = $dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
