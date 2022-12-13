@@ -62,14 +62,13 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
      * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files
      * When we remove a parent document we need to deduct his children aggregation from the project scope
      */
-
+       var_dump($document->getCollection());
     switch (true) {
         case $document->getCollection() === 'teams':
             $queueForUsage->addMetric("teams", $value); // per project
             break;
         case $document->getCollection() === 'users':
             $queueForUsage->addMetric("users", $value); // per project
-
             // Project sessions deduction
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 $userSessions = (count($document->getAttribute('sessions')));
@@ -84,14 +83,13 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
                 }
             }
             break;
-        case $document->getCollection() === 'sessions': // Todo sessions count offset issue
+        case $document->getCollection() === 'sessions': // sessions Todo sessions count offset issue
             $queueForUsage->addMetric("sessions", $value); // per project
             break;
-        case $document->getCollection() === 'databases':
+        case $document->getCollection() === 'databases': // databases
             $queueForUsage->addMetric("databases", $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-
                 //Project collections deduction
                 $dbCollections      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".collections"));
                 $projectCollections = $dbForProject->getDocument('stats', md5("_inf_collections"));
@@ -117,14 +115,13 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
                 }
             }
             break;
-        case $document->getCollection() === 'database_' . $document['$internalId']: // collections
+        case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
             $queueForUsage
-                ->addMetric("collections", $value) // per project
-                ->addMetric("{$document['databaseId']}" . ".collections", $value) // per database
-                ;
+               ->addMetric("collections", $value) // per project
+               ->addMetric("{$document['databaseId']}" . ".collections", $value) // per database
+               ;
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-
                 //Project documents deduction
                 $dbDocuments      = $dbForProject->getDocument('stats', md5("_inf_" . "{$document['databaseId']}" . ".documents"));
                 $projectDocuments = $dbForProject->getDocument('stats', md5("_inf_documents"));
@@ -150,7 +147,6 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
             $queueForUsage->addMetric("buckets", $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-
                 //Project files deduction
                 $bucketFiles  = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files"));
                 $projectFiles = $dbForProject->getDocument('stats', md5("_inf_files"));
@@ -175,7 +171,7 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
                 }
             }
             break;
-        case $document->getCollection() === 'bucket_' . $document['$internalId']: // files
+        case str_starts_with($document->getCollection(), 'bucket_'): // files
             $queueForUsage
                 ->addMetric("files", $value) // per project
                 ->addMetric("files.storage", $document->getAttribute('sizeOriginal') * $value) // per project
@@ -187,7 +183,6 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
             $queueForUsage->addMetric("functions", $value); // per project
 
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
-
                 //Project deployments deduction
                 $functionDeployments = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getId()}" . ".deployments"));
                 $projectDeployments  = $dbForProject->getDocument('stats', md5("_inf_deployments"));
@@ -274,9 +269,9 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
 
             $queueForUsage
                 ->addMetric("builds", $value) // per project
-                ->addMetric("builds.storage", $document->getAttribute('size') * $value) // per project
+                ->addMetric("builds.compute", $document->getAttribute('duration') * $value) // per project
                 ->addMetric("{$deployment['resourceId']}" . ".builds", $value) // per function
-                ->addMetric("{$deployment['resourceId']}" . ".builds.storage", $document->getAttribute('size') * $value) // per function
+                ->addMetric("{$deployment['resourceId']}" . ".builds.compute", $document->getAttribute('duration') * $value) // per function
                  ;
             break;
         case $document->getCollection() === 'executions':
@@ -645,4 +640,5 @@ App::shutdown()
                 ->addMetric("network.outbound", $response->getSize())
                 ->trigger();
         }
+        var_dump(1);
     });

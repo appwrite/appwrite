@@ -2,12 +2,12 @@
 
 require_once __DIR__ . '/../worker.php';
 
+use Appwrite\Event\Usage;
 use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
-use Domnikl\Statsd\Client;
 use Executor\Executor;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -28,7 +28,7 @@ Server::setResource('execute', function () {
     return function (
         Func $queueForFunctions,
         Database $dbForProject,
-        Client $statsd,
+        Usage $queueForUsage,
         Document $project,
         Document $function,
         string $trigger,
@@ -39,6 +39,7 @@ Server::setResource('execute', function () {
         string $eventData = null,
         string $executionId = null,
     ) {
+
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
@@ -201,6 +202,15 @@ Server::setResource('execute', function () {
             channels: $target['channels'],
             roles: $target['roles']
         );
+
+        /** Trigger usage queue */
+        $queueForUsage
+            ->setProject($project)
+            ->addMetric('executions', 1) // per project
+            ->addMetric('executions.compute', $execution->getAttribute('duration'))// per project
+            ->addMetric("{$function->getId()}" . ".executions", 1)
+            ->addMetric("{$function->getId()}" . ".executions.compute", $execution->getAttribute('duration'))
+            ->trigger();
     };
 });
 
@@ -208,9 +218,9 @@ $server->job()
     ->inject('message')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->inject('statsd')
+    ->inject('queueForUsage')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute) {
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -253,7 +263,7 @@ $server->job()
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
-                        statsd: $statsd,
+                        queueForUsage: $queueForUsage,
                         dbForProject: $dbForProject,
                         project: $project,
                         function: $function,
@@ -292,7 +302,7 @@ $server->job()
                     data: $data,
                     user: $user,
                     jwt: $jwt,
-                    statsd: $statsd,
+                    queueForUsage: $queueForUsage,
                 );
                 break;
             case 'schedule':
@@ -308,7 +318,7 @@ $server->job()
                     data: null,
                     user: null,
                     jwt: null,
-                    statsd: $statsd,
+                    queueForUsage: $queueForUsage,
                 );
                 break;
         }

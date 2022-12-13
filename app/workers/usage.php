@@ -2,10 +2,13 @@
 
 require_once __DIR__ . '/../worker.php';
 
+use Appwrite\Extend\Exception;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Message;
 use Utopia\CLI\Console;
@@ -43,8 +46,6 @@ $server->job()
         }
     });
 
-
-$server->start();
 $server
     ->workerStart()
     ->inject('register')
@@ -54,17 +55,21 @@ $server
         Timer::tick(30000, function () use ($register, $cache, $pools, $periods, &$stats) {
             $slice = array_slice($stats, 0, count($stats));
             array_splice($stats, 0, count($stats));
+            $log = [];
             foreach ($slice as $metric) {
+                $dbForProject = new Database(
+                    $pools
+                        ->get($metric['database'])
+                        ->pop()
+                        ->getResource(),
+                    $cache
+                );
+                $dbForProject->setNamespace('_' . $metric['projectInternalId']);
                 foreach ($periods as $period => $format) {
                     $time = 'inf' ===  $period ? null : date($format, time());
                     $id = \md5("{$time}_{$period}_{$metric['key']}");
-                    $dbForProject = new Database($pools->get($metric['database'])->pop()->getResource(), $cache);
-                    $dbForProject->setNamespace('_' . $metric['projectInternalId']);
-
                     try {
-                        $document = $dbForProject->getDocument('stats', $id);
-                        if ($document->isEmpty()) {
-                            //console::log("{$period}, {$time}, {$metric['key']}={$metric['value']}");
+                        try {
                             $dbForProject->createDocument('stats', new Document([
                                 '$id' => $id,
                                 'period' => $period,
@@ -73,21 +78,37 @@ $server
                                 'value' => $metric['value'],
                                 'region' => App::getEnv('_APP_REGION', 'default'),
                             ]));
-                        } else {
-                            //console::info("{$document->getAttribute('period')}, {$document->getAttribute('time')}, {$document->getAttribute('metric')} = {$value}");
+                        } catch (Duplicate $th) {
                             $dbForProject->increaseDocumentAttribute(
                                 'stats',
-                                $document->getId(),
+                                $id,
                                 'value',
                                 $metric['value']
                             );
                         }
+
+                        $log[] = [
+                            'id' => $id,
+                            'period' => $period,
+                            'time' => $time,
+                            'metric' => $metric['key'],
+                            'value' => $metric['value'],
+                            'region' => App::getEnv('_APP_REGION', 'default'),
+                        ];
                     } catch (\Exception $e) {
                         console::error($e->getMessage());
                     } finally {
                         $pools->reclaim();
                     }
                 }
+
+                if (!empty($metrics)) {
+                    $dbForProject->createDocument('statsLogger', new Document([
+                        'time' => DateTime::now(),
+                        'metrics' => $log,
+                    ]));
+                }
             }
         });
     });
+$server->start();

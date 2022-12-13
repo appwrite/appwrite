@@ -133,7 +133,6 @@ class Executor
             'variables' => $variables,
             'payload' => $payload,
             'timeout' => $timeout,
-
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,

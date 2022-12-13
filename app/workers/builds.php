@@ -56,6 +56,11 @@ class BuildsV1 extends Worker
         }
     }
 
+    /**
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws Throwable
+     * @throws \Utopia\Database\Exception\Structure
+     */
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
         global $register;
@@ -169,8 +174,8 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
+                projectId: $project->getId(),
                 source: $source,
                 image: $runtime['image'],
                 remove: true,
@@ -248,6 +253,17 @@ class BuildsV1 extends Worker
                 roles: $target['roles']
             );
         }
+
+        /** Trigger usage queue */
+        $this
+            ->getUsageQueue()
+            ->setProject($project)
+            ->addMetric("builds", 1) // per project
+            ->addMetric("builds.compute", $build->getAttribute('duration')) // per project
+            ->addMetric("{$function->getId()}" . ".builds", 1) // per function
+            ->addMetric("{$function->getId()}" . ".builds.compute", $build->getAttribute('duration')) // per function
+            ->trigger()
+        ;
     }
 
     public function shutdown(): void

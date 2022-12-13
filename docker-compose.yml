@@ -93,7 +93,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -390,6 +390,7 @@ services:
       - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_CONNECTIONS_STORAGE
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates

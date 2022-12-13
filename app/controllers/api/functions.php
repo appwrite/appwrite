@@ -1373,10 +1373,10 @@ App::get('/v1/functions/:functionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'function.' . $function->getId() . '.deployments',
-            'function.' . $function->getId() . '.deployments.storage',
+            'functions.' . $function->getId() . '.deployments',
+            'functions.' . $function->getId() . '.deployments.storage',
             $function->getId() . '.builds',
-            $function->getId() . '.builds.storage',
+            $function->getId() . '.builds.compute',
             $function->getId() . '.executions',
             $function->getId() . '.executions.compute',
         ];
@@ -1424,7 +1424,7 @@ App::get('/v1/functions/:functionId/usage')
             'deployments' => $usage[$metrics[0]],
             'deploymentsStorage' => $usage[$metrics[1]],
             'builds' => $usage[$metrics[2]],
-            'buildsStorage' => $usage[$metrics[3]],
+            'buildsCompute' => $usage[$metrics[3]],
             'executions' => $usage[$metrics[4]],
             'executionsCompute' => $usage[$metrics[5]],
         ]), Response::MODEL_USAGE_FUNCTION);
@@ -1453,7 +1453,7 @@ App::get('/v1/functions/usage')
             'deployments',
             'deployments.storage',
             'builds',
-            'builds.storage',
+            'builds.compute',
             'executions',
             'executions.compute',
         ];
@@ -1495,14 +1495,13 @@ App::get('/v1/functions/usage')
         }
         $usage[$metric] = array_reverse($usage[$metric]);
     }
-
         $response->dynamic(new Document([
             'range' => $range,
             'functions' => $usage[$metrics[0]],
             'deployments' => $usage[$metrics[1]],
             'deploymentsStorage' => $usage[$metrics[2]],
             'builds' => $usage[$metrics[3]],
-            'buildsStorage' => $usage[$metrics[4]],
+            'buildsCompute' => $usage[$metrics[4]],
             'executions' => $usage[$metrics[5]],
             'executionsCompute' => $usage[$metrics[6]],
         ]), Response::MODEL_USAGE_FUNCTIONS);

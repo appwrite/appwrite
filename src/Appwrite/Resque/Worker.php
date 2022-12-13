@@ -2,6 +2,8 @@
 
 namespace Appwrite\Resque;
 
+use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Exception;
 use Utopia\App;
 use Utopia\Cache\Cache;
@@ -9,6 +11,8 @@ use Utopia\Config\Config;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Pools\Group;
+use Utopia\Queue\Connection;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\DOSpaces;
@@ -141,7 +145,7 @@ abstract class Worker
         global $register;
 
         try {
-            $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+            $pools = $register->get('pools'); /** @var Group $pools */
             $pools->reclaim();
 
             $this->shutdown();
@@ -176,7 +180,7 @@ abstract class Worker
     {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var Group $pools */
 
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $this->getConsoleDB();
@@ -213,7 +217,7 @@ abstract class Worker
     {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var Group $pools */
 
         $dbAdapter = $pools
             ->get('console')
@@ -237,7 +241,7 @@ abstract class Worker
     {
         global $register;
 
-        $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+        $pools = $register->get('pools'); /** @var Group $pools */
 
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
@@ -251,6 +255,24 @@ abstract class Worker
         }
 
         return new Cache(new Sharding($adapters));
+    }
+
+    /**
+     * Get usage queue
+     * @return Usage
+     * @throws Exception
+     */
+    protected function getUsageQueue(): Usage
+    {
+        global $register;
+
+        $pools = $register->get('pools'); /** @var Group $pools */
+        $queue = $pools
+            ->get('queue')
+            ->pop()
+            ->getResource();
+
+        return new Usage($queue);
     }
 
     /**
@@ -291,7 +313,6 @@ abstract class Worker
     public function getDevice($root): Device
     {
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
-
         $acl = 'private';
         $device = Storage::DEVICE_LOCAL;
         $accessKey = '';
