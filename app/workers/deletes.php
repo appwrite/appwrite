@@ -411,6 +411,18 @@ class DeletesV1 extends Worker
         $functionId = $document->getId();
 
         /**
+         * Delete Schedule
+         */
+        Console::info("Deleting schedule for function " . $functionId);
+        $dbForConsole = $this->getConsoleDB();
+        $this->deleteByGroup('schedules', [
+            Query::equal('region', [$project->getAttribute('region', 'default')]),
+            Query::equal('resourceType', ['function']),
+            Query::equal('resourceId', [$functionId]),
+            Query::equal('projectId', [$projectId])
+        ], $dbForConsole);
+
+        /**
          * Delete Variables
          */
         Console::info("Deleting variables for function " . $functionId);
