@@ -432,6 +432,32 @@ class AccountTest extends Scope
         return $account;
     }
 
+    public function testUpdateAccountPrefs(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_ACCOUNT_PREFS);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'prefs' => [
+                    'key' => 'value'
+                ]
+            ]
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertArrayNotHasKey('errors', $account['body']);
+        $this->assertIsArray($account['body']['data']);
+        $this->assertIsArray($account['body']['data']['accountUpdatePrefs']);
+        $this->assertEquals(['data' => \json_encode(['key' => 'value'])], $account['body']['data']['accountUpdatePrefs']['prefs']);
+
+        return $account;
+    }
+
     public function testDeleteAccountSessions(): array
     {
         $projectId = $this->getProject()['$id'];

@@ -283,6 +283,8 @@ class Mapper
                 $type = Type::float();
                 break;
             case 'Utopia\Validator\Assoc':
+                $type = Types::assoc();
+                break;
             case 'Utopia\Validator\JSON':
                 $type = Types::json();
                 break;

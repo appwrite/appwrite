@@ -946,14 +946,17 @@ trait Base
                     }
                 }';
             case self::$UPDATE_ACCOUNT_PREFS:
-                return 'mutation updateAccountPrefs($userId: String!, $prefs: Json!){
-                    accountUpdatePrefs(userId: $userId, prefs: $prefs) {
+                return 'mutation updateAccountPrefs($prefs: Assoc!){
+                    accountUpdatePrefs(prefs: $prefs) {
                         _id
                         name
                         registration
                         status
                         email
                         emailVerification
+                        prefs {
+                          data
+                        }
                     }
                 }';
             case self::$UPDATE_ACCOUNT_STATUS:
