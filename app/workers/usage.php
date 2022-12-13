@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../worker.php';
 
-use Appwrite\Extend\Exception;
 use Swoole\Timer;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -41,7 +40,6 @@ $server->job()
 
                 continue;
             }
-
             $stats[$uniq]['value'] += $metric['value'];
         }
     });
@@ -71,11 +69,11 @@ $server
                     try {
                         try {
                             $dbForProject->createDocument('stats', new Document([
-                                '$id' => $id,
+                                '$id'    => $id,
                                 'period' => $period,
-                                'time' => $time,
+                                'time'   => $time,
                                 'metric' => $metric['key'],
-                                'value' => $metric['value'],
+                                'value'  => $metric['value'],
                                 'region' => App::getEnv('_APP_REGION', 'default'),
                             ]));
                         } catch (Duplicate $th) {
@@ -88,11 +86,11 @@ $server
                         }
 
                         $log[] = [
-                            'id' => $id,
+                            'id'     => $id,
                             'period' => $period,
-                            'time' => $time,
+                            'time'   => $time,
                             'metric' => $metric['key'],
-                            'value' => $metric['value'],
+                            'value'  => $metric['value'],
                             'region' => App::getEnv('_APP_REGION', 'default'),
                         ];
                     } catch (\Exception $e) {
@@ -102,9 +100,9 @@ $server
                     }
                 }
 
-                if (!empty($metrics)) {
+                if (!empty($log)) {
                     $dbForProject->createDocument('statsLogger', new Document([
-                        'time' => DateTime::now(),
+                        'time'    => DateTime::now(),
                         'metrics' => $log,
                     ]));
                 }

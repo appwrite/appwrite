@@ -2,7 +2,6 @@
 
 namespace Appwrite\Resque;
 
-use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Exception;
 use Utopia\App;
@@ -12,7 +11,6 @@ use Utopia\Cache\Adapter\Sharding;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\DOSpaces;

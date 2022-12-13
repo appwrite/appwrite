@@ -4,7 +4,6 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
-use Utopia\CLI\Console;
 
 class Executor
 {
@@ -133,6 +132,7 @@ class Executor
             'variables' => $variables,
             'payload' => $payload,
             'timeout' => $timeout,
+
             'image' => $image,
             'source' => $source,
             'entrypoint' => $entrypoint,
