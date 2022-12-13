@@ -117,7 +117,7 @@ class Project extends Model
             ->addRule('authSessionsLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max sessions allowed per user. 100 maximum.',
-                'default' => 100,
+                'default' => 10,
                 'example' => 10,
             ])
             ->addRule('providers', [
