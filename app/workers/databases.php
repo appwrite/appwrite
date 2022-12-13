@@ -47,7 +47,7 @@ function getCache(): Cache
 
 /**
  * Get Project DB
- * 
+ *
  * @param Document $project
  * @returns Database
  */
@@ -80,7 +80,7 @@ function getProjectDB(Document $project): Database
  * @param Document $collection
  * @param Document $attribute
  * @param Database $dbForConsole
- * 
+ *
  * @param Document $project
  */
 function createDBAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole): void
