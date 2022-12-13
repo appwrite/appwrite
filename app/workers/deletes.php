@@ -358,8 +358,15 @@ class DeletesV1 extends Worker
 
     protected function deleteExpiredSessions(): void
     {
-        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
+        $consoleDB = $this->getConsoleDB();
+
+        $this->deleteForProjectIds(function (Document $project) use ($consoleDB) {
             $dbForProject = $this->getProjectDB($project);
+
+            $project = $consoleDB->getDocument('projects', $project->getId());
+            $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
+
             // Delete Sessions
             $this->deleteByGroup('sessions', [
                 Query::lessThan('$createdAt', $expired)
