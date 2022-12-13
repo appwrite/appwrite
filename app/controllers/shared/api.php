@@ -320,7 +320,7 @@ App::init()
 
 /**
  * Limit user session
- * 
+ *
  * Delete older sessions if the number of sessions have crossed
  * the session limit set for the project
  */
