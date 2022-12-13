@@ -321,10 +321,10 @@ class DeletesV1 extends Worker
     {
         $consoleDB = $this->getConsoleDB();
 
-        $this->deleteForProjectIds(function (string $projectId) use ($consoleDB) {
-            $dbForProject = $this->getProjectDB($projectId);
+        $this->deleteForProjectIds(function (Document $project) use ($consoleDB) {
+            $dbForProject = $this->getProjectDB($project);
 
-            $project = $consoleDB->getDocument('projects', $projectId);
+            $project = $consoleDB->getDocument('projects', $project->getId());
             $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
 
