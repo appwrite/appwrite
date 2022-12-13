@@ -261,6 +261,7 @@ class BuildsV1 extends Worker
                     ->setParam('builds.{scope}.compute', 1)
                     ->setParam('buildStatus', $build->getAttribute('status', ''))
                     ->setParam('buildTime', $build->getAttribute('duration'))
+                    ->setParam('buildSize', $build->getAttribute('outputSize'))
                     ->setParam('networkRequestSize', 0)
                     ->setParam('networkResponseSize', 0)
                     ->submit();
