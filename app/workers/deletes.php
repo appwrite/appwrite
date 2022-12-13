@@ -116,9 +116,6 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
                 $this->deleteCacheByDate();
                 break;
-            case DELETE_TYPE_SCHEDULES:
-                $this->deleteSchedules($this->args['datetime']);
-                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -127,40 +124,6 @@ class DeletesV1 extends Worker
 
     public function shutdown(): void
     {
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function deleteSchedules(string $datetime): void
-    {
-
-        $this->deleteByGroup(
-            'schedules',
-            [
-                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', ['function']),
-                Query::lessThanEqual('resourceUpdatedAt', $datetime),
-                Query::equal('active', [false]),
-            ],
-            $this->getConsoleDB(),
-            function (Document $document) {
-                Console::info('Querying schedule for function ' . $document->getAttribute('resourceId'));
-                $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
-
-                if ($project->isEmpty()) {
-                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
-                    return;
-                }
-
-                $function = $this->getProjectDB($project)->getDocument('functions', $document->getAttribute('resourceId'));
-
-                if ($function->isEmpty()) {
-                    $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
-                }
-            }
-        );
     }
 
     /**
