@@ -25,10 +25,11 @@ class Maintenance extends Action
         $this
             ->desc('Schedules maintenance tasks and publishes them to resque')
             ->inject('dbForConsole')
-            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
+            ->inject('queueForCertificates')
+            ->callback(fn (Database $dbForConsole, Certificate $queueForCertificates) => $this->action($dbForConsole, $queueForCertificates));
     }
 
-    public function action(Database $dbForConsole): void
+    public function action(Database $dbForConsole, Certificate $queueForCertificates): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
@@ -80,7 +81,7 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function renewCertificates($dbForConsole)
+        function renewCertificates($dbForConsole, $queueForCertificates)
         {
             $time = DateTime::now();
 
@@ -91,12 +92,11 @@ class Maintenance extends Action
             ]);
 
 
-            if (\count($certificates) > 0) {
+            if (\count($certificates) > 0 || true) {
                 Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
 
-                $event = new Certificate();
                 foreach ($certificates as $certificate) {
-                    $event
+                    $queueForCertificates
                         ->setDomain(new Document([
                             'domain' => $certificate->getAttribute('domain')
                         ]))
@@ -135,7 +135,7 @@ class Maintenance extends Action
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForCertificates) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -145,7 +145,7 @@ class Maintenance extends Action
             notifyDeleteUsageStats($usageStatsRetentionHourly);
             notifyDeleteConnections();
             notifyDeleteExpiredSessions();
-            renewCertificates($dbForConsole);
+            renewCertificates($dbForConsole, $queueForCertificates);
             notifyDeleteCache($cacheRetention);
             notifyDeleteSchedules($schedulesDeletionRetention);
         }, $interval);

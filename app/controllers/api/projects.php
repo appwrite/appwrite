@@ -1314,7 +1314,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
+    ->inject('queueForCertificates')
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Certificate $queueForCertificates) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1352,8 +1353,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        $event = new Certificate();
-        $event
+        $queueForCertificates
             ->setDomain($domain)
             ->trigger();
 

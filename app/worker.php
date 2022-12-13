@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use Swoole\Runtime;
 use Utopia\App;
@@ -78,6 +79,16 @@ Server::setResource('cache', function (Registry $register) {
 Server::setResource('queueForFunctions', function (Registry $register) {
     $pools = $register->get('pools');
     return new Func(
+        $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+    );
+}, ['register']);
+
+Server::setResource('queueForCertificates', function (Registry $register) {
+    $pools = $register->get('pools');
+    return new Certificate(
         $pools
             ->get('queue')
             ->pop()
