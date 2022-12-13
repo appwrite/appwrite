@@ -4,6 +4,8 @@ namespace Appwrite\Event;
 
 use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Database extends Event
 {
@@ -12,7 +14,7 @@ class Database extends Event
     protected ?Document $collection = null;
     protected ?Document $document = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
         parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
     }
@@ -104,7 +106,9 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'type' => $this->type,

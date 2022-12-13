@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
@@ -112,6 +113,10 @@ CLI::setResource('influxdb', function (Registry $register) {
 
 CLI::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
+
+CLI::setResource('database', function (Group $pools) {
+    return new EventDatabase($pools->get('queue')->pop()->getResource());
 }, ['pools']);
 
 CLI::setResource('logError', function (Registry $register) {

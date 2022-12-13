@@ -850,7 +850,9 @@ App::setResource('events', fn() => new Event('', ''));
 App::setResource('audits', fn() => new Audit());
 App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
-App::setResource('database', fn() => new EventDatabase());
+App::setResource('database', function (Group $pools) {
+    return new EventDatabase($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 App::setResource('messaging', fn() => new Phone());
 App::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());
