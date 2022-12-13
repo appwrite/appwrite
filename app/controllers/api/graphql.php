@@ -86,6 +86,7 @@ App::post('/v1/graphql')
         }
 
         $type = $request->getHeader('content-type');
+
         if (\str_starts_with($type, 'application/graphql')) {
             $query = parseGraphql($request);
         }
@@ -195,6 +196,7 @@ function parseMultipart(array $query, Request $request): array
 {
     $operations = \json_decode($query['operations'], true);
     $map = \json_decode($query['map'], true);
+
     foreach ($map as $fileKey => $locations) {
         foreach ($locations as $location) {
             $items = &$operations;
@@ -207,8 +209,12 @@ function parseMultipart(array $query, Request $request): array
             $items = $request->getFiles($fileKey);
         }
     }
+
     $query['query'] = $operations['query'];
     $query['variables'] = $operations['variables'];
+
+    unset($query['operations']);
+    unset($query['map']);
 
     return $query;
 }

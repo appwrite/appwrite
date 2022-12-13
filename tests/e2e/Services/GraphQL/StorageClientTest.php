@@ -73,9 +73,9 @@ class StorageClientTest extends Scope
                 ]
             ]),
             'map' => \json_encode([
-                'file' => ["variables.file"]
+                '0' => ["variables.file"]
             ]),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            '0' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
