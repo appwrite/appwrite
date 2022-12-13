@@ -114,6 +114,12 @@ class Project extends Model
                 'default' => 0,
                 'example' => 100,
             ])
+            ->addRule('authSessionsLimit', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Max sessions allowed per user. 100 maximum.',
+                'default' => 10,
+                'example' => 10,
+            ])
             ->addRule('providers', [
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
@@ -233,6 +239,7 @@ class Project extends Model
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('authSessionLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

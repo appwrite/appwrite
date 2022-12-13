@@ -318,6 +318,45 @@ App::init()
         }
     });
 
+/**
+ * Limit user session
+ *
+ * Delete older sessions if the number of sessions have crossed
+ * the session limit set for the project
+ */
+App::shutdown()
+    ->groups(['session'])
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
+        $session = $response->getPayload();
+        $userId = $session['userId'] ?? '';
+        if (empty($userId)) {
+            return;
+        }
+
+        $user = $dbForProject->getDocument('users', $userId);
+        if ($user->isEmpty()) {
+            return;
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $count = \count($sessions);
+        if ($count <= $sessionLimit) {
+            return;
+        }
+
+        for ($i = 0; $i < ($count - $sessionLimit); $i++) {
+            $session = array_shift($sessions);
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+        $dbForProject->deleteCachedDocument('users', $userId);
+    });
+
 App::shutdown()
     ->groups(['api'])
     ->inject('utopia')
