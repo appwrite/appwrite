@@ -10,8 +10,8 @@ use Tests\E2E\Scopes\SideServer;
 use CURLFile;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\DateTime;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class UsageTest extends Scope
 {

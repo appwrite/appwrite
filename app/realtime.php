@@ -14,7 +14,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Logger\Log;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

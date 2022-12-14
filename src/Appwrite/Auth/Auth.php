@@ -12,7 +12,7 @@ use Appwrite\Auth\Hash\Sha;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 

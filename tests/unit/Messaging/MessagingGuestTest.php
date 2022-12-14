@@ -5,7 +5,7 @@ namespace Tests\Unit\Messaging;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 
 class MessagingGuestTest extends TestCase
 {

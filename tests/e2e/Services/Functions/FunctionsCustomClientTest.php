@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
