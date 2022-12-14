@@ -49,7 +49,7 @@
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.28.*",
+        "utopia-php/database": "dev-feat-technical-debt as 0.28.0",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/framework": "0.25.*",

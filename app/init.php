@@ -37,7 +37,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\View;
 use Utopia\App;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Logger;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;

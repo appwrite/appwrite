@@ -9,7 +9,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;

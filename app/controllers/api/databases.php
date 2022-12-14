@@ -7,7 +7,7 @@ use Utopia\Audit\Audit;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\DatetimeValidator;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;

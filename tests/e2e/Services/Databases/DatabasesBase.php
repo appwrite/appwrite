@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;

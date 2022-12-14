@@ -6,7 +6,7 @@ use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 

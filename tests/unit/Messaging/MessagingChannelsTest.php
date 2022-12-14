@@ -6,7 +6,7 @@ use Appwrite\Auth\Auth;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Role;
 
 class MessagingChannelsTest extends TestCase

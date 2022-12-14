@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 

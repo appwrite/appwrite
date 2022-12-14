@@ -16,7 +16,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Locale\Locale;

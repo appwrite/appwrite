@@ -16,7 +16,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
