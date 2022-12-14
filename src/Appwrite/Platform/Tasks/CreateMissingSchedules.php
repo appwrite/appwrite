@@ -8,14 +8,11 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 use Utopia\Database\ID;
-
-use function Swoole\Coroutine\run;
+use Utopia\Database\Validator\Authorization;
 
 class CreateMissingSchedules extends Action
 {
-
     public static function getName(): string
     {
         return 'create-missing-schedules';
@@ -35,6 +32,9 @@ class CreateMissingSchedules extends Action
      */
     public function action(Database $dbForConsole, callable $getProjectDB): void
     {
+        Authorization::disable();
+        Authorization::setDefaultStatus(false);
+
         Console::title('CreateMissingSchedules V1');
         Console::success(APP_NAME . ' CreateMissingSchedules v1 has started');
 
@@ -47,7 +47,9 @@ class CreateMissingSchedules extends Action
             }
             $projects = $dbForConsole->find('projects', $projectsQueries);
 
-            if (count($projects) === 0) break;
+            if (count($projects) === 0) {
+                break;
+            }
 
             foreach ($projects as $project) {
                 Console::log("Checking Project " . $project->getAttribute('name') . " (" . $project->getId() . ")");
@@ -60,31 +62,29 @@ class CreateMissingSchedules extends Action
                         $functionsQueries[] = Query::cursorAfter($functionCursor);
                     }
                     $functions = $dbForProject->find('functions', $functionsQueries);
-                    if (count($functions) === 0) break;
+                    if (count($functions) === 0) {
+                        break;
+                    }
 
                     foreach ($functions as $function) {
-                        run(
-                            function () use ($function, $dbForConsole, $project) {
-                                Console::log("Checking Function " . $function->getAttribute('name') . " (" . $function->getId() . ")");
-                                $scheduleId = $function->getAttribute('scheduleId');
-                                $schedules = $dbForConsole->find('schedules', [Query::equal('$id', [$scheduleId])]);
+                        $scheduleId = $function->getAttribute('scheduleId');
+                        $schedule = $dbForConsole->getDocument('schedules', $scheduleId);
 
-                                if (empty($schedules)) {
-                                    $functionId = $function->getId();
-                                    Console::success('Recreated schedule for function ' . $functionId);
-                                    $dbForConsole->createDocument('schedules', new Document([
-                                        '$id' => ID::custom($scheduleId),
-                                        'region' => $project->getAttribute('region', 'default'),
-                                        'resourceType' => 'function',
-                                        'resourceId' => $functionId,
-                                        'resourceUpdatedAt' => DateTime::now(),
-                                        'projectId' => $project->getId(),
-                                        'schedule'  => $function->getAttribute('schedule'),
-                                        'active' => !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')),
-                                    ]));
-                                }
-                            }
-                        );
+                        if ($schedule->isEmpty()) {
+                            $functionId = $function->getId();
+                            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                                '$id' => ID::custom($scheduleId),
+                                'region' => $project->getAttribute('region', 'default'),
+                                'resourceType' => 'function',
+                                'resourceId' => $functionId,
+                                'resourceUpdatedAt' => DateTime::now(),
+                                'projectId' => $project->getId(),
+                                'schedule'  => $function->getAttribute('schedule'),
+                                'active' => !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')),
+                            ]));
+
+                            Console::success('Recreated schedule for function ' . $functionId);
+                        }
                     }
 
                     $functionCursor = $functions[array_key_last($functions)];
