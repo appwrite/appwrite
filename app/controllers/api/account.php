@@ -713,11 +713,34 @@ App::post('/v1/account/sessions/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
+
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText("emails.magicSession.subject");
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
+            ->setParam('{{name}}', '')
+            ->setParam('{{body}}', $locale->getText("emails.magicSession.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"))
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
+
         $mails
-            ->setType(MAIL_TYPE_MAGIC_SESSION)
+            ->setName('')
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->trigger()
         ;
 
@@ -2150,12 +2173,40 @@ App::post('/v1/account/verification')
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
+        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+
+        if (!$this->doesLocaleExist($locale, $prefix)) {
+            $locale->setDefault('en');
+        }
+
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $subject = \sprintf($locale->getText("emails.verification.subject"), $team->getAttribute('name'), $projectName);
+        $body->setParam('{{owner}}', $user->getAttribute('name'));
+        $body->setParam('{{team}}', $team->getAttribute('name'));
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
+            ->setParam('{{name}}', $name)
+            ->setParam('{{body}}', $locale->getText("emails.verification.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.verification.signature"))
+            ->setParam('{{project}}', $projectName)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
 
         $mails
-            ->setType(MAIL_TYPE_VERIFICATION)
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->setName($user->getAttribute('name'))
             ->trigger()
         ;
