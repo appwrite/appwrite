@@ -11,11 +11,11 @@ use Utopia\Database\Database;
 use Utopia\Database\ID;
 use Utopia\Database\Validator\Authorization;
 
-class CreateMissingSchedules extends Action
+class PatchCreateMissingSchedules extends Action
 {
     public static function getName(): string
     {
-        return 'create-missing-schedules';
+        return 'patch-create-missing-schedules';
     }
 
     public function __construct()
@@ -35,8 +35,8 @@ class CreateMissingSchedules extends Action
         Authorization::disable();
         Authorization::setDefaultStatus(false);
 
-        Console::title('CreateMissingSchedules V1');
-        Console::success(APP_NAME . ' CreateMissingSchedules v1 has started');
+        Console::title('PatchCreateMissingSchedules V1');
+        Console::success(APP_NAME . ' PatchCreateMissingSchedules v1 has started');
 
         $limit = 100;
         $projectCursor = null;
