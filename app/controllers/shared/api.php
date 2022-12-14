@@ -62,7 +62,7 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
      * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files
      * When we remove a parent document we need to deduct his children aggregation from the project scope
      */
-       var_dump($document->getCollection());
+       //var_dump($document->getCollection());
     switch (true) {
         case $document->getCollection() === 'teams':
             $queueForUsage->addMetric("teams", $value); // per project
@@ -145,7 +145,6 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
             break;
         case $document->getCollection() === 'buckets':
             $queueForUsage->addMetric("buckets", $value); // per project
-
             if ($event === Database::EVENT_DOCUMENT_DELETE) {
                 //Project files deduction
                 $bucketFiles  = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getId()}" . ".files"));
@@ -594,10 +593,10 @@ App::shutdown()
 
                 $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
                 $data = json_encode([
-                'resourceType' => $resourceType,
-                'resource' => $resource,
-                'contentType' => $response->getContentType(),
-                'payload' => base64_encode($data['payload']),
+                    'resourceType' => $resourceType,
+                    'resource' => $resource,
+                    'contentType' => $response->getContentType(),
+                    'payload' => base64_encode($data['payload']),
                 ]) ;
 
                 $signature = md5($data);
@@ -640,5 +639,4 @@ App::shutdown()
                 ->addMetric("network.outbound", $response->getSize())
                 ->trigger();
         }
-        var_dump(1);
     });

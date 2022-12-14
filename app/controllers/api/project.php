@@ -29,7 +29,7 @@ App::get('/v1/project/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'requests',
+            'network.requests',
             'network.inbound',
             'network.outbound',
             'executions',
@@ -75,7 +75,7 @@ App::get('/v1/project/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
+        //$usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([

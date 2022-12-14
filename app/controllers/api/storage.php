@@ -1478,7 +1478,7 @@ App::get('/v1/storage/:bucketId/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
+        //$usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([
@@ -1547,7 +1547,7 @@ App::get('/v1/storage/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
+        //$usage[$metric] = array_reverse($usage[$metric]);
     }
 
     $response->dynamic(new Document([

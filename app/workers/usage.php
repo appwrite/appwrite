@@ -19,6 +19,7 @@ $stats = [];
 
 $periods['1h']  = 'Y-m-d H:00';
 $periods['1d']  = 'Y-m-d 00:00';
+$periods['1m']  = 'Y-m-00 00:00';
 $periods['inf'] = '0000-00-00 00:00';
 
 $server->job()
@@ -50,11 +51,17 @@ $server
     ->inject('cache')
     ->inject('pools')
     ->action(function ($register, $cache, $pools) use ($periods, &$stats) {
-        Timer::tick(30000, function () use ($register, $cache, $pools, $periods, &$stats) {
+        Timer::tick(3000, function () use ($register, $cache, $pools, $periods, &$stats) {
             $slice = array_slice($stats, 0, count($stats));
             array_splice($stats, 0, count($stats));
+            //var_dump($slice);
             $log = [];
+
             foreach ($slice as $metric) {
+                if ($metric['value'] == 0) {
+                    continue;
+                }
+                var_dump($metric['value']);
                 $dbForProject = new Database(
                     $pools
                         ->get($metric['database'])
@@ -62,6 +69,7 @@ $server
                         ->getResource(),
                     $cache
                 );
+
                 $dbForProject->setNamespace('_' . $metric['projectInternalId']);
                 foreach ($periods as $period => $format) {
                     $time = 'inf' ===  $period ? null : date($format, time());
@@ -69,20 +77,29 @@ $server
                     try {
                         try {
                             $dbForProject->createDocument('stats', new Document([
-                                '$id'    => $id,
+                                '$id' => $id,
                                 'period' => $period,
-                                'time'   => $time,
+                                'time' => $time,
                                 'metric' => $metric['key'],
-                                'value'  => $metric['value'],
+                                'value' => $metric['value'],
                                 'region' => App::getEnv('_APP_REGION', 'default'),
                             ]));
                         } catch (Duplicate $th) {
-                            $dbForProject->increaseDocumentAttribute(
-                                'stats',
-                                $id,
-                                'value',
-                                $metric['value']
-                            );
+                            if ($metric['value'] < 0) {
+                                $dbForProject->decreaseDocumentAttribute(
+                                    'stats',
+                                    $id,
+                                    'value',
+                                    abs($metric['value'])
+                                );
+                            } else {
+                                $dbForProject->increaseDocumentAttribute(
+                                    'stats',
+                                    $id,
+                                    'value',
+                                    $metric['value']
+                                );
+                            }
                         }
 
                         $log[] = [
