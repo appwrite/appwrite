@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+/usr/src/code/vendor/bin/phpbench run --config /usr/src/code/phpbench.json --report appwrite $@
