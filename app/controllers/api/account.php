@@ -2014,12 +2014,35 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
+        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText("emails.recovery.subject");
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
+            ->setParam('{{name}}', $profile->getAttribute('name'))
+            ->setParam('{{body}}', $locale->getText("emails.recovery.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"))
+            ->setParam('{{project}}', $projectName)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
+
+
         $mails
-            ->setType(MAIL_TYPE_RECOVERY)
             ->setRecipient($profile->getAttribute('email', ''))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->setName($profile->getAttribute('name'))
+            ->setBody($body)
+            ->setFrom($from)
+            ->setSubject($subject)
             ->trigger();
         ;
 
@@ -2173,22 +2196,15 @@ App::post('/v1/account/verification')
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
+
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
-
-        if (!$this->doesLocaleExist($locale, $prefix)) {
-            $locale->setDefault('en');
-        }
-
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
-        $subject = \sprintf($locale->getText("emails.verification.subject"), $team->getAttribute('name'), $projectName);
-        $body->setParam('{{owner}}', $user->getAttribute('name'));
-        $body->setParam('{{team}}', $team->getAttribute('name'));
-
+        $subject = $locale->getText("emails.verification.subject");
         $body
             ->setParam('{{subject}}', $subject)
             ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
-            ->setParam('{{name}}', $name)
+            ->setParam('{{name}}', $user->getAttribute('name'))
             ->setParam('{{body}}', $locale->getText("emails.verification.body"))
             ->setParam('{{redirect}}', $url)
             ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
