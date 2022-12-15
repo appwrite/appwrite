@@ -212,7 +212,7 @@ If everything goes well, raise both the pull requests and be ready to respond to
 
 ## 5. Raise a pull request
 
-First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite and the console. If you visit it at `github.com/YOUR_USERNAME/appwrite`, `github.com/YOUR_USERNAME/appwrite/console` you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite and the Console. If you visit it at `github.com/YOUR_USERNAME/appwrite`, `github.com/YOUR_USERNAME/appwrite/console` you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck ?
 
