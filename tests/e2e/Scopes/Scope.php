@@ -6,6 +6,8 @@ use Appwrite\Tests\Retryable;
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Validator;
 
 abstract class Scope extends TestCase
 {
@@ -16,10 +18,9 @@ abstract class Scope extends TestCase
      */
     protected $client = null;
 
-    /**
-     * @var string
-     */
-    protected $endpoint = 'http://localhost/v1';
+    protected string $endpoint = 'http://localhost/v1';
+
+    public static Validator $dateValidator;
 
     protected function setUp(): void
     {
@@ -28,6 +29,8 @@ abstract class Scope extends TestCase
         $this->client
             ->setEndpoint($this->endpoint)
         ;
+
+        self::$dateValidator = new DatetimeValidator();
     }
 
     protected function tearDown(): void

@@ -30,7 +30,7 @@ class StorageCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($bucket['body']['$createdAt']));
+        $this->assertEquals(true, self::$dateValidator->isValid($bucket['body']['$createdAt']));
         $this->assertIsArray($bucket['body']['$permissions']);
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket', $bucket['body']['name']);
@@ -228,7 +228,7 @@ class StorageCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucket['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($bucket['body']['$createdAt']));
+        $this->assertEquals(true, self::$dateValidator->isValid($bucket['body']['$createdAt']));
         $this->assertIsArray($bucket['body']['$permissions']);
         $this->assertIsArray($bucket['body']['allowedFileExtensions']);
         $this->assertEquals('Test Bucket Updated', $bucket['body']['name']);

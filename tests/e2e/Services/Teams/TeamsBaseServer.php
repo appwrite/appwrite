@@ -57,7 +57,7 @@ trait TeamsBaseServer
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
 
         /**
@@ -108,7 +108,7 @@ trait TeamsBaseServer
         $this->assertEquals($email, $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
+        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
 
         $userUid = $response['body']['userId'];
@@ -252,7 +252,7 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['$createdAt']));
 
         /** Delete User */
         $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $userUid, array_merge([
@@ -277,6 +277,6 @@ trait TeamsBaseServer
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['$createdAt']));
     }
 }
