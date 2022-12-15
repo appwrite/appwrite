@@ -19,7 +19,7 @@ $stats = [];
 
 $periods['1h']  = 'Y-m-d H:00';
 $periods['1d']  = 'Y-m-d 00:00';
-$periods['1m']  = 'Y-m-1 00:00';
+//$periods['1m']  = 'Y-m-1 00:00';
 $periods['inf'] = '0000-00-00 00:00';
 
 $server->job()

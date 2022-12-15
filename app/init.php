@@ -817,7 +817,6 @@ App::setResource('loggerBreadcrumbs', function () {
 });
 
 App::setResource('register', fn() => $register);
-
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
