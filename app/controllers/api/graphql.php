@@ -188,6 +188,8 @@ function execute(
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
+    }
+    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 

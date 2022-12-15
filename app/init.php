@@ -1096,6 +1096,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
             return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
         },
     ];
+
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
             return [ 'queries' => $args['queries']];

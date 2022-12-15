@@ -161,7 +161,8 @@ class Mapper
             ];
         }
 
-        // If model has no properties, explicitly add a 'status' field because GraphQL requires at least 1 field per type.
+        // If model has no properties, explicitly add a 'status' field
+        // because GraphQL requires at least 1 field per type.
         if (!$model->isAny() && empty($model->getRules())) {
             $fields['status'] = [
                 'type' => Type::string(),
