@@ -256,9 +256,7 @@ class UsageTest extends Scope
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-        var_dump($storageTotal);
-        var_dump($res['storage'][array_key_last($res['storage'])]['value']);
-        exit;
+
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
 
@@ -516,6 +514,7 @@ class UsageTest extends Scope
         $this->assertEquals($functionId, $execution['body']['functionId']);
 
         $executionTime += (int) ($execution['body']['duration'] * 1000);
+
         if ($execution['body']['status'] == 'failed') {
             $failures++;
         } elseif ($execution['body']['status'] == 'completed') {
@@ -553,6 +552,7 @@ class UsageTest extends Scope
         } elseif ($execution['body']['status'] == 'completed') {
             $executions++;
         }
+
         $executionTime += (int) ($execution['body']['duration'] * 1000);
 
         $data = array_merge($data, [
@@ -590,18 +590,17 @@ class UsageTest extends Scope
         $this->assertIsArray($response['body']['executionsCompute']);
 
         $response = $response['body'];
-        var_dump($executions);
-        var_dump($response['executions'][array_key_last($response['executions'])]['value']);
-        exit;
+
         $this->assertEquals($executions, $response['executions'][array_key_last($response['executions'])]['value']);
         $this->validateDates($response['executions']);
+
         $this->assertEquals($executionTime, $response['executionsCompute'][array_key_last($response['executionsCompute'])]['value']);
         $this->validateDates($response['executionsCompute']);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/usage?range=30d', $data['consoleHeaders']);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(6, count($response['body']));
+        $this->assertEquals(8, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);

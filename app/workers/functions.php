@@ -101,6 +101,7 @@ Server::setResource('execute', function () {
             /**
              * Usage
              */
+
             $queueForUsage
                 ->addMetric('executions', 1) // per project
                 ->addMetric("{$function->getId()}" . ".executions", 1); // per function
@@ -213,8 +214,8 @@ Server::setResource('execute', function () {
         /** Trigger usage queue */
         $queueForUsage
             ->setProject($project)
-            ->addMetric('executions.compute', $execution->getAttribute('duration'))// per project
-            ->addMetric("{$function->getId()}" . ".executions.compute", $execution->getAttribute('duration') * 1000)// per function
+            ->addMetric('executions.compute', (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric("{$function->getId()}" . ".executions.compute", (int)($execution->getAttribute('duration') * 1000))// per function
             ->trigger()
         ;
     };

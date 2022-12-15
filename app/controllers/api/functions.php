@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -851,7 +852,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('events')
     ->inject('mode')
     ->inject('queueForFunctions')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, string $mode, Func $queueForFunctions) {
+    ->inject('queueForUsage')
+    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, string $mode, Func $queueForFunctions, Usage $queueForUsage) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -993,6 +995,13 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stdout', $executionResponse['stdout']);
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+            /**
+             * Sync execution compute usage from
+             */
+            $queueForUsage
+                ->addMetric('executions.compute', (int)($executionResponse['duration'] * 1000))// per project
+                ->addMetric("{$function->getId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
+            ;
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution

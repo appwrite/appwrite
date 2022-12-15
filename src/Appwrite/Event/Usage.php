@@ -18,14 +18,11 @@ class Usage extends Event
      * Add metric.
      *
      * @param string $key
-     * @param int|float $value
+     * @param int $value
      * @return self
      */
-    public function addMetric(string $key, int|float $value): self
+    public function addMetric(string $key, int $value): self
     {
-        if($key == 'executions.compute'){
-            var_dump($value);
-        }
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,
@@ -42,6 +39,8 @@ class Usage extends Event
     public function trigger(): string|bool
     {
         $client = new Client($this->queue, $this->connection);
+
+        var_dump($this->metrics);
 
         return $client->enqueue([
             'project' => $this->getProject(),
