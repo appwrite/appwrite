@@ -47,11 +47,7 @@ Make sure to fill in all data needed and that your provider array key name:
 
 > Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
 
-### 2.2 Add Provider Logo
-
-Add a logo image to your new provider in this path: `public/images/users`. Your logo should be a png 100×100px file with the name of your provider (all lowercase). Please make sure to leave about 30px padding around the logo to be consistent with other logos.
-
-### 2.3 Add Provider Class
+### 2.2 Add Provider Class
 
 Once you have finished setting up all the metadata for the new provider, you need to start coding.
 
@@ -173,9 +169,34 @@ class [PROVIDER NAME] extends OAuth2
 
 Please mention in your documentation what resources or API docs you used to implement the provider's OAuth2 protocol.
 
-## 3. Test your provider
+## 3. Add provider to console
 
-After you finished adding your new provider to Appwrite, you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
+### 3.1 Add provider logo
+
+To add the logo for the provider you are implementing, you will need to create a separate pull request in [`appwrite/console`](https://github.com/appwrite/console) repository.
+
+Appwrite requires 4 copies of the logo, 2 in color and 2 in grayscale, all in SVG format in the following locations.
+
+```bash
+ 
+static/icons/dark/color/XXX.svg
+ 
+static/icons/dark/grayscale/XXX.svg
+
+static/icons/light/color/XXX.svg
+
+static/icons/light/grayscale/XXX.svg
+
+```
+> Where `XXX` is the name of the provider in `lowercase`.
+
+### 3.2 Add provider doc
+
+Make sure you update the documentation url for the implemented provider in `oauth-providers.ts` located in the [`src/lib/stores/oauth-providers.ts`](https://github.com/appwrite/console/blob/main/src/lib/stores/oauth-providers.ts) in the [`appwrite/console`](https://github.com/appwrite/console) repository.
+
+## 4. Test your provider
+
+To test your provider within appwrite make sure you make the changes required for the console in the `console` git submodule present at [`/app/console`](https://github.com/appwrite/appwrite/tree/master/app) for testing purposes. Navigate to **Auth > Setting > OAuth2 Providers** in your appwrite instance to find the newly added provider and test it out.
 
 > To start Appwrite console from the source code, you can simply run `docker compose up -d'.
 
@@ -185,11 +206,13 @@ You can test your OAuth2 provider by trying to login using the [OAuth2 method](h
 
 Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
 
-If everything goes well, raise a pull request and be ready to respond to any feedback which can arise during our code review.
+> Please note that you do not need to try to commit the changes you made in the `console` git submodule within appwrite, it was done only for testing purposes. Make a separate pull request in [`appwrite/console`](https://github.com/appwrite/console) repository with the required console changes as mentioned earlier.
 
-## 4. Raise a pull request
+If everything goes well, raise both the pull requests and be ready to respond to any feedback which can arise during our code review.
 
-First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
+## 5. Raise a pull request
+
+First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite and the Console. If you visit it at `github.com/YOUR_USERNAME/appwrite`, `github.com/YOUR_USERNAME/appwrite/console` you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
 ## 🤕 Stuck ?
 
@@ -197,30 +220,4 @@ If you need any help with the contribution, feel free to head over to [our Disco
 
 ## 😉 Need more freedom
 
-If your OAuth provider requires special configuration apart from `clientId` and `clientSecret` you can create a custom form. Currently this is being realized through putting all custom fields as JSON into the `clientSecret` field to keep the project API stable. You can implement your custom form following these steps:
-
-1. Add your custom form in `app/views/console/users/oauth/[PROVIDER].phtml`. Below is a template you can use. Add the filename to `app/config/providers.php`.
-
-```php
-<?php
-$provider = $this->getParam('provider', '');
-?>
-<label for="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid">Application (Client) ID<span class="tooltip" data-tooltip="Provided by AzureAD"><i class="icon-info-circled"></i></span></label>
-<input name="appId" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Appid}}" placeholder="Application ID" />
-<?php /*Hidden input for the final secret. Gets filled with a JSON via JS. */ ?>
-<input name="secret" data-forms-oauth-custom="<?php echo $this->escape(ucfirst($provider)); ?>" id="oauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret" type="hidden" autocomplete="off" data-ls-bind="{{console-project.provider<?php echo $this->escape(ucfirst($provider)); ?>Secret}}" />
-<!-- [Your custom form inputs go here] -->
-```
-
-2. Add the config for creating the JSON in `public/scripts/views/forms/oauth-custom.js` using this template
-
-```js
-{
-    "[Provider]":{
-        "[JSON property name 1]":"[html element Id 1]",
-        "[JSON property name 2]":"[html element Id 2]"
-    }
-}
-```
-
-3. In your provider class `src/Appwrite/Auth/OAuth2/[Provider].php` add logic to decode the JSON using the same property names.
+If your OAuth provider requires special configuration apart from `AppId` and `AppSecret` you can create a custom form. You can implement your custom form by adding a custom modal at [src/routes/console/project-%5Bproject%5D/auth](https://github.com/appwrite/console/tree/main/src/routes/console/project-%5Bproject%5D/auth) for your provider.
