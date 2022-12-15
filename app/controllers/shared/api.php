@@ -270,15 +270,16 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
                 ->addMetric("builds", $value) // per project
                 ->addMetric("builds.compute", $document->getAttribute('duration') * $value) // per project
                 ->addMetric("{$deployment['resourceId']}" . ".builds", $value) // per function
-                ->addMetric("{$deployment['resourceId']}" . ".builds.compute", $document->getAttribute('duration') * $value) // per function
+                ->addMetric("{$deployment['resourceId']}" . ".builds.compute", ($document->getAttribute('duration') * 1000) * $value) // per function
                  ;
             break;
         case $document->getCollection() === 'executions':
+            var_dump($document);
             $queueForUsage
                 ->addMetric("executions", $value) // per project
                 ->addMetric("executions.compute", $document->getAttribute('duration') * $value) // per project
                 ->addMetric("{$document['functionId']}" . ".executions", $value) // per function
-                ->addMetric("{$document['functionId']}" . ".executions.compute", $document->getAttribute('duration') * $value) // per function
+                ->addMetric("{$document['functionId']}" . ".executions.compute", ($document->getAttribute('duration') * 1000) * $value) // per function
                 ;
             break;
         default:
@@ -467,7 +468,8 @@ App::shutdown()
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('queueForUsage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage) use ($parseLabel) {
+    ->inject('mode')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, string $mode) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -624,7 +626,11 @@ App::shutdown()
             }
         }
 
-        if ($project->getId() && $project->getId() !== 'console') {
+        var_dump($mode);
+        var_dump($project->getId());
+        if (
+            $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN
+        ) {
             $fileSize = 0;
             $file = $request->getFiles('file');
 

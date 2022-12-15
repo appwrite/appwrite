@@ -18,11 +18,14 @@ class Usage extends Event
      * Add metric.
      *
      * @param string $key
-     * @param int $value
+     * @param int|float $value
      * @return self
      */
-    public function addMetric(string $key, int $value): self
+    public function addMetric(string $key, int|float $value): self
     {
+        if($key == 'executions.compute'){
+            var_dump($value);
+        }
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,

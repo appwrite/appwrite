@@ -19,7 +19,7 @@ $stats = [];
 
 $periods['1h']  = 'Y-m-d H:00';
 $periods['1d']  = 'Y-m-d 00:00';
-$periods['1m']  = 'Y-m-00 00:00';
+$periods['1m']  = 'Y-m-1 00:00';
 $periods['inf'] = '0000-00-00 00:00';
 
 $server->job()
@@ -54,14 +54,12 @@ $server
         Timer::tick(3000, function () use ($register, $cache, $pools, $periods, &$stats) {
             $slice = array_slice($stats, 0, count($stats));
             array_splice($stats, 0, count($stats));
-            //var_dump($slice);
             $log = [];
 
             foreach ($slice as $metric) {
                 if ($metric['value'] == 0) {
                     continue;
                 }
-                var_dump($metric['value']);
                 $dbForProject = new Database(
                     $pools
                         ->get($metric['database'])

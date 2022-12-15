@@ -16,7 +16,7 @@ class UsageStorage extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('buckets', [
+            ->addRule('bucketsCount', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of buckets.',
                 'default' => [],

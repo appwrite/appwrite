@@ -1416,7 +1416,6 @@ App::get('/v1/functions/:functionId/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([
@@ -1493,7 +1492,6 @@ App::get('/v1/functions/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
     }
         $response->dynamic(new Document([
             'range' => $range,

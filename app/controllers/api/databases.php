@@ -852,7 +852,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
-    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('required', null, new Boolean(true), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -2451,7 +2451,6 @@ App::get('/v1/databases/:databaseId/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([
@@ -2530,7 +2529,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([
@@ -2598,9 +2596,7 @@ App::get('/v1/databases/usage')
                 'date' => $formatDate,
             ];
         }
-        $usage[$metric] = array_reverse($usage[$metric]);
     }
-
         $response->dynamic(new Document([
             'range' => $range,
             'databasesCount'   => $usage[$metrics[0]],

@@ -1478,7 +1478,6 @@ App::get('/v1/storage/:bucketId/usage')
                 'date' => $formatDate,
             ];
         }
-        //$usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([
@@ -1547,12 +1546,11 @@ App::get('/v1/storage/usage')
                 'date' => $formatDate,
             ];
         }
-        //$usage[$metric] = array_reverse($usage[$metric]);
     }
 
     $response->dynamic(new Document([
         'range' => $range,
-        'buckets' => $usage[$metrics[0]],
+        'bucketsCount' => $usage[$metrics[0]],
         'filesCount' => $usage[$metrics[1]],
         'filesStorage' => $usage[$metrics[2]],
     ]), Response::MODEL_USAGE_STORAGE);

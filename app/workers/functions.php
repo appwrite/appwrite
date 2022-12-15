@@ -97,6 +97,13 @@ Server::setResource('execute', function () {
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
+
+            /**
+             * Usage
+             */
+            $queueForUsage
+                ->addMetric('executions', 1) // per project
+                ->addMetric("{$function->getId()}" . ".executions", 1); // per function
         }
 
         $execution->setAttribute('status', 'processing');
@@ -206,11 +213,10 @@ Server::setResource('execute', function () {
         /** Trigger usage queue */
         $queueForUsage
             ->setProject($project)
-            ->addMetric('executions', 1) // per project
             ->addMetric('executions.compute', $execution->getAttribute('duration'))// per project
-            ->addMetric("{$function->getId()}" . ".executions", 1)
-            ->addMetric("{$function->getId()}" . ".executions.compute", $execution->getAttribute('duration'))
-            ->trigger();
+            ->addMetric("{$function->getId()}" . ".executions.compute", $execution->getAttribute('duration') * 1000)// per function
+            ->trigger()
+        ;
     };
 });
 
@@ -262,6 +268,7 @@ $server->job()
                         continue;
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
+
                     $execute(
                         queueForUsage: $queueForUsage,
                         dbForProject: $dbForProject,
