@@ -47,11 +47,7 @@ Make sure to fill in all data needed and that your provider array key name:
 
 > Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
 
-### 2.2 Add Provider Logo
-
-Add a logo image to your new provider in this path: `public/images/users`. Your logo should be a png 100×100px file with the name of your provider (all lowercase). Please make sure to leave about 30px padding around the logo to be consistent with other logos.
-
-### 2.3 Add Provider Class
+### 2.2 Add Provider Class
 
 Once you have finished setting up all the metadata for the new provider, you need to start coding.
 
@@ -173,9 +169,35 @@ class [PROVIDER NAME] extends OAuth2
 
 Please mention in your documentation what resources or API docs you used to implement the provider's OAuth2 protocol.
 
-## 3. Test your provider
+## 3. Add provider to console
 
-After you finished adding your new provider to Appwrite, you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
+### 3.1 Add provider logo
+
+To add the logo for the provider you are implementing, you will need to create a separate pull request in [`appwrite/console`](https://github.com/appwrite/console) repository.
+
+Appwrite requires 4 copies of the logo, 2 in color and 2 in grayscale, all in SVG format in the following locations.
+
+```bash
+ 
+static/icons/dark/color/XXX.svg
+ 
+static/icons/dark/grayscale/XXX.svg
+
+static/icons/light/color/XXX.svg
+
+static/icons/light/grayscale/XXX.svg
+
+```
+> Where `XXX` is the name of the provider in `lowercase`.
+
+### 3.2 Add provider doc
+
+Make sure you update the documentation url for the implemented provider in `oauth-providers.ts` located in `src/lib/stores/oauth-providers.ts`
+
+
+## 4. Test your provider
+
+To test your provider within appwrite make sure you make the changes required in the console in `console` module present here at /app/console. Navigate to Auth > Setting > OAuth2 Providers to find the newly added provider.
 
 > To start Appwrite console from the source code, you can simply run `docker compose up -d'.
 
@@ -184,6 +206,8 @@ Add credentials and check both a successful and a failed login (where the user d
 You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/client/account#accountCreateOAuth2Session) when integrating the Appwrite Web SDK in a demo app.
 
 Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
+
+> Please note that you do not need to commit the changes you made in the `console` module within appwrite, make a separate pull request in [`appwrite/console`](https://github.com/appwrite/console) repository with the console changes as mentioned earlier.
 
 If everything goes well, raise a pull request and be ready to respond to any feedback which can arise during our code review.
 
