@@ -211,7 +211,7 @@ Pass your new adapter name as the provider parameter. If login is successful, yo
 
 If everything goes well, raise a pull request and be ready to respond to any feedback which can arise during our code review.
 
-## 4. Raise a pull request
+## 5. Raise a pull request
 
 First of all, commit the changes with the message `Added XXX OAuth2 Provider` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/appwrite`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
