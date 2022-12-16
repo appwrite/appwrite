@@ -4,6 +4,7 @@
 - Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+- Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
 
 # Version 1.1.2
 ## Changes
