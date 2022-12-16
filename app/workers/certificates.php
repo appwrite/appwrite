@@ -385,10 +385,10 @@ class CertificatesV1 extends Worker
 
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
 
-                $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-                $body->setParam('{{domain}}', $domain);
-                $body->setParam('{{error}}', $errorMessage);
-                $body->setParam('{{attempt}}', $attempt);
+            $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+            $body->setParam('{{domain}}', $domain);
+            $body->setParam('{{error}}', $errorMessage);
+            $body->setParam('{{attempt}}', $attempt);
 
         $body
             ->setParam('{{subject}}', $subject)
