@@ -137,10 +137,10 @@ class Schedule extends Action
                             $new = strtotime($document['resourceUpdatedAt']);
 
                             if ($document['active'] === false) {
-                                Console::info("Removing:  {$document['resourceId']}");
+                                Console::info("Removing: {$document['resourceId']}");
                                 unset($schedules[$document['resourceId']]);
                             } elseif ($new !== $org) {
-                                Console::info("Updating:  {$document['resourceId']}");
+                                Console::info("Updating: {$document['resourceId']}");
                                 $schedules[$document['resourceId']] = $getSchedule($document);
                             }
                         }
@@ -159,7 +159,7 @@ class Schedule extends Action
                  * The timer to prepare soon-to-execute schedules.
                  */
                 $lastEnqueueUpdate = null;
-                $enqueueFunctions = function () use (&$schedules, $lastEnqueueUpdate, $pools) {
+                $enqueueFunctions = function () use ($schedules, $lastEnqueueUpdate, $pools) {
                     $timerStart = \microtime(true);
                     $time = DateTime::now();
 
