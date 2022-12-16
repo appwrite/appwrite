@@ -482,7 +482,6 @@ App::put('/v1/functions/:functionId')
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
 
-
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -542,7 +541,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $active = !empty($function->getAttribute('schedule'));
 
         if ($active) {
-            $schedule->setAttribute('resourceUpdatedAt', datetime::now());
+            $schedule->setAttribute('resourceUpdatedAt', DateTime::now());
         }
 
         $schedule->setAttribute('active', $active);
@@ -795,7 +794,7 @@ App::post('/v1/functions/:functionId/deployments')
         $active = !empty($function->getAttribute('schedule'));
 
         if ($active) {
-            $schedule->setAttribute('resourceUpdatedAt', datetime::now());
+            $schedule->setAttribute('resourceUpdatedAt', DateTime::now());
         }
 
         $schedule->setAttribute('active', $active);
@@ -1381,7 +1380,8 @@ App::post('/v1/functions/:functionId/variables')
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1408,6 +1408,11 @@ App::post('/v1/functions/:functionId/variables')
             $variable = $dbForProject->createDocument('variables', $variable);
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
+        }
+
+        if (!empty($function->getAttribute('deployment')) && !empty($function->getAttribute('schedule'))) {
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule->setAttribute('resourceUpdatedAt', DateTime::now())));
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
@@ -1497,7 +1502,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1526,6 +1532,11 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
+        if (!empty($function->getAttribute('deployment')) && !empty($function->getAttribute('schedule'))) {
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule->setAttribute('resourceUpdatedAt', DateTime::now())));
+        }
+
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
@@ -1547,7 +1558,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1564,6 +1576,12 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
+
+        if (!empty($function->getAttribute('deployment')) && !empty($function->getAttribute('schedule'))) {
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule->setAttribute('resourceUpdatedAt', DateTime::now())));
+        }
+
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
