@@ -1509,23 +1509,32 @@ App::patch('/v1/account/password')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $history = $user->getAttribute('passwordHistory', []);
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
-        if(in_array($newPassword, $history)) {
-            throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+        $history = [];
+        if($historyLimit > 0) {
+            $history = $user->getAttribute('passwordHistory', []);
+            $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+    
+            if(in_array($newPassword, $history)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+            }
+    
+            $history[] = $newPassword;
+            while(count($history) > $historyLimit) {
+                array_pop($history);
+            }
         }
-
-        $history[] = $newPassword;
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
                 ->setAttribute('passwordHistory', $history)

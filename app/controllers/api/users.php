@@ -783,9 +783,10 @@ App::patch('/v1/users/:userId/password')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -793,14 +794,22 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $history = $user->getAttribute('passwordHistory', []);
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
-        if(in_array($newPassword, $history)) {
-            throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+        $history = [];
+        if($historyLimit > 0) {
+            $history = $user->getAttribute('passwordHistory', []);
+            $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+    
+            if(in_array($newPassword, $history)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+            }
+    
+            $history[] = $newPassword;
+            while(count($history) > $historyLimit) {
+                array_pop($history);
+            }
         }
-
-        $history[] = $newPassword;
 
         $user
             ->setAttribute('passwordHistory', $history)
