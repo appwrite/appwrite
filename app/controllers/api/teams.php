@@ -463,8 +463,8 @@ App::post('/v1/teams/:teamId/memberships')
                 ->setSubject($subject)
                 ->setBody($body)
                 ->setFrom($from)
-                ->setRecipient($user->getAttribute('email'))
-                ->setName($user->getAttribute('name'))
+                ->setRecipient($invitee->getAttribute('email'))
+                ->setName($invitee->getAttribute('name'))
                 ->trigger()
             ;
         }
