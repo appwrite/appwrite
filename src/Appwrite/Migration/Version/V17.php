@@ -52,6 +52,7 @@ class V17 extends Migration
                          * Update 'mimeType' attribute size (127->255)
                          */
                         $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
+                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
