@@ -49,6 +49,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             ? ID::unique()
             : ID::custom($userId);
 
+        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
             '$permissions' => [
@@ -61,7 +62,8 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'phone' => $phone,
             'phoneVerification' => false,
             'status' => true,
-            'password' => (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null,
+            'passwordHistory' => is_null($password) ? [] : [$password],
+            'password' => $password,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
             'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
@@ -798,8 +800,11 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
         }
 
+        $history[] = $newPassword;
+
         $user
-            ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('password', $newPassword)
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
             ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
             ->setAttribute('passwordUpdate', DateTime::now());

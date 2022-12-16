@@ -358,6 +358,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
+                    'passwordHistory' => [Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)],
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
