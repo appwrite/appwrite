@@ -64,6 +64,7 @@ class Exception extends \Exception
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
+    public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';

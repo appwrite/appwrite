@@ -1235,6 +1235,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('passwordHistory'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => ['json', 'encrypt'],
+            ],
+            [
                 '$id' => ID::custom('password'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

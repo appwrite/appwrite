@@ -791,6 +791,13 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        $history = $user->getAttribute('passwordHistory', []);
+        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+
+        if(in_array($newPassword, $history)) {
+            throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+        }
+
         $user
             ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
