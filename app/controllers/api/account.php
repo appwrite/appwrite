@@ -736,7 +736,6 @@ App::post('/v1/account/sessions/magic-url')
         $body = $body->render();
 
         $mails
-            ->setName('')
             ->setSubject($subject)
             ->setBody($body)
             ->setFrom($from)
