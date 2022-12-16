@@ -88,7 +88,7 @@ class Executor
             'memory' => $this->memory,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = ((int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)) + 2; // 2 secs network lattelcy allowed
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
 
@@ -141,7 +141,7 @@ class Executor
             'memory' => $this->memory,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = ((int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)) + 2; // 2 secs network lattelcy allowed
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
 
