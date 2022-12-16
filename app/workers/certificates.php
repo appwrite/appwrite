@@ -383,7 +383,7 @@ class CertificatesV1 extends Worker
             $locale->setDefault('en');
         }
 
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
 
             $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
             $body->setParam('{{domain}}', $domain);

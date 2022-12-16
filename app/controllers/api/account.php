@@ -715,7 +715,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
 
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
         $subject = $locale->getText("emails.magicSession.subject");
 
         $body
@@ -2016,7 +2016,7 @@ App::post('/v1/account/recovery')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
         $subject = $locale->getText("emails.recovery.subject");
 
         $body
@@ -2199,7 +2199,7 @@ App::post('/v1/account/verification')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
         $subject = $locale->getText("emails.verification.subject");
         $body
             ->setParam('{{subject}}', $subject)

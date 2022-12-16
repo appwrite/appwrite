@@ -437,7 +437,7 @@ App::post('/v1/teams/:teamId/memberships')
             $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
             $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-            $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+            $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
             $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
             $body->setParam('{{owner}}', $user->getAttribute('name'));
             $body->setParam('{{team}}', $team->getAttribute('name'));
