@@ -84,7 +84,7 @@ Server::setResource('execute', function () {
                 'functionId' => $functionId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
-                'status' => 'waiting',
+                'status' => 'processing',
                 'statusCode' => 0,
                 'response' => '',
                 'stderr' => '',
@@ -97,10 +97,10 @@ Server::setResource('execute', function () {
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
+        } else {
+            $execution->setAttribute('status', 'processing');
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
-
-        $execution->setAttribute('status', 'processing');
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
@@ -124,6 +124,7 @@ Server::setResource('execute', function () {
         ]);
 
         /** Execute function */
+        $durationStart = \microtime(true);
         try {
             $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executionResponse = $client->createExecution(
@@ -146,9 +147,10 @@ Server::setResource('execute', function () {
                 ->setAttribute('stderr', $executionResponse['stderr'])
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
-            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $durationEnd = \microtime(true);
+            $duration = ($durationEnd - $durationStart);
             $execution
-                ->setAttribute('duration', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', $duration)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());

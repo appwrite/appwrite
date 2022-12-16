@@ -2574,7 +2574,7 @@ $collections = [
             ],
             [
                 '$id' => ID::custom('duration'),
-                'type' => Database::VAR_INTEGER,
+                'type' => Database::VAR_FLOAT,
                 'format' => '',
                 'size' => 0,
                 'signed' => true,
