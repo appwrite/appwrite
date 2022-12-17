@@ -24,7 +24,7 @@ $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
 $user = $dsn->getUser();
 $secret = $dsn->getPassword();
 
-Server::setResource('sms',  function () use ($dsn, $user, $secret) {
+Server::setResource('sms', function () use ($dsn, $user, $secret) {
     return match ($dsn->getHost()) {
         'mock' => new Mock($user, $secret), // used for tests
         'twilio' => new Twilio($user, $secret),
@@ -58,7 +58,6 @@ Server::setResource('execute', function () {
 
         try {
             $sms->send($message);
-            Console::info('Successfully sent sms message to ' . $recipient);
         } catch (\Exception $error) {
             throw new Exception('Error sending message: ' . $error->getMessage(), 500);
         }
