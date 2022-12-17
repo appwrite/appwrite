@@ -98,7 +98,7 @@ class BuildsV1 extends Worker
                 '$permissions' => [],
                 'startTime' => $startTime,
                 'deploymentId' => $deployment->getId(),
-                'status' => 'processing',
+                'status' => 'building',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
@@ -112,11 +112,10 @@ class BuildsV1 extends Worker
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
-        }
 
-        /** Request the executor to build the code... */
-        $build->setAttribute('status', 'building');
-        $build = $dbForProject->updateDocument('builds', $buildId, $build);
+            $build->setAttribute('status', 'building');
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+        }
 
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
