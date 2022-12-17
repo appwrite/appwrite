@@ -850,7 +850,9 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 // Queues
 App::setResource('events', fn() => new Event('', ''));
 App::setResource('audits', fn() => new Audit());
-App::setResource('mails', fn() => new Mail());
+App::setResource('mails', function (Connection $queue) {
+    return new Mail($queue);
+}, ['queue']);
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());

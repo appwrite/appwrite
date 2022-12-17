@@ -5,26 +5,69 @@ use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
+use Utopia\Queue\Message;
+use Utopia\Queue\Server;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__ . '/../worker.php';
 
-Console::title('Mails V1 Worker');
-Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
 
-class MailsV1 extends Worker
+Authorization::disable();
+Authorization::setDefaultStatus(false);
+
+/*
+     * Returns a prefix from a mail type
+     *
+     * @param $type
+     *
+     * @return string
+     */
+function getPrefix(string $type): string
 {
-    public function getName(): string
-    {
-        return "mails";
+    switch ($type) {
+        case MAIL_TYPE_RECOVERY:
+            return 'emails.recovery';
+        case MAIL_TYPE_CERTIFICATE:
+            return 'emails.certificate';
+        case MAIL_TYPE_INVITATION:
+            return 'emails.invitation';
+        case MAIL_TYPE_VERIFICATION:
+            return 'emails.verification';
+        case MAIL_TYPE_MAGIC_SESSION:
+            return 'emails.magicSession';
+        default:
+            throw new Exception('Undefined Mail Type : ' . $type, 500);
+    }
+}
+
+/**
+ * Returns true if all the required terms in a locale exist. False otherwise
+ *
+ * @param $locale
+ * @param $prefix
+ *
+ * @return bool
+ */
+function doesLocaleExist(Locale $locale, string $prefix): bool
+{
+
+    if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
+        return false;
     }
 
-    public function init(): void
-    {
-    }
+    return true;
+}
 
-    public function run(): void
-    {
+$server->job()
+    ->inject('message')
+    ->action(function (Message $message) {
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
         global $register;
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
@@ -32,20 +75,19 @@ class MailsV1 extends Worker
             return;
         }
 
-        $project = new Document($this->args['project'] ?? []);
-        $user = new Document($this->args['user'] ?? []);
-        $team = new Document($this->args['team'] ?? []);
-        $payload = $this->args['payload'] ?? [];
+        $project = new Document($payload['project'] ?? []);
+        $user = new Document($payload['user'] ?? []);
+        $team = new Document($payload['team'] ?? []);
 
-        $recipient = $this->args['recipient'];
-        $url = $this->args['url'];
-        $name = $this->args['name'];
-        $type = $this->args['type'];
-        $prefix = $this->getPrefix($type);
-        $locale = new Locale($this->args['locale']);
+        $recipient = $payload['recipient'];
+        $url = $payload['url'];
+        $name = $payload['name'];
+        $type = $payload['type'];
+        $prefix = getPrefix($type);
+        $locale = new Locale($payload['locale']);
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-        if (!$this->doesLocaleExist($locale, $prefix)) {
+        if (!doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
 
@@ -125,52 +167,7 @@ class MailsV1 extends Worker
         } catch (\Exception $error) {
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
-    }
+    });
 
-    public function shutdown(): void
-    {
-    }
-
-    /**
-     * Returns a prefix from a mail type
-     *
-     * @param $type
-     *
-     * @return string
-     */
-    protected function getPrefix(string $type): string
-    {
-        switch ($type) {
-            case MAIL_TYPE_RECOVERY:
-                return 'emails.recovery';
-            case MAIL_TYPE_CERTIFICATE:
-                return 'emails.certificate';
-            case MAIL_TYPE_INVITATION:
-                return 'emails.invitation';
-            case MAIL_TYPE_VERIFICATION:
-                return 'emails.verification';
-            case MAIL_TYPE_MAGIC_SESSION:
-                return 'emails.magicSession';
-            default:
-                throw new Exception('Undefined Mail Type : ' . $type, 500);
-        }
-    }
-
-    /**
-     * Returns true if all the required terms in a locale exist. False otherwise
-     *
-     * @param $locale
-     * @param $prefix
-     *
-     * @return bool
-     */
-    protected function doesLocaleExist(Locale $locale, string $prefix): bool
-    {
-
-        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
-            return false;
-        }
-
-        return true;
-    }
-}
+$server->workerStart();
+$server->start();
