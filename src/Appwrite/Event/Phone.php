@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
