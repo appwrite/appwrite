@@ -56,9 +56,18 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
-
                     break;
-
+                case 'builds':
+                    try {
+                        /**
+                         * Update 'duration' attribute type (int->float)
+                         */
+                        $this->projectDB->updateAttribute($id, 'duration', Database::VAR_FLOAT, 0, true, false);
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'duration' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 default:
                     break;
             }
