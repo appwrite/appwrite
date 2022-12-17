@@ -1188,6 +1188,8 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
+        $durationStart = \microtime(true);
+        $timeout = $function->getAttribute('timeout', 0);
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $executionResponse = $executor->createExecution(
@@ -1195,7 +1197,7 @@ App::post('/v1/functions/:functionId/executions')
                 deploymentId: $deployment->getId(),
                 payload: $data,
                 variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
+                timeout: $timeout,
                 image: $runtime['image'],
                 source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
@@ -1209,9 +1211,10 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('stderr', $executionResponse['stderr']);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
-            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $durationEnd = \microtime(true);
+            $duration = ($durationEnd - $durationStart);
             $execution
-                ->setAttribute('duration', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', \min($duration, $timeout))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());

@@ -125,6 +125,7 @@ Server::setResource('execute', function () {
 
         /** Execute function */
         $durationStart = \microtime(true);
+        $timeout = $function->getAttribute('timeout', 0);
         try {
             $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executionResponse = $client->createExecution(
@@ -132,7 +133,7 @@ Server::setResource('execute', function () {
                 deploymentId: $deploymentId,
                 payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
                 variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
+                timeout: $timeout,
                 image: $runtime['image'],
                 source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
@@ -150,7 +151,7 @@ Server::setResource('execute', function () {
             $durationEnd = \microtime(true);
             $duration = ($durationEnd - $durationStart);
             $execution
-                ->setAttribute('duration', $duration)
+                ->setAttribute('duration', \min($duration, $timeout))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
