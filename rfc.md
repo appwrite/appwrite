@@ -39,7 +39,7 @@ In case we use the injection sql timeouts a change to sql syntax will be changed
 <!-- Will this feature introduce any breaking changes? How can we achieve backward compatability -->
 
 ### Documentation & Content
-I guess some relevant docs how to index queries better.
+We need to add relevant docs how to index queries better and what are the user's options to remove the blocked api calls.
 <!-- What documentation do we need to update or add for this feature? -->
 
 ## Reliability
@@ -56,6 +56,6 @@ Not relevant
 <!-- How will we benchmark this feature? -->
 
 ### Tests (UI, Unit, E2E)
-We need to add test how to be able to mock the data better, 
-currently mocks are hardcoded. except mongo db where I was able to add sleep condition in queries.
+We need to add test how to be able to mock data better, 
+currently mocks are hardcoded, except mongo db, where I was able to add sleep condition in queries.
 <!-- How will we test this feature? -->
