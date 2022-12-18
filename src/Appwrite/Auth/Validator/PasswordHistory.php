@@ -13,9 +13,11 @@ class PasswordHistory extends Password
 {
     protected array $history;
 
-    public function __construct(array $history)
+    public function __construct(array $history, string $algo, array $algoOptions = [])
     {
         $this->history = $history;
+        $this->algo = $algo;
+        $this->algoOptions = $algoOptions;
     }
 
     /**
