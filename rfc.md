@@ -1,4 +1,4 @@
-# Query Databse Timeouts
+# Query Database Timeouts
 
 * Creator: [Shmuel, Jake]
 * Relevant Branch:  https://github.com/utopia-php/database/pull/220
