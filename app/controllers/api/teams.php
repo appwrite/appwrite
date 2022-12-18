@@ -345,7 +345,7 @@ App::post('/v1/teams/:teamId/memberships')
                 }
             }
 
-            $passwordHistory = $project->getAttribute('auths',[])['passwordHistory'] ?? 0;
+            $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
             try {
                 $userId = ID::unique();

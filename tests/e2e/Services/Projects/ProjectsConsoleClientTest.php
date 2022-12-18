@@ -1060,7 +1060,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
 
-        
+
          /**
          * Reset
          */

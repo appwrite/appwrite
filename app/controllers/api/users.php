@@ -804,21 +804,20 @@ App::patch('/v1/users/:userId/password')
         }
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
-        
+
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = [];
-        if($historyLimit > 0) {
+        if ($historyLimit > 0) {
             $history = $user->getAttribute('passwordHistory', []);
-            
-            foreach($history as $hash) {
-                if(Auth::passwordVerify($password, $hash, $user->getAttribute('hash'), $user->getAttribute('hashOptions')))
-                {
+
+            foreach ($history as $hash) {
+                if (Auth::passwordVerify($password, $hash, $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) {
                     throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
                 }
             }
 
             $history[] = $newPassword;
-            while(count($history) > $historyLimit) {
+            while (count($history) > $historyLimit) {
                 array_pop($history);
             }
         }
