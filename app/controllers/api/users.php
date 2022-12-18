@@ -34,6 +34,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
+use Appwrite\Auth\Validator\PasswordHistory;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $events): Document
@@ -809,11 +810,9 @@ App::patch('/v1/users/:userId/password')
         $history = [];
         if ($historyLimit > 0) {
             $history = $user->getAttribute('passwordHistory', []);
-
-            foreach ($history as $hash) {
-                if (Auth::passwordVerify($password, $hash, $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) {
-                    throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
-                }
+            $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
             }
 
             $history[] = $newPassword;

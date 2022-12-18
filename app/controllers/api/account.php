@@ -40,6 +40,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Appwrite\Auth\Validator\PasswordHistory;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -1530,11 +1531,9 @@ App::patch('/v1/account/password')
         $history = [];
         if ($historyLimit > 0) {
             $history = $user->getAttribute('passwordHistory', []);
-
-            foreach ($history as $hash) {
-                if (Auth::passwordVerify($password, $hash, $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) {
-                    throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
-                }
+            $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
             }
 
             $history[] = $newPassword;
@@ -1544,7 +1543,7 @@ App::patch('/v1/account/password')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('passwordHistory', $history)
+                ->setAttribute('a', $history)
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
