@@ -5,6 +5,7 @@
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
+- Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
 
 # Version 1.1.2
 ## Changes
