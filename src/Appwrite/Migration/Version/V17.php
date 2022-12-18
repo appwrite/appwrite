@@ -49,11 +49,11 @@ class V17 extends Migration
                 case 'builds':
                     try {
                         /**
-                         * Create 'region' attribute
+                         * Create 'size' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'outputSize');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
                     } catch (\Throwable $th) {
-                        Console::warning("'region' from {$id}: {$th->getMessage()}");
+                        Console::warning("'size' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 default:

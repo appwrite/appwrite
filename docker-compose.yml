@@ -666,7 +666,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: myexc
+    image: meldiron/appwrite-executor:latest
     networks:
       - appwrite
       - runtimes

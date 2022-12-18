@@ -193,8 +193,8 @@ class BuildsV1 extends Worker
             $build->setAttribute('endTime', DateTime::format($endTime));
             $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
-            $build->setAttribute('outputPath', $response['outputPath']);
-            $build->setAttribute('outputSize', $response['outputSize']);
+            $build->setAttribute('path', $response['path']);
+            $build->setAttribute('size', $response['size']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
@@ -261,7 +261,7 @@ class BuildsV1 extends Worker
                     ->setParam('builds.{scope}.compute', 1)
                     ->setParam('buildStatus', $build->getAttribute('status', ''))
                     ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('buildSize', $build->getAttribute('outputSize'))
+                    ->setParam('buildSize', $build->getAttribute('size'))
                     ->setParam('networkRequestSize', 0)
                     ->setParam('networkResponseSize', 0)
                     ->submit();

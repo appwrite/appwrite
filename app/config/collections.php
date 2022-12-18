@@ -2617,7 +2617,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('outputPath'),
+                '$id' => ID::custom('path'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -2628,7 +2628,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('outputSize'),
+                '$id' => ID::custom('size'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,
