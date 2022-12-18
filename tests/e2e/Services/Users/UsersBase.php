@@ -813,66 +813,6 @@ trait UsersBase
     }
 
     /**
-     * @depends testUpdateUserPassword
-     */
-    public function testUserPasswordHistory(array $data): array
-    {
-        $userId = $data['userId'];
-        $projectId = $this->getProject()['$id'];
-        /**
-         * Test for SUCCESS
-         */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password2',
-        ]);
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertNotEmpty($user['body']['$id']);
-
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password2',
-        ]);
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertNotEmpty($user['body']['$id']);
-
-        $project = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/auth/password-history', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-mode' => 'admin'
-        ]), [
-            'limit' => 2
-        ]);
-        $this->assertEquals(200, $project['headers']['status-code']);
-        $this->assertEquals(2, $project['body']['passwordHistory']);
-
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password2',
-        ]);
-        $this->assertEquals($user['headers']['status-code'], 200);
-        $this->assertNotEmpty($user['body']['$id']);
-
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password2',
-        ]);
-        $this->assertEquals(409, $user['headers']['status-code']);
-        $this->assertNotEmpty($user['body']['$id']);
-
-        return $data;
-    }
-
-    /**
      * @depends testGetUser
      */
     #[Retry(count: 1)]
