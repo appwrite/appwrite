@@ -2562,17 +2562,6 @@ $collections = [
                 'filters' => ['datetime'],
             ],
             [
-                '$id' => ID::custom('endTime'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
                 '$id' => ID::custom('duration'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',

@@ -66,6 +66,16 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'size' from {$id}: {$th->getMessage()}");
                     }
+                    
+                    try {
+                        /**
+                         * Delete 'endTime' attribute (use startTime+duration if needed)
+                         */
+                        $this->projectDB->deleteAttribute($id, 'startTime');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'startTime');
+                    } catch (\Throwable $th) {
+                        Console::warning("'startTime' from {$id}: {$th->getMessage()}");
+                    }
                     break;
                 default:
                     break;
