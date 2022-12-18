@@ -97,6 +97,8 @@ App::post('/v1/account')
             }
         }
 
+        $passwordHistory = $project->getAttribute('auths',[])['passwordHistory'] ?? 0;
+
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
@@ -109,7 +111,7 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'passwordHistory' => [Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)],
+                'passwordHistory' => $passwordHistory > 0 ? [Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)] : [],
                 'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                 'hash' => Auth::DEFAULT_ALGO,
                 'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
@@ -490,6 +492,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
+                $passwordHistory = $project->getAttribute('auths',[])['passwordHistory'] ?? 0;
+
                 try {
                     $userId = ID::unique();
                     $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
@@ -502,7 +506,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'passwordHistory' => [Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)],
+                        'passwordHistory' => $passwordHistory > 0 ? [Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)] : null,
                         'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                         'hash' => Auth::DEFAULT_ALGO,
                         'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,

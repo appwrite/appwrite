@@ -345,6 +345,8 @@ App::post('/v1/teams/:teamId/memberships')
                 }
             }
 
+            $passwordHistory = $project->getAttribute('auths',[])['passwordHistory'] ?? 0;
+
             try {
                 $userId = ID::unique();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
@@ -358,7 +360,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'email' => $email,
                     'emailVerification' => false,
                     'status' => true,
-                    'passwordHistory' => [Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)],
+                    'passwordHistory' => $passwordHistory > 0 ? [Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)] : [],
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,

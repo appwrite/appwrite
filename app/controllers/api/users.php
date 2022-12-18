@@ -36,9 +36,10 @@ use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Database $dbForProject, Event $events): Document
+function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $events): Document
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
+    $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
     if (!empty($email)) {
         $email = \strtolower($email);
@@ -62,7 +63,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'phone' => $phone,
             'phoneVerification' => false,
             'status' => true,
-            'passwordHistory' => is_null($password) ? [] : [$password],
+            'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
             'password' => $password,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
@@ -106,10 +107,11 @@ App::post('/v1/users')
     ->param('password', null, new Password(), 'Plain text user password. Must be at least 8 chars.', true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $events);
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -136,10 +138,11 @@ App::post('/v1/users/bcrypt')
     ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -166,10 +169,11 @@ App::post('/v1/users/md5')
     ->param('password', '', new Password(), 'User password hashed using MD5.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -196,10 +200,11 @@ App::post('/v1/users/argon2')
     ->param('password', '', new Password(), 'User password hashed using Argon2.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -227,16 +232,17 @@ App::post('/v1/users/sha')
     ->param('passwordVersion', '', new WhiteList(['sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512']), "Optional SHA version used to hash password. Allowed values are: 'sha1', 'sha224', 'sha256', 'sha384', 'sha512/224', 'sha512/256', 'sha512', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'", true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
         $options = '{}';
 
         if (!empty($passwordVersion)) {
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $events);
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -263,10 +269,11 @@ App::post('/v1/users/phpass')
     ->param('password', '', new Password(), 'User password hashed using PHPass.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -298,9 +305,10 @@ App::post('/v1/users/scrypt')
     ->param('passwordLength', 64, new Integer(), 'Optional hash length used to hash password.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
         $options = [
             'salt' => $passwordSalt,
             'costCpu' => $passwordCpu,
@@ -309,7 +317,7 @@ App::post('/v1/users/scrypt')
             'length' => $passwordLength
         ];
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $events);
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -339,10 +347,11 @@ App::post('/v1/users/scrypt-modified')
     ->param('passwordSignerKey', '', new Text(128), 'Signer key used to hash password.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
