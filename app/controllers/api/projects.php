@@ -587,7 +587,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of password history to keep for users. Value allowed is between 0-' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default is 0')
+    ->param('limit', false, new Range(0, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of password history to keep for users. Value allowed is between 0-' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default is 0')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {

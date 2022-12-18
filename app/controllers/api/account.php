@@ -99,6 +99,7 @@ App::post('/v1/account')
 
         $passwordHistory = $project->getAttribute('auths',[])['passwordHistory'] ?? 0;
 
+        $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
             $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
@@ -111,8 +112,8 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'passwordHistory' => $passwordHistory > 0 ? [Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)] : [],
-                'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'passwordHistory' => $passwordHistory > 0 ? [$password] : [],
+                'password' => $password,
                 'hash' => Auth::DEFAULT_ALGO,
                 'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                 'passwordUpdate' => DateTime::now(),
@@ -1523,17 +1524,20 @@ App::patch('/v1/account/password')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = [];
         if($historyLimit > 0) {
             $history = $user->getAttribute('passwordHistory', []);
-            $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
-    
-            if(in_array($newPassword, $history)) {
-                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+            
+            foreach($history as $hash) {
+                if(Auth::passwordVerify($password, $hash, $user->getAttribute('hash'), $user->getAttribute('hashOptions')))
+                {
+                    throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+                }
             }
-    
+
             $history[] = $newPassword;
             while(count($history) > $historyLimit) {
                 array_pop($history);

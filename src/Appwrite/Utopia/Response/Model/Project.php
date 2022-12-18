@@ -120,6 +120,12 @@ class Project extends Model
                 'default' => 10,
                 'example' => 10,
             ])
+            ->addRule('authPasswordHistory', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Max password history to save per user. 20 maximum. 0 for ignoring the password history.',
+                'default' => 0,
+                'example' => 5,
+            ])
             ->addRule('providers', [
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
@@ -240,6 +246,7 @@ class Project extends Model
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
+        $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

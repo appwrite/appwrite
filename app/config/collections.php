@@ -1243,7 +1243,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => true,
-                'filters' => ['json', 'encrypt'],
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('password'),
