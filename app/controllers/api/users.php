@@ -809,11 +809,14 @@ App::patch('/v1/users/:userId/password')
         $history = [];
         if($historyLimit > 0) {
             $history = $user->getAttribute('passwordHistory', []);
-    
-            if(in_array($newPassword, $history)) {
-                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+            
+            foreach($history as $hash) {
+                if(Auth::passwordVerify($password, $hash, $user->getAttribute('hash'), $user->getAttribute('hashOptions')))
+                {
+                    throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+                }
             }
-    
+
             $history[] = $newPassword;
             while(count($history) > $historyLimit) {
                 array_pop($history);
