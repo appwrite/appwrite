@@ -817,7 +817,7 @@ App::patch('/v1/users/:userId/password')
             }
 
             $history[] = $newPassword;
-            if(count($history) > $historyLimit) {
+            if (count($history) > $historyLimit) {
                 array_slice($history, (count($history) - $historyLimit), $historyLimit);
             }
         }
