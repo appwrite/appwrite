@@ -66,7 +66,7 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'size' from {$id}: {$th->getMessage()}");
                     }
-                    
+
                     try {
                         /**
                          * Delete 'endTime' attribute (use startTime+duration if needed)
