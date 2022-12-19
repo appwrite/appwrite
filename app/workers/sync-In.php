@@ -8,9 +8,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Queue\Message;
 
-global $connection;
-global $workerNumber;
-
 $server->job()
     ->inject('message')
     ->inject('cache')

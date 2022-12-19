@@ -1093,10 +1093,10 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     $cache  = new Cache(new Sharding($adapters));
 
     $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForCacheSyncOut) {
-        //Todo fix cache re-invoked
-        if ($key === 'cache-console:_metadata:users') {
-            return;
-        }
+//        //Todo fix cache re-invoked
+//        if ($key === 'cache-console:_metadata:users') {
+//            return;
+//        }
         $queueForCacheSyncOut
             ->enqueue([
                 'key' => $key
@@ -1104,9 +1104,9 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForCacheSyncOut) {
-        if ($key === 'cache-console:_metadata:users') {
-            return;
-        }
+//        if ($key === 'cache-console:_metadata:users') {
+//            return;
+//        }
         $queueForCacheSyncOut
             ->enqueue([
                 'key' => $key

@@ -15,9 +15,6 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Queue\Message;
 
-global $connection;
-global $workerNumber;
-
 $regions = array_filter(
     Config::getParam('regions', []),
     fn ($region) => App::getEnv('_APP_REGION') !== $region
@@ -76,7 +73,7 @@ function call(string $url, string $token, array $stack): array
 /**
  * @throws Authorization
  * @throws Structure
- * @throws Exception
+ * @throws Exception|\Exception
  */
 function handle($dbForConsole, $regions, $stack): void
 {
