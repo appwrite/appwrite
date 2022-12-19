@@ -11,7 +11,7 @@ The problem begin with collections with a relative big amount of data inside, wh
 Google, Mysql workbench tool, Mongosh.
 
 ## Implementation
-We will limit specific `select` type queries executions or set by session a timeout for all select queries during the connection session for a specific timeout in milliseconds.
+We will limit specific `select` type queries executions or set by session a timeout for all select queries during the connection session, for a specific api call, a timeout in milliseconds.
 In case the select operation exceeds time limit, an Exception will be thrown with an error code value per adapter (mysql, mongo..etc) that we will catch.
 We will audit the error throw with data from the api , such as the queries variable, user making the query, host.
 After a number of times wee will block this call.
