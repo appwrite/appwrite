@@ -1,3 +1,10 @@
+## Version 1.2.0
+
+## Features
+
+- Password history setting allows to save user's last used password so that it may not be used again. Maximum number of history saved is 20, which can be configured [#4866](https://github.com/appwrite/appwrite/pull/4866)
+
+## Bugs
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 
