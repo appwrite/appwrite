@@ -59,5 +59,6 @@ Not relevant
 ### Tests (UI, Unit, E2E)
 We need to add tests with the ability to mock exceed timeout queries, for catching the exceptions. 
 currently, mocks are hardcoded, except mongo db, where I was able to add sleep condition in queries.
+It is hard to inject sleep method to where conditions or select part of the sql.
 
 <!-- How will we test this feature? -->
