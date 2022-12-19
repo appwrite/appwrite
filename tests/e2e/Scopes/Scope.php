@@ -20,8 +20,6 @@ abstract class Scope extends TestCase
 
     protected string $endpoint = 'http://localhost/v1';
 
-    public static Validator $dateValidator;
-
     protected function setUp(): void
     {
         $this->client = new Client();
