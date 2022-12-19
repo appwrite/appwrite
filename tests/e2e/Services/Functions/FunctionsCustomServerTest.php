@@ -12,6 +12,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\DatetimeValidator;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -45,8 +46,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
         $this->assertEquals('php-8.0', $response1['body']['runtime']);
-        $this->assertEquals(true, self::$dateValidator->isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, self::$dateValidator->isValid($response1['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'users.*.create',
@@ -328,8 +330,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test1', $response1['body']['name']);
-        $this->assertEquals(true, self::$dateValidator->isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, self::$dateValidator->isValid($response1['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'users.*.update.name',
@@ -369,7 +372,8 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, self::$dateValidator->isValid($deployment['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -418,7 +422,8 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
-        $this->assertEquals(true, self::$dateValidator->isValid($largeTag['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($largeTag['body']['$createdAt']));
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
 
@@ -440,8 +445,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
 
         /**
@@ -606,7 +612,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertEquals(true, self::$dateValidator->isValid($execution['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
         $this->assertEquals(0, $execution['body']['statusCode']);
@@ -623,7 +630,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertEquals(true, self::$dateValidator->isValid($execution['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['statusCode']);

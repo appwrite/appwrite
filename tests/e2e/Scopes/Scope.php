@@ -29,8 +29,6 @@ abstract class Scope extends TestCase
         $this->client
             ->setEndpoint($this->endpoint)
         ;
-
-        self::$dateValidator = new DatetimeValidator();
     }
 
     protected function tearDown(): void

@@ -11,6 +11,7 @@ use CURLFile;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\DatetimeValidator;
 
 class UsageTest extends Scope
 {
@@ -600,6 +601,7 @@ class UsageTest extends Scope
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array
     {
+        $dateValidator = new DatetimeValidator();
         $headers = $data['headers'];
         $functionId = '';
         $executionTime = 0;
@@ -641,7 +643,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, self::$dateValidator->isValid($deployment['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -651,8 +653,8 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, self::$dateValidator->isValid($response['body']['$updatedAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
