@@ -1034,6 +1034,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
+        $userId = $response['body']['$id'];
+
         // create session
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
@@ -1056,7 +1058,14 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        var_dump($response['body']);
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'password' => $password,
+        ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
 

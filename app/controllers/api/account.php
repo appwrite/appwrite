@@ -1537,13 +1537,11 @@ App::patch('/v1/account/password')
             }
 
             $history[] = $newPassword;
-            if (count($history) > $historyLimit) {
-                array_slice($history, (count($history) - $historyLimit), $historyLimit);
-            }
+            array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('a', $history)
+                ->setAttribute('passwordHistory', $history)
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
