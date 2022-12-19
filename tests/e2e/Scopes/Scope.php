@@ -21,7 +21,7 @@ abstract class Scope extends TestCase
      */
     protected $endpoint = 'http://localhost/v1';
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         $this->client = new Client();
 
@@ -30,7 +30,7 @@ abstract class Scope extends TestCase
         ;
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->client = null;
     }

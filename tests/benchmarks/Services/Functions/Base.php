@@ -50,7 +50,7 @@ abstract class Base extends Scope
         $stderr = '';
 
         Console::execute(
-            'cd ' . realpath(__DIR__ . "/../../resources/functions/php") . " && \
+            'cd ' . realpath(__DIR__ . "/../../../resources/functions/php") . " && \
             tar --exclude code.tar.gz -czf code.tar.gz .",
             '',
             $stdout,
@@ -60,7 +60,7 @@ abstract class Base extends Scope
 
     public function createDeployment()
     {
-        $code = realpath(__DIR__ . '/../../resources/functions/php/code.tar.gz');
+        $code = realpath(__DIR__ . '/../../../resources/functions/php/code.tar.gz');
 
         $response = $this->client->call(Client::METHOD_POST, '/functions/' . static::$functionId . '/deployments', [
             'content-type' => 'multipart/form-data',

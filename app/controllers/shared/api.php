@@ -186,7 +186,7 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
                 break;
         }
     } catch (Throwable $error) {
-        if (!empty($logger) && $error->getCode() === 500) {
+        if (!empty($logger)) {
             $log = new Log();
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log
@@ -552,7 +552,8 @@ App::shutdown()
         }
 
         if (
-            $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN
+            $project->getId() !== 'console'
+            //&& $mode !== APP_MODE_ADMIN
         ) {
             $fileSize = 0;
             $file = $request->getFiles('file');

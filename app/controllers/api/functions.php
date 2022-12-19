@@ -482,7 +482,6 @@ App::post('/v1/functions/:functionId/deployments')
         // Save to storage
         $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
         $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
@@ -1002,6 +1001,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric('executions.compute', (int)($executionResponse['duration'] * 1000))// per project
                 ->addMetric("{$function->getId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
             ;
+
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution

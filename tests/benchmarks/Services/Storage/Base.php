@@ -31,7 +31,8 @@ abstract class Base extends Scope
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::write(Role::user($this->getUser()['$id'])),
             ],
-            'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'logo.png'),
+
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ]);
     }
 
@@ -107,7 +108,7 @@ abstract class Base extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ], [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'logo.png'),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             ]);
 
             static::$fileId = $response['body']['$id'];

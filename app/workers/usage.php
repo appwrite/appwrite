@@ -54,7 +54,7 @@ $server
         Timer::tick(3000, function () use ($register, $cache, $pools, $periods, &$stats) {
             $slice = array_slice($stats, 0, count($stats));
             array_splice($stats, 0, count($stats));
-            $log = [];
+            //$log = [];
 
             foreach ($slice as $metric) {
                 if ($metric['value'] == 0) {
@@ -100,14 +100,14 @@ $server
                             }
                         }
 
-                        $log[] = [
-                            'id'     => $id,
-                            'period' => $period,
-                            'time'   => $time,
-                            'metric' => $metric['key'],
-                            'value'  => $metric['value'],
-                            'region' => App::getEnv('_APP_REGION', 'default'),
-                        ];
+//                        $log[] = [
+//                            'id'     => $id,
+//                            'period' => $period,
+//                            'time'   => $time,
+//                            'metric' => $metric['key'],
+//                            'value'  => $metric['value'],
+//                            'region' => App::getEnv('_APP_REGION', 'default'),
+//                        ];
                     } catch (\Exception $e) {
                         console::error($e->getMessage());
                     } finally {
@@ -115,12 +115,12 @@ $server
                     }
                 }
 
-                if (!empty($log)) {
-                    $dbForProject->createDocument('statsLogger', new Document([
-                        'time'    => DateTime::now(),
-                        'metrics' => $log,
-                    ]));
-                }
+//                if (!empty($log)) {
+//                    $dbForProject->createDocument('statsLogger', new Document([
+//                        'time'    => DateTime::now(),
+//                        'metrics' => $log,
+//                    ]));
+//                }
             }
         });
     });
