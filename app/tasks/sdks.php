@@ -15,7 +15,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
-use Appwrite\SDK\Language\SwiftClient;
+use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
@@ -150,7 +150,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $warning = $warning . "\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
                         break;
                     case 'apple':
-                        $config = new SwiftClient();
+                        $config = new Apple();
                         break;
                     case 'dotnet':
                         $cover = '';
