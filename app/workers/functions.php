@@ -152,6 +152,10 @@ Server::setResource('execute', function () {
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
+
+            Console::error($th->getTraceAsString());
+            Console::error($th->getFile());
+            Console::error($th->getLine());
             Console::error($th->getMessage());
         }
 
@@ -205,7 +209,7 @@ Server::setResource('execute', function () {
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId())
+                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
                 ->setParam('executionTime', $execution->getAttribute('duration'))
@@ -272,7 +276,7 @@ $server->job()
                         queueForFunctions: $queueForFunctions,
                         trigger: 'event',
                         event: $events[0],
-                        eventData: $eventData,
+                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
                         user: $user,
                         data: null,
                         executionId: null,

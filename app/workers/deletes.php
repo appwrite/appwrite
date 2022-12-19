@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -13,6 +14,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
+use Utopia\Database\DateTime;
 
 require_once __DIR__ . '/../init.php';
 
@@ -96,7 +98,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_SESSIONS:
-                $this->deleteExpiredSessions($this->args['datetime']);
+                $this->deleteExpiredSessions();
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
@@ -105,7 +107,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($this->args['dateTime1d'], $this->args['hourlyUsageRetentionDatetime']);
+                $this->deleteUsageStats($this->args['hourlyUsageRetentionDatetime']);
                 break;
 
             case DELETE_TYPE_CACHE_BY_RESOURCE:
@@ -132,8 +134,7 @@ class DeletesV1 extends Worker
      */
     protected function deleteSchedules(string $datetime): void
     {
-
-        $this->deleteByGroup(
+        $this->listByGroup(
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
@@ -143,7 +144,6 @@ class DeletesV1 extends Worker
             ],
             $this->getConsoleDB(),
             function (Document $document) {
-                Console::info('Querying schedule for function ' . $document->getAttribute('resourceId'));
                 $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
@@ -253,13 +253,13 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param string $datetime1d
      * @param string $hourlyUsageRetentionDatetime
      */
     protected function deleteUsageStats(string $hourlyUsageRetentionDatetime)
     {
         $this->deleteForProjectIds(function (Document $project) use ($hourlyUsageRetentionDatetime) {
             $dbForProject = $this->getProjectDB($project);
+            // Delete Usage stats
             $this->deleteByGroup('stats', [
                 Query::lessThan('time', $hourlyUsageRetentionDatetime),
                 Query::equal('period', ['1h']),
@@ -354,16 +354,20 @@ class DeletesV1 extends Worker
         });
     }
 
-    /**
-     * @param string $datetime
-     */
-    protected function deleteExpiredSessions(string $datetime): void
+    protected function deleteExpiredSessions(): void
     {
-        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
+        $consoleDB = $this->getConsoleDB();
+
+        $this->deleteForProjectIds(function (Document $project) use ($consoleDB) {
             $dbForProject = $this->getProjectDB($project);
+
+            $project = $consoleDB->getDocument('projects', $project->getId());
+            $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
+
             // Delete Sessions
             $this->deleteByGroup('sessions', [
-                Query::lessThan('expire', $datetime)
+                Query::lessThan('$createdAt', $expired)
             ], $dbForProject);
         });
     }
@@ -570,6 +574,7 @@ class DeletesV1 extends Worker
      */
     protected function deleteForProjectIds(callable $callback): void
     {
+        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
         $count = 0;
         $chunk = 0;
         $limit = 50;
@@ -631,6 +636,43 @@ class DeletesV1 extends Worker
         $executionEnd = \microtime(true);
 
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    /**
+     * @param string $collection collectionID
+     * @param Query[] $queries
+     * @param Database $database
+     * @param callable $callback
+     */
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $results = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+
+        while ($sum === $limit) {
+            $chunk++;
+
+            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+
+            $sum = count($results);
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+
+        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
     /**

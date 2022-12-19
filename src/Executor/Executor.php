@@ -94,7 +94,8 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception($response['body']['message'], $status);
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
         }
 
         return $response['body'];
@@ -146,7 +147,8 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception($response['body']['message'], $status);
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
         }
 
         return $response['body'];

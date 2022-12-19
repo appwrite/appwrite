@@ -7,9 +7,9 @@ use InfluxDB\Database as InfluxDatabase;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
-use Utopia\Validator\WhiteList;
 use Throwable;
 use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
 
 class Usage extends Action
 {
@@ -22,18 +22,28 @@ class Usage extends Action
     {
         $this
             ->desc('Schedules syncing data from influxdb to Appwrite console db')
-            ->param('type', 'timeseries', new WhiteList(['timeseries', 'database']))
             ->inject('dbForConsole')
             ->inject('influxdb')
+            ->inject('register')
+            ->inject('getProjectDB')
             ->inject('logError')
-            ->callback(fn ($type, $dbForConsole, $influxDB, $logError) => $this->action($type, $dbForConsole, $influxDB, $logError));
+            ->callback(fn ($dbForConsole, $influxDB, $register, $getProjectDB, $logError) => $this->action($dbForConsole, $influxDB, $register, $getProjectDB, $logError));
     }
 
     protected function aggregateTimeseries(UtopiaDatabase $database, InfluxDatabase $influxDB, callable $logError): void
     {
-        $interval = (int) App::getEnv('_APP_USAGE_TIMESERIES_INTERVAL', '30'); // 30 seconds (by default)
+    }
+
+    public function action(UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, Registry $register, callable $getProjectDB, callable $logError)
+    {
+        Console::title('Usage Aggregation V1');
+        Console::success(APP_NAME . ' usage aggregation process v1 has started');
+
+        $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($error, "usage", $action);
+
+        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
         $region = App::getEnv('region', 'default');
-        $usage = new TimeSeries($region, $database, $influxDB, $logError);
+        $usage = new TimeSeries($region, $dbForConsole, $influxDB, $getProjectDB, $register, $errorLogger);
 
         Console::loop(function () use ($interval, $usage) {
             $now = date('d-m-Y H:i:s', time());
@@ -46,21 +56,5 @@ class Usage extends Action
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Aggregation took {$loopTook} seconds");
         }, $interval);
-    }
-
-    public function action(string $type, UtopiaDatabase $dbForConsole, InfluxDatabase $influxDB, callable $logError)
-    {
-        Console::title('Usage Aggregation V1');
-        Console::success(APP_NAME . ' usage aggregation process v1 has started');
-
-        $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($error, "usage", $action);
-
-        switch ($type) {
-            case 'timeseries':
-                $this->aggregateTimeseries($dbForConsole, $influxDB, $errorLogger);
-                break;
-            default:
-                Console::error("Unsupported usage aggregation type");
-        }
     }
 }

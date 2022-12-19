@@ -18,6 +18,12 @@ COPY app/console /usr/local/src/console
 
 WORKDIR /usr/local/src/console
 
+ARG VITE_GA_PROJECT
+ARG VITE_CONSOLE_MODE
+
+ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
+ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
+
 RUN npm ci
 RUN npm run build
 
@@ -297,6 +303,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/patch-create-missing-schedules && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/edge-sync && \

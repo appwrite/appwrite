@@ -100,7 +100,7 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.1.1';
+const APP_VERSION_STABLE = '1.1.2';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -553,10 +553,16 @@ $register->set('pools', function () {
         ],
     ];
 
-    $instances = 3; // REST, Realtime, CLI
-    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-    $maxConnections = App::getenv('_APP_CONNECTIONS_MAX', 251);
-    $instanceConnections = $maxConnections / $instances;
+    $maxConnections = App::getEnv('_APP_CONNECTIONS_MAX', 151);
+    $instanceConnections = $maxConnections / App::getEnv('_APP_POOL_CLIENTS', 14);
+
+    $multiprocessing = App::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
+
+    if ($multiprocessing) {
+        $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+    } else {
+        $workerCount = 1;
+    }
 
     if ($workerCount > $instanceConnections) {
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
@@ -908,9 +914,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Authorization::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (APP_MODE_ADMIN === $mode) {
         Auth::setCookieName('a_session_' . $console->getId());
+        $authDuration = Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     }
 
     $session = Auth::decodeSession(
@@ -947,8 +955,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
-
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (
         $user->isEmpty() // Check a document has been found in the DB

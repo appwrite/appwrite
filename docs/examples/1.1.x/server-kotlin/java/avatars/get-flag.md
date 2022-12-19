@@ -1,22 +1,36 @@
-import io.appwrite.Client;
-import io.appwrite.coroutines.CoroutineCallback;
-import io.appwrite.services.Avatars;
+import io.appwrite.Client
+import io.appwrite.services.Avatars
 
-Client client = new Client()
-    .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
-    .setProject("5df5acd0d48c2") // Your project ID
-    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+public void main() {
+    Client client = Client(context)
+        .setEndpoint("https://[HOSTNAME_OR_IP]/v1") // Your API Endpoint
+        .setProject("5df5acd0d48c2") // Your project ID
+        .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-Avatars avatars = new Avatars(client);
+    Avatars avatars = new Avatars(client);
+    avatars.getFlag(
+        code = "af",
+        new Continuation<Response>() {
+            @NotNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
 
-avatars.getFlag(
-    "af",
-    new CoroutineCallback<>((result, error) -> {
-        if (error != null) {
-            error.printStackTrace();
-            return;
+            @Override
+            public void resumeWith(@NotNull Object o) {
+                String json = "";
+                try {
+                    if (o instanceof Result.Failure) {
+                        Result.Failure failure = (Result.Failure) o;
+                        throw failure.exception;
+                    } else {
+                        Response response = (Response) o;
+                    }
+                } catch (Throwable th) {
+                    Log.e("ERROR", th.toString());
+                }
+            }
         }
-
-        System.out.println(result);
-    })
-);
+    );
+}

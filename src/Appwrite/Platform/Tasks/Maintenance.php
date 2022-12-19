@@ -77,7 +77,6 @@ class Maintenance extends Action
         {
             (new Delete())
                 ->setType(DELETE_TYPE_SESSIONS)
-                ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * Auth::TOKEN_EXPIRATION_LOGIN_LONG)) //TODO: Update to use project session expiration instead of default.
                 ->trigger();
         }
 
@@ -136,7 +135,7 @@ class Maintenance extends Action
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetentionHourly, $cacheRetention, $schedulesDeletionRetention, $dbForConsole) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");

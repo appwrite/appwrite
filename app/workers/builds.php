@@ -254,6 +254,7 @@ class BuildsV1 extends Worker
                 $statsd = $register->get('statsd');
                 $usage = new Stats($statsd);
                 $usage
+                    ->setParam('projectInternalId', $project->getInternalId())
                     ->setParam('projectId', $project->getId())
                     ->setParam('functionId', $function->getId())
                     ->setParam('builds.{scope}.compute', 1)
