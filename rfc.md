@@ -57,7 +57,7 @@ Not relevant
 <!-- How will we benchmark this feature? -->
 
 ### Tests (UI, Unit, E2E)
-We need to add test how to be able to mock data better, 
-currently mocks are hardcoded, except mongo db, where I was able to add sleep condition in queries.
+We need to add tests with the ability to mock exceed timeout queries, for catching the exceptions. 
+currently, mocks are hardcoded, except mongo db, where I was able to add sleep condition in queries.
 
 <!-- How will we test this feature? -->
