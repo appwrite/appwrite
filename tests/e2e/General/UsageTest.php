@@ -24,7 +24,7 @@ class UsageTest extends Scope
 
     protected string $projectId;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
     }
