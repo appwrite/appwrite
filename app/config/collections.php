@@ -3545,7 +3545,7 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_seconds'),
+                '$id' => ID::custom('_key_seconds_'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['seconds'],
                 'lengths' => [],
