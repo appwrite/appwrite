@@ -122,7 +122,7 @@ class Project extends Model
             ])
             ->addRule('authPasswordHistory', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Max password history to save per user. Max passwords limit allowed in history is 20. Use 0 for disabling password history.',
+                'description' => 'Max allowed passwords in the history list per user. Max passwords limit allowed in history is 20. Use 0 for disabling password history.',
                 'default' => 0,
                 'example' => 5,
             ])
