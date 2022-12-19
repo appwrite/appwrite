@@ -1060,10 +1060,13 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', array_merge($this->getHeaders(), [
+        $headers = array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'admin',
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-        ]), [
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $headers, [
             'password' => $password,
         ]);
 
