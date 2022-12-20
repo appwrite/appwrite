@@ -5,6 +5,7 @@ require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Func;
 use Appwrite\Event\Audit;
 use Appwrite\Platform\Appwrite;
@@ -25,7 +26,7 @@ use Utopia\Registry\Registry;
 
 Authorization::disable();
 
-CLI::setResource('register', fn()=>$register);
+CLI::setResource('register', fn () => $register);
 
 CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
@@ -35,8 +36,7 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -68,7 +68,8 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', []);
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) {
+                /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -121,7 +122,8 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 }, ['pools', 'dbForConsole', 'cache']);
 
 CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
+    $client = $register->get('influxdb');
+    /** @var InfluxDB\Client $client */
     $attempts = 0;
     $max = 10;
     $sleep = 1;
@@ -160,10 +162,13 @@ CLI::setResource('audits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
 
-CLI::setResource('certificates', function (Group $pools) {
-    return new Certificate($pools->get('queue')->pop()->getResource());
-}, ['pools']);
+CLI::setResource('certificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
 
+CLI::setResource('database', function (Connection $queue) {
+    return new EventDatabase($queue);
+}, ['queue']);
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

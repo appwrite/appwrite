@@ -850,14 +850,16 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 
 // Queues
 App::setResource('mails', fn() => new Mail());
-App::setResource('deletes', function (Connection $queue) {
-    return new Delete($queue);
-}, ['queue']);
-App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('database', function (Connection $queue) {
+    return new EventDatabase($queue);
+}, ['pools']);
+App::setResource('deletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
 App::setResource('events', function (Connection $queue) {
     return new Event('', '', $queue);
 }, ['pools']);
