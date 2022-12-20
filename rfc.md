@@ -21,6 +21,8 @@ We will have to show on the console this lists of audit , so the user can try to
 
 ### API Changes
 If case we want to limit time execution for a whole api call we can set by session the execution time limit for all select queries in that connection thread.
+In case mongo will throw a 'Utopia\Mongo\Exception' with Error Code 50, with a message such as "E50 MaxTimeMSExpired:operation exceeded time limit".
+
 <!-- Do we need new API endpoints? List and describe them and their API signatures -->
 
 ###  Workers / Commands
