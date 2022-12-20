@@ -278,7 +278,7 @@ class Event
 
     /**
      * Get Queue Size
-     * 
+     *
      * @return int
      */
     public function getQueueSize(): int
