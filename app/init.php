@@ -853,34 +853,31 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-App::setResource('messaging', function (Connection $queue) {
+App::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
-App::setResource('mails', function (Connection $queue) {
+App::setResource('queueForMail', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
-App::setResource('builds', function (Connection $queue) {
+App::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
-App::setResource('database', function (Connection $queue) {
+App::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
-App::setResource('deletes', function (Connection $queue) {
+App::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
-App::setResource('events', function (Connection $queue) {
+App::setResource('queueForEvents', function (Connection $queue) {
     return new Event('', '', $queue);
 }, ['queue']);
-App::setResource('audits', function (Connection $queue) {
+App::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
-}, ['queue']);
-App::setResource('events', function (Connection $queue) {
-    return new Event('', '', $queue);
 }, ['queue']);
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('certificates', function (Connection $queue) {
+App::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 App::setResource('usage', function ($register) {

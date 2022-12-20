@@ -153,34 +153,31 @@ CLI::setResource('influxdb', function (Registry $register) {
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-CLI::setResource('messaging', function (Connection $queue) {
+CLI::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
-CLI::setResource('mails', function (Connection $queue) {
+CLI::setResource('queueForMail', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
-CLI::setResource('builds', function (Connection $queue) {
+CLI::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
-CLI::setResource('database', function (Connection $queue) {
+CLI::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
-CLI::setResource('deletes', function (Connection $queue) {
+CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
-CLI::setResource('events', function (Connection $queue) {
+CLI::setResource('queueForEvents', function (Connection $queue) {
     return new Event('', '', $queue);
 }, ['queue']);
-CLI::setResource('audits', function (Connection $queue) {
+CLI::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
-}, ['queue']);
-CLI::setResource('events', function (Connection $queue) {
-    return new Event('', '', $queue);
 }, ['queue']);
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-CLI::setResource('certificates', function (Connection $queue) {
+CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 CLI::setResource('logError', function (Registry $register) {

@@ -162,12 +162,12 @@ class Func extends Event
     /**
      * Generate a function event from a base event
      *
-     * @param Event $event
+     * @param Event $queueForEvents
      *
      * @return self
      *
      */
-    public function from(Event $event): self
+    public function from(Event $queueForEvents): self
     {
         $this->project = $event->getProject();
         $this->user = $event->getUser();

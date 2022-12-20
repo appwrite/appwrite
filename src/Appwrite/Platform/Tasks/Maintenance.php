@@ -28,59 +28,59 @@ class Maintenance extends Action
         $this
             ->desc('Schedules maintenance tasks and publishes them to queues')
             ->inject('dbForConsole')
-            ->inject('certificates')
-            ->inject('deletes')
-            ->callback(fn (Database $dbForConsole, Certificate $certificates, Delete $deletes) => $this->action($dbForConsole, $certificates, $deletes));
+            ->inject('queueForCertificates')
+            ->inject('queueForDeletes')
+            ->callback(fn (Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForConsole, $queueForCertificates, $queueForDeletes));
     }
 
-    public function action(Database $dbForConsole, Certificate $certificates, Delete $deletes): void
+    public function action(Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        function notifyDeleteExecutionLogs(int $interval, Delete $deletes)
+        function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes)
         {
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_EXECUTIONS)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteAbuseLogs(int $interval, Delete $deletes)
+        function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes)
         {
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_ABUSE)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteAuditLogs(int $interval, Delete $deletes)
+        function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes)
         {
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_AUDIT)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $deletes)
+        function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes)
         {
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_USAGE)
                 ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                 ->trigger();
         }
 
-        function notifyDeleteConnections(Delete $deletes)
+        function notifyDeleteConnections(Delete $queueForDeletes)
         {
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_REALTIME)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
                 ->trigger();
         }
 
-        function notifyDeleteExpiredSessions(Delete $deletes)
+        function notifyDeleteExpiredSessions(Delete $queueForDeletes)
         {
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_SESSIONS)
                 ->trigger();
         }
@@ -111,19 +111,19 @@ class Maintenance extends Action
             }
         }
 
-        function notifyDeleteCache($interval, Delete $deletes)
+        function notifyDeleteCache($interval, Delete $queueForDeletes)
         {
 
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteSchedules($interval, Delete $deletes)
+        function notifyDeleteSchedules($interval, Delete $queueForDeletes)
         {
 
-            ($deletes)
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_SCHEDULES)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -139,19 +139,19 @@ class Maintenance extends Action
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $deletes, $certificates) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
-            notifyDeleteExecutionLogs($executionLogsRetention, $deletes);
-            notifyDeleteAbuseLogs($abuseLogsRetention, $deletes);
-            notifyDeleteAuditLogs($auditLogRetention, $deletes);
-            notifyDeleteUsageStats($usageStatsRetentionHourly, $deletes);
-            notifyDeleteConnections($deletes);
-            notifyDeleteExpiredSessions($deletes);
-            renewCertificates($dbForConsole, $certificates);
-            notifyDeleteCache($cacheRetention, $deletes);
-            notifyDeleteSchedules($schedulesDeletionRetention, $deletes);
+            notifyDeleteExecutionLogs($executionLogsRetention, $queueForDeletes);
+            notifyDeleteAbuseLogs($abuseLogsRetention, $queueForDeletes);
+            notifyDeleteAuditLogs($auditLogRetention, $queueForDeletes);
+            notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+            notifyDeleteConnections($queueForDeletes);
+            notifyDeleteExpiredSessions($queueForDeletes);
+            renewCertificates($dbForConsole, $queueForCertificates);
+            notifyDeleteCache($cacheRetention, $queueForDeletes);
+            notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval);
     }
 }

@@ -90,7 +90,7 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
-Server::setResource('database', function (Registry $register) {
+Server::setResource('queueForDatabase', function (Registry $register) {
     $pools = $register->get('pools');
     return new EventDatabase(
         $pools
@@ -103,67 +103,33 @@ Server::setResource('database', function (Registry $register) {
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-Server::setResource('messaging', function (Connection $queue) {
+Server::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
-Server::setResource('mails', function (Connection $queue) {
+Server::setResource('queueForMail', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
-Server::setResource('builds', function (Connection $queue) {
+Server::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
-Server::setResource('database', function (Connection $queue) {
+Server::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
-Server::setResource('deletes', function (Connection $queue) {
+Server::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
-Server::setResource('events', function (Connection $queue) {
+Server::setResource('queueForEvents', function (Connection $queue) {
     return new Event('', '', $queue);
 }, ['queue']);
-Server::setResource('audits', function (Connection $queue) {
+Server::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
-}, ['queue']);
-Server::setResource('events', function (Connection $queue) {
-    return new Event('', '', $queue);
 }, ['queue']);
 Server::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-Server::setResource('certificates', function (Connection $queue) {
+Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-Server::setResource('events', function (Registry $register) {
-    $pools = $register->get('pools');
-    return new Event(
-        '',
-        '',
-        $pools
-            ->get('queue')
-            ->pop()
-            ->getResource()
-    );
-}, ['register']);
-
-Server::setResource('audits', function (Registry $register) {
-    $pools = $register->get('pools');
-    return new Audit(
-        $pools
-            ->get('queue')
-            ->pop()
-            ->getResource()
-    );
-}, ['register']);
-
-Server::setResource('certificates', function (Registry $register) {
-    $pools = $register->get('pools');
-    return new Certificate(
-        $pools
-            ->get('queue')
-            ->pop()
-            ->getResource()
-    );
-}, ['register']);
 
 Server::setResource('logger', function ($register) {
     return $register->get('logger');

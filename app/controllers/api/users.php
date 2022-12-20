@@ -36,7 +36,7 @@ use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Database $dbForProject, Event $events): Document
+function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Database $dbForProject, Event $queueForEvents): Document
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
 
@@ -78,7 +78,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
 
-    $events->setParam('userId', $user->getId());
+    $queueForEvents->setParam('userId', $user->getId());
 
     return $user;
 }
@@ -105,9 +105,9 @@ App::post('/v1/users')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $events);
+    ->inject('queueForEvents')
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -135,9 +135,9 @@ App::post('/v1/users/bcrypt')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -165,9 +165,9 @@ App::post('/v1/users/md5')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -195,9 +195,9 @@ App::post('/v1/users/argon2')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -226,15 +226,15 @@ App::post('/v1/users/sha')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
         $options = '{}';
 
         if (!empty($passwordVersion)) {
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $events);
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -262,9 +262,9 @@ App::post('/v1/users/phpass')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -297,8 +297,8 @@ App::post('/v1/users/scrypt')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
         $options = [
             'salt' => $passwordSalt,
             'costCpu' => $passwordCpu,
@@ -307,7 +307,7 @@ App::post('/v1/users/scrypt')
             'length' => $passwordLength
         ];
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $events);
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -338,9 +338,9 @@ App::post('/v1/users/scrypt-modified')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Event $events) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $events);
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -632,8 +632,8 @@ App::patch('/v1/users/:userId/status')
     ->param('status', null, new Boolean(true), 'User Status. To activate the user pass `true` and to block the user pass `false`.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -643,7 +643,7 @@ App::patch('/v1/users/:userId/status')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', (bool) $status));
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -668,8 +668,8 @@ App::patch('/v1/users/:userId/verification')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -679,7 +679,7 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -704,8 +704,8 @@ App::patch('/v1/users/:userId/verification/phone')
     ->param('phoneVerification', false, new Boolean(), 'User phone verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -715,7 +715,7 @@ App::patch('/v1/users/:userId/verification/phone')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('phoneVerification', $phoneVerification));
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -741,8 +741,8 @@ App::patch('/v1/users/:userId/name')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -757,7 +757,7 @@ App::patch('/v1/users/:userId/name')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -782,8 +782,8 @@ App::patch('/v1/users/:userId/password')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $password, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -799,7 +799,7 @@ App::patch('/v1/users/:userId/password')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -824,8 +824,8 @@ App::patch('/v1/users/:userId/email')
     ->param('email', '', new Email(), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -846,7 +846,7 @@ App::patch('/v1/users/:userId/email')
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -870,8 +870,8 @@ App::patch('/v1/users/:userId/phone')
     ->param('number', '', new Phone(), 'User phone number.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -891,7 +891,7 @@ App::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -916,8 +916,8 @@ App::patch('/v1/users/:userId/verification')
     ->param('emailVerification', false, new Boolean(), 'User email verification status.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -927,7 +927,7 @@ App::patch('/v1/users/:userId/verification')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_USER);
     });
@@ -949,8 +949,8 @@ App::patch('/v1/users/:userId/prefs')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -960,7 +960,7 @@ App::patch('/v1/users/:userId/prefs')
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
@@ -984,8 +984,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->param('sessionId', '', new UID(), 'Session ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1002,7 +1002,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $dbForProject->deleteDocument('sessions', $session->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $sessionId);
 
@@ -1026,8 +1026,8 @@ App::delete('/v1/users/:userId/sessions')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1045,7 +1045,7 @@ App::delete('/v1/users/:userId/sessions')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_USER));
 
@@ -1069,9 +1069,9 @@ App::delete('/v1/users/:userId')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForEvents')
+    ->inject('queueForDeletes')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1084,11 +1084,11 @@ App::delete('/v1/users/:userId')
 
         $dbForProject->deleteDocument('users', $userId);
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($clone);
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($clone, Response::MODEL_USER));
 
