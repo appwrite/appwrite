@@ -4,7 +4,8 @@
 * Relevant Branch:  https://github.com/utopia-php/database/pull/220
 
 ## Summary
-We want to add for Appwrite's users queries api flexible options for making any query they desire, with no limitations, today we restrict the query to have a specific indexes for queries.
+We want to give Appwrite's users, who use queries api flexibility options for making any query they desire, with no limitations.
+Today they are restricted to have indexes for specific queries conditions.
 The problem begin with collections with a relative big amount of data inside, which can make queries with no indexes or `bad` queries in sense of sql with operators as `not in` or `<>`
 
 ## Resources
