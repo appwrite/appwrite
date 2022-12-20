@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Resque\Worker;
 use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;

@@ -17,10 +17,6 @@ class EventTest extends TestCase
 
     public function setUp(): void
     {
-        $redisHost = App::getEnv('_APP_REDIS_HOST', '');
-        $redisPort = App::getEnv('_APP_REDIS_PORT', '');
-        \Resque::setBackend($redisHost . ':' . $redisPort);
-
         $fallbackForRedis = URL::unparse([
             'scheme' => 'redis',
             'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
@@ -74,7 +70,7 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
-        $this->assertEquals(\Resque::size($this->queue), 1);
+        $this->assertEquals($this->object->getQueueSize(), 1);
     }
 
     public function testReset(): void

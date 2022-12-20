@@ -9,7 +9,6 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Appwrite\Resque\Worker;
 use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;

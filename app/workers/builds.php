@@ -5,7 +5,6 @@ require_once __DIR__ . '/../worker.php';
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
 use Appwrite\Usage\Stats;

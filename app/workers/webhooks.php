@@ -2,7 +2,6 @@
 
 require_once __DIR__ . '/../worker.php';
 
-use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;

@@ -1,6 +1,8 @@
 <?php
 
 use Appwrite\ClamAV\Network;
+use Appwrite\Event\Audit;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
@@ -347,10 +349,11 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('events')
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (Event $events, Response $response) {
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $events->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
@@ -364,10 +367,11 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('audits')
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (Audit $audits, Response $response) {
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $audits->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
@@ -381,10 +385,11 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('certificates')
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (Certificate $certificates, Response $response) {
 
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $certificates->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/functions')

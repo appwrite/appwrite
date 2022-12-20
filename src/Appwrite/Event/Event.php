@@ -277,6 +277,18 @@ class Event
     }
 
     /**
+     * Get Queue Size
+     * 
+     * @return int
+     */
+    public function getQueueSize(): int
+    {
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->getQueueSize();
+    }
+
+    /**
      * Resets event.
      *
      * @return self
