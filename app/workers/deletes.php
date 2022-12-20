@@ -486,10 +486,10 @@ class DeletesV1 extends Worker
             $this->deleteByGroup('builds', [
                 Query::equal('deploymentId', [$deploymentId])
             ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
-                if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
-                    Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
+                if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
+                    Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
                 } else {
-                    Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
+                    Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
                 }
             });
         }
@@ -535,10 +535,10 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('builds', [
             Query::equal('deploymentId', [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
-            if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
-                Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
+            if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
+                Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
             } else {
-                Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
+                Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
             }
         });
 
