@@ -849,10 +849,12 @@ App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
-App::setResource('messaging', fn() => new Phone());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('messaging', function (Connection $queue) {
+    return new Phone($queue);
+}, ['queue']);
 App::setResource('mails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);

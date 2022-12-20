@@ -2,14 +2,15 @@
 
 namespace Appwrite\Event;
 
-use Resque;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Phone extends Event
 {
     protected string $recipient = '';
     protected string $message = '';
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
         parent::__construct(Event::MESSAGING_QUEUE_NAME, Event::MESSAGING_CLASS_NAME);
     }
@@ -68,7 +69,11 @@ class Phone extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
