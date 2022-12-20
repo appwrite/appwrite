@@ -53,6 +53,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
+        VITE_CONSOLE_MODE: self-hosted
     ports: 
       - 9501:80
     networks:
@@ -658,7 +659,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.1.6
+    image: openruntimes/executor:0.2.0
     networks:
       - appwrite
       - runtimes

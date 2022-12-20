@@ -65,13 +65,13 @@ function buildDeployment(Document $project, Document $function, Document $deploy
             'startTime' => $startTime,
             'deploymentId' => $deployment->getId(),
             'status' => 'processing',
-            'outputPath' => '',
+            'path' => '',
+            'size' => 0,
             'runtime' => $function->getAttribute('runtime'),
             'source' => $deployment->getAttribute('path'),
             'sourceType' => $device,
             'stdout' => '',
             'stderr' => '',
-            'endTime' => null,
             'duration' => 0
         ]));
         $deployment->setAttribute('buildId', $buildId);
@@ -155,14 +155,12 @@ function buildDeployment(Document $project, Document $function, Document $deploy
             ]
         );
 
-        $endTime = new \DateTime();
-        $endTime->setTimestamp($response['endTimeUnix']);
-
         /** Update the build document */
-        $build->setAttribute('endTime', DateTime::format($endTime));
+        $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
         $build->setAttribute('duration', \intval($response['duration']));
         $build->setAttribute('status', $response['status']);
-        $build->setAttribute('outputPath', $response['outputPath']);
+        $build->setAttribute('path', $response['path']);
+        $build->setAttribute('size', $response['size']);
         $build->setAttribute('stderr', $response['stderr']);
         $build->setAttribute('stdout', $response['stdout']);
 
@@ -193,7 +191,6 @@ function buildDeployment(Document $project, Document $function, Document $deploy
     } catch (\Throwable $th) {
         $endTime = DateTime::now();
         $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
-        $build->setAttribute('endTime', $endTime);
         $build->setAttribute('duration', $interval->format('%s') + 0);
         $build->setAttribute('status', 'failed');
         $build->setAttribute('stderr', $th->getMessage());
@@ -229,6 +226,7 @@ function buildDeployment(Document $project, Document $function, Document $deploy
                 ->setParam('builds.{scope}.compute', 1)
                 ->setParam('buildStatus', $build->getAttribute('status', ''))
                 ->setParam('buildTime', $build->getAttribute('duration'))
+                ->setParam('buildSize', $build->getAttribute('size'))
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
