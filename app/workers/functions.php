@@ -28,18 +28,18 @@ Authorization::setDefaultStatus(false);
 
 Server::setResource('execute', function () {
     return function (
-        Func $queueForFunctions,
-        Database $dbForProject,
         Client $statsd,
+        Database $dbForProject,
         Document $project,
         Document $function,
+        Func $queueForFunctions,
         string $trigger,
-        string $data = null,
-        ?Document $user = null,
-        string $jwt = null,
         string $event = null,
         string $eventData = null,
+        ?Document $user = null,
+        string $data = null,
         string $executionId = null,
+        string $jwt = null,
         Connection $queueConnection,
     ) {
         $user ??= new Document();
@@ -162,8 +162,6 @@ Server::setResource('execute', function () {
         }
 
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-
-        $connection = $
 
         /** Trigger Webhook */
         $executionModel = new Execution();
@@ -315,6 +313,7 @@ $server->job()
                     user: $user,
                     jwt: $jwt,
                     statsd: $statsd,
+                    queueConnection: $queue
                 );
                 break;
             case 'schedule':
@@ -331,6 +330,7 @@ $server->job()
                     user: null,
                     jwt: null,
                     statsd: $statsd,
+                    queueConnection: $queue
                 );
                 break;
         }
