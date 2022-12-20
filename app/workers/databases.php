@@ -25,56 +25,6 @@ Authorization::setDefaultStatus(false);
 const DATABASE_PROJECT = 'project';
 const DATABASE_CONSOLE = 'console';
 
-function getCache(): Cache
-{
-    global $register;
-
-    $pools = $register->get('pools');
-    /** @var \Utopia\Pools\Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource();
-    }
-
-    return new Cache(new Sharding($adapters));
-}
-
-/**
- * Get Project DB
- *
- * @param Document $project
- * @returns Database
- */
-function getProjectDB(Document $project): Database
-{
-    global $register;
-
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
-    }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $database = new Database($dbAdapter, getCache());
-    $database->setNamespace('_' . $project->getInternalId());
-
-    return $database;
-}
-
-
 /**
  * @param Document $database
  * @param Document $collection

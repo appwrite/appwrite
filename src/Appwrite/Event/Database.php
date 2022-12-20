@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -16,7 +15,7 @@ class Database extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
+        parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME, $connection);
     }
 
     /**

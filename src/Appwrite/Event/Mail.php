@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -18,7 +17,7 @@ class Mail extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
+        parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME, $connection);
     }
 
     /**

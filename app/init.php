@@ -69,6 +69,7 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
@@ -858,18 +859,21 @@ App::setResource('messaging', function (Connection $queue) {
 App::setResource('mails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
+App::setResource('builds', function (Connection $queue) {
+    return new Build($queue);
+}, ['queue']);
 App::setResource('database', function (Connection $queue) {
     return new EventDatabase($queue);
-}, ['pools']);
+}, ['queue']);
 App::setResource('deletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
 App::setResource('events', function (Connection $queue) {
     return new Event('', '', $queue);
-}, ['pools']);
+}, ['queue']);
 App::setResource('audits', function (Connection $queue) {
     return new Audit($queue);
-}, ['pools']);
+}, ['queue']);
 App::setResource('events', function (Connection $queue) {
     return new Event('', '', $queue);
 }, ['queue']);

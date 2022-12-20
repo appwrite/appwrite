@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 
@@ -15,7 +14,7 @@ class Audit extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME);
+        parent::__construct(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME, $connection);
     }
 
     /**

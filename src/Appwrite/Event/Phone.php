@@ -12,7 +12,7 @@ class Phone extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::MESSAGING_QUEUE_NAME, Event::MESSAGING_CLASS_NAME);
+        parent::__construct(Event::MESSAGING_QUEUE_NAME, Event::MESSAGING_CLASS_NAME, $connection);
     }
 
     /**

@@ -8,6 +8,10 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Func;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Build;
+use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
+use Appwrite\Event\Phone;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -149,27 +153,36 @@ CLI::setResource('influxdb', function (Registry $register) {
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-
-CLI::setResource('deletes', function (Connection $queue) {
-    return new Delete($queue);
+CLI::setResource('messaging', function (Connection $queue) {
+    return new Phone($queue);
 }, ['queue']);
-
-CLI::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
+CLI::setResource('mails', function (Connection $queue) {
+    return new Mail($queue);
 }, ['queue']);
-
-CLI::setResource('audits', function (Connection $queue) {
-    return new Audit($queue);
+CLI::setResource('builds', function (Connection $queue) {
+    return new Build($queue);
 }, ['queue']);
-
-CLI::setResource('certificates', function (Connection $queue) {
-    return new Certificate($queue);
-}, ['queue']);
-
 CLI::setResource('database', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
-
+CLI::setResource('deletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+CLI::setResource('events', function (Connection $queue) {
+    return new Event('', '', $queue);
+}, ['queue']);
+CLI::setResource('audits', function (Connection $queue) {
+    return new Audit($queue);
+}, ['queue']);
+CLI::setResource('events', function (Connection $queue) {
+    return new Event('', '', $queue);
+}, ['queue']);
+CLI::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
+CLI::setResource('certificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         $logger = $register->get('logger');

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Resque;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -14,7 +13,7 @@ class Certificate extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME);
+        parent::__construct(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, $connection);
     }
 
     /**

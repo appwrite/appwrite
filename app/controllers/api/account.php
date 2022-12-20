@@ -1291,7 +1291,6 @@ App::get('/v1/account')
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
-
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 

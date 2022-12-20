@@ -634,7 +634,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
+    ->inject('builds')
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole, Build $builds) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -754,8 +755,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
 
             // Start the build
-            $buildEvent = new Build();
-            $buildEvent
+            $builds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
                 ->setDeployment($deployment)
@@ -1001,7 +1001,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
+    ->inject('builds')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events, Build $builds) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1029,8 +1030,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             ->setParam('deploymentId', $deployment->getId());
 
         // Retry the build
-        $buildEvent = new Build();
-        $buildEvent
+        $builds
             ->setType(BUILD_TYPE_RETRY)
             ->setResource($function)
             ->setDeployment($deployment)
