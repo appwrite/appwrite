@@ -228,7 +228,6 @@ class BuildsV1 extends Worker
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
         } finally {
-            \var_dump($build);
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             /**
