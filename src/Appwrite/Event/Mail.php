@@ -4,6 +4,8 @@ namespace Appwrite\Event;
 
 use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Mail extends Event
 {
@@ -14,7 +16,7 @@ class Mail extends Event
     protected string $locale = '';
     protected ?Document $team = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
         parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME);
     }
@@ -165,7 +167,11 @@ class Mail extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
