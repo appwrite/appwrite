@@ -1004,7 +1004,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $sessionId);
+            ->setParam('sessionId', $sessionId)
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
         $response->noContent();
     });
