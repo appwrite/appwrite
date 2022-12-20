@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Audit;
 use Appwrite\Event\Func;
 use Swoole\Runtime;
 use Utopia\App;
@@ -24,15 +25,14 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 global $register;
 
-Server::setResource('register', fn() => $register);
+Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
     $database = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('console');
@@ -52,8 +52,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     $database = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('_' . $project->getInternalId());
@@ -69,8 +68,7 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -91,6 +89,16 @@ Server::setResource('events', function (Registry $register) {
     return new Event(
         '',
         '',
+        $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+    );
+}, ['register']);
+
+Server::setResource('audits', function (Registry $register) {
+    $pools = $register->get('pools');
+    return new Audit(
         $pools
             ->get('queue')
             ->pop()

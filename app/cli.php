@@ -5,6 +5,7 @@ require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\Audit;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -152,6 +153,10 @@ CLI::setResource('deletes', function (Connection $queue) {
 
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
+}, ['queue']);
+
+CLI::setResource('audits', function (Connection $queue) {
+    return new Audit($queue);
 }, ['queue']);
 
 CLI::setResource('logError', function (Registry $register) {

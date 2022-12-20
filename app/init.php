@@ -848,7 +848,6 @@ App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
-App::setResource('audits', fn() => new Audit());
 App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', function (Connection $queue) {
     return new Delete($queue);
@@ -857,6 +856,12 @@ App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
+}, ['pools']);
+App::setResource('events', function (Connection $queue) {
+    return new Event('', '', $queue);
+}, ['pools']);
+App::setResource('audits', function (Connection $queue) {
+    return new Audit($queue);
 }, ['pools']);
 App::setResource('events', function (Connection $queue) {
     return new Event('', '', $queue);
