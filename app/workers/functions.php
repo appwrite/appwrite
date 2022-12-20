@@ -20,6 +20,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Connection;
 use Utopia\Queue\Server;
 
 Authorization::disable();
@@ -39,6 +40,7 @@ Server::setResource('execute', function () {
         string $event = null,
         string $eventData = null,
         string $executionId = null,
+        Connection $queueConnection,
     ) {
         $user ??= new Document();
         $functionId = $function->getId();
@@ -161,9 +163,11 @@ Server::setResource('execute', function () {
 
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
+        $connection = $
+
         /** Trigger Webhook */
         $executionModel = new Execution();
-        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME, $queueConnection);
         $executionUpdate
             ->setProject($project)
             ->setUser($user)
@@ -225,8 +229,9 @@ $server->job()
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('statsd')
+    ->inject('queue')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute) {
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, Connection $queue, callable $execute) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -280,7 +285,8 @@ $server->job()
                         user: $user,
                         data: null,
                         executionId: null,
-                        jwt: null
+                        jwt: null,
+                        queueConnection: $queue
                     );
                     Console::success('Triggered function: ' . $events[0]);
                 }

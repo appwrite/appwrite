@@ -16,7 +16,7 @@ class Func extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME, $connection);
     }
 
     /**

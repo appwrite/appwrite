@@ -1,48 +1,23 @@
 <?php
 
+require_once __DIR__ . '/../worker.php';
+
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Message;
+use Utopia\Queue\Server;
 
-require_once __DIR__ . '/../init.php';
+Authorization::disable();
+Authorization::setDefaultStatus(false);
 
-Console::title('Webhooks V1 Worker');
-Console::success(APP_NAME . ' webhooks worker v1 has started');
+global $errors;
+$errors = [];
 
-class WebhooksV1 extends Worker
-{
-    protected array $errors = [];
-
-    public function getName(): string
-    {
-        return "webhooks";
-    }
-
-    public function init(): void
-    {
-    }
-
-    public function run(): void
-    {
-        $events = $this->args['events'];
-        $payload = json_encode($this->args['payload']);
-        $project = new Document($this->args['project']);
-        $user = new Document($this->args['user'] ?? []);
-
-        foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $payload, $webhook, $user, $project);
-            }
-        }
-
-        if (!empty($this->errors)) {
-            throw new Exception(\implode(" / \n\n", $this->errors));
-        }
-    }
-
-    protected function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
-    {
+Server::setResource('execute', function () {
+    return function (array $events, string $payload, Document $webhook, Document $user, Document $project): void {
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
@@ -85,14 +60,40 @@ class WebhooksV1 extends Worker
         }
 
         if (false === \curl_exec($ch)) {
-            $this->errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
+            $errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
         }
 
         \curl_close($ch);
-    }
+    };
+});
 
-    public function shutdown(): void
-    {
-        $this->errors = [];
-    }
-}
+
+$server->job()
+    ->inject('message')
+    ->inject('execute')
+    ->action(function (Message $message, callable $execute) {
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $events = $payload['events'];
+        $webhookPayload = json_encode($payload['payload']);
+        $project = new Document($payload['project']);
+        $user = new Document($payload['user'] ?? []);
+
+        foreach ($project->getAttribute('webhooks', []) as $webhook) {
+            if (array_intersect($webhook->getAttribute('events', []), $events)) {
+                $execute($events, $webhookPayload, $webhook, $user, $project);
+            }
+        }
+
+        if (!empty($errors)) {
+            throw new Exception(\implode(" / \n\n", $errors));
+        }
+    });
+
+
+$server->workerStart();
+$server->start();

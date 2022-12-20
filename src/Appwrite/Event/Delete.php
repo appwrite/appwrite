@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Connection;
 
 class Delete extends Event
 {
@@ -14,9 +15,9 @@ class Delete extends Event
     protected ?string $hourlyUsageRetentionDatetime = null;
 
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
+        parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, $connection);
     }
 
     /**

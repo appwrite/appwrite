@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/init.php';
 
+use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Swoole\Runtime;
 use Utopia\App;
@@ -78,6 +79,18 @@ Server::setResource('cache', function (Registry $register) {
 Server::setResource('queueForFunctions', function (Registry $register) {
     $pools = $register->get('pools');
     return new Func(
+        $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+    );
+}, ['register']);
+
+Server::setResource('events', function (Registry $register) {
+    $pools = $register->get('pools');
+    return new Event(
+        '',
+        '',
         $pools
             ->get('queue')
             ->pop()

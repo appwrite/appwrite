@@ -121,7 +121,10 @@ class BuildsV1 extends Worker
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
 
-        $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+        $pools = $register->get('pools');
+        $connection = $pools->get('queue')->pop()->getResource();
+
+        $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME, $connection);
         $deploymentUpdate
             ->setProject($project)
             ->setEvent('functions.[functionId].deployments.[deploymentId].update')

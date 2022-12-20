@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
@@ -17,6 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
@@ -140,9 +142,17 @@ CLI::setResource('influxdb', function (Registry $register) {
     return $database;
 }, ['register']);
 
-CLI::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+CLI::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+
+CLI::setResource('deletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+
+CLI::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

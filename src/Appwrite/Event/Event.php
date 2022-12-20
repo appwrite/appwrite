@@ -3,8 +3,9 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Event
 {
@@ -43,16 +44,18 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected Connection $connection;
 
     /**
      * @param string $queue
      * @param string $class
      * @return void
      */
-    public function __construct(string $queue, string $class)
+    public function __construct(string $queue, string $class, Connection $connection)
     {
         $this->queue = $queue;
         $this->class = $class;
+        $this->connection = $connection;
     }
 
     /**
@@ -260,7 +263,11 @@ class Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
@@ -437,9 +444,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -447,7 +454,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }
