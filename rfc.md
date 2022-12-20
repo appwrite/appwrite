@@ -38,6 +38,7 @@ No change
 
 ### Breaking Changes
 In case we use the injection sql timeouts a change to sql syntax will be changed.
+No problem at all with backward compatability at all.
 <!-- Will this feature introduce any breaking changes? How can we achieve backward compatability -->
 
 ### Documentation & Content
