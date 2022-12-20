@@ -4,6 +4,7 @@ require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use Swoole\Runtime;
 use Utopia\App;
@@ -99,6 +100,16 @@ Server::setResource('events', function (Registry $register) {
 Server::setResource('audits', function (Registry $register) {
     $pools = $register->get('pools');
     return new Audit(
+        $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+    );
+}, ['register']);
+
+Server::setResource('certificates', function (Registry $register) {
+    $pools = $register->get('pools');
+    return new Certificate(
         $pools
             ->get('queue')
             ->pop()

@@ -69,6 +69,7 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -868,6 +869,9 @@ App::setResource('events', function (Connection $queue) {
 }, ['queue']);
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
+}, ['queue']);
+App::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
 }, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));

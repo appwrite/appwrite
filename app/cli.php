@@ -4,6 +4,7 @@ require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Delete;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use Appwrite\Event\Audit;
 use Appwrite\Platform\Appwrite;
@@ -158,6 +159,11 @@ CLI::setResource('queueForFunctions', function (Connection $queue) {
 CLI::setResource('audits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
+
+CLI::setResource('certificates', function (Group $pools) {
+    return new Certificate($pools->get('queue')->pop()->getResource());
+}, ['pools']);
+
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

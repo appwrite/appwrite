@@ -51,7 +51,8 @@ App::init()
     ->inject('locale')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
+    ->inject('queueForCertificates')
+    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Certificate $queueForCertificates) {
         /*
         * Request format
         */
@@ -122,7 +123,7 @@ App::init()
 
                         Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
 
-                        (new Certificate())
+                        $queueForCertificates
                             ->setDomain($domainDocument)
                             ->trigger();
                     }
