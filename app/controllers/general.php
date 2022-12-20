@@ -41,6 +41,7 @@ Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init()
+    ->groups(['api', 'auth', 'avatars', 'functions', 'account', 'projects', 'storage', 'teams', 'users'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')

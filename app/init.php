@@ -949,7 +949,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         if ($project->isEmpty()) {
             $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
-            //Todo fix cache save re-invoked
             $user = $dbForProject->getDocument('users', Auth::$unique);
         }
     } else {
@@ -1093,10 +1092,6 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     $cache  = new Cache(new Sharding($adapters));
 
     $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForCacheSyncOut) {
-//        //Todo fix cache re-invoked
-//        if ($key === 'cache-console:_metadata:users') {
-//            return;
-//        }
         $queueForCacheSyncOut
             ->enqueue([
                 'key' => $key
@@ -1104,9 +1099,6 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     });
 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForCacheSyncOut) {
-//        if ($key === 'cache-console:_metadata:users') {
-//            return;
-//        }
         $queueForCacheSyncOut
             ->enqueue([
                 'key' => $key
