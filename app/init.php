@@ -870,7 +870,7 @@ App::setResource('events', function (Connection $queue) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('queueForCertificates', function (Connection $queue) {
+App::setResource('certificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 App::setResource('usage', function ($register) {

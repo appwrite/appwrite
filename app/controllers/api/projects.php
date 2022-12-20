@@ -1314,7 +1314,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('queueForCertificates')
+    ->inject('certificates')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Certificate $queueForCertificates) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);

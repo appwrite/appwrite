@@ -51,7 +51,7 @@ App::init()
     ->inject('locale')
     ->inject('clients')
     ->inject('servers')
-    ->inject('queueForCertificates')
+    ->inject('certificates')
     ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Certificate $queueForCertificates) {
         /*
         * Request format
