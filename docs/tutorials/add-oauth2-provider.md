@@ -190,7 +190,7 @@ static/icons/light/grayscale/XXX.svg
 ```
 > Where `XXX` is the name of the provider in `lowercase`.
 
-### 3.2 Add provider doc
+### 3.2 Add provider documentation
 
 Make sure you update the documentation url for the implemented provider in `oauth-providers.ts` located in the [`src/lib/stores/oauth-providers.ts`](https://github.com/appwrite/console/blob/main/src/lib/stores/oauth-providers.ts) in the [`appwrite/console`](https://github.com/appwrite/console) repository.
 
