@@ -75,6 +75,12 @@ class V17 extends Migration
     protected function fixDocument(Document $document)
     {
         switch ($document->getCollection()) {
+            case 'projects':
+                /**
+                 * Bump version number.
+                 */
+                $document->setAttribute('version', '1.2.0');
+                break;
             case 'users':
                 /**
                  * Bump version number.
