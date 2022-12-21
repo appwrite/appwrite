@@ -1385,6 +1385,7 @@ App::get('/v1/functions/:functionId/usage')
             'functions.' . $function->getId() . '.deployments',
             'functions.' . $function->getId() . '.deployments.storage',
             $function->getId() . '.builds',
+            $function->getId() . '.builds.storage',
             $function->getId() . '.builds.compute',
             $function->getId() . '.executions',
             $function->getId() . '.executions.compute',
@@ -1432,9 +1433,10 @@ App::get('/v1/functions/:functionId/usage')
             'deployments' => $usage[$metrics[0]],
             'deploymentsStorage' => $usage[$metrics[1]],
             'builds' => $usage[$metrics[2]],
-            'buildsCompute' => $usage[$metrics[3]],
-            'executions' => $usage[$metrics[4]],
-            'executionsCompute' => $usage[$metrics[5]],
+            'buildsStorage' => $usage[$metrics[3]],
+            'buildsCompute' => $usage[$metrics[4]],
+            'executions' => $usage[$metrics[5]],
+            'executionsCompute' => $usage[$metrics[6]],
         ]), Response::MODEL_USAGE_FUNCTION);
     });
 
@@ -1461,6 +1463,7 @@ App::get('/v1/functions/usage')
             'deployments',
             'deployments.storage',
             'builds',
+            'builds.storage',
             'builds.compute',
             'executions',
             'executions.compute',
@@ -1508,8 +1511,9 @@ App::get('/v1/functions/usage')
             'deployments' => $usage[$metrics[1]],
             'deploymentsStorage' => $usage[$metrics[2]],
             'builds' => $usage[$metrics[3]],
-            'buildsCompute' => $usage[$metrics[4]],
-            'executions' => $usage[$metrics[5]],
-            'executionsCompute' => $usage[$metrics[6]],
+            'buildsStorage' => $usage[$metrics[4]],
+            'buildsCompute' => $usage[$metrics[5]],
+            'executions' => $usage[$metrics[6]],
+            'executionsCompute' => $usage[$metrics[7]],
         ]), Response::MODEL_USAGE_FUNCTIONS);
     });

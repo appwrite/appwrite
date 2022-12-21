@@ -33,6 +33,15 @@ services:
       - 8080:80
       - 443:443
       - 9500:8080
+    ulimits:
+      nofile:
+        soft: 655350
+        hard: 655350
+    sysctls:
+      - net.core.somaxconn=1024
+      - net.ipv4.tcp_rmem=1024 4096 16384
+      - net.ipv4.tcp_wmem=1024 4096 16384
+      - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -53,7 +62,6 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-        VITE_CONSOLE_MODE: self-hosted
     ports:
       - 9501:80
     networks:
@@ -655,7 +663,7 @@ services:
     image: openruntimes/executor:0.2.0
     networks:
       - appwrite
-      - runtimes
+      - openruntimes-runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -811,8 +819,8 @@ networks:
     name: gateway
   appwrite:
     name: appwrite
-  runtimes:
-    name: runtimes
+  openruntimes-runtimes:
+    name: openruntimes-runtimes
 
 volumes:
   appwrite-mariadb:
@@ -823,5 +831,6 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
+
 
 

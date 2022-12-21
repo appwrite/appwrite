@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\General;
 
-use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -693,7 +692,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(7, count($response['body']));
+        $this->assertEquals(8, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
@@ -717,7 +716,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(8, count($response['body']));
+        $this->assertEquals(9, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
         $this->assertIsArray($response['body']['functions']);
         $this->assertIsArray($response['body']['deployments']);
@@ -737,7 +736,7 @@ class UsageTest extends Scope
         $this->validateDates($response['buildsCompute']);
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->usersCount = 0;
         $this->requestsCount = 0;

@@ -252,9 +252,11 @@ class BuildsV1 extends Worker
             ->getUsageQueue()
             ->setProject($project)
             ->addMetric("builds", 1) // per project
-            ->addMetric("builds.compute", $build->getAttribute('duration')) // per project
+            ->addMetric("builds.storage", $build->getAttribute('size', 0))
+            ->addMetric("builds.compute", $build->getAttribute('duration', 0))
             ->addMetric("{$function->getId()}" . ".builds", 1) // per function
-            ->addMetric("{$function->getId()}" . ".builds.compute", $build->getAttribute('duration')) // per function
+            ->addMetric("{$function->getId()}" . ".builds.storage", $build->getAttribute('size', 0))
+            ->addMetric("{$function->getId()}" . ".builds.compute", $build->getAttribute('duration', 0))
             ->trigger()
         ;
     }

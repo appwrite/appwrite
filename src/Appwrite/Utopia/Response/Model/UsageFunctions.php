@@ -44,6 +44,13 @@ class UsageFunctions extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('buildsStorage', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated stats for builds  storage.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('buildsCompute', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for function build compute.',
