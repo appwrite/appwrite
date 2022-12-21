@@ -28,7 +28,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Database\Validator\Queries\admin;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -37,17 +37,17 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::get('/v1/projects')
-    ->desc('List Projects')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+App::get('/v1/admin')
+    ->desc('List admin')
+    ->groups(['api', 'admin'])
+    ->label('scope', 'admin.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'admin')
     ->label('sdk.method', 'list')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new admin(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', admin::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -65,7 +65,7 @@ App::get('/v1/projects')
         if ($cursor) {
             /** @var Query $cursor */
             $projectId = $cursor->getValue();
-            $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
+            $cursorDocument = $dbForConsole->getDocument('admin', $projectId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
@@ -77,17 +77,17 @@ App::get('/v1/projects')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'projects' => $dbForConsole->find('projects', $queries),
-            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
+            'admin' => $dbForConsole->find('admin', $queries),
+            'total' => $dbForConsole->count('admin', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
-    App::get('/v1/projects/:projectId/webhooks')
+    App::get('/v1/admin/:projectId/webhooks')
     ->desc('List Webhooks')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'admin'])
+    ->label('scope', 'admin.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'admin')
     ->label('sdk.method', 'listWebhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -97,7 +97,7 @@ App::get('/v1/projects')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForConsole->getDocument('admin', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -114,12 +114,12 @@ App::get('/v1/projects')
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
-    App::get('/v1/projects/:projectId/keys')
+    App::get('/v1/admin/:projectId/keys')
     ->desc('List Keys')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'admin'])
+    ->label('scope', 'admin.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'admin')
     ->label('sdk.method', 'listKeys')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -129,7 +129,7 @@ App::get('/v1/projects')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForConsole->getDocument('admin', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -146,12 +146,12 @@ App::get('/v1/projects')
         ]), Response::MODEL_KEY_LIST);
     });
 
-    App::get('/v1/projects/:projectId/domains')
+    App::get('/v1/admin/:projectId/domains')
     ->desc('List Domains')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'admin'])
+    ->label('scope', 'admin.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'admin')
     ->label('sdk.method', 'listDomains')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -161,7 +161,7 @@ App::get('/v1/projects')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForConsole->getDocument('admin', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -178,12 +178,12 @@ App::get('/v1/projects')
         ]), Response::MODEL_DOMAIN_LIST);
     });
 
-    App::get('/v1/projects/:projectId/platforms')
+    App::get('/v1/admin/:projectId/platforms')
     ->desc('List Platforms')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'admin'])
+    ->label('scope', 'admin.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'admin')
     ->label('sdk.method', 'listPlatforms')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -193,7 +193,7 @@ App::get('/v1/projects')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForConsole->getDocument('admin', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
