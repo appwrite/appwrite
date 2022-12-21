@@ -735,7 +735,7 @@ trait Base
                     }
                 }';
             case self::$UPDATE_USER_PREFS:
-                return 'mutation updateUserPrefs($userId: String!, $prefs: Json!){
+                return 'mutation updateUserPrefs($userId: String!, $prefs: Assoc!){
                     usersUpdatePrefs(userId: $userId, prefs: $prefs) {
                         data
                     }
