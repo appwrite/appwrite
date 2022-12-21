@@ -76,9 +76,9 @@ $databaseListener = function (string $event, array $args, Document $project, Usa
 
                 //Project level sessions deduction
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $sessions = (count($document->getAttribute('sessions')));
+                    $sessions = count($document->getAttribute('sessions'));
                     $queueForUsage
-                        ->addMetric("databases", ($sessions['value'] * -1)); // per project
+                        ->addMetric("sessions", ($sessions * -1)); // per project
                 }
                 break;
             case $document->getCollection() === 'sessions': // sessions

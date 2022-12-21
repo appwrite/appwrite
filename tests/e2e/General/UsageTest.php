@@ -18,7 +18,7 @@ class UsageTest extends Scope
     use SideServer;
     use FunctionsBase;
 
-    private const WAIT = 5;
+    private const WAIT = 30;
     private const CREATE = 20;
 
     protected string $projectId;
@@ -111,7 +111,11 @@ class UsageTest extends Scope
             $consoleHeaders
         );
         $res = $res['body'];
+        var_dump($res['users']);
+        var_dump(array_key_last($res['users']));
+        var_dump($res['users'][array_key_last($res['users'])]['value']);
 
+        exit;
         $this->assertEquals('24h', $res['range']);
         $this->assertEquals(9, count($res));
         $this->assertEquals(24, count($res['requests']));

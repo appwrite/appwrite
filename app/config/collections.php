@@ -3167,7 +3167,7 @@ $collections = [
             ],
             [
                 '$id' => ID::custom('_key_metric_period_time'),
-                'type' => Database::INDEX_KEY,
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['metric', 'period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],

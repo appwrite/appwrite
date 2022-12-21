@@ -39,8 +39,6 @@ class Usage extends Event
     public function trigger(): string|bool
     {
         $client = new Client($this->queue, $this->connection);
-        var_dump('triger');
-        var_dump($this->metrics);
 
         return $client->enqueue([
             'project' => $this->getProject(),

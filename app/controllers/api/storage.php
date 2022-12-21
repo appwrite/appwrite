@@ -1470,6 +1470,7 @@ App::get('/v1/storage/:bucketId/usage')
     foreach ($metrics as $metric) {
         $usage[$metric] = [];
         $leap = time() - ($days['limit'] * $days['factor']);
+
         while ($leap < time()) {
             $leap += $days['factor'];
             $formatDate = date($format, $leap);

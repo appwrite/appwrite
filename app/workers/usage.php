@@ -25,23 +25,18 @@ $periods['inf'] = '0000-00-00 00:00';
 $server->job()
     ->inject('message')
     ->action(function (Message $message) use (&$stats) {
+
         $payload = $message->getPayload() ?? [];
         $project = new Document($payload['project'] ?? []);
+        $projectId = $project->getInternalId();
+        $stats[$projectId]['database'] = $project->getAttribute('database');
 
         foreach ($payload['metrics'] ?? [] as $metric) {
-            $uniq = md5($metric['key']);
-
-            if (!isset($stats[$uniq])) {
-                $stats[$uniq] = [
-                    'projectInternalId' => $project->getInternalId(),
-                    'database' => $project->getAttribute('database'),
-                    'key' => $metric['key'],
-                    'value' => $metric['value']
-                ];
-
+            if (!isset($stats[$projectId]['keys'][$metric['key']])) {
+                $stats[$projectId]['keys'][$metric['key']] = $metric['value'];
                 continue;
             }
-            $stats[$uniq]['value'] += $metric['value'];
+            $stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
     });
 
@@ -51,76 +46,70 @@ $server
     ->inject('cache')
     ->inject('pools')
     ->action(function ($register, $cache, $pools) use ($periods, &$stats) {
-        Timer::tick(3000, function () use ($register, $cache, $pools, $periods, &$stats) {
-            $slice = array_slice($stats, 0, count($stats));
-            array_splice($stats, 0, count($stats));
-            //$log = [];
+        Timer::tick(30000, function () use ($register, $cache, $pools, $periods, &$stats) {
 
-            foreach ($slice as $metric) {
-                if ($metric['value'] == 0) {
-                    continue;
-                }
-                $dbForProject = new Database(
-                    $pools
-                        ->get($metric['database'])
-                        ->pop()
-                        ->getResource(),
-                    $cache
-                );
+            $offset = count($stats);
+            $projects = array_slice($stats, 0, $offset, true);
+            array_splice($stats, 0, $offset);
 
-                $dbForProject->setNamespace('_' . $metric['projectInternalId']);
-                foreach ($periods as $period => $format) {
-                    $time = 'inf' ===  $period ? null : date($format, time());
-                    $id = \md5("{$time}_{$period}_{$metric['key']}");
-                    try {
-                        try {
-                            $dbForProject->createDocument('stats', new Document([
-                                '$id' => $id,
-                                'period' => $period,
-                                'time' => $time,
-                                'metric' => $metric['key'],
-                                'value' => $metric['value'],
-                                'region' => App::getEnv('_APP_REGION', 'default'),
-                            ]));
-                        } catch (Duplicate $th) {
-                            if ($metric['value'] < 0) {
-                                $dbForProject->decreaseDocumentAttribute(
-                                    'stats',
-                                    $id,
-                                    'value',
-                                    abs($metric['value'])
-                                );
-                            } else {
-                                $dbForProject->increaseDocumentAttribute(
-                                    'stats',
-                                    $id,
-                                    'value',
-                                    $metric['value']
-                                );
-                            }
+            foreach ($projects as $projectInternalId => $project) {
+                try {
+                    $dbForProject = new Database(
+                        $pools
+                            ->get($project['database'])
+                            ->pop()
+                            ->getResource(),
+                        $cache
+                    );
+
+                    $dbForProject->setNamespace('_' . $projectInternalId);
+
+                    foreach ($project['keys'] as $key => $value) {
+                        if ($value == 0) {
+                            continue;
                         }
 
-//                        $log[] = [
-//                            'id'     => $id,
-//                            'period' => $period,
-//                            'time'   => $time,
-//                            'metric' => $metric['key'],
-//                            'value'  => $metric['value'],
-//                            'region' => App::getEnv('_APP_REGION', 'default'),
-//                        ];
-                    } catch (\Exception $e) {
-                        console::error($e->getMessage());
-                    } finally {
-                        $pools->reclaim();
-                    }
-                }
+                        foreach ($periods as $period => $format) {
+                            $time = 'inf' === $period ? null : date($format, time());
+                            $id = \md5("{$time}_{$period}_{$key}");
 
-//                if (!empty($log)) {
-//                    $dbForProject->createDocument('statsLogger', new Document([
-//                        'time'    => DateTime::now(),
-//                        'metrics' => $log,
-//                    ]));
-//                }
+                            try {
+                                $dbForProject->createDocument('stats', new Document([
+                                    '$id' => $id,
+                                    'period' => $period,
+                                    'time' => $time,
+                                    'metric' => $key,
+                                    'value' => $value,
+                                    'region' => App::getEnv('_APP_REGION', 'default'),
+                                ]));
+                            } catch (Duplicate $th) {
+                                if ($value < 0) {
+                                    $dbForProject->decreaseDocumentAttribute(
+                                        'stats',
+                                        $id,
+                                        'value',
+                                        abs($value)
+                                    );
+                                } else {
+                                    $dbForProject->increaseDocumentAttribute(
+                                        'stats',
+                                        $id,
+                                        'value',
+                                        $value
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    $dbForProject->createDocument('statsLogger', new Document([
+                        'time'    => DateTime::now(),
+                        'metrics' => $project['keys'],
+                    ]));
+                } catch (\Exception $e) {
+                    console::error($e->getMessage());
+                } finally {
+                    $pools->reclaim();
+                }
             }
         });
     });
