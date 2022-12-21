@@ -82,10 +82,10 @@ docker run -it --rm ^
 #### PowerShell
 
 ```powershell
-docker run -it --rm ,
-    --volume /var/run/docker.sock:/var/run/docker.sock ,
-    --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw ,
-    --entrypoint="install" ,
+docker run -it --rm `
+    --volume /var/run/docker.sock:/var/run/docker.sock `
+    --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
+    --entrypoint="install" `
     appwrite/appwrite:1.1.2
 ```
 
@@ -169,7 +169,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 订阅我们
 
-加入我们在世界各地不断发展的社区！请参阅我们的官方 [博客](https://medium.com/appwrite-io)。在 [Twitter](https://twitter.com/appwrite)、[Facebook 页面](https://www.facebook.com/appwrite.io)、[Facebook 群组](https://www.facebook)、[开发者社区](https://dev.to/appwrite) 等平台订阅我们或加入我们的 [Discord 社区](https://discord.gg/GSeTUeA) 以获得更多帮助，想法和讨论。
+加入我们在世界各地不断发展的社区！请参阅我们的官方 [博客](https://medium.com/appwrite-io)。在 [Twitter](https://twitter.com/appwrite)、[Facebook 页面](https://www.facebook.com/appwrite.io)、[Facebook 群组](https://www.facebook.com/appwrite.io/groups/)、[开发者社区](https://dev.to/appwrite) 等平台订阅我们或加入我们的 [Discord 社区](https://discord.gg/GSeTUeA) 以获得更多帮助，想法和讨论。
 
 ## 版权说明
 
