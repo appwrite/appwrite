@@ -48,7 +48,6 @@ class V17 extends Migration
             $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
-
                 case 'users':
                     try {
                         /**
