@@ -232,11 +232,6 @@ class Response extends SwooleResponse
     protected array $payload = [];
 
     /**
-     * @var string
-     */
-    protected $model = '';
-
-    /**
      * Response constructor.
      *
      * @param float $time
