@@ -134,8 +134,7 @@ class DeletesV1 extends Worker
      */
     protected function deleteSchedules(string $datetime): void
     {
-
-        $this->deleteByGroup(
+        $this->listByGroup(
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
@@ -145,7 +144,6 @@ class DeletesV1 extends Worker
             ],
             $this->getConsoleDB(),
             function (Document $document) {
-                Console::info('Querying schedule for function ' . $document->getAttribute('resourceId'));
                 $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
@@ -358,8 +356,15 @@ class DeletesV1 extends Worker
 
     protected function deleteExpiredSessions(): void
     {
-        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
+        $consoleDB = $this->getConsoleDB();
+
+        $this->deleteForProjectIds(function (Document $project) use ($consoleDB) {
             $dbForProject = $this->getProjectDB($project);
+
+            $project = $consoleDB->getDocument('projects', $project->getId());
+            $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
+
             // Delete Sessions
             $this->deleteByGroup('sessions', [
                 Query::lessThan('$createdAt', $expired)
@@ -481,10 +486,10 @@ class DeletesV1 extends Worker
             $this->deleteByGroup('builds', [
                 Query::equal('deploymentId', [$deploymentId])
             ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
-                if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
-                    Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+                if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
+                    Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
                 } else {
-                    Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+                    Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
                 }
             });
         }
@@ -530,10 +535,10 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('builds', [
             Query::equal('deploymentId', [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
-            if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
-                Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+            if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
+                Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
             } else {
-                Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+                Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
             }
         });
 
@@ -569,6 +574,7 @@ class DeletesV1 extends Worker
      */
     protected function deleteForProjectIds(callable $callback): void
     {
+        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
         $count = 0;
         $chunk = 0;
         $limit = 50;
@@ -630,6 +636,43 @@ class DeletesV1 extends Worker
         $executionEnd = \microtime(true);
 
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    /**
+     * @param string $collection collectionID
+     * @param Query[] $queries
+     * @param Database $database
+     * @param callable $callback
+     */
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $results = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+
+        while ($sum === $limit) {
+            $chunk++;
+
+            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+
+            $sum = count($results);
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+
+        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
     /**

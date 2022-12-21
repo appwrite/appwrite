@@ -56,11 +56,6 @@ class BuildsV1 extends Worker
         }
     }
 
-    /**
-     * @throws \Utopia\Database\Exception\Authorization
-     * @throws Throwable
-     * @throws \Utopia\Database\Exception\Structure
-     */
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
         global $register;
@@ -103,13 +98,13 @@ class BuildsV1 extends Worker
                 'startTime' => $startTime,
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
-                'outputPath' => '',
+                'path' => '',
+                'size' => 0,
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
                 'sourceType' => $device,
                 'stdout' => '',
                 'stderr' => '',
-                'endTime' => null,
                 'duration' => 0
             ]));
             $deployment->setAttribute('buildId', $buildId);
@@ -174,8 +169,8 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                deploymentId: $deployment->getId(),
                 projectId: $project->getId(),
+                deploymentId: $deployment->getId(),
                 source: $source,
                 image: $runtime['image'],
                 remove: true,
@@ -190,14 +185,12 @@ class BuildsV1 extends Worker
                 ]
             );
 
-            $endTime = new \DateTime();
-            $endTime->setTimestamp($response['endTimeUnix']);
-
             /** Update the build document */
-            $build->setAttribute('endTime', DateTime::format($endTime));
+            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
             $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
-            $build->setAttribute('outputPath', $response['outputPath']);
+            $build->setAttribute('path', $response['path']);
+            $build->setAttribute('size', $response['size']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
@@ -228,7 +221,7 @@ class BuildsV1 extends Worker
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
-            $build->setAttribute('endTime', $endTime);
+
             $build->setAttribute('duration', $interval->format('%s') + 0);
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());

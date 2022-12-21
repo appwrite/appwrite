@@ -33,15 +33,6 @@ services:
       - 8080:80
       - 443:443
       - 9500:8080
-    ulimits:
-      nofile:
-        soft: 655350
-        hard: 655350
-    sysctls:
-      - net.core.somaxconn=1024
-      - net.ipv4.tcp_rmem=1024 4096 16384
-      - net.ipv4.tcp_wmem=1024 4096 16384
-      - net.ipv4.ip_local_port_range=1025 65535
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -62,6 +53,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
+        VITE_CONSOLE_MODE: self-hosted
     ports:
       - 9501:80
     networks:
@@ -85,7 +77,7 @@ services:
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - openruntimes-functions:/storage/functions:rw
+      - appwrite-functions:/storage/functions:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
@@ -99,7 +91,7 @@ services:
       - mariadb
       - redis
       # - clamav
-    entrypoint:
+    entrypoint: 
       - php
       - -e
       - app/http.php
@@ -107,10 +99,12 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_SERVER_MULTIPROCESS=enabled
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_WHITELIST_IPS
+      - _APP_CONSOLE_INVITES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -126,6 +120,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -173,7 +168,7 @@ services:
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
-    ports:
+    ports: 
       - 9505:80
     labels:
       - "traefik.enable=true"
@@ -201,6 +196,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_SERVER_MULTIPROCESS=enabled
       - _APP_OPTIONS_ABUSE
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
@@ -209,6 +205,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -272,6 +269,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -292,17 +291,19 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes:
+    volumes: 
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
-      - openruntimes-functions:/storage/functions:rw
-      - openruntimes-builds:/storage/builds:rw
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -330,7 +331,7 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
+    volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
@@ -340,6 +341,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -364,7 +367,7 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
+    volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -373,6 +376,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -389,9 +394,9 @@ services:
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
+      - _APP_CONNECTIONS_STORAGE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_CONNECTIONS_STORAGE
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -403,7 +408,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes:
+    volumes: 
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -411,6 +416,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -448,6 +455,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -486,6 +495,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -517,6 +528,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -617,6 +630,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -637,18 +652,19 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.1.4
+    image: openruntimes/executor:0.2.0
     networks:
       - appwrite
-      - openruntimes-runtimes
+      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - openruntimes-builds:/storage/builds:rw
-      - openruntimes-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
+      - appwrite-functions:/storage/functions:rw
       - /tmp:/tmp:rw
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=$_APP_CONNECTIONS_STORAGE
       - OPR_EXECUTOR_INACTIVE_TRESHOLD=$_APP_FUNCTIONS_INACTIVE_THRESHOLD
+      - OPR_EXECUTOR_MAINTENANCE_INTERVAL=$_APP_FUNCTIONS_MAINTENANCE_INTERVAL
       - OPR_EXECUTOR_NETWORK=$_APP_FUNCTIONS_RUNTIMES_NETWORK
       - OPR_EXECUTOR_DOCKER_HUB_USERNAME=$_APP_DOCKER_HUB_USERNAME
       - OPR_EXECUTOR_DOCKER_HUB_PASSWORD=$_APP_DOCKER_HUB_PASSWORD
@@ -657,7 +673,6 @@ services:
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
@@ -679,7 +694,6 @@ services:
   # smtp:
   #   image: appwrite/smtp:1.2.0
   #   container_name: appwrite-smtp
-  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   environment:
@@ -745,15 +759,26 @@ services:
     image: adminer
     container_name: appwrite-adminer
     <<: *x-logging
-    restart: always
     ports:
       - 9506:8080
     networks:
       - appwrite
+  
+  # appwrite-volume-sync:
+  #   entrypoint: volume-sync
+  #   <<: *x-logging
+  #   container_name: appwrite-volume-sync
+  #   image: appwrite-dev
+  #   command:
+  #     - --source=/data/src/ --destination=/data/dest/ --interval=10
+  #   networks:
+  #     - appwrite
+  #   # volumes: # Mount the rsync source and destination directories  
+  #   #   - /nfs/config:/data/src 
+  #   #   - /storage/config:/data/dest
 
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
-  #   restart: unless-stopped
   #   networks:
   #   - appwrite
   #   environment:
@@ -763,7 +788,6 @@ services:
 
   # resque:
   #   image: appwrite/resque-web:1.1.0
-  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   ports:
@@ -779,7 +803,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
-
+  
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:
@@ -787,8 +811,8 @@ networks:
     name: gateway
   appwrite:
     name: appwrite
-  openruntimes-runtimes:
-    name: openruntimes-runtimes
+  runtimes:
+    name: runtimes
 
 volumes:
   appwrite-mariadb:
@@ -799,6 +823,5 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   appwrite-config:
-  openruntimes-functions:
-  openruntimes-builds:
+
 

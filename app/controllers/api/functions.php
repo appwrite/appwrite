@@ -983,7 +983,7 @@ App::post('/v1/functions/:functionId/executions')
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('outputPath', ''),
+                source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
