@@ -1,5 +1,14 @@
-- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+# Version 1.2.0
+## Features
+- Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added GraphQL Explorer [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added ability to set max sessions per user per project [#4831](https://github.com/appwrite/appwrite/pull/4831)
+
+## Changes
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+
+## Bugs
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 
 # Version 1.1.2
 ## Changes
