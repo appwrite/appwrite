@@ -86,6 +86,7 @@ class BuildsV1 extends Worker
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'outputPath' => '',
