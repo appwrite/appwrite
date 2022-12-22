@@ -1439,8 +1439,8 @@ App::get('/v1/storage/:bucketId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $bucket->getId() . '.files',
-            $bucket->getId() . '.files.storage',
+            $bucket->getInternalId() . '.files',
+            $bucket->getInternalId() . '.files.storage',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {

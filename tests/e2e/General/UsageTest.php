@@ -111,11 +111,7 @@ class UsageTest extends Scope
             $consoleHeaders
         );
         $res = $res['body'];
-        var_dump($res['users']);
-        var_dump(array_key_last($res['users']));
-        var_dump($res['users'][array_key_last($res['users'])]['value']);
 
-        exit;
         $this->assertEquals('24h', $res['range']);
         $this->assertEquals(9, count($res));
         $this->assertEquals(24, count($res['requests']));
@@ -162,7 +158,9 @@ class UsageTest extends Scope
                 '/storage/buckets',
                 array_merge(
                     $headers,
-                    ['content-type' => 'multipart/form-data']
+                    [
+                    'content-type' => 'multipart/form-data'
+                    ]
                 ),
                 [
                 'bucketId' => 'unique()',
@@ -517,14 +515,14 @@ class UsageTest extends Scope
         $this->assertEquals($collectionsCount, $res['collectionsCount'][array_key_last($res['collectionsCount'])]['value']);
         $this->validateDates($res['collectionsCount']);
 
-//        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
-//        $this->validateDates($res['documentsCount']);
-//
-//        $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d', $data['consoleHeaders']);
-//        $res = $res['body'];
-//
-//        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
-//        $this->validateDates($res['documentsCount']);
+        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
+        $this->validateDates($res['documentsCount']);
+
+        $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d', $data['consoleHeaders']);
+        $res = $res['body'];
+
+        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
+        $this->validateDates($res['documentsCount']);
 
         $data['requestsCount'] = $requestsCount;
 

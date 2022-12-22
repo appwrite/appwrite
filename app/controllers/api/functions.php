@@ -1384,11 +1384,11 @@ App::get('/v1/functions/:functionId/usage')
         $metrics = [
             'functions.' . $function->getId() . '.deployments',
             'functions.' . $function->getId() . '.deployments.storage',
-            $function->getId() . '.builds',
-            $function->getId() . '.builds.storage',
-            $function->getId() . '.builds.compute',
-            $function->getId() . '.executions',
-            $function->getId() . '.executions.compute',
+            $function->getInternalId() . '.builds',
+            $function->getInternalId() . '.builds.storage',
+            $function->getInternalId() . '.builds.compute',
+            $function->getInternalId() . '.executions',
+            $function->getInternalId() . '.executions.compute',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {

@@ -2411,8 +2411,8 @@ App::get('/v1/databases/:databaseId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $database->getId() . '.collections',
-            $database->getId() . '.documents',
+            $database->getInternalId() . '.collections',
+            $database->getInternalId() . '.documents',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -2490,7 +2490,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $collection->getId() . '.documents',
+            $collectionDocument->getInternalId() . '.documents',
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
