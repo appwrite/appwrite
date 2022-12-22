@@ -96,6 +96,7 @@ class BuildsV1 extends Worker
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'path' => '',
@@ -107,7 +108,8 @@ class BuildsV1 extends Worker
                 'stderr' => '',
                 'duration' => 0
             ]));
-            $deployment->setAttribute('buildId', $buildId);
+            $deployment->setAttribute('buildId', $build->getId());
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
@@ -254,9 +256,9 @@ class BuildsV1 extends Worker
             ->addMetric("builds", 1) // per project
             ->addMetric("builds.storage", $build->getAttribute('size', 0))
             ->addMetric("builds.compute", $build->getAttribute('duration', 0))
-            ->addMetric("{$function->getId()}" . ".builds", 1) // per function
-            ->addMetric("{$function->getId()}" . ".builds.storage", $build->getAttribute('size', 0))
-            ->addMetric("{$function->getId()}" . ".builds.compute", $build->getAttribute('duration', 0))
+            ->addMetric("{$function->getInternalId()}" . ".builds", 1) // per function
+            ->addMetric("{$function->getInternalId()}" . ".builds.storage", $build->getAttribute('size', 0))
+            ->addMetric("{$function->getInternalId()}" . ".builds.compute", $build->getAttribute('duration', 0))
             ->trigger()
         ;
     }

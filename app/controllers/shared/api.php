@@ -194,14 +194,14 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 $queueForUsage
                     ->addMetric("deployments", $value) // per project
                     ->addMetric("deployments.storage", $document->getAttribute('size') * $value) // per project
-                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceId')}" . ".deployments", $value)// per function
-                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceId')}" . ".deployments.storage", $document->getAttribute('size') * $value) // per function
+                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments", $value)// per function
+                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments.storage", $document->getAttribute('size') * $value) // per function
                 ;
                 break;
             case $document->getCollection() === 'executions':
                 $queueForUsage
                     ->addMetric("executions", $value) // per project
-                    ->addMetric("{$document->getAttribute('functionId')}" . ".executions", $value) // per function
+                    ->addMetric("{$document->getAttribute('functionInternalId')}" . ".executions", $value) // per function
                 ;
                 break;
             default:

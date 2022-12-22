@@ -61,7 +61,6 @@ $collections = [
             ],
         ],
     ],
-
     'collections' => [
         '$collection' => ID::custom('databases'),
         '$id' => ID::custom('collections'),
@@ -2372,6 +2371,17 @@ $collections = [
         'name' => 'Deployments',
         'attributes' => [
             [
+                '$id' => ID::custom('resourceInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2384,6 +2394,17 @@ $collections = [
             ],
             [
                 '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('buildInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2574,6 +2595,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'deploymentInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('deploymentId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2690,7 +2722,29 @@ $collections = [
         'name' => 'Executions',
         'attributes' => [
             [
+                '$id' => ID::custom('functionInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('functionId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('deploymentInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3318,7 +3372,6 @@ $collections = [
             ],
         ],
     ],
-
     'files' => [
         '$collection' => ID::custom('buckets'),
         '$id' => ID::custom('files'),

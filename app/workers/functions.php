@@ -215,7 +215,7 @@ Server::setResource('execute', function () {
         $queueForUsage
             ->setProject($project)
             ->addMetric('executions.compute', (int)($execution->getAttribute('duration') * 1000))// per project
-            ->addMetric("{$function->getId()}" . ".executions.compute", (int)($execution->getAttribute('duration') * 1000))// per function
+            ->addMetric("{$function->getInternalId()}" . ".executions.compute", (int)($execution->getAttribute('duration') * 1000))// per function
             ->trigger()
         ;
     };

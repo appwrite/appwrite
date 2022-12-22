@@ -526,6 +526,7 @@ App::post('/v1/functions/:functionId/deployments')
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
+                    'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -556,6 +557,7 @@ App::post('/v1/functions/:functionId/deployments')
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
+                    'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -902,7 +904,9 @@ App::post('/v1/functions/:functionId/executions')
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            'functionInternalId' => $function->getInternalId(),
             'functionId' => $function->getId(),
+            'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
