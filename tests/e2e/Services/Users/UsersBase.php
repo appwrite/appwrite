@@ -874,6 +874,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    #[Retry(count: 1)]
     public function testUpdateAndGetUserPrefs(array $data): array
     {
         /**
