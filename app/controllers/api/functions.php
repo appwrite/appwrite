@@ -1007,7 +1007,7 @@ App::post('/v1/functions/:functionId/executions')
              */
             $queueForUsage
                 ->addMetric('executions.compute', (int)($executionResponse['duration'] * 1000))// per project
-                ->addMetric("{$function->getId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
+                ->addMetric("{$function->getInternalId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
             ;
 
         } catch (\Throwable $th) {

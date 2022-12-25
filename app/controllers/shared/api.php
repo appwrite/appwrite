@@ -74,7 +74,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
 
                 //Project level sessions deduction
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                    $sessions = count($document->getAttribute('sessions'));
+                    $sessions = count($document->getAttribute('sessions', 0));
                     if (!empty($sessions)) {
                         $queueForUsage
                             ->addMetric("sessions", ($sessions * -1)); // per project
@@ -102,7 +102,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 break;
             case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                 $parts = explode('_', $document->getCollection());
-                $databaseId = $parts[1];
+                $databaseId = $parts[1] ?? 0;
                 $queueForUsage
                     ->addMetric("collections", $value) // per project
                     ->addMetric("{$databaseId}" . ".collections", $value) // per database
@@ -119,8 +119,8 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 break;
             case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
                 $parts = explode('_', $document->getCollection());
-                $databaseId   = $parts[1];
-                $collectionId = $parts[3];
+                $databaseId   = $parts[1] ?? 0;
+                $collectionId = $parts[3] ?? 0;
                 $queueForUsage
                     ->addMetric("documents", $value)  // per project
                     ->addMetric("{$databaseId}" . ".documents", $value) // per database
@@ -575,7 +575,7 @@ App::shutdown()
 
         if (
             $project->getId() !== 'console'
-            && $mode !== APP_MODE_ADMIN
+            //&& $mode !== APP_MODE_ADMIN
         ) {
             $fileSize = 0;
             $file = $request->getFiles('file');
