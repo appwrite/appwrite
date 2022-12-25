@@ -212,7 +212,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $log = new Log();
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log
-                ->setNamespace("appwrite-worker")
+                ->setNamespace("appwrite-stats-api")
                 ->setServer(\gethostname())
                 ->setVersion(App::getEnv('_APP_VERSION', 'UNKNOWN'))
                 ->setType(Log::TYPE_ERROR)
@@ -220,6 +220,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 ->setAction('appwrite-queue-usage')
                 ->addTag('verboseType', get_class($error))
                 ->addTag('code', $error->getCode())
+                ->addExtra('event', $event)
                 ->addExtra('collection', $document->getCollection())
                 ->addExtra('file', $error->getFile())
                 ->addExtra('line', $error->getLine())
