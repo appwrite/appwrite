@@ -81,6 +81,7 @@ App::post('/v1/functions')
             'enabled' => $enabled,
             'name' => $name,
             'runtime' => $runtime,
+            'deploymentInternalId' => '',
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
@@ -102,6 +103,7 @@ App::post('/v1/functions')
         );
 
         $function->setAttribute('scheduleId', $schedule->getId());
+        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
         $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -534,6 +536,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+            'deploymentInternalId' => $deployment->getInternalId(),
             'deployment' => $deployment->getId()
         ])));
 
@@ -969,6 +972,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         if ($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'deployment' => '',
+                'deploymentInternalId' => '',
             ])));
         }
 
