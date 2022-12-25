@@ -1386,8 +1386,8 @@ App::get('/v1/functions/:functionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'functions.' . $function->getId() . '.deployments',
-            'functions.' . $function->getId() . '.deployments.storage',
+            'functions.' . $function->getInternalId() . '.deployments',
+            'functions.' . $function->getInternalId() . '.deployments.storage',
             $function->getInternalId() . '.builds',
             $function->getInternalId() . '.builds.storage',
             $function->getInternalId() . '.builds.compute',
