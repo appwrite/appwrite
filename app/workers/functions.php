@@ -209,7 +209,8 @@ Server::setResource('execute', function () {
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
+                ->setParam('functionId', $function->getId())
+                ->setParam('functionInternalId', $function->getInternalId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
                 ->setParam('executionTime', $execution->getAttribute('duration'))
