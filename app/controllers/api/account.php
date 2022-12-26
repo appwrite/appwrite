@@ -99,7 +99,7 @@ App::post('/v1/account')
             }
         }
 
-        $passwordDictionary = $project->getAttribute('auths', []['passwordDictionary']) ?? false;
+        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
         if ($passwordDictionary && str_contains($passwordsDB, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
@@ -1538,7 +1538,7 @@ App::patch('/v1/account/password')
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
-        $passwordDictionary = $project->getAttribute('auths', []['passwordDictionary']) ?? false;
+        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
         if ($passwordDictionary && str_contains($passwordsDB, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,

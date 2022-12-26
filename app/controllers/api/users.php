@@ -114,7 +114,7 @@ App::post('/v1/users')
     ->inject('events')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, string $passwordsDB, Response $response, Document $project, Database $dbForProject, Event $events) {
 
-        $passwordDictionary = $project->getAttribute('auths', []['passwordDictionary']) ?? false;
+        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
         if ($passwordDictionary && str_contains($passwordsDB, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
@@ -818,7 +818,7 @@ App::patch('/v1/users/:userId/password')
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
-        $passwordDictionary = $project->getAttribute('auths', []['passwordDictionary']) ?? false;
+        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
         if ($passwordDictionary && str_contains($passwordsDB, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
