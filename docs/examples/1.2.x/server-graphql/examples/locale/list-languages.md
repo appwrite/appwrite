@@ -1,0 +1,6 @@
+query {
+    localeListLanguages {
+        total
+        languages
+    }
+}

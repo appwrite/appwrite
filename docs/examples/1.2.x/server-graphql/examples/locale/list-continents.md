@@ -1,0 +1,6 @@
+query {
+    localeListContinents {
+        total
+        continents
+    }
+}
