@@ -1025,7 +1025,7 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('passwordsDB', function ($register) {
+App::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDB');
 }, ['register']);
