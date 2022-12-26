@@ -107,15 +107,15 @@ App::post('/v1/users')
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('password', null, new Password(), 'Plain text user password. Must be at least 8 chars.', true)
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->inject('passwordsDB')
+    ->inject('passwordsDictionary')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, string $passwordsDB, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, string $passwordsDictionary, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($passwordDictionary && str_contains($passwordsDB, $password)) {
+        if ($passwordDictionary && str_contains($passwordsDictionary, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
@@ -803,12 +803,12 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
-    ->inject('passwordsDB')
+    ->inject('passwordsDictionary')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $password, string $passwordsDB, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $password, string $passwordsDictionary, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -819,7 +819,7 @@ App::patch('/v1/users/:userId/password')
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
         $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($passwordDictionary && str_contains($passwordsDB, $password)) {
+        if ($passwordDictionary && str_contains($passwordsDictionary, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
