@@ -1173,7 +1173,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals(403, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Create user
@@ -1188,7 +1188,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
         ]);
-        $this->assertEquals(403, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $headers = array_merge($this->getHeaders(), [
             'x-appwrite-mode' => 'admin',
@@ -1200,7 +1200,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(403, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
 
          /**
@@ -1223,11 +1223,11 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'enabled' => true,
+            'enabled' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(true, $response['body']['authPasswordDictionary']);
+        $this->assertEquals(false, $response['body']['authPasswordDictionary']);
 
         return $data;
     }
