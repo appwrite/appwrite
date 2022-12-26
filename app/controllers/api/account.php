@@ -1523,7 +1523,7 @@ App::patch('/v1/account/password')
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
-        
+
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = [];

@@ -41,7 +41,7 @@ class PasswordDictionary extends Password
      */
     public function isValid($value): bool
     {
-        if(!parent::isValid($value)) {
+        if (!parent::isValid($value)) {
             return false;
         }
 
