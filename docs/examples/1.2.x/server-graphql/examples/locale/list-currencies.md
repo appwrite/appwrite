@@ -1,0 +1,6 @@
+query {
+    localeListCurrencies {
+        total
+        currencies
+    }
+}

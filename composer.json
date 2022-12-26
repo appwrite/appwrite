@@ -79,7 +79,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "dev-feat-graphql as 0.28.1",
+        "appwrite/sdk-generator": "0.29.0",
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
