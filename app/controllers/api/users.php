@@ -114,7 +114,8 @@ App::post('/v1/users')
     ->inject('events')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, string $passwordsDB, Response $response, Document $project, Database $dbForProject, Event $events) {
 
-        if (str_contains($passwordsDB, $password)) {
+        $passwordDictionary = $project->getAttribute('auths', []['passwordDictionary']) ?? false;
+        if ($passwordDictionary && str_contains($passwordsDB, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
@@ -815,15 +816,16 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if (str_contains($passwordsDB, $password)) {
+        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+
+        $passwordDictionary = $project->getAttribute('auths', []['passwordDictionary']) ?? false;
+        if ($passwordDictionary && str_contains($passwordsDB, $password)) {
             throw new Exception(
                 Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
                 403
             );
         }
-
-        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = [];
