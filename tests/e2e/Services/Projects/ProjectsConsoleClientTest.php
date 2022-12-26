@@ -1174,7 +1174,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(403, $response['headers']['status-code']);
-        
+
         /**
          * Create user
          */

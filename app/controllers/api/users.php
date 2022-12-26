@@ -114,10 +114,12 @@ App::post('/v1/users')
     ->inject('events')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, string $passwordsDB, Response $response, Document $project, Database $dbForProject, Event $events) {
 
-        if(str_contains($passwordsDB, $password)) {
-            throw new Exception(Exception::USER_PASSWORD_IN_DICTIONARY,
+        if (str_contains($passwordsDB, $password)) {
+            throw new Exception(
+                Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
-                403);
+                403
+            );
         }
 
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $events);
@@ -813,10 +815,12 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if(str_contains($passwordsDB, $password)) {
-            throw new Exception(Exception::USER_PASSWORD_IN_DICTIONARY,
+        if (str_contains($passwordsDB, $password)) {
+            throw new Exception(
+                Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
-                403);
+                403
+            );
         }
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);

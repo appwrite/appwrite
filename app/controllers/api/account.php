@@ -99,10 +99,12 @@ App::post('/v1/account')
             }
         }
 
-        if(str_contains($passwordsDB, $password)) {
-            throw new Exception(Exception::USER_PASSWORD_IN_DICTIONARY,
+        if (str_contains($passwordsDB, $password)) {
+            throw new Exception(
+                Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
-                403);
+                403
+            );
         }
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -1533,10 +1535,12 @@ App::patch('/v1/account/password')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        if(str_contains($passwordsDB, $password)) {
-            throw new Exception(Exception::USER_PASSWORD_IN_DICTIONARY,
+        if (str_contains($passwordsDB, $password)) {
+            throw new Exception(
+                Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
-                403);
+                403
+            );
         }
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
