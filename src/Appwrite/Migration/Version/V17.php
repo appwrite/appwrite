@@ -9,7 +9,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
-class V16 extends Migration
+class V17 extends Migration
 {
     public function execute(): void
     {
