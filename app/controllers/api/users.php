@@ -35,6 +35,7 @@ use Utopia\Validator\Boolean;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordDictionary;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $events): Document
@@ -105,23 +106,13 @@ App::post('/v1/users')
     ->param('userId', '', new CustomId(), 'User ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', null, new Email(), 'User email.', true)
     ->param('phone', null, new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('password', null, new Password(), 'Plain text user password. Must be at least 8 chars.', true)
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project), 'Plain text user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->inject('passwordsDictionary')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, string $passwordsDictionary, Response $response, Document $project, Database $dbForProject, Event $events) {
-
-        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($passwordDictionary && str_contains($passwordsDictionary, $password)) {
-            throw new Exception(
-                Exception::USER_PASSWORD_IN_DICTIONARY,
-                'The password is among the common passwords in dictionary.',
-                403
-            );
-        }
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $events);
 
@@ -802,13 +793,12 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
-    ->inject('passwordsDictionary')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $password, string $passwordsDictionary, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -817,15 +807,6 @@ App::patch('/v1/users/:userId/password')
         }
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
-
-        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($passwordDictionary && str_contains($passwordsDictionary, $password)) {
-            throw new Exception(
-                Exception::USER_PASSWORD_IN_DICTIONARY,
-                'The password is among the common passwords in dictionary.',
-                403
-            );
-        }
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = [];

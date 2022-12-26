@@ -41,6 +41,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordDictionary;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -65,16 +66,14 @@ App::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->inject('passwordsDictionary')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, string $passwordsDictionary, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
-
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -97,15 +96,6 @@ App::post('/v1/account')
             if ($total >= $limit) {
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
-        }
-
-        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($passwordDictionary && str_contains($passwordsDictionary, $password)) {
-            throw new Exception(
-                Exception::USER_PASSWORD_IN_DICTIONARY,
-                'The password is among the common passwords in dictionary.',
-                403
-            );
         }
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -1520,33 +1510,21 @@ App::patch('/v1/account/password')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
-    ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
-    ->inject('passwordsDictionary')
     ->inject('response')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $password, string $oldPassword, string $passwordsDictionary, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
-
-
+        
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
-
-        $passwordDictionary = $project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($passwordDictionary && str_contains($passwordsDictionary, $password)) {
-            throw new Exception(
-                Exception::USER_PASSWORD_IN_DICTIONARY,
-                'The password is among the common passwords in dictionary.',
-                403
-            );
-        }
-
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $history = [];
         if ($historyLimit > 0) {
