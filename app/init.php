@@ -606,7 +606,10 @@ $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
 });
 $register->set('passwordsDictionary', function () {
-    return \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode('\n', $content);
+    $content = array_flip($content);
+    return $content;
 });
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
