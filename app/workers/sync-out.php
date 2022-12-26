@@ -28,7 +28,7 @@ $stack = [
 ];
 $failures = [];
 
-const CHUNK_MAX_KEYS = 2;
+const CHUNK_MAX_KEYS = 500;
 const MAX_CURL_SEND_ATTEMPTS = 4;
 
 /**
