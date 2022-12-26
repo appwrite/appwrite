@@ -54,6 +54,7 @@ class V17 extends Migration
                          * Create 'passwordHistory' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'passwordHistory');
+                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'region' from {$id}: {$th->getMessage()}");
                     }
