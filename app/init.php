@@ -605,7 +605,7 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
 });
-$register->set('passwordsdb', function () {
+$register->set('passwordsDB', function () {
     return \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
 });
 $register->set('db', function () {
@@ -1025,9 +1025,9 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
-App::setResource('passwordsdb', function ($register) {
+App::setResource('passwordsDB', function ($register) {
     /** @var Utopia\Registry\Registry $register */
-    return $register->get('passwordsdb');
+    return $register->get('passwordsDB');
 }, ['register']);
 
 App::setResource('sms', function () {

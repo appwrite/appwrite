@@ -67,13 +67,13 @@ App::post('/v1/account')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->inject('passwordsdb')
+    ->inject('passwordsDB')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, string $passwordsdb, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $name, string $passwordsDB, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -99,7 +99,7 @@ App::post('/v1/account')
             }
         }
 
-        if(str_contains($passwordsdb, $password)) {
+        if(str_contains($passwordsDB, $password)) {
             throw new Exception(Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
                 403);
@@ -1520,20 +1520,20 @@ App::patch('/v1/account/password')
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
-    ->inject('passwordsdb')
+    ->inject('passwordsDB')
     ->inject('response')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $password, string $oldPassword, string $passwordsdb, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $password, string $oldPassword, string $passwordsDB, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        if(str_contains($passwordsdb, $password)) {
+        if(str_contains($passwordsDB, $password)) {
             throw new Exception(Exception::USER_PASSWORD_IN_DICTIONARY,
                 'The password is among the common passwords in dictionary.',
                 403);
