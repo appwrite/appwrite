@@ -126,6 +126,12 @@ class Project extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule('authPasswordDictionary', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('providers', [
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
