@@ -630,7 +630,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['passwordDisctionary'] = (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN);
+        $auths['passwordDictionary'] = (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN);
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
