@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -27,8 +28,8 @@ class V17 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        // Console::info('Migrating Documents');
-        // $this->forEachDocument([$this, 'fixDocument']);
+        Console::info('Migrating Documents');
+        $this->forEachDocument([$this, 'fixDocument']);
     }
 
     /**
@@ -75,6 +76,30 @@ class V17 extends Migration
      */
     protected function fixDocument(Document $document)
     {
+        switch ($document->getCollection()) {
+            case 'projects':
+                /**
+                 * Bump version number.
+                 */
+                $document->setAttribute('version', '1.1.0');
+
+                /**
+                 * Set default maxSessions
+                 */
+                $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
+                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT
+                ]));
+                break;
+            case 'users':
+                 /**
+                 * Set hashOptions type
+                 */
+                $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
+                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
+                ]));
+                break;
+        }
+
         return $document;
     }
 }
