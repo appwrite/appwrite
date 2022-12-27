@@ -607,7 +607,7 @@ $register->set('geodb', function () {
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
-    $content = explode('\n', $content);
+    $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;
 });
