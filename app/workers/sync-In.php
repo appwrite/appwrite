@@ -14,14 +14,14 @@ $server->job()
     ->action(function (Message $message, Cache $cache) {
         $time = DateTime::now();
 
-        $cache->setDisableListeners(true);
+        $cache->setListenersStatus(false);
 
         foreach ($message->getPayload()['keys'] ?? [] as $key) {
             Console::log("[{$time}] Purging  {$key}");
             $cache->purge($key);
         }
 
-        $cache->setDisableListeners(false);
+        $cache->setListenersStatus(true);
     });
 
 $server
