@@ -300,8 +300,9 @@ class Resolvers
         $resolve($payload);
     }
 
-    private static function escapePayload(array $payload, int $depth) {
-        if($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+    private static function escapePayload(array $payload, int $depth)
+    {
+        if ($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return;
         }
 
@@ -312,7 +313,7 @@ class Resolvers
                 unset($payload[$key]);
             }
 
-            if(\is_array($value)) {
+            if (\is_array($value)) {
                 $payload[$key] = self::escapePayload($value, $depth + 1);
             }
         }
