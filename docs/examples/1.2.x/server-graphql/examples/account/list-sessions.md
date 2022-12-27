@@ -1,0 +1,6 @@
+query {
+    accountListSessions {
+        total
+        sessions
+    }
+}

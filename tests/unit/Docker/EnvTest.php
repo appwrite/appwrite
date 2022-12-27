@@ -37,6 +37,7 @@ class EnvTest extends TestCase
         $this->assertEquals("_APP_X=value1
 _APP_Y=value2
 _APP_Z=value3
+_APP_W=value5=
 ", $this->object->export());
     }
 }

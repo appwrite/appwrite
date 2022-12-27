@@ -1,0 +1,5 @@
+query {
+    accountGetPrefs {
+        data
+    }
+}

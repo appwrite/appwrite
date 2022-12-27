@@ -1,0 +1,6 @@
+query {
+    usersList {
+        total
+        users
+    }
+}

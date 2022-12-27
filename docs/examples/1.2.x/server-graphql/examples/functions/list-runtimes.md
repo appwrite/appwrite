@@ -1,0 +1,6 @@
+query {
+    functionsListRuntimes {
+        total
+        runtimes
+    }
+}

@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\SMS\Adapter\Mock;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -923,6 +924,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
+    #[Retry(count: 1)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';

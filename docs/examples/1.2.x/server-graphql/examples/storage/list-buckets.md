@@ -1,0 +1,6 @@
+query {
+    storageListBuckets {
+        total
+        buckets
+    }
+}

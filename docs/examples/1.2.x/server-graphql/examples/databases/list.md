@@ -1,0 +1,6 @@
+query {
+    databasesList {
+        total
+        databases
+    }
+}
