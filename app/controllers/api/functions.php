@@ -619,13 +619,19 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $file = $request->getFiles('code');
-        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
-        $upload = new Upload();
+
+        // GraphQL multipart spec adds files with index keys
+        if (empty($file)) {
+            $file = $request->getFiles(0);
+        }
 
         if (empty($file)) {
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
+
+        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];

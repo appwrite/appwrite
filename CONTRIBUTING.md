@@ -12,7 +12,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Submit a Pull Request 🚀
 
-Branch naming convention is as follows
+Branch naming convention is as following
 
 `TYPE-ISSUE_ID-DESCRIPTION`
 
@@ -188,20 +188,23 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 ├── src # Supporting libraries (each lib has one role, common libs are released as individual projects)
 │   └── Appwrite
 │       ├── Auth
-│       ├── Database
 │       ├── Detector
 │       ├── Docker
+|       ├── DSN
 │       ├── Event
 │       ├── Extend
+│       ├── GraphQL
+│       ├── Messaging
 │       ├── Migration
 │       ├── Network
 │       ├── OpenSSL
-│       ├── Realtime
+│       ├── Promises
 │       ├── Resque
 │       ├── Specification
 │       ├── Task
 │       ├── Template
 │       ├── URL
+│       ├── Usage
 │       └── Utopia
 └── tests # End to end & unit tests
     ├── e2e

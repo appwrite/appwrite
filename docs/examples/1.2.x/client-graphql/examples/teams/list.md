@@ -1,0 +1,6 @@
+query {
+    teamsList {
+        total
+        teams
+    }
+}
