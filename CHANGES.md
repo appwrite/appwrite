@@ -6,6 +6,8 @@
 
 ## Changes
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+- Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
+- Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
 
 ## Bugs
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)

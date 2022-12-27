@@ -414,7 +414,7 @@ App::get('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1004,7 +1004,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $sessionId);
+            ->setParam('sessionId', $sessionId)
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
         $response->noContent();
     });

@@ -153,6 +153,9 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_GRAPHQL_MAX_BATCH_SIZE
+      - _APP_GRAPHQL_MAX_COMPLEXITY
+      - _APP_GRAPHQL_MAX_DEPTH
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
