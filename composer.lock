@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7e4fe4a68feca880bee0afd38421165e",
+    "content-hash": "60bbe8610441d8b6e119bd322e0f5a13",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2720,16 +2720,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.29.0",
+            "version": "0.29.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "4d35fb0037aaeca7a5a076e44b7f42bdac2d2e2e"
+                "reference": "a13ad2a5a62b1662f58596bfdd45e1fb0b6d5fb8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/4d35fb0037aaeca7a5a076e44b7f42bdac2d2e2e",
-                "reference": "4d35fb0037aaeca7a5a076e44b7f42bdac2d2e2e",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a13ad2a5a62b1662f58596bfdd45e1fb0b6d5fb8",
+                "reference": "a13ad2a5a62b1662f58596bfdd45e1fb0b6d5fb8",
                 "shasum": ""
             },
             "require": {
@@ -2765,9 +2765,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.29.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.29.1"
             },
-            "time": "2022-12-26T11:28:04+00:00"
+            "time": "2022-12-27T20:50:20+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5170,16 +5170,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.4.3",
+            "version": "v3.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "c38fd6b0b7f370c198db91ffd02e23b517426b58"
+                "reference": "3ffcf4b7d890770466da3b2666f82ac054e7ec72"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c38fd6b0b7f370c198db91ffd02e23b517426b58",
-                "reference": "c38fd6b0b7f370c198db91ffd02e23b517426b58",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/3ffcf4b7d890770466da3b2666f82ac054e7ec72",
+                "reference": "3ffcf4b7d890770466da3b2666f82ac054e7ec72",
                 "shasum": ""
             },
             "require": {
@@ -5194,7 +5194,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.4-dev"
+                    "dev-master": "3.5-dev"
                 }
             },
             "autoload": {
@@ -5230,7 +5230,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.4.3"
+                "source": "https://github.com/twigphp/Twig/tree/v3.5.0"
             },
             "funding": [
                 {
@@ -5242,7 +5242,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-09-28T08:42:51+00:00"
+            "time": "2022-12-27T12:28:18+00:00"
         }
     ],
     "aliases": [],
