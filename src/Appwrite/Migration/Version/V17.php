@@ -81,7 +81,7 @@ class V17 extends Migration
                 /**
                  * Bump version number.
                  */
-                $document->setAttribute('version', '1.1.0');
+                $document->setAttribute('version', '1.2.0');
 
                 /**
                  * Set default maxSessions
