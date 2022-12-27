@@ -905,7 +905,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['authSessionsLimit']);
+        $this->assertEquals(1, $response['body']['authSessionsLimit']);
 
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
