@@ -291,18 +291,33 @@ class Resolvers
             return;
         }
 
-        foreach ($payload as $key => $value) {
-            if (\str_starts_with($key, '$')) {
-                $escapedKey = \str_replace('$', '_', $key);
-                $payload[$escapedKey] = $value;
-                unset($payload[$key]);
-            }
-        }
+        $payload = self::escapePayload($payload, 1);
 
         if ($beforeResolve) {
             $payload = $beforeResolve($payload);
         }
 
         $resolve($payload);
+    }
+
+    private static function escapePayload(array $payload, int $depth)
+    {
+        if ($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+            return;
+        }
+
+        foreach ($payload as $key => $value) {
+            if (\str_starts_with($key, '$')) {
+                $escapedKey = \str_replace('$', '_', $key);
+                $payload[$escapedKey] = $value;
+                unset($payload[$key]);
+            }
+
+            if (\is_array($value)) {
+                $payload[$key] = self::escapePayload($value, $depth + 1);
+            }
+        }
+
+        return $payload;
     }
 }
