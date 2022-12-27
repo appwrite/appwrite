@@ -2,10 +2,8 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -29,8 +27,8 @@ class V17 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'fixDocument']);
+        // Console::info('Migrating Documents');
+        // $this->forEachDocument([$this, 'fixDocument']);
     }
 
     /**
@@ -48,6 +46,19 @@ class V17 extends Migration
             $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
+                case 'files':
+                    try {
+                        /**
+                         * Update 'mimeType' attribute size (127->255)
+                         */
+                        $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
+
                 default:
                     break;
             }
@@ -64,11 +75,6 @@ class V17 extends Migration
      */
     protected function fixDocument(Document $document)
     {
-        switch ($document->getCollection()) {
-            default:
-                break;
-        }
-
         return $document;
     }
 }
