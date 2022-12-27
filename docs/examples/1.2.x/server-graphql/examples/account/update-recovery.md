@@ -5,8 +5,8 @@ mutation {
         password: "password",
         passwordAgain: "password"
     ) {
-        id
-        createdAt
+        _id
+        _createdAt
         userId
         secret
         expire

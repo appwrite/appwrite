@@ -4,10 +4,10 @@ mutation {
         collectionId: "[COLLECTION_ID]",
         name: "[NAME]"
     ) {
-        id
-        createdAt
-        updatedAt
-        permissions
+        _id
+        _createdAt
+        _updatedAt
+        _permissions
         databaseId
         name
         enabled

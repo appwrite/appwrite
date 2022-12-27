@@ -1,8 +1,8 @@
 mutation {
     accountUpdateStatus {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         registration
         status

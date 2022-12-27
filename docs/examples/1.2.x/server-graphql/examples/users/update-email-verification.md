@@ -3,9 +3,9 @@ mutation {
         userId: "[USER_ID]",
         emailVerification: false
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         password
         hash

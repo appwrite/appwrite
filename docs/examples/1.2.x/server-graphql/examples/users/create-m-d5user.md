@@ -4,9 +4,9 @@ mutation {
         email: "email@example.com",
         password: "password"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         password
         hash

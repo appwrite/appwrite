@@ -1,7 +1,7 @@
 mutation {
     accountCreateAnonymousSession {
-        id
-        createdAt
+        _id
+        _createdAt
         userId
         expire
         provider

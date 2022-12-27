@@ -4,9 +4,9 @@ mutation {
         membershipId: "[MEMBERSHIP_ID]",
         roles: []
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         userId
         userName
         userEmail

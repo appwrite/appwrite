@@ -2,9 +2,9 @@ query {
     teamsGet(
         teamId: "[TEAM_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         total
     }
