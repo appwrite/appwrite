@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
@@ -41,7 +42,10 @@ class PatchCreateMissingSchedules extends Action
         $limit = 100;
         $projectCursor = null;
         while (true) {
-            $projectsQueries = [Query::limit($limit)];
+            $projectsQueries = [
+                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::limit($limit)
+            ];
             if ($projectCursor !== null) {
                 $projectsQueries[] = Query::cursorAfter($projectCursor);
             }

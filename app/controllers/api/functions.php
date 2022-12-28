@@ -91,7 +91,7 @@ App::post('/v1/functions')
 
         $schedule = Authorization::skip(
             fn() => $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'region' => $project->getAttribute('region'),
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
                 'resourceUpdatedAt' => DateTime::now(),

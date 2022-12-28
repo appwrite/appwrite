@@ -360,7 +360,7 @@ class DeletesV1 extends Worker
 
         $this->deleteForProjectIds(function (Document $project) use ($consoleDB) {
             $dbForProject = $this->getProjectDB($project);
-
+            //Todo @shimonewman do we need to $consoleDB->getDocument the $project
             $project = $consoleDB->getDocument('projects', $project->getId());
             $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
@@ -584,7 +584,10 @@ class DeletesV1 extends Worker
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
-            $projects = $this->getConsoleDB()->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
+            $projects = $this->getConsoleDB()->find('projects', [
+                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::limit($limit), Query::offset($chunk * $limit)
+                ]);
 
             $chunk++;
 
@@ -681,7 +684,6 @@ class DeletesV1 extends Worker
     protected function deleteCertificates(Document $document): void
     {
         $consoleDB = $this->getConsoleDB();
-
         // If domain has certificate generated
         if (isset($document['certificateId'])) {
             $domainUsingCertificate = $consoleDB->findOne('domains', [
