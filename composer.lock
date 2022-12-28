@@ -2720,16 +2720,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.29.1",
+            "version": "0.29.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "a13ad2a5a62b1662f58596bfdd45e1fb0b6d5fb8"
+                "reference": "d5352e09ffe9442eb1bf7a5ddbaf2618df8ade6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a13ad2a5a62b1662f58596bfdd45e1fb0b6d5fb8",
-                "reference": "a13ad2a5a62b1662f58596bfdd45e1fb0b6d5fb8",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d5352e09ffe9442eb1bf7a5ddbaf2618df8ade6a",
+                "reference": "d5352e09ffe9442eb1bf7a5ddbaf2618df8ade6a",
                 "shasum": ""
             },
             "require": {
@@ -2765,9 +2765,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.29.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.29.2"
             },
-            "time": "2022-12-27T20:50:20+00:00"
+            "time": "2022-12-28T06:52:51+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -3423,16 +3423,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.22",
+            "version": "9.2.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "e4bf60d2220b4baaa0572986b5d69870226b06df"
+                "reference": "9f1f0f9a2fbb680b26d1cf9b61b6eac43a6e4e9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/e4bf60d2220b4baaa0572986b5d69870226b06df",
-                "reference": "e4bf60d2220b4baaa0572986b5d69870226b06df",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/9f1f0f9a2fbb680b26d1cf9b61b6eac43a6e4e9c",
+                "reference": "9f1f0f9a2fbb680b26d1cf9b61b6eac43a6e4e9c",
                 "shasum": ""
             },
             "require": {
@@ -3488,7 +3488,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.22"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.23"
             },
             "funding": [
                 {
@@ -3496,7 +3496,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-12-18T16:40:55+00:00"
+            "time": "2022-12-28T12:41:10+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",

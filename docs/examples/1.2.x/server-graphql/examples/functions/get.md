@@ -10,7 +10,14 @@ query {
         enabled
         runtime
         deployment
-        vars
+        vars {
+            _id
+            _createdAt
+            _updatedAt
+            key
+            value
+            functionId
+        }
         events
         schedule
         scheduleNext

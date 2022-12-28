@@ -4,6 +4,11 @@ query {
         collectionId: "[COLLECTION_ID]"
     ) {
         total
-        indexes
+        indexes {
+            key
+            type
+            status
+            attributes
+        }
     }
 }
