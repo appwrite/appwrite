@@ -1,6 +1,12 @@
 query {
     teamsList {
         total
-        teams
+        teams {
+            _id
+            _createdAt
+            _updatedAt
+            name
+            total
+        }
     }
 }

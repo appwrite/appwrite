@@ -4,6 +4,14 @@ query {
         collectionId: "[COLLECTION_ID]"
     ) {
         total
-        documents
+        documents {
+            _id
+            _collectionId
+            _databaseId
+            _createdAt
+            _updatedAt
+            _permissions
+            data
+        }
     }
 }

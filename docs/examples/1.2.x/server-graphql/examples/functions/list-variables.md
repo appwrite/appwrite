@@ -3,6 +3,13 @@ query {
         functionId: "[FUNCTION_ID]"
     ) {
         total
-        variables
+        variables {
+            _id
+            _createdAt
+            _updatedAt
+            key
+            value
+            functionId
+        }
     }
 }

@@ -12,6 +12,11 @@ query {
         enabled
         documentSecurity
         attributes
-        indexes
+        indexes {
+            key
+            type
+            status
+            attributes
+        }
     }
 }

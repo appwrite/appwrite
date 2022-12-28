@@ -1,6 +1,9 @@
 query {
     localeListContinents {
         total
-        continents
+        continents {
+            name
+            code
+        }
     }
 }

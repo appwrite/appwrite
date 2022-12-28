@@ -3,6 +3,18 @@ query {
         bucketId: "[BUCKET_ID]"
     ) {
         total
-        files
+        files {
+            _id
+            bucketId
+            _createdAt
+            _updatedAt
+            _permissions
+            name
+            signature
+            mimeType
+            sizeOriginal
+            chunksTotal
+            chunksUploaded
+        }
     }
 }

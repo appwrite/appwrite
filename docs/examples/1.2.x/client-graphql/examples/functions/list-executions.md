@@ -3,6 +3,19 @@ query {
         functionId: "[FUNCTION_ID]"
     ) {
         total
-        executions
+        executions {
+            _id
+            _createdAt
+            _updatedAt
+            _permissions
+            functionId
+            trigger
+            status
+            statusCode
+            response
+            stdout
+            stderr
+            duration
+        }
     }
 }

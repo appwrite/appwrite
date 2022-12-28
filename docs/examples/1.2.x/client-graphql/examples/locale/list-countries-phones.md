@@ -1,6 +1,10 @@
 query {
     localeListCountriesPhones {
         total
-        phones
+        phones {
+            code
+            countryCode
+            countryName
+        }
     }
 }
