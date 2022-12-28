@@ -2,10 +2,10 @@ query {
     storageGetBucket(
         bucketId: "[BUCKET_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
-        permissions
+        _id
+        _createdAt
+        _updatedAt
+        _permissions
         fileSecurity
         name
         enabled

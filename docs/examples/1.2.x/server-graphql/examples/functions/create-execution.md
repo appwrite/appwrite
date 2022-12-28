@@ -2,10 +2,10 @@ mutation {
     functionsCreateExecution(
         functionId: "[FUNCTION_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
-        permissions
+        _id
+        _createdAt
+        _updatedAt
+        _permissions
         functionId
         trigger
         status

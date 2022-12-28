@@ -3,10 +3,10 @@ query {
         databaseId: "[DATABASE_ID]",
         collectionId: "[COLLECTION_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
-        permissions
+        _id
+        _createdAt
+        _updatedAt
+        _permissions
         databaseId
         name
         enabled

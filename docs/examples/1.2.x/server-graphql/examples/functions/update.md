@@ -4,9 +4,9 @@ mutation {
         name: "[NAME]",
         execute: ["any"]
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         execute
         name
         enabled

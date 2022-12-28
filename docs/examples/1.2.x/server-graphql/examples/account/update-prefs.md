@@ -2,9 +2,9 @@ mutation {
     accountUpdatePrefs(
         prefs: "{}"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         registration
         status

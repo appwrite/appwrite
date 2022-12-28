@@ -2,9 +2,9 @@ query {
     databasesGet(
         databaseId: "[DATABASE_ID]"
     ) {
-        id
+        _id
         name
-        createdAt
-        updatedAt
+        _createdAt
+        _updatedAt
     }
 }

@@ -3,11 +3,11 @@ query {
         bucketId: "[BUCKET_ID]",
         fileId: "[FILE_ID]"
     ) {
-        id
+        _id
         bucketId
-        createdAt
-        updatedAt
-        permissions
+        _createdAt
+        _updatedAt
+        _permissions
         name
         signature
         mimeType

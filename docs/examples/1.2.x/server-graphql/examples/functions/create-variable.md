@@ -4,9 +4,9 @@ mutation {
         key: "[KEY]",
         value: "[VALUE]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         key
         value
         functionId
