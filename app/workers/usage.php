@@ -69,10 +69,15 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                     $parts = explode('_', $document->getCollection());
                     $databaseId = $parts[1] ?? 0;
-                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . "{$databaseId}" . ".documents"));
+                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . "{$databaseId}" . "." . "{$document->getInternalId()}" . ".documents"));
+
                     if (!empty($documents['value'])) {
                         $metrics[] = [
                             'key' => 'documents',
+                            'value' => ($documents['value'] * -1),
+                        ];
+                        $metrics[] = [
+                            'key' => "{$databaseId}" . ".documents",
                             'value' => ($documents['value'] * -1),
                         ];
                     }
