@@ -1,3 +1,5 @@
+- Added ability to transfer project between organizations [#4935](https://github.com/appwrite/appwrite/pull/4935)
+
 # Version 1.2.0
 ## Features
 - Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
