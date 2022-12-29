@@ -104,8 +104,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 $queueForUsage
                     ->addMetric("documents", $value)  // per project
                     ->addMetric("{$databaseId}" . ".documents", $value) // per database
-                    ->addMetric("{$databaseId}" . "." . "{$collectionId}" . ".documents", $value)  // per collection
-                ;
+                    ->addMetric("{$databaseId}" . "." . "{$collectionId}" . ".documents", $value);  // per collection
                 break;
             case $document->getCollection() === 'buckets': //buckets
                 $queueForUsage
@@ -122,8 +121,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
                     ->addMetric("files", $value) // per project
                     ->addMetric("files.storage", $document->getAttribute('sizeOriginal') * $value) // per project
                     ->addMetric("{$bucketId}" . ".files", $value) // per bucket
-                    ->addMetric("{$bucketId}" . ".files.storage", $document->getAttribute('sizeOriginal') * $value)// per bucket
-                ;
+                    ->addMetric("{$bucketId}" . ".files.storage", $document->getAttribute('sizeOriginal') * $value);// per bucket
                 break;
             case $document->getCollection() === 'functions':
                 $queueForUsage
@@ -139,14 +137,12 @@ $databaseListener = function (string $event, Document $document, Document $proje
                     ->addMetric("deployments", $value) // per project
                     ->addMetric("deployments.storage", $document->getAttribute('size') * $value) // per project
                     ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments", $value)// per function
-                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments.storage", $document->getAttribute('size') * $value) // per function
-                ;
+                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments.storage", $document->getAttribute('size') * $value); // per function
                 break;
             case $document->getCollection() === 'executions':
                 $queueForUsage
                     ->addMetric("executions", $value) // per project
-                    ->addMetric("{$document->getAttribute('functionInternalId')}" . ".executions", $value) // per function
-                ;
+                    ->addMetric("{$document->getAttribute('functionInternalId')}" . ".executions", $value); // per function
                 break;
             default:
                 break;
@@ -171,8 +167,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 ->addExtra('trace', $error->getTraceAsString())
                 ->addExtra('detailedTrace', $error->getTrace())
                 ->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles)
-                ->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING)
-                ;
+                ->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
             $logger->addLog($log);
         }
     }
