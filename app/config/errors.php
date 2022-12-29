@@ -197,6 +197,11 @@ return [
         'description' => 'Team with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::PROJECT_TEAM_ALREADY_MATCHES => [
+        'name' => Exception::PROJECT_TEAM_ALREADY_MATCHES,
+        'description' => 'Project already owned by this team.',
+        'code' => 400,
+    ],
     Exception::TEAM_INVITE_ALREADY_EXISTS => [
         'name' => Exception::TEAM_INVITE_ALREADY_EXISTS,
         'description' => 'User has already been invited or is already a member of this team',

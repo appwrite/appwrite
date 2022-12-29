@@ -678,6 +678,10 @@ App::patch('/v1/projects/:projectId/team')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        if ($team->getInternalId() === $project->getAttribute('teamInternalId')) {
+            throw new Exception(Exception::PROJECT_TEAM_ALREADY_MATCHES);
+        }
+
         $project
             ->setAttribute('teamId', $team->getId())
             ->setAttribute('teamInternalId', $team->getInternalId())
