@@ -198,6 +198,8 @@ App::init()
 
         $route = $utopia->match($request);
 
+        var_dump($route->getPath());
+
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
             throw new Exception(Exception::PROJECT_UNKNOWN);
         }

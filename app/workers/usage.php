@@ -43,7 +43,7 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
             $dbForProject->setNamespace('_' . $projectInternalId);
 
             switch (true) {
-                case $document->getCollection() === 'users':
+                case $document->getCollection() === 'users': // users
                     $sessions = count($document->getAttribute('sessions', 0));
                     if (!empty($sessions)) {
                         $metrics[] = [
@@ -60,6 +60,8 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                             'key' => 'collections',
                             'value' => ($collections['value'] * -1),
                         ];
+                    }
+                    if (!empty($documents['value'])) {
                         $metrics[] = [
                             'key' => 'documents',
                             'value' => ($documents['value'] * -1),
@@ -149,7 +151,7 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     break;
             }
         } catch (\Exception $e) {
-            console::error($e->getMessage());
+            console::error("[reducer] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
         } finally {
             $pools->reclaim();
         }
@@ -168,10 +170,14 @@ $server->job()
         $projectId = $project->getInternalId();
 
         foreach ($payload['reduce'] ?? [] as $document) {
+            if (empty($document)) {
+                continue;
+            }
+
              $reduce(
                  database: $project->getAttribute('database'),
                  projectInternalId: $project->getInternalId(),
-                 document: new Document($document ?? []),
+                 document: new Document($document),
                  metrics:  $payload['metrics'],
              );
         }
@@ -253,7 +259,7 @@ $server
                         'metrics' => $project['keys'],
                     ]));
                 } catch (\Exception $e) {
-                    console::error($e->getMessage());
+                    console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
                 } finally {
                     $pools->reclaim();
                 }
