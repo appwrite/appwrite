@@ -2721,4 +2721,137 @@ class ProjectsConsoleClientTest extends Scope
 
         return $data;
     }
+
+    public function testUpdateProjectTeam(): void
+    {
+        // Create two teams
+        $team1 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Team 1'
+        ]);
+
+        $this->assertEquals(201, $team1['headers']['status-code']);
+
+        $team1Id = $team1['body']['$id'];
+
+        $team2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Team 2'
+        ]);
+
+        $this->assertEquals(201, $team1['headers']['status-code']);
+
+        $team2Id = $team2['body']['$id'];
+
+        // Create project in team 1
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Transfer Project',
+            'teamId' => $team1Id,
+            'region' => 'default'
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertEquals($team1Id, $project['body']['teamId']);
+
+        $projectId = $project['body']['$id'];
+
+        // Test list projects
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("teamId", "' . $team1Id .  '")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("teamId", "' . $team2Id .  '")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        // Transfer project
+        $project = $this->client->call(Client::METHOD_PATCH, "/projects/{$projectId}/team", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $team2Id
+        ]);
+
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals($team2Id, $project['body']['teamId']);
+
+        $project = $this->client->call(Client::METHOD_GET, "/projects/{$projectId}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertEquals($team2Id, $project['body']['teamId']);
+
+        // Test list projects again
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("teamId", "' . $team2Id .  '")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("teamId", "' . $team1Id .  '")' ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        // Test failures
+        $project = $this->client->call(Client::METHOD_PATCH, "/projects/nonExistingProjectId/team", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $team1Id
+        ]);
+
+        $this->assertEquals(404, $project['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_PATCH, "/projects/{$projectId}/team", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => 'nonExistingTeamId'
+        ]);
+
+        $this->assertEquals(404, $project['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_PATCH, "/projects/{$projectId}/team", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $team2Id
+        ]);
+
+        $this->assertEquals(400, $project['headers']['status-code']);
+    }
 }
