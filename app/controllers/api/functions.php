@@ -611,7 +611,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
     ->action(function (string $functionId, string $entrypoint, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
-        $activate = in_array($activate, ['1', 'true', 1, true], true);
+        $activate = in_array($activate, ['true', true], true);
 
         $function = $dbForProject->getDocument('functions', $functionId);
 

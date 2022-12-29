@@ -314,7 +314,7 @@ App::get('/v1/avatars/qr')
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
     ->action(function (string $text, int $size, int $margin, mixed $download, Response $response) {
-        $download = in_array($download, ['1', 'true', 1, true], true);
+        $download = in_array($download, ['true', true], true);
 
         $options = new QROptions([
             'addQuietzone' => true,
