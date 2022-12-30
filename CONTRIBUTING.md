@@ -4,7 +4,7 @@ We would ❤️ you to contribute to Appwrite and help make it better! We want c
 
 ## How to Start?
 
-If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can reach out with questions to [Eldad Fux (@eldadfux)](https://twitter.com/eldadfux) or [@appwrite](https://twitter.com/appwrite) on Twitter or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
+If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite](https://twitter.com/appwrite) on Twitter or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
 
 ## Code of Conduct
 
@@ -254,7 +254,7 @@ Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependenci
 
 ## Coding Standards
 
-Appwrite is follows the [PHP-FIG standards](https://www.php-fig.org/). Currently, we use both PSR-0 and PSR-12 for coding standards and autoloading standards.
+Appwrite follows the [PHP-FIG standards](https://www.php-fig.org/). Currently, we use both PSR-0 and PSR-12 for coding standards and autoloading standards.
 
 We use prettier for our JS coding standards and auto-formatting for our code.
 
