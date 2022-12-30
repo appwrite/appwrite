@@ -148,7 +148,7 @@ Learn more at our [Technology Stack](#technology-stack) section.
 
 ## Architecture
 
-Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but as we grow, our goal is to only use microservices.
+Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures.
 
 ---
 
