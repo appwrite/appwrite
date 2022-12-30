@@ -2756,7 +2756,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        
+
         $membership1Id = $response['body']['memberships'][0]['$id'];
 
         $response = $this->client->call(Client::METHOD_GET, "/teams/{$team2Id}/memberships", array_merge([
@@ -2877,7 +2877,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $project['headers']['status-code']);
-        
+
         $project = $this->client->call(Client::METHOD_PATCH, "/teams/{$team2Id}/memberships/{$membership2Id}", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
