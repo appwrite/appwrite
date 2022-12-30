@@ -84,7 +84,7 @@ return [
     ],
     Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($member, $admins, []),
+        'scopes' => \array_merge($member, $admins, [ 'projects.transfer' ]),
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',

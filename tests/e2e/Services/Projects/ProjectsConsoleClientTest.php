@@ -2749,6 +2749,26 @@ class ProjectsConsoleClientTest extends Scope
 
         $team2Id = $team2['body']['$id'];
 
+        $response = $this->client->call(Client::METHOD_GET, "/teams/{$team1Id}/memberships", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        
+        $membership1Id = $response['body']['memberships'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, "/teams/{$team2Id}/memberships", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+
+        $membership2Id = $response['body']['memberships'][0]['$id'];
+
         // Create project in team 1
         $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -2787,9 +2807,10 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(0, $response['body']['total']);
 
         // Transfer project
-        $project = $this->client->call(Client::METHOD_PATCH, "/projects/{$projectId}/team", array_merge([
+        $project = $this->client->call(Client::METHOD_PATCH, "/project/{$projectId}/team", array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'teamId' => $team2Id
         ]);
@@ -2827,31 +2848,56 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(0, $response['body']['total']);
 
         // Test failures
-        $project = $this->client->call(Client::METHOD_PATCH, "/projects/nonExistingProjectId/team", array_merge([
+        $project = $this->client->call(Client::METHOD_PATCH, "/project/nonExistingProjectId/team", array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'teamId' => $team1Id
         ]);
 
         $this->assertEquals(404, $project['headers']['status-code']);
 
-        $project = $this->client->call(Client::METHOD_PATCH, "/projects/{$projectId}/team", array_merge([
+        $project = $this->client->call(Client::METHOD_PATCH, "/project/{$projectId}/team", array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'teamId' => 'nonExistingTeamId'
         ]);
 
         $this->assertEquals(404, $project['headers']['status-code']);
 
-        $project = $this->client->call(Client::METHOD_PATCH, "/projects/{$projectId}/team", array_merge([
+        $project = $this->client->call(Client::METHOD_PATCH, "/project/{$projectId}/team", array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin'
         ], $this->getHeaders()), [
             'teamId' => $team2Id
         ]);
 
         $this->assertEquals(400, $project['headers']['status-code']);
+        
+        $project = $this->client->call(Client::METHOD_PATCH, "/teams/{$team2Id}/memberships/{$membership2Id}", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => ['member']
+        ]);
+
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertCount(1, $project['body']['roles']);
+        $this->assertContains('member', $project['body']['roles']);
+        $this->assertNotContains('owner', $project['body']['roles']);
+
+        $project = $this->client->call(Client::METHOD_PATCH, "/project/{$projectId}/team", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin'
+        ], $this->getHeaders()), [
+            'teamId' => $team1Id
+        ]);
+
+        $this->assertEquals(401, $project['headers']['status-code']);
     }
 }
