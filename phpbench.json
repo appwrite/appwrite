@@ -3,7 +3,7 @@
   "runner.path": "tests/benchmarks",
   "runner.file_pattern": "*Bench.php",
   "runner.bootstrap": "app/init.php",
-  "runner.revs": 2000,
+  "runner.revs": 1000,
   "runner.iterations": 3,
   "runner.retry_threshold": 5,
   "runner.warmup": 1,
