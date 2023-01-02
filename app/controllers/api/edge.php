@@ -6,10 +6,13 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::init()
     ->groups(['edge'])
@@ -30,20 +33,23 @@ App::post('/v1/edge/sync')
     ->desc('Purge cache keys')
     ->groups(['edge'])
     ->label('scope', 'public')
-    ->param('keys', '', new ArrayList(new Text(100), 1000), 'Cache keys. an array containing alphanumerical cache keys')
+    ->param('keys', '', new ArrayList(new Assoc(), 500), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
     ->inject('queueForCacheSyncIn')
     ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncIn) {
 
-        if (empty($keys)) {
+        //if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
-        }
+        //}
 
-        $queueForCacheSyncIn
-            ->enqueue([
-                'keys' => $keys
-            ]);
+        foreach ($keys as $sync) {
+            $queueForCacheSyncIn
+                ->enqueue([
+                    'type' => $sync['type'],
+                    'key'  => $sync['key']
+                ]);
+        }
 
         $response->dynamic(new Document([
             'keys' => $keys

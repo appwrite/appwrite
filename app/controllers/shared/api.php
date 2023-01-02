@@ -22,6 +22,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Client;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -333,7 +334,8 @@ App::shutdown()
     ->inject('mode')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions) use ($parseLabel) {
+    ->inject('queueForCacheSyncOut')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions, Client $queueForCacheSyncOut) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -388,6 +390,21 @@ App::shutdown()
                         'userId' => $events->getParam('userId')
                     ]
                 );
+
+                $queueForCacheSyncOut->enqueue([
+                        'type' => 'realtime',
+                        'key' => [
+                                'projectId' => $target['projectId'] ?? $project->getId(),
+                                'payload' => $events->getPayload(),
+                                'events' => $allEvents,
+                                'channels' => $target['channels'],
+                                'roles' => $target['roles'],
+                                'options' => [
+                                    'permissionsChanged' => $target['permissionsChanged'],
+                                    'userId' => $events->getParam('userId')
+                                ]
+                        ]
+                ]);
             }
         }
 
@@ -511,6 +528,7 @@ App::shutdown()
 
             $fileSize = 0;
             $file = $request->getFiles('file');
+
             if (!empty($file)) {
                 $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
             }

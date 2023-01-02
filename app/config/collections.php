@@ -24,6 +24,15 @@ $collections = [
         'name' => 'Syncs',
         'attributes' => [
             [
+                '$id' => ID::custom('type'),
+                'type' => Database::VAR_STRING,
+                'size' => 256,
+                'required' => true,
+                'signed' => true,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('region'),
                 'type' => Database::VAR_STRING,
                 'size' => 50,
@@ -42,7 +51,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('keys'),
+                '$id' => ID::custom('key'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -61,23 +70,12 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('payload'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => true,
-                'default' => [],
-                'array' => false,
-                'filters' => ['json'],
-            ],
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_status'),
+                '$id' => ID::custom('_key_type_status'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['status'],
+                'attributes' => ['type', 'status'],
                 'lengths' => [],
                 'orders' => [],
             ],
