@@ -1094,6 +1094,7 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForCacheSyncOut) {
         $queueForCacheSyncOut
             ->enqueue([
+                'type' => 'cache',
                 'key' => $key
             ]);
     });
@@ -1101,6 +1102,7 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForCacheSyncOut) {
         $queueForCacheSyncOut
             ->enqueue([
+                'type' => 'cache',
                 'key' => $key
             ]);
     });
