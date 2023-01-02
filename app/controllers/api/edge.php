@@ -39,9 +39,9 @@ App::post('/v1/edge/sync')
     ->inject('queueForCacheSyncIn')
     ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncIn) {
 
-        //if (empty($keys)) {
+        if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
-        //}
+        }
 
         foreach ($keys as $sync) {
             $queueForCacheSyncIn

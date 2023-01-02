@@ -35,9 +35,9 @@ const MAX_CURL_SEND_ATTEMPTS = 4;
  * @param string $url
  * @param string $token
  * @param array $payload
- * @return array
+ * @return int
  */
-function call(string $url, string $token, array $payload): array
+function call(string $url, string $token, array $payload): int
 {
 
     $ch = curl_init($url);
@@ -82,12 +82,13 @@ function handle($dbForConsole, $regions, $payload): void
         $status = call($region['domain'] . '/v1/edge/sync', $token, ['keys' => $payload]);
         if ($status !== Response::STATUS_CODE_OK) {
             Console::error("[{$time}] Request to {$code} has failed");
+
             foreach ($payload as $sync) {
                 $dbForConsole->createDocument('syncs', new Document([
                     'region' => App::getEnv('_APP_REGION'),
                     'target' => $code,
                     'type' => $sync['type'],
-                    'key' => $sync['key'],
+                    'key'  => ['key' => $sync['key']],
                     'status' => $status,
                 ]));
             }
@@ -100,11 +101,6 @@ $server->job()
     ->action(function (Message $message) use (&$stack, &$failures) {
 
         $payload = $message->getPayload() ?? [];
-        $type    = $payload['type'] ?? null;
-
-        if (empty($type)) {
-            return;
-        }
 
         //Get failed requests
         if (!empty($payload['region']) && !empty($payload['keys'])) {
@@ -119,6 +115,10 @@ $server->job()
                 'keys' => $payload['keys']
             ];
 
+            return;
+        }
+
+        if (empty($payload['type'])) {
             return;
         }
 
@@ -154,9 +154,8 @@ $server
                 }
                 return;
             }
-            //var_dump($stack['keys']);
+
             $chunk = array_slice($stack['keys'], 0, CHUNK_MAX_KEYS, true);
-            //var_dump($chunk);
             array_splice($stack['keys'], 0, CHUNK_MAX_KEYS);
             Console::log("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
             handle($dbForConsole, $stack['regions'], $chunk);

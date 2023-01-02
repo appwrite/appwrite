@@ -47,7 +47,7 @@ class EdgeSync extends Action
 
             Console::success("[{$time}] New task every {$interval} seconds");
 
-            foreach ($regions as $target) {
+            foreach ($regions as $code => $region) {
                 $count = 0;
                 $chunk = 0;
                 $limit = 50;
@@ -58,16 +58,17 @@ class EdgeSync extends Action
 
                     $results = $dbForConsole->find('syncs', [
                         Query::equal('region', [App::getEnv('_APP_REGION')]),
-                        Query::equal('target', [$target]),
+                        Query::equal('target', [$code]),
                         Query::limit($limit)
                     ]);
 
                     $sum = count($results);
                     if ($sum > 0) {
                         foreach ($results as $document) {
+                            $key = $document->getAttribute('key');
                             $keys[] = [
                                         'type' => $document->getAttribute('type'),
-                                        'key' => $document->getAttribute('key')
+                                        'key'  => $key['key']
                                 ];
                             $dbForConsole->deleteDocument('syncs', $document->getId());
                             $count++;
@@ -76,14 +77,14 @@ class EdgeSync extends Action
                 }
 
                 if (!empty($keys)) {
-                    Console::info("[{$time}] Enqueueing  keys chunk {$count} to {$target}");
+                    Console::info("[{$time}] Enqueueing  keys chunk {$count} to region {$code}");
                     $queueForCacheSyncOut
                         ->enqueue([
-                            'region' => $target,
+                            'region' => $code,
                             'keys' => $keys
                         ]);
                 } else {
-                        Console::info("[{$time}] No cache keys where found.");
+                        Console::info("[{$time}] No  keys where found for  region {$code}.");
                 }
             }
         }, $interval);
