@@ -757,7 +757,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.1.6
+    image: openruntimes/executor:0.2.0
     networks:
       - appwrite
       - runtimes

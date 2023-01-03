@@ -184,6 +184,7 @@ class Stats
 
         $functionBuild = $this->params['builds.{scope}.compute'] ?? 0;
         $functionBuildTime = ($this->params['buildTime'] ?? 0) * 1000; // ms
+        $functionBuildSize = ($this->params['buildSize'] ?? 0); // bytes
         $functionBuildStatus = $this->params['buildStatus'] ?? '';
         $functionCompute = $functionExecutionTime + $functionBuildTime;
         $functionTags = $tags . ',functionId=' . $functionId;
@@ -207,6 +208,7 @@ class Stats
         if ($functionBuild >= 1) {
             $this->statsd->increment('builds.{scope}.compute' . $functionTags . ',functionBuildStatus=' . $functionBuildStatus);
             $this->statsd->count('builds.{scope}.compute.time' . $functionTags, $functionBuildTime);
+            $this->statsd->count('builds.{scope}.storage.size' . $functionTags, $functionBuildSize);
         }
         if ($functionBuild + $functionExecution >= 1) {
             $this->statsd->count('project.{scope}.compute.time' . $functionTags, $functionCompute);
