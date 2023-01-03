@@ -73,9 +73,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_type_status'),
+                '$id' => ID::custom('_key_region_target'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['type', 'status'],
+                'attributes' => ['region', 'target'],
                 'lengths' => [],
                 'orders' => [],
             ],
