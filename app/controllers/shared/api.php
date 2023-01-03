@@ -390,7 +390,7 @@ App::shutdown()
                         'userId' => $events->getParam('userId')
                     ]
                 );
-
+                 //Sync with other regions
                 $queueForCacheSyncOut->enqueue([
                         'type' => 'realtime',
                         'key' => [

@@ -105,8 +105,6 @@ if (empty(App::getEnv('QUEUE'))) {
     throw new Exception('Please configure "QUEUE" environemnt variable.');
 }
 
-
-$workerNumber =1;
 $adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
 $server = new Server($adapter);
 
