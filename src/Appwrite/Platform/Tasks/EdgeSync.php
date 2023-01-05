@@ -9,7 +9,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Database;
-use Utopia\Pools\Group;
 use Utopia\Queue\Client;
 
 class EdgeSync extends Action
@@ -23,13 +22,12 @@ class EdgeSync extends Action
     {
         $this
             ->desc('Schedules edge sync tasks')
-            ->inject('pools')
             ->inject('dbForConsole')
-            ->inject('queueForSyncOut')
-            ->callback(fn (Group $pools, Database $dbForConsole, Client $queueForEdgeSyncOut) => $this->action($pools, $dbForConsole, $queueForEdgeSyncOut));
+            ->inject('queueForEdgeSyncOut')
+            ->callback(fn (Database $dbForConsole, Client $queueForEdgeSyncOut) => $this->action($dbForConsole, $queueForEdgeSyncOut));
     }
 
-    public function action(Group $pools, Database $dbForConsole, Client $queueForEdgeSyncOut): void
+    public function action(Database $dbForConsole, Client $queueForEdgeSyncOut): void
     {
         Console::title('Edge-sync V1');
         Console::success(APP_NAME . ' Edge-sync v1 has started');
@@ -50,9 +48,9 @@ class EdgeSync extends Action
             foreach ($regions as $code => $region) {
                 $count = 0;
                 $chunk = 0;
-                $limit = 50;
-                $sum = $limit;
-                $keys = [];
+                $limit = 500;
+                $sum   = $limit;
+                $keys  = [];
                 while ($sum === $limit) {
                     $chunk++;
 
