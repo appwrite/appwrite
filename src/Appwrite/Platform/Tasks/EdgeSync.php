@@ -25,11 +25,11 @@ class EdgeSync extends Action
             ->desc('Schedules edge sync tasks')
             ->inject('pools')
             ->inject('dbForConsole')
-            ->inject('queueForCacheSyncOut')
-            ->callback(fn (Group $pools, Database $dbForConsole, Client $queueForCacheSyncOut) => $this->action($pools, $dbForConsole, $queueForCacheSyncOut));
+            ->inject('queueForSyncOut')
+            ->callback(fn (Group $pools, Database $dbForConsole, Client $queueForEdgeSyncOut) => $this->action($pools, $dbForConsole, $queueForEdgeSyncOut));
     }
 
-    public function action(Group $pools, Database $dbForConsole, Client $queueForCacheSyncOut): void
+    public function action(Group $pools, Database $dbForConsole, Client $queueForEdgeSyncOut): void
     {
         Console::title('Edge-sync V1');
         Console::success(APP_NAME . ' Edge-sync v1 has started');
@@ -42,7 +42,7 @@ class EdgeSync extends Action
         );
 
         $interval = (int) App::getEnv('_APP_SYNC_EDGE_INTERVAL', '180');
-        Console::loop(function () use ($interval, $dbForConsole, $queueForCacheSyncOut, $regions) {
+        Console::loop(function () use ($interval, $dbForConsole, $queueForEdgeSyncOut, $regions) {
             $time = DateTime::now();
 
             Console::success("[{$time}] New task every {$interval} seconds");
@@ -78,7 +78,7 @@ class EdgeSync extends Action
 
                 if (!empty($keys)) {
                     Console::info("[{$time}] Enqueueing  keys chunk {$count} to region {$code}");
-                    $queueForCacheSyncOut
+                    $queueForEdgeSyncOut
                         ->enqueue([
                             'region' => $code,
                             'keys' => $keys

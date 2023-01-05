@@ -18,11 +18,14 @@ use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Client;
+use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
 
-CLI::setResource('register', fn()=>$register);
+global $register;
+
+CLI::setResource('register', fn() => $register);
 
 CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
@@ -141,13 +144,17 @@ CLI::setResource('influxdb', function (Registry $register) {
     return $database;
 }, ['register']);
 
-CLI::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+App::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
 
-CLI::setResource('queueForCacheSyncOut', function (Group $pools) {
-    return new Client('v1-sync-out', $pools->get('queue')->pop()->getResource());
-}, ['pools']);
+CLI::setResource('queueForFunctions', function (Client $queue) {
+    return new Func($queue);
+}, ['queue']);
+
+CLI::setResource('queueForEdgeSyncOut', function (Client $queue) {
+    return new Client('v1-sync-out', $queue);
+}, ['queue']);
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {

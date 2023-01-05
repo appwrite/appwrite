@@ -36,8 +36,8 @@ App::post('/v1/edge/sync')
     ->param('keys', '', new ArrayList(new Text(4056), 600), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
-    ->inject('queueForCacheSyncIn')
-    ->action(function (array $keys, Request $request, Response $response, Client $queueForCacheSyncIn) {
+    ->inject('queueForEdgeSyncIn')
+    ->action(function (array $keys, Request $request, Response $response, Client $queueForEdgeSyncIn) {
 
         if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
@@ -45,7 +45,7 @@ App::post('/v1/edge/sync')
 
         foreach ($keys as $parts) {
             $key = json_decode($parts);
-            $queueForCacheSyncIn
+            $queueForEdgeSyncIn
                 ->enqueue([
                     'type' => $key->type,
                     'key'  => $key->key

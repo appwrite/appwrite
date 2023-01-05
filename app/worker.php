@@ -90,7 +90,7 @@ Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 
-Server::setResource('queueForCacheSyncOut', function (Connection $queue) {
+Server::setResource('queueForSyncOut', function (Connection $queue) {
     return new Client('v1-sync-out', $queue);
 }, ['queue']);
 

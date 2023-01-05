@@ -18,6 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\Certificate;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\SMS\Adapter\Mock;
@@ -40,6 +41,7 @@ use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Queue\Client;
+use Utopia\Queue\Server;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\ID;
@@ -855,15 +857,21 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
-App::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+App::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-App::setResource('queueForCacheSyncOut', function (Group $pools) {
-    return new Client('v1-sync-out', $pools->get('queue')->pop()->getResource());
-}, ['pools']);
-App::setResource('queueForCacheSyncIn', function (Group $pools) {
-    return new Client('v1-sync-in', $pools->get('queue')->pop()->getResource());
-}, ['pools']);
+App::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
+App::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
+App::setResource('queueForEdgeSyncOut', function (Connection $queue) {
+    return new Client('v1-sync-out', $queue);
+}, ['queue']);
+App::setResource('queueForEdgeSyncIn', function (Connection $queue) {
+    return new Client('v1-sync-in', $queue);
+}, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -1078,7 +1086,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
-App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) {
+App::setResource('cache', function (Group $pools, Client $queueForEdgeSyncOut) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -1091,16 +1099,16 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     }
     $cache  = new Cache(new Sharding($adapters));
 
-    $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForCacheSyncOut) {
-        $queueForCacheSyncOut
+    $cache->on(cache::EVENT_SAVE, function ($key) use ($queueForEdgeSyncOut) {
+        $queueForEdgeSyncOut
             ->enqueue([
                 'type' => 'cache',
                 'key' => $key
             ]);
     });
 
-    $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForCacheSyncOut) {
-        $queueForCacheSyncOut
+    $cache->on(cache::EVENT_PURGE, function ($key) use ($queueForEdgeSyncOut) {
+        $queueForEdgeSyncOut
             ->enqueue([
                 'type' => 'cache',
                 'key' => $key
@@ -1108,7 +1116,7 @@ App::setResource('cache', function (Group $pools, Client $queueForCacheSyncOut) 
     });
 
     return $cache;
-}, ['pools', 'queueForCacheSyncOut']);
+}, ['pools', 'queueForEdgeSyncOut']);
 
 App::setResource('deviceLocal', function () {
     return new Local();

@@ -12,7 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
 use Utopia\Database\Query;
-use Utopia\Domains\Domain;
+  use Utopia\Domains\Domain;
 use Utopia\Queue\Client;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -28,7 +28,7 @@ Server::setResource('execute', function () {
         Database $dbForConsole,
         Document $document,
         Domain $domain,
-        $queueForCacheSyncOut,
+        $queueForEdgeSyncOut,
         bool $skipRenewCheck = false,
     ) {
         /**
@@ -110,7 +110,7 @@ Server::setResource('execute', function () {
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
 
-            $queueForCacheSyncOut->enqueue([
+            $queueForEdgeSyncOut->enqueue([
                 'type' => 'certificate',
                 'key'  => [
                     'domain'   => $domain,
@@ -423,7 +423,7 @@ $server->job()
     ->inject('message')
     ->inject('dbForConsole')
     ->inject('execute')
-    ->action(function ($message, $dbForConsole, $execute, Client $queueForCacheSyncOut) use ($server) {
+    ->action(function ($message, $dbForConsole, $execute, Client $queueForEdgeSyncOut) use ($server) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -438,7 +438,7 @@ $server->job()
             dbForConsole: $dbForConsole,
             document: $document,
             domain: $domain,
-            queueForCacheSyncOut: $queueForCacheSyncOut,
+            queueForEdgeSyncOut: $queueForEdgeSyncOut,
             skipRenewCheck: $skipRenewCheck,
         );
     });

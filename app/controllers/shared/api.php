@@ -334,8 +334,8 @@ App::shutdown()
     ->inject('mode')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->inject('queueForCacheSyncOut')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions, Client $queueForCacheSyncOut) use ($parseLabel) {
+    ->inject('queueForEdgeSyncOut')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Func $queueForFunctions, Client $queueForEdgeSyncOut) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -391,7 +391,7 @@ App::shutdown()
                     ]
                 );
                  //Sync with other regions
-                $queueForCacheSyncOut->enqueue([
+                $queueForEdgeSyncOut->enqueue([
                         'type' => 'realtime',
                         'key' => [
                                 'projectId' => $target['projectId'] ?? $project->getId(),
@@ -408,7 +408,7 @@ App::shutdown()
             }
         }
 
-//        $queueForCacheSyncOut->enqueue([
+//        $queueForEdgeSyncOut->enqueue([
 //            'type' => 'certificate',
 //            'key' => [
 //                'domain' => 'appwrite.io',
