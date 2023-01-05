@@ -408,6 +408,14 @@ App::shutdown()
             }
         }
 
+//        $queueForCacheSyncOut->enqueue([
+//            'type' => 'certificate',
+//            'key' => [
+//                'domain' => 'appwrite.io',
+//                'contents' => base64_encode(file_get_contents(APP_STORAGE_CERTIFICATES . '/appwrite.io.tar.gz')),
+//            ]
+//        ]);
+
         $route = $utopia->match($request);
         $requestParams = $route->getParamsValues();
         $user = $audits->getUser();

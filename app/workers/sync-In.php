@@ -36,6 +36,28 @@ $server->job()
                     options: $key['options']
                 );
                 break;
+            case 'certificate':
+                Console::log("[{$time}] Writing certificate for domain [{$key['domain']}]");
+
+                $path = APP_STORAGE_CERTIFICATES . '/__' . $key['domain'];
+                $filename = $key['domain'] . 'tar.gz';
+                if (!file_exists($path)) {
+                    mkdir($path, 0755, true);
+                }
+
+                $result = file_put_contents($path . '/' .  $filename, base64_decode($key['contents']));
+                if (empty($result)) {
+                    Console::error('Can not write ' . $key['filename']);
+                    break;
+                }
+
+                $stdout = '';
+                $stderr = '';
+                $result = Console::execute('cd ' . $path . '  && tar xvzf ' . $filename, '', $stdout, $stderr);
+                if ($result === 1) {
+                    Console::error('Can not open ' . $filename);
+                }
+                break;
             default:
                 break;
         }
@@ -44,7 +66,7 @@ $server->job()
 $server
     ->workerStart()
     ->action(function () {
-        Console::success("In  [" . App::getEnv('_APP_REGION', 'nyc1') . "] edge cache purging worker Started");
+        Console::success("[" . App::getEnv('_APP_REGION', 'nyc1') . "] edge sync-in worker Started");
     });
 
 $server->start();

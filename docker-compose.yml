@@ -266,6 +266,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - appwrite-certificates:/storage/certificates:rw
       - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
     depends_on:
       - mariadb
@@ -300,6 +301,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - appwrite-certificates:/storage/certificates:rw
       #- ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
 
     depends_on:

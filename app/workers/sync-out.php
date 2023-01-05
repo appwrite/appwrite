@@ -34,24 +34,40 @@ const MAX_CURL_SEND_ATTEMPTS = 4;
 /**
  * @param string $url
  * @param string $token
- * @param array $payload
+ * @param array data
  * @return int
  */
-function call(string $url, string $token, array $payload): int
+function call(string $url, string $token, array $data): int
 {
 
+    $boundary  = uniqid();
+    $delimiter = '-------------' . $boundary;
+    $payload = '';
+    $eol = "\r\n";
+    foreach ($data as $keys) {
+        $payload .= "--" . $delimiter . $eol
+            . 'Content-Disposition: form-data; name="keys[]"' . $eol . $eol
+            . json_encode($keys) . $eol;
+    }
+    $payload .= "--" . $delimiter . "--" . $eol;
+    var_dump($payload);
+    $status = 404;
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Authorization: Bearer ' . $token,
-        'Content-Type: application/json'
+        'Content-type: multipart/form-data; boundary=' . $delimiter,
+        'Content-Length: ' . strlen($payload)
     ]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    curl_setopt($ch, CURLOPT_HEADER, false);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 
     for ($attempts = 0; $attempts < MAX_CURL_SEND_ATTEMPTS; $attempts++) {
-        $response = curl_exec($ch);
+        curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($status === 200) {
@@ -66,29 +82,30 @@ function call(string $url, string $token, array $payload): int
     return $status;
 }
 
+
 /**
  * @throws Authorization
  * @throws Structure
  * @throws Exception|\Exception
  */
-function handle($dbForConsole, $regions, $payload): void
+function handle($dbForConsole, $regions, $data): void
 {
 
     $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 600, 10);
     $token = $jwt->encode([]);
 
     foreach ($regions as $code => $region) {
+        var_dump($region);
         $time = DateTime::now();
-        $status = call($region['domain'] . '/v1/edge/sync', $token, ['keys' => $payload]);
+        $status = call($region['domain'] . '/v1/edge/sync', $token, $data);
         if ($status !== Response::STATUS_CODE_OK) {
             Console::error("[{$time}] Request to {$code} has failed");
-
-            foreach ($payload as $sync) {
+            foreach ($data as $keys) {
                 $dbForConsole->createDocument('syncs', new Document([
                     'region' => App::getEnv('_APP_REGION'),
                     'target' => $code,
-                    'type' => $sync['type'],
-                    'key'  => ['key' => $sync['key']],
+                    'type' => $keys['type'],
+                    'key'  => ['key' => $keys['key']],
                     'status' => $status,
                 ]));
             }
@@ -160,7 +177,7 @@ $server
             Console::log("[{$time}] Sending " . count($chunk) . " remains " . count($stack['keys']));
             handle($dbForConsole, $stack['regions'], $chunk);
         });
-        Console::success("Out  [" . App::getEnv('_APP_REGION') . "] edge cache purging worker Started");
+        Console::success("[" . App::getEnv('_APP_REGION') . "] edge sync-out worker Started");
     });
 
   $server->start();
