@@ -41,7 +41,6 @@ use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Queue\Client;
-use Utopia\Queue\Server;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\ID;
@@ -860,6 +859,9 @@ App::setResource('messaging', fn() => new Phone());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('queueForDeletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);

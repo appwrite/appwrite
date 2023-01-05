@@ -392,6 +392,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
+      - _APP_REGION
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -505,6 +506,7 @@ services:
       - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_REGION
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -637,9 +639,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE

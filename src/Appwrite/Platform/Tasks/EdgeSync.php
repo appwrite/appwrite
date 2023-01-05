@@ -83,7 +83,7 @@ class EdgeSync extends Action
                             ]);
                     }
                 }
-                if (!$found) {
+              if (!$found) {
                     Console::info("[{$time}] No  keys where found for  region {$code}.");
                 }
             }
