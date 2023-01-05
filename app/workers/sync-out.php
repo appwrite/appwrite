@@ -50,7 +50,7 @@ function call(string $url, string $token, array $data): int
             . json_encode($keys) . $eol;
     }
     $payload .= "--" . $delimiter . "--" . $eol;
-    var_dump($payload);
+
     $status = 404;
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -95,7 +95,6 @@ function handle($dbForConsole, $regions, $data): void
     $token = $jwt->encode([]);
 
     foreach ($regions as $code => $region) {
-        var_dump($region);
         $time = DateTime::now();
         $status = call($region['domain'] . '/v1/edge/sync', $token, $data);
         if ($status !== Response::STATUS_CODE_OK) {

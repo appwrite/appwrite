@@ -46,14 +46,14 @@ class EdgeSync extends Action
             Console::success("[{$time}] New task every {$interval} seconds");
 
             foreach ($regions as $code => $region) {
-                $count = 0;
                 $chunk = 0;
                 $limit = 500;
                 $sum   = $limit;
                 $keys  = [];
+                $found = false;
                 while ($sum === $limit) {
                     $chunk++;
-
+                    $count = 0;
                     $results = $dbForConsole->find('syncs', [
                         Query::equal('region', [App::getEnv('_APP_REGION')]),
                         Query::equal('target', [$code]),
@@ -62,6 +62,7 @@ class EdgeSync extends Action
 
                     $sum = count($results);
                     if ($sum > 0) {
+                        $found = true;
                         foreach ($results as $document) {
                             $key = $document->getAttribute('key');
                             $keys[] = [
@@ -72,17 +73,18 @@ class EdgeSync extends Action
                             $count++;
                         }
                     }
-                }
 
-                if (!empty($keys)) {
-                    Console::info("[{$time}] Enqueueing  keys chunk {$count} to region {$code}");
-                    $queueForEdgeSyncOut
-                        ->enqueue([
-                            'region' => $code,
-                            'keys' => $keys
-                        ]);
-                } else {
-                        Console::info("[{$time}] No  keys where found for  region {$code}.");
+                    if (!empty($keys)) {
+                        Console::info("[{$time}] Enqueueing  chunk {$chunk}, {$count} keys to region {$code}");
+                        $queueForEdgeSyncOut
+                            ->enqueue([
+                                'region' => $code,
+                                'keys' => $keys
+                            ]);
+                    }
+                }
+                if (!$found) {
+                    Console::info("[{$time}] No  keys where found for  region {$code}.");
                 }
             }
         }, $interval);
