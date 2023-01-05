@@ -1,8 +1,6 @@
 <?php
-
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
@@ -23,80 +21,81 @@ class Maintenance extends Action
     public function __construct()
     {
         $this
-            ->desc('Schedules maintenance tasks and publishes them to resque')
+            ->desc('Schedules maintenance tasks and publishes them to queues')
             ->inject('dbForConsole')
-            ->callback(fn (Database $dbForConsole) => $this->action($dbForConsole));
+            ->inject('queueForCertificates')
+            ->inject('queueForDeletes')
+            ->callback(fn (Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForConsole, $queueForCertificates, $queueForDeletes));
     }
 
-    public function action(Database $dbForConsole): void
+    public function action(Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        function notifyDeleteExecutionLogs(int $interval)
+        function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes)
         {
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_EXECUTIONS)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteAbuseLogs(int $interval)
+        function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes)
         {
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_ABUSE)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteAuditLogs(int $interval)
+        function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes)
         {
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_AUDIT)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $usageStatsRetentionHourly)
+        function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes)
         {
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_USAGE)
                 ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                 ->trigger();
         }
 
-        function notifyDeleteConnections()
+        function notifyDeleteConnections(Delete $queueForDeletes)
         {
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_REALTIME)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
                 ->trigger();
         }
 
-        function notifyDeleteExpiredSessions()
+        function notifyDeleteExpiredSessions(Delete $queueForDeletes)
         {
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_SESSIONS)
                 ->trigger();
         }
 
-        function renewCertificates($dbForConsole)
+        function renewCertificates(Database $dbForConsole, Certificate $queueForCertificate)
         {
             $time = DateTime::now();
 
             $certificates = $dbForConsole->find('certificates', [
-               Query::lessThan('attempts', 5), // Maximum 5 attempts
-               Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
-               Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+                Query::lessThan('attempts', 5), // Maximum 5 attempts
+                Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+                Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
             ]);
 
 
             if (\count($certificates) > 0) {
                 Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
 
-                $event = new Certificate();
                 foreach ($certificates as $certificate) {
-                    $event
+                    $queueForCertificate
                         ->setDomain(new Document([
                             'domain' => $certificate->getAttribute('domain')
                         ]))
@@ -107,19 +106,19 @@ class Maintenance extends Action
             }
         }
 
-        function notifyDeleteCache($interval)
+        function notifyDeleteCache($interval, Delete $queueForDeletes)
         {
 
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
         }
 
-        function notifyDeleteSchedules($interval)
+        function notifyDeleteSchedules($interval, Delete $queueForDeletes)
         {
 
-            (new Delete())
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_SCHEDULES)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -131,23 +130,22 @@ class Maintenance extends Action
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
         $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
-
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole) {
+        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
-            notifyDeleteExecutionLogs($executionLogsRetention);
-            notifyDeleteAbuseLogs($abuseLogsRetention);
-            notifyDeleteAuditLogs($auditLogRetention);
-            notifyDeleteUsageStats($usageStatsRetentionHourly);
-            notifyDeleteConnections();
-            notifyDeleteExpiredSessions();
-            renewCertificates($dbForConsole);
-            notifyDeleteCache($cacheRetention);
-            notifyDeleteSchedules($schedulesDeletionRetention);
+            notifyDeleteExecutionLogs($executionLogsRetention, $queueForDeletes);
+            notifyDeleteAbuseLogs($abuseLogsRetention, $queueForDeletes);
+            notifyDeleteAuditLogs($auditLogRetention, $queueForDeletes);
+            notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+            notifyDeleteConnections($queueForDeletes);
+            notifyDeleteExpiredSessions($queueForDeletes);
+            renewCertificates($dbForConsole, $queueForCertificates);
+            notifyDeleteCache($cacheRetention, $queueForDeletes);
+            notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval);
     }
 }
