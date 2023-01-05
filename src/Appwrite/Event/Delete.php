@@ -17,7 +17,7 @@ class Delete extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, $connection);
+        parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
     }
 
     /**
@@ -123,8 +123,6 @@ class Delete extends Event
     public function trigger(): string|bool
     {
         $client = new Client($this->queue, $this->connection);
-
-        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
 
         return $client->enqueue([
             'project' => $this->project,

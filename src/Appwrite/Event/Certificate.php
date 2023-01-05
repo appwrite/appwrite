@@ -13,7 +13,7 @@ class Certificate extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+        parent::__construct(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME);
     }
 
     /**
@@ -71,6 +71,7 @@ class Certificate extends Event
     public function trigger(): string|bool
     {
         $client = new Client($this->queue, $this->connection);
+
         return $client->enqueue([
             'project' => $this->project,
             'domain' => $this->domain,

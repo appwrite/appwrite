@@ -3,6 +3,8 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Certificate;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
@@ -144,9 +146,14 @@ CLI::setResource('influxdb', function (Registry $register) {
     return $database;
 }, ['register']);
 
+
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+
+CLI::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
 
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
