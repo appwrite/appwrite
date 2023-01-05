@@ -148,6 +148,10 @@ CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
 
+CLI::setResource('queueForDeletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
