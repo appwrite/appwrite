@@ -19,6 +19,9 @@ class Maintenance extends Action
         return 'maintenance';
     }
 
+    /**
+     * @throws \Exception
+     */
     public function __construct()
     {
         $this
@@ -37,7 +40,7 @@ class Maintenance extends Action
         Console::title('Maintenance V1');
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
-        function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes)
+        function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes): void
         {
             $queueForDeletes
                 ->setType(DELETE_TYPE_EXECUTIONS)
@@ -45,7 +48,7 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes)
+        function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes): void
         {
             $queueForDeletes
                 ->setType(DELETE_TYPE_ABUSE)
@@ -53,7 +56,7 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes)
+        function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes): void
         {
             $queueForDeletes
                 ->setType(DELETE_TYPE_AUDIT)
@@ -61,7 +64,7 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes)
+        function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
         {
             $queueForDeletes
                 ->setType(DELETE_TYPE_USAGE)
@@ -69,7 +72,7 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteConnections(Delete $queueForDeletes)
+        function notifyDeleteConnections(Delete $queueForDeletes): void
         {
             $queueForDeletes
                 ->setType(DELETE_TYPE_REALTIME)
@@ -77,14 +80,14 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteExpiredSessions(Delete $queueForDeletes)
+        function notifyDeleteExpiredSessions(Delete $queueForDeletes): void
         {
             $queueForDeletes
                 ->setType(DELETE_TYPE_SESSIONS)
                 ->trigger();
         }
 
-        function renewCertificates(Database $dbForConsole, Certificate $queueForCertificate)
+        function renewCertificates(Database $dbForConsole, Certificate $queueForCertificate): void
         {
             $time = DateTime::now();
 
@@ -110,7 +113,7 @@ class Maintenance extends Action
             }
         }
 
-        function notifyDeleteCache($interval, Delete $queueForDeletes)
+        function notifyDeleteCache($interval, Delete $queueForDeletes): void
         {
 
             $queueForDeletes
@@ -119,7 +122,7 @@ class Maintenance extends Action
                 ->trigger();
         }
 
-        function notifyDeleteSchedules($interval, Delete $queueForDeletes)
+        function notifyDeleteSchedules($interval, Delete $queueForDeletes): void
         {
 
             $queueForDeletes
