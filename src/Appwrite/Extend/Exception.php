@@ -182,6 +182,9 @@ class Exception extends \Exception
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
+    /** Timeout */
+    public const TIMEOUT_ROUTE_BLOCKED              = 'timeout_route_blocked';
+
     protected $type = '';
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)

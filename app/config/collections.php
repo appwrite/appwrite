@@ -3548,6 +3548,47 @@ $collections = [
             ],
         ],
     ],
+    'timeouts' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'timeouts',
+        'name' => 'timeouts',
+        'attributes' => [
+            [
+                '$id' => 'isBlocked',
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('json'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => false,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
+                '$id' => ID::custom('uri'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [],
+    ],
 ];
 
 return $collections;

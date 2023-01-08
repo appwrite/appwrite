@@ -1,9 +1,13 @@
 <?php
 
+use Appwrite\Utopia\Request;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\DatetimeValidator;
@@ -1980,8 +1984,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
-
+    ->inject('request')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Request $request) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
@@ -2010,6 +2014,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
+        $json = [
+            'queries' => $queries,
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId
+        ];
+
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
@@ -2034,12 +2044,50 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        if ($documentSecurity && !$valid) {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
-        } else {
-            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
-            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+        $key = md5(json_encode([$request->getURI(), $queries]));
+        /* @var $document Document */
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+
+        if ($document->getAttribute('isBlocked') === true) {
+            throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+        }
+        $timeoutMilliseconds = 1001;
+
+        var_dump("key = " . $key);
+        var_dump($document);
+
+        try {
+            if ($documentSecurity && !$valid) {
+                $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds);
+                $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+            } else {
+                $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds));
+                $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+            }
+
+            throw new Timeout('Timeout');// Force Exception.....
+        } catch (Timeout $e) {
+            var_dump("Catching the timeout");
+            $timeLimit = new TimeLimit($key, 1, (60 * 5), $dbForProject);
+            $abuse = new Abuse($timeLimit);
+            var_dump($abuse->check());// force increment to reach abuse limit
+            if ($abuse->check() === true) {
+                if ($document->isEmpty()) {
+                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
+                        '$id' => $key,
+                        'isBlocked' => true,
+                        'json' => $json,
+                        'uri' => $request->getURI(),
+                    ])));
+
+                } else {
+                    // Do we have updates? or does console delete the row completely?
+                    $document->setAttribute('isBlocked', false);
+                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+                }
+
+                throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+            }
         }
 
         /**
@@ -2077,7 +2125,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode) {
+    ->inject('project')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode, Document $project) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
