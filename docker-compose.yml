@@ -625,10 +625,8 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_CONNECTIONS_MAX
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_POOL_CLIENTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -642,6 +640,10 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_QUEUE
+      - _APP_CONNECTIONS_CACHE
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -736,6 +738,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_CONNECTIONS_MAX
       - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
@@ -750,6 +753,7 @@ services:
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
 
   openruntimes-executor:

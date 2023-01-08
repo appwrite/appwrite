@@ -37,8 +37,7 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -70,7 +69,8 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', []);
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) {
+                /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -123,7 +123,8 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 }, ['pools', 'dbForConsole', 'cache']);
 
 CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
+    $client = $register->get('influxdb');
+    /** @var InfluxDB\Client $client */
     $attempts = 0;
     $max = 10;
     $sleep = 1;
@@ -145,7 +146,6 @@ CLI::setResource('influxdb', function (Registry $register) {
     } while ($attempts < $max);
     return $database;
 }, ['register']);
-
 
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();

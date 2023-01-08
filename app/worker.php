@@ -33,8 +33,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     $database = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('console');
@@ -71,8 +70,7 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -163,3 +161,111 @@ $server
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
     });
+
+/**
+ * Get Console DB
+ *
+ * @returns Cache
+ */
+function getCache(): Cache
+{
+    global $register;
+
+    $pools = $register->get('pools');
+    /** @var \Utopia\Pools\Group $pools */
+
+    $list = Config::getParam('pools-cache', []);
+    $adapters = [];
+
+    foreach ($list as $value) {
+        $adapters[] = $pools
+            ->get($value)
+            ->pop()
+            ->getResource();
+    }
+
+    return new Cache(new Sharding($adapters));
+}
+
+/**
+ * Get Console DB
+ *
+ * @returns Database
+ */
+function getConsoleDB(): Database
+{
+    global $register;
+
+    /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools');
+
+    $dbAdapter = $pools
+        ->get('console')
+        ->pop()
+        ->getResource();
+
+    $database = new Database($dbAdapter, getCache());
+
+    $database->setNamespace('console');
+
+    return $database;
+}
+
+/**
+ * Get Project DB
+ *
+ * @param Document $project
+ * @returns Database
+ */
+function getProjectDB(Document $project): Database
+{
+    global $register;
+
+    /** @var \Utopia\Pools\Group $pools */
+    $pools = $register->get('pools');
+
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return getConsoleDB();
+    }
+
+    $dbAdapter = $pools
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource();
+
+    $database = new Database($dbAdapter, getCache());
+    $database->setNamespace('_' . $project->getInternalId());
+
+    return $database;
+}
+
+
+/**
+ * Get Functions Storage Device
+ * @param string $projectId of the project
+ * @return Device
+ */
+function getFunctionsDevice($projectId): Device
+{
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+}
+
+/**
+ * Get Files Storage Device
+ * @param string $projectId of the project
+ * @return Device
+ */
+function getFilesDevice($projectId): Device
+{
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+}
+
+/**
+ * Get Builds Storage Device
+ * @param string $projectId of the project
+ * @return Device
+ */
+function getBuildsDevice($projectId): Device
+{
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+}
