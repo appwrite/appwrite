@@ -300,9 +300,9 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
+    ->inject('queueForDeletes')
     ->inject('events')
-    ->action(function (string $bucketId, Response $response, Database $dbForProject, Delete $deletes, Event $events) {
+    ->action(function (string $bucketId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $events) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -313,7 +313,7 @@ App::delete('/v1/storage/buckets/:bucketId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove bucket from DB');
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($bucket);
 
@@ -359,8 +359,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->inject('deletes')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal, Delete $queueForDeletes) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -642,7 +642,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->setContext('bucket', $bucket)
         ;
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
             ->setResource('file/' . $file->getId())
         ;
@@ -1364,8 +1364,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('events')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->inject('deletes')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Delete $queueForDeletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -1402,7 +1402,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($deviceDeleted) {
-            $deletes
+            $queueForDeletes
                 ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
                 ->setResource('file/' . $fileId)
             ;

@@ -29,6 +29,9 @@ class Maintenance extends Action
             ->callback(fn (Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes) => $this->action($dbForConsole, $queueForCertificates, $queueForDeletes));
     }
 
+    /**
+     * @throws \Exception
+     */
     public function action(Database $dbForConsole, Certificate $queueForCertificates, Delete $queueForDeletes): void
     {
         Console::title('Maintenance V1');
@@ -36,7 +39,7 @@ class Maintenance extends Action
 
         function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes)
         {
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_EXECUTIONS)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -44,7 +47,7 @@ class Maintenance extends Action
 
         function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes)
         {
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_ABUSE)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -52,7 +55,7 @@ class Maintenance extends Action
 
         function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes)
         {
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_AUDIT)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -60,7 +63,7 @@ class Maintenance extends Action
 
         function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes)
         {
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_USAGE)
                 ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
                 ->trigger();
@@ -68,7 +71,7 @@ class Maintenance extends Action
 
         function notifyDeleteConnections(Delete $queueForDeletes)
         {
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_REALTIME)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
                 ->trigger();
@@ -76,7 +79,7 @@ class Maintenance extends Action
 
         function notifyDeleteExpiredSessions(Delete $queueForDeletes)
         {
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_SESSIONS)
                 ->trigger();
         }
@@ -110,7 +113,7 @@ class Maintenance extends Action
         function notifyDeleteCache($interval, Delete $queueForDeletes)
         {
 
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -119,7 +122,7 @@ class Maintenance extends Action
         function notifyDeleteSchedules($interval, Delete $queueForDeletes)
         {
 
-            ($queueForDeletes)
+            $queueForDeletes
                 ->setType(DELETE_TYPE_SCHEDULES)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
@@ -131,7 +134,6 @@ class Maintenance extends Action
         $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
         $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
         $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
-
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 

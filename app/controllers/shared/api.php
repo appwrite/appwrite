@@ -102,11 +102,11 @@ App::init()
     ->inject('audits')
     ->inject('mails')
     ->inject('usage')
-    ->inject('deletes')
+    ->inject('queueForDeletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $queueForDeletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -200,7 +200,7 @@ App::init()
             ->setParam('project.{scope}.network.inbound', 0)
             ->setParam('project.{scope}.network.outbound', 0);
 
-        $deletes->setProject($project);
+        $queueForDeletes->setProject($project);
         $database->setProject($project);
 
         $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
@@ -329,7 +329,7 @@ App::shutdown()
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
-    ->inject('deletes')
+    ->inject('queueForDeletes')
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')

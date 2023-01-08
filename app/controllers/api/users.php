@@ -1070,8 +1070,8 @@ App::delete('/v1/users/:userId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $queueForDeletes) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1084,7 +1084,7 @@ App::delete('/v1/users/:userId')
 
         $dbForProject->deleteDocument('users', $userId);
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($clone);
 

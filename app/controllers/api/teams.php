@@ -246,8 +246,8 @@ App::delete('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $queueForDeletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -271,7 +271,7 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($team);
 

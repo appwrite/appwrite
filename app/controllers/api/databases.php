@@ -442,8 +442,8 @@ App::delete('/v1/databases/:databaseId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $databaseId, Response $response, Database $dbForProject, Event $events, Delete $queueForDeletes) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -457,7 +457,7 @@ App::delete('/v1/databases/:databaseId')
 
         $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($database)
         ;
@@ -814,8 +814,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $queueForDeletes) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -835,7 +835,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($collection)
         ;
@@ -2380,9 +2380,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('deletes')
+    ->inject('queueForDeletes')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, Event $events, Delete $queueForDeletes, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2430,7 +2430,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $document->setAttribute('$collectionId', $collectionId);
         $document->setAttribute('$databaseId', $databaseId);
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_AUDIT)
             ->setDocument($document)
         ;

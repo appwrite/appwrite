@@ -483,8 +483,8 @@ App::delete('/v1/projects/:projectId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $queueForDeletes) {
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -496,7 +496,7 @@ App::delete('/v1/projects/:projectId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project)
         ;
@@ -1314,7 +1314,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
+    ->inject('queueForCertificates')
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Certificate $queueForCertificates) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1352,8 +1353,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
-        $event = new Certificate();
-        $event
+        $queueForCertificates
             ->setDomain($domain)
             ->trigger();
 
@@ -1373,8 +1373,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $queueForDeletes) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1395,7 +1395,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_CERTIFICATES)
             ->setDocument($domain);
 

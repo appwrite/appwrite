@@ -621,11 +621,14 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
+      - mariadb
       - redis
     environment:
       - _APP_ENV
-      - _APP_WORKER_PER_CORE
       - _APP_CONNECTIONS_MAX
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_POOL_CLIENTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -639,10 +642,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -661,11 +660,16 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/cli:/usr/src/code/vendor/utopia-php/cli
     depends_on:
       - mariadb
       - redis
     environment:
+      - _APP_CONNECTIONS_MAX
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
+      - _APP_POOL_CLIENTS
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -676,15 +680,8 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_CONNECTIONS_MAX
-      - _APP_POOL_CLIENTS
       - _APP_SYNC_EDGE_INTERVAL
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
-      - _APP_WORKER_PER_CORE
 
   appwrite-usage:
     entrypoint: usage
@@ -739,7 +736,6 @@ services:
       - redis
     environment:
       - _APP_ENV
-      - _APP_WORKER_PER_CORE
       - _APP_CONNECTIONS_MAX
       - _APP_POOL_CLIENTS
       - _APP_REDIS_HOST
@@ -754,7 +750,6 @@ services:
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
 
   openruntimes-executor:
