@@ -457,13 +457,11 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-        }
-
-        $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
-        $url = Template::unParseURL($url);
-
-        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
+            $url = Template::parseURL($url);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+            $url = Template::unParseURL($url);
+    
+            // No need of confirmation when in admin or app mode
             if (!empty($email)) {
                 $mails
                     ->setType(MAIL_TYPE_INVITATION)
