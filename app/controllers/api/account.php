@@ -44,7 +44,7 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-App::post('/v1/account')
+App::post('/v1/account/code/:code')
     ->desc('Create Account')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
@@ -89,6 +89,99 @@ App::post('/v1/account')
                 if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
                     throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
                 }
+            }
+        }
+
+        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+        if ($limit !== 0) {
+            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+            if ($total >= $limit) {
+                throw new Exception(Exception::USER_COUNT_EXCEEDED);
+            }
+        }
+
+        try {
+            $userId = $userId == 'unique()' ? ID::unique() : $userId;
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                '$id' => $userId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'email' => $email,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                'passwordUpdate' => DateTime::now(),
+                'registration' => DateTime::now(),
+                'reset' => false,
+                'name' => $name,
+                'prefs' => new \stdClass(),
+                'sessions' => null,
+                'tokens' => null,
+                'memberships' => null,
+                'search' => implode(' ', [$userId, $email, $name])
+            ])));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::USER_ALREADY_EXISTS);
+        }
+
+        Authorization::unsetRole(Role::guests()->toString());
+        Authorization::setRole(Role::user($user->getId())->toString());
+        Authorization::setRole(Role::users()->toString());
+
+        $events->setParam('userId', $user->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($user, Response::MODEL_ACCOUNT);
+    });
+    
+App::post('/v1/account')
+    ->desc('Create Account')
+    ->groups(['api', 'account', 'auth'])
+    ->label('event', 'users.[userId].create')
+    ->label('scope', 'public')
+    ->label('auth.type', 'emailPassword')
+    ->label('audits.event', 'user.create')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/account/create.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('abuse-limit', 10)
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
+
+        $email = \strtolower($email);
+        if ('console' === $project->getId()) {
+            $whitelistEmails = $project->getAttribute('authWhitelistEmails');
+            $whitelistIPs = $project->getAttribute('authWhitelistIPs');
+
+            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
+                throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
+            }
+
+            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
+                throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
             }
         }
 
