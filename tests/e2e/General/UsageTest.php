@@ -21,7 +21,7 @@ class UsageTest extends Scope
 
     protected string $projectId;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
     }
@@ -791,7 +791,7 @@ class UsageTest extends Scope
         $this->validateDates($response['executionsFailure']);
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->usersCount = 0;
         $this->requestsCount = 0;
