@@ -66,24 +66,29 @@ App::post('/v1/account')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
+    ->param('code', '', new Text(64), 'An invite code to restrict users ', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $name, string $code, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
 
         $email = \strtolower($email);
+
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
+            $whitelistCodes = (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null)) : [];
 
-            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
-                throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
-            }
-
-            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
-                throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
+            if (!empty($whitelistCodes) && !\in_array($code, $whitelistCodes)) {
+                if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
+                    throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
+                }
+    
+                if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
+                    throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
+                }
             }
         }
 

@@ -88,6 +88,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_CONSOLE_WHITELIST_CODES',
+                'description' => 'This option allows you to control the creation of new users on the Appwrite console. This option is useful when you want to give access to a group of users without sharing their email addresses. To enable it, pass a list of allowed invitation codes separated by a comma.',
+                'introduction' => '1.3.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             // [
             //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
             //     'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
