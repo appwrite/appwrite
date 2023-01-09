@@ -33,7 +33,7 @@ App::post('/v1/edge/sync')
     ->desc('Purge cache keys')
     ->groups(['edge'])
     ->label('scope', 'public')
-    ->param('keys', '', new ArrayList(new Text(4056), 600), 'Cache keys. an array containing alphanumerical cache keys')
+    ->param('keys', '', new ArrayList(new Text(9012), 600), 'Cache keys. an array containing alphanumerical cache keys')
     ->inject('request')
     ->inject('response')
     ->inject('queueForEdgeSyncIn')
@@ -42,7 +42,7 @@ App::post('/v1/edge/sync')
         if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
-
+        var_dump($keys);
         foreach ($keys as $parts) {
             $key = json_decode($parts);
             $queueForEdgeSyncIn

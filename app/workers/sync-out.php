@@ -44,6 +44,7 @@ function call(string $url, string $token, array $data): int
     $delimiter = '-------------' . $boundary;
     $payload = '';
     $eol = "\r\n";
+    var_dump($data);
     foreach ($data as $keys) {
         $payload .= "--" . $delimiter . $eol
             . 'Content-Disposition: form-data; name="keys[]"' . $eol . $eol
