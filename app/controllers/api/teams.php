@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -39,6 +40,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
+use Appwrite\Event\Phone as EventPhone;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -304,7 +306,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('email', '', new Email(), 'Email of the new team member.')
+    ->param('userId', '', new UID(), 'User ID.', true)
+    ->param('email', '', new Email(), 'Email of the new team member.', true)
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
@@ -314,9 +318,13 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('mails')
+    ->inject('messaging')
     ->inject('events')
-    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, Event $events) {
+    ->action(function (string $teamId, string $userId, string $email, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
 
+        if(empty($userId) && empty($email) && empty($phone)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
+        }
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
@@ -332,7 +340,28 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
+        if(!empty($userId)) {
+            $invitee = $dbForProject->getDocument('users', $userId);
+            if($invitee->isEmpty()) {
+                throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
+            }
+            if(!empty($email) && $invitee->getAttribute('email', '') != $email) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
+            }
+            if(!empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
+            }
+        } else if(!empty($email)) {
+            $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
+            if(!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
+            }
+        }else if(!empty($phone)) {
+            $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
+            if(!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') != $email) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
+            }
+        }
 
         if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -356,6 +385,7 @@ App::post('/v1/teams/:teamId/memberships')
                         Permission::delete(Role::user($userId)),
                     ],
                     'email' => $email,
+                    'phone' => $phone,
                     'emailVerification' => false,
                     'status' => true,
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
@@ -434,16 +464,25 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
-            $mails
-                ->setType(MAIL_TYPE_INVITATION)
-                ->setRecipient($email)
-                ->setUrl($url)
-                ->setName($name)
-                ->setLocale($locale->default)
-                ->setTeam($team)
-                ->setUser($user)
-                ->trigger()
-            ;
+            if(!empty($email)) {
+                $mails
+                    ->setType(MAIL_TYPE_INVITATION)
+                    ->setRecipient($email)
+                    ->setUrl($url)
+                    ->setName($name)
+                    ->setLocale($locale->default)
+                    ->setTeam($team)
+                    ->setUser($user)
+                    ->trigger()
+                ;
+            }
+
+            if(@empty($phone)) {
+                $messaging
+                    ->setRecipient($phone)
+                    ->setMessage($url)
+                    ->trigger();
+            }
         }
 
         $events
