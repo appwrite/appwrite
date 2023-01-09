@@ -475,9 +475,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setUser($user)
                     ->trigger()
                 ;
-            }
-
-            if (!empty($phone)) {
+            } else if (!empty($phone)) {
                 $messaging
                     ->setRecipient($phone)
                     ->setMessage($url)
