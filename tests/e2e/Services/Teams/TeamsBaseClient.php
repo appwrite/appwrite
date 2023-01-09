@@ -278,7 +278,7 @@ trait TeamsBaseClient
         $this->assertEquals($secondEmail, $lastEmail['to'][0]['address']);
         $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
         $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
-        
+
         /**
          * Test for FAILURE
          */
