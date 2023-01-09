@@ -354,14 +354,11 @@ App::post('/v1/teams/:teamId/memberships')
             $phone = $invitee->getAttribute('phone', '');
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
-            var_dump("email not empty");
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            var_dump($invitee);
             if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
-            var_dump("phone not empty");
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
             if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') != $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
@@ -412,7 +409,6 @@ App::post('/v1/teams/:teamId/memberships')
                     'search' => implode(' ', [$userId, $email, $name])
                 ])));
             } catch (Duplicate $th) {
-                var_dump($th->getMessage());
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
