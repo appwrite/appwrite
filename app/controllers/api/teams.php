@@ -322,7 +322,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('events')
     ->action(function (string $teamId, string $userId, string $email, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
 
-        if(empty($userId) && empty($email) && empty($phone)) {
+        if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
         }
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -340,25 +340,25 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        if(!empty($userId)) {
+        if (!empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
-            if($invitee->isEmpty()) {
+            if ($invitee->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
             }
-            if(!empty($email) && $invitee->getAttribute('email', '') != $email) {
+            if (!empty($email) && $invitee->getAttribute('email', '') != $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
             }
-            if(!empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+            if (!empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
             }
-        } else if(!empty($email)) {
+        } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if(!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+            if (!$invitee->isEmpty() && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
-        }else if(!empty($phone)) {
+        } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if(!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') != $email) {
+            if (!$invitee->isEmpty() && !empty($email) && $invitee->getAttribute('email', '') != $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
@@ -464,7 +464,7 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
-            if(!empty($email)) {
+            if (!empty($email)) {
                 $mails
                     ->setType(MAIL_TYPE_INVITATION)
                     ->setRecipient($email)
@@ -477,7 +477,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ;
             }
 
-            if(@empty($phone)) {
+            if (@empty($phone)) {
                 $messaging
                     ->setRecipient($phone)
                     ->setMessage($url)
