@@ -306,8 +306,8 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('userId', '', new UID(), 'User ID.', true)
     ->param('email', '', new Email(), 'Email of the new team member.', true)
+    ->param('userId', '', new UID(), 'User ID.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
@@ -477,7 +477,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ;
             }
 
-            if (@empty($phone)) {
+            if (!empty($phone)) {
                 $messaging
                     ->setRecipient($phone)
                     ->setMessage($url)
