@@ -320,7 +320,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('mails')
     ->inject('messaging')
     ->inject('events')
-    ->action(function (string $teamId, string $userId, string $email, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
 
         if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
