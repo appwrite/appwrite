@@ -128,6 +128,7 @@ Server::setResource('execute', function () {
 
             // Save all changes we made to certificate document into database
             saveCertificateDocument($domain->get(), $certificate, $dbForConsole);
+
             $filename = APP_STORAGE_CERTIFICATES . '/' . $domain . '.tar.gz';
             if (file_exists($filename)) {
                 $queueForEdgeSyncOut->enqueue([

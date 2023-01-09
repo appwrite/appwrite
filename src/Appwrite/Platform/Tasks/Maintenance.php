@@ -42,7 +42,7 @@ class Maintenance extends Action
 
         function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes): void
         {
-            $queueForDeletes
+            ($queueForDeletes)
                 ->setType(DELETE_TYPE_EXECUTIONS)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
                 ->trigger();
