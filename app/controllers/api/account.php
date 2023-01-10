@@ -85,7 +85,7 @@ App::post('/v1/account/code/:code')
                 if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
                     throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
                 }
-    
+
                 if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
                     throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
                 }
@@ -141,7 +141,7 @@ App::post('/v1/account/code/:code')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_ACCOUNT);
     });
-    
+
 App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account', 'auth'])
