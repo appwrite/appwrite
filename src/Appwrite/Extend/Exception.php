@@ -60,6 +60,7 @@ class Exception extends \Exception
     public const USER_PASSWORD_RESET_REQUIRED      = 'user_password_reset_required';
     public const USER_EMAIL_NOT_WHITELISTED        = 'user_email_not_whitelisted';
     public const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
+    public const USER_CODE_INVALID                 = 'user_code_invalid';
     public const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';

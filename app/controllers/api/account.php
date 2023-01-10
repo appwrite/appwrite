@@ -44,8 +44,8 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-App::post('/v1/account/code/:code')
-    ->desc('Create Account')
+App::post('/v1/account/invite')
+    ->desc('Create Account using an invite code')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'public')
@@ -56,7 +56,7 @@ App::post('/v1/account/code/:code')
     ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'create')
+    ->label('sdk.method', 'createWithInviteCode')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -77,18 +77,10 @@ App::post('/v1/account/code/:code')
         $email = \strtolower($email);
 
         if ('console' === $project->getId()) {
-            $whitelistEmails = $project->getAttribute('authWhitelistEmails');
-            $whitelistIPs = $project->getAttribute('authWhitelistIPs');
             $whitelistCodes = (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null)) : [];
 
             if (!empty($whitelistCodes) && !\in_array($code, $whitelistCodes)) {
-                if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
-                    throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
-                }
-
-                if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
-                    throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
-                }
+               throw new Exception(Exception::USER_CODE_INVALID);
             }
         }
 
