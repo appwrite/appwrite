@@ -44,6 +44,7 @@ function call(string $url, string $token, array $data): int
     $delimiter = '-------------' . $boundary;
     $payload = '';
     $eol = "\r\n";
+    console::warning('Sending ' . count($data) . 'to ' . $url);
     var_dump($data);
     foreach ($data as $keys) {
         $payload .= "--" . $delimiter . $eol
@@ -53,6 +54,7 @@ function call(string $url, string $token, array $data): int
     $payload .= "--" . $delimiter . "--" . $eol;
 
     $status = 404;
+
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Authorization: Bearer ' . $token,
