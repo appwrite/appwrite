@@ -54,7 +54,8 @@ App::post('/v1/account/invite')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.create')
-    ->label('sdk.auth', [])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.hide', true)
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createWithInviteCode')
     ->label('sdk.description', '/docs/references/account/create.md')
@@ -74,14 +75,16 @@ App::post('/v1/account/invite')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, string $code, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
 
+        if ($project->getId() !== 'console') {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+        }
+
         $email = \strtolower($email);
 
-        if ('console' === $project->getId()) {
-            $whitelistCodes = (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null)) : [];
+        $whitelistCodes = (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null)) : [];
 
-            if (!empty($whitelistCodes) && !\in_array($code, $whitelistCodes)) {
-                throw new Exception(Exception::USER_CODE_INVALID);
-            }
+        if (!empty($whitelistCodes) && !\in_array($code, $whitelistCodes)) {
+            throw new Exception(Exception::USER_CODE_INVALID);
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
