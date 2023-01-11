@@ -58,6 +58,7 @@ function call(string $url, string $token, array $data): int
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Authorization: Bearer ' . $token,
+        'Origin-edge-url: ' . App::getEnv('_APP_REGION'),
         'Content-type: multipart/form-data; boundary=' . $delimiter,
         'Content-Length: ' . strlen($payload)
     ]);

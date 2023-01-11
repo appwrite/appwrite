@@ -12,7 +12,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Pools\Connection;
+use Utopia\Queue\Connection;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Client;
 use Utopia\Queue\Message;
@@ -21,6 +21,7 @@ use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
+use Utopia\Storage\Device;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
@@ -88,7 +89,7 @@ Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 
-Server::setResource('queueForSyncOut', function (Connection $queue) {
+Server::setResource('queueForEdgeSyncOut', function (Connection $queue) {
     return new Client('v1-sync-out', $queue);
 }, ['queue']);
 
@@ -107,13 +108,13 @@ Server::setResource('pools', function ($register) {
 $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-$workerNumber =1;
+
 if (empty(App::getEnv('QUEUE'))) {
     throw new Exception('Please configure "QUEUE" environemnt variable.');
 }
 
 $adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
-$server = new Server($adapter);
+$server  = new Server($adapter);
 
 $server
     ->shutdown()
@@ -245,7 +246,7 @@ function getProjectDB(Document $project): Database
  * @param string $projectId of the project
  * @return Device
  */
-function getFunctionsDevice($projectId): Device
+function getFunctionsDevice(string $projectId): Device
 {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
 }
@@ -255,7 +256,7 @@ function getFunctionsDevice($projectId): Device
  * @param string $projectId of the project
  * @return Device
  */
-function getFilesDevice($projectId): Device
+function getFilesDevice(string $projectId): Device
 {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
 }
@@ -265,7 +266,7 @@ function getFilesDevice($projectId): Device
  * @param string $projectId of the project
  * @return Device
  */
-function getBuildsDevice($projectId): Device
+function getBuildsDevice(string $projectId): Device
 {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
 }

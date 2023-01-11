@@ -6,13 +6,11 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 App::init()
     ->groups(['edge'])
@@ -42,7 +40,13 @@ App::post('/v1/edge/sync')
         if (empty($keys)) {
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
+
+        $originEdgeUrl = $request->getHeader('origin-edge-url');
+        $time = DateTime::now();
+
+        var_dump('[' . $time . '] incoming request from:' . $originEdgeUrl);
         var_dump($keys);
+
         foreach ($keys as $parts) {
             $key = json_decode($parts);
             $queueForEdgeSyncIn

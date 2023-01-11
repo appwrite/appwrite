@@ -109,6 +109,18 @@ Server::setResource('execute', function () {
             $certificate->setAttribute('renewDate', getRenewDate($domain->get()));
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
+
+            // Enqueue certificate for regional sync
+            $filename = APP_STORAGE_CERTIFICATES . '/' . $domain . '.tar.gz';
+            if (file_exists($filename)) {
+                $queueForEdgeSyncOut->enqueue([
+                    'type' => 'certificate',
+                    'key' => [
+                        'domain' => $domain,
+                        'contents' => base64_encode(file_get_contents($filename)),
+                    ]
+                ]);
+            }
         } catch (Throwable $e) {
             // Set exception as log in certificate document
             $certificate->setAttribute('log', $e->getMessage());
@@ -128,17 +140,6 @@ Server::setResource('execute', function () {
 
             // Save all changes we made to certificate document into database
             saveCertificateDocument($domain->get(), $certificate, $dbForConsole);
-
-            $filename = APP_STORAGE_CERTIFICATES . '/' . $domain . '.tar.gz';
-            if (file_exists($filename)) {
-                $queueForEdgeSyncOut->enqueue([
-                    'type' => 'certificate',
-                    'key' => [
-                        'domain' => $domain,
-                        'contents' => base64_encode(file_get_contents($filename)),
-                    ]
-                ]);
-            }
         }
     };
 });
@@ -426,6 +427,7 @@ $server->job()
     ->inject('message')
     ->inject('dbForConsole')
     ->inject('execute')
+    ->inject('queueForEdgeSyncOut')
     ->action(function ($message, $dbForConsole, $execute, Client $queueForEdgeSyncOut) use ($server) {
         $payload = $message->getPayload() ?? [];
 
