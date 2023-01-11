@@ -12,7 +12,7 @@ use Tests\E2E\Client;
 
 class AccountConsoleClientTest extends Scope
 {
-    // use AccountBase;
+    use AccountBase;
     use ProjectConsole;
     use SideClient;
 
