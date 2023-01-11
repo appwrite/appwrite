@@ -284,7 +284,7 @@ abstract class Worker
      */
     public function getDevice($root): Device
     {
-        switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
             case Storage::DEVICE_LOCAL:
             default:
                 return new Local($root);
