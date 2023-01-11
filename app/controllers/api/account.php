@@ -45,7 +45,7 @@ $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
 App::post('/v1/account/invite')
-    ->desc('Create Account using an invite code')
+    ->desc('Create account using an invite code')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'public')
@@ -66,7 +66,7 @@ App::post('/v1/account/invite')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('code', '', new Text(64), 'An invite code to restrict user signups on the Appwrite console. Users with an invite code will be able to create accounts irrespective of email and IP whitelists.', true)
+    ->param('code', '', new Text(128), 'An invite code to restrict user signups on the Appwrite console. Users with an invite code will be able to create accounts irrespective of email and IP whitelists.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
