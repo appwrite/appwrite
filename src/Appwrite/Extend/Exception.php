@@ -31,6 +31,8 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * * Video
+     * - GraphQL
      */
 
     /** General */
@@ -186,6 +188,10 @@ class Exception extends \Exception
     public const VIDEO_RENDITION_SEGMENT_NOT_FOUND  = 'video_rendition_segment_not_found';
     public const VIDEO_SUBTITLE_SEGMENT_NOT_FOUND   = 'video_subtitle_segment_not_found';
 
+
+    /** GraphqQL */
+    public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
+    public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     protected $type = '';
 

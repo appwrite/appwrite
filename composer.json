@@ -72,7 +72,8 @@
         "slickdeals/statsd": "3.1.0",
         "aminyazdanpanah/php-ffmpeg-video-streaming": "dev-master",
         "captioning/captioning": "2.*",
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "webonyx/graphql-php": "14.11.*"
     },
     "repositories": [
         {
