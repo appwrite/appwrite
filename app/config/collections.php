@@ -3554,7 +3554,7 @@ $collections = [
         'name' => 'timeouts',
         'attributes' => [
             [
-                '$id' => 'isBlocked',
+                '$id' => 'blocked',
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3565,7 +3565,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('json'),
+                '$id' => ID::custom('count'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('queries'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -3576,10 +3587,10 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('uri'),
+                '$id' => ID::custom('route'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 255,
+                'size' => 2500,
                 'signed' => false,
                 'required' => false,
                 'default' => null,

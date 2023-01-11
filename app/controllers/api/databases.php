@@ -151,6 +151,65 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     return $attribute;
 }
 
+
+App::init()
+    ->inject('request')
+    ->inject('dbForProject')
+    ->action(function (Request $request, Database $dbForProject) {
+        $key = md5(json_encode([$request->getURI(), []]));
+       // $key = md5(json_encode([$request->getURI(), $queries]));
+        /* @var $document Document */
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+
+        if ($document->getAttribute('blocked') === true) {
+            throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+        }
+
+        var_dump("key = " . $key);
+        var_dump($document);
+        var_dump("App::init()");
+    });
+
+App::error()
+    ->inject('utopia')
+    ->inject('error')
+    ->inject('request')
+    ->inject('dbForProject')
+    ->action(function (App $utopia, throwable $error, Request $request, Database $dbForProject) {
+        if ($error instanceof Timeout) {
+            var_dump("App::error() in in in in in in in in in in in in in");
+            var_dump($request->getParams());
+            $queries = $request->getParam('queries'); // validate malicious
+            $uri = $request->getURI();
+            $key = md5(json_encode([$uri, $queries]));
+            var_dump($key);
+            var_dump($queries);
+
+            $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+            if ($document->isEmpty()) {
+                $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
+                    '$id' => $key,
+                    'blocked' => false,
+                    'count' => 1,
+                    'queries' => $request->getParam('queries'),
+                    'route' => $request->getURI(),
+                ])));
+            } else {
+                $document['count']++;
+                $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+            }
+
+            if ($document['count'] > 1) { // todo: make this configurable
+                throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+            }
+
+            var_dump($document);
+        }
+
+        throw $error;
+    });
+
+
 App::post('/v1/databases')
     ->desc('Create Database')
     ->groups(['api', 'database'])
@@ -2044,51 +2103,57 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $key = md5(json_encode([$request->getURI(), $queries]));
-        /* @var $document Document */
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+//        $key = md5(json_encode([$request->getURI(), $queries]));
+//        /* @var $document Document */
+//        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+//
+//        if ($document->getAttribute('blocked') === true) {
+//            throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+//        }
+//        $timeoutMilliseconds = 1001;
+//
+//        var_dump("key = " . $key);
+//        var_dump($document);
 
-        if ($document->getAttribute('isBlocked') === true) {
-            throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+//        try {
+
+        $timeoutMilliseconds = 1000;
+
+        if ($documentSecurity && !$valid) {
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        } else {
+            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds));
+            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
-        $timeoutMilliseconds = 1001;
 
-        var_dump("key = " . $key);
-        var_dump($document);
+            throw new Timeout('Timeout'); // Force Exception.....
 
-        try {
-            if ($documentSecurity && !$valid) {
-                $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds);
-                $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
-            } else {
-                $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds));
-                $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
-            }
-
-            throw new Timeout('Timeout');// Force Exception.....
-        } catch (Timeout $e) {
-            var_dump("Catching the timeout");
-            $timeLimit = new TimeLimit($key, 1, (60 * 5), $dbForProject);
-            $abuse = new Abuse($timeLimit);
-            var_dump($abuse->check());// force increment to reach abuse limit
-            if ($abuse->check() === true) {
-                if ($document->isEmpty()) {
-                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
-                        '$id' => $key,
-                        'isBlocked' => true,
-                        'json' => $json,
-                        'uri' => $request->getURI(),
-                    ])));
-
-                } else {
-                    // Do we have updates? or does console delete the row completely?
-                    $document->setAttribute('isBlocked', false);
-                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
-                }
-
-                throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
-            }
-        }
+//        }
+//
+//        catch (Timeout $e) {
+//            var_dump("Catching the timeout");
+//            $key = 'sss123';
+//            $timeLimit = new TimeLimit($key, 1, (60 * 5), $dbForProject);
+//            $abuse = new Abuse($timeLimit);
+//            var_dump($abuse->check());// force increment to reach abuse limit
+//            if ($abuse->check() === true) {
+//                if ($document->isEmpty()) {
+//                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
+//                        '$id' => $key,
+//                        'blocked' => true,
+//                        'json' => $json,
+//                        'uri' => $request->getURI(),
+//                    ])));
+//                } else {
+//                    // Do we have updates? or does console delete the row completely?
+//                    $document->setAttribute('blocked', false);
+//                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+//                }
+//
+//                throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+//            }
+//        }
 
         /**
          * Reset $collection attribute to remove prefix.
