@@ -1,3 +1,11 @@
+# Version 1.2.1
+## Features
+
+## Changes
+
+## Bugs
+- Add flutter-web as a platform type [#4992](https://github.com/appwrite/appwrite/pull/4992)
+
 # Version 1.2.0
 ## Features
 - Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
