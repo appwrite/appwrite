@@ -61,6 +61,7 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                             'value' => ($collections['value'] * -1),
                         ];
                     }
+
                     if (!empty($documents['value'])) {
                         $metrics[] = [
                             'key' => 'documents',
@@ -94,6 +95,9 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                             'key' => 'files',
                             'value' => ($files['value'] * -1),
                         ];
+                    }
+
+                    if (!empty($storage['value'])) {
                         $metrics[] = [
                             'key' => 'files.storage',
                             'value' => ($storage['value'] * -1),
@@ -115,6 +119,9 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                             'key' => 'deployments',
                             'value' => ($deployments['value'] * -1),
                         ];
+                    }
+
+                    if (!empty($deploymentsStorage['value'])) {
                         $metrics[] = [
                             'key' => 'deployments.storage',
                             'value' => ($deploymentsStorage['value'] * -1),
@@ -126,10 +133,16 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                             'key' => 'builds',
                             'value' => ($builds['value'] * -1),
                         ];
+                    }
+
+                    if (!empty($buildsStorage['value'])) {
                         $metrics[] = [
                             'key' => 'builds.storage',
                             'value' => ($buildsStorage['value'] * -1),
                         ];
+                    }
+
+                    if (!empty($buildsCompute['value'])) {
                         $metrics[] = [
                             'key' => 'builds.compute',
                             'value' => ($buildsCompute['value'] * -1),
@@ -139,8 +152,11 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     if (!empty($executions['value'])) {
                         $metrics[] = [
                             'key' => 'executions',
-                            'value' => ($executions['value'] * -1),
+                            'value' => ($executionsCompute['value'] * -1),
                         ];
+                    }
+
+                    if (!empty($executionsCompute['value'])) {
                         $metrics[] = [
                             'key' => 'executions.compute',
                             'value' => ($executionsCompute['value'] * -1),

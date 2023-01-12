@@ -18,7 +18,7 @@ class UsageTest extends Scope
     use SideServer;
     use FunctionsBase;
 
-    private const WAIT = 30;
+    private const WAIT = 35;
     private const CREATE = 20;
 
     protected string $projectId;
