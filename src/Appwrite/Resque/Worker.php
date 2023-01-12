@@ -165,31 +165,20 @@ abstract class Worker
      * @return Database
      * @throws Exception
      */
-    protected function getProjectDB(string $projectId): Database
+    protected function getProjectDB(string $projectId, ?Document $project = null): Database
     {
-        $consoleDB = $this->getConsoleDB();
+        if ($project === null) {
+            $consoleDB = $this->getConsoleDB();
 
-        if ($projectId === 'console') {
-            return $consoleDB;
+            if ($projectId === 'console') {
+                return $consoleDB;
+            }
+
+            /** @var Document $project */
+            $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
         }
 
-        /** @var Document $project */
-        $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
-
-        return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId());
-    }
-
-    /**
-     * Get internal project database given the project document
-     *
-     * Allows avoiding race conditions when modifying the projects collection
-     * @param Document $project
-     * @return Database
-     * @throws Exception
-     */
-    protected function getProjectDBFromDocument(Document $project): Database
-    {
-        return $this->getDB(self::DATABASE_PROJECT, project: $project);
+        return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId(), $project);
     }
 
     /**

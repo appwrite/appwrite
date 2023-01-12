@@ -254,7 +254,7 @@ class DeletesV1 extends Worker
     protected function deleteProject(Document $document): void
     {
         // Delete project tables
-        $dbForProject = $this->getProjectDBFromDocument($document);
+        $dbForProject = $this->getProjectDB($document->getId(), $document);
 
         $limit = 50;
         $offset = 0;
