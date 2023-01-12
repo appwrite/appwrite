@@ -20,18 +20,14 @@ error_reporting(E_ALL);
 
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\SMS\Adapter\Mock;
-use Appwrite\SMS\Adapter\Telesign;
-use Appwrite\SMS\Adapter\TextMagic;
-use Appwrite\SMS\Adapter\Twilio;
-use Appwrite\SMS\Adapter\Msg91;
-use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Delete;
+use Appwrite\Extend\PDO;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
@@ -39,26 +35,30 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Utopia\App;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
-use Utopia\Database\Document;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\Structure;
-use Utopia\Logger\Logger;
-use Utopia\Config\Config;
 use Utopia\Locale\Locale;
+use Utopia\DSN\DSN;
+use Utopia\Logger\Logger;
+use Utopia\Messaging\Adapters\SMS\Mock;
+use Utopia\Messaging\Adapters\SMS\Msg91;
+use Utopia\Messaging\Adapters\SMS\Telesign;
+use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Twilio;
+use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
-use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -77,6 +77,8 @@ use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
+use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -88,6 +90,8 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_SESSIONS_MAX = 100;
+const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
@@ -96,10 +100,11 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
+const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.1.2';
+const APP_VERSION_STABLE = '1.2.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -1186,3 +1191,93 @@ App::setResource('servers', function () {
 
     return $languages;
 });
+
+App::setResource('promiseAdapter', function ($register) {
+    return $register->get('promiseAdapter');
+}, ['register']);
+
+App::setResource('schema', function ($utopia, $dbForProject) {
+
+    $complexity = function (int $complexity, array $args) {
+        $queries = Query::parseQueries($args['queries'] ?? []);
+        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+        return $complexity * $limit;
+    };
+
+    $attributes = function (int $limit, int $offset) use ($dbForProject) {
+        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+            Query::limit($limit),
+            Query::offset($offset),
+        ]));
+
+        return \array_map(function ($attr) {
+            return $attr->getArrayCopy();
+        }, $attrs);
+    };
+
+    $urls = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'read' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'delete' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+    ];
+
+    $params = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return [ 'queries' => $args['queries']];
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            $id = $args['id'] ?? 'unique()';
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'documentId' => $id,
+                'collectionId' => $collectionId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            $documentId = $args['id'];
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'documentId' => $documentId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+    ];
+
+    return Schema::build(
+        $utopia,
+        $complexity,
+        $attributes,
+        $urls,
+        $params,
+    );
+}, ['utopia', 'dbForProject']);

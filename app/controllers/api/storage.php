@@ -418,7 +418,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Maximum bucket file size is larger than _APP_STORAGE_LIMIT');
         }
 
+
         $file = $request->getFiles('file');
+
+        // GraphQL multipart spec adds files with index keys
+        if (empty($file)) {
+            $file = $request->getFiles(0);
+        }
+
         if (empty($file)) {
             throw new Exception(Exception::STORAGE_FILE_EMPTY);
         }
