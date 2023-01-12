@@ -26,7 +26,6 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Delete;
-use Appwrite\Extend\PDO;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\IP;
