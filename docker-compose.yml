@@ -245,6 +245,7 @@ services:
       - ./vendor/php-ffmpeg/php-ffmpeg:/usr/src/code/vendor/php-ffmpeg/php-ffmpeg #TODO remove when done!!
       - ./vendor/alchemy/binary-driver:/usr/src/code/vendor/alchemy/binary-driver
       - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
+      - ./vendor/symfony/process:/usr/src/code/vendor/symfony/process
 
     depends_on:
       - redis
