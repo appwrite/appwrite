@@ -296,6 +296,11 @@ abstract class Worker
         return $this->getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
     }
 
+    protected function getCacheDevice(string $projectId): Device
+    {
+        return $this->getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
+    }
+
     /**
      * Get Device based on selected storage environment
      * @param string $root path of the device

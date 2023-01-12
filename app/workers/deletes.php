@@ -253,8 +253,10 @@ class DeletesV1 extends Worker
      */
     protected function deleteProject(Document $document): void
     {
+        $projectId = $document->getId();
+
         // Delete project tables
-        $dbForProject = $this->getProjectDB($document->getId(), $document);
+        $dbForProject = $this->getProjectDB($projectId, $document);
 
         $limit = 50;
         $offset = 0;
@@ -282,10 +284,14 @@ class DeletesV1 extends Worker
         }
 
         // Delete all storage directories
-        $uploads = $this->getFilesDevice($document->getId());
-        $cache = new Local(APP_STORAGE_CACHE . '/app-' . $document->getId());
+        $uploads = $this->getFilesDevice($projectId);
+        $functions = $this->getFunctionsDevice($projectId);
+        $builds = $this->getBuildsDevice($projectId);
+        $cache = $this->getCacheDevice($projectId);
 
         $uploads->delete($uploads->getRoot(), true);
+        $functions->delete($functions->getRoot(), true);
+        $builds->delete($builds->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
     }
 
