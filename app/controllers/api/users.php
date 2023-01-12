@@ -1128,7 +1128,6 @@ App::get('/v1/users/usage')
                 'date' => $formatDate,
             ];
         }
-        //$usage[$metric] = array_reverse($usage[$metric]);
     }
 
         $response->dynamic(new Document([

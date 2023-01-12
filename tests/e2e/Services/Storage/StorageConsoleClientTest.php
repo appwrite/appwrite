@@ -39,10 +39,12 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(3, count($response['body']));
+        $this->assertEquals(4, count($response['body']));
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['storage']);
+        $this->assertIsArray($response['body']['bucketsCount']);
         $this->assertIsArray($response['body']['filesCount']);
+        $this->assertIsArray($response['body']['filesStorage']);
+
     }
 
     public function testGetStorageBucketUsage()
@@ -94,7 +96,7 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 2);
+        $this->assertEquals(count($response['body']), 3);
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['filesCount']);
         $this->assertIsArray($response['body']['filesStorage']);

@@ -193,8 +193,6 @@ App::init()
 
         $route = $utopia->match($request);
 
-        var_dump($route->getPath());
-
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
             throw new Exception(Exception::PROJECT_UNKNOWN);
         }
@@ -517,7 +515,7 @@ App::shutdown()
 
         if (
             $project->getId() !== 'console'
-            //&& $mode !== APP_MODE_ADMIN
+            && $mode !== APP_MODE_ADMIN
         ) {
             $fileSize = 0;
             $file = $request->getFiles('file');

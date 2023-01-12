@@ -283,7 +283,6 @@ class UsageTest extends Scope
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
 

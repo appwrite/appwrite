@@ -29,7 +29,6 @@ class Usage extends Event
         return $this;
     }
 
-
     /**
      * Add metric.
      *
@@ -46,8 +45,6 @@ class Usage extends Event
 
         return $this;
     }
-
-
 
     /**
      * Sends metrics to the usage worker.
