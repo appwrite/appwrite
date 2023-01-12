@@ -92,7 +92,7 @@ App::post('/v1/project')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $project = $dbForConsole->createDocument('project', new Document([
+        $project = $dbForConsole->createDocument('projects', new Document([
             '$id' => $projectId,
             '$permissions' => [
                 Permission::read(Role::team(ID::custom($teamId))),
@@ -190,7 +190,7 @@ App::get('/v1/project/:projectId')
 ->inject('dbForConsole')
 ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
-    $project = $dbForConsole->getDocument('project', $projectId);
+    $project = $dbForConsole->getDocument('projects', $projectId);
 
     if ($project->isEmpty()) {
         throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -217,7 +217,7 @@ App::get('/v1/project/:projectId/usage')
 ->inject('register')
 ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
 
-    $project = $dbForConsole->getDocument('project', $projectId);
+    $project = $dbForConsole->getDocument('projects', $projectId);
 
     if ($project->isEmpty()) {
         throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -338,13 +338,13 @@ App::patch('/v1/project/:projectId')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $project = $dbForConsole->updateDocument('project', $project->getId(), $project
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
                 ->setAttribute('name', $name)
                 ->setAttribute('description', $description)
                 ->setAttribute('logo', $logo)
@@ -358,6 +358,38 @@ App::patch('/v1/project/:projectId')
                 ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::get('/v1/admin/:projectId/webhooks')
+    ->desc('List Webhooks')
+    ->groups(['api', 'admin'])
+    ->label('scope', 'admin.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'admin')
+    ->label('sdk.method', 'listWebhooks')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_WEBHOOK_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $webhooks = $dbForConsole->find('webhooks', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'webhooks' => $webhooks,
+            'total' => count($webhooks),
+        ]), Response::MODEL_WEBHOOK_LIST);
     });
 
 App::patch('/v1/project/:projectId/service')
@@ -377,7 +409,7 @@ App::patch('/v1/project/:projectId/service')
 ->inject('dbForConsole')
 ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
 
-    $project = $dbForConsole->getDocument('project', $projectId);
+    $project = $dbForConsole->getDocument('projects', $projectId);
 
     if ($project->isEmpty()) {
         throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -386,7 +418,7 @@ App::patch('/v1/project/:projectId/service')
     $services = $project->getAttribute('services', []);
     $services[$service] = $status;
 
-    $project = $dbForConsole->updateDocument('project', $project->getId(), $project->setAttribute('services', $services));
+    $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
     $response->dynamic($project, Response::MODEL_PROJECT);
 });
@@ -410,7 +442,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -430,7 +462,7 @@ App::patch('/v1/project/:projectId/oauth2')
             $providers[$provider . 'Enabled'] = $enabled;
         }
 
-        $project = $dbForConsole->updateDocument('project', $project->getId(), $project->setAttribute('authProviders', $providers));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -451,7 +483,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -460,7 +492,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $auths = $project->getAttribute('auths', []);
         $auths['limit'] = $limit;
 
-        $dbForConsole->updateDocument('project', $project->getId(), $project
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -482,7 +514,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $duration, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -491,7 +523,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $auths = $project->getAttribute('auths', []);
         $auths['duration'] = $duration;
 
-        $dbForConsole->updateDocument('project', $project->getId(), $project
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
@@ -514,7 +546,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
         $authKey = $auth['key'] ?? '';
         $status = ($status === '1' || $status === 'true' || $status === 1 || $status === true);
@@ -526,7 +558,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $auths = $project->getAttribute('auths', []);
         $auths[$authKey] = $status;
 
-        $project = $dbForConsole->updateDocument('project', $project->getId(), $project->setAttribute('auths', $auths));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -563,7 +595,7 @@ App::patch('/v1/project/:projectId/oauth2')
             ->setDocument($project)
         ;
 
-        if (!$dbForConsole->deleteDocument('project', $projectId)) {
+        if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
 
@@ -593,7 +625,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -621,7 +653,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -644,7 +676,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -684,7 +716,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -711,7 +743,7 @@ App::patch('/v1/project/:projectId/oauth2')
         ;
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -750,7 +782,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $webhook->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -787,7 +819,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $dbForConsole->deleteDocument('webhooks', $webhook->getId());
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -812,7 +844,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -837,7 +869,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $key = $dbForConsole->createDocument('keys', $key);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -920,7 +952,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_KEY);
     });
@@ -957,7 +989,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $dbForConsole->deleteDocument('keys', $key->getId());
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1007,7 +1039,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1091,7 +1123,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
@@ -1128,7 +1160,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $dbForConsole->deleteDocument('platforms', $platformId);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1193,7 +1225,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $domain = $dbForConsole->createDocument('domains', $domain);
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1285,7 +1317,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
 
         $dbForConsole->updateDocument('domains', $domain->getId(), $domain->setAttribute('verification', true));
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         // Issue a TLS certificate when domain is verified
         $event = new Certificate();
@@ -1329,7 +1361,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
         $dbForConsole->deleteDocument('domains', $domain->getId());
 
-        $dbForConsole->deleteCachedDocument('project', $project->getId());
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $deletes
             ->setType(DELETE_TYPE_CERTIFICATES)

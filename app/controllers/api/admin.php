@@ -28,7 +28,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\Queries\admin;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -38,16 +38,16 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/admin')
-    ->desc('List admin')
+    ->desc('List Projects')
     ->groups(['api', 'admin'])
     ->label('scope', 'admin.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'admin')
-    ->label('sdk.method', 'list')
+    ->label('sdk.method', 'listProjects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new admin(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', admin::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -82,37 +82,7 @@ App::get('/v1/admin')
         ]), Response::MODEL_PROJECT_LIST);
     });
 
-    App::get('/v1/admin/:projectId/webhooks')
-    ->desc('List Webhooks')
-    ->groups(['api', 'admin'])
-    ->label('scope', 'admin.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'admin')
-    ->label('sdk.method', 'listWebhooks')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('admin', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $webhooks = $dbForConsole->find('webhooks', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'webhooks' => $webhooks,
-            'total' => count($webhooks),
-        ]), Response::MODEL_WEBHOOK_LIST);
-    });
+    
 
     App::get('/v1/admin/:projectId/keys')
     ->desc('List Keys')
