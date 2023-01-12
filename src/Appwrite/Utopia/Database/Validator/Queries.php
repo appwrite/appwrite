@@ -87,6 +87,7 @@ class Queries extends Validator
                 case Query::TYPE_GREATER:
                 case Query::TYPE_GREATEREQUAL:
                 case Query::TYPE_SEARCH:
+                case Query::TYPE_SLEEP:
                     $methodType = Base::METHOD_TYPE_FILTER;
                     break;
                 default:

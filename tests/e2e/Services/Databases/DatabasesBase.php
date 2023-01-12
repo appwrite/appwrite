@@ -984,6 +984,34 @@ trait DatabasesBase
         return $data;
     }
 
+
+    /**
+     * @depends testCreateDocument
+     */
+    public function testTimeout(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['orderAsc("releaseYear")', 'sleep(1)'],
+        ]);
+die;
+        var_dump($documents);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['orderAsc("releaseYear")', 'sleep(1)'],
+
+        ]);
+
+        var_dump($documents);
+        exit;
+    }
+
     /**
      * @depends testCreateDocument
      */
@@ -996,10 +1024,6 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => ['orderAsc("releaseYear")'],
         ]);
-
-
-        var_dump($documents);
-        exit;
 
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
