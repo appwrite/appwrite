@@ -11,6 +11,12 @@ class AlgoArgon2 extends Model
     {
         // No options if imported. If hashed by Appwrite, following configuration is available:
         $this
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Algo type.',
+                'default' => 'argon2',
+                'example' => 'argon2',
+            ])
             ->addRule('memoryCost', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Memory used to compute hash.',

@@ -1,3 +1,7 @@
+## 7.2.0
+
+* Support for GraphQL
+
 ## 7.1.0
 
 * Role helper update
