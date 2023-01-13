@@ -26,7 +26,8 @@ $cli
     ->task('sdks')
     ->action(function () {
         $platforms = Config::getParam('platforms');
-        $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        $selectedPlatform = Console::confirm('Choose Platform ("'. APP_PLATFORM_CLIENT .'", "'. APP_PLATFORM_SERVER .'", "'. APP_PLATFORM_CONSOLE .'" or "*" for all):');
+        $selectedSDK = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version = Console::confirm('Choose an Appwrite version');
         $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
@@ -37,8 +38,12 @@ $cli
         }
 
         foreach ($platforms as $key => $platform) {
-            foreach ($platform['languages'] as $language) {
-                if ($selected !== $language['key'] && $selected !== '*') {
+            if ($selectedPlatform !== $key && $selectedPlatform !== '*') {
+                continue;
+            }
+
+            foreach ($platform['sdks'] as $language) {
+                if ($selectedSDK !== $language['key'] && $selectedSDK !== '*') {
                     continue;
                 }
 
