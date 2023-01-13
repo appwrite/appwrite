@@ -1,3 +1,6 @@
+## Features
+- Re-hash password using default algo on update phone [#4990](https://github.com/appwrite/appwrite/pull/5003)
+
 # Version 1.2.0
 ## Features
 - Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
