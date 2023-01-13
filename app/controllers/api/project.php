@@ -362,10 +362,10 @@ App::patch('/v1/project/:projectId')
 
 App::get('/v1/admin/:projectId/webhooks')
     ->desc('List Webhooks')
-    ->groups(['api', 'admin'])
-    ->label('scope', 'admin.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'admin')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'listWebhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -584,7 +584,7 @@ App::patch('/v1/project/:projectId/oauth2')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -764,7 +764,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -802,7 +802,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -892,7 +892,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -929,7 +929,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -972,7 +972,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1015,7 +1015,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1062,7 +1062,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1099,7 +1099,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, string $name, string $key, string $store, string $hostname, Response $response, Database $dbForConsole) {
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1143,7 +1143,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1183,7 +1183,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domain, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1250,7 +1250,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1284,7 +1284,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1344,7 +1344,7 @@ App::patch('/v1/project/:projectId/oauth2')
     ->inject('deletes')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
 
-        $project = $dbForConsole->getDocument('project', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -1368,4 +1368,99 @@ App::patch('/v1/project/:projectId/oauth2')
             ->setDocument($domain);
 
         $response->noContent();
+    });
+    App::get('/v1/project/:projectId/keys')
+    ->desc('List Keys')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'admin')
+    ->label('sdk.method', 'listKeys')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_KEY_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $keys = $dbForConsole->find('keys', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'keys' => $keys,
+            'total' => count($keys),
+        ]), Response::MODEL_KEY_LIST);
+    });
+
+    App::get('/v1/project/:projectId/domains')
+    ->desc('List Domains')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'listDomains')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $domains = $dbForConsole->find('domains', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'domains' => $domains,
+            'total' => count($domains),
+        ]), Response::MODEL_DOMAIN_LIST);
+    });
+
+    App::get('/v1/project/:projectId/platforms')
+    ->desc('List Platforms')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'listPlatforms')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PLATFORM_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $platforms = $dbForConsole->find('platforms', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'platforms' => $platforms,
+            'total' => count($platforms),
+        ]), Response::MODEL_PLATFORM_LIST);
     });

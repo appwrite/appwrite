@@ -65,7 +65,7 @@ App::get('/v1/admin')
         if ($cursor) {
             /** @var Query $cursor */
             $projectId = $cursor->getValue();
-            $cursorDocument = $dbForConsole->getDocument('admin', $projectId);
+            $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
@@ -77,105 +77,11 @@ App::get('/v1/admin')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'admin' => $dbForConsole->find('admin', $queries),
-            'total' => $dbForConsole->count('admin', $filterQueries, APP_LIMIT_COUNT),
+            'projects' => $dbForConsole->find('projects', $queries),
+            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
     
 
-    App::get('/v1/admin/:projectId/keys')
-    ->desc('List Keys')
-    ->groups(['api', 'admin'])
-    ->label('scope', 'admin.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'admin')
-    ->label('sdk.method', 'listKeys')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_KEY_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('admin', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $keys = $dbForConsole->find('keys', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'keys' => $keys,
-            'total' => count($keys),
-        ]), Response::MODEL_KEY_LIST);
-    });
-
-    App::get('/v1/admin/:projectId/domains')
-    ->desc('List Domains')
-    ->groups(['api', 'admin'])
-    ->label('scope', 'admin.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'admin')
-    ->label('sdk.method', 'listDomains')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('admin', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'domains' => $domains,
-            'total' => count($domains),
-        ]), Response::MODEL_DOMAIN_LIST);
-    });
-
-    App::get('/v1/admin/:projectId/platforms')
-    ->desc('List Platforms')
-    ->groups(['api', 'admin'])
-    ->label('scope', 'admin.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'admin')
-    ->label('sdk.method', 'listPlatforms')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PLATFORM_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('admin', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $platforms = $dbForConsole->find('platforms', [
-            Query::equal('projectId', [$project->getId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'platforms' => $platforms,
-            'total' => count($platforms),
-        ]), Response::MODEL_PLATFORM_LIST);
-    });
+    
