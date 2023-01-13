@@ -1634,6 +1634,7 @@ App::patch('/v1/account/phone')
         }
 
         $user
+            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS) : $user->getAttribute('password', ''))
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $phone]));
