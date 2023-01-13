@@ -7,7 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Host;
+use Utopia\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries;

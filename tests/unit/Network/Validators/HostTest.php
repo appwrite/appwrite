@@ -14,7 +14,7 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Validator\Host;
+use Utopia\Validator\Host;
 use PHPUnit\Framework\TestCase;
 
 class HostTest extends TestCase

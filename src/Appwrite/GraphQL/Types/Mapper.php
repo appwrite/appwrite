@@ -228,7 +228,7 @@ class Mapper
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Task\Validator\Cron':
             case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Appwrite\Network\Validator\Domain':
+            case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Event\Validator\Event':
             case 'Utopia\Validator\HexColor':

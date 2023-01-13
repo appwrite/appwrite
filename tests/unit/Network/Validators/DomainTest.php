@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Validator\Domain;
+use Utopia\Validator\Domain;
 use PHPUnit\Framework\TestCase;
 
 class DomainTest extends TestCase

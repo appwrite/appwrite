@@ -14,7 +14,7 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Validator\IP;
+use Utopia\Validator\IP;
 use PHPUnit\Framework\TestCase;
 
 class IPTest extends TestCase

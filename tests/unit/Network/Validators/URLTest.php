@@ -14,7 +14,7 @@
 
 namespace Tests\Unit\Network\Validators;
 
-use Appwrite\Network\Validator\URL;
+use Utopia\Validator\URL;
 use PHPUnit\Framework\TestCase;
 
 class URLTest extends TestCase

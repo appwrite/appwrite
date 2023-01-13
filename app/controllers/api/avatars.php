@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\URL;
+use Utopia\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
