@@ -125,6 +125,11 @@ return [
         'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
         'code' => 401,
     ],
+    Exception::USER_CODE_INVALID => [
+        'name' => Exception::USER_CODE_INVALID,
+        'description' => 'The specified code is not valid. Contact your administrator for more information.',
+        'code' => 401,
+    ],
     Exception::USER_IP_NOT_WHITELISTED => [
         'name' => Exception::USER_IP_NOT_WHITELISTED,
         'description' => 'Console registration is restricted to specific IPs. Contact your administrator for more information.',
