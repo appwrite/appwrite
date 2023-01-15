@@ -62,7 +62,7 @@
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.14.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "dev-increment as 0.28.0",
+        "utopia-php/database": "0.28.*",
         "utopia-php/queue": "0.5.*",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.3.*",
