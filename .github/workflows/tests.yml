@@ -32,8 +32,9 @@ jobs:
         docker pull composer:2.0
         docker compose build appwrite
         docker compose up -d
-        sleep 40
-    
+        sleep 30
+        docker logs appwrite
+
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
