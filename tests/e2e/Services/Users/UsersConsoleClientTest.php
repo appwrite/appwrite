@@ -42,6 +42,5 @@ class UsersConsoleClientTest extends Scope
         $this->assertEquals($response['body']['range'], '24h');
         $this->assertIsArray($response['body']['usersCount']);
         $this->assertIsArray($response['body']['sessionsCount']);
-
     }
 }

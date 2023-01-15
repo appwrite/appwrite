@@ -1009,7 +1009,6 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric('executions.compute', (int)($executionResponse['duration'] * 1000))// per project
                 ->addMetric("{$function->getInternalId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
             ;
-
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution

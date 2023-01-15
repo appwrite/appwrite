@@ -44,7 +44,6 @@ class StorageConsoleClientTest extends Scope
         $this->assertIsArray($response['body']['bucketsCount']);
         $this->assertIsArray($response['body']['filesCount']);
         $this->assertIsArray($response['body']['filesStorage']);
-
     }
 
     public function testGetStorageBucketUsage()

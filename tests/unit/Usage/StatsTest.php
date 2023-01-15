@@ -12,16 +12,10 @@ use Utopia\Queue\Connection;
 
 class StatsTest extends TestCase
 {
-    /**
-     * @var Connection
-     */
     protected ?Connection $connection = null;
-    /**
-     * @var Client
-     */
     protected ?Client $client = null;
 
-    const QUEUE_NAME = 'usage-test-q';
+    protected const QUEUE_NAME = 'usage-test-q';
 
     public function setUp(): void
     {
