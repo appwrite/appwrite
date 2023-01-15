@@ -2,70 +2,59 @@
 
 namespace Tests\Unit\Usage;
 
-use Appwrite\Usage\Stats;
+use Appwrite\URL\URL as AppwriteURL;
 use PHPUnit\Framework\TestCase;
 use Utopia\App;
+use Utopia\DSN\DSN;
+use Utopia\Queue;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class StatsTest extends TestCase
 {
-//    /**
-//     * @var Stats
-//     */
-//    protected $object = null;
-//
-//    public function setUp(): void
-//    {
-//        $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-//        $port = App::getEnv('_APP_STATSD_PORT', 8125);
-//
-//        $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-//        $statsd = new \Domnikl\Statsd\Client($connection);
-//
-//        $this->object = new Stats($statsd);
-//    }
-//
-//    public function tearDown(): void
-//    {
-//    }
-//
-//    public function testNamespace(): void
-//    {
-//        $this->object->setNamespace('appwritetest.usage');
-//        $this->assertEquals('appwritetest.usage', $this->object->getNamespace());
-//    }
-//
-//    public function testParams(): void
-//    {
-//        $this->object
-//            ->setParam('projectId', 'appwrite_test')
-//            ->setParam('projectInternalId', 1)
-//            ->setParam('networkRequestSize', 100)
-//        ;
-//
-//        $this->assertEquals('appwrite_test', $this->object->getParam('projectId'));
-//        $this->assertEquals(1, $this->object->getParam('projectInternalId'));
-//        $this->assertEquals(100, $this->object->getParam('networkRequestSize'));
-//
-//        $this->object->submit();
-//
-//        $this->assertEquals(null, $this->object->getParam('projectId'));
-//        $this->assertEquals(null, $this->object->getParam('networkRequestSize'));
-//    }
-//
-//    public function testReset(): void
-//    {
-//        $this->object
-//            ->setParam('projectId', 'appwrite_test')
-//            ->setParam('networkRequestSize', 100)
-//        ;
-//
-//        $this->assertEquals('appwrite_test', $this->object->getParam('projectId'));
-//        $this->assertEquals(100, $this->object->getParam('networkRequestSize'));
-//
-//        $this->object->reset();
-//
-//        $this->assertEquals(null, $this->object->getParam('projectId'));
-//        $this->assertEquals(null, $this->object->getParam('networkRequestSize'));
-//        $this->assertEquals('appwrite.usage', $this->object->getNamespace());
-//    }
+    /**
+     * @var Connection
+     */
+    protected ?Connection $connection = null;
+    /**
+     * @var Client
+     */
+    protected ?Client $client = null;
+
+    const QUEUE_NAME = 'usage-test-q';
+
+    public function setUp(): void
+    {
+        $env =  App::getEnv('_APP_CONNECTIONS_QUEUE', AppwriteURL::unparse([
+                    'scheme' => 'redis',
+                    'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+                    'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+                    'user' => App::getEnv('_APP_REDIS_USER', ''),
+                    'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+                ]));
+
+        $dsn = explode('=', $env);
+        $dsn = $dsn[1] ?? '';
+        $dsn = new DSN($dsn);
+        $this->connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+        $this->client     = new Client(self::QUEUE_NAME, $this->connection);
+    }
+
+    public function tearDown(): void
+    {
+    }
+
+    public function testSamePayload(): void
+    {
+        $inToQueue = [
+            'key_1'  => 'value_1',
+            'key_2'  => 'value_2',
+        ];
+
+        $result = $this->client->enqueue($inToQueue);
+        $this->assertTrue($result);
+        $outFromQueue  = $this->connection->leftPopArray('utopia-queue.queue.' . self::QUEUE_NAME, 0)['payload'];
+        $this->assertNotEmpty($outFromQueue);
+        $this->assertSame($inToQueue, $outFromQueue);
+    }
 }
