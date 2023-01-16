@@ -434,14 +434,37 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
+            $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+
+            $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+            $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+            $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+            $body->setParam('{{owner}}', $user->getAttribute('name'));
+            $body->setParam('{{team}}', $team->getAttribute('name'));
+
+            $body
+                ->setParam('{{subject}}', $subject)
+                ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                ->setParam('{{name}}', $user->getAttribute('name'))
+                ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
+                ->setParam('{{redirect}}', $url)
+                ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
+                ->setParam('{{project}}', $projectName)
+                ->setParam('{{direction}}', $locale->getText('settings.direction'))
+                ->setParam('{{bg-body}}', '#f7f7f7')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{text-content}}', '#000000');
+
+            $body = $body->render();
+
             $mails
-                ->setType(MAIL_TYPE_INVITATION)
-                ->setRecipient($email)
-                ->setUrl($url)
-                ->setName($name)
-                ->setLocale($locale->default)
-                ->setTeam($team)
-                ->setUser($user)
+                ->setSubject($subject)
+                ->setBody($body)
+                ->setFrom($from)
+                ->setRecipient($invitee->getAttribute('email'))
+                ->setName($invitee->getAttribute('name'))
                 ->trigger()
             ;
         }

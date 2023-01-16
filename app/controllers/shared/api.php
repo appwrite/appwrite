@@ -6,12 +6,12 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
-use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
@@ -98,13 +98,12 @@ App::init()
     ->inject('user')
     ->inject('events')
     ->inject('audits')
-    ->inject('mails')
     ->inject('usage')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -175,10 +174,6 @@ App::init()
      */
         $events
             ->setEvent($route->getLabel('event', ''))
-            ->setProject($project)
-            ->setUser($user);
-
-        $mails
             ->setProject($project)
             ->setUser($user);
 

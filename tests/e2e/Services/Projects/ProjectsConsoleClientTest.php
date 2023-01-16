@@ -877,7 +877,7 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * @depends testUpdateProjectAuthLimit
      */
-    public function testUpdateProjectAuthSessionLimit($data): array
+    public function testUpdateProjectAuthSessionsLimit($data): array
     {
         $id = $data['projectId'] ?? '';
 
@@ -905,7 +905,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(1, $response['body']['authSessionsLimit']);
 
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
