@@ -576,7 +576,6 @@ class RealtimeCustomClientTest extends Scope
         ]);
 
         $response = json_decode($client->receive(), true);
-
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('event', $response['type']);
@@ -1248,7 +1247,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
