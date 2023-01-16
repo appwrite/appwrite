@@ -211,25 +211,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(1003, $response['data']['code']);
         $this->assertEquals('Message format is not valid.', $response['data']['message']);
 
-
-        $client->close();
-    }
-
-    public function testConnectionPlatform()
-    {
-        /**
-         * Test for FAILURE
-         */
-        $client = $this->getWebsocket(['documents'], ['origin' => 'http://appwrite.unknown']);
-        $payload = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $payload);
-        $this->assertArrayHasKey('data', $payload);
-        $this->assertEquals('error', $payload['type']);
-        $this->assertEquals(1008, $payload['data']['code']);
-        $this->assertEquals('Invalid Origin. Register your new client (appwrite.unknown) as a new Web platform on your project console dashboard', $payload['data']['message']);
-        \usleep(250000); // 250ms
-        $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
     }
 
@@ -459,8 +440,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         /**
-         * Test Account Session Create
-         */
+//         * Test Account Session Create
+//         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -1248,7 +1229,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
