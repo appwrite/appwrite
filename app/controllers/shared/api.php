@@ -513,22 +513,23 @@ App::shutdown()
             }
         }
 
-        if (
-            $project->getId() !== 'console'
-            && $mode !== APP_MODE_ADMIN
-        ) {
-            $fileSize = 0;
-            $file = $request->getFiles('file');
+        if ($project->getId() !== 'console') {
+            if ($mode !== APP_MODE_ADMIN) {
+                $fileSize = 0;
+                $file = $request->getFiles('file');
 
-            if (!empty($file)) {
-                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+                if (!empty($file)) {
+                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+                }
+
+                $queueForUsage
+                    ->addMetric('network.requests', 1)
+                    ->addMetric("network.inbound", $request->getSize() + $fileSize)
+                    ->addMetric("network.outbound", $response->getSize());
             }
 
             $queueForUsage
                 ->setProject($project)
-                ->addMetric('network.requests', 1)
-                ->addMetric("network.inbound", $request->getSize() + $fileSize)
-                ->addMetric("network.outbound", $response->getSize())
                 ->trigger();
         }
     });
