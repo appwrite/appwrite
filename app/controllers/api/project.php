@@ -360,7 +360,7 @@ App::patch('/v1/project/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/admin/:projectId/webhooks')
+App::get('/v1/project/:projectId/webhooks')
     ->desc('List Webhooks')
     ->groups(['api', 'project'])
     ->label('scope', 'project.read')
