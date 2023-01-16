@@ -3,6 +3,7 @@
 namespace Appwrite\Utopia;
 
 use Exception;
+use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -84,6 +85,7 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
 
 /**
+ * @method int getStatusCode()
  * @method Response setStatusCode(int $code = 200)
  */
 class Response extends SwooleResponse
@@ -351,6 +353,7 @@ class Response extends SwooleResponse
      * HTTP content types
      */
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
+    public const CONTENT_TYPE_NULL = 'null';
 
     /**
      * List of defined output objects
@@ -372,7 +375,9 @@ class Response extends SwooleResponse
     /**
      * Get Model Object
      *
+     * @param string $key
      * @return Model
+     * @throws Exception
      */
     public function getModel(string $key): Model
     {
@@ -401,6 +406,7 @@ class Response extends SwooleResponse
      * @param string $model
      *
      * return void
+     * @throws Exception
      */
     public function dynamic(Document $document, string $model): void
     {
@@ -411,7 +417,26 @@ class Response extends SwooleResponse
             $output = self::getFilter()->parse($output, $model);
         }
 
-        $this->json(!empty($output) ? $output : new \stdClass());
+        switch ($this->getContentType()) {
+            case self::CONTENT_TYPE_JSON:
+                $this->json(!empty($output) ? $output : new \stdClass());
+                break;
+
+            case self::CONTENT_TYPE_YAML:
+                $this->yaml(!empty($output) ? $output : new \stdClass());
+                break;
+
+            case self::CONTENT_TYPE_NULL:
+                break;
+
+            default:
+                if ($model === self::MODEL_NONE) {
+                    $this->noContent();
+                } else {
+                    $this->json(!empty($output) ? $output : new \stdClass());
+                }
+                break;
+        }
     }
 
     /**
@@ -421,6 +446,8 @@ class Response extends SwooleResponse
      * @param string $model
      *
      * return array
+     * @return array
+     * @throws Exception
      */
     public function output(Document $document, string $model): array
     {
@@ -520,6 +547,7 @@ class Response extends SwooleResponse
      * @param array $data
      *
      * @return void
+     * @throws Exception
      */
     public function yaml(array $data): void
     {

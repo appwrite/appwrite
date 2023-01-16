@@ -874,6 +874,124 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * @depends testUpdateProjectAuthLimit
+     */
+    public function testUpdateProjectAuthSessionsLimit($data): array
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Test for failure
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 0,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(1, $response['body']['authSessionsLimit']);
+
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Create new user
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * create new session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionId1 = $response['body']['$id'];
+
+        /**
+         * create new session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionCookie = $response['headers']['set-cookie'];
+        $sessionId2 = $response['body']['$id'];
+
+        // request was called in parallel and test failed
+        sleep(5);
+
+        /**
+         * List sessions
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'Cookie' => $sessionCookie,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $sessions = $response['body']['sessions'];
+
+        $this->assertEquals(1, count($sessions));
+        $this->assertEquals($sessionId2, $sessions[0]['$id']);
+
+        /**
+         * Reset Limit
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/project/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 10,
+        ]);
+
+        return $data;
+    }
+
     public function testUpdateProjectServiceStatusAdmin(): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
