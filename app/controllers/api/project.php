@@ -28,11 +28,9 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\Queries\project;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
-use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -176,142 +174,142 @@ App::post('/v1/project')
     });
 
 App::get('/v1/project/:projectId')
-->desc('Get Project')
-->groups(['api', 'project'])
-->label('scope', 'project.read')
-->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-->label('sdk.namespace', 'project')
-->label('sdk.method', 'get')
-->label('sdk.response.code', Response::STATUS_CODE_OK)
-->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-->label('sdk.response.model', Response::MODEL_PROJECT)
-->param('projectId', '', new UID(), 'Project unique ID.')
-->inject('response')
-->inject('dbForConsole')
-->action(function (string $projectId, Response $response, Database $dbForConsole) {
+    ->desc('Get Project')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'get')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
 
-    $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
-    if ($project->isEmpty()) {
-        throw new Exception(Exception::PROJECT_NOT_FOUND);
-    }
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
 
-    $response->dynamic($project, Response::MODEL_PROJECT);
-});
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
 
 App::get('/v1/project/:projectId/usage')
-->desc('Get usage stats for a project')
-->groups(['api', 'project'])
-->label('scope', 'project.read')
-->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-->label('sdk.namespace', 'project')
-->label('sdk.method', 'getUsage')
-->label('sdk.response.code', Response::STATUS_CODE_OK)
-->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-->param('projectId', '', new UID(), 'Project unique ID.')
-->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-->inject('response')
-->inject('dbForConsole')
-->inject('dbForProject')
-->inject('register')
-->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
+    ->desc('Get usage stats for a project')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->inject('register')
+    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
 
-    $project = $dbForConsole->getDocument('projects', $projectId);
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
-    if ($project->isEmpty()) {
-        throw new Exception(Exception::PROJECT_NOT_FOUND);
-    }
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
 
-    $usage = [];
-    if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-        $periods = [
-            '24h' => [
-                'period' => '1h',
-                'limit' => 24,
-            ],
-            '7d' => [
-                'period' => '1d',
-                'limit' => 7,
-            ],
-            '30d' => [
-                'period' => '1d',
-                'limit' => 30,
-            ],
-            '90d' => [
-                'period' => '1d',
-                'limit' => 90,
-            ],
-        ];
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '1h',
+                    'limit' => 24,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
 
-        $dbForProject->setNamespace("_{$project->getInternalId()}");
+            $dbForProject->setNamespace("_{$project->getInternalId()}");
 
-        $metrics = [
-            'project.$all.network.requests',
-            'project.$all.network.bandwidth',
-            'project.$all.storage.size',
-            'users.$all.count.total',
-            'databases.$all.count.total',
-            'documents.$all.count.total',
-            'executions.$all.compute.total',
-            'buckets.$all.count.total'
-        ];
+            $metrics = [
+                'project.$all.network.requests',
+                'project.$all.network.bandwidth',
+                'project.$all.storage.size',
+                'users.$all.count.total',
+                'databases.$all.count.total',
+                'documents.$all.count.total',
+                'executions.$all.compute.total',
+                'buckets.$all.count.total'
+            ];
 
-        $stats = [];
+            $stats = [];
 
-        Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $periods[$range]['limit'];
-                $period = $periods[$range]['period'];
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
 
-                $requestDocs = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
+                    $requestDocs = $dbForProject->find('stats', [
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
 
-                $stats[$metric] = [];
-                foreach ($requestDocs as $requestDoc) {
-                    $stats[$metric][] = [
-                        'value' => $requestDoc->getAttribute('value'),
-                        'date' => $requestDoc->getAttribute('time'),
-                    ];
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
+                            '1h' => 3600,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
                 }
+            });
 
-                // backfill metrics with empty values for graphs
-                $backfill = $limit - \count($requestDocs);
-                while ($backfill > 0) {
-                    $last = $limit - $backfill - 1; // array index of last added metric
-                    $diff = match ($period) { // convert period to seconds for unix timestamp math
-                        '1h' => 3600,
-                        '1d' => 86400,
-                    };
-                    $stats[$metric][] = [
-                        'value' => 0,
-                        'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                    ];
-                    $backfill--;
-                }
-                $stats[$metric] = array_reverse($stats[$metric]);
-            }
-        });
+            $usage = new Document([
+                'range' => $range,
+                'requests' => $stats[$metrics[0]] ?? [],
+                'network' => $stats[$metrics[1]] ?? [],
+                'storage' => $stats[$metrics[2]] ?? [],
+                'users' => $stats[$metrics[3]] ?? [],
+                'databases' => $stats[$metrics[4]] ?? [],
+                'documents' => $stats[$metrics[5]] ?? [],
+                'executions' => $stats[$metrics[6]] ?? [],
+                'buckets' => $stats[$metrics[7]] ?? [],
+            ]);
+        }
 
-        $usage = new Document([
-            'range' => $range,
-            'requests' => $stats[$metrics[0]] ?? [],
-            'network' => $stats[$metrics[1]] ?? [],
-            'storage' => $stats[$metrics[2]] ?? [],
-            'users' => $stats[$metrics[3]] ?? [],
-            'databases' => $stats[$metrics[4]] ?? [],
-            'documents' => $stats[$metrics[5]] ?? [],
-            'executions' => $stats[$metrics[6]] ?? [],
-            'buckets' => $stats[$metrics[7]] ?? [],
-        ]);
-    }
-
-    $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
-});
+        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
+    });
 
 App::patch('/v1/project/:projectId')
     ->desc('Update Project')
@@ -360,20 +358,24 @@ App::patch('/v1/project/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/project/:projectId/webhooks')
-    ->desc('List Webhooks')
+
+
+App::patch('/v1/project/:projectId/service')
+    ->desc('Update service status')
     ->groups(['api', 'project'])
-    ->label('scope', 'project.read')
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'listWebhooks')
+    ->label('sdk.method', 'updateServiceStatus')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_WEBHOOK_LIST)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
+    ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -381,47 +383,13 @@ App::get('/v1/project/:projectId/webhooks')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $webhooks = $dbForConsole->find('webhooks', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
+        $services = $project->getAttribute('services', []);
+        $services[$service] = $status;
 
-        $response->dynamic(new Document([
-            'webhooks' => $webhooks,
-            'total' => count($webhooks),
-        ]), Response::MODEL_WEBHOOK_LIST);
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
-
-App::patch('/v1/project/:projectId/service')
-->desc('Update service status')
-->groups(['api', 'project'])
-->label('scope', 'project.write')
-->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-->label('sdk.namespace', 'project')
-->label('sdk.method', 'updateServiceStatus')
-->label('sdk.response.code', Response::STATUS_CODE_OK)
-->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-->label('sdk.response.model', Response::MODEL_PROJECT)
-->param('projectId', '', new UID(), 'Project unique ID.')
-->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
-->param('status', null, new Boolean(), 'Service status.')
-->inject('response')
-->inject('dbForConsole')
-->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
-
-    $project = $dbForConsole->getDocument('projects', $projectId);
-
-    if ($project->isEmpty()) {
-        throw new Exception(Exception::PROJECT_NOT_FOUND);
-    }
-
-    $services = $project->getAttribute('services', []);
-    $services[$service] = $status;
-
-    $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
-
-    $response->dynamic($project, Response::MODEL_PROJECT);
-});
 
 App::patch('/v1/project/:projectId/oauth2')
     ->desc('Update Project OAuth2')
@@ -467,7 +435,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-    App::patch('/v1/project/:projectId/auth/limit')
+App::patch('/v1/project/:projectId/auth/limit')
     ->desc('Update Project users limit')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -498,7 +466,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-    App::patch('/v1/project/:projectId/auth/duration')
+App::patch('/v1/project/:projectId/auth/duration')
     ->desc('Update Project Authentication Duration')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -529,7 +497,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-    App::patch('/v1/project/:projectId/auth/:method')
+App::patch('/v1/project/:projectId/auth/:method')
     ->desc('Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -563,7 +531,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-    App::delete('/v1/project/:projectId')
+App::delete('/v1/project/:projectId')
     ->desc('Delete Project')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -604,7 +572,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
 // Webhooks
 
-    App::post('/v1/project/:projectId/webhooks')
+App::post('/v1/project/:projectId/webhooks')
     ->desc('Create Webhook')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -660,7 +628,39 @@ App::patch('/v1/project/:projectId/oauth2')
             ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-    App::get('/v1/project/:projectId/webhooks/:webhookId')
+App::get('/v1/project/:projectId/webhooks')
+    ->desc('List Webhooks')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'listWebhooks')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_WEBHOOK_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $webhooks = $dbForConsole->find('webhooks', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'webhooks' => $webhooks,
+            'total' => count($webhooks),
+        ]), Response::MODEL_WEBHOOK_LIST);
+    });
+
+App::get('/v1/project/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
     ->groups(['api', 'project'])
     ->label('scope', 'project.read')
@@ -694,7 +694,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-    App::put('/v1/project/:projectId/webhooks/:webhookId')
+App::put('/v1/project/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -748,7 +748,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-    App::patch('/v1/project/:projectId/webhooks/:webhookId/signature')
+App::patch('/v1/project/:projectId/webhooks/:webhookId/signature')
     ->desc('Update Webhook Signature Key')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -787,7 +787,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-    App::delete('/v1/project/:projectId/webhooks/:webhookId')
+App::delete('/v1/project/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -826,7 +826,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
 // Keys
 
-    App::post('/v1/project/:projectId/keys')
+App::post('/v1/project/:projectId/keys')
     ->desc('Create Key')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -876,7 +876,39 @@ App::patch('/v1/project/:projectId/oauth2')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-    App::get('/v1/project/:projectId/keys/:keyId')
+App::get('/v1/project/:projectId/keys')
+    ->desc('List Keys')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'listKeys')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_KEY_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $keys = $dbForConsole->find('keys', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'keys' => $keys,
+            'total' => count($keys),
+        ]), Response::MODEL_KEY_LIST);
+    });
+
+App::get('/v1/project/:projectId/keys/:keyId')
     ->desc('Get Key')
     ->groups(['api', 'project'])
     ->label('scope', 'project.read')
@@ -910,7 +942,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-    App::put('/v1/project/:projectId/keys/:keyId')
+App::put('/v1/project/:projectId/keys/:keyId')
     ->desc('Update Key')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -957,7 +989,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-    App::delete('/v1/project/:projectId/keys/:keyId')
+App::delete('/v1/project/:projectId/keys/:keyId')
     ->desc('Delete Key')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -996,7 +1028,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
 // Platforms
 
-    App::post('/v1/project/:projectId/platforms')
+App::post('/v1/project/:projectId/platforms')
     ->desc('Create Platform')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -1046,7 +1078,39 @@ App::patch('/v1/project/:projectId/oauth2')
             ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-    App::get('/v1/project/:projectId/platforms/:platformId')
+App::get('/v1/project/:projectId/platforms')
+    ->desc('List Platforms')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'listPlatforms')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PLATFORM_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $platforms = $dbForConsole->find('platforms', [
+            Query::equal('projectId', [$project->getId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'platforms' => $platforms,
+            'total' => count($platforms),
+        ]), Response::MODEL_PLATFORM_LIST);
+    });
+
+App::get('/v1/project/:projectId/platforms/:platformId')
     ->desc('Get Platform')
     ->groups(['api', 'project'])
     ->label('scope', 'project.read')
@@ -1080,7 +1144,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-    App::put('/v1/project/:projectId/platforms/:platformId')
+App::put('/v1/project/:projectId/platforms/:platformId')
     ->desc('Update Platform')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -1128,7 +1192,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-    App::delete('/v1/project/:projectId/platforms/:platformId')
+App::delete('/v1/project/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -1167,7 +1231,7 @@ App::patch('/v1/project/:projectId/oauth2')
 
 // Domains
 
-    App::post('/v1/project/:projectId/domains')
+App::post('/v1/project/:projectId/domains')
     ->desc('Create Domain')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -1232,9 +1296,40 @@ App::patch('/v1/project/:projectId/oauth2')
             ->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
+App::get('/v1/project/:projectId/domains')
+    ->desc('List Domains')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'project')
+    ->label('sdk.method', 'listDomains')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $domains = $dbForConsole->find('domains', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000),
+        ]);
+
+        $response->dynamic(new Document([
+            'domains' => $domains,
+            'total' => count($domains),
+        ]), Response::MODEL_DOMAIN_LIST);
+    });
 
 
-    App::get('/v1/project/:projectId/domains/:domainId')
+App::get('/v1/project/:projectId/domains/:domainId')
     ->desc('Get Domain')
     ->groups(['api', 'project'])
     ->label('scope', 'project.read')
@@ -1268,7 +1363,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-    App::patch('/v1/project/:projectId/domains/:domainId/verification')
+App::patch('/v1/project/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -1328,7 +1423,7 @@ App::patch('/v1/project/:projectId/oauth2')
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-    App::delete('/v1/project/:projectId/domains/:domainId')
+App::delete('/v1/project/:projectId/domains/:domainId')
     ->desc('Delete Domain')
     ->groups(['api', 'project'])
     ->label('scope', 'project.write')
@@ -1368,99 +1463,4 @@ App::patch('/v1/project/:projectId/oauth2')
             ->setDocument($domain);
 
         $response->noContent();
-    });
-    App::get('/v1/project/:projectId/keys')
-    ->desc('List Keys')
-    ->groups(['api', 'project'])
-    ->label('scope', 'project.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'listKeys')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_KEY_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $keys = $dbForConsole->find('keys', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'keys' => $keys,
-            'total' => count($keys),
-        ]), Response::MODEL_KEY_LIST);
-    });
-
-    App::get('/v1/project/:projectId/domains')
-    ->desc('List Domains')
-    ->groups(['api', 'project'])
-    ->label('scope', 'project.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'listDomains')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'domains' => $domains,
-            'total' => count($domains),
-        ]), Response::MODEL_DOMAIN_LIST);
-    });
-
-    App::get('/v1/project/:projectId/platforms')
-    ->desc('List Platforms')
-    ->groups(['api', 'project'])
-    ->label('scope', 'project.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'project')
-    ->label('sdk.method', 'listPlatforms')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PLATFORM_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $platforms = $dbForConsole->find('platforms', [
-            Query::equal('projectId', [$project->getId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'platforms' => $platforms,
-            'total' => count($platforms),
-        ]), Response::MODEL_PLATFORM_LIST);
     });
