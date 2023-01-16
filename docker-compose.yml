@@ -85,7 +85,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
+      #- ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
       #- ./vendor/utopia-php/cache:/usr/src/code/vendor/utopia-php/cache
     depends_on:
       - mariadb
@@ -268,7 +268,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - appwrite-certificates:/storage/certificates:rw
-      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
+      #- ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
     depends_on:
       - mariadb
       - redis
