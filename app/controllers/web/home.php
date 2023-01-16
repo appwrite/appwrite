@@ -17,7 +17,7 @@ App::get('/versions')
         ];
 
         foreach ($platforms as $platform) {
-            $languages = $platform['languages'] ?? [];
+            $languages = $platform['sdks'] ?? [];
 
             foreach ($languages as $key => $language) {
                 if (isset($language['dev']) && $language['dev']) {
