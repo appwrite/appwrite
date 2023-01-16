@@ -995,10 +995,12 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderAsc("releaseYear")', 'sleep(1)'],
+            'queries' => ['sleep("$id", 1)'],
         ]);
-die;
+
         var_dump($documents);
+
+        die;
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',

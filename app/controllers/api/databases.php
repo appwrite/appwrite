@@ -179,6 +179,9 @@ App::error()
     ->inject('request')
     ->inject('dbForProject')
     ->action(function (App $utopia, throwable $error, Request $request, Database $dbForProject) {
+        var_dump("App::error");
+        var_dump("getCode=" . $error->getCode());
+        var_dump($error->getMessage());
         if ($error instanceof Timeout) {
             var_dump("App::error() in in in in in in in in in in in in in");
             var_dump($request->getParams());
@@ -2102,7 +2105,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-        $timeoutMilliseconds = 200;
+        $timeoutMilliseconds = 200; // todo: make this configurable
 
         if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds);
@@ -2111,8 +2114,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeoutMilliseconds));
             $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
-
-        throw new Timeout('Timeout'); // Force Exception.....
 
         /**
          * Reset $collection attribute to remove prefix.
