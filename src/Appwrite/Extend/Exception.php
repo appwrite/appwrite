@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * - GraphQL
      */
 
     /** General */
@@ -177,6 +178,10 @@ class Exception extends \Exception
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
+
+    /** GraphqQL */
+    public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
+    public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     protected $type = '';
 

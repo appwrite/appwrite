@@ -1,12 +1,21 @@
-## Version 1.2.0
+## Version 1.3.0
 
 ## Features
-
 - Password history setting allows to save user's last used password so that it may not be used again. Maximum number of history saved is 20, which can be configured [#4866](https://github.com/appwrite/appwrite/pull/4866)
+
+# Version 1.2.0
+## Features
+- Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added GraphQL Explorer [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added ability to set max sessions per user per project [#4831](https://github.com/appwrite/appwrite/pull/4831)
+
+## Changes
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+- Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
+- Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
 
 ## Bugs
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
-- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 
 # Version 1.1.2
 ## Changes
@@ -34,13 +43,11 @@
 
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
 - Fix missing `status`, `buildStderr` and `buildStderr` from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
 - Fix project pagination in DB usage aggregation [#4517](https://github.com/appwrite/appwrite/pull/4517)
 - Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
 - Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
-
-# Features
-- Added Auth Duration API to allow users to set the duration of their sessions. [#4618](https://github.com/appwrite/appwrite/pull/4618)
 
 # Version 1.0.3
 ## Bugs
