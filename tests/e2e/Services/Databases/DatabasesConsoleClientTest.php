@@ -56,47 +56,47 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      */
-     public function testGetDatabaseUsage(array $data)
-     {
-         $databaseId = $data['databaseId'];
-         /**
-          * Test for FAILURE
-          */
+    public function testGetDatabaseUsage(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        /**
+         * Test for FAILURE
+         */
 
-         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
-             'content-type' => 'application/json',
-             'x-appwrite-project' => $this->getProject()['$id']
-         ], $this->getHeaders()), [
-             'range' => '32h'
-         ]);
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '32h'
+        ]);
 
-         $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
-         /**
-          * Test for SUCCESS
-          */
+        /**
+         * Test for SUCCESS
+         */
 
-         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
-             'content-type' => 'application/json',
-             'x-appwrite-project' => $this->getProject()['$id']
-         ], $this->getHeaders()), [
-             'range' => '24h'
-         ]);
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
 
-         $this->assertEquals(200, $response['headers']['status-code']);
-         $this->assertEquals(count($response['body']), 11);
-         $this->assertEquals($response['body']['range'], '24h');
-         $this->assertIsArray($response['body']['documentsCount']);
-         $this->assertIsArray($response['body']['collectionsCount']);
-         $this->assertIsArray($response['body']['documentsCreate']);
-         $this->assertIsArray($response['body']['documentsRead']);
-         $this->assertIsArray($response['body']['documentsUpdate']);
-         $this->assertIsArray($response['body']['documentsDelete']);
-         $this->assertIsArray($response['body']['collectionsCreate']);
-         $this->assertIsArray($response['body']['collectionsRead']);
-         $this->assertIsArray($response['body']['collectionsUpdate']);
-         $this->assertIsArray($response['body']['collectionsDelete']);
-     }
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(count($response['body']), 11);
+        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertIsArray($response['body']['documentsCount']);
+        $this->assertIsArray($response['body']['collectionsCount']);
+        $this->assertIsArray($response['body']['documentsCreate']);
+        $this->assertIsArray($response['body']['documentsRead']);
+        $this->assertIsArray($response['body']['documentsUpdate']);
+        $this->assertIsArray($response['body']['documentsDelete']);
+        $this->assertIsArray($response['body']['collectionsCreate']);
+        $this->assertIsArray($response['body']['collectionsRead']);
+        $this->assertIsArray($response['body']['collectionsUpdate']);
+        $this->assertIsArray($response['body']['collectionsDelete']);
+    }
 
 
     /**
