@@ -891,7 +891,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    //$projectId = '637e1b81cfbec5916845';
+    $projectId = '63c41b7aed635ef2bab7';
     if ($projectId === 'console') {
         return $console;
     }
