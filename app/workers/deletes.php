@@ -258,11 +258,8 @@ class DeletesV1 extends Worker
         // Delete project tables
         $dbForProject = $this->getProjectDB($projectId, $document);
 
-        $limit = 50;
-        $offset = 0;
-
         while (true) {
-            $collections = $dbForProject->listCollections($limit, $offset);
+            $collections = $dbForProject->listCollections();
 
             if (empty($collections)) {
                 break;
@@ -271,8 +268,6 @@ class DeletesV1 extends Worker
             foreach ($collections as $collection) {
                 $dbForProject->deleteCollection($collection->getId());
             }
-
-            $offset += $limit;
         }
 
         // Delete metadata tables
