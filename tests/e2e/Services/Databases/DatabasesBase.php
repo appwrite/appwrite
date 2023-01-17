@@ -988,7 +988,7 @@ trait DatabasesBase
     /**
      * @depends testCreateDocument
      */
-    public function testTimeout(array $data): array
+    public function testCreateTimeout(array $data): void
     {
         $databaseId = $data['databaseId'];
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -998,19 +998,40 @@ trait DatabasesBase
             'queries' => ['sleep("$id", 1)'],
         ]);
 
-        var_dump($documents);
+        $this->assertEquals(500, $documents['headers']['status-code']);
+    }
 
-        die;
 
+    /**
+     * @depends testCreateDocument
+     */
+    public function testUpdateAndBlockTimeout(array $data): void
+    {
+        $databaseId = $data['databaseId'];
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderAsc("releaseYear")', 'sleep(1)'],
-
+            'queries' => ['sleep("$id", 1)'],
         ]);
 
-        var_dump($documents);
+        $this->assertEquals(500, $documents['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDocument
+     */
+    public function testBlockedAtInitTimeout(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['sleep("$id", 1)'],
+        ]);
+
+        $this->assertEquals(500, $documents['headers']['status-code']);
         exit;
     }
 

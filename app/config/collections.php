@@ -3587,7 +3587,7 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('route'),
+                '$id' => ID::custom('path'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2500,
