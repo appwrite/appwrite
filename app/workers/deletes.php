@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -13,6 +14,7 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
 use Utopia\Audit\Audit;
+use Utopia\Database\DateTime;
 
 require_once __DIR__ . '/../init.php';
 
@@ -96,7 +98,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_SESSIONS:
-                $this->deleteExpiredSessions($this->args['datetime']);
+                $this->deleteExpiredSessions();
                 break;
 
             case DELETE_TYPE_CERTIFICATES:
@@ -105,7 +107,7 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($this->args['dateTime1d'], $this->args['dateTime30m']);
+                $this->deleteUsageStats($this->args['hourlyUsageRetentionDatetime']);
                 break;
 
             case DELETE_TYPE_CACHE_BY_RESOURCE:
@@ -214,22 +216,15 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param string $datetime1d
-     * @param string $datetime30m
+     * @param string $hourlyUsageRetentionDatetime
      */
-    protected function deleteUsageStats(string $datetime1d, string $datetime30m)
+    protected function deleteUsageStats(string $hourlyUsageRetentionDatetime)
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($datetime1d, $datetime30m) {
+        $this->deleteForProjectIds(function (string $projectId) use ($hourlyUsageRetentionDatetime) {
             $dbForProject = $this->getProjectDB($projectId);
-            // Delete Usage stats
             $this->deleteByGroup('stats', [
-                Query::lessThan('time', $datetime1d),
-                Query::equal('period', ['1d']),
-            ], $dbForProject);
-
-            $this->deleteByGroup('stats', [
-                Query::lessThan('time', $datetime30m),
-                Query::equal('period', ['30m']),
+                Query::lessThan('time', $hourlyUsageRetentionDatetime),
+                Query::equal('period', ['1h']),
             ], $dbForProject);
         });
     }
@@ -259,7 +254,7 @@ class DeletesV1 extends Worker
         $this->getProjectDB($projectId)->delete($projectId);
 
         // Delete all storage directories
-        $uploads = new Local(APP_STORAGE_UPLOADS . '/app-' . $document->getId());
+        $uploads = $this->getFilesDevice($document->getId());
         $cache = new Local(APP_STORAGE_CACHE . '/app-' . $document->getId());
 
         $uploads->delete($uploads->getRoot(), true);
@@ -322,16 +317,20 @@ class DeletesV1 extends Worker
         });
     }
 
-    /**
-     * @param string $datetime
-     */
-    protected function deleteExpiredSessions(string $datetime): void
+    protected function deleteExpiredSessions(): void
     {
-        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
+        $consoleDB = $this->getConsoleDB();
+
+        $this->deleteForProjectIds(function (string $projectId) use ($consoleDB) {
             $dbForProject = $this->getProjectDB($projectId);
+
+            $project = $consoleDB->getDocument('projects', $projectId);
+            $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
+
             // Delete Sessions
             $this->deleteByGroup('sessions', [
-                Query::lessThan('expire', $datetime)
+                Query::lessThan('$createdAt', $expired)
             ], $dbForProject);
         });
     }
@@ -425,7 +424,7 @@ class DeletesV1 extends Worker
          * Delete Deployments
          */
         Console::info("Deleting deployments for function " . $functionId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = $this->getFunctionsDevice($projectId);
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceId', [$functionId])
@@ -442,7 +441,7 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for function " . $functionId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $storageBuilds = $this->getBuildsDevice($projectId);
         foreach ($deploymentIds as $deploymentId) {
             $this->deleteByGroup('builds', [
                 Query::equal('deploymentId', [$deploymentId])
@@ -491,7 +490,7 @@ class DeletesV1 extends Worker
          * Delete deployment files
          */
         Console::info("Deleting deployment files for deployment " . $deploymentId);
-        $storageFunctions = new Local(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        $storageFunctions = $this->getFunctionsDevice($projectId);
         if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
             Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
         } else {
@@ -502,7 +501,7 @@ class DeletesV1 extends Worker
          * Delete builds
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
-        $storageBuilds = new Local(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        $storageBuilds = $this->getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
             Query::equal('deploymentId', [$deploymentId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
@@ -671,7 +670,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($projectId);
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
 
-        $device = $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
     }

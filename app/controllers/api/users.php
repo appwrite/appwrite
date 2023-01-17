@@ -63,7 +63,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'status' => true,
             'password' => (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
-            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptions,
+            'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
             'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'registration' => DateTime::now(),
             'reset' => false,
@@ -414,7 +414,7 @@ App::get('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
@@ -1004,7 +1004,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $sessionId);
+            ->setParam('sessionId', $sessionId)
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
         $response->noContent();
     });
@@ -1116,8 +1117,8 @@ App::get('/v1/users/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -1171,7 +1172,7 @@ App::get('/v1/users/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [

@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\SMS\Adapter\Mock;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -716,12 +717,12 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        \sleep(2);
+        \sleep(5);
 
         $smsRequest = $this->getLastRequest();
 
         $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
-        $this->assertEquals('Appwrite Phone Authentication', $smsRequest['headers']['User-Agent']);
+        $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
         $this->assertEquals('username', $smsRequest['headers']['X-Username']);
         $this->assertEquals('password', $smsRequest['headers']['X-Key']);
         $this->assertEquals('POST', $smsRequest['method']);
@@ -923,6 +924,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
+    #[Retry(count: 1)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';

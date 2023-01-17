@@ -181,6 +181,9 @@ class BuildsV1 extends Worker
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['response']);
 
+            /* Also update the deployment buildTime */
+            $deployment->setAttribute('buildTime', $response['duration']);
+
             Console::success("Build id: $buildId created");
 
             /** Set auto deploy */

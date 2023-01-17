@@ -30,7 +30,7 @@ class Auth
     ];
 
     public const DEFAULT_ALGO = 'argon2';
-    public const DEFAULT_ALGO_OPTIONS = ['memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
+    public const DEFAULT_ALGO_OPTIONS = ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
 
     /**
      * User Roles.
@@ -352,19 +352,19 @@ class Auth
      *
      * @param array  $sessions
      * @param string $secret
+     * @param string $expires
      *
      * @return bool|string
      */
-    public static function sessionVerify(array $sessions, string $secret)
+    public static function sessionVerify(array $sessions, string $secret, int $expires)
     {
         foreach ($sessions as $session) {
             /** @var Document $session */
             if (
                 $session->isSet('secret') &&
-                $session->isSet('expire') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz($session->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
+                DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $expires)) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }

@@ -170,8 +170,8 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_AGGREGATION_INTERVAL',
-                'description' => 'Deprecated since 1.0.0, use `_APP_USAGE_TIMESERIES_INTERVAL` and `_APP_USAGE_DATABASE_INTERVAL` instead.',
-                'introduction' => '0.10.0',
+                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Database from TimeSeries data. The default value is 30 seconds. Reintroduced in 1.1.0.',
+                'introduction' => '1.1.0',
                 'default' => '30',
                 'required' => false,
                 'question' => '',
@@ -179,7 +179,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_TIMESERIES_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats and syncing it to Appwrite Database from Timeseries Database. The default value is 30 seconds.',
+                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
                 'introduction' => '1.0.0',
                 'default' => '30',
                 'required' => false,
@@ -188,7 +188,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_DATABASE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite usage process should wait before aggregating stats from data in Appwrite Database. The default value is 15 minutes.',
+                'description' => 'Deprecated since 1.1.0 use _APP_USAGE_AGGREGATION_INTERVAL instead.',
                 'introduction' => '1.0.0',
                 'default' => '900',
                 'required' => false,
@@ -857,7 +857,49 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_USAGE_HOURLY',
+                'description' => 'The maximum duration (in seconds) upto which to retain hourly usage metrics. The default value is 8640000 seconds (100 days).',
+                'introduction' => '',
+                'default' => '8640000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'GraphQL',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
+                'description' => 'Maximum number of batched queries per request. The default value is 10.',
+                'introduction' => '1.2.0',
+                'default' => '10',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GRAPHQL_MAX_COMPLEXITY',
+                'description' => 'Maximum complexity of a GraphQL query. One field adds one to query complexity. Lists multiply the complexity by the number of items requested. The default value is 250.',
+                'introduction' => '1.2.0',
+                'default' => '250',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GRAPHQL_MAX_DEPTH',
+                'description' => 'Maximum depth of a GraphQL query. One nested field level adds one to query depth. The default value is 3.',
+                'introduction' => '1.2.0',
+                'default' => '3',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
 ];
