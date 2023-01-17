@@ -1,3 +1,7 @@
+# Version 1.2.1
+## Bugs
+- Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+
 # Version 1.2.0
 ## Features
 - Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
