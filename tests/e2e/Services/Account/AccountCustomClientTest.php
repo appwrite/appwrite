@@ -40,6 +40,7 @@ class AccountCustomClientTest extends Scope
             'provider' => $provider,
             'appId' => $appId,
             'secret' => $secret,
+            'enabled' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -496,6 +497,7 @@ class AccountCustomClientTest extends Scope
             'provider' => $provider,
             'appId' => $appId,
             'secret' => $secret,
+            'enabled' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
