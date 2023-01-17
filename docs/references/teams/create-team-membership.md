@@ -1,4 +1,6 @@
-Invite a new member to join your team. If initiated from the client SDK, an email with a link to join the team will be sent to the member's email address and an account will be created for them should they not be signed up already. If initiated from server-side SDKs, the new member will automatically be added to the team.
+Invite a new member to join your team. You can also add existing users with their unique ID. You can also invite using a phone number. If initiated from the client SDK, an email or sms with a link to join the team will be sent to the member's email address or phone number and an account will be created for them should they not exist already. If initiated from server-side SDKs, the new member will automatically be added to the team.
+
+You can only provide one of the User ID, email or phone number to add member to the team. And the priority will be User ID > email and > phone number.
 
 Use the 'url' parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the [Update Team Membership Status](/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow the user to accept the invitation to the team. 
 
