@@ -35,7 +35,7 @@ trait ProjectCustom
         $this->assertEquals('Demo Project Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
-        $project = $this->client->call(Client::METHOD_POST, '/projects', [
+        $project = $this->client->call(Client::METHOD_POST, '/project', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -59,7 +59,7 @@ trait ProjectCustom
         $this->assertEquals(201, $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
+        $key = $this->client->call(Client::METHOD_POST, '/project/' . $project['body']['$id'] . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -95,7 +95,7 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
+        $webhook = $this->client->call(Client::METHOD_POST, '/project/' . $project['body']['$id'] . '/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -138,7 +138,7 @@ trait ProjectCustom
 
         $projectId = self::$project['$id'];
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+        $key = $this->client->call(Client::METHOD_POST, '/project/' . $projectId . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],

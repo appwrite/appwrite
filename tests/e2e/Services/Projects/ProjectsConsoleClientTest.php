@@ -166,7 +166,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('Project Test 2', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/project', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
