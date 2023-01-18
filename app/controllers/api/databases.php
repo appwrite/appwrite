@@ -1,8 +1,6 @@
 <?php
 
 use Appwrite\Utopia\Request;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
@@ -161,14 +159,16 @@ App::init()
         $queries = $request->getParam('queries'); // validate malicious
         $uri = $request->getURI();
         $key = md5(json_encode([$uri, $queries]));
-        var_dump($key);
+        var_dump("key = " . $key);
         var_dump($queries);
         /* @var $document Document */
         $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+        var_dump("App::init() document start ------- ");
         var_dump($document);
+        var_dump("App::init() document end ------- ");
         if (!$document->isEmpty() && $document->getAttribute('blocked') === true) {
-            var_dump("App::init() Exception::TIMEOUT_ROUTE_BLOCKED  -------------------------------------");
-            throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+            var_dump("App::init() Exception::TIMEOUT_BLOCKED  -------------------------------------");
+            throw new Exception(Exception::TIMEOUT_BLOCKED);
         }
         var_dump("App::init() end -------------------------------------");
     });
@@ -181,19 +181,18 @@ App::error()
     ->inject('dbForProject')
     ->action(function (App $utopia, throwable $error, Request $request, Database $dbForProject) {
         if ($error instanceof Timeout) {
-            var_dump("start App::error -------------------------------------");
-            var_dump("getCode=" . $error->getCode());
+            var_dump("App::error start instanceof Timeout -------------------------------------");
             var_dump($error->getMessage());
             var_dump($request->getParams());
             $queries = $request->getParam('queries'); // validate malicious
             $uri = $request->getURI();
             $key = md5(json_encode([$uri, $queries]));
-            var_dump($key);
+            var_dump("key = " . $key);
             var_dump($queries);
             /* @var $document Document */
             $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
             if ($document->isEmpty()) {
-                var_dump("createDocument createDocument createDocument createDocument createDocument createDocument");
+                var_dump("createDocument start! -----------------------");
                 $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
                     '$id' => $key,
                     'blocked' => false,
@@ -201,21 +200,25 @@ App::error()
                     'queries' => $request->getParam('queries'),
                     'path' => $request->getURI(),
                 ])));
+                var_dump("createDocument end!!! -----------------------");
             } else {
-                var_dump("updateDocument updateDocument updateDocument updateDocument updateDocument updateDocument updateDocument");
+                var_dump("updateDocument start! updateDocument updateDocument updateDocument updateDocument updateDocument updateDocument");
                 $document['count']++;
                 if ($document['count'] > 1) { // todo: make this configurable
                     $document['blocked'] = true;
                 }
                 $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+                var_dump("updateDocument end!!! updateDocument end!! updateDocument end!! updateDocument end!! updateDocument end!! ");
             }
 
-            var_dump($document);
             if ($document['blocked'] === true) {
                 var_dump("blocked throwing exception");
-                throw new Exception(Exception::TIMEOUT_ROUTE_BLOCKED);
+                throw new Exception(Exception::TIMEOUT_BLOCKED);
             }
-            var_dump("end App::error-------------------------------------");
+
+            var_dump("App::error end !! instanceof Timeout-------------------------------------");
+
+            //throw new Exception(Exception::TIMEOUT);
         }
 
         throw $error;
@@ -2057,6 +2060,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('mode')
     ->inject('request')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Request $request) {
+
+        var_dump("*************** /v1/databases/:databaseId/collections/:collectionId/documents *************** ");
+
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {

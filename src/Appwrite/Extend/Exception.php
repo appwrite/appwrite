@@ -183,7 +183,8 @@ class Exception extends \Exception
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     /** Timeout */
-    public const TIMEOUT_ROUTE_BLOCKED              = 'timeout_route_blocked';
+    public const TIMEOUT_BLOCKED                    = 'timeout_blocked';
+    public const TIMEOUT                            = 'timeout';
 
     protected $type = '';
 

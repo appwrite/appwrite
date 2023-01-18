@@ -559,4 +559,14 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
+//    Exception::TIMEOUT_BLOCKED => [
+//        'name' => Exception::TIMEOUT_BLOCKED,
+//        'description' => Exception::TIMEOUT_BLOCKED,
+//        'code' => 403,
+//    ],
+//    Exception::TIMEOUT => [
+//        'name' => Exception::TIMEOUT,
+//        'description' => Exception::TIMEOUT,
+//        'code' => 408,
+//    ],
 ];
