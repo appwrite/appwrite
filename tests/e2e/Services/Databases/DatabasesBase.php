@@ -1019,7 +1019,7 @@ trait DatabasesBase
     /**
      * @depends testCreateDocument
      */
-    public function testBlockedAtInitTimeout(array $data): array
+    public function testBlockedAtInitTimeout(array $data): void
     {
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1029,9 +1029,6 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(403, $documents['headers']['status-code']);
-
-        exit;
-
     }
 
     /**
