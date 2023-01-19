@@ -401,11 +401,6 @@ App::error()
     ->inject('loggerBreadcrumbs')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
-
-        var_dump($error->getCode());
-        var_dump($error->getMessage());
-        var_dump(get_class($error));
-
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
 
