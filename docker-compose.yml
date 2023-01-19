@@ -80,6 +80,7 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
+      #- ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src

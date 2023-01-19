@@ -151,7 +151,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
 
 App::init()
-    //->groups(['timeout'])
+    ->groups(['timeout'])
     ->inject('request')
     ->inject('dbForProject')
     ->action(function (Request $request, Database $dbForProject) {
@@ -174,16 +174,19 @@ App::init()
     });
 
 App::error()
-    //->groups(['timeout'])
+    ->groups(['timeout'])
     ->inject('utopia')
     ->inject('error')
     ->inject('request')
     ->inject('dbForProject')
     ->action(function (App $utopia, throwable $error, Request $request, Database $dbForProject) {
+
+        var_dump("App::error start instanceof Timeout -------------------------------------");
+        var_dump($error->getMessage());
+        var_dump($request->getParams());
+
         if ($error instanceof Timeout) {
-            var_dump("App::error start instanceof Timeout -------------------------------------");
-            var_dump($error->getMessage());
-            var_dump($request->getParams());
+            $error = new Exception(Exception::TIMEOUT);
             $queries = $request->getParam('queries'); // validate malicious
             $uri = $request->getURI();
             $key = md5(json_encode([$uri, $queries]));
@@ -204,7 +207,7 @@ App::error()
             } else {
                 var_dump("updateDocument start! updateDocument updateDocument updateDocument updateDocument updateDocument updateDocument");
                 $document['count']++;
-                if ($document['count'] > 1) { // todo: make this configurable
+                if ($document['count'] > 1) { // todo: make this configurable exceeds max
                     $document['blocked'] = true;
                 }
                 $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
@@ -213,15 +216,13 @@ App::error()
 
             if ($document['blocked'] === true) {
                 var_dump("blocked throwing exception");
-                throw new Exception(Exception::TIMEOUT_BLOCKED);
+                $error = new Exception(Exception::TIMEOUT_BLOCKED);
             }
-
-            var_dump("App::error end !! instanceof Timeout-------------------------------------");
-
-            //throw new Exception(Exception::TIMEOUT);
         }
 
-        throw $error;
+        App::setResource('error', fn() => $error);
+
+        var_dump("App::error end !! instanceof Timeout-------------------------------------");
     });
 
 
@@ -2041,7 +2042,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('List Documents')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database','timeout'])
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])

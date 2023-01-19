@@ -401,6 +401,11 @@ App::error()
     ->inject('loggerBreadcrumbs')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
+
+        var_dump($error->getCode());
+        var_dump($error->getMessage());
+        var_dump(get_class($error));
+
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
 
@@ -498,6 +503,7 @@ App::error()
             case 402: // Error allowed publicly
             case 403: // Error allowed publicly
             case 404: // Error allowed publicly
+            case 408: // Error allowed publicly
             case 409: // Error allowed publicly
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly

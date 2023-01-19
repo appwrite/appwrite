@@ -990,17 +990,14 @@ trait DatabasesBase
      */
     public function testCreateTimeout(array $data): void
     {
-        //sleep(1);
-        $databaseId = $data['databaseId'];
-
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => ['sleep("$id", 1)'],
         ]);
 
-        $this->assertEquals(500, $documents['headers']['status-code']);
+        $this->assertEquals(408, $documents['headers']['status-code']);
     }
 
 
@@ -1009,35 +1006,32 @@ trait DatabasesBase
      */
     public function testUpdateAndBlockTimeout(array $data): void
     {
-       // sleep(1);
-        $databaseId = $data['databaseId'];
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => ['sleep("$id", 1)'],
         ]);
 
-        $this->assertEquals(500, $documents['headers']['status-code']);
+        $this->assertEquals(403, $documents['headers']['status-code']);
     }
 
     /**
      * @depends testCreateDocument
      */
-    public function testBlockedAtInitTimeout(array $data): void
+    public function testBlockedAtInitTimeout(array $data): array
     {
-       // sleep(1);
-        $databaseId = $data['databaseId'];
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => ['sleep("$id", 1)'],
         ]);
 
-        $this->assertEquals(500, $documents['headers']['status-code']);
+        $this->assertEquals(403, $documents['headers']['status-code']);
 
         exit;
+
     }
 
     /**

@@ -200,6 +200,9 @@ class Exception extends \Exception
 
         $this->message = $message ?? $this->message;
         $this->code = $code ?? $this->code;
+        var_dump("__construct __construct __construct __construct __construct __construct __construct");
+        var_dump($this->code);
+        var_dump("__construct __construct __construct __construct __construct __construct __construct");
 
         parent::__construct($this->message, $this->code, $previous);
     }
