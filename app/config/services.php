@@ -111,7 +111,7 @@ return [
     'project' => [
         'key' => 'project',
         'name' => 'Project',
-        'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
+        'subtitle' => 'The Project service allows you to manage a specific project on your Appwrite server.',
         'description' => '',
         'controller' => 'api/project.php',
         'sdk' => true,
