@@ -99,13 +99,13 @@ class BuildsV1 extends Worker
                 'startTime' => $startTime,
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
-                'path' => '',
-                'size' => 0,
+                'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
                 'sourceType' => $device,
                 'stdout' => '',
                 'stderr' => '',
+                'endTime' => null,
                 'duration' => 0
             ]));
             $deployment->setAttribute('buildId', $buildId);
@@ -186,12 +186,14 @@ class BuildsV1 extends Worker
                 ]
             );
 
+            $endTime = new \DateTime();
+            $endTime->setTimestamp($response['endTimeUnix']);
+
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('endTime', DateTime::format($endTime));
             $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
-            $build->setAttribute('path', $response['path']);
-            $build->setAttribute('size', $response['size']);
+            $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
@@ -222,7 +224,7 @@ class BuildsV1 extends Worker
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
-
+            $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', $interval->format('%s') + 0);
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
@@ -258,7 +260,6 @@ class BuildsV1 extends Worker
                     ->setParam('builds.{scope}.compute', 1)
                     ->setParam('buildStatus', $build->getAttribute('status', ''))
                     ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('buildSize', $build->getAttribute('size'))
                     ->setParam('networkRequestSize', 0)
                     ->setParam('networkResponseSize', 0)
                     ->submit();
