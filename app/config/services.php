@@ -98,7 +98,7 @@ return [
     'admin' => [
         'key' => 'admin',
         'name' => 'admin',
-        'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
+        'subtitle' => 'The Admin service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
         'controller' => 'api/admin.php',
         'sdk' => true,
