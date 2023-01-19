@@ -52,7 +52,7 @@ class AccountConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
-        $this->assertEquals($response['body']['type'], Exception::GENERAL_CODES_DISABLED);
+        $this->assertEquals($response['body']['type'], Exception::USER_INVALID_CODE);
 
         /**
          * Test for SUCCESS
