@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "111a4f35f3b0692d332b20bca3946014",
+    "content-hash": "03cce7587051d385240c1682b974deae",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1403,62 +1403,6 @@
                 "source": "https://github.com/resque/php-resque/tree/v1.3.6"
             },
             "time": "2020-04-16T16:39:50+00:00"
-        },
-        {
-            "name": "slickdeals/statsd",
-            "version": "3.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Slickdeals/statsd-php.git",
-                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/225588a0a079e145359049f6e5e23eedb1b4c17f",
-                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">= 7.3 || ^8"
-            },
-            "replace": {
-                "domnikl/statsd": "self.version"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "phpunit/phpunit": "^9",
-                "vimeo/psalm": "^4.6"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Domnikl\\Statsd\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Dominik Liebler",
-                    "email": "liebler.dominik@gmail.com"
-                }
-            ],
-            "description": "a PHP client for statsd",
-            "homepage": "https://github.com/Slickdeals/statsd-php",
-            "keywords": [
-                "Metrics",
-                "monitoring",
-                "statistics",
-                "statsd",
-                "udp"
-            ],
-            "support": {
-                "issues": "https://github.com/Slickdeals/statsd-php/issues",
-                "source": "https://github.com/Slickdeals/statsd-php/tree/3.1.0"
-            },
-            "time": "2021-06-04T20:33:46+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -3226,16 +3170,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.15.2",
+            "version": "v4.15.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc"
+                "reference": "570e980a201d8ed0236b0a62ddf2c9cbb2034039"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc",
-                "reference": "f59bbe44bf7d96f24f3e2b4ddc21cd52c1d2adbc",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/570e980a201d8ed0236b0a62ddf2c9cbb2034039",
+                "reference": "570e980a201d8ed0236b0a62ddf2c9cbb2034039",
                 "shasum": ""
             },
             "require": {
@@ -3276,9 +3220,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.15.2"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.15.3"
             },
-            "time": "2022-11-12T15:38:23+00:00"
+            "time": "2023-01-16T22:05:37+00:00"
         },
         {
             "name": "phar-io/manifest",
