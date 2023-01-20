@@ -1,6 +1,7 @@
 # Version 1.2.1
 ## Bugs
 - Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+- Fix timestamp format in Realtime response [#4515](https://github.com/appwrite/appwrite/pull/4515)
 
 # Version 1.2.0
 ## Features
