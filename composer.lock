@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac80cafdd8c2c6deaec3dfe628084655",
+    "content-hash": "3e00aa37bea907b7dcca7f912402a392",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1808,29 +1808,28 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.18.0",
+            "version": "0.19.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8496401234f73a49f8c4259d3e89ab4a7c1f9ecf"
+                "reference": "419b6e2e0a5dec35ea83a25758df9cd129b6c412"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8496401234f73a49f8c4259d3e89ab4a7c1f9ecf",
-                "reference": "8496401234f73a49f8c4259d3e89ab4a7c1f9ecf",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/419b6e2e0a5dec35ea83a25758df9cd129b6c412",
+                "reference": "419b6e2e0a5dec35ea83a25758df9cd129b6c412",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.30.*"
+                "utopia-php/database": "0.31.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
-                "phpunit/phpunit": "^9.4",
-                "vimeo/psalm": "4.0.1"
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpunit": "^9.4"
             },
             "type": "library",
             "autoload": {
@@ -1852,9 +1851,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.18.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.19.0"
             },
-            "time": "2023-02-14T09:56:04+00:00"
+            "time": "2023-02-26T03:28:48+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1913,22 +1912,22 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.20.0",
+            "version": "0.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "3fce3f4ad3ea9dfcb39b79668abd76331412a5ed"
+                "reference": "7f9783a14718c82570c6effb35a3cb42c30b13a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/3fce3f4ad3ea9dfcb39b79668abd76331412a5ed",
-                "reference": "3fce3f4ad3ea9dfcb39b79668abd76331412a5ed",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/7f9783a14718c82570c6effb35a3cb42c30b13a2",
+                "reference": "7f9783a14718c82570c6effb35a3cb42c30b13a2",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.30.*"
+                "utopia-php/database": "0.31.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -1956,9 +1955,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.20.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.21.0"
             },
-            "time": "2023-02-14T09:46:54+00:00"
+            "time": "2023-02-26T03:28:30+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2115,16 +2114,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.30.1",
+            "version": "0.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1cea72c1217357bf0747ae4f28ebef57e9dc0e65"
+                "reference": "61f9f4743a317f1d78558a5f981adf74e7fdc931"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1cea72c1217357bf0747ae4f28ebef57e9dc0e65",
-                "reference": "1cea72c1217357bf0747ae4f28ebef57e9dc0e65",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/61f9f4743a317f1d78558a5f981adf74e7fdc931",
+                "reference": "61f9f4743a317f1d78558a5f981adf74e7fdc931",
                 "shasum": ""
             },
             "require": {
@@ -2163,9 +2162,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.30.1"
+                "source": "https://github.com/utopia-php/database/tree/0.31.0"
             },
-            "time": "2023-02-14T06:25:03+00:00"
+            "time": "2023-02-23T09:49:44+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3742,23 +3741,23 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.24",
+            "version": "9.2.25",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "2cf940ebc6355a9d430462811b5aaa308b174bed"
+                "reference": "0e2b40518197a8c0d4b08bc34dfff1c99c508954"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/2cf940ebc6355a9d430462811b5aaa308b174bed",
-                "reference": "2cf940ebc6355a9d430462811b5aaa308b174bed",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/0e2b40518197a8c0d4b08bc34dfff1c99c508954",
+                "reference": "0e2b40518197a8c0d4b08bc34dfff1c99c508954",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-libxml": "*",
                 "ext-xmlwriter": "*",
-                "nikic/php-parser": "^4.14",
+                "nikic/php-parser": "^4.15",
                 "php": ">=7.3",
                 "phpunit/php-file-iterator": "^3.0.3",
                 "phpunit/php-text-template": "^2.0.2",
@@ -3807,7 +3806,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.24"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.25"
             },
             "funding": [
                 {
@@ -3815,7 +3814,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-01-26T08:26:55+00:00"
+            "time": "2023-02-25T05:32:00+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -5127,16 +5126,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.7.1",
+            "version": "3.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619"
+                "reference": "ed8e00df0a83aa96acf703f8c2979ff33341f879"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/1359e176e9307e906dc3d890bcc9603ff6d90619",
-                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/ed8e00df0a83aa96acf703f8c2979ff33341f879",
+                "reference": "ed8e00df0a83aa96acf703f8c2979ff33341f879",
                 "shasum": ""
             },
             "require": {
@@ -5172,14 +5171,15 @@
             "homepage": "https://github.com/squizlabs/PHP_CodeSniffer",
             "keywords": [
                 "phpcs",
-                "standards"
+                "standards",
+                "static analysis"
             ],
             "support": {
                 "issues": "https://github.com/squizlabs/PHP_CodeSniffer/issues",
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2022-06-18T07:21:10+00:00"
+            "time": "2023-02-22T23:07:41+00:00"
         },
         {
             "name": "swoole/ide-helper",
