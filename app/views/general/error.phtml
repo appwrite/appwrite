@@ -6,44 +6,60 @@ $message = $this->getParam('message', '');
 $trace = $this->getParam('trace', []);
 $projectName = $this->getParam('projectName', '');
 $projectURL = $this->getParam('projectURL', '');
+$title = $this->getParam('title', '')
 ?>
 
-<section class="zone large margin-top padding">
-    <h1 class="margin-bottom">Error <?php echo $code; ?></h1>
+<!DOCTYPE html>
+<html lang="en">
 
-    <p><?php echo $message; ?></p>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $title; ?></title>
+</head>
 
-    <small>Error ID: <?php echo $errorID; ?></small>
+<body>
 
-    <?php if (!empty($projectURL)): ?>
-        <hr class="margin-top margin-bottom" />
+    <section>
+        <h1>Error <?php echo $code; ?></h1>
 
-        <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener">Back to <?php echo $projectName; ?></a></p>
-    <?php endif; ?>
+        <p><?php echo $message; ?></p>
 
-    <?php if ($development): ?>
-        <div class="margin-top-xl">
-            
-            <h2 class="margin-bottom-large">Error Trace</h2>
+        <small>Error ID: <?php echo $errorID; ?></small>
 
-            <?php foreach($trace as $log): ?>
-                <table class="margin-bottom-xl">
-                    <?php foreach($log as $key => $value): ?>
-                        <tr>
-                            <td style="width: 120px"><?php echo $key; ?></td>
-                            <td>
-                                <?php if (is_array($value)): ?>
-                                    <?php var_dump($value); ?>
-                                <?php else: ?>
-                                    <?php echo $value; ?>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        
+        <?php if (!empty($projectURL)) : ?>
+            <hr />
+
+            <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener">Back to <?php echo $projectName; ?></a></p>
+        <?php endif; ?>
+
+        <?php if ($development) : ?>
+            <div>
+
+                <h2>Error Trace</h2>
+
+                <?php foreach ($trace as $log) : ?>
+                    <table>
+                        <?php foreach ($log as $key => $value) : ?>
+                            <tr>
+                                <td style="width: 120px"><?php echo $key; ?></td>
+                                <td>
+                                    <?php if (is_array($value)) : ?>
+                                        <?php var_dump($value); ?>
+                                    <?php else : ?>
+                                        <?php echo $value; ?>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+
                         <?php endforeach; ?>
-                </table>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+                    </table>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
-</section>
+    </section>
+</body>
+
+</html>

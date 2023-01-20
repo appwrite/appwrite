@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Config\Config;
@@ -101,11 +102,30 @@ class Project extends Model
                 'default' => '',
                 'example' => '131102020',
             ])
+            ->addRule('authDuration', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Session duration in seconds.',
+                'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+                'example' => 60,
+            ])
             ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
                 'default' => 0,
                 'example' => 100,
+            ])
+            ->addRule('authSessionsLimit', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Max sessions allowed per user. 100 maximum.',
+                'default' => 10,
+                'example' => 10,
+            ])
+            ->addRule('providers', [
+                'type' => Response::MODEL_PROVIDER,
+                'description' => 'List of Providers.',
+                'default' => [],
+                'example' => new \stdClass(),
+                'array' => true,
             ])
             ->addRule('platforms', [
                 'type' => Response::MODEL_PLATFORM,
@@ -138,31 +158,7 @@ class Project extends Model
         ;
 
         $services = Config::getParam('services', []);
-        $providers = Config::getParam('providers', []);
         $auth = Config::getParam('auth', []);
-
-        foreach ($providers as $index => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $name = (isset($provider['name'])) ? $provider['name'] : 'Unknown';
-
-            $this
-                ->addRule('provider' . \ucfirst($index) . 'Appid', [
-                    'type' => self::TYPE_STRING,
-                    'description' => $name . ' OAuth app ID.',
-                    'example' => '123247283472834787438',
-                    'default' => '',
-                ])
-                ->addRule('provider' . \ucfirst($index) . 'Secret', [
-                    'type' => self::TYPE_STRING,
-                    'description' => $name . ' OAuth secret ID.',
-                    'example' => 'djsgudsdsewe43434343dd34...',
-                    'default' => '',
-                ])
-            ;
-        }
 
         foreach ($auth as $index => $method) {
             $name = $method['name'] ?? '';
@@ -224,6 +220,7 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
+        // Services
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
 
@@ -236,10 +233,13 @@ class Project extends Model
             $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
         }
 
+        // Auth
         $authValues = $document->getAttribute('auths', []);
         $auth = Config::getParam('auth', []);
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
+        $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];
@@ -247,17 +247,27 @@ class Project extends Model
             $document->setAttribute('auth' . ucfirst($key), $value);
         }
 
+        // Providers
         $providers = Config::getParam('providers', []);
         $providerValues = $document->getAttribute('authProviders', []);
+        $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
             if (!$provider['enabled']) {
+                // Disabled by Appwrite configuration, exclude from response
                 continue;
             }
-            $appId = $providerValues[$key . 'Appid'] ?? '';
-            $secret = $providerValues[$key . 'Secret'] ?? '';
-            $document->setAttribute('provider' . ucfirst($key) . 'Appid', $appId)->setAttribute('provider' . ucfirst($key) . 'Secret', $secret);
+
+            $projectProviders[] = new Document([
+                'name' => ucfirst($key),
+                'appId' => $providerValues[$key . 'Appid'] ?? '',
+                'secret' => $providerValues[$key . 'Secret'] ?? '',
+                'enabled' => $providerValues[$key . 'Enabled'] ?? false,
+            ]);
         }
+
+        $document->setAttribute("providers", $projectProviders);
+
         return $document;
     }
 }

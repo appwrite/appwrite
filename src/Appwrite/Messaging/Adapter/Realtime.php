@@ -321,7 +321,7 @@ class Realtime extends Adapter
                     }
                 } elseif ($parts[2] === 'deployments') {
                     $channels[] = 'console';
-
+                    $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 

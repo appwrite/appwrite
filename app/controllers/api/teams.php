@@ -54,7 +54,7 @@ App::post('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('teamId', '', new CustomId(), 'Team ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', true)
     ->inject('response')
@@ -434,14 +434,37 @@ App::post('/v1/teams/:teamId/memberships')
         $url = Template::unParseURL($url);
 
         if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
+            $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+
+            $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+            $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+            $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+            $body->setParam('{{owner}}', $user->getAttribute('name'));
+            $body->setParam('{{team}}', $team->getAttribute('name'));
+
+            $body
+                ->setParam('{{subject}}', $subject)
+                ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                ->setParam('{{name}}', $user->getAttribute('name'))
+                ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
+                ->setParam('{{redirect}}', $url)
+                ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
+                ->setParam('{{project}}', $projectName)
+                ->setParam('{{direction}}', $locale->getText('settings.direction'))
+                ->setParam('{{bg-body}}', '#f7f7f7')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{text-content}}', '#000000');
+
+            $body = $body->render();
+
             $mails
-                ->setType(MAIL_TYPE_INVITATION)
-                ->setRecipient($email)
-                ->setUrl($url)
-                ->setName($name)
-                ->setLocale($locale->default)
-                ->setTeam($team)
-                ->setUser($user)
+                ->setSubject($subject)
+                ->setBody($body)
+                ->setFrom($from)
+                ->setRecipient($invitee->getAttribute('email'))
+                ->setName($invitee->getAttribute('name'))
                 ->trigger()
             ;
         }
@@ -677,9 +700,10 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Reader $geodb, Event $events) {
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $events) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -723,7 +747,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        $user->setAttribute('emailVerification', true);
+        $user = Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
         // Log user in
 
@@ -731,7 +755,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::addSeconds(new \DateTime(), $authDuration);
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge([
             '$id' => ID::unique(),
@@ -740,7 +765,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'provider' => Auth::SESSION_PROVIDER_EMAIL,
             'providerUid' => $user->getAttribute('email'),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',

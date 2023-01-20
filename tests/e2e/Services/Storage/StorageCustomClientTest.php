@@ -25,10 +25,16 @@ class StorageCustomClientTest extends Scope
     use SideClient;
     use StoragePermissionsScope;
 
-    public function testBucketAnyPermissions(): void
+    public function testCachedFilePreview(): void
     {
         /**
-         * Test for SUCCESS
+        Create a bucket with File Level Security with no permissions.
+        Add a file with no permissions.
+        Login as UserA from SDK
+        Call File Preview from SDK all good userA can't see preview.
+        Add read permission to UserA, all good userA can now see preview.
+        Remove read permission for UserA.
+        Call File Preview from SDK and now userA can't see the preview.
          */
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
             'content-type' => 'application/json',
@@ -37,22 +43,19 @@ class StorageCustomClientTest extends Scope
         ], [
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
+            'fileSecurity' => true,
+            'permissions' => [],
         ]);
 
         $bucketId = $bucket['body']['$id'];
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $this->assertNotEmpty($bucketId);
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], [
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
@@ -65,46 +68,142 @@ class StorageCustomClientTest extends Scope
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
 
-        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'permissions.png',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
 
-        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ]);
-
-        $this->assertEquals(200, $file['headers']['status-code']);
-
-        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]);
-
-        $this->assertEquals(200, $file['headers']['status-code']);
-
-        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $file['headers']['status-code']);
 
         $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'permissions.png',
+            'permissions' => [],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(204, $file['headers']['status-code']);
+        $this->assertEmpty($file['body']);
+    }
+
+    public function testBucketAnyPermissions(): void
+    {
+
+        /**
+         * Test for SUCCESS
+         */
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+        'bucketId' => ID::unique(),
+        'name' => 'Test Bucket',
+        'permissions' => [
+            Permission::read(Role::any()),
+            Permission::create(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ],
+        ]);
+
+        $bucketId = $bucket['body']['$id'];
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucketId);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+        'content-type' => 'multipart/form-data',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+        'fileId' => ID::unique(),
+        'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
+        ]);
+
+        $fileId = $file['body']['$id'];
+        $this->assertEquals($file['headers']['status-code'], 201);
+        $this->assertNotEmpty($fileId);
+        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $this->assertEquals('permissions.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/view', [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+        'name' => 'permissions.png',
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
 
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+        'content-type' => 'application/json',
+        'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals(204, $file['headers']['status-code']);

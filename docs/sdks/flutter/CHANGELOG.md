@@ -1,3 +1,7 @@
+## 8.2.0
+
+* Support for GraphQL
+
 ## 8.1.0
 
 * Role helper update
