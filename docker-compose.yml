@@ -480,8 +480,8 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
-      - _APP_DOCKER_HUB_PULL_USERNAME
-      - _APP_DOCKER_HUB_PULL_PASSWORD
+      - _APP_DOCKER_HUB_USERNAME
+      - _APP_DOCKER_HUB_PASSWORD
 
   appwrite-worker-mails:
     entrypoint: worker-mails
