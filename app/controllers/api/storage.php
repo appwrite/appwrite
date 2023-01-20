@@ -549,6 +549,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $sizeActual = $deviceFiles->getFileSize($path);
             $fileHash = $deviceFiles->getFileHash($path);
 
+            $openSSLVersion = null;
+            $openSSLCipher = null;
+            $openSSLTag = null;
+            $openSSLIV = null;
+
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
                 $openSSLVersion = '1';
                 $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;

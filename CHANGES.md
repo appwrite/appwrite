@@ -4,6 +4,8 @@
 ## Changes
 
 ## Bugs
+- Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+- Fix timestamp format in Realtime response [#4515](https://github.com/appwrite/appwrite/pull/4515)
 - Add flutter-web as a platform type [#4992](https://github.com/appwrite/appwrite/pull/4992)
 
 # Version 1.2.0
