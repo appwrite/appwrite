@@ -46,6 +46,7 @@ use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Logger;
 use Utopia\Messaging\Adapters\SMS\Mock;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
@@ -748,7 +749,9 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
 });
-
+$register->set('promiseAdapter', function () {
+    return new Swoole();
+});
 /*
  * Localization
  */
