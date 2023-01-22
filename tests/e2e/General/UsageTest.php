@@ -362,11 +362,10 @@ class UsageTest extends Scope
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' database';
-            $res = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            $res = $this->client->call(Client::METHOD_POST, '/databases', array_merge($headers, ['content-type' => 'multipart/form-data']), [
                 'databaseId' => 'unique()',
                 'name' => $name,
             ]);
-
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
             $databaseId = $res['body']['$id'];
@@ -388,10 +387,10 @@ class UsageTest extends Scope
                 $requestsCount += 2;
             }
         }
-            exit;
+
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
-            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge($headers, ['content-type' => 'multipart/form-data']), [
                 'collectionId' => 'unique()',
                 'name' => $name,
                 'documentSecurity' => false,
@@ -424,7 +423,7 @@ class UsageTest extends Scope
             }
         }
 
-        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string', $headers, [
+        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string', array_merge($headers, ['content-type' => 'multipart/form-data']), [
             'key' => 'name',
             'size' => 255,
             'required' => true,
@@ -437,7 +436,7 @@ class UsageTest extends Scope
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
-            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
+            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge($headers, ['content-type' => 'multipart/form-data']), [
                 'documentId' => 'unique()',
                 'data' => ['name' => $name]
             ]);
@@ -629,7 +628,7 @@ class UsageTest extends Scope
         $executions = 0;
         $failures = 0;
 
-        $response1 = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+        $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge($headers, ['content-type' => 'multipart/form-data']), [
             'functionId' => 'unique()',
             'name' => 'Test',
             'runtime' => 'php-8.0',
@@ -678,7 +677,7 @@ class UsageTest extends Scope
         $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge($headers, ['content-type' => 'multipart/form-data']), [
             'async' => false,
         ]);
 
@@ -692,7 +691,7 @@ class UsageTest extends Scope
             $executions++;
         }
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge($headers, ['content-type' => 'multipart/form-data']), [
             'async' => false,
         ]);
 
