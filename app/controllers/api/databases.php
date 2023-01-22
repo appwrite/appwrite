@@ -2044,9 +2044,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('mode')
     ->inject('request')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Request $request) {
-
-        var_dump("*************** /v1/databases/:databaseId/collections/:collectionId/documents *************** ");
-
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
