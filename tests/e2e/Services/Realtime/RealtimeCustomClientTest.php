@@ -108,6 +108,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($userId, $response['data']['user']['$id']);
 
         $client->close();
+
     }
 
     public function testManualAuthentication()
@@ -213,6 +214,7 @@ class RealtimeCustomClientTest extends Scope
 
 
         $client->close();
+
     }
 
     public function testConnectionPlatform()
@@ -231,10 +233,12 @@ class RealtimeCustomClientTest extends Scope
         \usleep(250000); // 250ms
         $this->expectException(ConnectionException::class); // Check if server disconnnected client
         $client->close();
+
     }
 
     public function testChannelAccount()
     {
+
         $user = $this->getUser();
         $userId = $user['$id'] ?? '';
         $session = $user['session'] ?? '';
@@ -425,6 +429,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("users.*.verification.*.update", $response['data']['events']);
         $this->assertContains("users.*.verification.*", $response['data']['events']);
         $this->assertContains("users.*", $response['data']['events']);
+
         /**
          * Test Acoount Prefs Update
          */
