@@ -152,7 +152,8 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
 function getUniqueKey(Request $request): string
 {
-    $queries = $request->getParam('queries'); // validate malicious
+    // todo: do we want this a function? and what is the key built from?
+    $queries = $request->getParam('queries');
     $uri = $request->getURI();
     return md5(json_encode([$uri, $queries]));
 }
@@ -173,39 +174,64 @@ App::init()
 
 App::error()
     ->groups(['timeout'])
-    ->inject('utopia')
+    ->param('databaseId', null, new UID(), 'Database ID.', true)
     ->inject('error')
     ->inject('request')
     ->inject('dbForProject')
-    ->action(function (App $utopia, throwable $error, Request $request, Database $dbForProject) {
-        if ($error instanceof Timeout) {
-            $error = new Exception(Exception::TIMEOUT);
-            $key = getUniqueKey($request);
-            /* @var $document Document */
-            $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
-            if ($document->isEmpty()) {
-                $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
+    ->inject('utopia')
+    ->action(function ($databaseId, throwable $error, Request $request, Database $dbForProject, App $utopia) {
+        try {
+            $route = $utopia->match($request);
+            if ($error instanceof Timeout) {
+                $collectionId = $route->getParamValue('collectionId');
+                $queries = $request->getParam('queries');
+                $queriesValidator = new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE);
+                if (!$queriesValidator->isValid($queries)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR);
+                }
+
+                $uidValidator = new UID();
+//                if (!$uidValidator->isValid($databaseId)) {
+//                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "ss", 402);
+//                }
+
+                if (!$uidValidator->isValid($collectionId)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "ss", 403);
+                }
+
+                $key = getUniqueKey($request);
+                /* @var $document Document */
+                $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+                if ($document->isEmpty()) {
+                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
                     '$id' => $key,
                     'blocked' => false,
                     'count' => 1,
-                    'queries' => $request->getParam('queries'),
+                    'queries' => $queries,
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
                     'path' => $request->getURI(),
                 ])));
-            } else {
-                $document['count']++;
-                $max = App::getEnv('_APP_TIMEOUT_MAX', 1);
-                if ($document['count'] > $max) {
-                    $document['blocked'] = true;
+                } else {
+                    $document['count']++;
+                    $max = App::getEnv('_APP_TIMEOUT_MAX', 1);
+                    if ($document['count'] > $max) {
+                        $document['blocked'] = true;
+                    }
+                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
                 }
-                $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+
+                if ($document['blocked'] === true) {
+                    throw new Exception(Exception::TIMEOUT_BLOCKED);
+                }
+
+                throw new Exception(Exception::TIMEOUT);
             }
 
-            if ($document['blocked'] === true) {
-                $error = new Exception(Exception::TIMEOUT_BLOCKED);
-            }
+            throw $error;
+        } catch (throwable $error) {
+            App::setResource('error', fn() => $error);
         }
-
-        App::setResource('error', fn() => $error);
     });
 
 
@@ -2844,4 +2870,68 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         }
 
         $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
+    });
+
+
+
+App::get('/v1/databases/:databaseId/collections/:collectionId/documents/timeouts')
+    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
+    ->desc('List timeouts Documents')
+    ->groups([])
+    ->label('scope', 'documents.read')
+    ->label('usage.metric', 'documents.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'listDocuments')
+    ->label('sdk.description', '/docs/references/databases/list-documents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('request')
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Request $request) {
+
+        var_dump($databaseId);
+        var_dump($collectionId);
+        // todo: check security + read permission?
+
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        var_dump($databaseId);
+        var_dump($collectionId);
+
+        $documents = Authorization::skip(fn() => $dbForProject->find('timeouts', [
+            Query::equal('blocked', [true]),
+            Query::equal('databaseId', [$databaseId]),
+            Query::equal('collectionId', [$collectionId])
+        ]));
+
+        var_dump($documents);
+
+//
+//        /**
+//         * Reset $collection attribute to remove prefix.
+//         */
+//        $documents = array_map(function (Document $document) use ($collectionId, $databaseId) {
+//            $document->setAttribute('$collectionId', $collectionId);
+//            $document->setAttribute('$databaseId', $databaseId);
+//            return $document;
+//        }, $documents);
+
+        $response->dynamic(new Document([
+            'total' => count($documents),
+            'documents' => $documents,
+        ]), Response::MODEL_DOCUMENT_LIST);
     });
