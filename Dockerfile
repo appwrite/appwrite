@@ -314,7 +314,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
-    chmod +x /usr/local/bin/stat && \
+    chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
