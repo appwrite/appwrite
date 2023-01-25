@@ -3042,3 +3042,35 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
+
+
+App::get('/v1/databases/:documentId/timeout')
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
+    ->desc('Get Document')
+    ->groups(['api', 'database'])
+    ->label('scope', 'documents.read')
+    ->label('usage.metric', 'documents.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'getDocument')
+    ->label('sdk.description', '/docs/references/databases/get-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('documentId', '', new UID(), 'Document ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->inject('project')
+    ->action(function (string $documentId, Response $response, Database $dbForProject, string $mode, Document $project) {
+
+        //todo not sure we need this route?
+
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('timeouts', $documentId));
+        if ($document->isEmpty()) {
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+        }
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+    });
