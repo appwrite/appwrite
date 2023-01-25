@@ -2897,7 +2897,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/timeouts
 
         var_dump($databaseId);
         var_dump($collectionId);
-        // todo: check security + read permission?
+        // todo: check security + admin permissions?
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -2934,4 +2934,111 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/timeouts
             'total' => count($documents),
             'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
+    });
+
+
+App::get('/v1/databases/:databaseId/collections/:collectionId/documents/timeouts')
+    ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
+    ->desc('List timeouts Documents')
+    ->groups([])
+    ->label('scope', 'documents.read')
+    ->label('usage.metric', 'documents.{scope}.requests.read')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'listDocuments')
+    ->label('sdk.description', '/docs/references/databases/list-documents.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('request')
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Request $request) {
+
+        var_dump($databaseId);
+        var_dump($collectionId);
+        // todo: check security + admin permissions?
+
+        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        var_dump($databaseId);
+        var_dump($collectionId);
+
+        $documents = Authorization::skip(fn() => $dbForProject->find('timeouts', [
+            Query::equal('blocked', [true]),
+            Query::equal('databaseId', [$databaseId]),
+            Query::equal('collectionId', [$collectionId]),
+            Query::limit(9999)
+        ]));
+
+        var_dump($documents);
+
+//
+//        /**
+//         * Reset $collection attribute to remove prefix.
+//         */
+//        $documents = array_map(function (Document $document) use ($collectionId, $databaseId) {
+//            $document->setAttribute('$collectionId', $collectionId);
+//            $document->setAttribute('$databaseId', $databaseId);
+//            return $document;
+//        }, $documents);
+
+        $response->dynamic(new Document([
+            'total' => count($documents),
+            'documents' => $documents,
+        ]), Response::MODEL_DOCUMENT_LIST);
+    });
+
+
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/timeouts')
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
+    ->desc('Update Document')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+    ->label('scope', 'documents.write')
+    ->label('audits.event', 'document.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('usage.metric', 'documents.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateDocument')
+    ->label('sdk.description', '/docs/references/databases/update-document.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('documentId', '', new UID(), 'Document ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $documentId, Response $response, Database $dbForProject, Event $events) {
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $documentId));
+        if ($document->isEmpty()) {
+            throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+        }
+
+        $document['blocked'] = false;
+        $document['count'] = 0;
+        $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+
+        $collection = $dbForProject->getCollection('timeouts');
+
+        $events
+            ->setParam('documentId', $document->getId())
+            ->setContext('collection', $collection)
+        ;
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
