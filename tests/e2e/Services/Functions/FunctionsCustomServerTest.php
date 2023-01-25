@@ -914,8 +914,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
         $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
-        $this->assertLessThan(6, $executions['body']['executions'][0]['duration']);
-        $this->assertGreaterThan(4, $executions['body']['executions'][0]['duration']);
+        $this->assertLessThan(4, $executions['body']['executions'][0]['duration']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
 
