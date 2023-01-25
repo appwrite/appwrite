@@ -6,6 +6,11 @@
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
 
+# Version 1.2.1
+## Bugs
+- Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+- Fix timestamp format in Realtime response [#4515](https://github.com/appwrite/appwrite/pull/4515)
+
 # Version 1.2.0
 ## Features
 - Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
