@@ -3063,7 +3063,7 @@ App::get('/v1/databases/:documentId/timeout')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('project')
-    ->action(function (string $documentId, Response $response, Database $dbForProject, string $mode, Document $project) {
+    ->action(function (string $documentId, Response $response, Database $dbForProject) {
 
         //todo not sure we need this route?
 
