@@ -140,7 +140,7 @@ class Hamster extends Action
             }
         });
 
-        return $stats; 
+        return $stats;
     }
 
     public function action(Registry $register, Group $pools, Cache $cache, Database $dbForConsole): void
@@ -174,7 +174,7 @@ class Hamster extends Action
                 if ($project->getId() === 'console') {
                     continue;
                 }
-                
+
                 Console::info("Getting stats for {$project->getId()}");
 
                 try {
@@ -190,7 +190,6 @@ class Hamster extends Action
 
                     $statsPerProject = $this->getStats($dbForConsole, $dbForProject, $project);
                     $csv->insertOne(array_values($statsPerProject));
-
                 } catch (\Throwable $th) {
                     throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
