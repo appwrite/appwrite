@@ -52,7 +52,7 @@ class Hamster extends Action
         'Executions' => 'executions.$all.compute.total',
     ];
 
-    protected string $directory = '/usr/local/dev';
+    protected string $directory = '/usr/local';
     protected string $path;
 
     protected string $date;
