@@ -12,6 +12,7 @@ return [
     'jcb' => __DIR__ . '/credit-cards/jcb.png',
     'mastercard' => __DIR__ . '/credit-cards/mastercard.png',
     'naranja' => __DIR__ . '/credit-cards/naranja.png',
+    'rupay' => __DIR__ . '/credit-cards/rupay.png',
     'targeta-shopping' => __DIR__ . '/credit-cards/tarjeta-shopping.png',
     'union-china-pay' => __DIR__ . '/credit-cards/union-china-pay.png',
     'visa' => __DIR__ . '/credit-cards/visa.png',
