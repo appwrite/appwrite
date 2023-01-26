@@ -193,6 +193,10 @@ class Hamster extends Action
                 } catch (\Throwable $th) {
                     throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                } finally {
+                    $pools
+                        ->get($db)
+                        ->reclaim();
                 }
             }
 
@@ -210,6 +214,10 @@ class Hamster extends Action
         }
 
         $this->sendEmail($register);
+
+        $pools
+            ->get('console')
+            ->reclaim();
     }
 
     private function sendEmail(Registry $register)
