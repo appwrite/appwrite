@@ -65,7 +65,7 @@ class Hamster extends Action
     public function __construct()
     {
         $this
-            ->desc('Get stats for project')
+            ->desc('Get stats for projects')
             ->inject('register')
             ->inject('pools')
             ->inject('cache')
@@ -145,7 +145,7 @@ class Hamster extends Action
 
     public function action(Registry $register, Group $pools, Cache $cache, Database $dbForConsole): void
     {
-        Console::success('Getting stats...');
+        Console::info('Getting stats...');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
