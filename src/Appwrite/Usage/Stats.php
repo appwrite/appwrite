@@ -76,11 +76,14 @@ class Stats
 
     /**
      * Submit data to StatsD.
+     * Send various metrics to StatsD based on the parameters that are set
+     * @return void
      */
     public function submit(): void
     {
         $projectId = $this->params['projectId'] ?? '';
-        $tags = ",projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $projectInternalId = $this->params['projectInternalId'];
+        $tags = ",projectInternalId={$projectInternalId},projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
         $this->statsd->setNamespace($this->namespace);
@@ -91,8 +94,8 @@ class Stats
             $this->statsd->increment('project.{scope}.network.requests' . $tags . ',method=' . \strtolower($httpMethod));
         }
 
-        $inbound = $this->params['networkRequestSize'] ?? 0;
-        $outbound = $this->params['networkResponseSize'] ?? 0;
+        $inbound = $this->params['project.{scope}.network.inbound'] ?? 0;
+        $outbound = $this->params['project.{scope}.network.outbound'] ?? 0;
         $this->statsd->count('project.{scope}.network.inbound' . $tags, $inbound);
         $this->statsd->count('project.{scope}.network.outbound' . $tags, $outbound);
         $this->statsd->count('project.{scope}.network.bandwidth' . $tags, $inbound + $outbound);
@@ -102,12 +105,13 @@ class Stats
             'users.{scope}.requests.read',
             'users.{scope}.requests.update',
             'users.{scope}.requests.delete',
+            'users.{scope}.count.total',
         ];
 
         foreach ($usersMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
-                $this->statsd->increment($metric . $tags);
+            if ($value === 1 || $value === -1) {
+                $this->statsd->count($metric . $tags, $value);
             }
         }
 
@@ -124,13 +128,16 @@ class Stats
             'documents.{scope}.requests.read',
             'documents.{scope}.requests.update',
             'documents.{scope}.requests.delete',
+            'databases.{scope}.count.total',
+            'collections.{scope}.count.total',
+            'documents.{scope}.count.total'
         ];
 
         foreach ($dbMetrics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
+            if ($value === 1 || $value === -1) {
                 $dbTags = $tags . ",collectionId=" . ($this->params['collectionId'] ?? '') . ",databaseId=" . ($this->params['databaseId'] ?? '');
-                $this->statsd->increment($metric . $dbTags);
+                $this->statsd->count($metric . $dbTags, $value);
             }
         }
 
@@ -143,13 +150,16 @@ class Stats
             'files.{scope}.requests.read',
             'files.{scope}.requests.update',
             'files.{scope}.requests.delete',
+            'buckets.{scope}.count.total',
+            'files.{scope}.count.total',
+            'files.{scope}.storage.size'
         ];
 
         foreach ($storageMertics as $metric) {
             $value = $this->params[$metric] ?? 0;
-            if ($value >= 1) {
+            if ($value !== 0) {
                 $storageTags = $tags . ",bucketId=" . ($this->params['bucketId'] ?? '');
-                $this->statsd->increment($metric . $storageTags);
+                $this->statsd->count($metric . $storageTags, $value);
             }
         }
 
@@ -176,19 +186,30 @@ class Stats
         $functionBuildTime = ($this->params['buildTime'] ?? 0) * 1000; // ms
         $functionBuildStatus = $this->params['buildStatus'] ?? '';
         $functionCompute = $functionExecutionTime + $functionBuildTime;
+        $functionTags = $tags . ',functionId=' . $functionId;
+
+        $deploymentSize = $this->params['deployment.{scope}.storage.size'] ?? 0;
+        $storageSize = $this->params['files.{scope}.storage.size'] ?? 0;
+        if ($deploymentSize + $storageSize > 0 || $deploymentSize + $storageSize <= -1) {
+            $this->statsd->count('project.{scope}.storage.size' . $tags, $deploymentSize + $storageSize);
+        }
+
+        if ($deploymentSize !== 0) {
+            $this->statsd->count('deployments.{scope}.storage.size' . $functionTags, $deploymentSize);
+        }
 
         if ($functionExecution >= 1) {
-            $this->statsd->increment('executions.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionStatus=' . $functionExecutionStatus);
+            $this->statsd->increment('executions.{scope}.compute' . $functionTags . ',functionStatus=' . $functionExecutionStatus);
             if ($functionExecutionTime > 0) {
-                $this->statsd->count('executions.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionExecutionTime);
+                $this->statsd->count('executions.{scope}.compute.time' . $functionTags, $functionExecutionTime);
             }
         }
         if ($functionBuild >= 1) {
-            $this->statsd->increment('builds.{scope}.compute' . $tags . ',functionId=' . $functionId . ',functionBuildStatus=' . $functionBuildStatus);
-            $this->statsd->count('builds.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionBuildTime);
+            $this->statsd->increment('builds.{scope}.compute' . $functionTags . ',functionBuildStatus=' . $functionBuildStatus);
+            $this->statsd->count('builds.{scope}.compute.time' . $functionTags, $functionBuildTime);
         }
         if ($functionBuild + $functionExecution >= 1) {
-            $this->statsd->count('project.{scope}.compute.time' . $tags . ',functionId=' . $functionId, $functionCompute);
+            $this->statsd->count('project.{scope}.compute.time' . $functionTags, $functionCompute);
         }
 
         $this->reset();
