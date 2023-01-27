@@ -97,7 +97,7 @@ class Func extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
-                'example' => 1592981237,
+                'example' => 15,
             ])
         ;
     }

@@ -237,7 +237,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'data' => [
                         'events' => ['stats.connections'],
                         'channels' => ['project'],
-                        'timestamp' => DateTime::now(),
+                        'timestamp' => DateTime::formatTz(DateTime::now()),
                         'payload' => [
                             $projectId => $payload[$projectId]
                         ]
@@ -264,7 +264,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
-                    'timestamp' => DateTime::now(),
+                    'timestamp' => DateTime::formatTz(DateTime::now()),
                     'payload' => $payload
                 ]
             ];
@@ -306,7 +306,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
                         [$consoleDatabase, $returnConsoleDatabase] = getDatabase($register, '_console');
-                        $project = Authorization::skip(fn() => $consoleDatabase->getDocument('projects', $projectId));
+                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         [$database, $returnDatabase] = getDatabase($register, "_{$project->getInternalId()}");
 
                         $user = $database->getDocument('users', $userId);
@@ -484,6 +484,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
+        $app = new App('UTC');
         $response = new Response(new SwooleResponse());
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
@@ -493,12 +494,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_console");
         $projectId = $realtime->connections[$connection]['projectId'];
-
-        if ($projectId !== 'console') {
-            $project = Authorization::skip(fn() => $database->getDocument('projects', $projectId));
-            $database->setNamespace("_{$project->getInternalId()}");
-        }
-
+        $project = $projectId === 'console' ? $app->getResource('console') : Authorization::skip(fn () => $database->getDocument('projects', $projectId));
+        $database->setNamespace("_{$project->getInternalId()}");
         /*
          * Abuse Check
          *
@@ -536,10 +533,11 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 Auth::$secret = $session['secret'] ?? '';
 
                 $user = $database->getDocument('users', Auth::$unique);
+                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
                 if (
                     empty($user->getId()) // Check a document has been found in the DB
-                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret) // Validate user has valid login token
+                    || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration) // Validate user has valid login token
                 ) {
                     // cookie not valid
                     throw new Exception('Session is not valid.', 1003);
