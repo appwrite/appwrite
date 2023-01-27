@@ -33,9 +33,7 @@ use Appwrite\Extend\PDO;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Usage\Stats;
 use MaxMind\Db\Reader;
@@ -74,6 +72,8 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Range;
+use Utopia\Validator\IP;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 const APP_NAME = 'Appwrite';
@@ -605,7 +605,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
@@ -969,7 +969,7 @@ App::setResource('deviceBuilds', function ($project) {
 
 function getDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+    switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
         case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
