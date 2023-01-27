@@ -441,8 +441,8 @@ composer lint <your file path>
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
 - [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
-- [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
-- [Running in Production](./docs/tutorials/running-in-production.md)
+- [Appwrite Environment Variables](./docs/tutorials/add-environment-variable.md)
+- [Running in Production](https://appwrite.io/docs/production)
 - [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
 
 ## Other Ways to Help
