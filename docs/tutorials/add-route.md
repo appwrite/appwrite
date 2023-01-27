@@ -41,11 +41,10 @@ App::init()
 ```
 
 ### 4. The Labels Mechanism
-
-Labels are very strait forward and easy to use and understand, but in the same time are very robust.
+Labels are very straightforward and easy to use and understand, but at the same time are very robust.
 Labels are passed from the controllers route and used to pick up key-value pairs to be handled in a centralized place
 along the road.
-Labels can be used to pass a pattern in order to be replaced in the other end.
+Labels can be used to pass a pattern in order to be replaced on the other end.
 Appwrite uses different labels to achieve different things, for example:
 
 #### Scope
@@ -71,13 +70,12 @@ App::post('/v1/account/create')
 ```
 
 #### SDK
-
-- sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
-- sdk.namespace - Refers to the route namespace.
-- sdk.method - Refers to the sdk method that needs to called.
-- sdk.description - Description of the route,using markdown format.
-- sdk.sdk.response.code - Refers to the route http response status code expected.
-- sdk.auth.response.model - Refers the route http response expected.
+* sdk.auth - Array of authentication types is passed in order to impose different authentication methods in different situations.
+* sdk.namespace - Refers to the route namespace.
+* sdk.method - Refers to the sdk method that needs to be called.
+* sdk.description - Description of the route,using markdown format.
+* sdk.sdk.response.code - Refers to the route http response status code expected.
+* sdk.auth.response.model - Refers the route http response expected.
 
 ```php
 App::post('/v1/account/jwt')
@@ -174,8 +172,7 @@ some code...
 ```
 
 ### 6. Action
-
-Action populates the actual routes code and has to be very clear and understandable. A good route stay simple and doesn't contain complex logic. An action is where we describe our business need in code, and combine different libraries to work together and tell our story.
+Action populates the actual route code and has to be very clear and understandable. A good route stays simple and doesn't contain complex logic. An action is where we describe our business needs in code, and combine different libraries to work together and tell our story.
 
 ```php
 App::post('/v1/account/sessions/anonymous')
