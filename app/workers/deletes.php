@@ -255,6 +255,17 @@ class DeletesV1 extends Worker
     {
         $projectId = $document->getId();
 
+        // Delete project domains and certificates
+        $dbForConsole = $this->getConsoleDB();
+
+        $domains = $dbForConsole->find('domains', [
+            Query::equal('projectInternalId', [$document->getInternalId()])
+        ]);
+
+        foreach ($domains as $domain) {
+            $this->deleteCertificates($domain);
+        }
+
         // Delete project tables
         $dbForProject = $this->getProjectDB($projectId, $document);
 
