@@ -311,7 +311,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
-                    case 'Appwrite\Network\Validator\URL':
+                    case 'Utopia\Validator\URL':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
@@ -368,6 +368,11 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'password';
                         $node['schema']['x-example'] = 'password';
                         break;
+                    case 'Appwrite\Auth\Validator\Phone':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'phone';
+                        $node['schema']['x-example'] = '+12065550100'; // In the US, 555 is reserved like example.com
+                        break;
                     case 'Utopia\Validator\Range':
                         /** @var \Utopia\Validator\Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
@@ -386,7 +391,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = $validator->getType();
                         break;
-                    case 'Appwrite\Network\Validator\Host':
+                    case 'Utopia\Validator\Host':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
