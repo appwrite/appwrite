@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\URL;
+use Utopia\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
@@ -242,8 +242,8 @@ App::get('/v1/avatars/favicon')
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (int) $size[0] ?? 0;
-                            $sizeHeight = (int) $size[1] ?? 0;
+                            $sizeWidth = (int) ($size[0] ?? 0);
+                            $sizeHeight = (int) ($size[1] ?? 0);
 
                             if (($sizeWidth * $sizeHeight) >= $space) {
                                 $space = $sizeWidth * $sizeHeight;
@@ -342,7 +342,6 @@ App::get('/v1/avatars/initials')
     ->desc('Get User Initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    ->label('cache', true)
     ->label('cache.resource', 'avatar/initials')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
@@ -399,8 +398,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__ . "/../../../public/fonts/poppins-v9-latin-500.ttf");
+        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);

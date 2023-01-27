@@ -2,22 +2,23 @@
 
 namespace Appwrite\Resque;
 
+use Exception;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
-use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
-use Utopia\Storage\Device\Wasabi;
-use Utopia\Storage\Device\Backblaze;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Exception;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Storage\Device\Wasabi;
+use Utopia\Storage\Storage;
 
 abstract class Worker
 {
@@ -53,7 +54,7 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    public function init()
+    public function init(): void
     {
         throw new Exception("Please implement init method in worker");
     }
@@ -65,7 +66,7 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    public function run()
+    public function run(): void
     {
         throw new Exception("Please implement run method in worker");
     }
@@ -77,7 +78,7 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    public function shutdown()
+    public function shutdown(): void
     {
         throw new Exception("Please implement shutdown method in worker");
     }
@@ -151,35 +152,39 @@ abstract class Worker
     /**
      * Register callback. Will be executed when error occurs.
      * @param callable $callback
-     * @param Throwable $error
-     * @return self
+     * @return void
      */
     public static function error(callable $callback): void
     {
-        \array_push(self::$errorCallbacks, $callback);
+        self::$errorCallbacks[] = $callback;
     }
+
     /**
      * Get internal project database
      * @param string $projectId
      * @return Database
+     * @throws Exception
      */
-    protected function getProjectDB(string $projectId): Database
+    protected function getProjectDB(string $projectId, ?Document $project = null): Database
     {
-        $consoleDB = $this->getConsoleDB();
+        if ($project === null) {
+            $consoleDB = $this->getConsoleDB();
 
-        if ($projectId === 'console') {
-            return $consoleDB;
+            if ($projectId === 'console') {
+                return $consoleDB;
+            }
+
+            /** @var Document $project */
+            $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
         }
 
-        /** @var Document $project */
-        $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
-
-        return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId());
+        return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId(), $project);
     }
 
     /**
      * Get console database
      * @return Database
+     * @throws Exception
      */
     protected function getConsoleDB(): Database
     {
@@ -187,24 +192,35 @@ abstract class Worker
     }
 
     /**
-     * Get console database
-     * @param string $type One of (internal, external, console)
-     * @param string $projectId of internal or external DB
+     * Get database
+     * @param string $type One of (project, console)
+     * @param string $projectId of project or console DB
+     * @param string $projectInternalId
+     * @param Document|null $project
      * @return Database
+     * @throws Exception
      */
-    private function getDB(string $type, string $projectId = '', string $projectInternalId = ''): Database
-    {
+    private function getDB(
+        string $type,
+        string $projectId = '',
+        string $projectInternalId = '',
+        ?Document $project = null
+    ): Database {
         global $register;
 
-        $namespace = '';
         $sleep = DATABASE_RECONNECT_SLEEP; // overwritten when necessary
+
+        if ($project !== null) {
+            $projectId = $project->getId();
+            $projectInternalId = $project->getInternalId();
+        }
 
         switch ($type) {
             case self::DATABASE_PROJECT:
                 if (!$projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
-                $namespace = "_{$projectInternalId}";
+                $namespace = "_$projectInternalId";
                 break;
             case self::DATABASE_CONSOLE:
                 $namespace = "_console";
@@ -212,12 +228,11 @@ abstract class Worker
                 break;
             default:
                 throw new \Exception('Unknown database type: ' . $type);
-                break;
         }
 
         $attempts = 0;
 
-        do {
+        while (true) {
             try {
                 $attempts++;
                 $cache = new Cache(new RedisCache($register->get('cache')));
@@ -225,23 +240,27 @@ abstract class Worker
                 $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                 $database->setNamespace($namespace); // Main DB
 
-                if (!empty($projectId) && !$database->getDocument('projects', $projectId)->isEmpty()) {
-                    throw new \Exception("Project does not exist: {$projectId}");
+                if (
+                    $project === null
+                    && !empty($projectId)
+                    && !$database->getDocument('projects', $projectId)->isEmpty()
+                ) {
+                    throw new \Exception("Project does not exist: $projectId");
                 }
 
-                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), '_metadata')) {
+                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), Database::METADATA)) {
                     throw new \Exception('Console project not ready');
                 }
 
                 break; // leave loop if successful
             } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                Console::warning("Database not ready. Retrying connection ($attempts)...");
                 if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
                     throw new \Exception('Failed to connect to database: ' . $e->getMessage());
                 }
                 sleep($sleep);
             }
-        } while ($attempts < DATABASE_RECONNECT_MAX_ATTEMPTS);
+        }
 
         return $database;
     }
@@ -251,7 +270,7 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getFunctionsDevice($projectId): Device
+    protected function getFunctionsDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     }
@@ -261,7 +280,7 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getFilesDevice($projectId): Device
+    protected function getFilesDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
@@ -272,9 +291,14 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getBuildsDevice($projectId): Device
+    protected function getBuildsDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+    }
+
+    protected function getCacheDevice(string $projectId): Device
+    {
+        return $this->getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
     }
 
     /**
@@ -282,9 +306,9 @@ abstract class Worker
      * @param string $root path of the device
      * @return Device
      */
-    public function getDevice($root): Device
+    public function getDevice(string $root): Device
     {
-        switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
             case Storage::DEVICE_LOCAL:
             default:
                 return new Local($root);
