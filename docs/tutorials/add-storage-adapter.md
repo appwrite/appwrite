@@ -46,7 +46,7 @@ In this phase we will add support to the new storage adapter in Appwrite.
 Upgrade the utopia-php/storage dependency in `composer.json` file.
 
 ### Introduce new environment variables
-Introduce new environment variables if the adaptor requires new configuration information or to pass in credentials. The storage environment variables are prefixed as `_APP_STORAGE_DEVICE`. Please read [Adding Environment Variables]() guidelines in order to properly introduce new environment variables.
+Introduce new environment variables if the adapter requires new configuration information or to pass in credentials. The storage environment variables are prefixed as `_APP_STORAGE_DEVICE`. Please read [Adding Environment Variables](https://github.com/appwrite/appwrite/blob/master/docs/tutorials/add-environment-variable.md) guidelines in order to properly introduce new environment variables.
 
 ### Implement the device case
 In `app/controllers/shared/api.php` inside init function, there are `switch/case` statements for each supported storage device. Implement the instantiation of your device type for your device case. The device cases are the device constants listed in the `uptopa-php/storage/Storage` class.
