@@ -1,11 +1,8 @@
 <?php
 
 use Appwrite\Resque\Worker;
-use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Document;
-use Utopia\Locale\Locale;
 
 require_once __DIR__ . '/../init.php';
 
@@ -32,66 +29,12 @@ class MailsV1 extends Worker
             return;
         }
 
-        $project = new Document($this->args['project']);
-        $user = new Document($this->args['user'] ?? []);
-        $team = new Document($this->args['team'] ?? []);
 
         $recipient = $this->args['recipient'];
-        $url = $this->args['url'];
+        $subject = $this->args['subject'];
         $name = $this->args['name'];
-        $type = $this->args['type'];
-        $prefix = $this->getPrefix($type);
-        $locale = new Locale($this->args['locale']);
-        $projectName = $project->getAttribute('name', '[APP-NAME]');
-
-        if (!$this->doesLocaleExist($locale, $prefix)) {
-            $locale->setDefault('en');
-        }
-
-        $from = $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
-        $subject = '';
-        switch ($type) {
-            case MAIL_TYPE_CERTIFICATE:
-                $domain = $this->args['domain'];
-                $error = $this->args['error'];
-                $attempt = $this->args['attempt'];
-
-                $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
-                $body->setParam('{{domain}}', $domain);
-                $body->setParam('{{error}}', $error);
-                $body->setParam('{{attempt}}', $attempt);
-                break;
-            case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
-                break;
-            case MAIL_TYPE_RECOVERY:
-            case MAIL_TYPE_VERIFICATION:
-            case MAIL_TYPE_MAGIC_SESSION:
-                $subject = $locale->getText("$prefix.subject");
-                break;
-            default:
-                throw new Exception('Undefined Mail Type : ' . $type, 500);
-        }
-
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("$prefix.hello"))
-            ->setParam('{{name}}', $name)
-            ->setParam('{{body}}', $locale->getText("$prefix.body"))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("$prefix.footer"))
-            ->setParam('{{thanks}}', $locale->getText("$prefix.thanks"))
-            ->setParam('{{signature}}', $locale->getText("$prefix.signature"))
-            ->setParam('{{project}}', $projectName)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
-
-        $body = $body->render();
+        $body = $this->args['body'];
+        $from = $this->args['from'];
 
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = $register->get('smtp');
@@ -128,48 +71,5 @@ class MailsV1 extends Worker
 
     public function shutdown(): void
     {
-    }
-
-    /**
-     * Returns a prefix from a mail type
-     *
-     * @param $type
-     *
-     * @return string
-     */
-    protected function getPrefix(string $type): string
-    {
-        switch ($type) {
-            case MAIL_TYPE_RECOVERY:
-                return 'emails.recovery';
-            case MAIL_TYPE_CERTIFICATE:
-                return 'emails.certificate';
-            case MAIL_TYPE_INVITATION:
-                return 'emails.invitation';
-            case MAIL_TYPE_VERIFICATION:
-                return 'emails.verification';
-            case MAIL_TYPE_MAGIC_SESSION:
-                return 'emails.magicSession';
-            default:
-                throw new Exception('Undefined Mail Type : ' . $type, 500);
-        }
-    }
-
-    /**
-     * Returns true if all the required terms in a locale exist. False otherwise
-     *
-     * @param $locale
-     * @param $prefix
-     *
-     * @return bool
-     */
-    protected function doesLocaleExist(Locale $locale, string $prefix): bool
-    {
-
-        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
-            return false;
-        }
-
-        return true;
     }
 }

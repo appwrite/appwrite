@@ -14,12 +14,15 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM node:16.14.2-alpine3.15 as node
 
-WORKDIR /usr/local/src/
+COPY app/console /usr/local/src/console
 
-COPY package-lock.json /usr/local/src/
-COPY package.json /usr/local/src/
-COPY gulpfile.js /usr/local/src/
-COPY public /usr/local/src/public
+WORKDIR /usr/local/src/console
+
+ARG VITE_GA_PROJECT
+ARG VITE_CONSOLE_MODE
+
+ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
+ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
 
 RUN npm ci
 RUN npm run build
@@ -255,13 +258,13 @@ ENV _APP_SERVER=swoole \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
-    _APP_USAGE_TIMESERIES_INTERVAL=30 \
-    _APP_USAGE_DATABASE_INTERVAL=900 \
+    _APP_USAGE_AGGREGATION_INTERVAL=30 \
     # 14 Days = 1209600 s
     _APP_MAINTENANCE_RETENTION_EXECUTION=1209600 \
     _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
     # 1 Day = 86400 s
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
+    _APP_MAINTENANCE_RETENTION_USAGE_HOURLY=8640000 \
     _APP_MAINTENANCE_INTERVAL=86400 \
     _APP_LOGGING_PROVIDER= \
     _APP_LOGGING_CONFIG=
@@ -306,7 +309,7 @@ RUN \
 WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=node /usr/local/src/public/dist /usr/src/code/public/dist
+COPY --from=node /usr/local/src/console/build /usr/src/code/console
 COPY --from=swoole /usr/local/lib/php/extensions/no-debug-non-zts-20200930/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/yasd.so* /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=redis /usr/local/lib/php/extensions/no-debug-non-zts-20200930/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
 COPY --from=imagick /usr/local/lib/php/extensions/no-debug-non-zts-20200930/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200930/
@@ -321,8 +324,6 @@ COPY --from=snappy /usr/local/lib/php/extensions/no-debug-non-zts-20200930/snapp
 COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
-COPY ./public/fonts /usr/src/code/public/fonts
-COPY ./public/images /usr/src/code/public/images
 COPY ./src /usr/src/code/src
 
 # Set Volumes
