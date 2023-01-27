@@ -41,6 +41,7 @@ class Event
     protected array $params = [];
     protected array $payload = [];
     protected array $context = [];
+    protected array $additionalEvents = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
 
@@ -260,6 +261,16 @@ class Event
      */
     public function trigger(): string|bool
     {
+        foreach ($this->additionalEvents as $event) {
+            Resque::enqueue($this->queue, $this->class, [
+                'project' => $this->project,
+                'user' => $this->user,
+                'payload' => $event['payload'],
+                'context' => $this->context,
+                'events' => Event::generateEvents($event['event'], $event['params'])
+            ]);
+        }
+
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
@@ -277,6 +288,17 @@ class Event
     public function reset(): self
     {
         $this->params = [];
+
+        return $this;
+    }
+
+    public function addAdditionalEvent(string $event, array $params = [], array $payload = []): self
+    {
+        $this->additionalEvents[] = [
+            'event' => $event,
+            'params' => $params,
+            'payload' => $payload
+        ];
 
         return $this;
     }

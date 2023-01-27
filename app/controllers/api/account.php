@@ -514,6 +514,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'memberships' => null,
                         'search' => implode(' ', [$userId, $email, $name])
                     ])));
+
+                    $events->addAdditionalEvent('users.[userId].create', ['userId' => $user->getId()], $response->output($user, Response::MODEL_USER));
                 } catch (Duplicate $th) {
                     throw new Exception(Exception::USER_ALREADY_EXISTS);
                 }
