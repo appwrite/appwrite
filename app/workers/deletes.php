@@ -44,9 +44,6 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_DATABASES:
                         $this->deleteDatabase($document, $project->getId());
                         break;
-                    case DELETE_TYPE_COLLECTIONS:
-                        $this->deleteCollection($document, $project->getId());
-                        break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($document);
                         break;
@@ -66,6 +63,10 @@ class DeletesV1 extends Worker
                         $this->deleteBucket($document, $project->getId());
                         break;
                     default:
+                        if (\str_starts_with($document->getCollection(), 'database_')) {
+                            $this->deleteCollection($document, $project->getId());
+                            break;
+                        }
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
                 }
