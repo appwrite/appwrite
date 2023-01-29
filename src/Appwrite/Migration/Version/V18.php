@@ -56,7 +56,7 @@ class V18 extends Migration
                         $this->createAttributeFromCollection($this->projectDB, $id, 'passwordHistory');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'region' from {$id}: {$th->getMessage()}");
+                        Console::warning("'passwordHistory' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 default:
