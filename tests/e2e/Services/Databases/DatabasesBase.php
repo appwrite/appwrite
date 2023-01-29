@@ -1045,15 +1045,15 @@ trait DatabasesBase
             'queries' => [
                 'equal("blocked", true)',
                 'equal("databaseId", "' . $data['databaseId'] . '")',
-                'equal("collectionId", "' . $data['moviesId'] . '")'
+                'equal("collectionId", "' . $data['moviesId'] . '")',
+                'orderAsc("$updatedAt")'
             ],
         ]);
 
-        var_dump($documents);
-
-        $this->assertEquals(20000, $documents['headers']['status-code']);
-
-        exit;
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(1, $documents['body']['total']);
+        $this->assertEquals(true, $documents['body']['documents'][0]['blocked']);
+        $this->assertEquals(2, $documents['body']['documents'][0]['count']);
     }
 
 
