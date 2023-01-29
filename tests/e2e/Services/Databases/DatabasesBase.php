@@ -1020,20 +1020,6 @@ trait DatabasesBase
     /**
      * @depends testCreateDocument
      */
-    public function testTimeoutDocuments(array $data): void
-    {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/timeouts', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-var_dump($documents);
-        $this->assertEquals(20000, $documents['headers']['status-code']);
-    }
-
-
-    /**
-     * @depends testCreateDocument
-     */
     public function testBlockedAtInitTimeout(array $data): void
     {
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -1044,11 +1030,33 @@ var_dump($documents);
         ]);
 
         $this->assertEquals(403, $documents['headers']['status-code']);
+    }
+
+
+    /**
+     * @depends testCreateDocument
+     */
+    public function testConsoletimeouts(array $data): void
+    {
+        $documents = $this->client->call(Client::METHOD_GET, '/documents/slow-queries', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'equal("blocked", true)',
+                'equal("databaseId", "' . $data['databaseId'] . '")',
+                'equal("collectionId", "' . $data['moviesId'] . '")'
+            ],
+        ]);
+
+        var_dump($documents);
+
+        $this->assertEquals(20000, $documents['headers']['status-code']);
 
         exit;
-
-
     }
+
+
 
     /**
      * @depends testCreateDocument
