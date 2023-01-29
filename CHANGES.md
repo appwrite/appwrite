@@ -1,3 +1,5 @@
+- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+
 # Version 1.2.1
 ## Features
 
