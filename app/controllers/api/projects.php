@@ -618,7 +618,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('enabled', false, new Boolean(true), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
+    ->param('enabled', false, new Boolean(false), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
@@ -630,7 +630,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['passwordDictionary'] = (bool) filter_var($enabled, FILTER_VALIDATE_BOOLEAN);
+        $auths['passwordDictionary'] = $enabled;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
