@@ -2874,8 +2874,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     });
 
 
-
-App::get('/v1/documents/slow-queries')
+App::get('/v1/databases/slow-queries')
     ->desc('List timeouts Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
@@ -2911,7 +2910,7 @@ App::get('/v1/documents/slow-queries')
     });
 
 
-App::get('/v1/documents/:documentId/slow-queries')
+App::get('/v1/databases/slow-queries/:documentId')
     ->desc('Get Slow Query Document')
     ->groups(['api', 'database'])
     ->label('docs', false)
@@ -2943,7 +2942,7 @@ App::get('/v1/documents/:documentId/slow-queries')
 
 
 
-App::delete('/v1/documents/:documentId/slow-queries')
+App::delete('/v1/databases/slow-queries/:documentId')
     ->desc('Delete Slow query Document')
     ->desc('List  Documents')
     ->groups(['api', 'database'])
