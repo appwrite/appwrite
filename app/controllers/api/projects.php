@@ -577,7 +577,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
     });
 
 App::patch('/v1/projects/:projectId/auth/password-history')
-    ->desc('Update Project users limit')
+    ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -608,7 +608,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     });
 
 App::patch('/v1/projects/:projectId/auth/password-dictionary')
-    ->desc('Update Project users limit')
+    ->desc('Update authentication password disctionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
