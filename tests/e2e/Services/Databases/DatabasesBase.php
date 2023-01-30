@@ -1058,16 +1058,13 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($document['body']['queries'][0], 'sleep("$id", 1)');
-
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-
         $this->assertEquals(204, $response['headers']['status-code']);
 
 
@@ -1075,7 +1072,6 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-
         $this->assertEquals(404, $document['headers']['status-code']);
     }
 
