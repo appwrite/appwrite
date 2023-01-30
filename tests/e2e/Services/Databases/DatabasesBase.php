@@ -1035,7 +1035,7 @@ trait DatabasesBase
     /**
      * @depends testCreateDocument
      */
-    public function testConsoletimeouts(array $data): void
+    public function testConsoleTimeouts(array $data): void
     {
         $documents = $this->client->call(Client::METHOD_GET, '/databases/slow-queries', array_merge([
             'content-type' => 'application/json',
@@ -1053,9 +1053,31 @@ trait DatabasesBase
         $this->assertEquals(1, $documents['body']['total']);
         $this->assertEquals(true, $documents['body']['documents'][0]['blocked']);
         $this->assertEquals(2, $documents['body']['documents'][0]['count']);
+
+        $document = $this->client->call(Client::METHOD_GET, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals($document['body']['queries'][0], 'sleep("$id", 1)');
+
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+
+        $document = $this->client->call(Client::METHOD_GET, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $document['headers']['status-code']);
     }
-
-
 
     /**
      * @depends testCreateDocument
