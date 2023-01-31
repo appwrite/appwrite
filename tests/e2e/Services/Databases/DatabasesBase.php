@@ -1037,7 +1037,7 @@ trait DatabasesBase
      */
     public function testConsoleTimeouts(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/slow-queries', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/slow-queries', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

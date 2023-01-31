@@ -2874,7 +2874,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     });
 
 
-App::get('/v1/databases/slow-queries')
+App::get('/v1/databases/:databaseId/slow-queries')
     ->desc('List timeouts Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
@@ -2887,11 +2887,14 @@ App::get('/v1/databases/slow-queries')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Database $dbForProject) {
+    ->action(function ($databaseId, array $queries, Response $response, Database $dbForProject) {
         $queries = Query::parseQueries($queries);
+        $queries[] = Query::equal('databaseId', [$databaseId]);
+
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
