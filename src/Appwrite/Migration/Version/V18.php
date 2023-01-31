@@ -92,7 +92,8 @@ class V18 extends Migration
                  * Set default passwordHistory
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'passwordHistory' => 0
+                    'passwordHistory' => 0,
+                    'passwordDictionary' => false,
                 ]));
 
                 break;
