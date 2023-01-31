@@ -1043,7 +1043,6 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 'equal("blocked", true)',
-                'equal("databaseId", "' . $data['databaseId'] . '")',
                 'equal("collectionId", "' . $data['moviesId'] . '")',
                 'orderAsc("$updatedAt")'
             ],
