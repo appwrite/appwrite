@@ -12,19 +12,7 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/phpcs",
-        "format": "vendor/bin/phpcbf",
-        "benchmark": [
-            "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --report=appwrite --"
-        ],
-        "benchmark-tag": [
-            "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --report=appwrite --tag=baseline --"
-        ],
-        "benchmark-compare": [
-            "Composer\\Config::disableProcessTimeout",
-            "vendor/bin/phpbench run --report=appwrite --ref=baseline --"
-        ]
+        "format": "vendor/bin/phpcbf"
     },
     "autoload": {
         "psr-4": {
@@ -36,7 +24,6 @@
         "psr-4": {
             "Tests\\E2E\\": "tests/e2e",
             "Tests\\Unit\\": "tests/unit",
-            "Tests\\Benchmarks\\": "tests/benchmarks",
             "Appwrite\\Tests\\": "tests/extensions"
         }
     },
