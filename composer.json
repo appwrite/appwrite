@@ -99,14 +99,7 @@
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",
-        "textalk/websocket": "1.5.7",
-        "phpbench/phpbench": "^1.2",
-
-        "symfony/console": "^5.0",
-        "symfony/filesystem": "^5.0",
-        "symfony/finder": "^5.0",
-        "symfony/options-resolver": "^5.0",
-        "symfony/process": "^5.0"
+        "textalk/websocket": "1.5.7"
     },
     "provide": {
         "ext-phpiredis": "*"
