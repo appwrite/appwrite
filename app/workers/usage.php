@@ -25,6 +25,7 @@ $periods['1d']  = 'Y-m-d 00:00';
 //$periods['1m']  = 'Y-m-1 00:00';
 $periods['inf'] = '0000-00-00 00:00';
 
+
 /**
  * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files
  * When we remove a parent document we need to deduct his children aggregation from the project scope
