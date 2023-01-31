@@ -82,7 +82,7 @@ class V18 extends Migration
                  */
                 $document->setAttribute('version', '1.2.0');
                 break;
-            case 'users':
+            case 'projects':
                 /**
                  * Bump version number.
                  */
