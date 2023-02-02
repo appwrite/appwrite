@@ -16,7 +16,7 @@ class UsageFunction extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('deployments', [
+            ->addRule('deploymentsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of function deployments.',
                 'default' => [],
@@ -30,7 +30,7 @@ class UsageFunction extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('builds', [
+            ->addRule('buildsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of function builds.',
                 'default' => [],
@@ -44,14 +44,14 @@ class UsageFunction extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('buildsCompute', [
+            ->addRule('buildsTime', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for function build  compute.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('executions', [
+            ->addRule('executionsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of function executions.',
                 'default' => [],
@@ -59,7 +59,7 @@ class UsageFunction extends Model
                 'array' => true
             ])
 
-            ->addRule('executionsCompute', [
+            ->addRule('executionsTime', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for function execution compute.',
                 'default' => [],

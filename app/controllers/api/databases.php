@@ -2404,9 +2404,9 @@ App::get('/v1/databases/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'databases',
-            'collections',
-            'documents',
+            METRIC_DATABASES,
+            METRIC_COLLECTIONS,
+            METRIC_DOCUMENTS,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -2479,8 +2479,8 @@ App::get('/v1/databases/:databaseId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $database->getInternalId() . '.collections',
-            $database->getInternalId() . '.documents',
+            str_replace('{databaseId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
+            str_replace('{databaseId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -2546,7 +2546,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
 
          $database = $dbForProject->getDocument('databases', $databaseId);
-
          $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
          $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
@@ -2558,7 +2557,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $collectionDocument->getInternalId() . '.documents',
+            str_replace(['{databaseId}', '{collectionId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {

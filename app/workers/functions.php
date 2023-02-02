@@ -103,8 +103,8 @@ Server::setResource('execute', function () {
              */
 
             $queueForUsage
-                ->addMetric('executions', 1) // per project
-                ->addMetric("{$function->getId()}" . ".executions", 1); // per function
+                ->addMetric(METRIC_EXECUTIONS, 1) // per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
         }
 
         $execution->setAttribute('status', 'processing');
@@ -214,8 +214,8 @@ Server::setResource('execute', function () {
         /** Trigger usage queue */
         $queueForUsage
             ->setProject($project)
-            ->addMetric('executions.compute', (int)($execution->getAttribute('duration') * 1000))// per project
-            ->addMetric("{$function->getInternalId()}" . ".executions.compute", (int)($execution->getAttribute('duration') * 1000))// per function
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
             ->trigger()
         ;
     };

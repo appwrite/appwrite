@@ -254,12 +254,12 @@ class BuildsV1 extends Worker
         $this
             ->getUsageQueue()
             ->setProject($project)
-            ->addMetric("builds", 1) // per project
-            ->addMetric("builds.storage", $build->getAttribute('size', 0))
-            ->addMetric("builds.compute", $build->getAttribute('duration', 0))
-            ->addMetric("{$function->getInternalId()}" . ".builds", 1) // per function
-            ->addMetric("{$function->getInternalId()}" . ".builds.storage", $build->getAttribute('size', 0))
-            ->addMetric("{$function->getInternalId()}" . ".builds.compute", $build->getAttribute('duration', 0))
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, $build->getAttribute('duration', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), $build->getAttribute('duration', 0))
             ->trigger()
         ;
     }
