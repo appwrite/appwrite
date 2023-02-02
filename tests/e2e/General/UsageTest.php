@@ -111,7 +111,6 @@ class UsageTest extends Scope
         $this->validateDates($res['users']);
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-        $requestsCount++;
 
         $res = $this->client->call(Client::METHOD_GET, '/users/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
@@ -289,7 +288,6 @@ class UsageTest extends Scope
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
 
-        $requestsCount++;
         $res = $this->client->call(Client::METHOD_GET, '/storage/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
@@ -315,7 +313,6 @@ class UsageTest extends Scope
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
         $this->validateDates($res['filesDelete']);
 
-        $requestsCount++;
         $res = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId . '/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
