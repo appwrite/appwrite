@@ -7,6 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\ID;
 use Utopia\Database\DateTime;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 
 trait DatabasesBase
@@ -1045,7 +1046,7 @@ trait DatabasesBase
                 'equal("blocked", true)',
                 'equal("collectionId", "' . $data['moviesId'] . '")',
                 'orderAsc("$updatedAt")'
-            ],
+            ]
         ]);
 
         $this->assertEquals(200, $documents['headers']['status-code']);

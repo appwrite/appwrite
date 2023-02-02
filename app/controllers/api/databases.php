@@ -153,6 +153,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 function getUniqueKey(Request $request): string
 {
     // todo: do we want this a function? and what is the key built from?
+    ///make this specific not in a function.....
     $queries = $request->getParam('queries');
     $uri = $request->getURI();
     return md5(json_encode([$uri, $queries]));
