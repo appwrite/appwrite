@@ -61,11 +61,11 @@ $databaseListener = function (string $event, Document $document, Document $proje
         switch (true) {
             case $document->getCollection() === 'teams':
                 $queueForUsage
-                    ->addMetric("teams", $value); // per project
+                    ->addMetric(METRIC_TEAMS, $value); // per project
                 break;
             case $document->getCollection() === 'users':
                 $queueForUsage
-                    ->addMetric("users", $value); // per project
+                    ->addMetric(METRIC_USERS, $value); // per project
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
                     $queueForUsage
                         ->addReduce($document);
@@ -73,11 +73,11 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 break;
             case $document->getCollection() === 'sessions': // sessions
                 $queueForUsage
-                    ->addMetric("sessions", $value); //per project
+                    ->addMetric(METRIC_SESSIONS, $value); //per project
                 break;
             case $document->getCollection() === 'databases': // databases
                 $queueForUsage
-                    ->addMetric("databases", $value); // per project
+                    ->addMetric(METRIC_DATABASES, $value); // per project
 
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
                     $queueForUsage
@@ -88,8 +88,8 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 $parts = explode('_', $document->getCollection());
                 $databaseId = $parts[1] ?? 0;
                 $queueForUsage
-                    ->addMetric("collections", $value) // per project
-                    ->addMetric("{$databaseId}" . ".collections", $value) // per database
+                    ->addMetric(METRIC_COLLECTIONS, $value) // per project
+                    ->addMetric(str_replace('databaseId', $databaseId, METRIC_DATABASE_ID_COLLECTIONS), $value) // per database
                 ;
 
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -102,13 +102,13 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 $databaseId   = $parts[1] ?? 0;
                 $collectionId = $parts[3] ?? 0;
                 $queueForUsage
-                    ->addMetric("documents", $value)  // per project
-                    ->addMetric("{$databaseId}" . ".documents", $value) // per database
-                    ->addMetric("{$databaseId}" . "." . "{$collectionId}" . ".documents", $value);  // per collection
+                    ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                    ->addMetric(str_replace('databaseId', $databaseId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                    ->addMetric(str_replace(['databaseId', 'collectionId'], [$databaseId, $collectionId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
                 break;
             case $document->getCollection() === 'buckets': //buckets
                 $queueForUsage
-                    ->addMetric("buckets", $value); // per project
+                    ->addMetric(METRIC_BUCKETS, $value); // per project
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
                     $queueForUsage
                         ->addReduce($document);
@@ -118,14 +118,14 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 $parts = explode('_', $document->getCollection());
                 $bucketId   = $parts[1];
                 $queueForUsage
-                    ->addMetric("files", $value) // per project
-                    ->addMetric("files.storage", $document->getAttribute('sizeOriginal') * $value) // per project
-                    ->addMetric("{$bucketId}" . ".files", $value) // per bucket
-                    ->addMetric("{$bucketId}" . ".files.storage", $document->getAttribute('sizeOriginal') * $value);// per bucket
+                    ->addMetric(METRIC_FILES, $value) // per project
+                    ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
+                    ->addMetric(str_replace('bucketId', $bucketId, METRIC_BUCKET_ID_FILES), $value) // per bucket
+                    ->addMetric(str_replace('bucketId', $bucketId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
                 break;
             case $document->getCollection() === 'functions':
                 $queueForUsage
-                    ->addMetric('functions', $value); // per project
+                    ->addMetric(METRIC_FUNCTIONS, $value); // per project
 
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
                     $queueForUsage
@@ -134,15 +134,17 @@ $databaseListener = function (string $event, Document $document, Document $proje
                 break;
             case $document->getCollection() === 'deployments':
                 $queueForUsage
-                    ->addMetric("deployments", $value) // per project
+                    ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
                     ->addMetric("deployments.storage", $document->getAttribute('size') * $value) // per project
-                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments", $value)// per function
-                    ->addMetric("{$document->getAttribute('resourceType')}" . "." . "{$document->getAttribute('resourceInternalId')}" . ".deployments.storage", $document->getAttribute('size') * $value); // per function
+                    ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
+                    ->addMetric(str_replace(['resourceType', 'resourceInternalId'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value)// per function
+                    ->addMetric(str_replace(['resourceType', 'resourceInternalId'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_STORAGE), $document->getAttribute('size') * $value);// per function
+
                 break;
             case $document->getCollection() === 'executions':
                 $queueForUsage
-                    ->addMetric("executions", $value) // per project
-                    ->addMetric("{$document->getAttribute('functionInternalId')}" . ".executions", $value); // per function
+                    ->addMetric(METRIC_EXECUTIONS, $value) // per project
+                    ->addMetric(str_replace('functionInternalId', $document->getAttribute('functionInternalId'), METRIC_FUNCTION_ID_EXECUTIONS), $value);// per function
                 break;
             default:
                 break;

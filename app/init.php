@@ -174,7 +174,28 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
-
+// usage metrics
+const METRIC_TEAMS = 'teams';
+const METRIC_USERS = 'users';
+const METRIC_SESSIONS  = 'sessions';
+const METRIC_DATABASES = 'databases';
+const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASE_ID_COLLECTIONS = '{databaseId}.collections';
+const METRIC_DOCUMENTS = 'documents';
+const METRIC_DATABASE_ID_DOCUMENTS = '{databaseId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseId}.{collectionId}.documents';
+const METRIC_BUCKETS = 'buckets';
+const METRIC_FILES  = 'files';
+const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_BUCKET_ID_FILES = '{bucketId}.files';
+const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketId}.files.storage';
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_EXECUTIONS  = 'executions';
+const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
 
 
 $register = new Registry();
