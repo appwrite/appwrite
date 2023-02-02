@@ -175,6 +175,8 @@ const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 
+
+
 $register = new Registry();
 
 App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));

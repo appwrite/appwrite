@@ -2,16 +2,20 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\URL\URL;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Appwrite\ClamAV\Network;
 use Utopia\Logger\Logger;
+use Utopia\Queue\Client;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
+use Utopia\DSN\DSN;
+use Utopia\Queue;
 
 class Doctor extends Action
 {
@@ -185,6 +189,27 @@ class Doctor extends Action
             Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
         } catch (\Throwable $th) {
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
+        }
+
+        try {
+            $fallbackForRedis = URL::unparse([
+                'scheme' => 'redis',
+                'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
+                'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
+                'user' => App::getEnv('_APP_REDIS_USER', ''),
+                'pass' => App::getEnv('_APP_REDIS_PASS', ''),
+            ]);
+
+            $dsn = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
+            $dsn = explode('=', $dsn);
+            $dsn = $dsn[1] ?? '';
+            $dsn = new DSN($dsn);
+            $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+            $client = new Client('v1-usage', $connection);
+            $client->getQueueSize();
+            Console::success('🟢 ' . str_pad("Usage queue", 50, '.') . 'connected');
+        } catch (\Throwable $th) {
+            Console::error('🔴 ' . str_pad("Usage queue", 47, '.') . 'disconnected');
         }
 
         \sleep(0.2);

@@ -430,42 +430,6 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-worker-usage:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: worker-usage
-    <<: *x-logging
-    container_name: appwrite-worker-usage
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-    depends_on:
-      - redis
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_CONNECTIONS_MAX
-      - _APP_POOL_CLIENTS
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
-      - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
-
   appwrite-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: maintenance
@@ -580,6 +544,42 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
+
+  appwrite-worker-usage:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: worker-usage
+    <<: *x-logging
+    container_name: appwrite-worker-usage
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+     - redis
+     - mariadb
+    environment:
+     - _APP_ENV
+     - _APP_WORKER_PER_CORE
+     - _APP_CONNECTIONS_MAX
+     - _APP_POOL_CLIENTS
+     - _APP_OPENSSL_KEY_V1
+     - _APP_DB_HOST
+     - _APP_DB_PORT
+     - _APP_DB_SCHEMA
+     - _APP_DB_USER
+     - _APP_DB_PASS
+     - _APP_REDIS_HOST
+     - _APP_REDIS_PORT
+     - _APP_REDIS_USER
+     - _APP_REDIS_PASS
+     - _APP_CONNECTIONS_DB_CONSOLE
+     - _APP_CONNECTIONS_DB_PROJECT
+     - _APP_CONNECTIONS_CACHE
+     - _APP_CONNECTIONS_QUEUE
+     - _APP_USAGE_STATS
+     - DOCKERHUB_PULL_USERNAME
+     - DOCKERHUB_PULL_PASSWORD
 
 networks:
   gateway:
