@@ -64,6 +64,7 @@ class Executor
         string $projectId,
         string $source,
         string $image,
+        string $version,
         bool $remove = false,
         string $entrypoint = '',
         string $workdir = '',
@@ -86,6 +87,7 @@ class Executor
             'commands' => $commands,
             'cpus' => $this->cpus,
             'memory' => $this->memory,
+            'version' => $version,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
@@ -124,6 +126,7 @@ class Executor
         string $image,
         string $source,
         string $entrypoint,
+        string $version
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
@@ -139,6 +142,7 @@ class Executor
             'entrypoint' => $entrypoint,
             'cpus' => $this->cpus,
             'memory' => $this->memory,
+            'version' => $version,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);

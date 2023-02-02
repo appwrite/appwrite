@@ -129,6 +129,7 @@ Server::setResource('execute', function () {
             $executionResponse = $client->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
+                version: $function->getAttribute('version'),
                 payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
@@ -137,13 +138,15 @@ Server::setResource('execute', function () {
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
+
             /** Update execution status */
             $execution
-                ->setAttribute('status', $executionResponse['status'])
+                ->setAttribute('status', $status)
                 ->setAttribute('statusCode', $executionResponse['statusCode'])
-                ->setAttribute('response', $executionResponse['response'])
-                ->setAttribute('stdout', $executionResponse['stdout'])
-                ->setAttribute('stderr', $executionResponse['stderr'])
+                ->setAttribute('response', $executionResponse['body'])
+                ->setAttribute('stdout', $executionResponse['logs'])
+                ->setAttribute('stderr', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));

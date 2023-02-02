@@ -86,7 +86,8 @@ App::post('/v1/functions')
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
-            'search' => implode(' ', [$functionId, $name, $runtime])
+            'search' => implode(' ', [$functionId, $name, $runtime]),
+            'version' => 'v3'
         ]));
 
         $schedule = Authorization::skip(
@@ -1193,6 +1194,7 @@ App::post('/v1/functions/:functionId/executions')
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
+                version: $function->getAttribute('version'),
                 payload: $data,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
@@ -1201,12 +1203,14 @@ App::post('/v1/functions/:functionId/executions')
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
+
             /** Update execution status */
-            $execution->setAttribute('status', $executionResponse['status']);
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
+            $execution->setAttribute('status', $status);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('response', $executionResponse['response']);
-            $execution->setAttribute('stdout', $executionResponse['stdout']);
-            $execution->setAttribute('stderr', $executionResponse['stderr']);
+            $execution->setAttribute('response', $executionResponse['body']);
+            $execution->setAttribute('stdout', $executionResponse['logs']);
+            $execution->setAttribute('stderr', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));

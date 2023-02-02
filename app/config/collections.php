@@ -2311,6 +2311,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('version'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 8,
+                'signed' => true,
+                'required' => false,
+                'default' => 'v3',
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

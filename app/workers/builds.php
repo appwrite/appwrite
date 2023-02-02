@@ -173,6 +173,7 @@ class BuildsV1 extends Worker
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
                 source: $source,
+                version: $function->getAttribute('version'),
                 image: $runtime['image'],
                 remove: true,
                 entrypoint: $deployment->getAttribute('entrypoint'),
@@ -189,7 +190,7 @@ class BuildsV1 extends Worker
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
             $build->setAttribute('duration', \intval($response['duration']));
-            $build->setAttribute('status', $response['status']);
+            $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('stderr', $response['stderr']);
