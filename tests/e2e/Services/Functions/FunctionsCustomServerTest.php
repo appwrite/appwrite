@@ -635,7 +635,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('8.0', $execution['body']['response']);
         $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertLessThan(3, $execution['body']['duration']);
+        $this->assertLessThan(1.500, $execution['body']['duration']);
 
         /**
          * Test for FAILURE
@@ -915,6 +915,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
         $this->assertLessThan(6, $executions['body']['executions'][0]['duration']);
+        $this->assertLessThan(4, $executions['body']['executions'][0]['duration']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
 

@@ -111,14 +111,12 @@ class UsageTest extends Scope
         $this->validateDates($res['users']);
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-
         $requestsCount++;
 
         $res = $this->client->call(Client::METHOD_GET, '/users/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
-
         $requestsCount++;
 
         $res = $res['body'];
@@ -270,7 +268,7 @@ class UsageTest extends Scope
         $filesCreate = $data['filesCreate'];
         $filesDelete = $data['filesDelete'];
 
-        sleep(30);
+        sleep(20);
 
         // console request
         $headers = [
@@ -390,7 +388,7 @@ class UsageTest extends Scope
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
-            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
                 'collectionId' => 'unique()',
                 'name' => $name,
                 'documentSecurity' => false,
@@ -423,11 +421,12 @@ class UsageTest extends Scope
             }
         }
 
-        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string', $headers, [
             'key' => 'name',
             'size' => 255,
             'required' => true,
         ]);
+
         $this->assertEquals('name', $res['body']['key']);
         $collectionsUpdate++;
         $requestsCount++;
@@ -436,7 +435,7 @@ class UsageTest extends Scope
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
-            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+            $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
                 'documentId' => 'unique()',
                 'data' => ['name' => $name]
             ]);
@@ -514,7 +513,7 @@ class UsageTest extends Scope
         $documentsRead = $data['documentsRead'];
         $documentsDelete = $data['documentsDelete'];
 
-        sleep(30);
+        sleep(20);
 
         // check datbase stats
         $headers = [
@@ -628,7 +627,7 @@ class UsageTest extends Scope
         $executions = 0;
         $failures = 0;
 
-        $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+        $response1 = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
             'functionId' => 'unique()',
             'name' => 'Test',
             'runtime' => 'php-8.0',
@@ -653,7 +652,7 @@ class UsageTest extends Scope
         $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
         $this->packageCode('php');
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, ['content-type' => 'multipart/form-data',]), [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', $headers, [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
@@ -677,7 +676,7 @@ class UsageTest extends Scope
         $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
             'async' => false,
         ]);
 
@@ -744,7 +743,7 @@ class UsageTest extends Scope
         $executions = $data['executions'];
         $failures = $data['failures'];
 
-        sleep(30);
+        sleep(20);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', $headers, [
             'range' => '30d'
