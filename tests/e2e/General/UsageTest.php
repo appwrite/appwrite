@@ -118,7 +118,6 @@ class UsageTest extends Scope
             'x-appwrite-mode' => 'admin'
         ]));
         $requestsCount++;
-
         $res = $res['body'];
         $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
         $this->validateDates($res['usersCreate']);
@@ -289,7 +288,6 @@ class UsageTest extends Scope
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
         $requestsCount++;
-
         $res = $this->client->call(Client::METHOD_GET, '/storage/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
@@ -315,7 +313,6 @@ class UsageTest extends Scope
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
         $this->validateDates($res['filesDelete']);
         $requestsCount++;
-
         $res = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId . '/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
@@ -327,6 +324,7 @@ class UsageTest extends Scope
         $this->assertEquals($filesRead, $res['filesRead'][array_key_last($res['filesRead'])]['value']);
         $this->assertEquals($filesCreate, $res['filesCreate'][array_key_last($res['filesCreate'])]['value']);
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
+
         $requestsCount++;
         $data['requestsCount'] = $requestsCount;
         return $data;
@@ -360,7 +358,7 @@ class UsageTest extends Scope
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' database';
-            $res = $this->client->call(Client::METHOD_POST, '/databases', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+            $res = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
                 'databaseId' => 'unique()',
                 'name' => $name,
             ]);

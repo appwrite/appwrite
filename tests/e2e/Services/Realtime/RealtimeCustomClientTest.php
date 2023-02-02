@@ -106,7 +106,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('collections.1.documents.1', $response['data']['channels']);
         $this->assertContains('collections.2.documents.2', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
-
         $client->close();
     }
 
@@ -461,7 +460,7 @@ class RealtimeCustomClientTest extends Scope
 
         /**
          * Test Account Session Create
-        */
+         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
