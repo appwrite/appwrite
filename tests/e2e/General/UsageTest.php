@@ -85,7 +85,7 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(30);
+        sleep(20);
 
         $projectId = $data['projectId'];
         $headers = $data['headers'];
@@ -431,7 +431,7 @@ class UsageTest extends Scope
         $collectionsUpdate++;
         $requestsCount++;
 
-        sleep(30);
+        sleep(20);
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
@@ -652,7 +652,7 @@ class UsageTest extends Scope
         $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
         $this->packageCode('php');
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', $headers, [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, ['content-type' => 'multipart/form-data']), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
