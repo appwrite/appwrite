@@ -652,7 +652,7 @@ class UsageTest extends Scope
         $code = realpath(__DIR__ . '/../../resources/functions') . "/php/code.tar.gz";
         $this->packageCode('php');
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge($headers, ['content-type' => 'multipart/form-data',]), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
@@ -690,7 +690,7 @@ class UsageTest extends Scope
             $executions++;
         }
 
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge($headers, ['content-type' => 'multipart/form-data']), [
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
             'async' => false,
         ]);
 
