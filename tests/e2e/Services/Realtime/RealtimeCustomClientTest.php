@@ -106,6 +106,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('collections.1.documents.1', $response['data']['channels']);
         $this->assertContains('collections.2.documents.2', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
+
         $client->close();
     }
 
@@ -209,7 +210,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']);
         $this->assertEquals(1003, $response['data']['code']);
         $this->assertEquals('Message format is not valid.', $response['data']['message']);
-
 
 
         $client->close();

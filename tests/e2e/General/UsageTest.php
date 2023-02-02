@@ -280,6 +280,7 @@ class UsageTest extends Scope
 
         $res = $this->client->call(Client::METHOD_GET, '/project/usage?range=30d', $headers);
         $res = $res['body'];
+
         $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
@@ -287,12 +288,13 @@ class UsageTest extends Scope
         $this->validateDates($res['requests']);
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
+
         $requestsCount++;
         $res = $this->client->call(Client::METHOD_GET, '/storage/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
-
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
@@ -312,12 +314,13 @@ class UsageTest extends Scope
         $this->validateDates($res['filesCreate']);
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
         $this->validateDates($res['filesDelete']);
+
         $requestsCount++;
         $res = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId . '/usage?range=30d', array_merge($headers, [
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
-
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
         $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
@@ -325,7 +328,6 @@ class UsageTest extends Scope
         $this->assertEquals($filesCreate, $res['filesCreate'][array_key_last($res['filesCreate'])]['value']);
         $this->assertEquals($filesDelete, $res['filesDelete'][array_key_last($res['filesDelete'])]['value']);
 
-        $requestsCount++;
         $data['requestsCount'] = $requestsCount;
         return $data;
     }
@@ -424,11 +426,9 @@ class UsageTest extends Scope
             'size' => 255,
             'required' => true,
         ]);
-
         $this->assertEquals('name', $res['body']['key']);
         $collectionsUpdate++;
         $requestsCount++;
-
         sleep(20);
 
         for ($i = 0; $i < 10; $i++) {
