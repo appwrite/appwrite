@@ -1,3 +1,6 @@
+> 风起云涌！🌩 ☂️
+> Appwrite Cloud即将上线！ 您可以点击这里提前了解云托管方案，并且订阅获取免费额度： https://appwrite.io/cloud
+
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -21,7 +24,7 @@
 
 [English](README.md) | 简体中文
 
-[**我们发布了 Appwrite Console 2.0 版本，点击这里了解更多！**](https://medium.com/appwrite-io/announcing-console-2-0-2e0e96891cb0?source=friends_link&sk=7a82b4069778e3adc165dc026e960fe1)
+[**我们发布了 Appwrite 1.2 版本，包含 GraphQL 支持! 点击这里了解更多！**](https://appwrite.io/graphql)
 
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
