@@ -5,10 +5,31 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
+/**
+ * Class UsageUsers
+ *
+ * Model class representing a usage statistics for users and sessions.
+ */
 class UsageUsers extends Model
 {
+    /**
+     * Constant representing the type string.
+     *
+     * @var string
+     */
+    const TYPE_STRING = 'string';
+    const TYPE_METRIC = 'metric';
+
     public function __construct()
     {
+        $commonProperties = [
+            'type' => self::TYPE_METRIC,
+            'description' => '',
+            'default' => [],
+            'example' => [],
+            'array' => true
+        ];
+
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
@@ -16,61 +37,29 @@ class UsageUsers extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('usersCount', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('usersCount', $commonProperties + [
                 'description' => 'Aggregated stats for total number of users.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('usersCreate', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('usersCreate', $commonProperties + [
                 'description' => 'Aggregated stats for users created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('usersRead', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('usersRead', $commonProperties + [
                 'description' => 'Aggregated stats for users read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('usersUpdate', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('usersUpdate', $commonProperties + [
                 'description' => 'Aggregated stats for users updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('usersDelete', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('usersDelete', $commonProperties + [
                 'description' => 'Aggregated stats for users deleted.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('sessionsCreate', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('sessionsCreate', $commonProperties + [
                 'description' => 'Aggregated stats for sessions created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('sessionsProviderCreate', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('sessionsProviderCreate', $commonProperties + [
                 'description' => 'Aggregated stats for sessions created for a provider ( email, anonymous or oauth2 ).',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
-            ->addRule('sessionsDelete', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('sessionsDelete', $commonProperties + [
                 'description' => 'Aggregated stats for sessions deleted.',
-                'default' => [],
-                'example' => [],
-                'array' => true
             ])
         ;
     }
@@ -82,14 +71,14 @@ class UsageUsers extends Model
      */
     public function getName(): string
     {
-        return 'UsageUsers';
+        return static::class;
     }
 
     /**
      * Get Type
      *
-     * @return string
-     */
+     @return string
+    */
     public function getType(): string
     {
         return Response::MODEL_USAGE_USERS;
