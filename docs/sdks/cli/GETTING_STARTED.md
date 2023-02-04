@@ -73,7 +73,7 @@ Your function has now been deployed on your Appwrite server! As soon as the buil
 Similarly, you can deploy all your collections to your Appwrite server using 
 
 ```sh
-appwrite deploy collections
+appwrite deploy collection
 ```
 
 > ### Note
