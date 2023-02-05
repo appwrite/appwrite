@@ -155,6 +155,7 @@ App::init()
     ->inject('dbForProject')
     ->action(function (Request $request, Database $dbForProject) {
         $key = md5(json_encode([
+            $request->getMethod(),
             $request->getURI(), // Contains databaseId & collectionId
             $request->getParam('queries')
         ]));
@@ -196,6 +197,7 @@ App::error()
                 }
 
                 $key = md5(json_encode([
+                    $request->getMethod(),
                     $request->getURI(), // Contains databaseId & collectionId
                     $request->getParam('queries')
                 ]));
