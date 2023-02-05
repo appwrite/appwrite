@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Teams;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\DatetimeValidator;
 
 trait TeamsBase
 {
@@ -27,7 +28,7 @@ trait TeamsBase
         $this->assertEquals('Arsenal', $response1['body']['name']);
         $this->assertGreaterThan(-1, $response1['body']['total']);
         $this->assertIsInt($response1['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response1['body']['$createdAt']));
 
         $teamUid = $response1['body']['$id'];
         $teamName = $response1['body']['name'];
@@ -47,7 +48,7 @@ trait TeamsBase
         $this->assertEquals('Manchester United', $response2['body']['name']);
         $this->assertGreaterThan(-1, $response2['body']['total']);
         $this->assertIsInt($response2['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response2['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response2['body']['$createdAt']));
 
         $response3 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -62,7 +63,7 @@ trait TeamsBase
         $this->assertEquals('Newcastle', $response3['body']['name']);
         $this->assertGreaterThan(-1, $response3['body']['total']);
         $this->assertIsInt($response3['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response3['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response3['body']['$createdAt']));
         /**
          * Test for FAILURE
          */
@@ -97,7 +98,7 @@ trait TeamsBase
         $this->assertEquals('Arsenal', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -274,7 +275,7 @@ trait TeamsBase
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -289,7 +290,7 @@ trait TeamsBase
         $this->assertEquals('Demo New', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -325,7 +326,7 @@ trait TeamsBase
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid, array_merge([
             'content-type' => 'application/json',
