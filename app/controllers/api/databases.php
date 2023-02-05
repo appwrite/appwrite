@@ -149,23 +149,17 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     return $attribute;
 }
 
-
-function getUniqueKey(Request $request): string
-{
-    // todo: do we want this a function? and what is the key built from?
-    ///make this specific not in a function.....
-    $queries = $request->getParam('queries');
-    $uri = $request->getURI();
-    return md5(json_encode([$uri, $queries]));
-}
-
 App::init()
     ->groups(['timeout'])
     ->inject('request')
     ->inject('dbForProject')
     ->action(function (Request $request, Database $dbForProject) {
+        $key = md5(json_encode([
+            $request->getURI(), // Contains databaseId & collectionId
+            $request->getParam('queries')
+        ]));
         /* @var $document Document */
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', getUniqueKey($request)));
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
         if ($document->getAttribute('blocked') === true) {
             throw new Exception(Exception::TIMEOUT_BLOCKED);
         }
@@ -201,7 +195,11 @@ App::error()
                     throw new Exception(Exception::GENERAL_SERVER_ERROR);
                 }
 
-                $key = getUniqueKey($request);
+                $key = md5(json_encode([
+                    $request->getURI(), // Contains databaseId & collectionId
+                    $request->getParam('queries')
+                ]));
+
                 /* @var $document Document */
                 $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
                 if ($document->isEmpty()) {
@@ -2070,8 +2068,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('request')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Request $request) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
