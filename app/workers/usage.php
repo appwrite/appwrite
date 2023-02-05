@@ -45,27 +45,27 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
 
             switch (true) {
                 case $document->getCollection() === 'users': // users
-                    $sessions = count($document->getAttribute('sessions', 0));
+                    $sessions = count($document->getAttribute(METRIC_SESSIONS, 0));
                     if (!empty($sessions)) {
                         $metrics[] = [
-                            'key' => 'sessions',
+                            'key' => METRIC_SESSIONS,
                             'value' => ($sessions * -1),
                         ];
                     }
                     break;
                 case $document->getCollection() === 'databases': // databases
-                    $collections = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".collections"));
-                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".documents"));
+                    $collections = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{databaseId}', $document->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS)));
+                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{databaseId}', $document->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS)));
                     if (!empty($collections['value'])) {
                         $metrics[] = [
-                            'key' => 'collections',
+                            'key' => METRIC_COLLECTIONS,
                             'value' => ($collections['value'] * -1),
                         ];
                     }
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                            'key' => 'documents',
+                            'key' => METRIC_DOCUMENTS,
                             'value' => ($documents['value'] * -1),
                         ];
                     }
@@ -73,93 +73,93 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                     $parts = explode('_', $document->getCollection());
                     $databaseId = $parts[1] ?? 0;
-                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . "{$databaseId}" . "." . "{$document->getInternalId()}" . ".documents"));
+                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . str_replace(['{databaseId}', '{collectionId}'], [$databaseId, $document->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS)));
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
-                            'key' => 'documents',
+                            'key' => METRIC_DOCUMENTS,
                             'value' => ($documents['value'] * -1),
                         ];
                         $metrics[] = [
-                            'key' => "{$databaseId}" . ".documents",
+                            'key' => str_replace('{databaseId}', $databaseId, METRIC_DATABASE_ID_DOCUMENTS),
                             'value' => ($documents['value'] * -1),
                         ];
                     }
                     break;
 
                 case $document->getCollection() === 'buckets':
-                    $files = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".files"));
-                    $storage = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".files.storage"));
+                    $files = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{bucketId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
+                    $storage = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{bucketId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
 
                     if (!empty($files['value'])) {
                         $metrics[] = [
-                            'key' => 'files',
+                            'key' => METRIC_FILES,
                             'value' => ($files['value'] * -1),
                         ];
                     }
 
                     if (!empty($storage['value'])) {
                         $metrics[] = [
-                            'key' => 'files.storage',
+                            'key' => METRIC_FILES_STORAGE,
                             'value' => ($storage['value'] * -1),
                         ];
                     }
                     break;
 
                 case $document->getCollection() === 'functions':
-                    $deployments = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getInternalId()}" . ".deployments"));
-                    $deploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_function." . "{$document->getInternalId()}" . ".deployments.storage"));
-                    $builds = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".builds"));
-                    $buildsStorage = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".builds.storage"));
-                    $buildsCompute = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".builds.compute"));
-                    $executions = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".executions"));
-                    $executionsCompute = $dbForProject->getDocument('stats', md5("_inf_" . "{$document->getInternalId()}" . ".executions.compute"));
+                    $deployments = $dbForProject->getDocument('stats', md5("_inf_" . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
+                    $deploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_" . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
+                    $builds = $dbForProject->getDocument('stats', md5("_inf_" .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
+                    $buildsStorage = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
+                    $buildsCompute = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
+                    $executions = $dbForProject->getDocument('stats', md5("_inf_" .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
+                    $executionsCompute = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
 
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
-                            'key' => 'deployments',
+                            'key' => METRIC_DEPLOYMENTS,
                             'value' => ($deployments['value'] * -1),
                         ];
                     }
 
                     if (!empty($deploymentsStorage['value'])) {
                         $metrics[] = [
-                            'key' => 'deployments.storage',
+                            'key' => METRIC_DEPLOYMENTS_STORAGE,
                             'value' => ($deploymentsStorage['value'] * -1),
                         ];
                     }
 
                     if (!empty($builds['value'])) {
                         $metrics[] = [
-                            'key' => 'builds',
+                            'key' => METRIC_BUILDS,
                             'value' => ($builds['value'] * -1),
                         ];
                     }
 
                     if (!empty($buildsStorage['value'])) {
                         $metrics[] = [
-                            'key' => 'builds.storage',
+                            'key' => METRIC_BUILDS_STORAGE,
                             'value' => ($buildsStorage['value'] * -1),
                         ];
                     }
 
                     if (!empty($buildsCompute['value'])) {
                         $metrics[] = [
-                            'key' => 'builds.compute',
+                            'key' => METRIC_BUILDS_COMPUTE,
                             'value' => ($buildsCompute['value'] * -1),
                         ];
                     }
 
                     if (!empty($executions['value'])) {
                         $metrics[] = [
-                            'key' => 'executions',
+                            'key' => METRIC_EXECUTIONS,
                             'value' => ($executionsCompute['value'] * -1),
                         ];
                     }
 
                     if (!empty($executionsCompute['value'])) {
                         $metrics[] = [
-                            'key' => 'executions.compute',
+                            'key' => METRIC_EXECUTIONS_COMPUTE,
                             'value' => ($executionsCompute['value'] * -1),
                         ];
                     }
@@ -234,7 +234,7 @@ $server
 
                     $dbForProject->setNamespace('_' . $projectInternalId);
 
-                    foreach ($project['keys'] as $key => $value) {
+                    foreach ($project['keys'] ?? [] as $key => $value) {
                         if ($value == 0) {
                             continue;
                         }
@@ -271,10 +271,12 @@ $server
                             }
                         }
                     }
-                    $dbForProject->createDocument('statsLogger', new Document([
-                        'time'    => DateTime::now(),
-                        'metrics' => $project['keys'],
-                    ]));
+                    if (!empty($project['keys'])) {
+                        $dbForProject->createDocument('statsLogger', new Document([
+                            'time' => DateTime::now(),
+                            'metrics' => $project['keys'],
+                        ]));
+                    }
                 } catch (\Exception $e) {
                     console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
                 } finally {

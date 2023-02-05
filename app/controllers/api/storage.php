@@ -16,10 +16,10 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
@@ -1439,8 +1439,8 @@ App::get('/v1/storage/:bucketId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $bucket->getInternalId() . '.files',
-            $bucket->getInternalId() . '.files.storage',
+            str_replace('{bucketId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES),
+            str_replace('{bucketId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -1483,7 +1483,7 @@ App::get('/v1/storage/:bucketId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'filesCount' => $usage[$metrics[0]],
+            'filesTotal' => $usage[$metrics[0]],
             'filesStorage' => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_BUCKETS);
     });
@@ -1507,9 +1507,9 @@ App::get('/v1/storage/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'buckets',
-            'files',
-            'files.storage',
+            METRIC_BUCKETS,
+            METRIC_FILES,
+            METRIC_FILES_STORAGE,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -1551,8 +1551,8 @@ App::get('/v1/storage/usage')
 
     $response->dynamic(new Document([
         'range' => $range,
-        'bucketsCount' => $usage[$metrics[0]],
-        'filesCount' => $usage[$metrics[1]],
+        'bucketsTotal' => $usage[$metrics[0]],
+        'filesTotal' => $usage[$metrics[1]],
         'filesStorage' => $usage[$metrics[2]],
     ]), Response::MODEL_USAGE_STORAGE);
     });

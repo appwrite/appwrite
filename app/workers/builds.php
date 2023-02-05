@@ -9,7 +9,7 @@ use Executor\Executor;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;

@@ -16,7 +16,7 @@ class UsageCollection extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('documentsCount', [
+            ->addRule('documentsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],

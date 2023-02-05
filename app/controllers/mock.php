@@ -7,14 +7,13 @@ use Utopia\Database\Document;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')

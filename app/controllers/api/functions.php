@@ -10,9 +10,9 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
@@ -85,6 +85,7 @@ App::post('/v1/functions')
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleInternalId' => '',
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
@@ -95,6 +96,7 @@ App::post('/v1/functions')
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule'  => $function->getAttribute('schedule'),
@@ -236,8 +238,8 @@ App::get('/v1/functions/:functionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], $function->getInternalId(), METRIC_FUNCTION_ID_STORAGE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
@@ -694,6 +696,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
+                    'buildInternalId' => '',
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -725,6 +728,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
+                    'buildInternalId' => '',
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -1168,8 +1172,8 @@ App::post('/v1/functions/:functionId/executions')
              * Sync execution compute usage from
              */
             $queueForUsage
-                ->addMetric('executions.compute', (int)($executionResponse['duration'] * 1000))// per project
-                ->addMetric("{$function->getInternalId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
             ;
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));

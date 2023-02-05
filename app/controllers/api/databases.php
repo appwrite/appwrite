@@ -4,10 +4,10 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\DatetimeValidator;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -851,7 +851,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
-    ->param('required', null, new Boolean(true), 'Is attribute required?')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -2447,9 +2447,9 @@ App::get('/v1/databases/usage')
     }
         $response->dynamic(new Document([
             'range' => $range,
-            'databasesCount'   => $usage[$metrics[0]],
-            'collectionsCount' => $usage[$metrics[1]],
-            'documentsCount'   => $usage[$metrics[2]],
+            'databasesTotal'   => $usage[$metrics[0]],
+            'collectionsTotal' => $usage[$metrics[1]],
+            'documentsTotal'   => $usage[$metrics[2]],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -2522,8 +2522,8 @@ App::get('/v1/databases/:databaseId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'collectionsCount'   => $usage[$metrics[0]],
-            'documentsCount'   => $usage[$metrics[1]],
+            'collectionsTotal'   => $usage[$metrics[0]],
+            'documentsTotal'   => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
@@ -2599,6 +2599,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'documentsCount'   => $usage[$metrics[0]],
+            'documentsTotal'   => $usage[$metrics[0]],
         ]), Response::MODEL_USAGE_COLLECTION);
     });

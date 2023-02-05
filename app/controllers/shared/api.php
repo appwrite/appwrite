@@ -137,7 +137,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
                     ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
                     ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
                     ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value)// per function
-                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_STORAGE), $document->getAttribute('size') * $value);// per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);// per function
 
                 break;
             case $document->getCollection() === 'executions':
@@ -514,19 +514,20 @@ App::shutdown()
             }
         }
 
+
+
         if ($project->getId() !== 'console') {
             if ($mode !== APP_MODE_ADMIN) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
-
                 if (!empty($file)) {
                     $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
                 }
 
                 $queueForUsage
-                    ->addMetric('network.requests', 1)
-                    ->addMetric("network.inbound", $request->getSize() + $fileSize)
-                    ->addMetric("network.outbound", $response->getSize());
+                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
             }
 
             $queueForUsage

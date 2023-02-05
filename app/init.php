@@ -41,7 +41,7 @@ use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
@@ -199,12 +199,14 @@ const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
 const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
 const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
-const METRIC_FUNCTION_ID_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
 const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
-
+const METRIC_NETWORK_REQUESTS  = 'network.requests';
+const METRIC_NETWORK_INBOUND  = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 

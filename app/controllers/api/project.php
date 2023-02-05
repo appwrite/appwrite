@@ -29,15 +29,15 @@ App::get('/v1/project/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'network.requests',
-            'network.inbound',
-            'network.outbound',
-            'executions',
-            'documents',
-            'databases',
-            'users',
-            'files.storage',
-            'buckets',
+            METRIC_NETWORK_REQUESTS,
+            METRIC_NETWORK_INBOUND,
+            METRIC_NETWORK_OUTBOUND,
+            METRIC_EXECUTIONS,
+            METRIC_DOCUMENTS,
+            METRIC_DATABASES,
+            METRIC_USERS,
+            METRIC_BUCKETS,
+            METRIC_FILES_STORAGE
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -50,6 +50,7 @@ App::get('/v1/project/usage')
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
+
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
@@ -58,6 +59,7 @@ App::get('/v1/project/usage')
                 }
             }
         });
+
 
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
@@ -77,15 +79,16 @@ App::get('/v1/project/usage')
         }
     }
 
+
         $response->dynamic(new Document([
             'range' => $range,
-            'requests' => ($usage[$metrics[0]]),
+            'requestsTotal' => ($usage[$metrics[0]]),
             'network' => ($usage[$metrics[1]] + $usage[$metrics[2]]),
-            'executions' => $usage[$metrics[3]],
-            'documents' => $usage[$metrics[4]],
-            'databases' => $usage[$metrics[5]],
-            'users' => $usage[$metrics[6]],
-            'storage' => $usage[$metrics[7]],
-            'buckets' => $usage[$metrics[8]],
+            'executionsTotal' => $usage[$metrics[3]],
+            'documentsTotal' => $usage[$metrics[4]],
+            'databasesTotal' => $usage[$metrics[5]],
+            'usersTotal' => $usage[$metrics[6]],
+            'bucketsTotal' => $usage[$metrics[7]],
+            'filesStorage' => $usage[$metrics[8]],
         ]), Response::MODEL_USAGE_PROJECT);
     });

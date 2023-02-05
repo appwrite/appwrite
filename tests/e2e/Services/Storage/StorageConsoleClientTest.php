@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class StorageConsoleClientTest extends Scope
 {
@@ -97,7 +97,7 @@ class StorageConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 3);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['filesCount']);
+        $this->assertIsArray($response['body']['filesTotal']);
         $this->assertIsArray($response['body']['filesStorage']);
     }
 }

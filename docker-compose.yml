@@ -554,6 +554,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_OPENSSL_KEY_V1
@@ -653,7 +655,7 @@ services:
     image: openruntimes/executor:0.2.0
     networks:
       - appwrite
-      - openruntimes-runtimes
+      - runtimes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
@@ -809,8 +811,8 @@ networks:
     name: gateway
   appwrite:
     name: appwrite
-  openruntimes-runtimes:
-    name: openruntimes-runtimes
+  runtimes:
+    name: runtimes
 
 volumes:
   appwrite-mariadb:

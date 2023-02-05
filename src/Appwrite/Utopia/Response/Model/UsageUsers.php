@@ -16,7 +16,7 @@ class UsageUsers extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('usersCount', [
+            ->addRule('usersTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of users.',
                 'default' => [],
@@ -24,7 +24,7 @@ class UsageUsers extends Model
                 'array' => true
             ])
 
-            ->addRule('sessionsCount', [
+            ->addRule('sessionsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for sessions created.',
                 'default' => [],

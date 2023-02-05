@@ -5,11 +5,10 @@ namespace Tests\Unit\Auth;
 use Appwrite\Auth\Auth;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Roles;
 
 class AuthTest extends TestCase
