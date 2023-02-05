@@ -216,7 +216,7 @@ App::error()
                 ])));
                 } else {
                     $document['count']++;
-                    $max = App::getEnv('_APP_TIMEOUT_MAX', 1); // todo: set default value
+                    $max = App::getEnv('_APP_TIMEOUT_MAX', 2); // todo: set default value
                     if ($document['count'] > $max) {
                         $document['blocked'] = true;
                     }
