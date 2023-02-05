@@ -107,7 +107,7 @@ Server::setResource('pools', function ($register) {
 $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-$workerNumber = 1;
+
 if (empty(App::getEnv('QUEUE'))) {
     throw new Exception('Please configure "QUEUE" environemnt variable.');
 }

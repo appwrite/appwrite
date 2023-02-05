@@ -41,8 +41,8 @@ class StorageConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(4, count($response['body']));
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['bucketsCount']);
-        $this->assertIsArray($response['body']['filesCount']);
+        $this->assertIsArray($response['body']['bucketsTotal']);
+        $this->assertIsArray($response['body']['filesTotal']);
         $this->assertIsArray($response['body']['filesStorage']);
     }
 
