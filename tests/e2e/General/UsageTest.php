@@ -406,7 +406,7 @@ class UsageTest extends Scope
         $res = $this->client->call(
             Client::METHOD_POST,
             '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
-            array_merge($headers, ['content-type' => 'multipart/form-data']),
+            $headers,
             [
             'key' => 'name',
             'size' => 255,
