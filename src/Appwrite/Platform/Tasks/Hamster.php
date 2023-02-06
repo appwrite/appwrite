@@ -145,79 +145,94 @@ class Hamster extends Action
 
     public function action(Registry $register, Group $pools, Cache $cache, Database $dbForConsole): void
     {
-        Console::info('Getting stats...');
 
-        /* Initialise new Utopia app */
-        $app = new App('UTC');
-        $console = $app->getResource('console');
+        Console::title('Cloud Hamster V1');
+        Console::success(APP_NAME . ' cloud hamster process v1 has started');
 
-        /** CSV stuff */
-        $this->date = date('Y-m-d');
-        $this->path = "{$this->directory}/stats_{$this->date}.csv";
-        $csv = Writer::createFromPath($this->path, 'w');
-        $csv->insertOne($this->columns);
+        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
 
-        /** Database connections */
-        $totalProjects = $dbForConsole->count('projects') + 1;
-        Console::success("Found a total of: {$totalProjects} projects");
+        Console::loop(function () use ($register, $pools, $cache, $dbForConsole, $interval) {
+            
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Getting Cloud Usage Stats every {$interval} seconds");
+            $loopStart = microtime(true);
 
-        $projects = [$console];
-        $count = 0;
-        $limit = 30;
-        $sum = 30;
-        $offset = 0;
-        while (!empty($projects)) {
-            foreach ($projects as $project) {
-                /**
-                 * Skip user projects with id 'console'
-                 */
-                if ($project->getId() === 'console') {
-                    continue;
+            /* Initialise new Utopia app */
+            $app = new App('UTC');
+            $console = $app->getResource('console');
+
+            /** CSV stuff */
+            $this->date = date('Y-m-d');
+            $this->path = "{$this->directory}/stats_{$this->date}.csv";
+            $csv = Writer::createFromPath($this->path, 'w');
+            $csv->insertOne($this->columns);
+
+            /** Database connections */
+            $totalProjects = $dbForConsole->count('projects') + 1;
+            Console::success("Found a total of: {$totalProjects} projects");
+
+            $projects = [$console];
+            $count = 0;
+            $limit = 30;
+            $sum = 30;
+            $offset = 0;
+            while (!empty($projects)) {
+                foreach ($projects as $project) {
+                    /**
+                     * Skip user projects with id 'console'
+                     */
+                    if ($project->getId() === 'console') {
+                        continue;
+                    }
+
+                    Console::info("Getting stats for {$project->getId()}");
+
+                    try {
+                        $db = $project->getAttribute('database');
+                        $adapter = $pools
+                            ->get($db)
+                            ->pop()
+                            ->getResource();
+
+                        $dbForProject = new Database($adapter, $cache);
+                        $dbForProject->setDefaultDatabase('appwrite');
+                        $dbForProject->setNamespace('_' . $project->getInternalId());
+
+                        $statsPerProject = $this->getStats($dbForConsole, $dbForProject, $project);
+                        $csv->insertOne(array_values($statsPerProject));
+                    } catch (\Throwable $th) {
+                        throw $th;
+                        Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    } finally {
+                        $pools
+                            ->get($db)
+                            ->reclaim();
+                    }
                 }
 
-                Console::info("Getting stats for {$project->getId()}");
+                $sum = \count($projects);
 
-                try {
-                    $db = $project->getAttribute('database');
-                    $adapter = $pools
-                        ->get($db)
-                        ->pop()
-                        ->getResource();
+                $projects = $dbForConsole->find('projects', [
+                    Query::limit($limit),
+                    Query::offset($offset),
+                ]);
 
-                    $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
-                    $dbForProject->setNamespace('_' . $project->getInternalId());
+                $offset = $offset + $limit;
+                $count = $count + $sum;
 
-                    $statsPerProject = $this->getStats($dbForConsole, $dbForProject, $project);
-                    $csv->insertOne(array_values($statsPerProject));
-                } catch (\Throwable $th) {
-                    throw $th;
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
-                } finally {
-                    $pools
-                        ->get($db)
-                        ->reclaim();
-                }
+                Console::log('Iterated through ' . $count . '/' . $totalProjects . ' projects...');
             }
 
-            $sum = \count($projects);
+            $this->sendEmail($register);
 
-            $projects = $dbForConsole->find('projects', [
-                Query::limit($limit),
-                Query::offset($offset),
-            ]);
+            $pools
+                ->get('console')
+                ->reclaim();
 
-            $offset = $offset + $limit;
-            $count = $count + $sum;
-
-            Console::log('Iterated through ' . $count . '/' . $totalProjects . ' projects...');
-        }
-
-        $this->sendEmail($register);
-
-        $pools
-            ->get('console')
-            ->reclaim();
+            $loopTook = microtime(true) - $loopStart;
+            $now = date('d-m-Y H:i:s', time());
+            Console::info("[{$now}] Cloud Stats took {$loopTook} seconds");
+        }, $interval);
     }
 
     private function sendEmail(Registry $register)
