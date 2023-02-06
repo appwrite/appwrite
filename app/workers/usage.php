@@ -25,6 +25,7 @@ $periods['1d']  = 'Y-m-d 00:00';
 //$periods['1m']  = 'Y-m-1 00:00';
 $periods['inf'] = '0000-00-00 00:00';
 
+const INFINITI_PERIOD = '_inf_';
 
 /**
  * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files
@@ -54,8 +55,8 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     }
                     break;
                 case $document->getCollection() === 'databases': // databases
-                    $collections = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{databaseId}', $document->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS)));
-                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{databaseId}', $document->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS)));
+                    $collections = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS)));
+                    $documents = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{databaseInternalId}', $document->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS)));
                     if (!empty($collections['value'])) {
                         $metrics[] = [
                             'key' => METRIC_COLLECTIONS,
@@ -72,8 +73,8 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     break;
                 case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                     $parts = explode('_', $document->getCollection());
-                    $databaseId = $parts[1] ?? 0;
-                    $documents = $dbForProject->getDocument('stats', md5("_inf_" . str_replace(['{databaseId}', '{collectionId}'], [$databaseId, $document->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS)));
+                    $databaseInternalId = $parts[1] ?? 0;
+                    $documents = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $document->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS)));
 
                     if (!empty($documents['value'])) {
                         $metrics[] = [
@@ -81,15 +82,15 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                             'value' => ($documents['value'] * -1),
                         ];
                         $metrics[] = [
-                            'key' => str_replace('{databaseId}', $databaseId, METRIC_DATABASE_ID_DOCUMENTS),
+                            'key' => str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
                             'value' => ($documents['value'] * -1),
                         ];
                     }
                     break;
 
                 case $document->getCollection() === 'buckets':
-                    $files = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{bucketId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
-                    $storage = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{bucketId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
+                    $files = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES)));
+                    $storage = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{bucketInternalId}', $document->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE)));
 
                     if (!empty($files['value'])) {
                         $metrics[] = [
@@ -107,13 +108,13 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     break;
 
                 case $document->getCollection() === 'functions':
-                    $deployments = $dbForProject->getDocument('stats', md5("_inf_" . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
-                    $deploymentsStorage = $dbForProject->getDocument('stats', md5("_inf_" . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
-                    $builds = $dbForProject->getDocument('stats', md5("_inf_" .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
-                    $buildsStorage = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
-                    $buildsCompute = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
-                    $executions = $dbForProject->getDocument('stats', md5("_inf_" .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
-                    $executionsCompute = $dbForProject->getDocument('stats', md5("_inf_" . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
+                    $deployments = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
+                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
+                    $builds = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
+                    $buildsStorage = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
+                    $buildsCompute = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
+                    $executions = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
+                    $executionsCompute = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
 
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
