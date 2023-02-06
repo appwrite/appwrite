@@ -56,6 +56,11 @@ class BuildsV1 extends Worker
         }
     }
 
+    /**
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws \Utopia\Database\Exception\Structure
+     * @throws Throwable
+     */
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
         global $register;
@@ -171,8 +176,8 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
+                projectId: $project->getId(),
                 source: $source,
                 image: $runtime['image'],
                 remove: true,
@@ -256,10 +261,10 @@ class BuildsV1 extends Worker
             ->setProject($project)
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, $build->getAttribute('duration', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), $build->getAttribute('duration', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
             ->trigger()
         ;
     }
