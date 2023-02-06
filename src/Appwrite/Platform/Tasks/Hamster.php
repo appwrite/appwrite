@@ -152,7 +152,7 @@ class Hamster extends Action
         $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
 
         Console::loop(function () use ($register, $pools, $cache, $dbForConsole, $interval) {
-            
+
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Getting Cloud Usage Stats every {$interval} seconds");
             $loopStart = microtime(true);
