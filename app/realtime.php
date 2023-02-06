@@ -432,7 +432,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         }
 
         $roles = Auth::getRoles($user);
-        var_dump($request->getQuery('channels', []));
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
         /**
