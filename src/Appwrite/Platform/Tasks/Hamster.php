@@ -149,7 +149,7 @@ class Hamster extends Action
         Console::title('Cloud Hamster V1');
         Console::success(APP_NAME . ' cloud hamster process v1 has started');
 
-        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
+        $interval = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
         Console::loop(function () use ($register, $pools, $cache, $dbForConsole, $interval) {
 
