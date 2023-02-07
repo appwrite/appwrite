@@ -240,6 +240,13 @@ class Hamster extends Action
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = $register->get('smtp');
 
+        $mail->clearAddresses();
+        $mail->clearAllRecipients();
+        $mail->clearReplyTos();
+        $mail->clearAttachments();
+        $mail->clearBCCs();
+        $mail->clearCCs();
+
         try {
             /** Addresses */
             $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
