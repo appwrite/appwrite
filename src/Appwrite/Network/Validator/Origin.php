@@ -25,8 +25,10 @@ class Origin extends Validator
     public const SCHEME_TYPE_HTTP = 'http';
     public const SCHEME_TYPE_HTTPS = 'https';
     public const SCHEME_TYPE_IOS = 'appwrite-ios';
-    public const SCHEME_TYPE_ANDROID = 'appwrite-android';
     public const SCHEME_TYPE_MACOS = 'appwrite-macos';
+    public const SCHEME_TYPE_WATCHOS = 'appwrite-watchos';
+    public const SCHEME_TYPE_TVOS = 'appwrite-tvos';
+    public const SCHEME_TYPE_ANDROID = 'appwrite-android';
     public const SCHEME_TYPE_WINDOWS = 'appwrite-windows';
     public const SCHEME_TYPE_LINUX = 'appwrite-linux';
 
@@ -37,8 +39,10 @@ class Origin extends Validator
         self::SCHEME_TYPE_HTTP => 'Web',
         self::SCHEME_TYPE_HTTPS => 'Web',
         self::SCHEME_TYPE_IOS => 'iOS',
-        self::SCHEME_TYPE_ANDROID => 'Android',
         self::SCHEME_TYPE_MACOS => 'macOS',
+        self::SCHEME_TYPE_WATCHOS => 'watchOS',
+        self::SCHEME_TYPE_TVOS => 'tvOS',
+        self::SCHEME_TYPE_ANDROID => 'Android',
         self::SCHEME_TYPE_WINDOWS => 'Windows',
         self::SCHEME_TYPE_LINUX => 'Linux',
     ];
@@ -79,6 +83,9 @@ class Origin extends Validator
                 case self::CLIENT_TYPE_FLUTTER_LINUX:
                 case self::CLIENT_TYPE_ANDROID:
                 case self::CLIENT_TYPE_APPLE_IOS:
+                case self::CLIENT_TYPE_APPLE_MACOS:
+                case self::CLIENT_TYPE_APPLE_WATCHOS:
+                case self::CLIENT_TYPE_APPLE_TVOS:
                     $this->clients[] = (isset($platform['key'])) ? $platform['key'] : '';
                     break;
 
