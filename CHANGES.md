@@ -7,7 +7,7 @@
 - Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
 - New usage metrics collection flow [#4770](https://github.com/appwrite/appwrite/pull/4770)
-  - Deprecated influxdb, statsd, telegraf containers and removed all of their occurrences from the code.
+  - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
   - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
   - Removed usage labels dependency.
   - Usage metrics are processed via new usage worker.
@@ -31,7 +31,7 @@
         - databasesCount to databasesTotal, collectionsCount to collectionsTotal, documentsCount to documentsTotal.
     - Functions
       - deprecated 
-        - executionsFailure, executionsSuccess, buildsFailure, buildsSuccess, executionsFailure, executionsSuccess
+        - executionsFailure, executionsSuccess, buildsFailure, buildsSuccess, executionsFailure, executionsSuccess.
       - renamed
         - executionsTime to executionsCompute, buildsTime to buildsCompute, documentsCount to documentsTotal.
       - added
