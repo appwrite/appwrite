@@ -5,7 +5,7 @@ namespace Tests\E2E\Scopes;
 use Appwrite\Tests\Retryable;
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 abstract class Scope extends TestCase
 {
@@ -21,7 +21,7 @@ abstract class Scope extends TestCase
      */
     protected $endpoint = 'http://localhost/v1';
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->client = new Client();
 
@@ -30,7 +30,7 @@ abstract class Scope extends TestCase
         ;
     }
 
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         $this->client = null;
     }

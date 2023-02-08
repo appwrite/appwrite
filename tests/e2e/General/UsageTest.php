@@ -9,8 +9,9 @@ use Tests\E2E\Scopes\SideServer;
 use CURLFile;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\DateTime;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\DatetimeValidator;
 
 class UsageTest extends Scope
 {
@@ -45,8 +46,8 @@ class UsageTest extends Scope
         $headers['x-appwrite-key'] = $project['apiKey'];
         $headers['content-type'] = 'application/json';
 
-        $usersCount    = 0;
-        $requestsCount = 0;
+        $usersTotal    = 0;
+        $requestsTotal = 0;
         for ($i = 0; $i < self::CREATE; $i++) {
             $email = uniqid() . 'user@usage.test';
             $password = 'password';
@@ -65,23 +66,23 @@ class UsageTest extends Scope
 
             $this->assertEquals($email, $res['body']['email']);
             $this->assertNotEmpty($res['body']['$id']);
-            $usersCount++;
-            $requestsCount++;
+            $usersTotal++;
+            $requestsTotal++;
 
             if ($i < (self::CREATE / 2)) {
                 $userId = $res['body']['$id'];
                 $res = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, $headers);
                 $this->assertEmpty($res['body']);
-                $requestsCount++;
-                $usersCount--;
+                $requestsTotal++;
+                $usersTotal--;
             }
         }
 
         return [
             'projectId'     => $projectId,
             'headers'       => $headers,
-            'usersCount'    => $usersCount,
-            'requestsCount' => $requestsCount
+            'usersTotal'    => $usersTotal,
+            'requestsTotal' => $requestsTotal
         ];
     }
 
@@ -94,8 +95,8 @@ class UsageTest extends Scope
 
         $projectId     = $data['projectId'];
         $headers       = $data['headers'];
-        $usersCount    = $data['usersCount'];
-        $requestsCount = $data['requestsCount'];
+        $usersTotal    = $data['usersTotal'];
+        $requestsTotal = $data['requestsTotal'];
 
         $consoleHeaders = [
             'origin' => 'http://localhost',
@@ -114,12 +115,12 @@ class UsageTest extends Scope
 
         $this->assertEquals('24h', $res['range']);
         $this->assertEquals(9, count($res));
-        $this->assertEquals(24, count($res['requests']));
-        $this->assertEquals(24, count($res['users']));
-        $this->assertEquals($usersCount, $res['users'][array_key_last($res['users'])]['value']);
-        $this->validateDates($res['users']);
-        $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
-        $this->validateDates($res['requests']);
+        $this->assertEquals(24, count($res['requestsTotal']));
+        $this->assertEquals(24, count($res['usersTotal']));
+        $this->assertEquals($usersTotal, $res['usersTotal'][array_key_last($res['usersTotal'])]['value']);
+        $this->validateDates($res['usersTotal']);
+        $this->assertEquals($requestsTotal, $res['requestsTotal'][array_key_last($res['requestsTotal'])]['value']);
+        $this->validateDates($res['requestsTotal']);
 
         $res = $this->client->call(
             Client::METHOD_GET,
@@ -129,15 +130,15 @@ class UsageTest extends Scope
 
         $res = $res['body'];
         $this->assertEquals('90d', $res['range']);
-        $this->assertEquals(90, count($res['usersCount']));
-        $this->assertEquals(90, count($res['sessionsCount']));
-        $this->assertEquals((self::CREATE / 2), $res['usersCount'][array_key_last($res['usersCount'])]['value']);
+        $this->assertEquals(90, count($res['usersTotal']));
+        $this->assertEquals(90, count($res['sessionsTotal']));
+        $this->assertEquals((self::CREATE / 2), $res['usersTotal'][array_key_last($res['usersTotal'])]['value']);
 
         return [
             'projectId' => $projectId,
             'headers' => $headers,
             'consoleHeaders' => $consoleHeaders,
-            'requestsCount' => $requestsCount,
+            'requestsTotal' => $requestsTotal,
         ];
     }
 
@@ -145,10 +146,10 @@ class UsageTest extends Scope
     public function testPrepareStorageStats(array $data): array
     {
         $headers = $data['headers'];
-        $bucketsCount = 0;
-        $requestsCount = $data['requestsCount'];
+        $bucketsTotal = 0;
+        $requestsTotal = $data['requestsTotal'];
         $storageTotal = 0;
-        $filesCount = 0;
+        $filesTotal = 0;
 
 
         for ($i = 0; $i < self::CREATE; $i++) {
@@ -177,8 +178,8 @@ class UsageTest extends Scope
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
             $bucketId = $res['body']['$id'];
-            $bucketsCount++;
-            $requestsCount++;
+            $bucketsTotal++;
+            $requestsTotal++;
 
             if ($i < (self::CREATE / 2)) {
                 $res = $this->client->call(
@@ -187,8 +188,8 @@ class UsageTest extends Scope
                     $headers
                 );
                 $this->assertEmpty($res['body']);
-                $requestsCount++;
-                $bucketsCount--;
+                $requestsTotal++;
+                $bucketsTotal--;
             }
         }
 
@@ -229,8 +230,8 @@ class UsageTest extends Scope
 
             $fileSize = $res['body']['sizeOriginal'];
             $storageTotal += $fileSize;
-            $filesCount++;
-            $requestsCount++;
+            $filesTotal++;
+            $requestsTotal++;
 
             $fileId = $res['body']['$id'];
             if ($i < (self::CREATE / 2)) {
@@ -240,18 +241,18 @@ class UsageTest extends Scope
                     $headers
                 );
                 $this->assertEmpty($res['body']);
-                $requestsCount++;
-                $filesCount--;
+                $requestsTotal++;
+                $filesTotal--;
                 $storageTotal -=  $fileSize;
             }
         }
 
         return array_merge($data, [
             'bucketId' => $bucketId,
-            'bucketsCount' => $bucketsCount,
-            'requestsCount' => $requestsCount,
+            'bucketsTotal' => $bucketsTotal,
+            'requestsTotal' => $requestsTotal,
             'storageTotal' => $storageTotal,
-            'filesCount' => $filesCount,
+            'filesTotal' => $filesTotal,
         ]);
     }
 
@@ -261,10 +262,10 @@ class UsageTest extends Scope
     public function testStorageStats(array $data): array
     {
         $bucketId      = $data['bucketId'];
-        $bucketsCount  = $data['bucketsCount'];
-        $requestsCount = $data['requestsCount'];
+        $bucketsTotal  = $data['bucketsTotal'];
+        $requestsTotal = $data['requestsTotal'];
         $storageTotal  = $data['storageTotal'];
-        $filesCount    = $data['filesCount'];
+        $filesTotal    = $data['filesTotal'];
 
         sleep(self::WAIT);
 
@@ -279,12 +280,12 @@ class UsageTest extends Scope
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
-        $this->assertEquals(30, count($res['requests']));
-        $this->assertEquals(30, count($res['storage']));
-        $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
-        $this->validateDates($res['requests']);
-        $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
-        $this->validateDates($res['storage']);
+        $this->assertEquals(30, count($res['requestsTotal']));
+        $this->assertEquals(30, count($res['filesStorage']));
+        $this->assertEquals($requestsTotal, $res['requestsTotal'][array_key_last($res['requestsTotal'])]['value']);
+        $this->validateDates($res['requestsTotal']);
+        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
+        $this->validateDates($res['filesStorage']);
 
         $res = $this->client->call(
             Client::METHOD_GET,
@@ -296,12 +297,12 @@ class UsageTest extends Scope
         );
 
         $res = $res['body'];
-        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
+        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesTotal'])]['value']);
         $this->validateDates($res['filesStorage']);
-        $this->assertEquals($bucketsCount, $res['bucketsCount'][array_key_last($res['bucketsCount'])]['value']);
-        $this->validateDates($res['bucketsCount']);
-        $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
-        $this->validateDates($res['filesCount']);
+        $this->assertEquals($bucketsTotal, $res['bucketsTotal'][array_key_last($res['bucketsTotal'])]['value']);
+        $this->validateDates($res['bucketsTotal']);
+        $this->assertEquals($filesTotal, $res['filesTotal'][array_key_last($res['filesTotal'])]['value']);
+        $this->validateDates($res['filesTotal']);
 
         $res = $this->client->call(
             Client::METHOD_GET,
@@ -314,9 +315,9 @@ class UsageTest extends Scope
 
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
-        $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
+        $this->assertEquals($filesTotal, $res['filesTotal'][array_key_last($res['filesTotal'])]['value']);
 
-        $data['requestsCount'] = $requestsCount;
+        $data['requestsTotal'] = $requestsTotal;
 
         return $data;
     }
@@ -326,10 +327,10 @@ class UsageTest extends Scope
     {
         $headers = $data['headers'];
 
-        $requestsCount = $data['requestsCount'];
-        $databasesCount = 0;
-        $collectionsCount = 0;
-        $documentsCount = 0;
+        $requestsTotal = $data['requestsTotal'];
+        $databasesTotal = 0;
+        $collectionsTotal = 0;
+        $documentsTotal = 0;
 
         for ($i = 0; $i < self::CREATE; $i++) {
             $name = uniqid() . ' database';
@@ -348,8 +349,8 @@ class UsageTest extends Scope
             $this->assertNotEmpty($res['body']['$id']);
             $databaseId = $res['body']['$id'];
 
-            $requestsCount++;
-            $databasesCount++;
+            $requestsTotal++;
+            $databasesTotal++;
 
             if ($i < (self::CREATE / 2)) {
                 $res = $this->client->call(
@@ -359,8 +360,8 @@ class UsageTest extends Scope
                 );
                 $this->assertEmpty($res['body']);
 
-                $databasesCount--;
-                $requestsCount++;
+                $databasesTotal--;
+                $requestsTotal++;
             }
         }
 
@@ -387,8 +388,8 @@ class UsageTest extends Scope
             $this->assertNotEmpty($res['body']['$id']);
             $collectionId = $res['body']['$id'];
 
-            $requestsCount++;
-            $collectionsCount++;
+            $requestsTotal++;
+            $collectionsTotal++;
 
             if ($i < (self::CREATE / 2)) {
                 $res = $this->client->call(
@@ -397,15 +398,15 @@ class UsageTest extends Scope
                     $headers
                 );
                 $this->assertEmpty($res['body']);
-                $collectionsCount--;
-                $requestsCount++;
+                $collectionsTotal--;
+                $requestsTotal++;
             }
         }
 
         $res = $this->client->call(
             Client::METHOD_POST,
             '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
-            array_merge($headers, ['content-type' => 'multipart/form-data']),
+            $headers,
             [
             'key' => 'name',
             'size' => 255,
@@ -414,7 +415,7 @@ class UsageTest extends Scope
         );
 
         $this->assertEquals('name', $res['body']['key']);
-        $requestsCount++;
+        $requestsTotal++;
 
         sleep(self::WAIT);
 
@@ -433,8 +434,8 @@ class UsageTest extends Scope
             $this->assertNotEmpty($res['body']['$id']);
             $documentId = $res['body']['$id'];
 
-            $requestsCount++;
-            $documentsCount++;
+            $requestsTotal++;
+            $documentsTotal++;
 
             if ($i < (self::CREATE / 2)) {
                 $res = $this->client->call(
@@ -443,18 +444,18 @@ class UsageTest extends Scope
                     $headers
                 );
                 $this->assertEmpty($res['body']);
-                $documentsCount--;
-                $requestsCount++;
+                $documentsTotal--;
+                $requestsTotal++;
             }
         }
 
         return array_merge($data, [
             'databaseId' => $databaseId,
             'collectionId' => $collectionId,
-            'requestsCount' => $requestsCount,
-            'databasesCount' => $databasesCount,
-            'collectionsCount' => $collectionsCount,
-            'documentsCount' => $documentsCount,
+            'requestsTotal' => $requestsTotal,
+            'databasesTotal' => $databasesTotal,
+            'collectionsTotal' => $collectionsTotal,
+            'documentsTotal' => $documentsTotal,
         ]);
     }
 
@@ -466,10 +467,10 @@ class UsageTest extends Scope
         $projectId = $data['projectId'];
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
-        $requestsCount = $data['requestsCount'];
-        $databasesCount = $data['databasesCount'];
-        $collectionsCount = $data['collectionsCount'];
-        $documentsCount = $data['documentsCount'];
+        $requestsTotal = $data['requestsTotal'];
+        $databasesTotal = $data['databasesTotal'];
+        $collectionsTotal = $data['collectionsTotal'];
+        $documentsTotal = $data['documentsTotal'];
 
         sleep(self::WAIT);
 
@@ -481,14 +482,14 @@ class UsageTest extends Scope
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
-        $this->assertEquals(30, count($res['requests']));
-        $this->assertEquals(30, count($res['storage']));
-        $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
-        $this->validateDates($res['requests']);
-        $this->assertEquals($databasesCount, $res['databases'][array_key_last($res['databases'])]['value']);
-        $this->validateDates($res['databases']);
-        $this->assertEquals($documentsCount, $res['documents'][array_key_last($res['documents'])]['value']);
-        $this->validateDates($res['documents']);
+        $this->assertEquals(30, count($res['requestsTotal']));
+        $this->assertEquals(30, count($res['filesStorage']));
+        $this->assertEquals($requestsTotal, $res['requestsTotal'][array_key_last($res['requestsTotal'])]['value']);
+        $this->validateDates($res['requestsTotal']);
+        $this->assertEquals($databasesTotal, $res['databasesTotal'][array_key_last($res['databasesTotal'])]['value']);
+        $this->validateDates($res['databasesTotal']);
+        $this->assertEquals($documentsTotal, $res['documentsTotal'][array_key_last($res['documentsTotal'])]['value']);
+        $this->validateDates($res['documentsTotal']);
 
         $res = $this->client->call(
             Client::METHOD_GET,
@@ -497,12 +498,12 @@ class UsageTest extends Scope
         );
         $res = $res['body'];
 
-        $this->assertEquals($databasesCount, $res['databasesCount'][array_key_last($res['databasesCount'])]['value']);
-        $this->validateDates($res['databasesCount']);
-        $this->assertEquals($collectionsCount, $res['collectionsCount'][array_key_last($res['collectionsCount'])]['value']);
-        $this->validateDates($res['collectionsCount']);
-        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
-        $this->validateDates($res['documentsCount']);
+        $this->assertEquals($databasesTotal, $res['databasesTotal'][array_key_last($res['databasesTotal'])]['value']);
+        $this->validateDates($res['databasesTotal']);
+        $this->assertEquals($collectionsTotal, $res['collectionsTotal'][array_key_last($res['collectionsTotal'])]['value']);
+        $this->validateDates($res['collectionsTotal']);
+        $this->assertEquals($documentsTotal, $res['documentsTotal'][array_key_last($res['documentsTotal'])]['value']);
+        $this->validateDates($res['documentsTotal']);
 
         $res = $this->client->call(
             Client::METHOD_GET,
@@ -511,19 +512,19 @@ class UsageTest extends Scope
         );
         $res = $res['body'];
 
-        $this->assertEquals($collectionsCount, $res['collectionsCount'][array_key_last($res['collectionsCount'])]['value']);
-        $this->validateDates($res['collectionsCount']);
+        $this->assertEquals($collectionsTotal, $res['collectionsTotal'][array_key_last($res['collectionsTotal'])]['value']);
+        $this->validateDates($res['collectionsTotal']);
 
-        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
-        $this->validateDates($res['documentsCount']);
+        $this->assertEquals($documentsTotal, $res['documentsTotal'][array_key_last($res['documentsTotal'])]['value']);
+        $this->validateDates($res['documentsTotal']);
 
         $res = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d', $data['consoleHeaders']);
         $res = $res['body'];
 
-        $this->assertEquals($documentsCount, $res['documentsCount'][array_key_last($res['documentsCount'])]['value']);
-        $this->validateDates($res['documentsCount']);
+        $this->assertEquals($documentsTotal, $res['documentsTotal'][array_key_last($res['documentsTotal'])]['value']);
+        $this->validateDates($res['documentsTotal']);
 
-        $data['requestsCount'] = $requestsCount;
+        $data['requestsTotal'] = $requestsTotal;
 
         return $data;
     }
@@ -582,7 +583,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($deployment['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -596,8 +597,10 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
+
+
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
         $execution = $this->client->call(
@@ -695,20 +698,19 @@ class UsageTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(8, count($response['body']));
         $this->assertEquals('30d', $response['body']['range']);
-        $this->assertIsArray($response['body']['deployments']);
+        $this->assertIsArray($response['body']['deploymentsTotal']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
-        $this->assertIsArray($response['body']['builds']);
-        $this->assertIsArray($response['body']['buildsCompute']);
-        $this->assertIsArray($response['body']['executions']);
-        $this->assertIsArray($response['body']['executionsCompute']);
+        $this->assertIsArray($response['body']['buildsTotal']);
+        $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['executionsTotal']);
+        $this->assertIsArray($response['body']['executionsTime']);
 
         $response = $response['body'];
 
-        $this->assertEquals($executions, $response['executions'][array_key_last($response['executions'])]['value']);
-        $this->validateDates($response['executions']);
-
-        $this->assertEquals($executionTime, $response['executionsCompute'][array_key_last($response['executionsCompute'])]['value']);
-        $this->validateDates($response['executionsCompute']);
+        $this->assertEquals($executions, $response['executionsTotal'][array_key_last($response['executionsTotal'])]['value']);
+        $this->validateDates($response['executionsTotal']);
+        $this->assertEquals($executionTime, $response['executionsTime'][array_key_last($response['executionsTime'])]['value']);
+        $this->validateDates($response['executionsTime']);
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -719,28 +721,28 @@ class UsageTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(9, count($response['body']));
         $this->assertEquals($response['body']['range'], '30d');
-        $this->assertIsArray($response['body']['functions']);
-        $this->assertIsArray($response['body']['deployments']);
+        $this->assertIsArray($response['body']['functionsTotal']);
+        $this->assertIsArray($response['body']['deploymentsTotal']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
-        $this->assertIsArray($response['body']['builds']);
-        $this->assertIsArray($response['body']['buildsCompute']);
-        $this->assertIsArray($response['body']['executions']);
-        $this->assertIsArray($response['body']['executionsCompute']);
+        $this->assertIsArray($response['body']['buildsTotal']);
+        $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['executionsTotal']);
+        $this->assertIsArray($response['body']['executionsTime']);
 
         $response = $response['body'];
 
-        $this->assertEquals($executions, $response['executions'][array_key_last($response['executions'])]['value']);
-        $this->validateDates($response['executions']);
-        $this->assertEquals($executionTime, $response['executionsCompute'][array_key_last($response['executionsCompute'])]['value']);
-        $this->validateDates($response['executionsCompute']);
-        $this->assertGreaterThan(0, $response['buildsCompute'][array_key_last($response['buildsCompute'])]['value']);
-        $this->validateDates($response['buildsCompute']);
+        $this->assertEquals($executions, $response['executionsTotal'][array_key_last($response['executionsTotal'])]['value']);
+        $this->validateDates($response['executionsTotal']);
+        $this->assertEquals($executionTime, $response['executionsTime'][array_key_last($response['executionsTime'])]['value']);
+        $this->validateDates($response['executionsTime']);
+        $this->assertGreaterThan(0, $response['buildsTime'][array_key_last($response['buildsTime'])]['value']);
+        $this->validateDates($response['buildsTime']);
     }
 
     public function tearDown(): void
     {
-        $this->usersCount = 0;
-        $this->requestsCount = 0;
+        $this->usersTotal = 0;
+        $this->requestsTotal = 0;
         $projectId = '';
         $headers = [];
     }

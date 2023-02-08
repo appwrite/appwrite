@@ -9,7 +9,7 @@ use Executor\Executor;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
@@ -56,6 +56,11 @@ class BuildsV1 extends Worker
         }
     }
 
+    /**
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws \Utopia\Database\Exception\Structure
+     * @throws Throwable
+     */
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
         global $register;
@@ -171,8 +176,8 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
+                projectId: $project->getId(),
                 source: $source,
                 image: $runtime['image'],
                 remove: true,
@@ -256,12 +261,12 @@ class BuildsV1 extends Worker
         $this
             ->getUsageQueue()
             ->setProject($project)
-            ->addMetric("builds", 1) // per project
-            ->addMetric("builds.storage", $build->getAttribute('size', 0))
-            ->addMetric("builds.compute", $build->getAttribute('duration', 0))
-            ->addMetric("{$function->getInternalId()}" . ".builds", 1) // per function
-            ->addMetric("{$function->getInternalId()}" . ".builds.storage", $build->getAttribute('size', 0))
-            ->addMetric("{$function->getInternalId()}" . ".builds.compute", $build->getAttribute('duration', 0))
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
             ->trigger()
         ;
     }

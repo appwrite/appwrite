@@ -28,7 +28,7 @@ class ComposeTest extends TestCase
 
     public function testServices(): void
     {
-        $this->assertCount(17, $this->object->getServices());
+        $this->assertCount(15, $this->object->getServices());
         $this->assertEquals('appwrite', $this->object->getService('appwrite')->getContainerName());
         $this->assertEquals('', $this->object->getService('appwrite')->getImageVersion());
         $this->assertEquals('2.2', $this->object->getService('traefik')->getImageVersion());
@@ -42,7 +42,7 @@ class ComposeTest extends TestCase
 
     public function testVolumes(): void
     {
-        $this->assertCount(9, $this->object->getVolumes());
+        $this->assertCount(7, $this->object->getVolumes());
         $this->assertEquals('appwrite-mariadb', $this->object->getVolumes()[0]);
         $this->assertEquals('appwrite-redis', $this->object->getVolumes()[1]);
         $this->assertEquals('appwrite-cache', $this->object->getVolumes()[2]);

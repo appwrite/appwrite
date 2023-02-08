@@ -6,9 +6,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class DatabasesConsoleClientTest extends Scope
 {
@@ -86,8 +86,8 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(count($response['body']), 3);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsCount']);
-        $this->assertIsArray($response['body']['collectionsCount']);
+        $this->assertIsArray($response['body']['documentsTotal']);
+        $this->assertIsArray($response['body']['collectionsTotal']);
     }
 
 
@@ -131,7 +131,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(count($response['body']), 2);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsCount']);
+        $this->assertIsArray($response['body']['documentsTotal']);
     }
 
     /**

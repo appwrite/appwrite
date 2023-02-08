@@ -41,7 +41,7 @@ use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
@@ -174,6 +174,39 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Usage metrics
+const METRIC_TEAMS = 'teams';
+const METRIC_USERS = 'users';
+const METRIC_SESSIONS  = 'sessions';
+const METRIC_DATABASES = 'databases';
+const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DOCUMENTS = 'documents';
+const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_BUCKETS = 'buckets';
+const METRIC_FILES  = 'files';
+const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
+const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_STORAGE  = 'builds.storage';
+const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_EXECUTIONS  = 'executions';
+const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
+const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_NETWORK_REQUESTS  = 'network.requests';
+const METRIC_NETWORK_INBOUND  = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 

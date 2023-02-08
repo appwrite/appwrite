@@ -13,7 +13,6 @@ use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Hamster;
-use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;

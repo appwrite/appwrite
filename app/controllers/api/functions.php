@@ -10,9 +10,9 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
@@ -85,6 +85,7 @@ App::post('/v1/functions')
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleInternalId' => '',
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
@@ -95,6 +96,7 @@ App::post('/v1/functions')
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule'  => $function->getAttribute('schedule'),
@@ -208,6 +210,168 @@ App::get('/v1/functions/:functionId')
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
+    });
+
+App::get('/v1/functions/:functionId/usage')
+    ->desc('Get Function Usage')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getFunctionUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS),
+            str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
+        ];
+
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+    }
+
+        $response->dynamic(new Document([
+            'range' => $range,
+            'deploymentsTotal' => $usage[$metrics[0]],
+            'deploymentsStorage' => $usage[$metrics[1]],
+            'buildsTotal' => $usage[$metrics[2]],
+            'buildsStorage' => $usage[$metrics[3]],
+            'buildsTime' => $usage[$metrics[4]],
+            'executionsTotal' => $usage[$metrics[5]],
+            'executionsTime' => $usage[$metrics[6]],
+        ]), Response::MODEL_USAGE_FUNCTION);
+    });
+
+App::get('/v1/functions/usage')
+    ->desc('Get Functions Usage')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
+
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            METRIC_FUNCTIONS,
+            METRIC_DEPLOYMENTS,
+            METRIC_DEPLOYMENTS_STORAGE,
+            METRIC_BUILDS,
+            METRIC_BUILDS_STORAGE,
+            METRIC_BUILDS_COMPUTE,
+            METRIC_EXECUTIONS,
+            METRIC_EXECUTIONS_COMPUTE,
+        ];
+
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+    }
+        $response->dynamic(new Document([
+            'range' => $range,
+            'functionsTotal' => $usage[$metrics[0]],
+            'deploymentsTotal' => $usage[$metrics[1]],
+            'deploymentsStorage' => $usage[$metrics[2]],
+            'buildsTotal' => $usage[$metrics[3]],
+            'buildsStorage' => $usage[$metrics[4]],
+            'buildsTime' => $usage[$metrics[5]],
+            'executionsTotal' => $usage[$metrics[6]],
+            'executionsTime' => $usage[$metrics[7]],
+        ]), Response::MODEL_USAGE_FUNCTIONS);
     });
 
 App::put('/v1/functions/:functionId')
@@ -532,6 +696,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
+                    'buildInternalId' => '',
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -563,6 +728,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
+                    'buildInternalId' => '',
                     'entrypoint' => $entrypoint,
                     'path' => $path,
                     'size' => $fileSize,
@@ -1006,8 +1172,8 @@ App::post('/v1/functions/:functionId/executions')
              * Sync execution compute usage from
              */
             $queueForUsage
-                ->addMetric('executions.compute', (int)($executionResponse['duration'] * 1000))// per project
-                ->addMetric("{$function->getInternalId()}" . ".executions.compute", (int)($executionResponse['duration'] * 1000))// per function
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
             ;
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
@@ -1361,166 +1527,4 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
-    });
-
-App::get('/v1/functions/:functionId/usage')
-    ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
-    ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getFunctionUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            'functions.' . $function->getInternalId() . '.deployments',
-            'functions.' . $function->getInternalId() . '.deployments.storage',
-            $function->getInternalId() . '.builds',
-            $function->getInternalId() . '.builds.storage',
-            $function->getInternalId() . '.builds.compute',
-            $function->getInternalId() . '.executions',
-            $function->getInternalId() . '.executions.compute',
-        ];
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric] = [];
-                foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
-        }
-    }
-
-        $response->dynamic(new Document([
-            'range' => $range,
-            'deployments' => $usage[$metrics[0]],
-            'deploymentsStorage' => $usage[$metrics[1]],
-            'builds' => $usage[$metrics[2]],
-            'buildsStorage' => $usage[$metrics[3]],
-            'buildsCompute' => $usage[$metrics[4]],
-            'executions' => $usage[$metrics[5]],
-            'executionsCompute' => $usage[$metrics[6]],
-        ]), Response::MODEL_USAGE_FUNCTION);
-    });
-
-App::get('/v1/functions/usage')
-    ->desc('Get Functions Usage')
-    ->groups(['api', 'functions'])
-    ->label('scope', 'functions.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            'functions',
-            'deployments',
-            'deployments.storage',
-            'builds',
-            'builds.storage',
-            'builds.compute',
-            'executions',
-            'executions.compute',
-        ];
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric] = [];
-                foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
-        }
-    }
-        $response->dynamic(new Document([
-            'range' => $range,
-            'functions' => $usage[$metrics[0]],
-            'deployments' => $usage[$metrics[1]],
-            'deploymentsStorage' => $usage[$metrics[2]],
-            'builds' => $usage[$metrics[3]],
-            'buildsStorage' => $usage[$metrics[4]],
-            'buildsCompute' => $usage[$metrics[5]],
-            'executions' => $usage[$metrics[6]],
-            'executionsCompute' => $usage[$metrics[7]],
-        ]), Response::MODEL_USAGE_FUNCTIONS);
     });

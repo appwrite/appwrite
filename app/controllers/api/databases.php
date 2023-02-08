@@ -4,10 +4,10 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\DatetimeValidator;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
@@ -851,7 +851,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
-    ->param('required', null, new Boolean(true), 'Is attribute required?')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -2385,6 +2385,74 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $response->noContent();
     });
 
+App::get('/v1/databases/usage')
+    ->desc('Get usage stats for the database')
+    ->groups(['api', 'database'])
+    ->label('scope', 'collections.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
+
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            METRIC_DATABASES,
+            METRIC_COLLECTIONS,
+            METRIC_DOCUMENTS,
+        ];
+
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+    }
+        $response->dynamic(new Document([
+            'range' => $range,
+            'databasesTotal'   => $usage[$metrics[0]],
+            'collectionsTotal' => $usage[$metrics[1]],
+            'documentsTotal'   => $usage[$metrics[2]],
+        ]), Response::MODEL_USAGE_DATABASES);
+    });
+
 App::get('/v1/databases/:databaseId/usage')
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
@@ -2411,8 +2479,8 @@ App::get('/v1/databases/:databaseId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $database->getInternalId() . '.collections',
-            $database->getInternalId() . '.documents',
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -2454,8 +2522,8 @@ App::get('/v1/databases/:databaseId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'collectionsCount'   => $usage[$metrics[0]],
-            'documentsCount'   => $usage[$metrics[1]],
+            'collectionsTotal'   => $usage[$metrics[0]],
+            'documentsTotal'   => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
@@ -2478,7 +2546,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
 
          $database = $dbForProject->getDocument('databases', $databaseId);
-
          $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
          $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
 
@@ -2490,7 +2557,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            $collectionDocument->getInternalId() . '.documents',
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -2532,74 +2599,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'documentsCount'   => $usage[$metrics[0]],
+            'documentsTotal'   => $usage[$metrics[0]],
         ]), Response::MODEL_USAGE_COLLECTION);
-    });
-
-App::get('/v1/databases/usage')
-    ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
-    ->label('scope', 'collections.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            'databases',
-            'collections',
-            'documents',
-        ];
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric] = [];
-                foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
-        }
-    }
-        $response->dynamic(new Document([
-            'range' => $range,
-            'databasesCount'   => $usage[$metrics[0]],
-            'collectionsCount' => $usage[$metrics[1]],
-            'documentsCount'   => $usage[$metrics[2]],
-        ]), Response::MODEL_USAGE_DATABASES);
     });

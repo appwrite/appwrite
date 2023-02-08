@@ -16,9 +16,9 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
@@ -1089,8 +1089,8 @@ App::get('/v1/users/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            'users',
-            'sessions',
+            METRIC_USERS,
+            METRIC_SESSIONS,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -1132,7 +1132,7 @@ App::get('/v1/users/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'usersCount'   => $usage[$metrics[0]],
-            'sessionsCount' => $usage[$metrics[1]],
+            'usersTotal'   => $usage[$metrics[0]],
+            'sessionsTotal' => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_USERS);
     });
