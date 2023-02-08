@@ -56,48 +56,9 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
+
                     break;
-                case 'builds':
-                    try {
-                        /**
-                         * Create 'size' attribute
-                         */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'size' from {$id}: {$th->getMessage()}");
-                    }
 
-                    try {
-                        /**
-                         * Delete 'endTime' attribute (use startTime+duration if needed)
-                         */
-                        $this->projectDB->deleteAttribute($id, 'endTime');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'endTime' from {$id}: {$th->getMessage()}");
-                    }
-
-                    try {
-                        /**
-                         * Rename 'outputPath' to 'path'
-                         */
-                        $this->projectDB->renameAttribute($id, 'outputPath', 'path');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'path' from {$id}: {$th->getMessage()}");
-                    }
-
-                    try {
-                        /**
-                         * Create 'size'
-                         */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'size' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
                 default:
                     break;
             }

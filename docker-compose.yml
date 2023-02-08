@@ -142,6 +142,7 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      - _APP_HAMSTER_RECIPIENTS
       - _APP_USAGE_STATS
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
@@ -659,7 +660,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.2.0
+    image: openruntimes/executor:0.1.6
     networks:
       - appwrite
       - openruntimes-runtimes

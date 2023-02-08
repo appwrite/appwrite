@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_CODES_DISABLED => [
+        'name' => Exception::GENERAL_CODES_DISABLED,
+        'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
+        'code' => 500,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -125,8 +130,8 @@ return [
         'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
         'code' => 401,
     ],
-    Exception::USER_CODE_INVALID => [
-        'name' => Exception::USER_CODE_INVALID,
+    Exception::USER_INVALID_CODE => [
+        'name' => Exception::USER_INVALID_CODE,
         'description' => 'The specified code is not valid. Contact your administrator for more information.',
         'code' => 401,
     ],

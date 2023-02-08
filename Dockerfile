@@ -20,9 +20,11 @@ WORKDIR /usr/local/src/console
 
 ARG VITE_GA_PROJECT
 ARG VITE_CONSOLE_MODE
+ARG VITE_APPWRITE_GROWTH_ENDPOINT
 
 ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
 ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
+ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 
 RUN npm ci
 RUN npm run build
@@ -310,6 +312,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
+    chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \

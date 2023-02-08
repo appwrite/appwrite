@@ -12,6 +12,7 @@ use Appwrite\Platform\Tasks\PatchCreateMissingSchedules;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
+use Appwrite\Platform\Tasks\Hamster;
 use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
@@ -26,6 +27,7 @@ class Tasks extends Service
             ->addAction(Version::getName(), new Version())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(SSL::getName(), new SSL())
+            ->addAction(Hamster::getName(), new Hamster())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())

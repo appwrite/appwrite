@@ -50,6 +50,7 @@ class Exception extends \Exception
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
+    public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -60,7 +61,7 @@ class Exception extends \Exception
     public const USER_PASSWORD_RESET_REQUIRED      = 'user_password_reset_required';
     public const USER_EMAIL_NOT_WHITELISTED        = 'user_email_not_whitelisted';
     public const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
-    public const USER_CODE_INVALID                 = 'user_code_invalid';
+    public const USER_INVALID_CODE                 = 'user_invalid_code';
     public const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
@@ -179,6 +180,7 @@ class Exception extends \Exception
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
     protected $type = '';
+    protected $errors = [];
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
