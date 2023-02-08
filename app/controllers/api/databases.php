@@ -33,8 +33,8 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
-use Appwrite\Network\Validator\URL;
+use Utopia\Validator\IP;
+use Utopia\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Query\Limit;
 use Appwrite\Utopia\Database\Validator\Query\Offset;
@@ -68,7 +68,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
     $default = $attribute->getAttribute('default');
-
 
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -163,7 +162,7 @@ App::post('/v1/databases')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DATABASE) // Model for database needs to be created
-    ->param('databaseId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
@@ -384,7 +383,7 @@ App::get('/v1/databases/:databaseId/logs')
 
 App::put('/v1/databases/:databaseId')
     ->desc('Update Database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].update')
     ->label('audits.event', 'database.update')
@@ -398,7 +397,7 @@ App::put('/v1/databases/:databaseId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DATABASE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
+    ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -427,7 +426,7 @@ App::put('/v1/databases/:databaseId')
 
 App::delete('/v1/databases/:databaseId')
     ->desc('Delete Database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].delete')
     ->label('audits.event', 'database.delete')
@@ -489,9 +488,9 @@ App::post('/v1/databases/:databaseId/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('collectionId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default no user is granted with any permissions. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](/docs/permissions).', true)
     ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -729,7 +728,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
 App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
     ->desc('Update Collection')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.event', 'collection.update')
@@ -746,7 +745,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default the current permission are inherited. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](/docs/permissions).', true)
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
@@ -797,7 +796,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
     ->desc('Delete Collection')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
     ->label('audits.event', 'collection.delete')
@@ -854,7 +853,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
     ->alias('/v1/database/collections/:collectionId/attributes/string', ['databaseId' => 'default'])
     ->desc('Create String Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -904,7 +903,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
     ->alias('/v1/database/collections/:collectionId/attributes/email', ['databaseId' => 'default'])
     ->desc('Create Email Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -948,7 +947,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->alias('/v1/database/collections/:collectionId/attributes/enum', ['databaseId' => 'default'])
     ->desc('Create Enum Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -1008,7 +1007,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->alias('/v1/database/collections/:collectionId/attributes/ip', ['databaseId' => 'default'])
     ->desc('Create IP Address Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -1052,7 +1051,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->alias('/v1/database/collections/:collectionId/attributes/url', ['databaseId' => 'default'])
     ->desc('Create URL Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -1096,7 +1095,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
     ->alias('/v1/database/collections/:collectionId/attributes/integer', ['databaseId' => 'default'])
     ->desc('Create Integer Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -1169,7 +1168,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
     ->alias('/v1/database/collections/:collectionId/attributes/float', ['databaseId' => 'default'])
     ->desc('Create Float Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -1245,7 +1244,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
     ->alias('/v1/database/collections/:collectionId/attributes/boolean', ['databaseId' => 'default'])
     ->desc('Create Boolean Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
@@ -1444,7 +1443,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
 App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->alias('/v1/database/collections/:collectionId/attributes/:key', ['databaseId' => 'default'])
     ->desc('Delete Attribute')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete')
     ->label('audits.event', 'attribute.delete')
@@ -1753,15 +1752,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $indexes = $collection->getAttribute('indexes');
 
         // Search for index
-        $indexIndex = array_search($key, array_column($indexes, 'key'));
+        $indexIndex = array_search($key, array_map(fn($idx) => $idx['key'], $indexes));
 
         if ($indexIndex === false) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
 
-        $index = new Document([\array_merge($indexes[$indexIndex], [
-            'collectionId' => $database->getInternalId() . '_' . $collectionId,
-        ])]);
+        $index = $indexes[$indexIndex];
+        $index->setAttribute('collectionId', $database->getInternalId() . '_' . $collectionId);
 
         $response->dynamic($index, Response::MODEL_INDEX);
     });
@@ -1855,10 +1853,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('documentId', '', new CustomId(), 'Document ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default the current user is granted with all permissions. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -2246,7 +2244,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
+    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -2467,8 +2465,8 @@ App::get('/v1/databases/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -2529,7 +2527,7 @@ App::get('/v1/databases/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
@@ -2586,8 +2584,8 @@ App::get('/v1/databases/:databaseId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -2643,7 +2641,7 @@ App::get('/v1/databases/:databaseId/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
@@ -2706,8 +2704,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -2758,7 +2756,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [

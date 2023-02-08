@@ -23,6 +23,7 @@
             <directory>./tests/e2e/Services/Realtime</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Databases</directory>
+            <directory>./tests/e2e/Services/GraphQL</directory>
             <directory>./tests/e2e/Services/Health</directory>
             <directory>./tests/e2e/Services/Locale</directory>
             <directory>./tests/e2e/Services/Projects</directory>
