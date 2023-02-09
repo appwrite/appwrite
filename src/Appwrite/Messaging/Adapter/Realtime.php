@@ -149,7 +149,7 @@ class Realtime extends Adapter
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
-                'timestamp' => DateTime::now(),
+                'timestamp' => DateTime::formatTz(DateTime::now()),
                 'payload' => $payload
             ]
         ]));
