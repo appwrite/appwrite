@@ -191,6 +191,7 @@ ENV _APP_SERVER=swoole \
     _APP_LOCALE=en \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
+    _APP_DOMAIN_FUNCTIONS=disabled \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
     _APP_CONSOLE_WHITELIST_ROOT=enabled \

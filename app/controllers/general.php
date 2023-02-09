@@ -8,6 +8,10 @@ use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
+use Swoole\Http\Request as SwooleRequest;
+use Swoole\Http\Response as SwooleResponse;
+use Utopia\Cache\Cache;
+use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
@@ -42,6 +46,8 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init()
     ->inject('utopia')
+    ->inject('swooleRequest')
+    ->inject('swooleResponse')
     ->inject('request')
     ->inject('response')
     ->inject('console')
@@ -51,7 +57,80 @@ App::init()
     ->inject('locale')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
+    ->inject('pools')
+    ->inject('cache')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, SwooleResponse $swooleResponse, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Group $pools, Cache $cache) {
+        /*
+        * Appwrite Router
+        */
+        $host = $swooleRequest->header['host'] ?? '';
+
+        // Function Preview
+        if(\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+            $host = rtrim($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'));
+            $host = rtrim($host, '.');
+            $subdomains = explode('.', $host);
+
+            if(\count($subdomains) === 2) {
+                // Active deployment preview
+                $functionId = $subdomains[0];
+                $projectId = $subdomains[1];
+
+                if($projectId === 'console') {
+                    throw new AppwriteException(AppwriteException::ROUTER_CONSOLE_PROJECT);
+                }
+
+                // TODO: Rate limit?
+
+                $body = \json_encode([
+                    'async' => false,
+                    'data' => 'Heyy'
+                ]);
+
+                $headers = [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . \strlen($body),
+                    'X-Appwrite-Project: ' . $projectId
+                ];
+
+                $ch = \curl_init();
+                \curl_setopt($ch, CURLOPT_URL, "http://localhost/v1/functions/{$functionId}/executions");
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                // \curl_setopt($ch, CURLOPT_HEADER, true);
+                \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+
+                $executionResponse = \utf8_decode(\curl_exec($ch));
+                $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $error = \curl_error($ch);
+                $errNo = \curl_errno($ch);
+
+                \curl_close($ch);
+
+                $responseBody = \json_decode($executionResponse, true)['response'];
+
+                return $response->setStatusCode(200)->send($responseBody);
+            } else if(\count($subdomains) === 3) {
+                // Deployment preview
+                $deploymentId = $subdomains[0];
+                $functionId = $subdomains[1];
+                $projectId = $subdomains[2];
+
+                if($projectId === 'console') {
+                    throw new AppwriteException(AppwriteException::ROUTER_CONSOLE_PROJECT);
+                }
+
+                // TODO: Implement
+                throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Deployment preview not implemented yet.');
+            } else {
+                throw new AppwriteException(AppwriteException::ROUTER_INVALID_URL);
+            }
+        }
+
+        // TODO: Custom domains
+        
         /*
         * Request format
         */

@@ -163,6 +163,10 @@ class Exception extends \Exception
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
 
+    /** Router */
+    public const ROUTER_INVALID_URL                 = 'router_invalid_url';
+    public const ROUTER_CONSOLE_PROJECT             = 'router_console_project';
+
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
 

@@ -62,6 +62,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_FUNCTIONS',
+                'description' => 'A domain to use for function preview URLs. Setting to "disabled" turns off function preview URLs.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
                 'description' => 'A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',

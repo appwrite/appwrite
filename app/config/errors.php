@@ -514,6 +514,16 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ROUTER_INVALID_URL => [
+        'name' => Exception::ROUTER_INVALID_URL,
+        'description' => 'Invalid preview URL for Appwrite Router.',
+        'code' => 400,
+    ],
+    Exception::ROUTER_CONSOLE_PROJECT => [
+        'name' => Exception::ROUTER_CONSOLE_PROJECT,
+        'description' => 'Use of "console" project with Appwrite Router is not allowed.',
+        'code' => 400,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',

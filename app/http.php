@@ -229,6 +229,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+    App::setResource('swooleRequest', fn() => $swooleRequest);
+    App::setResource('swooleResponse', fn() => $swooleResponse);
+
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
