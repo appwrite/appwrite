@@ -97,6 +97,7 @@ class BuildsV1 extends Worker
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'path' => '',
@@ -108,7 +109,8 @@ class BuildsV1 extends Worker
                 'stderr' => '',
                 'duration' => 0
             ]));
-            $deployment->setAttribute('buildId', $buildId);
+            $deployment->setAttribute('buildId', $build->getId());
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
@@ -204,6 +206,7 @@ class BuildsV1 extends Worker
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
+                $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $function->setAttribute('deployment', $deployment->getId());
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
