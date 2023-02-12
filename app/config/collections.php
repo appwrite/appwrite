@@ -3,7 +3,7 @@
 use Appwrite\Auth\Auth;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
@@ -3548,10 +3548,10 @@ $collections = [
             ],
         ],
     ],
-    'timeouts' => [
+    'slowQueries' => [
         '$collection' => Database::METADATA,
-        '$id' => 'timeouts',
-        'name' => 'timeouts',
+        '$id' => 'slowQueries',
+        'name' => 'slowQueries',
         'attributes' => [
             [
                 '$id' => 'blocked',
@@ -3620,7 +3620,22 @@ $collections = [
                 'array' => false,
             ],
         ],
-        'indexes' => [],
+        'indexes' => [
+            [
+                '$id' => '_key_database_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['databaseId', 'blocked', 'collectionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => []
+            ],
+            [
+                '$id' => '_key_blocked',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['blocked', 'databaseId', 'collectionId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => []
+            ]
+        ],
     ],
 ];
 
