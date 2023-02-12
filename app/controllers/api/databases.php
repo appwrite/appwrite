@@ -2938,10 +2938,6 @@ App::get('/v1/databases/slow-queries/:documentId')
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
-
-
-
-
 App::delete('/v1/databases/slow-queries/:documentId')
     ->desc('Delete Slow query Document')
     ->desc('List  Documents')
