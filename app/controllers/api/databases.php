@@ -165,9 +165,6 @@ App::init()
             throw new Exception(Exception::TIMEOUT_BLOCKED);
         }
     });
-
-
-
 App::error()
     ->groups(['timeout'])
     ->inject('error')
