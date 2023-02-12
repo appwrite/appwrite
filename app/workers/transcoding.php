@@ -36,8 +36,8 @@ class TranscodingV1 extends Worker
     private const STATUS_READY     = 'ready';
     private const STATUS_ERROR     = 'error';
 
-    private const PROTOCOL_HLS  = 'hls';
-    private const PROTOCOL_DASH = 'dash';
+    private const OUTPUT_HLS  = 'hls';
+    private const OUTPUT_DASH = 'dash';
 
     private string $basePath = '/tmp/';
     //private string $basePath = '/usr/src/code/tests/tmp/';
@@ -176,7 +176,7 @@ class TranscodingV1 extends Worker
                'name'      => $this->getRenditionName(),
                'startedAt' => DateTime::now(),
                'status'    => self::STATUS_START,
-               'protocol'  => $this->profile->getAttribute('protocol'),
+               'output'  => $this->profile->getAttribute('output'),
             ]));
 
         $renditionRootPath = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/';
@@ -200,7 +200,7 @@ class TranscodingV1 extends Worker
                 }
             });
 
-            $general = $this->transcode($this->profile->getAttribute('protocol'), $media, $format, $representation, $subs);
+            $general = $this->transcode($this->profile->getAttribute('output'), $media, $format, $representation, $subs);
             if (!empty($general)) {
                 foreach ($general as $key => $value) {
                     $query->setAttribute($key, (string)$value);
@@ -211,7 +211,7 @@ class TranscodingV1 extends Worker
             //var_dump($o);
             //var_dump($v);
 
-            if ($this->profile->getAttribute('protocol') === self::PROTOCOL_HLS) {
+            if ($this->profile->getAttribute('output') === self::OUTPUT_HLS) {
                 $streams = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
                 foreach ($streams as $stream) {
                     $m3u8 = $this->getHlsSegments($this->outDir . $stream['path']);
@@ -254,7 +254,7 @@ class TranscodingV1 extends Worker
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
 
             foreach ($subtitles ?? [] as $subtitle) {
-                if ($this->profile->getAttribute('protocol') === 'hls') {
+                if ($this->profile->getAttribute('output') === 'hls') {
                     $m3u8 = $this->getHlsSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                     foreach ($m3u8['segments'] ?? [] as $segment) {
                             $this->database->createDocument('videos_subtitles_segments', new Document([
@@ -319,14 +319,14 @@ class TranscodingV1 extends Worker
     }
 
     /**
-     * @param string $protocol
+     * @param string $output
      * @param $media Media
      * @param $format StreamFormat
      * @param $representation Representation
      * @param array $subtitles
      * @return string|array
      */
-    private function transcode(string $protocol, Media $media, StreamFormat $format, Representation $representation, array $subtitles): string | array
+    private function transcode(string $output, Media $media, StreamFormat $format, Representation $representation, array $subtitles): string | array
     {
 
         $additionalParams = [
@@ -342,7 +342,7 @@ class TranscodingV1 extends Worker
 
         $segmentSize = 10;
 
-        if ($protocol === self::PROTOCOL_DASH) {
+        if ($output === self::OUTPUT_DASH) {
                 $dash = $media->dash()
                 ->setFormat($format)
                 ->setSegDuration($segmentSize)
@@ -351,7 +351,7 @@ class TranscodingV1 extends Worker
                 ->save($this->outPath)
                 ;
 
-                console::info(strtoupper($protocol) . ' rendition conversion ended');
+                console::info(strtoupper($output) . ' rendition conversion ended');
 
                 return $this->getVideoStreamInfo($dash->metadata()->export(), $representation);
         }
@@ -373,7 +373,7 @@ class TranscodingV1 extends Worker
             ->save($this->outPath)
         ;
 
-        console::info(strtoupper($protocol) . ' rendition conversion ended');
+        console::info(strtoupper($output) . ' rendition conversion ended');
 
         return $this->getVideoStreamInfo($hls->metadata()->export(), $representation);
     }

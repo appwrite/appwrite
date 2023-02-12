@@ -231,7 +231,6 @@ App::get('/v1/videos')
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $fileId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('videos', $fileId));
             if ($cursorDocument->isEmpty()) {
@@ -328,11 +327,11 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
         }
 
         $subtitle->setAttribute('videoId', $videoId)
-            ->setAttribute('bucketId', $bucketId)
-            ->setAttribute('fileId', $fileId)
-            ->setAttribute('name', $name)
-            ->setAttribute('code', $code)
-            ->setAttribute('default', $default);
+                 ->setAttribute('bucketId', $bucketId)
+                 ->setAttribute('fileId', $fileId)
+                 ->setAttribute('name', $name)
+                 ->setAttribute('code', $code)
+                 ->setAttribute('default', $default);
 
         $subtitle = Authorization::skip(fn() => $dbForProject->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle));
 
@@ -578,7 +577,7 @@ App::get('/v1/videos/:videoId/renditions')
         ]), Response::MODEL_RENDITION_LIST);
     });
 
-App::get('/v1/videos/:videoId/protocols/:protocolId')
+App::get('/v1/videos/:videoId/outputs/:output')
     ->desc('Get video master renditions manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -586,14 +585,15 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
     ->label('sdk.method', 'getMasterManifest')
     ->label('sdk.description', '/docs/references/videos/get-master-manifest.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.methodType', 'location')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'protocol name')
+    ->param('output', '', new WhiteList(['hls', 'dash']), 'protocol name')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $videoId, string $protocolId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $videoId, string $output, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
@@ -606,21 +606,21 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
         $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', [
             Query::equal('videoId', [$video->getId()]),
             Query::equal('status', ['ready']),
-            Query::equal('protocol', [$protocolId]),
+            Query::equal('output', [$output]),
         ]));
 
         if (empty($renditions)) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId;
+        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/outputs/' . $output;
         $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
             Query::equal('videoId', [$video->getId()]),
         ]));
 
         $_renditions = $_subtitles  = [];
 
-        if ($protocolId === 'hls') {
+        if ($output === 'hls') {
             foreach ($subtitles ?? [] as $subtitle) {
                 $_subtitles[] = [
                     'name' => $subtitle->getAttribute('name'),
@@ -650,10 +650,10 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
                 }
 
                 $_renditions[] = [
-                    'bandwidth' => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
+                    'bandwidth'  => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
                     'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                     'name' => $rendition->getAttribute('name'),
-                    'uri' => $uri,
+                    'uri'  => $uri,
                     'subs' => !empty($_subtitles) ? 'subs' : null,
                     'audio' => !empty($_audios) ? 'group_audio' : null,
                 ];
@@ -738,7 +738,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId')
         }
     });
 
-App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/streams/:streamId')
+App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:streamId')
     ->desc('Get video rendition manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -746,17 +746,17 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
     ->label('sdk.method', 'getManifest')
     ->label('sdk.description', '/docs/references/videos/get-manifest.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    // TODO: Response model
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.methodType', 'location')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('protocolId', '', new WhiteList(['hls']), 'protocol name.')
+    ->param('output', '', new WhiteList(['hls']), 'output name.')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
     ->param('streamId', '', new Range(0, 10), 'Stream id.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $videoId, string $protocolId, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $videoId, string $output, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
@@ -790,7 +790,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
         foreach ($segments as $segment) {
             $_segments[] = [
                 'duration' => $segment->getAttribute('duration'),
-                'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
+                'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/outputs/' . $output . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
             ];
         }
 
@@ -801,7 +801,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/stre
             ->send($template->render(false));
     });
 
-App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segments/:segmentId')
+App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:segmentId')
     ->desc('Get video rendition segment')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -809,17 +809,17 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
     ->label('sdk.method', 'getRenditionSegment')
     ->label('sdk.description', '/docs/references/videos/get-rendition-segment.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    // TODO: Response model
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.methodType', 'location')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'Protocol name')
+    ->param('output', '', new WhiteList(['hls', 'dash']), 'Output name')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
     ->param('segmentId', '', new UID(), 'Segment unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
-    ->action(function (string $videoId, string $protocolId, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos) {
+    ->action(function (string $videoId, string $output, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos) {
 
         $segment = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions_segments', $segmentId));
 
@@ -829,7 +829,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
 
         $output = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
 
-        if ($protocolId === 'hls') {
+        if ($output === 'hls') {
             $response->setContentType('video/MP2T')
                 ->send($output);
         } else {
@@ -838,7 +838,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/renditions/:renditionId/segm
         }
     });
 
-App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
+App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
     ->desc('Get video subtitle')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -846,17 +846,17 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
     ->label('sdk.method', 'getSubtitle')
     ->label('sdk.description', '/docs/references/videos/get-subtitle.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    // TODO: Response model
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.methodType', 'location')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'Protocol name')
+    ->param('output', '', new WhiteList(['hls', 'dash']), 'Protocol name')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
-    ->action(function (string $videoId, string $protocolId, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
+    ->action(function (string $videoId, string $output, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
@@ -874,7 +874,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        if ($protocolId == 'hls') {
+        if ($output == 'hls') {
             $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
                 Query::equal('subtitleId', [$subtitleId]),
             ]));
@@ -887,7 +887,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
             foreach ($segments as $segment) {
                 $_segments[] = [
                     'duration' => $segment->getAttribute('duration'),
-                    'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/protocols/' . $protocolId . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
+                    'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/outputs/' . $output . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
                 ];
             }
 
@@ -903,7 +903,7 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId')
         }
     });
 
-App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId/segments/:segmentId')
+App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:segmentId')
     ->desc('Get video subtitle segment')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -911,18 +911,18 @@ App::get('/v1/videos/:videoId/protocols/:protocolId/subtitles/:subtitleId/segmen
     ->label('sdk.method', 'getSubtitleSegment')
     ->label('sdk.description', '/docs/references/videos/get-subtitle-segment.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    // TODO: Response model
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.methodType', 'location')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('protocolId', '', new WhiteList(['hls', 'dash']), 'Protocol name')
+    ->param('output', '', new WhiteList(['hls', 'dash']), 'output name')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->param('segmentId', '', new UID(), 'Segment unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
-    ->action(function (string $videoId, string $protocolId, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
+    ->action(function (string $videoId, string $output, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
@@ -959,19 +959,19 @@ App::post('/v1/videos/profiles')
     ->param('audioBitrate', '', new Range(32, 5000), 'Audio profile bit rate in Kbps.')
     ->param('width', '', new Range(6, 3000), 'Video profile width.')
     ->param('height', '', new Range(6, 3000), 'Video  profile height.')
-    ->param('protocol', false, new WhiteList(['hls', 'dash']), 'Video  profile protocol.')
+    ->param('output', false, new WhiteList(['hls', 'dash']), 'Video  profile output.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $protocol, Response $response, Database $dbForProject) {
+    ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $output, Response $response, Database $dbForProject) {
 
-            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $protocol) {
+            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $output) {
                 return $dbForProject->createDocument('videos_profiles', new Document([
                     'name'          => $name,
                     'videoBitrate'  => (int)$videoBitrate,
                     'audioBitrate'  => (int)$audioBitrate,
                     'width'         => (int)$width,
                     'height'        => (int)$height,
-                    'protocol'        => $protocol,
+                    'output'        => $output,
                 ]));
             });
 
@@ -998,10 +998,10 @@ App::patch('/v1/videos/profiles/:profileId')
     ->param('audioBitrate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
     ->param('width', '', new Range(100, 2000), 'Video profile width.')
     ->param('height', '', new Range(100, 2000), 'Video  profile height.')
-    ->param('protocol', false, new WhiteList(['hls', 'dash']), 'Video  profile protocol.')
+    ->param('output', false, new WhiteList(['hls', 'dash']), 'Video  profile output.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $protocol, Response $response, Database $dbForProject) {
+    ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $output, Response $response, Database $dbForProject) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
         if ($profile->isEmpty()) {
@@ -1013,7 +1013,7 @@ App::patch('/v1/videos/profiles/:profileId')
                 ->setAttribute('audioBitrate', (int)$audioBitrate)
                 ->setAttribute('width', (int)$width)
                 ->setAttribute('height', (int)$height)
-                ->setAttribute('protocol', $protocol);
+                ->setAttribute('output', $output);
 
         $profile = Authorization::skip(fn() => $dbForProject->updateDocument('videos_profiles', $profile->getId(), $profile));
 

@@ -3911,7 +3911,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'protocol',
+                '$id' => 'output',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3924,9 +3924,9 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_video_protocol_profile',
+                '$id' => '_key_video_output_profile',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['videoId', 'protocol', 'profileId'],
+                'attributes' => ['videoId', 'output', 'profileId'],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -4075,7 +4075,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'protocol',
+                '$id' => 'output',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -4090,7 +4090,7 @@ $collections = [
             [
                 '$id' => '_key_profile',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['protocol', 'width', 'height', 'videoBitrate', 'audioBitrate' ],
+                'attributes' => ['output', 'width', 'height', 'videoBitrate', 'audioBitrate' ],
                 'lengths' => [],
                 'orders' => [],
             ],

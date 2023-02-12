@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Utopia\Validator\URL;
+use Appwrite\Network\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
@@ -242,8 +242,8 @@ App::get('/v1/avatars/favicon')
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (int) ($size[0] ?? 0);
-                            $sizeHeight = (int) ($size[1] ?? 0);
+                            $sizeWidth = (int) $size[0] ?? 0;
+                            $sizeHeight = (int) $size[1] ?? 0;
 
                             if (($sizeWidth * $sizeHeight) >= $space) {
                                 $space = $sizeWidth * $sizeHeight;
