@@ -561,12 +561,12 @@ return [
     ],
     Exception::TIMEOUT_BLOCKED => [
         'name' => Exception::TIMEOUT_BLOCKED,
-        'description' => Exception::TIMEOUT_BLOCKED,
+        'description' => 'Api call has been blocked',
         'code' => 403,
     ],
     Exception::TIMEOUT => [
         'name' => Exception::TIMEOUT,
-        'description' => Exception::TIMEOUT,
+        'description' => 'Query exceeded maximum time',
         'code' => 408,
     ],
 ];

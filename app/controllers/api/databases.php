@@ -160,7 +160,7 @@ App::init()
             $request->getParam('queries')
         ]));
         /* @var $document Document */
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
         if ($document->getAttribute('blocked') === true) {
             throw new Exception(Exception::TIMEOUT_BLOCKED);
         }
@@ -203,9 +203,9 @@ App::error()
                 ]));
 
                 /* @var $document Document */
-                $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $key));
+                $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
                 if ($document->isEmpty()) {
-                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('timeouts', new Document([
+                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('slowQueries', new Document([
                     '$id' => $key,
                     'blocked' => false,
                     'count' => 1,
@@ -216,11 +216,11 @@ App::error()
                 ])));
                 } else {
                     $document['count']++;
-                    $max = App::getEnv('_APP_TIMEOUT_MAX', 2); // todo: set default value
+                    $max = App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 2); // todo: set default value
                     if ($document['count'] > $max) {
                         $document['blocked'] = true;
                     }
-                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('timeouts', $document->getId(), $document));
+                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
                 }
 
                 if ($document['blocked'] === true) {
@@ -2875,7 +2875,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
 
 App::get('/v1/databases/:databaseId/slow-queries')
-    ->desc('List timeouts Documents')
+    ->desc('List Slow queries Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
     ->label('sdk.hide', true)
@@ -2899,7 +2899,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn()=>$dbForProject->getDocument('timeouts', $documentId));
+            $cursorDocument = Authorization::skip(fn()=>$dbForProject->getDocument('slowQueries', $documentId));
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Slow query '{$documentId}' for the 'cursor' value not found.");
             }
@@ -2907,8 +2907,8 @@ App::get('/v1/databases/:databaseId/slow-queries')
         }
 
         $response->dynamic(new Document([
-            'documents' => Authorization::skip(fn()=>$dbForProject->find('timeouts', $queries)),
-            'total' => Authorization::skip(fn()=>$dbForProject->count('timeouts', Query::groupByType($queries)['filters'], APP_LIMIT_COUNT)),
+            'documents' => Authorization::skip(fn()=>$dbForProject->find('slowQueries', $queries)),
+            'total' => Authorization::skip(fn()=>$dbForProject->count('slowQueries', Query::groupByType($queries)['filters'], APP_LIMIT_COUNT)),
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
@@ -2934,7 +2934,7 @@ App::get('/v1/databases/slow-queries/:documentId')
     ->inject('mode')
     ->inject('project')
     ->action(function (string $documentId, Response $response, Database $dbForProject) {
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('timeouts', $documentId));
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $documentId));
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
@@ -2956,7 +2956,7 @@ App::delete('/v1/databases/slow-queries/:documentId')
     //->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
-    ->label('event', 'timeouts.documents.[documentId].delete')
+    ->label('event', 'slowQueries.documents.[documentId].delete')
     ->label('audits.event', 'document.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -2967,14 +2967,14 @@ App::delete('/v1/databases/slow-queries/:documentId')
     ->inject('events')
     ->inject('deletes')
     ->action(function (string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('timeouts', $documentId));
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $documentId));
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        Authorization::skip(fn() => $dbForProject->deleteDocument('timeouts', $documentId));
+        Authorization::skip(fn() => $dbForProject->deleteDocument('slowQueries', $documentId));
 
-        $dbForProject->deleteCachedDocument('timeouts', $documentId);
+        $dbForProject->deleteCachedDocument('slowQueries', $documentId);
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)
@@ -2984,7 +2984,7 @@ App::delete('/v1/databases/slow-queries/:documentId')
         // todo: check events
 
         $events
-            ->setParam('collectionId', 'timeouts')
+            ->setParam('collectionId', 'slowQueries')
             ->setParam('documentId', $document->getId())
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
