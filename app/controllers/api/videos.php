@@ -67,7 +67,7 @@ App::post('/v1/videos')
     ->label('audits.event', 'video.create')
     ->label('audits.resource', 'video/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/videos/create.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -100,7 +100,7 @@ App::delete('/v1/videos/:videoId')
     ->label('scope', 'videos.write')
     ->label('audits.event', 'video.delete')
     ->label('audits.resource', 'video/{request.videoId}')
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/videos/delete.md') // TODO: Create markdown
@@ -140,7 +140,7 @@ App::put('/v1/videos/:videoId')
     ->label('scope', 'videos.write')
     ->label('audits.event', 'video.update')
     ->label('audits.resource', 'video/{request.videoId}')
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/videos/update.md') // TODO: Create markdown
@@ -188,7 +188,7 @@ App::get('/v1/videos/:videoId')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/videos/get-video.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -216,7 +216,7 @@ App::get('/v1/videos')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/videos/get-video-list.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -255,7 +255,7 @@ App::post('/v1/videos/:videoId/subtitles')
     ->label('audits.event', 'subtitle.create')
     ->label('audits.resource', 'video/{response.videoId}/subtitle/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'addSubtitle')
     ->label('sdk.description', '/docs/references/videos/add-subtitle.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -303,7 +303,7 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
     ->label('audits.event', 'subtitle.update')
     ->label('audits.resource', 'video/{response.videoId}/subtitle/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'updateSubtitle')
     ->label('sdk.description', '/docs/references/videos/update-subtitle.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -344,7 +344,7 @@ App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
     ->label('scope', 'videos.write')
     ->label('audits.event', 'subtitle.delete')
     ->label('audits.resource', 'video/{request.videoId}/subtitle/{request.subtitleId}')
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'deleteSubtitle')
     ->label('sdk.description', '/docs/references/videos/delete-subtitle.md') // TODO: Create markdown
@@ -374,7 +374,7 @@ App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
         $deleted = $dbForProject->deleteDocument('videos_subtitles', $subtitleId);
 
         if (!$deleted) {
-            throw new Exception('Failed to remove video subtitle from DB', 500, Exception::GENERAL_SERVER_ERROR);
+            throw new Exception('Failed to remove video subtitle', 500, Exception::GENERAL_SERVER_ERROR);
         }
 
         $response->noContent();
@@ -385,7 +385,7 @@ App::get('/v1/videos/:videoId/subtitles')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getSubtitles')
     ->label('sdk.description', '/docs/references/videos/get-subtitles.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -420,7 +420,7 @@ App::post('/v1/videos/:videoId/rendition')
     ->label('audits.event', 'rendition.create')
     ->label('audits.resource', 'video/{response.videoId}/rendition/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'createRendition')
     ->label('sdk.description', '/docs/references/videos/create-rendition.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -461,9 +461,10 @@ App::delete('/v1/videos/:videoId/renditions/:renditionId')
     ->desc('Delete video rendition')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.write')
+    ->label('event', 'videos.[videoIdId].renditions.[renditionId].delete')
     ->label('audits.event', 'rendition.delete')
     ->label('audits.resource', 'video/{request.videoId}/rendition/{request.$id}')
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'deleteRendition')
     ->label('sdk.description', '/docs/references/videos/delete-rendition.md') // TODO: Create markdown
@@ -509,7 +510,7 @@ App::get('/v1/videos/:videoId/renditions/:renditionId')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getRendition')
     ->label('sdk.description', '/docs/references/videos/get-rendition.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -544,7 +545,7 @@ App::get('/v1/videos/:videoId/renditions')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getRenditions')
     ->label('sdk.description', '/docs/references/videos/get-renditions.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -581,7 +582,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
     ->desc('Get video master renditions manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getMasterManifest')
     ->label('sdk.description', '/docs/references/videos/get-master-manifest.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -675,7 +676,6 @@ App::get('/v1/videos/:videoId/outputs/:output')
                 if (empty($xml)) {
                     continue;
                 }
-
                 $attributes = (array)$xml->attributes();
                 $mpd = $attributes['@attributes'] ?? [];
                 $streamId = 0;
@@ -742,7 +742,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
     ->desc('Get video rendition manifest')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getManifest')
     ->label('sdk.description', '/docs/references/videos/get-manifest.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -805,7 +805,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:
     ->desc('Get video rendition segment')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getRenditionSegment')
     ->label('sdk.description', '/docs/references/videos/get-rendition-segment.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -822,7 +822,6 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:
     ->action(function (string $videoId, string $output, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos) {
 
         $segment = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions_segments', $segmentId));
-
         if ($segment->isEmpty()) {
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
@@ -842,7 +841,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
     ->desc('Get video subtitle')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getSubtitle')
     ->label('sdk.description', '/docs/references/videos/get-subtitle.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -907,7 +906,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:se
     ->desc('Get video subtitle segment')
     ->groups(['api', 'video'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getSubtitleSegment')
     ->label('sdk.description', '/docs/references/videos/get-subtitle-segment.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -948,7 +947,7 @@ App::post('/v1/videos/profiles')
     ->label('audits.event', 'profile.create')
     ->label('audits.resource', 'profile/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'createProfile')
     ->label('sdk.description', '/docs/references/videos/create-profile.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -986,7 +985,7 @@ App::patch('/v1/videos/profiles/:profileId')
     ->label('audits.event', 'profile.update')
     ->label('audits.resource', 'profile/{request.profileId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'updateProfile')
     ->label('sdk.description', '/docs/references/videos/update-profile.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1025,7 +1024,7 @@ App::get('/v1/videos/profiles/:profileId')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getProfile')
     ->label('sdk.description', '/docs/references/videos/get-profile.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1049,7 +1048,7 @@ App::get('/v1/videos/profiles')
     ->groups(['api', 'video'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getProfiles')
     ->label('sdk.description', '/docs/references/videos/get-profiles.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -1076,7 +1075,7 @@ App::delete('/v1/videos/profiles/:profileId')
     ->label('scope', 'videos.write')
     ->label('audits.event', 'profile.delete')
     ->label('audits.resource', 'profile/{request.profileId}')
-    ->label('sdk.namespace', 'video')
+    ->label('sdk.namespace', 'videos')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'deleteProfile')
     ->label('sdk.description', '/docs/references/videos/delete-profile.md') // TODO: Create markdown

@@ -233,5 +233,33 @@ return [
         'update' => [
             '$description' => 'This event triggers when a function is updated.',
         ]
-    ]
+    ],
+    'videos' => [
+        '$model' => Response::MODEL_VIDEO,
+        '$resource' => true,
+        '$description' => 'This event triggers on any videos event.',
+        'renditions' => [
+            '$model' => Response::MODEL_RENDITION,
+            '$resource' => true,
+            '$description' => 'This event triggers on any renditions event.',
+            'create' => [
+                '$description' => 'This event triggers when a rendition is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a rendition is deleted.'
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a rendition is updated.'
+            ],
+        ],
+        'create' => [
+            '$description' => 'This event triggers when a video is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a video is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a video is updated.',
+        ]
+    ],
 ];

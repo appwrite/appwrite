@@ -1,6 +1,7 @@
 <?php
 
-use Appwrite\Extend\Exception;
+use Appwrite\Event\Event;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
 use Streaming\FFMpeg;
@@ -49,8 +50,6 @@ class TranscodingV1 extends Worker
     private string $outPath;
 
     private string $renditionName;
-
-    private array $audioTracks = [];
 
     private Database $database;
 
@@ -305,6 +304,32 @@ class TranscodingV1 extends Worker
             $query->setAttribute('status', self::STATUS_READY);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
 
+            $allEvents = Event::generateEvents('videos.[videoId].renditions.[renditionId].create', [
+                'videoId'     => $this->video->getId(),
+                'renditionId' => $query->getId()
+            ]);
+
+            $target = Realtime::fromPayload(
+                event: $allEvents[0],
+                payload: $query
+            );
+
+            Realtime::send(
+                projectId: 'console',
+                payload: $query->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
+
+            Realtime::send(
+                projectId: $this->project->getId(),
+                payload: $query->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
+
             Console::info('Process lasted ' . (microtime(true) - $startTime) . ' seconds');
         } catch (\Throwable $th) {
             $query->setAttribute('metadata', json_encode([
@@ -333,10 +358,8 @@ class TranscodingV1 extends Worker
             '-dn',
             '-sn',
             '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1',
-            //'-r', '24',
             '-b_strategy', '1',
-            '-bf', '3', // bframe
-            //'-g', '120' // gop
+            '-bf', '3',
             '-force_key_frames', 'expr:gte(t,n_forced*2)' //enforce strict key frame
         ];
 
@@ -348,8 +371,7 @@ class TranscodingV1 extends Worker
                 ->setSegDuration($segmentSize)
                 ->addRepresentation($representation)
                 ->setAdditionalParams($additionalParams)
-                ->save($this->outPath)
-                ;
+                ->save($this->outPath);
 
                 console::info(strtoupper($output) . ' rendition conversion ended');
 
@@ -365,13 +387,11 @@ class TranscodingV1 extends Worker
         }
 
         $hls->setFormat($format)
-            ->setAudioTracks($this->audioTracks)
             ->setHlsTime($segmentSize)
             ->setHlsAllowCache(false)
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
-            ->save($this->outPath)
-        ;
+            ->save($this->outPath);
 
         console::info(strtoupper($output) . ' rendition conversion ended');
 
@@ -384,6 +404,7 @@ class TranscodingV1 extends Worker
      */
     private function getDashSegments(string $path): array
     {
+        var_dump($this->outDir);
 
         $segments = [];
         $metadata = null;
