@@ -17,7 +17,7 @@ class TestHook implements AfterTestHook
         );
 
         if($time > self::MAX_SECONDS_ALLOWED) {
-            fwrite(STDERR, sprintf("\nThe %s test is slow, it took %s seconds!\n", $test, $time));
+            fwrite(STDOUT, sprintf("\e[31mThe %s test is slow, it took %s seconds!\n\e[0m", $test, $time));
         }
     }
 }
