@@ -3624,8 +3624,8 @@ $collections = [
             [
                 '$id' => '_key_database_id',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['blocked'],
-                'lengths' => [Database::LENGTH_KEY],
+                'attributes' => ['databaseId', 'collectionId'],
+                'lengths' => [],
                 'orders' => []
             ],
             [

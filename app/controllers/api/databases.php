@@ -202,7 +202,7 @@ App::error()
                 /* @var $document Document */
                 $document = Authorization::skip(fn() => $dbForProject->getDocument('slow_queries', $key));
                 if ($document->isEmpty()) {
-                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('slow_queriesueries', new Document([
+                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('slow_queries', new Document([
                     '$id' => $key,
                     'blocked' => false,
                     'count' => 1,
@@ -214,6 +214,9 @@ App::error()
                 } else {
                     $document['count']++;
                     $max = App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 99999); // todo: set default value
+                    var_dump('_APP_SLOW_QUERIES_MAX_HITS');
+                    var_dump($max);
+
                     if ($document['count'] > $max) {
                         $document['blocked'] = true;
                     }
@@ -2119,6 +2122,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+
+        var_dump('_APP_SLOW_QUERIES_ACTIVE');
+        var_dump(App::getEnv('_APP_SLOW_QUERIES_ACTIVE'));
+
         $timeout = App::getEnv('_APP_SLOW_QUERIES_ACTIVE') === 'true' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
 
         if ($documentSecurity && !$valid) {
