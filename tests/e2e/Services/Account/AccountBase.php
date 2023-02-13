@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
 
 trait AccountBase
