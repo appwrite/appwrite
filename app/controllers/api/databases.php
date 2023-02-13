@@ -160,7 +160,7 @@ App::init()
             $request->getParam('queries')
         ]));
         /* @var $document Document */
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('slow_queries', $key));
         if ($document->getAttribute('blocked') === true) {
             throw new Exception(Exception::TIMEOUT_BLOCKED);
         }
@@ -200,9 +200,9 @@ App::error()
                 ]));
 
                 /* @var $document Document */
-                $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
+                $document = Authorization::skip(fn() => $dbForProject->getDocument('slow_queries', $key));
                 if ($document->isEmpty()) {
-                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('slowQueries', new Document([
+                    $document = Authorization::skip(fn()=>$dbForProject->createDocument('slow_queriesueries', new Document([
                     '$id' => $key,
                     'blocked' => false,
                     'count' => 1,
@@ -217,7 +217,7 @@ App::error()
                     if ($document['count'] > $max) {
                         $document['blocked'] = true;
                     }
-                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
+                    $document = Authorization::skip(fn() => $dbForProject->updateDocument('slow_queries', $document->getId(), $document));
                 }
 
                 if ($document['blocked'] === true) {
@@ -2977,7 +2977,7 @@ App::delete('/v1/databases/slow-queries/:documentId')
         // todo: check slow Queries events
 
         $events
-            ->setParam('collectionId', 'slowQueries')
+            ->setParam('collectionId', 'slow_queries')
             ->setParam('documentId', $document->getId())
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
