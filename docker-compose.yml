@@ -83,7 +83,6 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -177,6 +176,9 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
+      - _APP_SLOW_QUERIES_MAX_HITS
+      - _APP_SLOW_QUERIES_TIMEOUT
+      - _APP_SLOW_QUERIES
 
   appwrite-realtime:
     entrypoint: realtime

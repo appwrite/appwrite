@@ -156,6 +156,9 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
+      - _APP_SLOW_QUERIES_MAX_HITS
+      - _APP_SLOW_QUERIES_TIMEOUT
+      - _APP_SLOW_QUERIES
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>

@@ -2123,10 +2123,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        var_dump('_APP_SLOW_QUERIES_ACTIVE');
-        var_dump(App::getEnv('_APP_SLOW_QUERIES_ACTIVE'));
+        var_dump('_APP_SLOW_QUERIES');
+        var_dump(App::getEnv('_APP_SLOW_QUERIES'));
 
-        $timeout = App::getEnv('_APP_SLOW_QUERIES_ACTIVE') === 'true' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
+        $timeout = App::getEnv('_APP_SLOW_QUERIES') === '1' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
 
         if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeout);
