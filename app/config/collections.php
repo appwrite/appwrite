@@ -3548,7 +3548,7 @@ $collections = [
             ],
         ],
     ],
-    'slowQueries' => [
+    'slow_queries' => [
         '$collection' => Database::METADATA,
         '$id' => 'slow_queries',
         'name' => 'slow_queries',
@@ -3624,7 +3624,7 @@ $collections = [
             [
                 '$id' => '_key_database_id',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['databaseId', 'blocked', 'collectionId'],
+                'attributes' => ['blocked'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => []
             ],
@@ -3632,7 +3632,7 @@ $collections = [
                 '$id' => '_key_blocked',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['blocked', 'databaseId', 'collectionId'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [],
                 'orders' => []
             ]
         ],

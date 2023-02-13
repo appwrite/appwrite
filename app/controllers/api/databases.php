@@ -2896,7 +2896,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn()=>$dbForProject->getDocument('slowQueries', $documentId));
+            $cursorDocument = Authorization::skip(fn()=>$dbForProject->getDocument('slow_queries', $documentId));
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Slow query '{$documentId}' for the 'cursor' value not found.");
             }
@@ -2904,11 +2904,10 @@ App::get('/v1/databases/:databaseId/slow-queries')
         }
 
         $response->dynamic(new Document([
-            'documents' => Authorization::skip(fn()=>$dbForProject->find('slowQueries', $queries)),
-            'total' => Authorization::skip(fn()=>$dbForProject->count('slowQueries', Query::groupByType($queries)['filters'], APP_LIMIT_COUNT)),
+            'documents' => Authorization::skip(fn()=>$dbForProject->find('slow_queries', $queries)),
+            'total' => Authorization::skip(fn()=>$dbForProject->count('slow_queries', Query::groupByType($queries)['filters'], APP_LIMIT_COUNT)),
         ]), Response::MODEL_DOCUMENT_LIST);
     });
-
 
 App::get('/v1/databases/slow-queries/:documentId')
     ->desc('Get Slow Query Document')
@@ -2931,13 +2930,14 @@ App::get('/v1/databases/slow-queries/:documentId')
     ->inject('mode')
     ->inject('project')
     ->action(function (string $documentId, Response $response, Database $dbForProject) {
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $documentId));
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('slow_queries', $documentId));
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
+
 App::delete('/v1/databases/slow-queries/:documentId')
     ->desc('Delete Slow query Document')
     ->desc('List  Documents')
@@ -2949,7 +2949,7 @@ App::delete('/v1/databases/slow-queries/:documentId')
     //->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
-    ->label('event', 'slowQueries.documents.[documentId].delete')
+    ->label('event', 'slow_queries.documents.[documentId].delete')
     ->label('audits.event', 'document.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
@@ -2960,21 +2960,21 @@ App::delete('/v1/databases/slow-queries/:documentId')
     ->inject('events')
     ->inject('deletes')
     ->action(function (string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $documentId));
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('slow_queries', $documentId));
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        Authorization::skip(fn() => $dbForProject->deleteDocument('slowQueries', $documentId));
+        Authorization::skip(fn() => $dbForProject->deleteDocument('slow_queries', $documentId));
 
-        $dbForProject->deleteCachedDocument('slowQueries', $documentId);
+        $dbForProject->deleteCachedDocument('slow_queries', $documentId);
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)
             ->setDocument($document)
         ;
 
-        // todo: check events
+        // todo: check slow Queries events
 
         $events
             ->setParam('collectionId', 'slowQueries')
