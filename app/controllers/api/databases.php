@@ -213,7 +213,7 @@ App::error()
                 ])));
                 } else {
                     $document['count']++;
-                    $max = App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 2); // todo: set default value
+                    $max = App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 99999); // todo: set default value
                     if ($document['count'] > $max) {
                         $document['blocked'] = true;
                     }
@@ -2119,7 +2119,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-        $timeout = 200; // todo: make this configurable
+        $timeout = App::getEnv('_APP_SLOW_QUERIES') === '1' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
 
         if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeout);
