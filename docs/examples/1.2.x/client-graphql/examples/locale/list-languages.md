@@ -1,6 +1,10 @@
 query {
     localeListLanguages {
         total
-        languages
+        languages {
+            name
+            code
+            nativeName
+        }
     }
 }

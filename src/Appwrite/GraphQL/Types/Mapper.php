@@ -228,18 +228,18 @@ class Mapper
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Task\Validator\Cron':
             case 'Appwrite\Utopia\Database\Validator\CustomId':
-            case 'Appwrite\Network\Validator\Domain':
+            case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Event\Validator\Event':
             case 'Utopia\Validator\HexColor':
-            case 'Appwrite\Network\Validator\Host':
-            case 'Appwrite\Network\Validator\IP':
+            case 'Utopia\Validator\Host':
+            case 'Utopia\Validator\IP':
             case 'Utopia\Database\Validator\Key':
-            case 'Appwrite\Network\Validator\Origin':
+            case 'Utopia\Validator\Origin':
             case 'Appwrite\Auth\Validator\Password':
             case 'Utopia\Validator\Text':
             case 'Utopia\Database\Validator\UID':
-            case 'Appwrite\Network\Validator\URL':
+            case 'Utopia\Validator\URL':
             case 'Utopia\Validator\WhiteList':
             default:
                 $type = Type::string();

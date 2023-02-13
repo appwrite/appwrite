@@ -1,6 +1,9 @@
 query {
     localeListCountriesEU {
         total
-        countries
+        countries {
+            name
+            code
+        }
     }
 }

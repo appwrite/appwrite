@@ -1,6 +1,14 @@
 query {
     localeListCurrencies {
         total
-        currencies
+        currencies {
+            symbol
+            name
+            symbolNative
+            decimalDigits
+            rounding
+            code
+            namePlural
+        }
     }
 }

@@ -4,12 +4,12 @@ mutation {
         collectionId: "[COLLECTION_ID]",
         documentId: "[DOCUMENT_ID]"
     ) {
-        id
-        collectionId
-        databaseId
-        createdAt
-        updatedAt
-        permissions
+        _id
+        _collectionId
+        _databaseId
+        _createdAt
+        _updatedAt
+        _permissions
         data
     }
 }

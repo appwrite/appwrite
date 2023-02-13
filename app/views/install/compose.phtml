@@ -509,6 +509,7 @@ services:
     entrypoint: worker-messaging
     <<: *x-logging
     container_name: appwrite-worker-messaging
+    restart: unless-stopped
     networks:
       - appwrite
     depends_on:

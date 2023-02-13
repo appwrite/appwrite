@@ -5,15 +5,22 @@ mutation {
         execute: ["any"],
         runtime: "node-14.5"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         execute
         name
         enabled
         runtime
         deployment
-        vars
+        vars {
+            _id
+            _createdAt
+            _updatedAt
+            key
+            value
+            functionId
+        }
         events
         schedule
         scheduleNext

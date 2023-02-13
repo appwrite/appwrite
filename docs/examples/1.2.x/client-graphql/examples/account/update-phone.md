@@ -3,9 +3,9 @@ mutation {
         phone: "+12065550100",
         password: "password"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         registration
         status
@@ -14,6 +14,8 @@ mutation {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

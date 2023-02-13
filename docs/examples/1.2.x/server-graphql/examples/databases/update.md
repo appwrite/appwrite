@@ -3,9 +3,9 @@ mutation {
         databaseId: "[DATABASE_ID]",
         name: "[NAME]"
     ) {
-        id
+        _id
         name
-        createdAt
-        updatedAt
+        _createdAt
+        _updatedAt
     }
 }

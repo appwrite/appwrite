@@ -1,6 +1,11 @@
 query {
     databasesList {
         total
-        databases
+        databases {
+            _id
+            name
+            _createdAt
+            _updatedAt
+        }
     }
 }

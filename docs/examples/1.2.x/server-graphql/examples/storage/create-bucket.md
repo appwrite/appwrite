@@ -3,10 +3,10 @@ mutation {
         bucketId: "[BUCKET_ID]",
         name: "[NAME]"
     ) {
-        id
-        createdAt
-        updatedAt
-        permissions
+        _id
+        _createdAt
+        _updatedAt
+        _permissions
         fileSecurity
         name
         enabled

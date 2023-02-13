@@ -3,8 +3,8 @@ mutation {
         email: "email@example.com",
         url: "https://example.com"
     ) {
-        id
-        createdAt
+        _id
+        _createdAt
         userId
         secret
         expire

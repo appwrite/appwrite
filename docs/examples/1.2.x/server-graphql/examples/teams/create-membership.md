@@ -5,9 +5,9 @@ mutation {
         roles: [],
         url: "https://example.com"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         userId
         userName
         userEmail

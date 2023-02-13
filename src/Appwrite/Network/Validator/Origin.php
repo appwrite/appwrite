@@ -14,6 +14,7 @@ class Origin extends Validator
     public const CLIENT_TYPE_FLUTTER_MACOS = 'flutter-macos';
     public const CLIENT_TYPE_FLUTTER_WINDOWS = 'flutter-windows';
     public const CLIENT_TYPE_FLUTTER_LINUX = 'flutter-linux';
+    public const CLIENT_TYPE_FLUTTER_WEB = 'flutter-web';
     public const CLIENT_TYPE_APPLE_IOS = 'apple-ios';
     public const CLIENT_TYPE_APPLE_MACOS = 'apple-macos';
     public const CLIENT_TYPE_APPLE_WATCHOS = 'apple-watchos';
@@ -73,6 +74,7 @@ class Origin extends Validator
 
             switch ($type) {
                 case self::CLIENT_TYPE_WEB:
+                case self::CLIENT_TYPE_FLUTTER_WEB:
                     $this->clients[] = (isset($platform['hostname'])) ? $platform['hostname'] : '';
                     break;
 

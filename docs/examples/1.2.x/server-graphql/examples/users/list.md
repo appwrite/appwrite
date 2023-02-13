@@ -1,6 +1,24 @@
 query {
     usersList {
         total
-        users
+        users {
+            _id
+            _createdAt
+            _updatedAt
+            name
+            password
+            hash
+            hashOptions
+            registration
+            status
+            passwordUpdate
+            email
+            phone
+            emailVerification
+            phoneVerification
+            prefs {
+                data
+            }
+        }
     }
 }
