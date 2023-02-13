@@ -21,18 +21,28 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
+    # This is a separate action that sets up buildx runner
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
     - name: Build Appwrite
-      # Upstream bug causes buildkit pulls to fail so prefetch base images
-      # https://github.com/moby/moby/issues/41864
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: false
+        tags: appwrite-dev
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          DEBUG=false
+          TESTING=true
+          VERSION=dev
+
+    - name: Start Appwrite
       run:  |
-        export COMPOSE_INTERACTIVE_NO_CLI
-        export DOCKER_BUILDKIT=1
-        export COMPOSE_DOCKER_CLI_BUILD=1
-        export BUILDKIT_PROGRESS=plain
-        docker pull composer:2.0
-        docker compose build appwrite
         docker compose up -d
         sleep 30
+
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
@@ -41,3 +51,13 @@ jobs:
 
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
+
+    # This ugly bit is necessary if you don't want your cache to grow forever
+    # until it hits GitHub's limit of 5GB.
+    # Temp fix
+    # https://github.com/docker/build-push-action/issues/252
+    # https://github.com/moby/buildkit/issues/1896
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
