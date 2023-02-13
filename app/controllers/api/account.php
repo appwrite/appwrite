@@ -1900,7 +1900,7 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $key => $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
             if (!Config::getParam('domainVerification')) {
@@ -1922,7 +1922,10 @@ App::delete('/v1/account/sessions')
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
                 // Use current session for events.
-                $events->setPayload($response->output($session, Response::MODEL_SESSION));
+                $events->addAdditionalEvent('users.[userId].sessions.[sessionId].delete', ['userId' => $user->getId(), 'sessionId' => $session->getId()], $response->output($session, Response::MODEL_SESSION));
+                if ($key === array_key_last($sessions)) {
+                    $events->setPayload($response->output($session, Response::MODEL_SESSION));
+                }
             }
         }
 
