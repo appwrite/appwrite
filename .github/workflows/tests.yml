@@ -51,13 +51,3 @@ jobs:
 
     - name: Run Tests
       run: docker compose exec -T appwrite test --debug
-
-    # This ugly bit is necessary if you don't want your cache to grow forever
-    # until it hits GitHub's limit of 5GB.
-    # Temp fix
-    # https://github.com/docker/build-push-action/issues/252
-    # https://github.com/moby/buildkit/issues/1896
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
