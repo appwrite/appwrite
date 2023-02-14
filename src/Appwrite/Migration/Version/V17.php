@@ -114,12 +114,90 @@ class V17 extends Migration
 
                     try {
                         /**
-                         * Create 'size'
+                         * Create 'deploymentInternalId' attribute
                          */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'size' from {$id}: {$th->getMessage()}");
+                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'schedules':
+                    try {
+                        /**
+                         * Create 'resourceInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'functions':
+                    try {
+                        /**
+                         * Create 'deploymentInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'scheduleInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'deployments':
+                    try {
+                        /**
+                         * Create 'resourceInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'buildInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'buildInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'buildInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'executions':
+                    try {
+                        /**
+                         * Create 'functionInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'functionInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'functionInternalId' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'deploymentInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 default:
