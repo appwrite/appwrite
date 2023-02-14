@@ -44,6 +44,14 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
+App::wildcard()
+    ->inject('swooleResponse')
+    ->action(function(SwooleResponse $swooleResponse) {
+        $swooleResponse->setStatusCode(404);
+        $swooleResponse->end('Not Found');
+        return;
+    });
+
 App::init()
     ->inject('utopia')
     ->inject('swooleRequest')
@@ -84,7 +92,10 @@ App::init()
 
                 $body = \json_encode([
                     'async' => false,
-                    'data' => 'Heyy'
+                    'body' => $swooleRequest->getContent() ?? '',
+                    'method' => $swooleRequest->server['request_method'],
+                    'path' => $swooleRequest->server['path_info'],
+                    'headers' => $swooleRequest->header
                 ]);
 
                 $headers = [
@@ -102,16 +113,31 @@ App::init()
                 // \curl_setopt($ch, CURLOPT_HEADER, true);
                 \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
-                $executionResponse = \utf8_decode(\curl_exec($ch));
+                $executionResponse = \curl_exec($ch);
                 $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $error = \curl_error($ch);
                 $errNo = \curl_errno($ch);
 
                 \curl_close($ch);
 
-                $responseBody = \json_decode($executionResponse, true)['response'];
+                if($errNo !== 0) {
+                    return $response->setStatusCode(500)->send("Internal error: " . $error);
+                }
 
-                return $response->setStatusCode(200)->send($responseBody);
+                if($statusCode >= 400) {
+                    $error = \json_decode($executionResponse, true)['message'];
+                    return $response->setStatusCode(500)->send("Execution error: " . $error);
+                }
+                
+                $execution = \json_decode($executionResponse, true);
+
+                foreach ($execution['headers'] as $header => $value) {
+                    if($header !== "content-length") {
+                        $response->setHeader($header, $value);
+                    }
+                }
+
+                return $response->setStatusCode($execution['statusCode'] ?? 200)->send($execution['body'] ?? '');
             } else if(\count($subdomains) === 3) {
                 // Deployment preview
                 $deploymentId = $subdomains[0];
@@ -136,6 +162,10 @@ App::init()
         */
         $route = $utopia->match($request);
         Request::setRoute($route);
+
+        if($route === null) {
+            return $response->setStatusCode(404)->send("Not Found");
+        }
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {

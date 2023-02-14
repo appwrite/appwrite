@@ -576,4 +576,16 @@ class Response extends SwooleResponse
     {
         return self::$filter != null;
     }
+
+    /**
+     * Set Header
+     *
+     * @param  string  $key
+     * @param  string  $value
+     * @return void
+     */
+    public function setHeader(string $key, string $value): void
+    {
+        $this->sendHeader($key, $value);
+    }
 }
