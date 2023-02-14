@@ -2,8 +2,8 @@ query {
     accountGetSession(
         sessionId: "[SESSION_ID]"
     ) {
-        id
-        createdAt
+        _id
+        _createdAt
         userId
         expire
         provider

@@ -9,9 +9,9 @@ mutation {
         passwordParallel: 0,
         passwordLength: 0
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         password
         hash
@@ -23,6 +23,8 @@ mutation {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

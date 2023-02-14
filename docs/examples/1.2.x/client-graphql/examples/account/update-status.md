@@ -1,8 +1,8 @@
 mutation {
     accountUpdateStatus {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         registration
         status
@@ -11,6 +11,8 @@ mutation {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

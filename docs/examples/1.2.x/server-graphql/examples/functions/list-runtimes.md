@@ -1,6 +1,14 @@
 query {
     functionsListRuntimes {
         total
-        runtimes
+        runtimes {
+            _id
+            name
+            version
+            base
+            image
+            logo
+            supports
+        }
     }
 }

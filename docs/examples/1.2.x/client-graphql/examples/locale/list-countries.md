@@ -1,6 +1,9 @@
 query {
     localeListCountries {
         total
-        countries
+        countries {
+            name
+            code
+        }
     }
 }

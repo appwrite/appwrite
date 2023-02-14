@@ -3,9 +3,9 @@ query {
         functionId: "[FUNCTION_ID]",
         deploymentId: "[DEPLOYMENT_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         resourceId
         resourceType
         entrypoint

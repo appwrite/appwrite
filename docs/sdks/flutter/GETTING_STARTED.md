@@ -58,7 +58,7 @@ For web in order to capture the OAuth2 callback URL and send it to the applicati
 close the window.
 <script>
   window.opener.postMessage({
-    flutter-web-auth-2: window.location.href
+    'flutter-web-auth-2': window.location.href
   }, window.location.origin);
   window.close();
 </script>

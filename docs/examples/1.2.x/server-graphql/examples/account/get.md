@@ -1,8 +1,8 @@
 query {
     accountGet {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         registration
         status
@@ -11,6 +11,8 @@ query {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

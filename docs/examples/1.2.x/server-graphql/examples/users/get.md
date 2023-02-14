@@ -2,9 +2,9 @@ query {
     usersGet(
         userId: "[USER_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         password
         hash
@@ -16,6 +16,8 @@ query {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

@@ -3,9 +3,9 @@ mutation {
         teamId: "[TEAM_ID]",
         name: "[NAME]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         total
     }

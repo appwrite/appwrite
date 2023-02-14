@@ -3,9 +3,9 @@ mutation {
         userId: "[USER_ID]",
         status: false
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         password
         hash
@@ -17,6 +17,8 @@ mutation {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

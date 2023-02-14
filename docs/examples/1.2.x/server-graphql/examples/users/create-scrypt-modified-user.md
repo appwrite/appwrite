@@ -7,9 +7,9 @@ mutation {
         passwordSaltSeparator: "[PASSWORD_SALT_SEPARATOR]",
         passwordSignerKey: "[PASSWORD_SIGNER_KEY]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         name
         password
         hash
@@ -21,6 +21,8 @@ mutation {
         phone
         emailVerification
         phoneVerification
-        prefs
+        prefs {
+            data
+        }
     }
 }

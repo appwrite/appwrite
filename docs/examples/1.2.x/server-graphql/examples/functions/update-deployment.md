@@ -3,15 +3,22 @@ mutation {
         functionId: "[FUNCTION_ID]",
         deploymentId: "[DEPLOYMENT_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         execute
         name
         enabled
         runtime
         deployment
-        vars
+        vars {
+            _id
+            _createdAt
+            _updatedAt
+            key
+            value
+            functionId
+        }
         events
         schedule
         scheduleNext

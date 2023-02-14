@@ -3,8 +3,8 @@ mutation {
         userId: "[USER_ID]",
         phone: "+12065550100"
     ) {
-        id
-        createdAt
+        _id
+        _createdAt
         userId
         secret
         expire

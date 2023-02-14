@@ -5,9 +5,9 @@ mutation {
         userId: "[USER_ID]",
         secret: "[SECRET]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         userId
         userName
         userEmail

@@ -3,9 +3,9 @@ query {
         teamId: "[TEAM_ID]",
         membershipId: "[MEMBERSHIP_ID]"
     ) {
-        id
-        createdAt
-        updatedAt
+        _id
+        _createdAt
+        _updatedAt
         userId
         userName
         userEmail
