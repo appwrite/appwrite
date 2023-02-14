@@ -1,5 +1,6 @@
 # Version 1.2.1
 ## Changes
+- Upgrade Console to [2.2.0](https://github.com/appwrite/console/releases/tag/2.2.0)
 - Update DBIP Database [#5049](https://github.com/appwrite/appwrite/pull/5049)
 
 ## Bugs
