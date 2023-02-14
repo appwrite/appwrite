@@ -30,7 +30,7 @@ class UsageStorage extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('storage', [
+            ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
