@@ -83,7 +83,7 @@ class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(412, $response['headers']['status-code']);
 
         return [];
     }
