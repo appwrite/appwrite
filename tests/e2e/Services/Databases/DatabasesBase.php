@@ -997,8 +997,6 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(408, $documents['headers']['status-code']);
-
-        exit();
     }
 
 
@@ -1013,7 +1011,6 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => ['sleep("$id", 1)'],
         ]);
-
         $this->assertEquals(403, $documents['headers']['status-code']);
     }
 

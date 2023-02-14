@@ -174,8 +174,8 @@ App::error()
     ->inject('utopia')
     ->action(function (throwable $error, Request $request, Database $dbForProject, App $utopia) {
         try {
-            $route = $utopia->match($request);
             if ($error instanceof Timeout) {
+                $route = $utopia->match($request);
                 $collectionId = $route->getParamValue('collectionId');
                 $databaseId = $route->getParamValue('databaseId');
                 $queries = $request->getParam('queries');
@@ -214,15 +214,13 @@ App::error()
                 ])));
                 } else {
                     $document['count']++;
-                    $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 99999)); // todo: set default value
-                    var_dump('_APP_SLOW_QUERIES_MAX_HITS');
-                    var_dump($max);
-
-                    if ($document['count'] > $max) {
+                    $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 9999));
+                    if ($document['count'] >= $max) {
                         $document['blocked'] = true;
                     }
                     $document = Authorization::skip(fn() => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
                 }
+
                 if ($document['blocked'] === true) {
                     throw new Exception(Exception::TIMEOUT_BLOCKED);
                 }
