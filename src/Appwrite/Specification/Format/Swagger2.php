@@ -312,7 +312,7 @@ class Swagger2 extends Format
                         $node['format'] = 'email';
                         $node['x-example'] = 'email@example.com';
                         break;
-                    case 'Appwrite\Network\Validator\URL':
+                    case 'Utopia\Validator\URL':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
@@ -393,7 +393,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Length':
                         $node['type'] = $validator->getType();
                         break;
-                    case 'Appwrite\Network\Validator\Host':
+                    case 'Utopia\Validator\Host':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
