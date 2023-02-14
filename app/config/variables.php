@@ -528,7 +528,7 @@ return [
                 'name' => '_APP_STORAGE_DEVICE',
                 'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
-                'default' => 'Local',
+                'default' => 'local',
                 'required' => false,
                 'question' => '',
             ],

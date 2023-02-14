@@ -56,7 +56,7 @@
         "utopia-php/pools": "0.4.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/framework": "0.25.*",
+        "utopia-php/framework": "0.26.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/dsn": "0.1.*",
         "utopia-php/locale": "0.4.*",

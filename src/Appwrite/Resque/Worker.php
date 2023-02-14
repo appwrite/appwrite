@@ -9,16 +9,16 @@ use Utopia\Config\Config;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
-use Utopia\Storage\Device\Wasabi;
-use Utopia\Storage\Device\Backblaze;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 
 abstract class Worker
@@ -55,7 +55,7 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    public function init()
+    public function init(): void
     {
         throw new Exception("Please implement init method in worker");
     }
@@ -67,7 +67,7 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    public function run()
+    public function run(): void
     {
         throw new Exception("Please implement run method in worker");
     }
@@ -79,7 +79,7 @@ abstract class Worker
      * @return void
      * @throws \Exception|\Throwable
      */
-    public function shutdown()
+    public function shutdown(): void
     {
         throw new Exception("Please implement shutdown method in worker");
     }
@@ -158,18 +158,18 @@ abstract class Worker
     /**
      * Register callback. Will be executed when error occurs.
      * @param callable $callback
-     * @param Throwable $error
-     * @return self
+     * @return void
      */
     public static function error(callable $callback): void
     {
-        \array_push(self::$errorCallbacks, $callback);
+        self::$errorCallbacks[] = $callback;
     }
 
     /**
      * Get internal project database
      * @param Document $project
      * @return Database
+     * @throws Exception
      */
     protected static $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
     protected function getProjectDB(Document $project): Database
@@ -208,6 +208,7 @@ abstract class Worker
     /**
      * Get console database
      * @return Database
+     * @throws Exception
      */
     protected function getConsoleDB(): Database
     {
@@ -258,7 +259,7 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getFunctionsDevice($projectId): Device
+    protected function getFunctionsDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     }
@@ -268,7 +269,7 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getFilesDevice($projectId): Device
+    protected function getFilesDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
@@ -278,9 +279,14 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getBuildsDevice($projectId): Device
+    protected function getBuildsDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+    }
+
+    protected function getCacheDevice(string $projectId): Device
+    {
+        return $this->getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
     }
 
     /**
@@ -288,7 +294,7 @@ abstract class Worker
      * @param string $root path of the device
      * @return Device
      */
-    public function getDevice($root): Device
+    public function getDevice(string $root): Device
     {
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 

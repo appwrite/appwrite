@@ -28,8 +28,7 @@ use Appwrite\Event\Phone;
 use Appwrite\Event\Delete;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
-use Appwrite\Network\Validator\URL;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
@@ -78,6 +77,8 @@ use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Range;
+use Utopia\Validator\IP;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 const APP_NAME = 'Appwrite';
@@ -747,7 +748,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
 $register->set('promiseAdapter', function () {
     return new Swoole();
@@ -874,7 +875,7 @@ App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => 'web',
+        'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -886,7 +887,7 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
         )
     );
 
@@ -897,7 +898,7 @@ App::setResource('clients', function ($request, $console, $project) {
                 fn ($node) => $node['hostname'],
                 \array_filter(
                     $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
                 )
             )
         )
@@ -1030,7 +1031,7 @@ App::setResource('console', function () {
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'localhost',
             ], // Current host is added on app init
         ],
