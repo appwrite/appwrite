@@ -74,7 +74,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
-        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
+        $reqHeaders = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -92,7 +92,7 @@ class Executor
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, $reqHeaders, $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -120,22 +120,28 @@ class Executor
     public function createExecution(
         string $projectId,
         string $deploymentId,
-        string $payload,
+        string $body,
         array $variables,
         int $timeout,
         string $image,
         string $source,
         string $entrypoint,
-        string $version
+        string $version,
+        string $path,
+        string $method,
+        array $headers,
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
-        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
+        $reqHeaders = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
-            'payload' => $payload,
+            'body' => $body,
             'timeout' => $timeout,
+            'path' => $path,
+            'method' => $method,
+            'headers' => $headers,
 
             'image' => $image,
             'source' => $source,
@@ -147,7 +153,7 @@ class Executor
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, $reqHeaders, $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {

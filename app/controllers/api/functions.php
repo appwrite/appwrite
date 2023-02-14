@@ -13,6 +13,7 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
+use Utopia\Validator\Assoc;
 use Appwrite\Usage\Stats;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
@@ -1057,8 +1058,11 @@ App::post('/v1/functions/:functionId/executions')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('data', '', new Text(8192), 'String of custom data to send to function.', true)
+    ->param('body', '', new Text(8192), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
+    ->param('path', '/', new Text(2048), 'HTTP path of execution. Default value is /', true)
+    ->param('method', 'GET', new Whitelist([ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS' ], true), 'HTTP method of execution. Default value is GET.', true)
+    ->param('headers', [], new Assoc(), 'HTP headers of execution. Defaults to empty.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1067,7 +1071,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('usage')
     ->inject('mode')
     ->inject('queueForFunctions')
-    ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1122,8 +1126,10 @@ App::post('/v1/functions/:functionId/executions')
             'trigger' => 'http', // http / schedule / event
             'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
-            'response' => '',
-            'stderr' => '',
+            'body' => '',
+            'headers' => [],
+            'errors' => '',
+            'logs' => '',
             'duration' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
         ])));
@@ -1159,7 +1165,10 @@ App::post('/v1/functions/:functionId/executions')
                 ->setType('http')
                 ->setExecution($execution)
                 ->setFunction($function)
-                ->setData($data)
+                ->setBody($body)
+                ->setHeaders($headers)
+                ->setPath($path)
+                ->setMethod($method)
                 ->setJWT($jwt)
                 ->setProject($project)
                 ->setUser($user)
@@ -1195,22 +1204,25 @@ App::post('/v1/functions/:functionId/executions')
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
                 version: $function->getAttribute('version'),
-                payload: $data,
+                body: $body,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
+                path: $path,
+                method: $method,
+                headers: $headers,
             );
-
 
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('response', $executionResponse['body']);
-            $execution->setAttribute('stdout', $executionResponse['logs']);
-            $execution->setAttribute('stderr', $executionResponse['errors']);
+            $execution->setAttribute('headers', $executionResponse['headers']);
+            $execution->setAttribute('body', $executionResponse['body']);
+            $execution->setAttribute('logs', $executionResponse['logs']);
+            $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
@@ -1218,7 +1230,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
-                ->setAttribute('stderr', $th->getMessage());
+                ->setAttribute('errors', $th->getMessage());
             Console::error($th->getMessage());
         }
 
@@ -1236,8 +1248,8 @@ App::post('/v1/functions/:functionId/executions')
         $isAppUser = Auth::isAppUser($roles);
 
         if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('stdout', '');
-            $execution->setAttribute('stderr', '');
+            $execution->setAttribute('logs', '');
+            $execution->setAttribute('errors', '');
         }
 
         $response
@@ -1306,8 +1318,8 @@ App::get('/v1/functions/:functionId/executions')
         $isAppUser = Auth::isAppUser($roles);
         if (!$isPrivilegedUser && !$isAppUser) {
             $results = array_map(function ($execution) {
-                $execution->setAttribute('stdout', '');
-                $execution->setAttribute('stderr', '');
+                $execution->setAttribute('logs', '');
+                $execution->setAttribute('errors', '');
                 return $execution;
             }, $results);
         }
@@ -1358,8 +1370,8 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         if (!$isPrivilegedUser && !$isAppUser) {
-            $execution->setAttribute('stdout', '');
-            $execution->setAttribute('stderr', '');
+            $execution->setAttribute('logs', '');
+            $execution->setAttribute('errors', '');
         }
 
         $response->dynamic($execution, Response::MODEL_EXECUTION);

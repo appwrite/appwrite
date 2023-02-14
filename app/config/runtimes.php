@@ -13,6 +13,4 @@ $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', 
 
 $runtimes = $runtimes->getAll(true, $allowList);
 
-$runtimes['php-8.1']['image'] = 'meldiron/php:v3-8.1';
-
 return $runtimes;

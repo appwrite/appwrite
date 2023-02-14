@@ -10,7 +10,10 @@ class Func extends Event
 {
     protected string $jwt = '';
     protected string $type = '';
-    protected string $data = '';
+    protected string $body = '';
+    protected string $path = '';
+    protected string $method = '';
+    protected array $headers = [];
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
@@ -89,14 +92,53 @@ class Func extends Event
     }
 
     /**
-     * Sets custom data for the function event.
+     * Sets custom body for the function event.
      *
-     * @param string $data
+     * @param string $body
      * @return self
      */
-    public function setData(string $data): self
+    public function setBody(string $body): self
     {
-        $this->data = $data;
+        $this->body = $body;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom method for the function event.
+     *
+     * @param string $method
+     * @return self
+     */
+    public function setMethod(string $method): self
+    {
+        $this->method = $method;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom path for the function event.
+     *
+     * @param string $path
+     * @return self
+     */
+    public function setPath(string $path): self
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom headers for the function event.
+     *
+     * @param string $headers
+     * @return self
+     */
+    public function setHeaders(array $headers): self
+    {
+        $this->headers = $headers;
 
         return $this;
     }
@@ -155,7 +197,10 @@ class Func extends Event
             'jwt' => $this->jwt,
             'payload' => $this->payload,
             'events' => $events,
-            'data' => $this->data,
+            'body' => $this->body,
+            'path' => $this->path,
+            'headers' => $this->headers,
+            'method' => $this->method,
         ]);
     }
 

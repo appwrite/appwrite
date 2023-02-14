@@ -2744,7 +2744,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('response'),
+                '$id' => ID::custom('body'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2755,7 +2755,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('stderr'),
+                '$id' => ID::custom('errors'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2766,7 +2766,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('stdout'),
+                '$id' => ID::custom('logs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 1000000,
@@ -2786,6 +2786,17 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('headers'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('duration'),
