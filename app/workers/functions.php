@@ -130,7 +130,6 @@ Server::setResource('execute', function () {
 
         /** Execute function */
         try {
-            \var_dump($build->getAttribute('path', ''));
             $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executionResponse = $client->createExecution(
                 projectId: $project->getId(),
@@ -140,7 +139,7 @@ Server::setResource('execute', function () {
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $deployment->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 path: $path,
                 method: $method,
