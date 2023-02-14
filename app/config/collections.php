@@ -3548,10 +3548,10 @@ $collections = [
             ],
         ],
     ],
-    'slow_queries' => [
+    'slowQueries' => [
         '$collection' => Database::METADATA,
-        '$id' => 'slow_queries',
-        'name' => 'slow_queries',
+        '$id' => 'slowQueries',
+        'name' => 'slowQueries',
         'attributes' => [
             [
                 '$id' => 'blocked',

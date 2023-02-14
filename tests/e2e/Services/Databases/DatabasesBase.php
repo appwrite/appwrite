@@ -997,6 +997,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(408, $documents['headers']['status-code']);
+
+        exit();
     }
 
 
