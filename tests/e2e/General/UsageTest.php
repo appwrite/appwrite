@@ -297,7 +297,7 @@ class UsageTest extends Scope
         );
 
         $res = $res['body'];
-        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesTotal'])]['value']);
+        $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
         $this->validateDates($res['filesStorage']);
         $this->assertEquals($bucketsTotal, $res['bucketsTotal'][array_key_last($res['bucketsTotal'])]['value']);
         $this->validateDates($res['bucketsTotal']);
