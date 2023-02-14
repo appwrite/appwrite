@@ -61,6 +61,7 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
@@ -187,6 +188,7 @@ class Response extends SwooleResponse
     public const MODEL_BUILD = 'build';
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
+    public const MODEL_HEADERS = 'headers';
 
     // Project
     public const MODEL_PROJECT = 'project';
@@ -341,6 +343,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new Headers())
             // Verification
             // Recovery
             // Tests (keep last)

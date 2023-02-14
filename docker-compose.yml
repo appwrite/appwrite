@@ -662,7 +662,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.2.0
+    image: meldiron/executor:0.3.0
     networks:
       - appwrite
       - runtimes

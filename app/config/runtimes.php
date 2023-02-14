@@ -7,7 +7,7 @@
 use Utopia\App;
 use Appwrite\Runtimes\Runtimes;
 
-$runtimes = new Runtimes('v2');
+$runtimes = new Runtimes('v3');
 
 $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
 

@@ -97,6 +97,7 @@ class BuildsV1 extends Worker
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
                 'path' => '',
@@ -108,7 +109,8 @@ class BuildsV1 extends Worker
                 'stderr' => '',
                 'duration' => 0
             ]));
-            $deployment->setAttribute('buildId', $buildId);
+            $deployment->setAttribute('buildId', $build->getId());
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
@@ -173,6 +175,7 @@ class BuildsV1 extends Worker
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
                 source: $source,
+                version: $function->getAttribute('version'),
                 image: $runtime['image'],
                 remove: true,
                 entrypoint: $deployment->getAttribute('entrypoint'),
@@ -189,7 +192,7 @@ class BuildsV1 extends Worker
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
             $build->setAttribute('duration', \intval($response['duration']));
-            $build->setAttribute('status', $response['status']);
+            $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('stderr', $response['stderr']);
@@ -204,6 +207,7 @@ class BuildsV1 extends Worker
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
+                $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $function->setAttribute('deployment', $deployment->getId());
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }

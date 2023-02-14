@@ -590,8 +590,8 @@ class FunctionsCustomClientTest extends Scope
         $this->assertNotEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($projectId, $output['APPWRITE_FUNCTION_PROJECT_ID']);
         // Client should never see logs and errors
-        $this->assertEmpty($execution['body']['stdout']);
-        $this->assertEmpty($execution['body']['stderr']);
+        $this->assertEmpty($execution['body']['logs']);
+        $this->assertEmpty($execution['body']['errors']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [

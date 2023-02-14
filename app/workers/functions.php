@@ -34,6 +34,9 @@ Server::setResource('execute', function () {
         Document $function,
         string $trigger,
         string $data = null,
+        string $path,
+        string $method,
+        array $headers,
         ?Document $user = null,
         string $jwt = null,
         string $event = null,
@@ -86,8 +89,10 @@ Server::setResource('execute', function () {
                 'trigger' => $trigger,
                 'status' => 'waiting',
                 'statusCode' => 0,
-                'response' => '',
-                'stderr' => '',
+                'body' => '',
+                'headers' => [],
+                'errors' => '',
+                'logs' => '',
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
             ]));
@@ -129,21 +134,28 @@ Server::setResource('execute', function () {
             $executionResponse = $client->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
-                payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
+                version: $function->getAttribute('version'),
+                body: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $deployment->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
+                path: $path,
+                method: $method,
+                headers: $headers,
             );
+
+            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
 
             /** Update execution status */
             $execution
-                ->setAttribute('status', $executionResponse['status'])
+                ->setAttribute('status', $status)
                 ->setAttribute('statusCode', $executionResponse['statusCode'])
-                ->setAttribute('response', $executionResponse['response'])
-                ->setAttribute('stdout', $executionResponse['stdout'])
-                ->setAttribute('stderr', $executionResponse['stderr'])
+                ->setAttribute('headers', $executionResponse['headers'])
+                ->setAttribute('body', $executionResponse['body'])
+                ->setAttribute('logs', $executionResponse['logs'])
+                ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
@@ -151,7 +163,7 @@ Server::setResource('execute', function () {
                 ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
-                ->setAttribute('stderr', $th->getMessage());
+                ->setAttribute('errors', $th->getMessage());
 
             Console::error($th->getTraceAsString());
             Console::error($th->getFile());
@@ -209,7 +221,8 @@ Server::setResource('execute', function () {
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
+                ->setParam('functionId', $function->getId())
+                ->setParam('functionInternalId', $function->getInternalId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))
                 ->setParam('executionTime', $execution->getAttribute('duration'))
@@ -280,7 +293,10 @@ $server->job()
                         user: $user,
                         data: null,
                         executionId: null,
-                        jwt: null
+                        jwt: null,
+                        path: $payload['path'],
+                        method: $payload['method'],
+                        headers: $payload['headers'],
                     );
                     Console::success('Triggered function: ' . $events[0]);
                 }
@@ -309,6 +325,9 @@ $server->job()
                     user: $user,
                     jwt: $jwt,
                     statsd: $statsd,
+                    path: $payload['path'],
+                    method: $payload['method'],
+                    headers: $payload['headers'],
                 );
                 break;
             case 'schedule':
@@ -325,6 +344,9 @@ $server->job()
                     user: null,
                     jwt: null,
                     statsd: $statsd,
+                    path: $payload['path'],
+                    method: $payload['method'],
+                    headers: $payload['headers'],
                 );
                 break;
         }
