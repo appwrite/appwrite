@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "290f8f03716871b264f9dd88b0ef60a9",
+    "content-hash": "3f126c671dad4d5dca48b41a8171ac92",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1139,25 +1139,27 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.16.0",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "6370d9150425460416583feba0990504ac789e98"
+                "reference": "8496401234f73a49f8c4259d3e89ab4a7c1f9ecf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/6370d9150425460416583feba0990504ac789e98",
-                "reference": "6370d9150425460416583feba0990504ac789e98",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8496401234f73a49f8c4259d3e89ab4a7c1f9ecf",
+                "reference": "8496401234f73a49f8c4259d3e89ab4a7c1f9ecf",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.28.*"
+                "utopia-php/database": "0.30.*"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.4",
                 "vimeo/psalm": "4.0.1"
             },
@@ -1171,12 +1173,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple abuse library to manage application usage limits",
             "keywords": [
                 "Abuse",
@@ -1187,9 +1183,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.16.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.18.0"
             },
-            "time": "2022-10-31T14:46:41+00:00"
+            "time": "2023-02-14T09:56:04+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1248,24 +1244,26 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.17.0",
+            "version": "0.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "455471bd4de8d74026809e843f8c9740eb32922c"
+                "reference": "3fce3f4ad3ea9dfcb39b79668abd76331412a5ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/455471bd4de8d74026809e843f8c9740eb32922c",
-                "reference": "455471bd4de8d74026809e843f8c9740eb32922c",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/3fce3f4ad3ea9dfcb39b79668abd76331412a5ed",
+                "reference": "3fce3f4ad3ea9dfcb39b79668abd76331412a5ed",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.28.*"
+                "utopia-php/database": "0.30.*"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^1.8",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -1289,9 +1287,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.17.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.20.0"
             },
-            "time": "2022-10-31T14:44:52+00:00"
+            "time": "2023-02-14T09:46:54+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1448,20 +1446,19 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-increment",
+            "version": "0.30.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e548c4b5c6f1d7cfc9ba0113fbeb8c4684eddcd2"
+                "reference": "1cea72c1217357bf0747ae4f28ebef57e9dc0e65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e548c4b5c6f1d7cfc9ba0113fbeb8c4684eddcd2",
-                "reference": "e548c4b5c6f1d7cfc9ba0113fbeb8c4684eddcd2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/1cea72c1217357bf0747ae4f28ebef57e9dc0e65",
+                "reference": "1cea72c1217357bf0747ae4f28ebef57e9dc0e65",
                 "shasum": ""
             },
             "require": {
-                "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
                 "utopia-php/framework": "0.*.*",
@@ -1497,9 +1494,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/increment"
+                "source": "https://github.com/utopia-php/database/tree/0.30.1"
             },
-            "time": "2023-02-05T10:33:42+00:00"
+            "time": "2023-02-14T06:25:03+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1751,22 +1748,23 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "079656cb5169ca9600861eda0b6819199e3d4a57"
+                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/079656cb5169ca9600861eda0b6819199e3d4a57",
-                "reference": "079656cb5169ca9600861eda0b6819199e3d4a57",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
+                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -1779,20 +1777,6 @@
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Matej Bačo",
-                    "email": "matej@appwrite.io"
-                },
-                {
-                    "name": "Christy Jacob",
-                    "email": "christy@appwrite.io"
-                }
             ],
             "description": "Utopia Logger library is simple and lite library for logging information, such as errors or warnings. This library is aiming to be as simple and easy to learn and use.",
             "keywords": [
@@ -1811,22 +1795,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.3.0"
+                "source": "https://github.com/utopia-php/logger/tree/0.3.1"
             },
-            "time": "2022-03-18T10:56:57+00:00"
+            "time": "2023-02-10T15:52:50+00:00"
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "501272fad666f06bec8f130076862e7981a73f8c"
+                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/501272fad666f06bec8f130076862e7981a73f8c",
-                "reference": "501272fad666f06bec8f130076862e7981a73f8c",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/a75d66ddd59b834ab500a4878a2c084e6572604a",
+                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a",
                 "shasum": ""
             },
             "require": {
@@ -1834,9 +1818,9 @@
                 "php": ">=8.0.0"
             },
             "require-dev": {
+                "laravel/pint": "^1.2",
                 "phpmailer/phpmailer": "6.6.*",
-                "phpunit/phpunit": "9.5.*",
-                "squizlabs/php_codesniffer": "^3.6"
+                "phpunit/phpunit": "9.5.*"
             },
             "type": "library",
             "autoload": {
@@ -1847,12 +1831,6 @@
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jake Barnby",
-                    "email": "jake@appwrite.io"
-                }
             ],
             "description": "A simple, light and advanced PHP messaging library",
             "keywords": [
@@ -1865,9 +1843,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.1.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.1.1"
             },
-            "time": "2022-09-29T11:22:48+00:00"
+            "time": "2023-02-07T05:42:46+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4977,16 +4955,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.5.0",
+            "version": "v3.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "3ffcf4b7d890770466da3b2666f82ac054e7ec72"
+                "reference": "a6e0510cc793912b451fd40ab983a1d28f611c15"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/3ffcf4b7d890770466da3b2666f82ac054e7ec72",
-                "reference": "3ffcf4b7d890770466da3b2666f82ac054e7ec72",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/a6e0510cc793912b451fd40ab983a1d28f611c15",
+                "reference": "a6e0510cc793912b451fd40ab983a1d28f611c15",
                 "shasum": ""
             },
             "require": {
@@ -5037,7 +5015,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.5.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.5.1"
             },
             "funding": [
                 {
@@ -5049,21 +5027,12 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-12-27T12:28:18+00:00"
+            "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-increment",
-            "alias": "0.28.0",
-            "alias_normalized": "0.28.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
