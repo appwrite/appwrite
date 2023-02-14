@@ -82,6 +82,7 @@ App::post('/v1/functions')
             'enabled' => $enabled,
             'name' => $name,
             'runtime' => $runtime,
+            'deploymentInternalId' => '',
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
@@ -104,6 +105,7 @@ App::post('/v1/functions')
         );
 
         $function->setAttribute('scheduleId', $schedule->getId());
+        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
         $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -536,6 +538,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
+            'deploymentInternalId' => $deployment->getInternalId(),
             'deployment' => $deployment->getId()
         ])));
 
@@ -742,6 +745,7 @@ App::post('/v1/functions/:functionId/deployments')
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
+                    'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -772,6 +776,7 @@ App::post('/v1/functions/:functionId/deployments')
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
+                    'resourceInternalId' => $function->getInternalId(),
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
@@ -969,6 +974,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         if ($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'deployment' => '',
+                'deploymentInternalId' => '',
             ])));
         }
 
@@ -1121,7 +1127,9 @@ App::post('/v1/functions/:functionId/executions')
         $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            'functionInternalId' => $function->getInternalId(),
             'functionId' => $function->getId(),
+            'deploymentInternalId' => $deployment->getInternalId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
             'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
