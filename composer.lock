@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "10f6cfc7ce51760284e4eb09f7c08f69",
+    "content-hash": "c8549a16dab956d72520257c8dc71157",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2290,16 +2290,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "dev-feat-upgrade-framework",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "9e2234d81fc5ec19ea01992bfc36e0c33f9e0555"
+                "reference": "a53997f1882dc16ff67968aa5f436364c8c8043e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/9e2234d81fc5ec19ea01992bfc36e0c33f9e0555",
-                "reference": "9e2234d81fc5ec19ea01992bfc36e0c33f9e0555",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a53997f1882dc16ff67968aa5f436364c8c8043e",
+                "reference": "a53997f1882dc16ff67968aa5f436364c8c8043e",
                 "shasum": ""
             },
             "require": {
@@ -2333,9 +2333,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/feat-upgrade-framework"
+                "source": "https://github.com/utopia-php/platform/tree/0.3.2"
             },
-            "time": "2023-02-14T04:40:38+00:00"
+            "time": "2023-02-14T04:51:46+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -5431,9 +5431,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/platform": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5457,5 +5455,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }

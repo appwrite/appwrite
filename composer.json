@@ -52,7 +52,7 @@
         "utopia-php/database": "0.28.*",
         "utopia-php/queue": "0.5.*",
         "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "dev-feat-upgrade-framework",
+        "utopia-php/platform": "0.3.*",
         "utopia-php/pools": "0.4.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
