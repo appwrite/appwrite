@@ -171,6 +171,11 @@ Please mention in your documentation what resources or API docs you used to impl
 
 ## 3. Add provider to console
 
+Start by creating a new branch from `appwrite/console:master`and commit your changes there. 
+
+```
+git checkout -b [name_of_your_new_branch]
+```
 ### 3.1 Add provider logo
 
 To add the logo for the provider you are implementing, you will need to create a separate pull request in [`appwrite/console`](https://github.com/appwrite/console) repository.
@@ -196,7 +201,16 @@ Make sure you update the documentation url for the implemented provider in `oaut
 
 ## 4. Test your provider
 
-To test your provider within appwrite make sure you make the changes required for the console in the `console` git submodule present at [`/app/console`](https://github.com/appwrite/appwrite/tree/master/app) for testing purposes. Navigate to **Auth > Setting > OAuth2 Providers** in your appwrite instance to find the newly added provider and test it out.
+To test your provider within appwrite make sure you make the changes required for the console in the `console` git submodule present at [`/app/console`](https://github.com/appwrite/appwrite/tree/master/app) for testing purposes. 
+
+Update the branch for the console in the [.gitmodules]( https://github.com/appwrite/appwrite/blob/master/.gitmodules#L4) folder
+and then run ```git submodule update --init``` from the root of the project.
+
+Following which you will need to `cd` into `app/console` and run `git pull origin <branch-name>`.
+
+Now we are ready to test our provider. To start your appwrite instance run `docker-compose up -d`.
+
+Navigate to **Auth > Setting > OAuth2 Providers** in your appwrite instance to find the newly added provider and test it out.
 
 > To start Appwrite console from the source code, you can simply run `docker compose up -d'.
 
@@ -205,8 +219,6 @@ Add credentials and check both a successful and a failed login (where the user d
 You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/client/account#accountCreateOAuth2Session) when integrating the Appwrite Web SDK in a demo app.
 
 Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
-
-> Please note that you do not need to try to commit the changes you made in the `console` git submodule within appwrite, it was done only for testing purposes. Make a separate pull request in [`appwrite/console`](https://github.com/appwrite/console) repository with the required console changes as mentioned earlier.
 
 If everything goes well, raise both the pull requests and be ready to respond to any feedback which can arise during our code review.
 
@@ -220,4 +232,15 @@ If you need any help with the contribution, feel free to head over to [our Disco
 
 ## 😉 Need more freedom
 
-If your OAuth provider requires special configuration apart from `AppId` and `AppSecret` you can create a custom form. You can implement your custom form by adding a custom modal at [src/routes/console/project-%5Bproject%5D/auth](https://github.com/appwrite/console/tree/main/src/routes/console/project-%5Bproject%5D/auth) for your provider.
+If your OAuth provider requires special configuration apart from `AppId` and `AppSecret` you can create a custom form. You can implement your custom form by adding a custom modal at [src/routes/console/project-%5Bproject%5D/auth](https://github.com/appwrite/console/tree/main/src/routes/console/project-%5Bproject%5D/auth) for your provider and by updating the `oauth-providers.ts` as below.
+
+```js
+import Microsoft from '../../routes/console/project-[project]/auth/microsoftOAuth.svelte';
+
+...
+
+  case 'microsoft':
+      docs = 'https://developer.microsoft.com/en-us/';
+      component = Microsoft;
+      break;
+```
