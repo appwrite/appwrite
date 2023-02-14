@@ -987,47 +987,22 @@ trait DatabasesBase
     /**
      * @depends testCreateDocument
      */
-    public function testCreateTimeout(array $data): void
+    public function testTimeouts(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['sleep("$id", 1)'],
-        ]);
+        $documents = [];
+        for ($i = 0; $i <= 3; $i++) {
+            $documents[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['sleep("$id", 2)'],
+            ]);
+        }
 
-        $this->assertEquals(408, $documents['headers']['status-code']);
-    }
-
-
-    /**
-     * @depends testCreateDocument
-     */
-    public function testUpdateAndBlockTimeout(array $data): void
-    {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['sleep("$id", 1)'],
-        ]);
-        $this->assertEquals(403, $documents['headers']['status-code']);
-    }
-
-
-    /**
-     * @depends testCreateDocument
-     */
-    public function testBlockedAtInitTimeout(array $data): void
-    {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['sleep("$id", 1)'],
-        ]);
-
-        $this->assertEquals(403, $documents['headers']['status-code']);
+        $this->assertEquals(408, $documents[0]['headers']['status-code']);
+        $this->assertEquals(408, $documents[1]['headers']['status-code']);
+        $this->assertEquals(403, $documents[2]['headers']['status-code']);
+        $this->assertEquals(403, $documents[3]['headers']['status-code']);
     }
 
     /**
