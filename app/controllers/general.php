@@ -44,14 +44,6 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::wildcard()
-    ->inject('swooleResponse')
-    ->action(function(SwooleResponse $swooleResponse) {
-        $swooleResponse->setStatusCode(404);
-        $swooleResponse->end('Not Found');
-        return;
-    });
-
 App::init()
     ->inject('utopia')
     ->inject('swooleRequest')
@@ -573,6 +565,8 @@ App::error()
         $line = $error->getLine();
         $trace = $error->getTrace();
 
+        \var_dump("Here?");
+
         if (php_sapi_name() === 'cli') {
             Console::error('[Error] Timestamp: ' . date('c', time()));
 
@@ -744,6 +738,12 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
+
+App::wildcard()
+    ->action(function() {
+        \var_dump("q");
+        throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
+    });
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];
