@@ -3,11 +3,11 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
-use Utopia\Database\Database;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\DatetimeValidator;
 
 trait DatabasesBase
 {
@@ -1532,8 +1532,8 @@ trait DatabasesBase
         $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals(true, DateTime::isValid($document['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($document['body']['birthDay']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($document['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($document['body']['birthDay']));
         $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);

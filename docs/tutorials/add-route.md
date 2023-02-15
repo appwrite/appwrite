@@ -127,11 +127,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
 ```
 
-#### Usage
-
-- usage.metric - The metric the route generates.
-- usage.params - Additional parameters the metrics can have.
-
 ```php
 App::post('/v1/storage/buckets/:bucketId/files')
     ->label('usage.metric', 'files.{scope}.requests.create')

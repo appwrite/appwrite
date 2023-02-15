@@ -65,19 +65,19 @@ class SDKs extends Action
 
                 Console::info('Fetching API Spec for ' . $language['name'] . ' for ' . $platform['name'] . ' (version: ' . $version . ')');
 
-                $spec = file_get_contents(__DIR__ . '/../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
+                $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
                 $cover = 'https://appwrite.io/images/github.png';
-                $result = \realpath(__DIR__ . '/../../../app') . '/sdks/' . $key . '-' . $language['key'];
-                $resultExamples = \realpath(__DIR__ . '/../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
-                $target = \realpath(__DIR__ . '/../../../app') . '/sdks/git/' . $language['key'] . '/';
-                $readme = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/README.md');
+                $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
+                $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
+                $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
+                $readme = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
+                $gettingStarted = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
-                $examples = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
+                $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
-                $changelog = \realpath(__DIR__ . '/../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
+                $changelog = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/CHANGELOG.md');
                 $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](' . $language['url'] . '/releases).**';
                 $license = 'BSD-3-Clause';

@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -631,6 +631,7 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
+include_once __DIR__ . '/shared/api/auth.php';
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];

@@ -6,6 +6,40 @@
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
+- New usage metrics collection flow [#4770](https://github.com/appwrite/appwrite/pull/4770)
+  - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
+  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
+  - Removed usage labels dependency.
+  - Dropped type attribute from stats collection.
+  - Usage metrics are processed via new usage worker.
+  - Metrics changes: 
+    - Storage
+      - deprecated
+        - filesCreate, filesRead, filesUpdate, filesDelete, bucketsCreate, bucketsRead, bucketsUpdate, bucketsDelete.
+      - renamed
+        - filesCount to filesTotal, storage to filesStorage, bucketsCount to bucketsTotal.
+    - Auth 
+        - deprecated
+          - usersCreate, usersRead, usersUpdate, usersDelete, sessionsCreate sessionsProviderCreate, sessionsDelete.
+        - renamed
+          - usersCount to usersTotal.
+        - added
+          - sessionsTotal.
+    - Databases
+      - deprecated
+        - databasesCreate, databasesRead, databasesDelete, documentsCreate, documentsRead, documentsUpdate, documentsDelete, collectionsCreate, collectionsRead, collectionsUpdate, collectionsDelete.
+      - renamed
+        - databasesCount to databasesTotal, collectionsCount to collectionsTotal, documentsCount to documentsTotal.
+    - Functions
+      - deprecated 
+        - executionsFailure, executionsSuccess, buildsFailure, buildsSuccess, executionsFailure, executionsSuccess.
+      - renamed
+        - executionsTime to executionsCompute, buildsTime to buildsCompute, documentsCount to documentsTotal.
+      - added
+        - functionsTotal, buildsStorage, deploymentsTotal, deploymentsStorage.
+    - Project
+      - renamed
+        - executions to executionsTotal, builds to buildsTotal, requests to requestsTotal, storage to filesStorage, buckets to bucketsTotal, users to usersTotal, documents to documentsTotal, collections to collectionsTotal, databases to databasesTotal.
 
 # Version 1.1.2
 ## Changes

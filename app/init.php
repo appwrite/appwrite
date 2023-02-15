@@ -18,6 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\SMS\Adapter\Mock;
@@ -37,11 +38,10 @@ use Appwrite\Network\Validator\IP;
 use Appwrite\Network\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
@@ -174,6 +174,39 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Usage metrics
+const METRIC_TEAMS = 'teams';
+const METRIC_USERS = 'users';
+const METRIC_SESSIONS  = 'sessions';
+const METRIC_DATABASES = 'databases';
+const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DOCUMENTS = 'documents';
+const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_BUCKETS = 'buckets';
+const METRIC_FILES  = 'files';
+const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
+const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_STORAGE  = 'builds.storage';
+const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_EXECUTIONS  = 'executions';
+const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
+const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_NETWORK_REQUESTS  = 'network.requests';
+const METRIC_NETWORK_INBOUND  = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 
@@ -189,6 +222,7 @@ Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -576,13 +610,11 @@ $register->set('pools', function () {
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
-
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
-
             if (empty($dsn)) {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
@@ -607,7 +639,6 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
@@ -645,7 +676,6 @@ $register->set('pools', function () {
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
-
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -689,30 +719,6 @@ $register->set('pools', function () {
     return $group;
 });
 
-$register->set('influxdb', function () {
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
-});
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -844,7 +850,6 @@ App::setResource('loggerBreadcrumbs', function () {
 });
 
 App::setResource('register', fn() => $register);
-
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
@@ -860,9 +865,9 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),

@@ -8,9 +8,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use WebSocket\ConnectionException;
 
 class RealtimeCustomClientTest extends Scope
@@ -1248,7 +1248,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
