@@ -52,7 +52,7 @@
         "utopia-php/database": "dev-timeout as 0.30.0",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/framework": "0.26.*",
+        "utopia-php/framework": "0.27.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",

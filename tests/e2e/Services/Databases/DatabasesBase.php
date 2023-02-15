@@ -1024,7 +1024,7 @@ trait DatabasesBase
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1, $documents['body']['total']);
         $this->assertEquals(true, $documents['body']['documents'][0]['blocked']);
-        $this->assertEquals(2, $documents['body']['documents'][0]['count']);
+        $this->assertEquals(3, $documents['body']['documents'][0]['count']);
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
