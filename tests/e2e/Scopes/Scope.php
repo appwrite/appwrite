@@ -11,15 +11,8 @@ abstract class Scope extends TestCase
 {
     use Retryable;
 
-    /**
-     * @var Client
-     */
-    protected $client = null;
-
-    /**
-     * @var string
-     */
-    protected $endpoint = 'http://localhost/v1';
+    protected ?Client $client = null;
+    protected string $endpoint = 'http://localhost/v1';
 
     protected function setUp(): void
     {
