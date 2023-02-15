@@ -58,7 +58,7 @@ class Execution extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The script status code.',
                 'default' => 0,
-                'example' => 0,
+                'example' => 200,
             ])
             ->addRule('body', [
                 'type' => self::TYPE_STRING,

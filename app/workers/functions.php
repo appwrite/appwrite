@@ -162,8 +162,8 @@ Server::setResource('execute', function () {
             $execution
                 ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
-                ->setAttribute('statusCode', $th->getCode())
-                ->setAttribute('errors', $th->getMessage());
+                ->setAttribute('statusCode', 500)
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
             Console::error($th->getTraceAsString());
             Console::error($th->getFile());

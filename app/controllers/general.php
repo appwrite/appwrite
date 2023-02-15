@@ -132,12 +132,16 @@ App::init()
                 $execution = \json_decode($executionResponse, true);
 
                 foreach ($execution['headers'] as $header => $value) {
-                    if($header !== "content-length") {
-                        $response->setHeader($header, $value);
-                    }
+                    $response->setHeader($header, $value);
                 }
 
-                return $response->setStatusCode($execution['statusCode'] ?? 200)->send($execution['body'] ?? '');
+                $body = $execution['body'] ?? '';
+
+                if($execution['headers']['x-open-runtimes-encoding'] === 'base64') {
+                    $body = \base64_decode($body);
+                }
+
+                return $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
             } else if(\count($subdomains) === 3) {
                 // Deployment preview
                 $deploymentId = $subdomains[0];

@@ -1237,8 +1237,8 @@ App::post('/v1/functions/:functionId/executions')
             $execution
                 ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
-                ->setAttribute('statusCode', $th->getCode())
-                ->setAttribute('errors', $th->getMessage());
+                ->setAttribute('statusCode', 500)
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
         }
 

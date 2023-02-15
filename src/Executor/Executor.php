@@ -74,7 +74,6 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
-        $reqHeaders = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -92,7 +91,7 @@ class Executor
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, $reqHeaders, $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, [], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -133,7 +132,6 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
-        $reqHeaders = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
@@ -153,7 +151,7 @@ class Executor
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, $reqHeaders, $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, [], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -237,6 +235,10 @@ class Executor
         $responseBody   = curl_exec($ch);
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        \var_dump($responseBody);
+        \var_dump($responseStatus);
+        \var_dump($responseHeaders);
 
         if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
