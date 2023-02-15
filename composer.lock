@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3f126c671dad4d5dca48b41a8171ac92",
+    "content-hash": "09028869387867b99924475970b7dd23",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -997,62 +997,6 @@
                 "source": "https://github.com/resque/php-resque/tree/v1.3.6"
             },
             "time": "2020-04-16T16:39:50+00:00"
-        },
-        {
-            "name": "slickdeals/statsd",
-            "version": "3.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Slickdeals/statsd-php.git",
-                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Slickdeals/statsd-php/zipball/225588a0a079e145359049f6e5e23eedb1b4c17f",
-                "reference": "225588a0a079e145359049f6e5e23eedb1b4c17f",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">= 7.3 || ^8"
-            },
-            "replace": {
-                "domnikl/statsd": "self.version"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "phpunit/phpunit": "^9",
-                "vimeo/psalm": "^4.6"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Domnikl\\Statsd\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Dominik Liebler",
-                    "email": "liebler.dominik@gmail.com"
-                }
-            ],
-            "description": "a PHP client for statsd",
-            "homepage": "https://github.com/Slickdeals/statsd-php",
-            "keywords": [
-                "Metrics",
-                "monitoring",
-                "statistics",
-                "statsd",
-                "udp"
-            ],
-            "support": {
-                "issues": "https://github.com/Slickdeals/statsd-php/issues",
-                "source": "https://github.com/Slickdeals/statsd-php/tree/3.1.0"
-            },
-            "time": "2021-06-04T20:33:46+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
