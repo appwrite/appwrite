@@ -93,7 +93,7 @@ class Filter extends Base
 
         switch ($method) {
             case Query::TYPE_SLEEP:
-                return true;
+                return true; // todo: check this please!
             case Query::TYPE_EQUAL:
             case Query::TYPE_NOTEQUAL:
             case Query::TYPE_LESSER:

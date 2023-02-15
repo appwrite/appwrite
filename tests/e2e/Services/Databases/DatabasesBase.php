@@ -995,14 +995,14 @@ trait DatabasesBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'queries' => ['sleep("$id", 2)'],
+                'queries' => ['sleep("$id", 1)'],
             ]);
         }
 
-        $this->assertEquals(408, $documents[0]['headers']['status-code']);
-        $this->assertEquals(408, $documents[1]['headers']['status-code']);
-        $this->assertEquals(403, $documents[2]['headers']['status-code']);
-        $this->assertEquals(403, $documents[3]['headers']['status-code']);
+        $this->assertEquals(408, $documents[0]['headers']['status-code']); // insert
+        $this->assertEquals(408, $documents[1]['headers']['status-code']); // update
+        $this->assertEquals(403, $documents[2]['headers']['status-code']); // update
+        $this->assertEquals(403, $documents[3]['headers']['status-code']); // blocked
     }
 
     /**
