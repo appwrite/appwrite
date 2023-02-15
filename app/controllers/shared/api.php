@@ -21,8 +21,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -50,7 +48,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject, Logger|null $logger) {
+$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject) {
 
     $value = 1;
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
@@ -163,9 +161,8 @@ App::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('queueForUsage')
-    ->inject('logger')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Delete $deletes, EventDatabase $database, Database $dbForProject, Usage $queueForUsage, Logger|null $logger, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Delete $deletes, EventDatabase $database, Database $dbForProject, Usage $queueForUsage, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -255,8 +252,8 @@ App::init()
         $database->setProject($project);
 
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject, $logger))
-            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject, $logger))
+            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
         ;
 
         $useCache = $route->getLabel('cache', false);
