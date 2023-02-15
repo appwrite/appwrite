@@ -10,6 +10,7 @@
   - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
   - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
   - Removed usage labels dependency.
+  - Dropped type attribute from stats collection.
   - Usage metrics are processed via new usage worker.
   - Metrics changes: 
     - Storage

@@ -99,6 +99,18 @@ class V17 extends Migration
                     }
                     break;
 
+                case 'stats':
+                    try {
+                        /**
+                         * Delete 'type' attribute
+                         */
+                        $this->projectDB->deleteAttribute($id, 'type');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
                 case 'schedules':
                     try {
                         /**
