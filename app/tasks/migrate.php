@@ -85,6 +85,7 @@ $cli
                 try {
                     $migration
                         ->setProject($project, $projectDB, $consoleDB)
+                        ->setPDO($register->get('db'))
                         ->execute();
                 } catch (\Throwable $th) {
                     throw $th;
