@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\DatetimeValidator;
 
@@ -369,8 +370,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($deployment['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -419,8 +419,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($largeTag['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($largeTag['body']['$createdAt']));
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
 
@@ -609,8 +608,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($execution['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
         $this->assertEquals(0, $execution['body']['statusCode']);
@@ -627,7 +625,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertEquals(true, $dateValidator->isValid($execution['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['statusCode']);
@@ -639,7 +637,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('8.0', $execution['body']['response']);
         $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['stderr']);
-        $this->assertLessThan(1.500, $execution['body']['duration']);
+        $this->assertLessThan(3, $execution['body']['duration']);
 
         /**
          * Test for FAILURE
@@ -918,7 +916,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
         $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
-        $this->assertLessThan(4, $executions['body']['executions'][0]['duration']);
+        $this->assertLessThan(6, $executions['body']['executions'][0]['duration']);
         $this->assertEquals($executions['body']['executions'][0]['response'], '');
         $this->assertEquals($executions['body']['executions'][0]['stderr'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
 

@@ -4,7 +4,6 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
-use Utopia\CLI\Console;
 
 class Executor
 {

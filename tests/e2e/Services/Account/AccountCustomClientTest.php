@@ -477,8 +477,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -729,8 +728,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -830,8 +828,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $number);
         $this->assertTrue($response['body']['phoneVerification']);
 
@@ -882,8 +879,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -925,8 +921,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $newPhone);
 
         /**
@@ -976,8 +971,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         \sleep(2);
 

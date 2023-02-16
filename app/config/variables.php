@@ -143,7 +143,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container for better resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -342,54 +342,6 @@ return [
 //                 'question' => '',
 //                 'filter' => ''
 //             ]
-        ],
-    ],
-    [
-        'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
-        'variables' => [
-            [
-                'name' => '_APP_INFLUXDB_HOST',
-                'description' => 'InfluxDB server host name address. Default value is: \'influxdb\'.',
-                'introduction' => '',
-                'default' => 'influxdb',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_INFLUXDB_PORT',
-                'description' => 'InfluxDB server TCP port. Default value is: \'8086\'.',
-                'introduction' => '',
-                'default' => '8086',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
-        'variables' => [
-            [
-                'name' => '_APP_STATSD_HOST',
-                'description' => 'StatsD server host name address. Default value is: \'telegraf\'.',
-                'introduction' => '',
-                'default' => 'telegraf',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_STATSD_PORT',
-                'description' => 'StatsD server TCP port. Default value is: \'8125\'.',
-                'introduction' => '',
-                'default' => '8125',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
         ],
     ],
     [

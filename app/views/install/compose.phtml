@@ -80,7 +80,6 @@ services:
       - mariadb
       - redis
 #      - clamav
-      - influxdb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -114,8 +113,6 @@ services:
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
       - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_STORAGE_ANTIVIRUS
@@ -132,8 +129,6 @@ services:
       - _APP_EXECUTOR_HOST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -469,35 +464,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
 
-  appwrite-usage:
-    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: usage
-    container_name: appwrite-usage
-    <<: *x-logging
-    restart: unless-stopped
-    networks:
-      - appwrite
-    depends_on:
-      - influxdb
-      - mariadb
-    environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-
   appwrite-schedule:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
     entrypoint: schedule
@@ -582,26 +548,41 @@ services:
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
 
-  influxdb:
-    image: appwrite/influxdb:1.5.0
-    container_name: appwrite-influxdb
+  appwrite-worker-usage:
+    image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
+    entrypoint: worker-usage
     <<: *x-logging
-    restart: unless-stopped
+    container_name: appwrite-worker-usage
     networks:
       - appwrite
     volumes:
-      - appwrite-influxdb:/var/lib/influxdb:rw
-
-  telegraf:
-    image: appwrite/telegraf:1.4.0
-    container_name: appwrite-telegraf
-    <<: *x-logging
-    restart: unless-stopped
-    networks:
-      - appwrite
-    environment: 
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+     - redis
+     - mariadb
+    environment:
+     - _APP_ENV
+     - _APP_WORKER_PER_CORE
+     - _APP_CONNECTIONS_MAX
+     - _APP_POOL_CLIENTS
+     - _APP_OPENSSL_KEY_V1
+     - _APP_DB_HOST
+     - _APP_DB_PORT
+     - _APP_DB_SCHEMA
+     - _APP_DB_USER
+     - _APP_DB_PASS
+     - _APP_REDIS_HOST
+     - _APP_REDIS_PORT
+     - _APP_REDIS_USER
+     - _APP_REDIS_PASS
+     - _APP_CONNECTIONS_DB_CONSOLE
+     - _APP_CONNECTIONS_DB_PROJECT
+     - _APP_CONNECTIONS_CACHE
+     - _APP_CONNECTIONS_QUEUE
+     - _APP_USAGE_STATS
+     - DOCKERHUB_PULL_USERNAME
+     - DOCKERHUB_PULL_PASSWORD
 
 networks:
   gateway:
@@ -617,7 +598,6 @@ volumes:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:
-  appwrite-influxdb:
   appwrite-config:
   appwrite-functions:
   appwrite-builds:

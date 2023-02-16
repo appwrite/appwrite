@@ -187,26 +187,6 @@ class Doctor extends Action
             Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
 
-        $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-        $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-        if ($fp = @\fsockopen('udp://' . $host, $port, $errCode, $errStr, 2)) {
-            Console::success('🟢 ' . str_pad("StatsD", 50, '.') . 'connected');
-            \fclose($fp);
-        } else {
-            Console::error('🔴 ' . str_pad("StatsD", 47, '.') . 'disconnected');
-        }
-
-        $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-        $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-        if ($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)) {
-            Console::success('🟢 ' . str_pad("InfluxDB", 50, '.') . 'connected');
-            \fclose($fp);
-        } else {
-            Console::error('🔴 ' . str_pad("InfluxDB", 47, '.') . 'disconnected');
-        }
-
         \sleep(0.2);
 
         Console::log('');

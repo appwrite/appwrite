@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Webhooks;
 use Appwrite\Tests\Retry;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -529,8 +530,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -588,8 +588,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -639,8 +638,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertEquals($webhook['data']['name'], 'logo.png');
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
@@ -722,8 +720,7 @@ trait WebhooksBase
         $this->assertEquals('Arsenal', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -768,8 +765,7 @@ trait WebhooksBase
         $this->assertEquals('Demo New', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -818,8 +814,7 @@ trait WebhooksBase
         $this->assertEquals('Chelsea', $webhook['data']['name']);
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
 
         /**
          * Test for FAILURE
@@ -880,8 +875,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['invited']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
 
         /**
@@ -953,8 +947,7 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['invited']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
     }
 }

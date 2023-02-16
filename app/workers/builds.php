@@ -6,12 +6,11 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
-use Appwrite\Usage\Stats;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\DSN\DSN;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
@@ -57,6 +56,11 @@ class BuildsV1 extends Worker
         }
     }
 
+    /**
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws \Utopia\Database\Exception\Structure
+     * @throws Throwable
+     */
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
         global $register;
@@ -172,8 +176,8 @@ class BuildsV1 extends Worker
 
         try {
             $response = $this->executor->createRuntime(
-                projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
+                projectId: $project->getId(),
                 source: $source,
                 image: $runtime['image'],
                 remove: true,
@@ -249,24 +253,20 @@ class BuildsV1 extends Worker
                 channels: $target['channels'],
                 roles: $target['roles']
             );
-
-            /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                $statsd = $register->get('statsd');
-                $usage = new Stats($statsd);
-                $usage
-                    ->setParam('projectInternalId', $project->getInternalId())
-                    ->setParam('projectId', $project->getId())
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('builds.{scope}.compute', 1)
-                    ->setParam('buildStatus', $build->getAttribute('status', ''))
-                    ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('buildSize', $build->getAttribute('size'))
-                    ->setParam('networkRequestSize', 0)
-                    ->setParam('networkResponseSize', 0)
-                    ->submit();
-            }
         }
+
+        /** Trigger usage queue */
+        $this
+            ->getUsageQueue()
+            ->setProject($project)
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+            ->trigger()
+        ;
     }
 
     public function shutdown(): void

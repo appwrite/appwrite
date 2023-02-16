@@ -35,8 +35,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -200,8 +199,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -346,8 +344,7 @@ trait AccountBase
         $this->assertIsNumeric($response['body']['total']);
         $this->assertContains($response['body']['logs'][1]['event'], ["session.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['logs'][1]['time']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
@@ -369,7 +366,7 @@ trait AccountBase
 
         $this->assertContains($response['body']['logs'][2]['event'], ["user.create"]);
         $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['logs'][2]['time']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
@@ -480,8 +477,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $newName);
 
@@ -548,8 +544,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -639,8 +634,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $newEmail);
 
         /**
@@ -682,7 +676,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $data['email']);
         $this->assertEquals($response['body']['name'], $data['name']);
 
@@ -824,8 +818,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
 
@@ -1127,8 +1120,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
 
@@ -1282,8 +1274,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -1389,8 +1380,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertTrue($response['body']['emailVerification']);
 
@@ -1450,8 +1440,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
