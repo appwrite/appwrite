@@ -2119,12 +2119,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c6ce079103f8e3a29485f0998fca902333e03875"
+                "reference": "f7c046412c5a7ee29ccd325e3e2107b132dca729"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c6ce079103f8e3a29485f0998fca902333e03875",
-                "reference": "c6ce079103f8e3a29485f0998fca902333e03875",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f7c046412c5a7ee29ccd325e3e2107b132dca729",
+                "reference": "f7c046412c5a7ee29ccd325e3e2107b132dca729",
                 "shasum": ""
             },
             "require": {
@@ -2165,7 +2165,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/timeout"
             },
-            "time": "2023-02-15T10:38:55+00:00"
+            "time": "2023-02-16T14:07:19+00:00"
         },
         {
             "name": "utopia-php/domains",
