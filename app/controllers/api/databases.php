@@ -2166,7 +2166,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('project')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode, Document $project) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
