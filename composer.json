@@ -80,7 +80,6 @@
     ],
     "require-dev": {
         "appwrite/sdk-generator": "0.30.*",
-        
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
