@@ -1,4 +1,0 @@
-[submodule "app/console"]
-	path = app/console
-	url = https://github.com/appwrite/console
-	branch = 2.1.1
