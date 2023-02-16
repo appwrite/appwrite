@@ -2156,6 +2156,53 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('com.example.macos', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
+        
+        public function testCreateProjectDomain($data): array 
+        { 
+         $id = $data['projectId'] ?? ''; 
+  
+         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/domains', array_merge([ 
+             'content-type' => 'application/json', 
+             'x-appwrite-project' => $this->getProject()['$id'], 
+         ], $this->getHeaders()), [ 
+             'domain' => 'sub.example.com', 
+         ]); 
+  
+         $this->assertEquals(201, $response['headers']['status-code']); 
+         $this->assertNotEmpty($response['body']['$id']); 
+         // $this->assertIsInt($response['body']['updated']); 
+         $this->assertEquals('sub.example.com', $response['body']['domain']); 
+         $this->assertEquals('com', $response['body']['tld']); 
+         $this->assertEquals('example.com', $response['body']['registerable']); 
+         $this->assertEquals(false, $response['body']['verification']); 
+  
+         $data = array_merge($data, ['domainId' => $response['body']['$id']]); 
+  
+         /** 
+          * Test for FAILURE 
+          */ 
+         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([ 
+             'content-type' => 'application/json', 
+             'x-appwrite-project' => $this->getProject()['$id'], 
+         ], $this->getHeaders()), [ 
+             'domain' => '123', 
+         ]); 
+  
+         $this->assertEquals(400, $response['headers']['status-code']); 
+  
+         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([ 
+             'content-type' => 'application/json', 
+             'x-appwrite-project' => $this->getProject()['$id'], 
+         ], $this->getHeaders()), [ 
+             'type' => 'web', 
+             'name' => 'Too Long Hostname', 
+             'key' => '', 
+             'store' => '', 
+             'hostname' => \str_repeat("bestdomain", 25) . '.com' // 250 + 4 chars total (exactly above limit) 
+         ]); 
+  
+         return $data; 
+        } 
 
         $platformAppleWatchOsId = $data['platformAppleWatchOsId'] ?? '';
 
