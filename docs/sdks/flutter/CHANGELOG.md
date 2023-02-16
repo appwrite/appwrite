@@ -1,3 +1,7 @@
+## 8.2.1
+
+* Fix: notify callback when websocket closes [#604](https://github.com/appwrite/sdk-generator/pull/604)
+
 ## 8.2.0
 
 * Support for GraphQL
