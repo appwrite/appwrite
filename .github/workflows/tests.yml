@@ -21,18 +21,29 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
+    # This is a separate action that sets up buildx runner
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
     - name: Build Appwrite
-      # Upstream bug causes buildkit pulls to fail so prefetch base images
-      # https://github.com/moby/moby/issues/41864
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        push: false
+        tags: appwrite-dev
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          DEBUG=false
+          TESTING=true
+          VERSION=dev
+
+    - name: Start Appwrite
       run:  |
-        export COMPOSE_INTERACTIVE_NO_CLI
-        export DOCKER_BUILDKIT=1
-        export COMPOSE_DOCKER_CLI_BUILD=1
-        export BUILDKIT_PROGRESS=plain
-        docker pull composer:2.0
-        docker compose build appwrite
         docker compose up -d
         sleep 30
+
     - name: Doctor
       run: docker compose exec -T appwrite doctor
 
