@@ -10,6 +10,7 @@ use Utopia\Config\Config;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
