@@ -531,7 +531,7 @@ return [
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
+        'description' => 'A Domain with same name already exists.',
         'code' => 409,
     ],
     Exception::VARIABLE_NOT_FOUND => [
