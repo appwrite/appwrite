@@ -2871,7 +2871,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
     });
 
-
 App::get('/v1/databases/:databaseId/slow-queries')
     ->desc('List Slow queries Documents')
     ->groups(['api', 'database'])
