@@ -62,19 +62,19 @@ class Execution extends Model
             ])
             ->addRule('response', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script response output string. Logs the last 4,000 characters of the execution response output.',
+                'description' => 'The script response output string. Logs the last 1MB of the execution response output.',
                 'default' => '',
                 'example' => '',
             ])
             ->addRule('stdout', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'The script stdout output string. Logs the last 1MB characters of the execution stdout output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
             ])
             ->addRule('stderr', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'The script stderr output string. Logs the last 1MB characters of the execution stderr output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
             ])
