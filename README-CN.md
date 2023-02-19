@@ -1,3 +1,6 @@
+> 准备好迎接狂风暴'云'了吗? 🌩 ☂️
+> Appwrite Cloud即将到来!你能够通过https://appwrite.io/cloud了解更多的资讯, 注册即可领取试用额度哦
+
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
@@ -23,7 +26,7 @@
 
 [**我们发布了 Appwrite Console 2.0 版本，点击这里了解更多！**](https://medium.com/appwrite-io/announcing-console-2-0-2e0e96891cb0?source=friends_link&sk=7a82b4069778e3adc165dc026e960fe1)
 
-Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面极简了从零编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
+Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
@@ -55,7 +58,7 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
 
 Appwrite 的容器化服务器只需要一行指令就可以运行。您可以使用 docker-compose 在本地主机上运行 Appwrite，也可以在任何其他容器化工具（如 Kubernetes、Docker Swarm 或 Rancher）上运行 Appwrite。
 
-开始运行 Appwrite 服务器的最简单方法是运行我们的 docker-compose 文件。在运行安装命令之前，请确保您的机器上安装了 [Docker](https://dockerdocs.cn/get-docker/index.html)：
+启动 Appwrite 服务器的最简单方法是运行我们的 docker-compose 文件。在运行安装命令之前，请确保您的机器上安装了 [Docker](https://dockerdocs.cn/get-docker/index.html)：
 
 ### Unix
 
@@ -64,7 +67,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.2.0
+    appwrite/appwrite:1.2.1
 ```
 
 ### Windows
@@ -76,7 +79,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.2.0
+    appwrite/appwrite:1.2.1
 ```
 
 #### PowerShell
@@ -86,7 +89,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.2.0
+    appwrite/appwrite:1.2.1
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -159,7 +162,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 贡献代码
 
-所有代码贡献 - 包括来自具有直接提交更改权限的贡献者 - 都必须提交PR请求并在合并分支之前得到核心开发人员的批准。这是为了确保正确审查所有代码。
+为了确保正确审查，所有代码贡献 - 包括来自具有直接提交更改权限的贡献者 - 都必须提交PR请求并在合并分支之前得到核心开发人员的批准。
 
 我们欢迎所有人提交PR！如果您愿意提供帮助，可以在 [贡献指南](CONTRIBUTING.md) 中了解有关如何为项目做出贡献的更多信息。
 

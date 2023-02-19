@@ -7,7 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class ScopeTest extends Scope
 {
