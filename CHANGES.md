@@ -1,3 +1,6 @@
+# Version TBD
+- Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
+
 # Version 1.2.1
 ## Changes
 - Upgrade Console to [2.2.0](https://github.com/appwrite/console/releases/tag/2.2.0)
