@@ -54,13 +54,13 @@ class Rendition extends Model
             ])
             ->addRule('progress', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition trascoding progress',
+                'description' => 'Rendition transcoding progress',
                 'default' => 0,
                 'example' => 88,
             ])
-            ->addRule('protocol', [
+            ->addRule('output', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Rendition trascoding  protocol type',
+                'description' => 'Rendition output type',
                 'default' => null,
                 'example' => 'hls',
             ])

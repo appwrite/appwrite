@@ -309,6 +309,12 @@ class TranscodingV1 extends Worker
                 'renditionId' => $query->getId()
             ]);
 
+            unset($query['metadata']);
+
+            $query->setAttribute('$permissions', $bucket->getAttribute('fileSecurity', false)
+                ? \array_merge($bucket->getAttribute('$permissions'), $file->getAttribute('$permissions'))
+                : $file->getAttribute('$permissions'));
+
             $target = Realtime::fromPayload(
                 event: $allEvents[0],
                 payload: $query

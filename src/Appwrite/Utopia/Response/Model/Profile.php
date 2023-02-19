@@ -47,9 +47,9 @@ class Profile extends Model
                 'example' => 400,
             ])
 
-            ->addRule('protocol', [
+            ->addRule('output', [
                 'type' => self::TYPE_STRING,
-                'description' => 'http video protocol type.',
+                'description' => 'Video out type.',
                 'default' => null,
                 'example' => 'dash',
             ])

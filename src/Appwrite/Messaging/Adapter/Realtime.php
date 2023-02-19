@@ -326,6 +326,18 @@ class Realtime extends Adapter
                 }
 
                 break;
+
+            case 'videos':
+                if ($parts[2] === 'renditions') {
+                        $projectId  = 'console';
+                        $channels[] = 'console';
+                        $channels[] = 'renditions';
+                        $channels[] = 'renditions.' . $payload->getId();
+                        $channels[] = 'videos.' . $payload->getAttribute('videoId');
+                        $roles = $payload->getRead();
+                }
+
+                break;
         }
 
         return [
