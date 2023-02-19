@@ -19,12 +19,17 @@ use Utopia\Registry\Registry;
 class Hamster extends Action
 {
     private array $columns = [
+        'Timestamp',
         'Project ID',
         'Project Name',
         'Functions',
         'Deployments',
         'Members',
         'Domains',
+        'Platforms - Web',
+        'Platforms - Android',
+        'Platforms - iOS',
+        'Platforms - Flutter',
         'Files',
         'Buckets',
         'Databases',
@@ -79,6 +84,9 @@ class Hamster extends Action
     {
         $stats = [];
 
+        /** Set the timestamp in ISO 8601 format */
+        $stats['Timestamp'] = \date('c');
+
         /** Get Project ID */
         $stats['Project ID'] = $project->getId();
 
@@ -103,6 +111,28 @@ class Hamster extends Action
 
         /** Get Domains */
         $stats['Domains'] = $dbForProject->count('domains', [], APP_LIMIT_COUNT);
+
+        /** Get Platforms */
+        $platforms = $dbForConsole->find('platforms', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(100)
+        ]);
+
+        $stats['Platforms - Web'] = array_count_values(array_filter($platforms, function ($platform) {
+            return $platform['platform'] === 'web';
+        }));
+
+        $stats['Platforms - Android'] = array_count_values(array_filter($platforms, function ($platform) {
+            return $platform['platform'] === 'android';
+        }));
+
+        $stats['Platforms - iOS'] = array_count_values(array_filter($platforms, function ($platform) {
+            return str_contains($platform['platform'], 'apple');
+        }));
+
+        $stats['Platforms - Flutter'] = array_count_values(array_filter($platforms, function ($platform) {
+            return str_contains($platform['platform'],'flutter');
+        }));
 
         /** Get Usage stats */
         $range = '90d';
@@ -223,7 +253,8 @@ class Hamster extends Action
                 Console::log('Iterated through ' . $count . '/' . $totalProjects . ' projects...');
             }
 
-            $this->sendEmail($register);
+            // var_dump($csv->toString());
+            // $this->sendEmail($register);
 
             $pools
                 ->get('console')
