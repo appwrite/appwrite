@@ -626,7 +626,7 @@ App::shutdown()
     ->action(function (App $utopia, Response $response, Request $request) {
 
         $result = [];
-        $route  = $utopia->match($request);
+        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

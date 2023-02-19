@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "caeed564a02aa3ec2ff5e94e537c1cad",
+    "content-hash": "e8e64d67c559b26264b6a89ebab1ab72",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1993,16 +1993,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.25.1",
+            "version": "dev-fix-wildcard-edge-cases",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "2391b397135586b2100d39e338827bef8d2f4ad0"
+                "reference": "bb7d020c257bd1d17daa0c61f0d5d29906c3d5ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/2391b397135586b2100d39e338827bef8d2f4ad0",
-                "reference": "2391b397135586b2100d39e338827bef8d2f4ad0",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bb7d020c257bd1d17daa0c61f0d5d29906c3d5ed",
+                "reference": "bb7d020c257bd1d17daa0c61f0d5d29906c3d5ed",
                 "shasum": ""
             },
             "require": {
@@ -2031,9 +2031,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.25.1"
+                "source": "https://github.com/utopia-php/framework/tree/fix-wildcard-edge-cases"
             },
-            "time": "2022-11-23T18:22:23+00:00"
+            "time": "2023-02-19T10:59:04+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5369,10 +5369,17 @@
             "version": "dev-feat-add-path-keyword",
             "alias": "0.28.99",
             "alias_normalized": "0.28.99.0"
+        },
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-fix-wildcard-edge-cases",
+            "alias": "0.25.99",
+            "alias_normalized": "0.25.99.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/framework": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,

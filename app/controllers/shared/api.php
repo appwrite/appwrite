@@ -107,7 +107,7 @@ App::init()
     ->inject('mode')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
             throw new Exception(Exception::PROJECT_UNKNOWN);
@@ -272,7 +272,7 @@ App::init()
     ->inject('project')
     ->action(function (App $utopia, Request $request, Document $project) {
 
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -391,7 +391,7 @@ App::shutdown()
             }
         }
 
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();
         $user = $audits->getUser();
 

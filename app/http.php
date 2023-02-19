@@ -270,7 +270,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             }
 
             $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
-            $route = $app->match($request);
+            $route = $app->getRoute();
 
             $log = new Utopia\Logger\Log();
 

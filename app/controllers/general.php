@@ -129,7 +129,7 @@ App::init()
 
                 $body = $execution['body'] ?? '';
 
-                if($execution['headers']['x-open-runtimes-encoding'] === 'base64') {
+                if(($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
                     $body = \base64_decode($body);
                 }
 
@@ -156,7 +156,7 @@ App::init()
         /*
         * Request format
         */
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
         Request::setRoute($route);
 
         if($route === null) {
@@ -507,7 +507,7 @@ App::error()
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
 
         if ($logger) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
@@ -564,8 +564,6 @@ App::error()
         $file = $error->getFile();
         $line = $error->getLine();
         $trace = $error->getTrace();
-
-        \var_dump("Here?");
 
         if (php_sapi_name() === 'cli') {
             Console::error('[Error] Timestamp: ' . date('c', time()));
@@ -741,7 +739,6 @@ include_once __DIR__ . '/shared/api.php';
 
 App::wildcard()
     ->action(function() {
-        \var_dump("q");
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
