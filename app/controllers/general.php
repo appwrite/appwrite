@@ -67,8 +67,10 @@ App::init()
 
         // Function Preview
         if(\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-            $host = rtrim($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'));
-            $host = rtrim($host, '.');
+            // Remove domain from host
+            $previewDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+            $host = \substr($host, 0, -1 * (1 + \strlen($previewDomain))); // +1 for starting dot (.)
+            
             $subdomains = explode('.', $host);
 
             if(\count($subdomains) === 2) {
