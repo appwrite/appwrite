@@ -59,6 +59,10 @@ class TranscodingV1 extends Worker
 
     private Document $project;
 
+    private Document $file;
+
+    private Document $bucket;
+
     private FFProbe $ffprobe;
 
     private FFMpeg $ffmpeg;
@@ -70,7 +74,7 @@ class TranscodingV1 extends Worker
 
     public function init(): void
     {
-        $this->video = new Document($this->args['video']);
+        $this->video   = new Document($this->args['video']);
         $this->profile = new Document($this->args['profile']);
         $this->project = new Document($this->args['project']);
 
@@ -88,11 +92,11 @@ class TranscodingV1 extends Worker
     {
         $startTime = \microtime(true);
         $this->database = $this->getProjectDB($this->project->getId());
-        $bucket = $this->database->getDocument('buckets', $this->video->getAttribute('bucketId'));
-        $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $this->video->getAttribute('fileId'));
-        $path = basename($file->getAttribute('path'));
+        $this->bucket = $this->database->getDocument('buckets', $this->video->getAttribute('bucketId'));
+        $this->file = $this->database->getDocument('bucket_' . $this->bucket->getInternalId(), $this->video->getAttribute('fileId'));
+        $path = basename($this->file->getAttribute('path'));
         $inPath = $this->inDir . $path;
-        $result = $this->writeData($this->project, $file);
+        $result = $this->writeData($this->project, $this->file);
 
         console::info('Transferring video from storage to [' . $this->inDir . ']');
 
@@ -177,7 +181,7 @@ class TranscodingV1 extends Worker
                'status'    => self::STATUS_START,
                'output'  => $this->profile->getAttribute('output'),
             ]));
-
+        $this->sendRealtimeUpdates($query);
         $renditionRootPath = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/';
         $renditionPath = $renditionRootPath . $this->getRenditionName() . '-' . $query->getId() .  '/';
 
@@ -196,6 +200,7 @@ class TranscodingV1 extends Worker
                 if ($percentage % 3 === 0) {
                     $query->setAttribute('progress', (string)$percentage);
                     $this->database->updateDocument('videos_renditions', $query->getId(), $query);
+                    $this->sendRealtimeUpdates($query, 'update');
                 }
             });
 
@@ -251,6 +256,7 @@ class TranscodingV1 extends Worker
             $query->setAttribute('status', self::STATUS_END);
             $query->setAttribute('endedAt', DateTime::now());
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
+            $this->sendRealtimeUpdates($query, 'update');
 
             foreach ($subtitles ?? [] as $subtitle) {
                 if ($this->profile->getAttribute('output') === 'hls') {
@@ -294,6 +300,7 @@ class TranscodingV1 extends Worker
                     $query->setAttribute('status', self::STATUS_UPLOADING);
                     $query->setAttribute('path', $renditionPath);
                     $this->database->updateDocument('videos_renditions', $query->getId(), $query);
+                    $this->sendRealtimeUpdates($query, 'update');
                     $start = 1;
 
                     console::info('Uploading to [' . $to . ']');
@@ -303,38 +310,7 @@ class TranscodingV1 extends Worker
 
             $query->setAttribute('status', self::STATUS_READY);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
-
-            $allEvents = Event::generateEvents('videos.[videoId].renditions.[renditionId].create', [
-                'videoId'     => $this->video->getId(),
-                'renditionId' => $query->getId()
-            ]);
-
-            unset($query['metadata']);
-
-            $query->setAttribute('$permissions', $bucket->getAttribute('fileSecurity', false)
-                ? \array_merge($bucket->getAttribute('$permissions'), $file->getAttribute('$permissions'))
-                : $file->getAttribute('$permissions'));
-
-            $target = Realtime::fromPayload(
-                event: $allEvents[0],
-                payload: $query
-            );
-
-            Realtime::send(
-                projectId: 'console',
-                payload: $query->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
-
-            Realtime::send(
-                projectId: $this->project->getId(),
-                payload: $query->getArrayCopy(),
-                events: $allEvents,
-                channels: $target['channels'],
-                roles: $target['roles']
-            );
+            $this->sendRealtimeUpdates($query, 'update');
 
             Console::info('Process lasted ' . (microtime(true) - $startTime) . ' seconds');
         } catch (\Throwable $th) {
@@ -345,6 +321,7 @@ class TranscodingV1 extends Worker
 
             $query->setAttribute('status', self::STATUS_ERROR);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
+            $this->sendRealtimeUpdates($query, 'update');
             console::error('Transcoding general error');
         }
     }
@@ -550,6 +527,38 @@ class TranscodingV1 extends Worker
             }
         }
         return $info;
+    }
+
+    /**
+     * @param string $action
+     * @param Document $payload
+     * @throws Exception
+     */
+    private function sendRealtimeUpdates(Document $payload, string $action = 'create')
+    {
+        unset($payload['metadata']);
+
+        $allEvents = Event::generateEvents('videos.[videoId].renditions.[renditionId].' . $action, [
+            'videoId'     => $payload['videoId'],
+            'renditionId' => $payload->getId()
+        ]);
+
+        $payload->setAttribute('$permissions', $this->bucket->getAttribute('fileSecurity', false)
+            ? \array_merge($this->bucket->getAttribute('$permissions'), $this->file->getAttribute('$permissions'))
+            : $this->bucket->getAttribute('$permissions'));
+
+        $target = Realtime::fromPayload(
+            event: $allEvents[0],
+            payload: $payload
+        );
+
+        Realtime::send(
+            projectId: 'console',
+            payload: $payload->getArrayCopy(),
+            events: $allEvents,
+            channels: $target['channels'],
+            roles: $target['roles']
+        );
     }
 
     /**
