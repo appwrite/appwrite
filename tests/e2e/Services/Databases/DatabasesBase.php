@@ -443,7 +443,7 @@ trait DatabasesBase
         $this->assertEquals(null, $longtext['body']['default']);
 
         // wait for database worker to create attributes
-        sleep(30);
+        sleep(33);
 
         $stringResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $string['body']['key'], array_merge([
             'content-type' => 'application/json',
