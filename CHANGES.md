@@ -1,3 +1,21 @@
+# Version TBD
+- Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
+
+# Version 1.2.1
+## Changes
+- Upgrade Console to [2.2.0](https://github.com/appwrite/console/releases/tag/2.2.0)
+- Update DBIP Database [#5049](https://github.com/appwrite/appwrite/pull/5049)
+
+## Bugs
+- Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+- Fix timestamp format in Realtime response [#4515](https://github.com/appwrite/appwrite/pull/4515)
+- Add flutter-web as a platform type [#4992](https://github.com/appwrite/appwrite/pull/4992)
+- Fix typo in Model/Locale.php [#4669](https://github.com/appwrite/appwrite/pull/4669)
+- Fix deletes worker not deleting project database tables [#4984](https://github.com/appwrite/appwrite/pull/4984)
+- Fix deletes worker not deleting database collections [#4983](https://github.com/appwrite/appwrite/pull/4983)
+- Fix restart policy for worker-messaging container [#4994](https://github.com/appwrite/appwrite/pull/4994)
+- Fix validating origin for apple platforms [#5089](https://github.com/appwrite/appwrite/pull/5089)
+
 # Version 1.2.0
 ## Features
 - Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
