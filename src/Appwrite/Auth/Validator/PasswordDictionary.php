@@ -12,12 +12,12 @@ use Utopia\Database\Document;
 class PasswordDictionary extends Password
 {
     protected array $dictionary;
-    protected Document $project;
+    protected bool $enabled;
 
-    public function __construct(array $dictionary, Document $project)
+    public function __construct(array $dictionary, bool $enabled = false)
     {
         $this->dictionary = $dictionary;
-        $this->project = $project;
+        $this->enabled = $enabled;
     }
 
     /**
@@ -45,8 +45,7 @@ class PasswordDictionary extends Password
             return false;
         }
 
-        $dictionaryEnabled = $this->project->getAttribute('auths', [])['passwordDictionary'] ?? false;
-        if ($dictionaryEnabled && array_key_exists($value, $this->dictionary)) {
+        if ($this->enabled && array_key_exists($value, $this->dictionary)) {
             return false;
         }
         return true;
