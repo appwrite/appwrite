@@ -13,7 +13,9 @@ class PasswordDictionaryTest extends TestCase
     public function setUp(): void
     {
         $this->object = new PasswordDictionary(
-            ['password' => true, '123456' => true], true);
+            ['password' => true, '123456' => true],
+            true
+        );
     }
 
     public function testValues(): void
