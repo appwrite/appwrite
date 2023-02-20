@@ -163,7 +163,7 @@ App::get('/v1/teams')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('teams', $filterQueries);
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -542,8 +542,7 @@ App::get('/v1/teams/:teamId/memberships')
 
         $total = $dbForProject->count(
             collection: 'memberships',
-            queries: $filterQueries,
-            max: APP_LIMIT_COUNT
+            queries: $filterQueries
         );
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
@@ -890,7 +889,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -905,8 +904,8 @@ App::get('/v1/teams/:teamId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped['limit'] ?? null;
+        $offset = $grouped['offset'] ?? null;
 
         $audit = new Audit($dbForProject);
         $resource = 'team/' . $team->getId();

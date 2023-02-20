@@ -390,7 +390,7 @@ App::get('/v1/users')
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('users', $filterQueries),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -543,7 +543,7 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -558,8 +558,8 @@ App::get('/v1/users/:userId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
-        $offset = $grouped['offset'] ?? 0;
+        $limit = $grouped['limit'] ?? null;
+        $offset = $grouped['offset'] ?? null;
 
         $audit = new Audit($dbForProject);
 

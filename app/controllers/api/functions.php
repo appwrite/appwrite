@@ -156,7 +156,7 @@ App::get('/v1/functions')
 
         $response->dynamic(new Document([
             'functions' => $dbForProject->find('functions', $queries),
-            'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('functions', $filterQueries),
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
@@ -831,7 +831,7 @@ App::get('/v1/functions/:functionId/deployments')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForProject->find('deployments', $queries);
-        $total = $dbForProject->count('deployments', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('deployments', $filterQueries);
 
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
@@ -1265,7 +1265,7 @@ App::get('/v1/functions/:functionId/executions')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForProject->find('executions', $queries);
-        $total = $dbForProject->count('executions', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('executions', $filterQueries);
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);

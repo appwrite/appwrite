@@ -215,7 +215,7 @@ App::get('/v1/projects')
 
         $response->dynamic(new Document([
             'projects' => $dbForConsole->find('projects', $queries),
-            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForConsole->count('projects', $filterQueries),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
@@ -726,7 +726,6 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $webhooks = $dbForConsole->find('webhooks', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
         ]);
 
         $response->dynamic(new Document([
@@ -974,7 +973,6 @@ App::get('/v1/projects/:projectId/keys')
 
         $keys = $dbForConsole->find('keys', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
         ]);
 
         $response->dynamic(new Document([
@@ -1176,7 +1174,6 @@ App::get('/v1/projects/:projectId/platforms')
 
         $platforms = $dbForConsole->find('platforms', [
             Query::equal('projectId', [$project->getId()]),
-            Query::limit(5000),
         ]);
 
         $response->dynamic(new Document([
@@ -1394,7 +1391,6 @@ App::get('/v1/projects/:projectId/domains')
 
         $domains = $dbForConsole->find('domains', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
         ]);
 
         $response->dynamic(new Document([
