@@ -1564,9 +1564,9 @@ App::patch('/v1/account/password')
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
                 ->setAttribute('password', $newPassword)
                 ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now()));
+                ->setAttribute('passwordUpdate', DateTime::now()))
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
         $events->setParam('userId', $user->getId());
 
