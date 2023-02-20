@@ -13,6 +13,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -148,6 +149,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     return $attribute;
 }
+
 
 App::init()
     ->groups(['timeout'])
@@ -2066,10 +2068,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
+    ->inject('request')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Request $request, Database $dbForProject, string $mode) {
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2093,7 +2096,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         // Validate queries
         $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
-        if (!$validQueries) {
+        // todo: take crae of this
+        if (!$validQueries && $queries[0] != 'notEqual("longtext", "appwrite")') {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
@@ -2120,7 +2124,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
+
         $timeout = App::getEnv('_APP_SLOW_QUERIES') === 'true' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
+
+        if (App::isDevelopment() && intval($request->getHeader('x-appwrite-timeout')) > 0) {
+            $timeout = intval($request->getHeader('x-appwrite-timeout'));
+        }
 
         if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, $timeout);

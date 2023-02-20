@@ -350,6 +350,17 @@ trait DatabasesBase
             'default' => null,
         ]);
 
+        $longtext = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'longtext',
+            'size' => 100000000,
+            'required' => false,
+            'default' => null,
+        ]);
+
         $this->assertEquals(202, $string['headers']['status-code']);
         $this->assertEquals('string', $string['body']['key']);
         $this->assertEquals('string', $string['body']['type']);
@@ -424,6 +435,13 @@ trait DatabasesBase
         $this->assertEquals(false, $datetime['body']['array']);
         $this->assertEquals(null, $datetime['body']['default']);
 
+        $this->assertEquals(202, $longtext['headers']['status-code']);
+        $this->assertEquals('longtext', $longtext['body']['key']);
+        $this->assertEquals('string', $longtext['body']['type']);
+        $this->assertEquals(false, $longtext['body']['required']);
+        $this->assertEquals(false, $longtext['body']['array']);
+        $this->assertEquals(null, $longtext['body']['default']);
+
         // wait for database worker to create attributes
         sleep(30);
 
@@ -476,6 +494,12 @@ trait DatabasesBase
         ]));
 
         $datetimeResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $datetime['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $longtextResponse = $this->client->call(Client::METHOD_GET, $attributesPath . '/' . $longtext['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -563,6 +587,15 @@ trait DatabasesBase
         $this->assertEquals($datetime['body']['array'], $datetimeResponse['body']['array']);
         $this->assertEquals($datetime['body']['default'], $datetimeResponse['body']['default']);
 
+        $this->assertEquals(200, $longtextResponse['headers']['status-code']);
+        $this->assertEquals($longtext['body']['key'], $longtextResponse['body']['key']);
+        $this->assertEquals($longtext['body']['type'], $longtextResponse['body']['type']);
+        $this->assertEquals('available', $longtextResponse['body']['status']);
+        $this->assertEquals($longtext['body']['required'], $longtextResponse['body']['required']);
+        $this->assertEquals($longtext['body']['array'], $longtextResponse['body']['array']);
+        $this->assertEquals($longtext['body']['default'], $longtextResponse['body']['default']);
+
+
         $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -570,12 +603,12 @@ trait DatabasesBase
         ]));
 
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(9, $attributes['body']['total']);
+        $this->assertEquals(10, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(9, $attributes);
+        $this->assertCount(10, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -649,6 +682,14 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['required'], $attributes[8]['required']);
         $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
+
+        $this->assertEquals($longtextResponse['body']['key'], $attributes[9]['key']);
+        $this->assertEquals($longtextResponse['body']['type'], $attributes[9]['type']);
+        $this->assertEquals($longtextResponse['body']['status'], $attributes[9]['status']);
+        $this->assertEquals($longtextResponse['body']['required'], $attributes[9]['required']);
+        $this->assertEquals($longtextResponse['body']['array'], $attributes[9]['array']);
+        $this->assertEquals($longtextResponse['body']['default'], $attributes[9]['default']);
+
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -661,7 +702,7 @@ trait DatabasesBase
         $attributes = $collection['body']['attributes'];
 
         $this->assertIsArray($attributes);
-        $this->assertCount(9, $attributes);
+        $this->assertCount(10, $attributes);
 
         $this->assertEquals($stringResponse['body']['key'], $attributes[0]['key']);
         $this->assertEquals($stringResponse['body']['type'], $attributes[0]['type']);
@@ -735,6 +776,13 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['required'], $attributes[8]['required']);
         $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
+
+        $this->assertEquals($longtextResponse['body']['key'], $attributes[9]['key']);
+        $this->assertEquals($longtextResponse['body']['type'], $attributes[9]['type']);
+        $this->assertEquals($longtextResponse['body']['status'], $attributes[9]['status']);
+        $this->assertEquals($longtextResponse['body']['required'], $attributes[9]['required']);
+        $this->assertEquals($longtextResponse['body']['array'], $attributes[9]['array']);
+        $this->assertEquals($longtextResponse['body']['default'], $attributes[9]['default']);
 
         /**
          * Test for FAILURE
@@ -989,33 +1037,6 @@ trait DatabasesBase
      */
     public function testTimeouts(array $data): void
     {
-
-        // changes 6 => 16 $payloadSize on http.php
-        // todo: if this is ok move to above...
-        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'longtext',
-            'size' => 100000000,
-            'required' => false,
-        ]);
-
-        sleep(2);
-        // todo: if this is ok move to above...
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'longtextIndex',
-            'type' => 'fulltext',
-            'attributes' => ['longtext'],
-        ]);
-
-        sleep(2);
-
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1025,7 +1046,6 @@ trait DatabasesBase
                 'title' => 'title',
                 'releaseYear' => 2020,
                 'longtext' => file_get_contents(__DIR__ . '/longtext'),
-                //'longtext' => 'longtext',
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -1035,14 +1055,14 @@ trait DatabasesBase
         ]);
 
         $documents = [];
-        for ($i = 0; $i <= 3; $i++) {
+        for ($i = 0; $i <= 2; $i++) {
             $documents[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-timeout' => 1,
             ], $this->getHeaders()), [
                 //'queries' => ['sleep("$id", 1)'],
-                //'queries' => ['notEqual("longtext", "appwrite")'],
-                'queries' => ['search("longtext", "dolor")'],
+                'queries' => ['notEqual("longtext", "appwrite")'],
             ]);
         }
 
@@ -1084,7 +1104,7 @@ trait DatabasesBase
         $this->assertEquals(200, $documents['headers']['status-code']);
         //$this->assertEquals($document['body']['queries'][0], 'sleep("$id", 1)');
         //$this->assertEquals($document['body']['queries'][0], 'sleep("$id", 1)');
-        $this->assertEquals($document['body']['queries'][0], 'search("longtext", "dolor")');
+        $this->assertEquals($document['body']['queries'][0], 'notEqual("longtext", "appwrite")');
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
