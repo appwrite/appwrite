@@ -128,9 +128,10 @@ App::get('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
     ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->action(function (array $queries, string $search, Document $project, Response $response, Database $dbForProject) {
 
         $queries = Query::parseQueries($queries);
 
@@ -155,8 +156,17 @@ App::get('/v1/functions')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $projectId = $project->getId();
+        $functions = $dbForProject->find('functions', $queries);
+        $functions = \array_map(function(Document $function) use($functionsDomain, $projectId) {
+            $functionId = $function->getId();
+            $function = $function->setAttribute('url', "{$functionId}.{$projectId}.{$functionsDomain}");
+            return $function;
+        }, $functions);
+
         $response->dynamic(new Document([
-            'functions' => $dbForProject->find('functions', $queries),
+            'functions' => $functions,
             'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
@@ -200,14 +210,21 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, Document $project, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
+
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $projectId = $project->getId();
+        $functionId = $function->getId();
+
+        $function = $function->setAttribute('url', "{$functionId}.{$projectId}.{$functionsDomain}");
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
