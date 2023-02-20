@@ -126,6 +126,12 @@ class Project extends Model
                 'default' => 0,
                 'example' => 5,
             ])
+            ->addRule('authPasswordDictionary', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('providers', [
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
@@ -247,6 +253,7 @@ class Project extends Model
         $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
+        $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

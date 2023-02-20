@@ -607,6 +607,12 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
 });
+$register->set('passwordsDictionary', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
@@ -1025,6 +1031,11 @@ App::setResource('mode', function ($request) {
 App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
+}, ['register']);
+
+App::setResource('passwordsDictionary', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary');
 }, ['register']);
 
 App::setResource('sms', function () {

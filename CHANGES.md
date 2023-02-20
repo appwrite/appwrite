@@ -1,6 +1,7 @@
 ## Version 1.3.0
 
 ## Features
+- Password dictionary setting allows to compare user's password against command password database [4906](https://github.com/appwrite/appwrite/pull/4906)
 - Password history setting allows to save user's last used password so that it may not be used again.  Maximum number of history saved is 20, which can be configured. Minimum is 0 which means disabled. [#4866](https://github.com/appwrite/appwrite/pull/4866)
 
 # Version 1.2.0
