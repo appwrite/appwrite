@@ -65,11 +65,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'phone' => $phone,
             'phoneVerification' => false,
             'status' => true,
-            'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
             'password' => $password,
+            'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
+            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
-            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'registration' => DateTime::now(),
             'reset' => false,
             'name' => $name,
@@ -822,11 +822,11 @@ App::patch('/v1/users/:userId/password')
         }
 
         $user
-            ->setAttribute('passwordHistory', $history)
             ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
             ->setAttribute('hash', Auth::DEFAULT_ALGO)
-            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-            ->setAttribute('passwordUpdate', DateTime::now());
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 

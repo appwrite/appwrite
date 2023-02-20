@@ -112,11 +112,11 @@ App::post('/v1/account')
                 'email' => $email,
                 'emailVerification' => false,
                 'status' => true,
-                'passwordHistory' => $passwordHistory > 0 ? [$password] : [],
                 'password' => $password,
+                'passwordHistory' => $passwordHistory > 0 ? [$password] : [],
+                'passwordUpdate' => DateTime::now(),
                 'hash' => Auth::DEFAULT_ALGO,
                 'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                'passwordUpdate' => DateTime::now(),
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
@@ -1561,11 +1561,11 @@ App::patch('/v1/account/password')
         }
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('passwordHistory', $history)
                 ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $history)
+                ->setAttribute('passwordUpdate', DateTime::now()));
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('passwordUpdate', DateTime::now()));
 
         $events->setParam('userId', $user->getId());
 
@@ -2133,9 +2133,9 @@ App::put('/v1/account/recovery')
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('passwordUpdate', DateTime::now())
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('passwordUpdate', DateTime::now())
                 ->setAttribute('emailVerification', true));
 
         $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);
