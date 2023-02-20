@@ -497,6 +497,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 try {
                     $userId = ID::unique();
+                    $password = Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
                     $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
                         '$id' => $userId,
                         '$permissions' => [
@@ -507,8 +508,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'passwordHistory' => $passwordHistory > 0 ? [Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS)] : null,
-                        'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                        'passwordHistory' => $passwordHistory > 0 ? [$password] : null,
+                        'password' => $password,
                         'hash' => Auth::DEFAULT_ALGO,
                         'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                         'passwordUpdate' => null,
