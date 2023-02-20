@@ -32,6 +32,7 @@ class Exception extends \Exception
      * - Platform
      * - Domain
      * - GraphQL
+     * - Transfers
      */
 
     /** General */
@@ -181,6 +182,12 @@ class Exception extends \Exception
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
+
+    /** Transfers */
+    public const TRANSFER_NOT_FOUND                = 'transfer_not_found';
+    public const TRANSFER_ALREADY_EXISTS           = 'transfer_already_exists';
+    public const TRANSFER_SOURCE_NOT_FOUND         = 'transfer_source_not_found';
+    public const TRANSFER_DESTINATION_NOT_FOUND         = 'transfer_destination_not_found';
 
     protected $type = '';
 

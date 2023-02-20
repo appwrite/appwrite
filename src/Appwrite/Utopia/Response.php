@@ -83,6 +83,9 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\Transfer;
+use Appwrite\Utopia\Response\Model\Source;
+use Appwrite\Utopia\Response\Model\Destination;
 
 /**
  * @method int getStatusCode()
@@ -213,6 +216,14 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
 
+    // Transfers
+    public const MODEL_TRANSFER = 'transfer';
+    public const MODEL_TRANSFER_LIST = 'transferList';
+    public const MODEL_SOURCE = 'source';
+    public const MODEL_SOURCE_LIST = 'sourceList';
+    public const MODEL_DESTINATION = 'Destination';
+    public const MODEL_DESTINATION_LIST = 'DestinationList';
+
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
     public const MODEL_RULE = 'rule';
@@ -274,6 +285,9 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+            ->setModel(new BaseList('Transfers List', self::MODEL_TRANSFER_LIST, 'transfers', self::MODEL_TRANSFER))
+            ->setModel(new BaseList('Sources List', self::MODEL_SOURCE_LIST, 'sources', self::MODEL_SOURCE))
+            ->setModel(new BaseList('Destination List', self::MODEL_DESTINATION_LIST, 'destinations', self::MODEL_DESTINATION))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -341,6 +355,9 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new Transfer())
+            ->setModel(new Destination())
+            ->setModel(new Source())
             // Verification
             // Recovery
             // Tests (keep last)

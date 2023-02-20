@@ -76,4 +76,10 @@ return [ // List of publicly visible scopes
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
     ],
+    'transfers.read' => [
+        'description' => 'Access to read your project\'s transfer logs',
+    ],
+    'transfers.write' => [
+        'description' => 'Access to create, update, and delete your project\'s sources, destinations, and transfer logs.',
+    ]
 ];

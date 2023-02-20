@@ -186,4 +186,17 @@ return [
         'optional' => true,
         'icon' => '/images/services/graphql.png',
     ],
+    'transfers' => [
+        'key' => 'transfers',
+        'name' => 'Transfers',
+        'subtitle' => 'The Transfers service allows you to migrate third-party data to your Appwrite server.',
+        'description' => '/docs/services/transfers.md',
+        'controller' => 'api/transfers.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/transfers',
+        'tests' => true,
+        'optional' => true,
+        'icon' => '/images/services/transfers.png',
+    ],
 ];

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac80cafdd8c2c6deaec3dfe628084655",
+    "content-hash": "f21d616c3ccd0256ce537cba5711749c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -62,6 +62,47 @@
                 }
             ],
             "time": "2021-02-20T09:56:44+00:00"
+        },
+        {
+            "name": "appwrite/appwrite",
+            "version": "7.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/appwrite/sdk-for-php.git",
+                "reference": "8940689d040153f397371a367926e4e97e257f41"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/8940689d040153f397371a367926e4e97e257f41",
+                "reference": "8940689d040153f397371a367926e4e97e257f41",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=7.1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.35"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Appwrite\\": "src/Appwrite"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API",
+            "support": {
+                "email": "team@appwrite.io",
+                "issues": "https://github.com/appwrite/sdk-for-php/issues",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/7.2.0",
+                "url": "https://appwrite.io/support"
+            },
+            "time": "2022-12-27T22:34:08+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1262,6 +1303,55 @@
                 }
             ],
             "time": "2022-02-28T15:31:21+00:00"
+        },
+        {
+            "name": "psr/cache",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/cache.git",
+                "reference": "213f9dbc5b9bfbc4f8db86d2838dc968752ce13b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/cache/zipball/213f9dbc5b9bfbc4f8db86d2838dc968752ce13b",
+                "reference": "213f9dbc5b9bfbc4f8db86d2838dc968752ce13b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Cache\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for caching libraries",
+            "keywords": [
+                "cache",
+                "psr",
+                "psr-6"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/cache/tree/2.0.0"
+            },
+            "time": "2021-02-03T23:23:37+00:00"
         },
         {
             "name": "psr/http-client",
@@ -2851,6 +2941,64 @@
                 "source": "https://github.com/utopia-php/system/tree/0.6.0"
             },
             "time": "2022-11-07T13:51:59+00:00"
+        },
+        {
+            "name": "utopia-php/transfer",
+            "version": "dev-feat-database-and-documents",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/transfer.git",
+                "reference": "a33d9e16e561885e884d1ed21982e41942b33fee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/a33d9e16e561885e884d1ed21982e41942b33fee",
+                "reference": "a33d9e16e561885e884d1ed21982e41942b33fee",
+                "shasum": ""
+            },
+            "require": {
+                "appwrite/appwrite": "^7.2",
+                "php": ">=8.0",
+                "utopia-php/cli": "^0.13.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "vimeo/psalm": "^5.6",
+                "vlucas/phpdotenv": "^5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Transfer\\": "src/Transfer"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Bradley Schofield",
+                    "email": "bradley@appwrite.io"
+                }
+            ],
+            "description": "A simple library to transfer resources between services.",
+            "keywords": [
+                "framework",
+                "php",
+                "transfer",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/transfer/tree/feat-database-and-documents",
+                "issues": "https://github.com/utopia-php/transfer/issues"
+            },
+            "time": "2023-02-17T13:39:23+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5566,7 +5714,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/transfer": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5590,5 +5740,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }

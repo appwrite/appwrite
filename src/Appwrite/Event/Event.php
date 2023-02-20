@@ -35,6 +35,9 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
+    public const TRANSFER_QUEUE_NAME = 'v1-transfer';
+    public const TRANSFER_CLASS_NAME = 'TransferV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
