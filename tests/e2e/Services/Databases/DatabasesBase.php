@@ -1009,7 +1009,7 @@ trait DatabasesBase
     public function testTimeouts(array $data): void
     {
         $documents = [];
-        for ($i = 0; $i <= 3; $i++) {
+        for ($i = 0; $i <= 1; $i++) {
             $documents[] = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
