@@ -1916,12 +1916,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "c3fe31ead91bdb7cd41e61df4dde76ef4a58661e"
+                "reference": "e34e229ccd3a0a68b1bdf9f45196eb0cac595bc7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/c3fe31ead91bdb7cd41e61df4dde76ef4a58661e",
-                "reference": "c3fe31ead91bdb7cd41e61df4dde76ef4a58661e",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e34e229ccd3a0a68b1bdf9f45196eb0cac595bc7",
+                "reference": "e34e229ccd3a0a68b1bdf9f45196eb0cac595bc7",
                 "shasum": ""
             },
             "require": {
@@ -1955,7 +1955,7 @@
                 "issues": "https://github.com/utopia-php/audit/issues",
                 "source": "https://github.com/utopia-php/audit/tree/feat-remove-limits"
             },
-            "time": "2023-02-20T03:50:56+00:00"
+            "time": "2023-02-20T09:26:53+00:00"
         },
         {
             "name": "utopia-php/cache",
