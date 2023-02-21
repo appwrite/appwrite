@@ -92,8 +92,6 @@ class Filter extends Base
         $attribute = $query->getAttribute();
 
         switch ($method) {
-            case Query::TYPE_SLEEP:
-                return true; // todo: check this please!
             case Query::TYPE_EQUAL:
             case Query::TYPE_NOTEQUAL:
             case Query::TYPE_LESSER:

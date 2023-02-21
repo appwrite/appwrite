@@ -87,7 +87,6 @@ class IndexedQueriesTest extends TestCase
         $this->assertEquals(true, $validator->isValid(['offset(10)']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['orderAsc("name")']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['search("name", "value")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['sleep("$id", 1)']), $validator->getDescription());
     }
 
     public function testMissingIndex(): void
