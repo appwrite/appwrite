@@ -1059,9 +1059,6 @@ App::get('/v1/videos/profiles')
     ->action(function (Response $response, Database $dbForProject) {
 
         $profiles = Authorization::skip(fn () => $dbForProject->find('videos_profiles'));
-        if (empty($profiles)) {
-            throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
-        }
 
         $response->dynamic(new Document([
             'total' => $dbForProject->count('videos_profiles', [], APP_LIMIT_COUNT),

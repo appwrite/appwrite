@@ -126,9 +126,8 @@ ENV _APP_SERVER=swoole \
 
 RUN \
   apk update \
-  && apk add --no-cache --virtual .deps \
+  && apk add --no-cache\
   ffmpeg \
-  && apk del .deps \
   && rm -rf /var/cache/apk/*
 
 RUN \

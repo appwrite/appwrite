@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1577b45260165bbdf1367d5a24e4e79f",
+    "content-hash": "b636b84edd26b787ae58b3dbdc752da4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3798,16 +3798,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.13.2",
+            "version": "dev-feat-transfer",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b"
+                "reference": "00b26ef3d04b04f2df64a64636f6b81f8ae1a166"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ad1c00f24ca56e73888acc2af3deee4919b1194b",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/00b26ef3d04b04f2df64a64636f6b81f8ae1a166",
+                "reference": "00b26ef3d04b04f2df64a64636f6b81f8ae1a166",
                 "shasum": ""
             },
             "require": {
@@ -3847,9 +3847,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.13.2"
+                "source": "https://github.com/utopia-php/storage/tree/feat-transfer"
             },
-            "time": "2022-12-20T11:11:35+00:00"
+            "time": "2022-11-02T07:42:34+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -6506,9 +6506,17 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/storage",
+            "version": "dev-feat-transfer",
+            "alias": "0.13.2",
+            "alias_normalized": "0.13.2.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/storage": 20,
         "aminyazdanpanah/php-ffmpeg-video-streaming": 20,
         "appwrite/sdk-generator": 20
     },

@@ -512,9 +512,9 @@ class TranscodingV1 extends Worker
         $general = $metadata['stream']['resolutions'][0] ?? [];
         $parts = explode('X', $general['dimension']);
         $info['width'] = $parts[0] ?? $representation->getWidth();
-        $info['height'] = isset($parts[1]) ?? $representation->getHeight();
-        $info['videoBitrate'] = isset($general['video_kilo_bitrate']) ?? '0';
-        $info['audioBitrate'] = isset($general['audio_kilo_bitrate']) ?? '0';
+        $info['height'] = $parts[1] ?? $representation->getHeight();
+        $info['videoBitrate'] = $general['video_kilo_bitrate'] ?? '0';
+        $info['audioBitrate'] = $general['audio_kilo_bitrate'] ?? '0';
 
         foreach ($metadata['video']['streams'] ?? [] as $streams) {
             if ($streams['codec_type'] === 'video') {
