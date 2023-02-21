@@ -1050,9 +1050,6 @@ trait DatabasesBase
         $this->assertEquals(408, $docs[0]['headers']['status-code']); // insert
         $this->assertEquals(403, $docs[1]['headers']['status-code']); // update
         $this->assertEquals(403, $docs[2]['headers']['status-code']); // blocked
-
-        die;
-
     }
 
     /**
