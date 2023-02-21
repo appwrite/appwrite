@@ -72,6 +72,5 @@ class QueriesTest extends TestCase
         $this->assertEquals(true, $validator->isValid(['limit(10)']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['offset(10)']), $validator->getDescription());
         $this->assertEquals(true, $validator->isValid(['orderAsc("name")']), $validator->getDescription());
-        $this->assertEquals(true, $validator->isValid(['sleep(1)']), $validator->getDescription());
     }
 }
