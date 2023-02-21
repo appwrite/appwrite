@@ -236,10 +236,6 @@ class Executor
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        \var_dump($responseBody);
-        \var_dump($responseStatus);
-        \var_dump($responseHeaders);
-
         if ($decode) {
             switch (substr($responseType, 0, strpos($responseType, ';'))) {
                 case 'application/json':

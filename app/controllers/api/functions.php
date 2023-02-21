@@ -162,7 +162,7 @@ App::get('/v1/functions')
         $base32 = new Base32();
         $projectIdHash = \rtrim($base32->encode($projectId), '=');
         $functions = $dbForProject->find('functions', $queries);
-        $functions = \array_map(function(Document $function) use($functionsDomain, $projectIdHash, $base32) {
+        $functions = \array_map(function (Document $function) use ($functionsDomain, $projectIdHash, $base32) {
             $functionId = $function->getId();
             $functionIdHash = \rtrim($base32->encode($functionId), '=');
             $function = $function->setAttribute('url', "{$functionIdHash}-{$projectIdHash}.{$functionsDomain}");

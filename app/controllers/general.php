@@ -67,18 +67,18 @@ App::init()
         $host = $swooleRequest->header['host'] ?? '';
 
         // Function Preview
-        if(\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
+        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
             // Remove domain from host
             $previewDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
             $host = \substr($host, 0, -1 * (1 + \strlen($previewDomain))); // +1 for starting dot (.)
 
-            if(empty($host) || \str_contains($host, '.')) {
+            if (empty($host) || \str_contains($host, '.')) {
                 throw new AppwriteException(AppwriteException::ROUTER_INVALID_URL);
             }
 
             $ids = explode('-', $host);
 
-            if(\count($ids) !== 2) {
+            if (\count($ids) !== 2) {
                 throw new AppwriteException(AppwriteException::ROUTER_INVALID_URL);
             }
 
@@ -120,15 +120,15 @@ App::init()
 
             \curl_close($ch);
 
-            if($errNo !== 0) {
+            if ($errNo !== 0) {
                 return $response->setStatusCode(500)->send("Internal error: " . $error);
             }
 
-            if($statusCode >= 400) {
+            if ($statusCode >= 400) {
                 $error = \json_decode($executionResponse, true)['message'];
                 return $response->setStatusCode(500)->send("Execution error: " . $error);
             }
-            
+
             $execution = \json_decode($executionResponse, true);
 
             foreach ($execution['headers'] as $header => $value) {
@@ -137,20 +137,20 @@ App::init()
 
             $body = $execution['body'] ?? '';
 
-            if(($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
+            if (($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
                 $body = \base64_decode($body);
             }
 
             return $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
         }
-        
+
         /*
         * Request format
         */
         $route = $utopia->getRoute();
         Request::setRoute($route);
 
-        if($route === null) {
+        if ($route === null) {
             return $response->setStatusCode(404)->send("Not Found");
         }
 
@@ -729,7 +729,7 @@ App::get('/.well-known/acme-challenge')
 include_once __DIR__ . '/shared/api.php';
 
 App::wildcard()
-    ->action(function() {
+    ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
 
