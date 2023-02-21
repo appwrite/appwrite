@@ -38,6 +38,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Executor\Executor;
+use Selective\Base32\Base32;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
@@ -158,10 +159,13 @@ App::get('/v1/functions')
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
         $projectId = $project->getId();
+        $base32 = new Base32();
+        $projectIdHash = \rtrim($base32->encode($projectId), '=');
         $functions = $dbForProject->find('functions', $queries);
-        $functions = \array_map(function(Document $function) use($functionsDomain, $projectId) {
+        $functions = \array_map(function(Document $function) use($functionsDomain, $projectIdHash, $base32) {
             $functionId = $function->getId();
-            $function = $function->setAttribute('url', "{$functionId}.{$projectId}.{$functionsDomain}");
+            $functionIdHash = \rtrim($base32->encode($functionId), '=');
+            $function = $function->setAttribute('url', "{$functionIdHash}-{$projectIdHash}.{$functionsDomain}");
             return $function;
         }, $functions);
 
@@ -223,8 +227,11 @@ App::get('/v1/functions/:functionId')
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
         $projectId = $project->getId();
         $functionId = $function->getId();
+        $base32 = new Base32();
+        $projectIdHash = \rtrim($base32->encode($projectId), '=');
+        $functionIdHash = \rtrim($base32->encode($functionId), '=');
 
-        $function = $function->setAttribute('url', "{$functionId}.{$projectId}.{$functionsDomain}");
+        $function = $function->setAttribute('url', "{$functionIdHash}-{$projectIdHash}.{$functionsDomain}");
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
