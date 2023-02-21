@@ -1008,26 +1008,29 @@ trait DatabasesBase
      */
     public function testTimeouts(array $data): void
     {
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'title' => 'title',
-                'releaseYear' => 2020,
-                'longtext' => file_get_contents(__DIR__ . '/longtext'),
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-
         $documents = [];
+        for ($i = 0; $i <= 3; $i++) {
+            $documents[] = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'title' => 'title',
+                    'releaseYear' => 2020,
+                    'longtext' => file_get_contents(__DIR__ . '/longtext'),
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ]);
+        }
+
+        $docs = [];
         for ($i = 0; $i <= 2; $i++) {
-            $documents[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-timeout' => 1,
@@ -1037,14 +1040,19 @@ trait DatabasesBase
             ]);
         }
 
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $document['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        for ($i = 0; $i < count($documents); $i++) {
+            $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documents[$i]['body']['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+        }
 
-        $this->assertEquals(408, $documents[0]['headers']['status-code']); // insert
-        $this->assertEquals(403, $documents[1]['headers']['status-code']); // update
-        $this->assertEquals(403, $documents[2]['headers']['status-code']); // blocked
+        $this->assertEquals(408, $docs[0]['headers']['status-code']); // insert
+        $this->assertEquals(403, $docs[1]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[2]['headers']['status-code']); // blocked
+
+        die;
+
     }
 
     /**
