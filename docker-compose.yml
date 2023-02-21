@@ -17,6 +17,8 @@ services:
     image: traefik:2.9
     <<: *x-logging
     container_name: appwrite-traefik
+    environment:
+      - DO_AUTH_TOKEN=$_APP_DOMAIN_DO_TOKEN
     command:
       - --log.level=DEBUG
       - --api.insecure=true
@@ -28,6 +30,10 @@ services:
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
+      - --certificatesresolvers.digitalocean.acme.dnschallenge=true
+      - --certificatesresolvers.digitalocean.acme.dnschallenge.provider=digitalocean
+      - --certificatesresolvers.digitalocean.acme.email=$_APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - --certificatesresolvers.digitalocean.acme.storage=/storage/certificates/digitalocean.json
     ports:
       - 80:80
       - 8080:80
@@ -36,7 +42,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
-      - appwrite-certificates:/storage/certificates:ro
+      - appwrite-certificates:/storage/certificates:rw
     depends_on:
       - appwrite
     networks:
@@ -72,6 +78,9 @@ services:
       - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
+      - traefik.http.routers.appwrite_api_https.tls.certresolver=digitalocean
+      - traefik.http.routers.appwrite_api_https.tls.domains[0].main=$_APP_DOMAIN_FUNCTIONS
+      - traefik.http.routers.appwrite_api_https.tls.domains[0].sans=*.$_APP_DOMAIN_FUNCTIONS
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
