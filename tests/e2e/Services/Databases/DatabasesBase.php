@@ -1532,8 +1532,9 @@ trait DatabasesBase
         $this->assertEquals($databaseId, $document['body']['$databaseId']);
         $this->assertEquals($document['body']['title'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($document['body']['$createdAt']));
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($document['body']['birthDay']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($document['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($document['body']['birthDay']));
         $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);

@@ -44,8 +44,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
         $this->assertEquals('php-8.0', $response1['body']['runtime']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response1['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'users.*.create',
@@ -327,8 +328,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test1', $response1['body']['name']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response1['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'users.*.update.name',
@@ -439,8 +441,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
 
         /**

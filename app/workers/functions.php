@@ -17,9 +17,9 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Server;
+use Utopia\Database\Helpers\Role;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);

@@ -533,6 +533,7 @@ class UsageTest extends Scope
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array
     {
+        $dateValidator = new DatetimeValidator();
         $headers = $data['headers'];
         $executionTime = 0;
         $executions = 0;
@@ -597,7 +598,6 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-
 
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$updatedAt']));

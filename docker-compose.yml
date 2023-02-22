@@ -53,7 +53,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-        VITE_CONSOLE_MODE: self-hosted
+        VITE_CONSOLE_MODE: cloud
     ports:
       - 9501:80
     networks:
@@ -85,7 +85,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
-
     depends_on:
       - mariadb
       - redis
@@ -161,6 +160,9 @@ services:
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_REGION
+      - _APP_GRAPHQL_MAX_BATCH_SIZE
+      - _APP_GRAPHQL_MAX_COMPLEXITY
+      - _APP_GRAPHQL_MAX_DEPTH
 
   appwrite-realtime:
     entrypoint: realtime
@@ -474,8 +476,8 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      - _APP_DOCKER_HUB_USERNAME
+      - _APP_DOCKER_HUB_PASSWORD
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -516,6 +518,7 @@ services:
     entrypoint: worker-messaging
     <<: *x-logging
     container_name: appwrite-worker-messaging
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
@@ -804,6 +807,18 @@ services:
   #   ports:
   #     - '3001:80'
   
+  graphql-explorer:
+    container_name: appwrite-graphql-explorer
+    image: appwrite/altair:0.3.0
+    restart: unless-stopped
+    networks:
+      - appwrite
+    ports:
+      - "9509:3000"
+    environment:
+      - SERVER_URL=http://localhost/v1/graphql
+
+
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:

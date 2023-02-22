@@ -872,6 +872,124 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * @depends testUpdateProjectAuthLimit
+     */
+    public function testUpdateProjectAuthSessionsLimit($data): array
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Test for failure
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 0,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(1, $response['body']['authSessionsLimit']);
+
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Create new user
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * create new session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionId1 = $response['body']['$id'];
+
+        /**
+         * create new session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionCookie = $response['headers']['set-cookie'];
+        $sessionId2 = $response['body']['$id'];
+
+        // request was called in parallel and test failed
+        sleep(5);
+
+        /**
+         * List sessions
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'Cookie' => $sessionCookie,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $sessions = $response['body']['sessions'];
+
+        $this->assertEquals(1, count($sessions));
+        $this->assertEquals($sessionId2, $sessions[0]['$id']);
+
+        /**
+         * Reset Limit
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 10,
+        ]);
+
+        return $data;
+    }
+
     public function testUpdateProjectServiceStatusAdmin(): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
@@ -1790,6 +1908,27 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'type' => 'flutter-web',
+            'name' => 'Flutter App (Web)',
+            'key' => '',
+            'store' => '',
+            'hostname' => 'flutter.appwrite.io',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('Flutter App (Web)', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('flutter.appwrite.io', $response['body']['hostname']);
+
+        $data = array_merge($data, ['platformFultterWebId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'type' => 'apple-ios',
             'name' => 'iOS App',
             'key' => 'com.example.ios',
@@ -1904,7 +2043,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(7, $response['body']['total']);
+        $this->assertEquals(8, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -1967,6 +2106,22 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
+
+        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultterWebId, $response['body']['$id']);
+        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('Flutter App (Web)', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('flutter.appwrite.io', $response['body']['hostname']);
 
         $platformAppleIosId = $data['platformAppleIosId'] ?? '';
 
@@ -2114,6 +2269,27 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('com.example.android2', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
+
+        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Flutter App (Web) 2',
+            'key' => '',
+            'store' => '',
+            'hostname' => 'flutter2.appwrite.io',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultterWebId, $response['body']['$id']);
+        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('Flutter App (Web) 2', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('flutter2.appwrite.io', $response['body']['hostname']);
 
         $platformAppleIosId = $data['platformAppleIosId'] ?? '';
 
@@ -2269,6 +2445,23 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);

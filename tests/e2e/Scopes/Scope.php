@@ -11,15 +11,8 @@ abstract class Scope extends TestCase
 {
     use Retryable;
 
-    /**
-     * @var Client
-     */
-    protected $client = null;
-
-    /**
-     * @var string
-     */
-    protected $endpoint = 'http://localhost/v1';
+    protected ?Client $client = null;
+    protected string $endpoint = 'http://localhost/v1';
 
     protected function setUp(): void
     {
@@ -160,13 +153,14 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $token = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => ID::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
-            'session' => $session,
+            'session' => $token,
+            'sessionId' => $session['body']['$id'],
         ];
 
         return self::$user[$this->getProject()['$id']];

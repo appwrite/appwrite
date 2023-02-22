@@ -554,4 +554,14 @@ return [
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
     ],
+    Exception::GRAPHQL_NO_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Param "query" is not optional.',
+        'code' => 400,
+    ],
+    Exception::GRAPHQL_TOO_MANY_QUERIES => [
+        'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
+        'description' => 'Too many queries.',
+        'code' => 400,
+    ],
 ];

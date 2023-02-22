@@ -10,8 +10,8 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\Host;
-use Appwrite\Network\Validator\URL;
+use Utopia\Validator\Host;
+use Utopia\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
@@ -152,7 +152,7 @@ App::post('/v1/account')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
     ->label('abuse-limit', 10)
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
@@ -230,7 +230,7 @@ App::post('/v1/account')
 App::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
     ->desc('Create Email Session')
-    ->groups(['api', 'account', 'auth'])
+    ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'emailPassword')
@@ -454,7 +454,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
@@ -708,7 +708,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
@@ -800,11 +800,33 @@ App::post('/v1/account/sessions/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
+
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText("emails.magicSession.subject");
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
+            ->setParam('{{name}}', '')
+            ->setParam('{{body}}', $locale->getText("emails.magicSession.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"))
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
+
         $mails
-            ->setType(MAIL_TYPE_MAGIC_SESSION)
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->trigger()
         ;
 
@@ -826,7 +848,7 @@ App::post('/v1/account/sessions/magic-url')
 
 App::put('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session (confirmation)')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('audits.event', 'session.update')
@@ -961,7 +983,7 @@ App::post('/v1/account/sessions/phone')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
@@ -1066,7 +1088,7 @@ App::post('/v1/account/sessions/phone')
 
 App::put('/v1/account/sessions/phone')
     ->desc('Create Phone Session (confirmation)')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('sdk.auth', [])
@@ -1179,7 +1201,7 @@ App::put('/v1/account/sessions/phone')
 
 App::post('/v1/account/sessions/anonymous')
     ->desc('Create Anonymous Session')
-    ->groups(['api', 'account', 'auth'])
+    ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('auth.type', 'anonymous')
@@ -2057,12 +2079,35 @@ App::post('/v1/account/recovery')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
+        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText("emails.recovery.subject");
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
+            ->setParam('{{name}}', $profile->getAttribute('name'))
+            ->setParam('{{body}}', $locale->getText("emails.recovery.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"))
+            ->setParam('{{project}}', $projectName)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
+
+
         $mails
-            ->setType(MAIL_TYPE_RECOVERY)
             ->setRecipient($profile->getAttribute('email', ''))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->setName($profile->getAttribute('name'))
+            ->setBody($body)
+            ->setFrom($from)
+            ->setSubject($subject)
             ->trigger();
         ;
 
@@ -2215,11 +2260,32 @@ App::post('/v1/account/verification')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
         $url = Template::unParseURL($url);
 
+        $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+        $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText("emails.verification.subject");
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
+            ->setParam('{{name}}', $user->getAttribute('name'))
+            ->setParam('{{body}}', $locale->getText("emails.verification.body"))
+            ->setParam('{{redirect}}', $url)
+            ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.verification.signature"))
+            ->setParam('{{project}}', $projectName)
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
+
         $mails
-            ->setType(MAIL_TYPE_VERIFICATION)
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->setName($user->getAttribute('name'))
             ->trigger()
         ;

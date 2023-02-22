@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -26,9 +27,32 @@ class V17 extends Migration
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
+        Console::info('Migrating Buckets');
+        $this->migrateBuckets();
+        Console::info('Migrating Documents');
+        $this->forEachDocument([$this, 'fixDocument']);
+    }
 
-        // Console::info('Migrating Documents');
-        // $this->forEachDocument([$this, 'fixDocument']);
+
+    /**
+     * Migrating all Bucket tables.
+     *
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
+    protected function migrateBuckets(): void
+    {
+        foreach ($this->documentsIterator('buckets') as $bucket) {
+            $id = "bucket_{$bucket->getInternalId()}";
+
+            try {
+                $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
+                $this->projectDB->deleteCachedCollection($id);
+            } catch (\Throwable $th) {
+                Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
+            }
+        }
     }
 
     /**
@@ -204,6 +228,30 @@ class V17 extends Migration
      */
     protected function fixDocument(Document $document)
     {
+        switch ($document->getCollection()) {
+            case 'projects':
+                /**
+                 * Bump version number.
+                 */
+                $document->setAttribute('version', '1.2.0');
+
+                /**
+                 * Set default maxSessions
+                 */
+                $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
+                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT
+                ]));
+                break;
+            case 'users':
+                 /**
+                 * Set hashOptions type
+                 */
+                $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
+                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
+                ]));
+                break;
+        }
+
         return $document;
     }
 }

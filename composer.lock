@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09028869387867b99924475970b7dd23",
+    "content-hash": "60f1cefcf6d210ed231acb4a99f2f20c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1545,16 +1545,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.25.1",
+            "version": "0.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "2391b397135586b2100d39e338827bef8d2f4ad0"
+                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/2391b397135586b2100d39e338827bef8d2f4ad0",
-                "reference": "2391b397135586b2100d39e338827bef8d2f4ad0",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e8da5576370366d3bf9c574ec855f8c96fe4f34e",
+                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e",
                 "shasum": ""
             },
             "require": {
@@ -1583,9 +1583,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.25.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.26.0"
             },
-            "time": "2022-11-23T18:22:23+00:00"
+            "time": "2023-01-13T08:14:43+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -1902,16 +1902,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4"
+                "reference": "a53997f1882dc16ff67968aa5f436364c8c8043e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/fe9f64420957dc8fb6201d22b499572f021411e4",
-                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a53997f1882dc16ff67968aa5f436364c8c8043e",
+                "reference": "a53997f1882dc16ff67968aa5f436364c8c8043e",
                 "shasum": ""
             },
             "require": {
@@ -1919,7 +1919,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.14.*",
-                "utopia-php/framework": "0.25.*"
+                "utopia-php/framework": "0.26.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -1945,9 +1945,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.3.1"
+                "source": "https://github.com/utopia-php/platform/tree/0.3.2"
             },
-            "time": "2022-11-10T07:04:24+00:00"
+            "time": "2023-02-14T04:51:46+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -2444,21 +2444,87 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.11.0"
             },
             "time": "2022-06-03T18:03:27+00:00"
+        },
+        {
+            "name": "webonyx/graphql-php",
+            "version": "v14.11.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webonyx/graphql-php.git",
+                "reference": "ff91c9f3cf241db702e30b2c42bcc0920e70ac70"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/ff91c9f3cf241db702e30b2c42bcc0920e70ac70",
+                "reference": "ff91c9f3cf241db702e30b2c42bcc0920e70ac70",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": "^7.1 || ^8"
+            },
+            "require-dev": {
+                "amphp/amp": "^2.3",
+                "doctrine/coding-standard": "^6.0",
+                "nyholm/psr7": "^1.2",
+                "phpbench/phpbench": "^1.2",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "0.12.82",
+                "phpstan/phpstan-phpunit": "0.12.18",
+                "phpstan/phpstan-strict-rules": "0.12.9",
+                "phpunit/phpunit": "^7.2 || ^8.5",
+                "psr/http-message": "^1.0",
+                "react/promise": "2.*",
+                "simpod/php-coveralls-mirror": "^3.0",
+                "squizlabs/php_codesniffer": "3.5.4"
+            },
+            "suggest": {
+                "psr/http-message": "To use standard GraphQL server",
+                "react/promise": "To leverage async resolving on React PHP platform"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GraphQL\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A PHP port of GraphQL reference implementation",
+            "homepage": "https://github.com/webonyx/graphql-php",
+            "keywords": [
+                "api",
+                "graphql"
+            ],
+            "support": {
+                "issues": "https://github.com/webonyx/graphql-php/issues",
+                "source": "https://github.com/webonyx/graphql-php/tree/v14.11.9"
+            },
+            "funding": [
+                {
+                    "url": "https://opencollective.com/webonyx-graphql-php",
+                    "type": "open_collective"
+                }
+            ],
+            "time": "2023-01-06T12:12:50+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.28.1",
+            "version": "0.29.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "ed8d3daa66589733b49b11c053d524cdf576ffee"
+                "reference": "35ec927d1de1854bebe8894e16b1646c3fdd5567"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ed8d3daa66589733b49b11c053d524cdf576ffee",
-                "reference": "ed8d3daa66589733b49b11c053d524cdf576ffee",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/35ec927d1de1854bebe8894e16b1646c3fdd5567",
+                "reference": "35ec927d1de1854bebe8894e16b1646c3fdd5567",
                 "shasum": ""
             },
             "require": {
@@ -2466,12 +2532,13 @@
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "matthiasmullie/minify": "^1.3.68",
-                "php": ">=7.0.0",
+                "php": ">=8.0",
                 "twig/twig": "^3.4.1"
             },
             "require-dev": {
                 "brianium/paratest": "^6.4",
-                "phpunit/phpunit": "^9.5.21"
+                "phpunit/phpunit": "^9.5.21",
+                "squizlabs/php_codesniffer": "^3.6"
             },
             "type": "library",
             "autoload": {
@@ -2493,9 +2560,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.28.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.29.4"
             },
-            "time": "2022-09-22T09:15:54+00:00"
+            "time": "2023-02-03T05:44:59+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -5000,5 +5067,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }

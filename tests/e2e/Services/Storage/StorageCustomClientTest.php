@@ -2,12 +2,7 @@
 
 namespace Tests\E2E\Services\Storage;
 
-use Appwrite\Auth\Auth;
 use CURLFile;
-use Exception;
-use PharIo\Manifest\Author;
-use SebastianBergmann\RecursionContext\InvalidArgumentException;
-use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;

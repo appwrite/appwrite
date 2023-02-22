@@ -53,7 +53,8 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -121,7 +122,7 @@ trait StorageBase
 
         $this->assertEquals(201, $largeFile['headers']['status-code']);
         $this->assertNotEmpty($largeFile['body']['$id']);
-        $this->assertEquals(true, $largeFile['body']['$createdAt']);
+        $this->assertEquals(true, $dateValidator->isValid($largeFile['body']['$createdAt']));
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
