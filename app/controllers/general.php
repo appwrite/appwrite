@@ -37,7 +37,6 @@ use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
-use Selective\Base32\Base32;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -65,83 +64,82 @@ App::init()
         * Appwrite Router
         */
         $host = $swooleRequest->header['host'] ?? '';
+        $mainDomain = App::getEnv('_APP_DOMAIN', '');
 
-        // Function Preview
-        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-            // Remove domain from host
-            $previewDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
-            $host = \substr($host, 0, -1 * (1 + \strlen($previewDomain))); // +1 for starting dot (.)
+        // Only run Router when external domain
+        if($host !== $mainDomain) {
+            $route = Authorization::skip(
+                fn() => $dbForConsole->find('routes', [
+                    Query::equal('domain', [$host]),
+                    Query::limit(1)
+                ])
+            )[0] ?? null;
 
-            if (empty($host) || \str_contains($host, '.')) {
-                throw new AppwriteException(AppwriteException::ROUTER_INVALID_URL);
+            if($route === null) {
+                throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
             }
+    
+            $type = $route->getAttribute('resourceType');
 
-            $ids = explode('-', $host);
+            if($type === 'function') {
+                $functionId = $route->getAttribute('resourceId');
+                $projectId = $route->getAttribute('projectId');
 
-            if (\count($ids) !== 2) {
-                throw new AppwriteException(AppwriteException::ROUTER_INVALID_URL);
+                $body = \json_encode([
+                    'async' => false,
+                    'body' => $swooleRequest->getContent() ?? '',
+                    'method' => $swooleRequest->server['request_method'],
+                    'path' => $swooleRequest->server['path_info'],
+                    'headers' => $swooleRequest->header
+                ]);
+    
+                $headers = [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . \strlen($body),
+                    'X-Appwrite-Project: ' . $projectId
+                ];
+    
+                $ch = \curl_init();
+                \curl_setopt($ch, CURLOPT_URL, "http://localhost/v1/functions/{$functionId}/executions");
+                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+                \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+                \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                // \curl_setopt($ch, CURLOPT_HEADER, true);
+                \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    
+                $executionResponse = \curl_exec($ch);
+                $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $error = \curl_error($ch);
+                $errNo = \curl_errno($ch);
+    
+                \curl_close($ch);
+    
+                if ($errNo !== 0) {
+                    return $response->setStatusCode(500)->send("Internal error: " . $error);
+                }
+    
+                if ($statusCode >= 400) {
+                    $error = \json_decode($executionResponse, true)['message'];
+                    return $response->setStatusCode(500)->send("Execution error: " . $error);
+                }
+    
+                $execution = \json_decode($executionResponse, true);
+    
+                foreach ($execution['headers'] as $header => $value) {
+                    $response->setHeader($header, $value);
+                }
+    
+                $body = $execution['body'] ?? '';
+    
+                if (($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
+                    $body = \base64_decode($body);
+                }
+    
+                return $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
+            } else {
+                throw new AppwriteException(AppwriteException::ROUTER_INVALID_TYPE);
             }
-
-            // Active deployment preview
-            $functionIdHash = $ids[0];
-            $projectIdHash = $ids[1];
-
-            $base32 = new Base32();
-            $functionId = $base32->decode($functionIdHash);
-            $projectId = $base32->decode($projectIdHash);
-
-            $body = \json_encode([
-                'async' => false,
-                'body' => $swooleRequest->getContent() ?? '',
-                'method' => $swooleRequest->server['request_method'],
-                'path' => $swooleRequest->server['path_info'],
-                'headers' => $swooleRequest->header
-            ]);
-
-            $headers = [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($body),
-                'X-Appwrite-Project: ' . $projectId
-            ];
-
-            $ch = \curl_init();
-            \curl_setopt($ch, CURLOPT_URL, "http://localhost/v1/functions/{$functionId}/executions");
-            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-            \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            // \curl_setopt($ch, CURLOPT_HEADER, true);
-            \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-
-            $executionResponse = \curl_exec($ch);
-            $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $error = \curl_error($ch);
-            $errNo = \curl_errno($ch);
-
-            \curl_close($ch);
-
-            if ($errNo !== 0) {
-                return $response->setStatusCode(500)->send("Internal error: " . $error);
-            }
-
-            if ($statusCode >= 400) {
-                $error = \json_decode($executionResponse, true)['message'];
-                return $response->setStatusCode(500)->send("Execution error: " . $error);
-            }
-
-            $execution = \json_decode($executionResponse, true);
-
-            foreach ($execution['headers'] as $header => $value) {
-                $response->setHeader($header, $value);
-            }
-
-            $body = $execution['body'] ?? '';
-
-            if (($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
-                $body = \base64_decode($body);
-            }
-
-            return $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
         }
 
         /*

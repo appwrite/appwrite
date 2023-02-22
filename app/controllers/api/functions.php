@@ -38,7 +38,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Config\Config;
 use Executor\Executor;
-use Selective\Base32\Base32;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
@@ -105,6 +104,19 @@ App::post('/v1/functions')
             ]))
         );
 
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $routeSubdomain = ID::unique();
+        $route = Authorization::skip(
+            fn() => $dbForConsole->createDocument('routes', new Document([
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'domain' => "{$routeSubdomain}.{$functionsDomain}",
+                'resourceType' => 'function',
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+            ]))
+        );
+
         $function->setAttribute('scheduleId', $schedule->getId());
         $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
         $dbForProject->updateDocument('functions', $function->getId(), $function);
@@ -132,7 +144,8 @@ App::get('/v1/functions')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Document $project, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (array $queries, string $search, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
 
         $queries = Query::parseQueries($queries);
 
@@ -157,15 +170,18 @@ App::get('/v1/functions')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
-        $projectId = $project->getId();
-        $base32 = new Base32();
-        $projectIdHash = \rtrim($base32->encode($projectId), '=');
         $functions = $dbForProject->find('functions', $queries);
-        $functions = \array_map(function (Document $function) use ($functionsDomain, $projectIdHash, $base32) {
-            $functionId = $function->getId();
-            $functionIdHash = \rtrim($base32->encode($functionId), '=');
-            $function = $function->setAttribute('url', "{$functionIdHash}-{$projectIdHash}.{$functionsDomain}");
+        $functions = \array_map(function (Document $function) use ($dbForConsole, $project) {
+            $route = Authorization::skip(
+                fn() => $dbForConsole->find('routes', [
+                    Query::equal('resourceType', ['function']),
+                    Query::equal('resourceInternalId', [ $function->getInternalId() ]),
+                    Query::equal('projectInternalId', [ $project->getInternalId() ]),
+                    Query::limit(1),
+                    Query::orderAsc('_createdAt')
+                ])
+            )[0] ?? null;
+            $function = $function->setAttribute('url', $route ? $route->getAttribute('domain') : '');
             return $function;
         }, $functions);
 
@@ -217,21 +233,24 @@ App::get('/v1/functions/:functionId')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, Document $project, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (string $functionId, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
-        $projectId = $project->getId();
-        $functionId = $function->getId();
-        $base32 = new Base32();
-        $projectIdHash = \rtrim($base32->encode($projectId), '=');
-        $functionIdHash = \rtrim($base32->encode($functionId), '=');
-
-        $function = $function->setAttribute('url', "{$functionIdHash}-{$projectIdHash}.{$functionsDomain}");
+        $route = Authorization::skip(
+            fn() => $dbForConsole->find('routes', [
+                Query::equal('resourceType', ['function']),
+                Query::equal('resourceInternalId', [ $function->getInternalId() ]),
+                Query::equal('projectInternalId', [ $project->getInternalId() ]),
+                Query::limit(1),
+                Query::orderAsc('_createdAt')
+            ])
+        )[0] ?? null;
+        $function = $function->setAttribute('url', $route ? $route->getAttribute('domain') : '');
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });

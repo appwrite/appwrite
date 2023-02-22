@@ -514,14 +514,14 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
-    Exception::ROUTER_INVALID_URL => [
-        'name' => Exception::ROUTER_INVALID_URL,
-        'description' => 'Invalid preview URL for Appwrite Router.',
+    Exception::ROUTER_INVALID_TYPE => [
+        'name' => Exception::ROUTER_INVALID_TYPE,
+        'description' => 'Invalid domain configuration. Route type is not supported.',
         'code' => 400,
     ],
-    Exception::ROUTER_CONSOLE_PROJECT => [
-        'name' => Exception::ROUTER_CONSOLE_PROJECT,
-        'description' => 'Use of "console" project with Appwrite Router is not allowed.',
+    Exception::ROUTER_UNKNOWN_HOST => [
+        'name' => Exception::ROUTER_UNKNOWN_HOST,
+        'description' => 'Host is not trusted. Add a custom domain to your project first.',
         'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [

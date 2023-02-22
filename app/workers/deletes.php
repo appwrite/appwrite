@@ -450,7 +450,18 @@ class DeletesV1 extends Worker
     {
         $projectId = $project->getId();
         $dbForProject = $this->getProjectDB($project);
+        $dbForConsole = $this->getConsoleDB();
         $functionId = $document->getId();
+
+        /**
+         * Delete routes
+         */
+        Console::info("Deleting routes for function " . $functionId);
+        $this->deleteByGroup('routes', [
+            Query::equal('resourceType', ['function']),
+            Query::equal('resourceInternalId', [$document->getInternalId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ], $dbForConsole);
 
         /**
          * Delete Variables
