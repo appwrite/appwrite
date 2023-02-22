@@ -5,12 +5,81 @@
 
 x-logging: &x-logging
   logging:
-    driver: 'json-file'
+    driver: "json-file"
     options:
-      max-file: '5'
-      max-size: '10m'
+      max-file: "5"
+      max-size: "10m"
 
-version: '3'
+x-variables-common: &x-variables-common
+  _APP_ENV:
+
+x-variables-smtp: &x-variables-smtp
+  _APP_SYSTEM_EMAIL_NAME:
+  _APP_SYSTEM_EMAIL_ADDRESS:
+  _APP_SMTP_HOST:
+  _APP_SMTP_PORT:
+  _APP_SMTP_SECURE:
+  _APP_SMTP_USERNAME:
+  _APP_SMTP_PASSWORD:
+
+x-variables-logging: &x-variables-logging
+  _APP_LOGGING_PROVIDER:
+  _APP_LOGGING_CONFIG:
+
+x-variables-database: &x-variables-database
+  _APP_DB_HOST:
+  _APP_DB_PORT:
+  _APP_DB_SCHEMA:
+  _APP_DB_USER:
+  _APP_DB_PASS:
+
+x-variables-redis: &x-variables-redis
+  _APP_REDIS_HOST:
+  _APP_REDIS_PORT:
+  _APP_REDIS_USER:
+  _APP_REDIS_PASS:
+
+x-variables-storage: &x-variables-storage
+  _APP_STORAGE_DEVICE:
+  _APP_STORAGE_S3_ACCESS_KEY:
+  _APP_STORAGE_S3_SECRET:
+  _APP_STORAGE_S3_REGION:
+  _APP_STORAGE_S3_BUCKET:
+  _APP_STORAGE_DO_SPACES_ACCESS_KEY:
+  _APP_STORAGE_DO_SPACES_SECRET:
+  _APP_STORAGE_DO_SPACES_REGION:
+  _APP_STORAGE_DO_SPACES_BUCKET:
+  _APP_STORAGE_BACKBLAZE_ACCESS_KEY:
+  _APP_STORAGE_BACKBLAZE_SECRET:
+  _APP_STORAGE_BACKBLAZE_REGION:
+  _APP_STORAGE_BACKBLAZE_BUCKET:
+  _APP_STORAGE_LINODE_ACCESS_KEY:
+  _APP_STORAGE_LINODE_SECRET:
+  _APP_STORAGE_LINODE_REGION:
+  _APP_STORAGE_LINODE_BUCKET:
+  _APP_STORAGE_WASABI_ACCESS_KEY:
+  _APP_STORAGE_WASABI_SECRET:
+  _APP_STORAGE_WASABI_REGION:
+  _APP_STORAGE_WASABI_BUCKET:
+
+x-variables-functions: &x-variables-functions
+  _APP_FUNCTIONS_TIMEOUT:
+  _APP_FUNCTIONS_BUILD_TIMEOUT:
+  _APP_FUNCTIONS_CONTAINERS:
+  _APP_FUNCTIONS_CPUS:
+  _APP_FUNCTIONS_MEMORY:
+  _APP_FUNCTIONS_MEMORY_SWAP:
+  _APP_FUNCTIONS_RUNTIMES:
+
+x-variables-maintenance: &x-variables-maintenance
+  _APP_MAINTENANCE_INTERVAL:
+  _APP_MAINTENANCE_RETENTION_EXECUTION:
+  _APP_MAINTENANCE_RETENTION_CACHE:
+  _APP_MAINTENANCE_RETENTION_ABUSE:
+  _APP_MAINTENANCE_RETENTION_AUDIT:
+  _APP_MAINTENANCE_RETENTION_USAGE_HOURLY:
+
+version: "3.4"
 
 services:
   traefik:
@@ -50,10 +119,10 @@ services:
     build:
       context: .
       args:
-        DEBUG: false
-        TESTING: true
+        DEBUG: "false"
+        TESTING: "true"
         VERSION: dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -87,95 +156,51 @@ services:
       - mariadb
       - redis
       # - clamav
-    entrypoint: 
+    entrypoint:
       - php
       - -e
       - app/http.php
       - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_LOCALE
-      - _APP_CONSOLE_WHITELIST_ROOT
-      - _APP_CONSOLE_WHITELIST_EMAILS
-      - _APP_CONSOLE_WHITELIST_IPS
-      - _APP_SYSTEM_EMAIL_NAME
-      - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_SYSTEM_RESPONSE_FORMAT
-      - _APP_OPTIONS_ABUSE
-      - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_SMTP_HOST
-      - _APP_SMTP_PORT
-      - _APP_SMTP_SECURE
-      - _APP_SMTP_USERNAME
-      - _APP_SMTP_PASSWORD
-      - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_STORAGE_LIMIT
-      - _APP_STORAGE_PREVIEW_LIMIT
-      - _APP_STORAGE_ANTIVIRUS
-      - _APP_STORAGE_ANTIVIRUS_HOST
-      - _APP_STORAGE_ANTIVIRUS_PORT
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - _APP_FUNCTIONS_SIZE_LIMIT
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_RUNTIMES
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
-      - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_RETENTION_EXECUTION
-      - _APP_MAINTENANCE_RETENTION_CACHE
-      - _APP_MAINTENANCE_RETENTION_ABUSE
-      - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
-      - _APP_GRAPHQL_MAX_BATCH_SIZE
-      - _APP_GRAPHQL_MAX_COMPLEXITY
-      - _APP_GRAPHQL_MAX_DEPTH
+      <<:
+        - *x-variables-common
+        - *x-variables-smtp
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+        - *x-variables-storage
+        - *x-variables-functions
+        - *x-variables-maintenance
+      _APP_WORKER_PER_CORE:
+      _APP_LOCALE:
+      _APP_CONSOLE_WHITELIST_ROOT:
+      _APP_CONSOLE_WHITELIST_EMAILS:
+      _APP_CONSOLE_WHITELIST_IPS:
+      _APP_SYSTEM_SECURITY_EMAIL_ADDRESS:
+      _APP_SYSTEM_RESPONSE_FORMAT:
+      _APP_OPTIONS_ABUSE:
+      _APP_OPTIONS_FORCE_HTTPS:
+      _APP_OPENSSL_KEY_V1:
+      _APP_DOMAIN:
+      _APP_DOMAIN_TARGET:
+      _APP_USAGE_STATS:
+      _APP_INFLUXDB_HOST:
+      _APP_INFLUXDB_PORT:
+      _APP_STORAGE_LIMIT:
+      _APP_STORAGE_PREVIEW_LIMIT:
+      _APP_STORAGE_ANTIVIRUS:
+      _APP_STORAGE_ANTIVIRUS_HOST:
+      _APP_STORAGE_ANTIVIRUS_PORT:
+      _APP_FUNCTIONS_SIZE_LIMIT:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
+      _APP_STATSD_HOST:
+      _APP_STATSD_PORT:
+      _APP_SMS_PROVIDER:
+      _APP_SMS_FROM:
+      _APP_GRAPHQL_MAX_BATCH_SIZE:
+      _APP_GRAPHQL_MAX_COMPLEXITY:
+      _APP_GRAPHQL_MAX_DEPTH:
 
   appwrite-realtime:
     entrypoint: realtime
@@ -183,7 +208,7 @@ services:
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
-    ports: 
+    ports:
       - 9505:80
     labels:
       - "traefik.enable=true"
@@ -209,20 +234,15 @@ services:
       - mariadb
       - redis
     environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPTIONS_ABUSE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+      _APP_WORKER_PER_CORE:
+      _APP_OPTIONS_ABUSE:
+      _APP_OPENSSL_KEY_V1:
+      _APP_USAGE_STATS:
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -238,19 +258,12 @@ services:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -267,15 +280,12 @@ services:
       - mariadb
       - request-catcher
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
+      _APP_SYSTEM_SECURITY_EMAIL_ADDRESS:
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -287,7 +297,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -296,42 +306,15 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+        - *x-variables-storage
+      _APP_OPENSSL_KEY_V1:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -340,7 +323,7 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
@@ -348,19 +331,12 @@ services:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-worker-builds:
     entrypoint: worker-builds
@@ -369,28 +345,21 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -402,28 +371,21 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
+      _APP_DOMAIN:
+      _APP_DOMAIN_TARGET:
+      _APP_SYSTEM_SECURITY_EMAIL_ADDRESS:
 
   appwrite-worker-functions:
     entrypoint: worker-functions
@@ -440,23 +402,17 @@ services:
       - mariadb
       - appwrite-executor
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      <<:
+        - *x-variables-common
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
+      _APP_FUNCTIONS_TIMEOUT:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
+      _APP_USAGE_STATS:
+      DOCKERHUB_PULL_USERNAME:
+      DOCKERHUB_PULL_PASSWORD:
 
   appwrite-executor:
     container_name: appwrite-executor
@@ -481,43 +437,17 @@ services:
       - mariadb
       - appwrite
     environment:
-      - _APP_ENV
-      - _APP_VERSION
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_RUNTIMES
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_INACTIVE_THRESHOLD
-      - _APP_EXECUTOR_SECRET
-      - OPEN_RUNTIMES_NETWORK
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-storage
+        - *x-variables-functions
+      _APP_VERSION:
+      _APP_FUNCTIONS_INACTIVE_THRESHOLD:
+      _APP_EXECUTOR_SECRET:
+      OPEN_RUNTIMES_NETWORK:
+      DOCKERHUB_PULL_USERNAME:
+      DOCKERHUB_PULL_PASSWORD:
 
   appwrite-worker-mails:
     entrypoint: worker-mails
@@ -534,21 +464,12 @@ services:
       - maildev
       # - smtp
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_EMAIL_NAME
-      - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_SMTP_HOST
-      - _APP_SMTP_PORT
-      - _APP_SMTP_SECURE
-      - _APP_SMTP_USERNAME
-      - _APP_SMTP_PASSWORD
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-smtp
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-worker-messaging:
     entrypoint: worker-messaging
@@ -564,15 +485,12 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+      _APP_SMS_PROVIDER:
+      _APP_SMS_FROM:
 
   appwrite-maintenance:
     entrypoint: maintenance
@@ -588,25 +506,14 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_RETENTION_EXECUTION
-      - _APP_MAINTENANCE_RETENTION_CACHE
-      - _APP_MAINTENANCE_RETENTION_ABUSE
-      - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
+      <<:
+        - *x-variables-common
+        - *x-variables-database
+        - *x-variables-redis
+        - *x-variables-maintenance
+      _APP_DOMAIN:
+      _APP_DOMAIN_TARGET:
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-usage:
     entrypoint: usage
@@ -622,22 +529,15 @@ services:
       - influxdb
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
+      _APP_INFLUXDB_HOST:
+      _APP_INFLUXDB_PORT:
+      _APP_USAGE_AGGREGATION_INTERVAL:
 
   appwrite-schedule:
     entrypoint: schedule
@@ -652,11 +552,9 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
+      <<:
+        - *x-variables-common
+        - *x-variables-redis
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
@@ -673,7 +571,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
+    command: "mysqld --innodb-flush-method=fsync" # add ' --query_cache_size=0' for DB tests
     # command: mv /var/lib/mysql/ib_logfile0 /var/lib/mysql/ib_logfile0.bu && mv /var/lib/mysql/ib_logfile1 /var/lib/mysql/ib_logfile1.bu
 
   # smtp:
@@ -687,7 +585,7 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
-  
+
   redis:
     image: redis:7.0.4-alpine
     <<: *x-logging
@@ -727,12 +625,12 @@ services:
     <<: *x-logging
     networks:
       - appwrite
-    environment: 
+    environment:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
-  # 
+  #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
   #
   # Here is a description of the different tools and why are we using them:
@@ -749,7 +647,7 @@ services:
     container_name: appwrite-mailcatcher
     <<: *x-logging
     ports:
-      - '9503:1080'
+      - "9503:1080"
     networks:
       - appwrite
 
@@ -758,7 +656,7 @@ services:
     container_name: appwrite-requestcatcher
     <<: *x-logging
     ports:
-      - '9504:5000'
+      - "9504:5000"
     networks:
       - appwrite
 
@@ -820,7 +718,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
-  
+
   graphql-explorer:
     container_name: appwrite-graphql-explorer
     image: appwrite/altair:0.3.0
@@ -831,7 +729,6 @@ services:
       - "9509:3000"
     environment:
       - SERVER_URL=http://localhost/v1/graphql
-
 
   # Dev Tools End   ------------------------------------------------------------------------------------------
 

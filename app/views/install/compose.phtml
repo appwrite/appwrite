@@ -1,9 +1,78 @@
 x-logging: &x-logging
   logging:
-    driver: 'json-file'
+    driver: "json-file"
     options:
-      max-file: '5'
-      max-size: '10m'
+      max-file: "5"
+      max-size: "10m"
+
+x-variables-common: &x-variables-common
+  _APP_ENV:
+
+x-variables-smtp: &x-variables-smtp
+  _APP_SYSTEM_EMAIL_NAME:
+  _APP_SYSTEM_EMAIL_ADDRESS:
+  _APP_SMTP_HOST:
+  _APP_SMTP_PORT:
+  _APP_SMTP_SECURE:
+  _APP_SMTP_USERNAME:
+  _APP_SMTP_PASSWORD:
+
+x-variables-logging: &x-variables-logging
+  _APP_LOGGING_PROVIDER:
+  _APP_LOGGING_CONFIG:
+
+x-variables-database: &x-variables-database
+  _APP_DB_HOST:
+  _APP_DB_PORT:
+  _APP_DB_SCHEMA:
+  _APP_DB_USER:
+  _APP_DB_PASS:
+
+x-variables-redis: &x-variables-redis
+  _APP_REDIS_HOST:
+  _APP_REDIS_PORT:
+  _APP_REDIS_USER:
+  _APP_REDIS_PASS:
+
+x-variables-storage: &x-variables-storage
+  _APP_STORAGE_DEVICE:
+  _APP_STORAGE_S3_ACCESS_KEY:
+  _APP_STORAGE_S3_SECRET:
+  _APP_STORAGE_S3_REGION:
+  _APP_STORAGE_S3_BUCKET:
+  _APP_STORAGE_DO_SPACES_ACCESS_KEY:
+  _APP_STORAGE_DO_SPACES_SECRET:
+  _APP_STORAGE_DO_SPACES_REGION:
+  _APP_STORAGE_DO_SPACES_BUCKET:
+  _APP_STORAGE_BACKBLAZE_ACCESS_KEY:
+  _APP_STORAGE_BACKBLAZE_SECRET:
+  _APP_STORAGE_BACKBLAZE_REGION:
+  _APP_STORAGE_BACKBLAZE_BUCKET:
+  _APP_STORAGE_LINODE_ACCESS_KEY:
+  _APP_STORAGE_LINODE_SECRET:
+  _APP_STORAGE_LINODE_REGION:
+  _APP_STORAGE_LINODE_BUCKET:
+  _APP_STORAGE_WASABI_ACCESS_KEY:
+  _APP_STORAGE_WASABI_SECRET:
+  _APP_STORAGE_WASABI_REGION:
+  _APP_STORAGE_WASABI_BUCKET:
+
+x-variables-functions: &x-variables-functions
+  _APP_FUNCTIONS_TIMEOUT:
+  _APP_FUNCTIONS_BUILD_TIMEOUT:
+  _APP_FUNCTIONS_CONTAINERS:
+  _APP_FUNCTIONS_CPUS:
+  _APP_FUNCTIONS_MEMORY:
+  _APP_FUNCTIONS_MEMORY_SWAP:
+  _APP_FUNCTIONS_RUNTIMES:
+
+x-variables-maintenance: &x-variables-maintenance
+  _APP_MAINTENANCE_INTERVAL:
+  _APP_MAINTENANCE_RETENTION_EXECUTION:
+  _APP_MAINTENANCE_RETENTION_CACHE:
+  _APP_MAINTENANCE_RETENTION_ABUSE:
+  _APP_MAINTENANCE_RETENTION_AUDIT:
+  _APP_MAINTENANCE_RETENTION_USAGE_HOURLY:
 <?php
 
 $httpPort = $this->getParam('httpPort', '');
@@ -11,7 +80,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
-?>version: '3'
+?>version: "3.4"
 
 services:
   traefik:
@@ -73,89 +142,45 @@ services:
 #      - clamav
       - influxdb
     environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_LOCALE
-      - _APP_CONSOLE_WHITELIST_ROOT
-      - _APP_CONSOLE_WHITELIST_EMAILS
-      - _APP_CONSOLE_WHITELIST_IPS
-      - _APP_SYSTEM_EMAIL_NAME
-      - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_SYSTEM_RESPONSE_FORMAT
-      - _APP_OPTIONS_ABUSE
-      - _APP_OPTIONS_FORCE_HTTPS
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_SMTP_HOST
-      - _APP_SMTP_PORT
-      - _APP_SMTP_SECURE
-      - _APP_SMTP_USERNAME
-      - _APP_SMTP_PASSWORD
-      - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_STORAGE_LIMIT
-      - _APP_STORAGE_PREVIEW_LIMIT
-      - _APP_STORAGE_ANTIVIRUS
-      - _APP_STORAGE_ANTIVIRUS_HOST
-      - _APP_STORAGE_ANTIVIRUS_PORT
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - _APP_FUNCTIONS_SIZE_LIMIT
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_RUNTIMES
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
-      - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_RETENTION_EXECUTION
-      - _APP_MAINTENANCE_RETENTION_CACHE
-      - _APP_MAINTENANCE_RETENTION_ABUSE
-      - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
-      - _APP_GRAPHQL_MAX_BATCH_SIZE
-      - _APP_GRAPHQL_MAX_COMPLEXITY
-      - _APP_GRAPHQL_MAX_DEPTH
+      <<:
+        - *x-variables-common
+        - *x-variables-smtp
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+        - *x-variables-storage
+        - *x-variables-functions
+        - *x-variables-maintenance
+      _APP_WORKER_PER_CORE:
+      _APP_LOCALE:
+      _APP_CONSOLE_WHITELIST_ROOT:
+      _APP_CONSOLE_WHITELIST_EMAILS:
+      _APP_CONSOLE_WHITELIST_IPS:
+      _APP_SYSTEM_SECURITY_EMAIL_ADDRESS:
+      _APP_SYSTEM_RESPONSE_FORMAT:
+      _APP_OPTIONS_ABUSE:
+      _APP_OPTIONS_FORCE_HTTPS:
+      _APP_OPENSSL_KEY_V1:
+      _APP_DOMAIN:
+      _APP_DOMAIN_TARGET:
+      _APP_USAGE_STATS:
+      _APP_INFLUXDB_HOST:
+      _APP_INFLUXDB_PORT:
+      _APP_STORAGE_LIMIT:
+      _APP_STORAGE_PREVIEW_LIMIT:
+      _APP_STORAGE_ANTIVIRUS:
+      _APP_STORAGE_ANTIVIRUS_HOST:
+      _APP_STORAGE_ANTIVIRUS_PORT:
+      _APP_FUNCTIONS_SIZE_LIMIT:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
+      _APP_STATSD_HOST:
+      _APP_STATSD_PORT:
+      _APP_SMS_PROVIDER:
+      _APP_SMS_FROM:
+      _APP_GRAPHQL_MAX_BATCH_SIZE:
+      _APP_GRAPHQL_MAX_COMPLEXITY:
+      _APP_GRAPHQL_MAX_DEPTH:
 
   appwrite-realtime:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -184,20 +209,15 @@ services:
       - mariadb
       - redis
     environment:
-      - _APP_ENV
-      - _APP_WORKER_PER_CORE
-      - _APP_OPTIONS_ABUSE
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_USAGE_STATS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+      _APP_WORKER_PER_CORE:
+      _APP_OPTIONS_ABUSE:
+      _APP_OPENSSL_KEY_V1:
+      _APP_USAGE_STATS:
 
   appwrite-worker-audits:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -211,19 +231,12 @@ services:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-worker-webhooks:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -237,15 +250,12 @@ services:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
+      _APP_SYSTEM_SECURITY_EMAIL_ADDRESS:
 
   appwrite-worker-deletes:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -258,49 +268,22 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+        - *x-variables-storage
+      _APP_OPENSSL_KEY_V1:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
 
   appwrite-worker-databases:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -314,19 +297,12 @@ services:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-worker-builds:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -340,21 +316,14 @@ services:
       - redis
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
 
   appwrite-worker-certificates:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -367,26 +336,19 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
-      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
+      _APP_DOMAIN:
+      _APP_DOMAIN_TARGET:
+      _APP_SYSTEM_SECURITY_EMAIL_ADDRESS:
 
   appwrite-worker-functions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -401,23 +363,17 @@ services:
       - mariadb
       - appwrite-executor
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_EXECUTOR_SECRET
-      - _APP_EXECUTOR_HOST
-      - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      <<:
+        - *x-variables-common
+        - *x-variables-redis
+        - *x-variables-database
+      _APP_OPENSSL_KEY_V1:
+      _APP_FUNCTIONS_TIMEOUT:
+      _APP_EXECUTOR_SECRET:
+      _APP_EXECUTOR_HOST:
+      _APP_USAGE_STATS:
+      DOCKERHUB_PULL_USERNAME:
+      DOCKERHUB_PULL_PASSWORD:
 
   appwrite-executor:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -439,43 +395,17 @@ services:
       - mariadb
       - appwrite
     environment:
-      - _APP_ENV
-      - _APP_VERSION
-      - _APP_FUNCTIONS_TIMEOUT
-      - _APP_FUNCTIONS_BUILD_TIMEOUT
-      - _APP_FUNCTIONS_CONTAINERS
-      - _APP_FUNCTIONS_RUNTIMES
-      - _APP_FUNCTIONS_CPUS
-      - _APP_FUNCTIONS_MEMORY
-      - _APP_FUNCTIONS_MEMORY_SWAP
-      - _APP_FUNCTIONS_INACTIVE_THRESHOLD
-      - _APP_EXECUTOR_SECRET
-      - OPEN_RUNTIMES_NETWORK
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_STORAGE_DEVICE
-      - _APP_STORAGE_S3_ACCESS_KEY
-      - _APP_STORAGE_S3_SECRET
-      - _APP_STORAGE_S3_REGION
-      - _APP_STORAGE_S3_BUCKET
-      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
-      - _APP_STORAGE_DO_SPACES_SECRET
-      - _APP_STORAGE_DO_SPACES_REGION
-      - _APP_STORAGE_DO_SPACES_BUCKET
-      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
-      - _APP_STORAGE_BACKBLAZE_SECRET
-      - _APP_STORAGE_BACKBLAZE_REGION
-      - _APP_STORAGE_BACKBLAZE_BUCKET
-      - _APP_STORAGE_LINODE_ACCESS_KEY
-      - _APP_STORAGE_LINODE_SECRET
-      - _APP_STORAGE_LINODE_REGION
-      - _APP_STORAGE_LINODE_BUCKET
-      - _APP_STORAGE_WASABI_ACCESS_KEY
-      - _APP_STORAGE_WASABI_SECRET
-      - _APP_STORAGE_WASABI_REGION
-      - _APP_STORAGE_WASABI_BUCKET
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-storage
+        - *x-variables-functions
+      _APP_VERSION:
+      _APP_FUNCTIONS_INACTIVE_THRESHOLD:
+      _APP_EXECUTOR_SECRET:
+      OPEN_RUNTIMES_NETWORK:
+      DOCKERHUB_PULL_USERNAME:
+      DOCKERHUB_PULL_PASSWORD:
 
   appwrite-worker-mails:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -488,21 +418,12 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_SYSTEM_EMAIL_NAME
-      - _APP_SYSTEM_EMAIL_ADDRESS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_SMTP_HOST
-      - _APP_SMTP_PORT
-      - _APP_SMTP_SECURE
-      - _APP_SMTP_USERNAME
-      - _APP_SMTP_PASSWORD
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-smtp
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-worker-messaging:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -515,15 +436,12 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-redis
+      _APP_SMS_PROVIDER:
+      _APP_SMS_FROM:
 
   appwrite-maintenance:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -536,25 +454,14 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DOMAIN
-      - _APP_DOMAIN_TARGET
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_MAINTENANCE_INTERVAL
-      - _APP_MAINTENANCE_RETENTION_EXECUTION
-      - _APP_MAINTENANCE_RETENTION_CACHE
-      - _APP_MAINTENANCE_RETENTION_ABUSE
-      - _APP_MAINTENANCE_RETENTION_AUDIT
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
+      <<:
+        - *x-variables-common
+        - *x-variables-database
+        - *x-variables-redis
+        - *x-variables-maintenance
+      _APP_DOMAIN:
+      _APP_DOMAIN_TARGET:
+      _APP_OPENSSL_KEY_V1:
 
   appwrite-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -568,22 +475,15 @@ services:
       - influxdb
       - mariadb
     environment:
-      - _APP_ENV
-      - _APP_OPENSSL_KEY_V1
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
-      - _APP_USAGE_AGGREGATION_INTERVAL
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
+      <<:
+        - *x-variables-common
+        - *x-variables-logging
+        - *x-variables-database
+        - *x-variables-redis
+      _APP_OPENSSL_KEY_V1:
+      _APP_INFLUXDB_HOST:
+      _APP_INFLUXDB_PORT:
+      _APP_USAGE_AGGREGATION_INTERVAL:
 
   appwrite-schedule:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -596,11 +496,9 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_ENV
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
+      <<:
+        - *x-variables-common
+        - *x-variables-redis
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
@@ -616,7 +514,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync'
+    command: "mysqld --innodb-flush-method=fsync"
 
   redis:
     image: redis:7.0.4-alpine
@@ -659,7 +557,7 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    environment: 
+    environment:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
 
