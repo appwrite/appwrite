@@ -40,8 +40,11 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
     }
 
     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+    //var_dump($fileSecurity);
+    //var_dump($bucket->getRead());
     $validator = new Authorization(Database::PERMISSION_READ);
     $valid = $validator->isValid($bucket->getRead());
+
 
     if (!$fileSecurity && !$valid) {
         throw new Exception(Exception::USER_UNAUTHORIZED);

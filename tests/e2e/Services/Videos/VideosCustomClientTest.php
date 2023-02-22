@@ -7,12 +7,15 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\VideoCustom;
+use Tests\E2E\Services\Videos\VideosPermissionsScope;
+use Utopia\Database\Helpers\ID;
 
 class VideosCustomClientTest extends Scope
 {
     use ProjectCustom;
     use VideoCustom;
     use SideClient;
+    use VideosPermissionsScope;
 
 
     public function testDeleteProfiles()
@@ -68,6 +71,19 @@ class VideosCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
 
         $videoId = $response['body']['$id'];
+
+        $email = ID::unique() . '@localhost.test';
+        $password = 'password';
+        $user2 = $this->createUser('user2', $email, $password);
+
+        $file = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
+        ]);
+
+        $this->assertEquals($file['headers']['status-code'], 401);
+
 
         /**
          * Create subtitles
@@ -157,56 +173,65 @@ class VideosCustomClientTest extends Scope
             $this->assertEquals(204, $response['headers']['status-code']);
         }
         sleep(30);
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls', [
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        ], $this->getHeaders()));
+
+
 
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
         $this->assertEquals(3, count($match[0]));
-        $subtitleUri = $match[0][1];
+        $subtitleUri  = $match[0][1];
         $renditionUri = $match[0][2];
 
-        $response = $this->client->call(Client::METHOD_GET, $renditionUri, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            $renditionUri,
+            array_merge(
+                [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                ],
+                $this->getHeaders()
+            )
+        );
 
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
         $this->assertEquals(10, count($match[0]));
 
         $segmentUri = $match[0][0];
-        $response = $this->client->call(Client::METHOD_GET, $segmentUri, [
+        $response = $this->client->call(Client::METHOD_GET, $segmentUri, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThan(0, strlen($response['body']));
 
-        $response = $this->client->call(Client::METHOD_GET, $subtitleUri, [
+        $response = $this->client->call(Client::METHOD_GET, $subtitleUri, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        ], $this->getHeaders()));
 
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
         $segmentUri = $match[0][0];
 
-        $response = $this->client->call(Client::METHOD_GET, $segmentUri, [
+        $response = $this->client->call(Client::METHOD_GET, $segmentUri, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
+        ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1508, strlen($response['body']));
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash', [
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders());
-
+        ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
 
         $xml = simplexml_load_string($response['body']);
@@ -263,18 +288,18 @@ class VideosCustomClientTest extends Scope
                     $audioSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
                     $audioSegmentId = (string)$representation->SegmentList->SegmentURL['media'];
 
-                    $response = $this->client->call(Client::METHOD_GET, $audioSegmentBaseUrl . $audioSegmentInitialization, [
+                    $response = $this->client->call(Client::METHOD_GET, $audioSegmentBaseUrl . $audioSegmentInitialization, array_merge([
                         'content-type' => 'application/json',
                         'x-appwrite-project' => $this->getProject()['$id'],
-                    ], $this->getHeaders());
+                    ], $this->getHeaders()));
 
                     $this->assertEquals(200, $response['headers']['status-code']);
                     $this->assertGreaterThan(0, strlen($response['body']));
 
-                    $response = $this->client->call(Client::METHOD_GET, $audioSegmentBaseUrl . $audioSegmentId, [
+                    $response = $this->client->call(Client::METHOD_GET, $audioSegmentBaseUrl . $audioSegmentId, array_merge([
                         'content-type' => 'application/json',
                         'x-appwrite-project' => $this->getProject()['$id'],
-                    ], $this->getHeaders());
+                    ], $this->getHeaders()));
 
                     $this->assertEquals(200, $response['headers']['status-code']);
                     $this->assertGreaterThan(0, strlen($response['body']));

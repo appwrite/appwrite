@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\validator\DateTimeValidator;
 use Utopia\Database\Helpers\Role;
 
 trait VideoCustom
@@ -35,12 +34,12 @@ trait VideoCustom
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => 'unique()',
-            'name' => 'Test Bucket 2',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
+            'name' => 'My Video bucket ',
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
             ],
         ]);
 
