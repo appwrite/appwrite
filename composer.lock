@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60f1cefcf6d210ed231acb4a99f2f20c",
+    "content-hash": "d82e08efceeebb37f8ed6b75972af70a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2168,16 +2168,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.13.2",
+            "version": "dev-feat-transfer",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b"
+                "reference": "00b26ef3d04b04f2df64a64636f6b81f8ae1a166"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ad1c00f24ca56e73888acc2af3deee4919b1194b",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/00b26ef3d04b04f2df64a64636f6b81f8ae1a166",
+                "reference": "00b26ef3d04b04f2df64a64636f6b81f8ae1a166",
                 "shasum": ""
             },
             "require": {
@@ -2217,9 +2217,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.13.2"
+                "source": "https://github.com/utopia-php/storage/tree/feat-transfer"
             },
-            "time": "2022-12-20T11:11:35+00:00"
+            "time": "2022-11-02T07:42:34+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -4604,16 +4604,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.7.1",
+            "version": "3.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619"
+                "reference": "ed8e00df0a83aa96acf703f8c2979ff33341f879"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/1359e176e9307e906dc3d890bcc9603ff6d90619",
-                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/ed8e00df0a83aa96acf703f8c2979ff33341f879",
+                "reference": "ed8e00df0a83aa96acf703f8c2979ff33341f879",
                 "shasum": ""
             },
             "require": {
@@ -4649,14 +4649,15 @@
             "homepage": "https://github.com/squizlabs/PHP_CodeSniffer",
             "keywords": [
                 "phpcs",
-                "standards"
+                "standards",
+                "static analysis"
             ],
             "support": {
                 "issues": "https://github.com/squizlabs/PHP_CodeSniffer/issues",
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2022-06-18T07:21:10+00:00"
+            "time": "2023-02-22T23:07:41+00:00"
         },
         {
             "name": "swoole/ide-helper",
@@ -5041,9 +5042,18 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/storage",
+            "version": "dev-feat-transfer",
+            "alias": "0.13.2",
+            "alias_normalized": "0.13.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/storage": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5067,5 +5077,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }
