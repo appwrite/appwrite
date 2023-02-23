@@ -2125,7 +2125,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $timeout = App::getEnv('_APP_SLOW_QUERIES') === 'true' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
+        $timeout = App::getEnv('_APP_SLOW_QUERIES') === 'enabled' ? App::getEnv('_APP_SLOW_QUERIES_TIMEOUT') : null;
 
         if (App::isDevelopment() && intval($request->getHeader('x-appwrite-timeout')) > 0) {
             $timeout = intval($request->getHeader('x-appwrite-timeout'));
