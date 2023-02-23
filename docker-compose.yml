@@ -581,6 +581,23 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
+  appwrite-folder-backup:
+    entrypoint: folder-backup
+    <<: *x-logging
+    container_name: appwrite-folder-backup
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - appwrite-certificates:/storage/certificates:rw
+      - ./vendor/utopia-php/cli:/usr/src/code/vendor/utopia-php/cli
+    environment:
+      - _APP_ENV
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_CONNECTIONS_STORAGE
+
   appwrite-worker-usage:
     entrypoint: worker-usage
     <<: *x-logging
