@@ -191,7 +191,6 @@ class AuthTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
         ], $gqlPayload);
 
-        var_dump($document);
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
         $this->assertArrayNotHasKey('errors', $document['body']);
 
