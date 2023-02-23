@@ -180,7 +180,7 @@ App::error()
                 $route = $utopia->match($request);
                 $collectionId = $route->getParamValue('collectionId');
                 $databaseId = $route->getParamValue('databaseId');
-                $queries = $request->getParam('queries');
+                $queries = $request->getParam('queries', []);
 
                 $queriesValidator = new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE);
                 if (!$queriesValidator->isValid($queries)) {
