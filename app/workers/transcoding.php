@@ -77,9 +77,6 @@ class TranscodingV1 extends Worker
         $this->video   = new Document($this->args['video']);
         $this->profile = new Document($this->args['profile']);
         $this->project = new Document($this->args['project']);
-
-        console::info('Receiving videoId [' . $this->video->getId() . '] of size [' . $this->video['size'] . ']');
-
         $this->basePath .=   $this->video->getId() . '/' . $this->profile->getId();
         $this->inDir  =  $this->basePath . '/in/';
         $this->outDir =  $this->basePath . '/out/';
@@ -136,8 +133,17 @@ class TranscodingV1 extends Worker
             ->setAttribute('audioBitrate', $audioStreamCount > 0 ? $streams->audios()->first()->get('bit_rate') : null)
             ;
 
-        $this->database->updateDocument('videos', $this->video->getId(), $this->video);
 
+        console::info('Input video id:' . $this->video->getId() . PHP_EOL .
+            'Input name: ' . $this->file->getAttribute('name') . PHP_EOL .
+            'Input width: ' . $this->video->getAttribute('width') . PHP_EOL .
+            'Input height: ' . $this->video->getAttribute('height') . PHP_EOL .
+            'Input duration: ' . $this->video->getAttribute('duration') . PHP_EOL .
+            'Input size: ' . $this->video['size'] . PHP_EOL .
+            'Input videoBitrate: ' . $this->video->getAttribute('videoBitrate') . PHP_EOL .
+            'Input audioBitrate: ' . $this->video->getAttribute('audioBitrate') . PHP_EOL);
+
+        $this->database->updateDocument('videos', $this->video->getId(), $this->video);
         $media = $this->ffmpeg->open($inPath);
         $this->setRenditionName($this->profile);
 
@@ -191,9 +197,14 @@ class TranscodingV1 extends Worker
                 ->setAudioKiloBitrate($this->profile->getAttribute('audioBitrate'))
                 ->setResize($this->profile->getAttribute('width'), $this->profile->getAttribute('height'))
             ;
-            console::info('Setting video bitrate to [' . $this->profile->getAttribute('videoBitrate') . ']');
-            console::info('Setting audio bitrate to [' . $this->profile->getAttribute('audioBitrate') . ']');
-            console::info('Setting  resolution to [' . $this->profile->getAttribute('width') . 'X' . $this->profile->getAttribute('height') . ']');
+
+            console::info('Output bitrate:' . $this->video->getId() . PHP_EOL .
+                'Output resolution: ' . $this->file->getAttribute('name') . PHP_EOL .
+                'Output width: ' . $this->profile->getAttribute('width')  . PHP_EOL .
+                'Output height: ' . $this->profile->getAttribute('height') . PHP_EOL .
+                'Output video bitrate:' . $this->profile->getAttribute('videoBitrate') . PHP_EOL .
+                'Output audio bitrate:' . $this->profile->getAttribute('audioBitrate') . PHP_EOL .
+                'Output:' . $this->profile->getAttribute('output') . PHP_EOL);
 
             $format = new Streaming\Format\X264();
             $format->on('progress', function ($media, $format, $percentage) use ($query) {
@@ -279,6 +290,8 @@ class TranscodingV1 extends Worker
                 $this->database->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle);
             }
 
+            console::info('Rendition ' . $query->getId() . ' conversion, done');
+
             /** Upload & cleanup **/
             $start = 0;
             $fileNames = scandir($this->outDir);
@@ -312,7 +325,7 @@ class TranscodingV1 extends Worker
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
             $this->sendRealtimeUpdates($query, 'update');
 
-            Console::info('Process lasted ' . (microtime(true) - $startTime) . ' seconds');
+            Console::warning('Job total time ' . (microtime(true) - $startTime) . ' seconds');
         } catch (\Throwable $th) {
             $query->setAttribute('metadata', json_encode([
                 'code' => $th->getCode(),
@@ -322,7 +335,8 @@ class TranscodingV1 extends Worker
             $query->setAttribute('status', self::STATUS_ERROR);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
             $this->sendRealtimeUpdates($query, 'update');
-            console::error('Transcoding general error');
+
+            console::error($th->getMessage());
         }
     }
 
@@ -356,9 +370,7 @@ class TranscodingV1 extends Worker
                 ->setAdditionalParams($additionalParams)
                 ->save($this->outPath);
 
-                console::info(strtoupper($output) . ' rendition conversion ended');
-
-                return $this->getVideoStreamInfo($dash->metadata()->export(), $representation);
+                return $dash->metadata()->basic($dash->metadata()->export());
         }
 
         $hls = $media->hls();
@@ -376,9 +388,7 @@ class TranscodingV1 extends Worker
             ->setAdditionalParams($additionalParams)
             ->save($this->outPath);
 
-        console::info(strtoupper($output) . ' rendition conversion ended');
-
-        return $this->getVideoStreamInfo($hls->metadata()->export(), $representation);
+        return $hls->metadata()->basic($hls->metadata()->export());
     }
 
     /**
@@ -387,7 +397,6 @@ class TranscodingV1 extends Worker
      */
     private function getDashSegments(string $path): array
     {
-        var_dump($this->outDir);
 
         $segments = [];
         $metadata = null;
@@ -499,34 +508,6 @@ class TranscodingV1 extends Worker
             'targetDuration' => $targetDuration,
             'segments' => $segments
         ];
-    }
-
-    /**
-     * @param $metadata array
-     * @return array
-     */
-    private function getVideoStreamInfo(array $metadata, RepresentationInterface $representation): array
-    {
-
-        $info = [];
-        $general = $metadata['stream']['resolutions'][0] ?? [];
-        $parts = explode('X', $general['dimension']);
-        $info['width'] = $parts[0] ?? $representation->getWidth();
-        $info['height'] = $parts[1] ?? $representation->getHeight();
-        $info['videoBitrate'] = $general['video_kilo_bitrate'] ?? '0';
-        $info['audioBitrate'] = $general['audio_kilo_bitrate'] ?? '0';
-
-        foreach ($metadata['video']['streams'] ?? [] as $streams) {
-            if ($streams['codec_type'] === 'video') {
-                $info['duration'] = !empty($streams['duration']) ? $streams['duration'] : '0';
-                $info['videoCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '';
-                $info['videoFramerate'] = !empty($streams['avg_frame_rate']) ? $streams['avg_frame_rate'] : '0';
-            } elseif ($streams['codec_type'] === 'audio') {
-                $info['audioCodec'] = !empty($streams['codec_name']) ? $streams['codec_name'] : '' ;
-                $info['audioSamplerate'] = !empty($streams['sample_rate']) ? $streams['sample_rate'] : '0';
-            }
-        }
-        return $info;
     }
 
     /**
