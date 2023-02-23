@@ -1018,7 +1018,7 @@ trait DatabasesBase
                 'data' => [
                     'title' => 'title',
                     'releaseYear' => 2020,
-                    'longtext' => file_get_contents(__DIR__ . '/longtext'),
+                    'longtext' => file_get_contents(__DIR__ . '/longtext.txt'),
                 ],
                 'permissions' => [
                     Permission::read(Role::user($this->getUser()['$id'])),
