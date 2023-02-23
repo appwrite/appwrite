@@ -36,11 +36,11 @@ class FolderBackup extends Action
             ];
 
             foreach ($folders as $key => $folder) {
-                $root = new Local($folder);
+                $local = new Local($folder);
                 $filename = $key . '-' . date("Y-m-d") . '.tar.gz';
-                $source   = $root->getRoot() . '/' . $filename;
+                $source   = $local->getRoot() . '/' . $filename;
                 $destination = '/' . $key . '/' . $filename;
-                $content = $root->getRoot() . '/*';
+                $content = $local->getRoot() . '/*';
 
 //            for ($i = 0; $i < 1000; $i++) {
 //                file_put_contents($root->getRoot() . '/' . $i . '.txt', '');
@@ -65,7 +65,7 @@ class FolderBackup extends Action
                         $dsn->getPath(),
                         $dsn->getParam('region')
                     );
-                    $result = $root->transfer($source, $destination, $remote);
+                    $result = $local->transfer($source, $destination, $remote);
                     var_dump($result);
                     Console::log('done');
                 } catch (\Exception $e) {
