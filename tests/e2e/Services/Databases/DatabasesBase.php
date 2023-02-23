@@ -1035,7 +1035,6 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-timeout' => 1,
             ], $this->getHeaders()), [
-                //'queries' => ['sleep("$id", 1)'],
                 'queries' => ['notEqual("longtext", "appwrite")'],
             ]);
         }
@@ -1078,8 +1077,6 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
         $this->assertEquals(200, $documents['headers']['status-code']);
-        //$this->assertEquals($document['body']['queries'][0], 'sleep("$id", 1)');
-        //$this->assertEquals($document['body']['queries'][0], 'sleep("$id", 1)');
         $this->assertEquals($document['body']['queries'][0], 'notEqual("longtext", "appwrite")');
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
@@ -1087,7 +1084,6 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
         $this->assertEquals(204, $response['headers']['status-code']);
-
 
         $document = $this->client->call(Client::METHOD_GET, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
