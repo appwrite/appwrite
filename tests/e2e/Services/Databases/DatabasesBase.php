@@ -1035,13 +1035,9 @@ trait DatabasesBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-timeout' => 1,
             ], $this->getHeaders()), [
-                //'queries' => ['notEqual("longtext", "appwrite")'],
+                'queries' => ['notEqual("longtext", "appwrite")'],
             ]);
-
-            var_dump($docs);
         }
-
-        exit;
 
         for ($i = 0; $i < count($documents); $i++) {
             $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'] . '/collections/' . $data['moviesId'] . '/documents/' . $documents[$i]['body']['$id'], array_merge([
