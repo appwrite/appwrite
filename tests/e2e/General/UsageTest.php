@@ -9,9 +9,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use CURLFile;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\DateTime;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class UsageTest extends Scope
 {
@@ -642,7 +641,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($deployment['body']['$createdAt']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -652,8 +651,8 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
@@ -774,13 +773,5 @@ class UsageTest extends Scope
         $this->validateDates($response['buildsTime']);
         $this->assertEquals($failures, $response['executionsFailure'][array_key_last($response['executionsFailure'])]['value']);
         $this->validateDates($response['executionsFailure']);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->usersCount = 0;
-        $this->requestsCount = 0;
-        $projectId = '';
-        $headers = [];
     }
 }

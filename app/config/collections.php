@@ -3,7 +3,7 @@
 use Appwrite\Auth\Auth;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);
@@ -3185,7 +3185,7 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
-         ],
+        ],
         'indexes' => [
             [
                 '$id' => '_key_accessedAt',
@@ -3503,7 +3503,7 @@ $collections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [ 'encrypt' ]
+                'filters' => ['encrypt']
             ],
             [
                 '$id' => ID::custom('search'),

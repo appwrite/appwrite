@@ -8,9 +8,8 @@ use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class ProjectsConsoleClientTest extends Scope
 {

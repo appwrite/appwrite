@@ -8,10 +8,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class WebhooksCustomServerTest extends Scope
 {
@@ -245,7 +244,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
-        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -336,7 +335,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
-        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], false);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -378,7 +377,7 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
-        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], false);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);

@@ -3,8 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 trait TeamsBaseClient
 {
@@ -150,7 +149,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(false, DateTime::isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(false, $this->datetimeValidator->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
         /**
@@ -203,7 +202,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(false, DateTime::isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(false, $this->datetimeValidator->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(false, $response['body']['confirm']);
 
         $lastEmail = $this->getLastEmail();
@@ -337,7 +336,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['joined']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
         $data['session'] = $session;
@@ -369,7 +368,7 @@ trait TeamsBaseClient
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
@@ -403,7 +402,7 @@ trait TeamsBaseClient
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
+        $this->assertEquals(true, $this->datetimeValidator->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 

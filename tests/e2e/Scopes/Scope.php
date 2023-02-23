@@ -5,11 +5,14 @@ namespace Tests\E2E\Scopes;
 use Appwrite\Tests\Retryable;
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\DatetimeValidator;
 
 abstract class Scope extends TestCase
 {
     use Retryable;
+
+    protected DatetimeValidator $datetimeValidator;
 
     /**
      * @var Client
@@ -23,11 +26,11 @@ abstract class Scope extends TestCase
 
     protected function setUp(): void
     {
+        $this->datetimeValidator = new DatetimeValidator();
         $this->client = new Client();
 
         $this->client
-            ->setEndpoint($this->endpoint)
-        ;
+            ->setEndpoint($this->endpoint);
     }
 
     protected function tearDown(): void
