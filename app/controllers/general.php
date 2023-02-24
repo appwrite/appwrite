@@ -85,11 +85,17 @@ App::init()
                 $functionId = $route->getAttribute('resourceId');
                 $projectId = $route->getAttribute('projectId');
 
+                $path = ($swooleRequest->server['request_uri'] ?? '');
+                $query = ($swooleRequest->server['query_string'] ?? '');
+                if(!empty($query)) {
+                    $path .= '?' . $query;
+                }
+
                 $body = \json_encode([
                     'async' => false,
                     'body' => $swooleRequest->getContent() ?? '',
                     'method' => $swooleRequest->server['request_method'],
-                    'path' => $swooleRequest->server['path_info'],
+                    'path' => $path,
                     'headers' => $swooleRequest->header
                 ]);
     
