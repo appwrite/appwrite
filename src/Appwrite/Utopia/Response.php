@@ -86,6 +86,8 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Transfer;
 use Appwrite\Utopia\Response\Model\Source;
 use Appwrite\Utopia\Response\Model\Destination;
+use Appwrite\Utopia\Response\Model\DestinationValidation;
+use Appwrite\Utopia\Response\Model\SourceValidation;
 
 /**
  * @method int getStatusCode()
@@ -221,8 +223,10 @@ class Response extends SwooleResponse
     public const MODEL_TRANSFER_LIST = 'transferList';
     public const MODEL_SOURCE = 'source';
     public const MODEL_SOURCE_LIST = 'sourceList';
-    public const MODEL_DESTINATION = 'Destination';
-    public const MODEL_DESTINATION_LIST = 'DestinationList';
+    public const MODEL_SOURCE_VALIDATION = 'sourceValidation';
+    public const MODEL_DESTINATION = 'destination';
+    public const MODEL_DESTINATION_LIST = 'destinationList';
+    public const MODEL_DESTINATION_VALIDATION = 'destinationValidation';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -357,7 +361,9 @@ class Response extends SwooleResponse
             ->setModel(new UsageProject())
             ->setModel(new Transfer())
             ->setModel(new Destination())
+            ->setModel(new DestinationValidation())
             ->setModel(new Source())
+            ->setModel(new SourceValidation())
             // Verification
             // Recovery
             // Tests (keep last)

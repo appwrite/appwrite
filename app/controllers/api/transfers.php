@@ -23,6 +23,7 @@ use Utopia\Transfer\Sources\Appwrite as SourcesAppwrite;
 use Utopia\Transfer\Sources\Firebase;
 use Utopia\Transfer\Sources\NHost;
 use Utopia\Transfer\Sources\Supabase;
+use Utopia\Transfer\Transfer as TransferTransfer;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
@@ -48,7 +49,7 @@ App::post('/v1/transfers')
     ->param('transferId', 'unique()', new CustomId(), 'Transfer unique ID. Use \'unique()\' to auto generate a unique ID for this transfer.')
     ->param('source', '', new UID(), 'Source UID. [Learn more about sources](https://appwrite.io/docs/transfers/sources)', false)
     ->param('destination', '', new UID(), 'Destination UID. [Learn more about destinations](https://appwrite.io/docs/transfers/sources)', false)
-    ->param('resources', [], new ArrayList(new WhiteList(['users', 'databases'])), 'List of resources to transfer. [A list of resources can be found here.](https://appwrite.io/docs/transfers#resources)', false)
+    ->param('resources', [], new ArrayList(new WhiteList(TRANSFER_RESOURCES)), 'List of resources to transfer. [A list of resources can be found here.](https://appwrite.io/docs/transfers#resources)', false)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -57,7 +58,7 @@ App::post('/v1/transfers')
     ->action(function (string $transferId, string $source, string $destination, array $resources, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
         $cron = !empty($schedule) ? new CronExpression($schedule) : null;
         $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
-        
+
         $transferId = ($transferId == 'unique()') ? ID::unique() : $transferId;
 
         $transfer = $dbForProject->createDocument('transfers', new Document([
@@ -157,7 +158,7 @@ App::get('/v1/transfers/:transferId')
         $transfer = $dbForProject->getDocument('transfers', $transferId);
 
         if ($transfer->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_NOT_FOUND);
+            throw new Exception(Exception::TRANSFER_NOT_FOUND, 'Transfer not found', 404);
         }
 
         $response->dynamic($transfer, Response::MODEL_TRANSFER);
@@ -186,11 +187,11 @@ App::delete('/v1/transfers/:transferId')
         $transfer = $dbForProject->getDocument('transfers', $transferId);
 
         if ($transfer->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_NOT_FOUND);
+            throw new Exception(Exception::TRANSFER_NOT_FOUND, 'Transfer not found', 404);
         }
 
         if (!$dbForProject->deleteDocument('transfers', $transfer->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove transfer from DB');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove transfer from DB', 500);
         }
 
         $deletes
@@ -268,7 +269,7 @@ App::get('/v1/transfers/sources/:sourceId')
         $source = $dbForProject->getDocument('sources', $sourceId);
 
         if ($source->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found');
+            throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found', 404);
         }
 
         $response->dynamic($source, Response::MODEL_SOURCE);
@@ -283,16 +284,17 @@ App::post('/v1/transfers/sources/:sourceId/validate')
     ->label('sdk.method', 'validateSource')
     ->label('sdk.description', '/docs/references/transfers/validate-source.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_NULL)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ANY)
     ->param('sourceId', '', new UID(), 'Source unique ID.')
+    ->param('resources', TRANSFER_RESOURCES, new ArrayList(new WhiteList(TRANSFER_RESOURCES)), 'List of resources to test. If none are sent then all resources are tested. [A list of resources can be found here.](https://appwrite.io/docs/transfers#resources)', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $sourceId, Response $response, Database $dbForProject) {
+    ->action(function (string $sourceId, array $resources, Response $response, Database $dbForProject) {
         $source = $dbForProject->getDocument('sources', $sourceId);
 
         if ($source->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found');
+            throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found', 404);
         }
 
         $authData = json_decode($source->getAttribute('data', "{}"), true);
@@ -302,30 +304,31 @@ App::post('/v1/transfers/sources/:sourceId/validate')
 
             switch ($source['type']) {
                 case 'appwrite': {
-                    $testAdapter = new SourcesAppwrite($authData['project'], $authData['endpoint'], $authData['key']);
-                    break;
-                }
+                        $testAdapter = new SourcesAppwrite($authData['project'], $authData['endpoint'], $authData['key']);
+                        break;
+                    }
                 case 'firebase': {
-                    $testAdapter = new Firebase($authData['authObject'], Firebase::AUTH_SERVICEACCOUNT);
-                    break;
-                }
+                        $testAdapter = new Firebase($authData['authObject'], Firebase::AUTH_SERVICEACCOUNT);
+                        break;
+                    }
                 case 'supabase': {
-                    $testAdapter = new Supabase($authData['host'], $authData['database'], $authData['password'], $authData['port']);
-                    break;
-                }
+                        $testAdapter = new Supabase($authData['url'], $authData['database'], $authData['username'], $authData['password'], $authData['port']);
+                        break;
+                    }
                 case 'nhost': {
-                    $testAdapter = new NHost($authData['host'], $authData['database'], $authData['password'], $authData['port']);
-                    break;
-                }
+                        $testAdapter = new NHost($authData['url'], $authData['database'], $authData['username'], $authData['password'], $authData['port']);
+                        break;
+                    }
                 default: {
-                    throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found');
-                }
+                        throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found', 404);
+                    }
             }
 
-            $testAdapter->check(); // Throws exception on failure
-            $response->noContent();
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 400);
+            $result = $testAdapter->check($resources); // Throws exception on failure
+
+            return $response->json($result);
+        } catch (Throwable $e) {
+            throw new Exception(Exception::TRANSFER_SOURCE_FAILED, $e->getMessage(), 400);
         }
     });
 
@@ -346,7 +349,7 @@ App::delete('/v1/transfers/sources/:sourceId')
         $source = $dbForProject->getDocument('sources', $sourceId);
 
         if ($source->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found');
+            throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found', 404);
         }
 
         $dbForProject->deleteDocument('sources', $source->getId());
@@ -418,7 +421,7 @@ App::get('/v1/transfers/destinations/:destinationId')
         $destination = $dbForProject->getDocument('destinations', $desinationId);
 
         if ($destination->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found');
+            throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
         }
 
         $response->dynamic($destination, Response::MODEL_DESTINATION);
@@ -433,16 +436,17 @@ App::post('/v1/transfers/destinations/:destinationId/validate')
     ->label('sdk.method', 'validateDestination')
     ->label('sdk.description', '/docs/references/transfers/validate-destination.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_NULL)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DESTINATION_VALIDATION)
     ->param('destinationId', '', new UID(), 'Destination unique ID.')
+    ->param('resources', TRANSFER_RESOURCES, new ArrayList(new WhiteList(TRANSFER_RESOURCES)), 'List of resources to test. If none are sent then all resources are tested. [A list of resources can be found here.](https://appwrite.io/docs/transfers#resources)', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $destinationId, Response $response, Database $dbForProject) {
+    ->action(function (string $destinationId, array $resources, Response $response, Database $dbForProject) {
         $destination = $dbForProject->getDocument('destinations', $destinationId);
 
         if ($destination->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found');
+            throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
         }
 
         $authData = json_decode($destination->getAttribute('data', "{}"), true);
@@ -452,18 +456,35 @@ App::post('/v1/transfers/destinations/:destinationId/validate')
 
             switch ($destination['type']) {
                 case 'appwrite': {
-                    $testAdapter = new Appwrite($authData['projectId'], $authData['endpoint'], $authData['key']);
-                    break;
-                }
+                        $testAdapter = new Appwrite($authData['projectId'], $authData['endpoint'], $authData['key']);
+                        break;
+                    }
                 default: {
-                    throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found');
-                }
+                        throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
+                    }
             }
 
-            $testAdapter->check(); // Throws exception on failure
-            $response->noContent();
+            $result = $testAdapter->check($resources);
+
+            $result = array_filter($result, function ($value) {
+                return $value !== true;
+            });
+    
+            if (count($result) == 0) {
+                return $response->dynamic(new Document([
+                    'status' => 'success',
+                    'message' => 'Destination is valid',
+                    'errors' => $result
+                ]), Response::MODEL_DESTINATION_VALIDATION);
+            } else {
+                return $response->setStatusCode(401)->dynamic(new Document([
+                    'status' => 'failed',
+                    'message' => 'Missing Permissions',
+                    'errors' => $result
+                ]), Response::MODEL_DESTINATION_VALIDATION);
+            }
         } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 400);
+            throw new Exception(Exception::TRANSFER_DESTINATION_FAILED, $e->getMessage(), 400);
         }
     });
 
@@ -477,6 +498,7 @@ App::delete('/v1/transfers/destinations/:destinationId')
     ->label('sdk.description', '/docs/references/transfers/delete-destination.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('destinationId', '', new UID(), 'Destination unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -484,7 +506,7 @@ App::delete('/v1/transfers/destinations/:destinationId')
         $destination = $dbForProject->getDocument('destinations', $destinationId);
 
         if ($destination->isEmpty()) {
-            throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found');
+            throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
         }
 
         $dbForProject->deleteDocument('destinations', $destination->getId());
@@ -554,7 +576,7 @@ App::post('/v1/transfers/sources/appwrite/validate')
     ->label('sdk.description', '/docs/references/transfers/validate-appwrite-source.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_SOURCE_VALIDATION)
     ->param('projectId', '', new UID(), 'Source Project UID. The UID of the project to transfer.', false)
     ->param('endpoint', '', new URL(), 'Source Endpoint. The endpoint of the project to transfer.', false)
     ->param('key', '', new Text(100), 'Source Key. The key of the project to transfer.', false)
@@ -567,7 +589,7 @@ App::post('/v1/transfers/sources/appwrite/validate')
             throw new Exception($e->getMessage(), 400);
         }
 
-        $response->noContent();
+        return $response->json(TRANSFER_RESOURCES);
     });
 
 App::post('/v1/transfers/sources/firebase')
@@ -619,7 +641,7 @@ App::post('/v1/transfers/sources/firebase/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Firebase Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.[sourceId].validateFirebaseSource')
+    ->label('event', 'transfers.validateFirebaseSource')
     ->label('audits.event', 'transfers.validateFirebaseSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -628,10 +650,11 @@ App::post('/v1/transfers/sources/firebase/validate')
     ->label('sdk.description', '/docs/references/transfers/validate-firebase-source.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_SOURCE_VALIDATION)
     ->param('serviceAccount', '', new JSON(), 'Firebase Service account with all required scopes, [Learn more about Firebase Transfer](https://appwrite.io/docs/transfers/sources#firebase)', false)
     ->inject('response')
-    ->action(function (string $serviceAccount, Response $response) {
+    ->inject('events')
+    ->action(function (string $serviceAccount, Response $response, Event $eventsInstance) {
         $testAdapter = new Firebase(json_decode($serviceAccount, true), Firebase::AUTH_SERVICEACCOUNT);
         try {
             $testAdapter->check(); // Throws exception on failure
@@ -699,7 +722,7 @@ App::post('/v1/transfers/sources/supabase/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Supabase Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.[sourceId].validateSupabaseSource')
+    ->label('event', 'transfers.validateSupabaseSource')
     ->label('audits.event', 'transfers.validateSupabaseSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -708,7 +731,7 @@ App::post('/v1/transfers/sources/supabase/validate')
     ->label('sdk.description', '/docs/references/transfers/validate-supabase-source.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_SOURCE_VALIDATION)
     ->param('host', '', new Text(100), 'Supabase Database Host. The host of the project to transfer.', false)
     ->param('database', 'postgres', new Text(100), 'Supabase Database Name. The name of the database to transfer.', true)
     ->param('username', 'postgres', new Text(100), 'Supabase Database Username. The username of the database to transfer.', true)
@@ -717,13 +740,26 @@ App::post('/v1/transfers/sources/supabase/validate')
     ->inject('response')
     ->action(function (string $host, string $database, string $username, string $password, string $port, Response $response) {
         $testAdapter = new Supabase($host, $database, $username, $password, $port);
-        try {
-            $testAdapter->check(); // Throws exception on failure
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 400);
-        }
 
-        $response->noContent();
+        $result = $testAdapter->check();
+
+        $result = array_filter($result, function ($value) {
+            return $value !== true;
+        });
+
+        if (count($result) == 0) {
+            return $response->dynamic(new Document([
+                'status' => 'success',
+                'message' => 'Destination is valid',
+                'errors' => $result
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        } else {
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'status' => 'failed',
+                'message' => 'Missing Permissions',
+                'errors' => $result
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        }
     });
 
 App::post('/v1/transfers/sources/nhost')
@@ -783,7 +819,7 @@ App::post('/v1/transfers/sources/nhost/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Nhost Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.[sourceId].validateNhostSource')
+    ->label('event', 'transfers.validateNhostSource')
     ->label('audits.event', 'transfers.validateNhostSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -792,7 +828,7 @@ App::post('/v1/transfers/sources/nhost/validate')
     ->label('sdk.description', '/docs/references/transfers/validate-nhost-source.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_SOURCE_VALIDATION)
     ->param('host', '', new Text(100), 'Nhost Database Host. The host of the project to validate.', false)
     ->param('database', 'postgres', new Text(100), 'Nhost Database Name. The name of the database to validate.', true)
     ->param('username', 'postgres', new Text(100), 'Nhost Database Username. The username of the database to validate.', true)
@@ -801,13 +837,24 @@ App::post('/v1/transfers/sources/nhost/validate')
     ->inject('response')
     ->action(function (string $url, string $database, string $username, string $password, string $port, Response $response) {
         $testAdapter = new NHost($url, $database, $username, $password, $port);
-        try {
-            $testAdapter->check(); // Throws exception on failure
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 400);
-        }
 
-        $response->noContent();
+        $result = array_filter($result, function ($value) {
+            return $value !== true;
+        });
+
+        if (count($result) == 0) {
+            return $response->dynamic(new Document([
+                'status' => 'success',
+                'message' => 'Destination is valid',
+                'errors' => $result
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        } else {
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'status' => 'failed',
+                'message' => 'Missing Permissions',
+                'errors' => $result
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        }
     });
 
 App::post('/v1/transfers/destinations/appwrite')
@@ -837,11 +884,15 @@ App::post('/v1/transfers/destinations/appwrite')
     ->action(function (string $destinationId, string $name, string $projectId, string $endpoint, string $key, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
         $destinationId = ($destinationId == 'unique()') ? ID::unique() : $destinationId;
 
-        try {
-            $testAdapter = new Appwrite($projectId, $endpoint, $key);
-            $testAdapter->check(); // Throws exception on failure
-        } catch (Exception $e) {
-            throw new Exception('Failed to connect to Appwrite project');
+        $testAdapter = new Appwrite($projectId, $endpoint, $key);
+        $result = $testAdapter->check();
+
+        $result = array_filter($result, function ($value) {
+            return $value !== true;
+        });
+
+        if (count($result) > 0) {
+            throw new Exception('Missing Permissions', 401);
         }
 
         $destination = $dbForProject->createDocument('destinations', new Document([
@@ -867,8 +918,6 @@ App::post('/v1/transfers/destinations/appwrite/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Appwrite Destination')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.[sourceId].validateAppwriteDestination')
-    ->label('audits.event', 'transfers.validateAppwriteDestination')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'transfers')
@@ -876,18 +925,31 @@ App::post('/v1/transfers/destinations/appwrite/validate')
     ->label('sdk.description', '/docs/references/transfers/validate-appwrite-destination.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_DESTINATION_VALIDATION)
     ->param('projectId', '', new UID(), 'Destination Project UID. The UID of the project to transfer.', false)
     ->param('endpoint', '', new URL(), 'Destination Endpoint. The endpoint of the project to transfer.', false)
     ->param('key', '', new Text(1024), 'Destination Key. The key of the project to transfer.', false)
     ->inject('response')
     ->action(function (string $projectId, string $endpoint, string $key, Response $response) {
         $testAdapter = new Appwrite($projectId, $endpoint, $key);
-        try {
-            $testAdapter->check(); // Throws exception on failure
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 400);
-        }
 
-        $response->noContent();
+        $result = $testAdapter->check();
+
+        $result = array_filter($result, function ($value) {
+            return $value !== true;
+        });
+
+        if (count($result) == 0) {
+            return $response->dynamic(new Document([
+                'status' => 'success',
+                'message' => 'Destination is valid',
+                'errors' => $result
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        } else {
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'status' => 'failed',
+                'message' => 'Missing Permissions',
+                'errors' => $result
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        }
     });

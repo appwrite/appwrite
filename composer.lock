@@ -2948,12 +2948,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/transfer.git",
-                "reference": "a33d9e16e561885e884d1ed21982e41942b33fee"
+                "reference": "84b543d9c9c344986930821be234adf9ee8adace"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/a33d9e16e561885e884d1ed21982e41942b33fee",
-                "reference": "a33d9e16e561885e884d1ed21982e41942b33fee",
+                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/84b543d9c9c344986930821be234adf9ee8adace",
+                "reference": "84b543d9c9c344986930821be234adf9ee8adace",
                 "shasum": ""
             },
             "require": {
@@ -2998,7 +2998,7 @@
                 "source": "https://github.com/utopia-php/transfer/tree/feat-database-and-documents",
                 "issues": "https://github.com/utopia-php/transfer/issues"
             },
-            "time": "2023-02-17T13:39:23+00:00"
+            "time": "2023-02-24T06:12:39+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5275,16 +5275,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.7.1",
+            "version": "3.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619"
+                "reference": "ed8e00df0a83aa96acf703f8c2979ff33341f879"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/1359e176e9307e906dc3d890bcc9603ff6d90619",
-                "reference": "1359e176e9307e906dc3d890bcc9603ff6d90619",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/ed8e00df0a83aa96acf703f8c2979ff33341f879",
+                "reference": "ed8e00df0a83aa96acf703f8c2979ff33341f879",
                 "shasum": ""
             },
             "require": {
@@ -5320,14 +5320,15 @@
             "homepage": "https://github.com/squizlabs/PHP_CodeSniffer",
             "keywords": [
                 "phpcs",
-                "standards"
+                "standards",
+                "static analysis"
             ],
             "support": {
                 "issues": "https://github.com/squizlabs/PHP_CodeSniffer/issues",
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2022-06-18T07:21:10+00:00"
+            "time": "2023-02-22T23:07:41+00:00"
         },
         {
             "name": "swoole/ide-helper",

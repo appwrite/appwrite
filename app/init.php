@@ -174,6 +174,8 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Transfer related
+const TRANSFER_RESOURCES = ['Users', 'Files', 'Databases', 'Documents', 'Functions'];
 
 $register = new Registry();
 
