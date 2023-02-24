@@ -81,13 +81,13 @@ Server::setResource('execute', function () {
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
             $executionId = ID::unique();
-            $execution = $dbForProject->createDocument('executions', new Document([
+            $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
                 'functionId' => $functionId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
-                'status' => 'waiting',
+                'status' => 'processing',
                 'statusCode' => 0,
                 'body' => '',
                 'headers' => [],
@@ -95,7 +95,11 @@ Server::setResource('execute', function () {
                 'logs' => '',
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
-            ]));
+            ]);
+
+            if($function->getAttribute('logging')) {
+                $execution = $dbForProject->createDocument('executions', $execution);
+            }
 
             // TODO: @Meldiron Trigger executions.create event here
 
@@ -104,8 +108,13 @@ Server::setResource('execute', function () {
             }
         }
 
-        $execution->setAttribute('status', 'processing');
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        if($execution->getAttribute('status') !== 'processing') {
+            $execution->setAttribute('status', 'processing');
+
+            if($function->getAttribute('logging')) {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            }
+        }
 
         $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
@@ -171,7 +180,9 @@ Server::setResource('execute', function () {
             Console::error($th->getMessage());
         }
 
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        if($function->getAttribute('logging')) {
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        }
 
         /** Trigger Webhook */
         $executionModel = new Execution();

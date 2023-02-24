@@ -67,19 +67,21 @@ App::post('/v1/functions')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
+    ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
             'enabled' => $enabled,
+            'logging' => $logging,
             'name' => $name,
             'runtime' => $runtime,
             'deploymentInternalId' => '',
@@ -489,13 +491,14 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
+    ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -513,6 +516,7 @@ App::put('/v1/functions/:functionId')
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
             'enabled' => $enabled,
+            'logging' => $logging,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -1166,8 +1170,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $executionId = ID::unique();
 
-        /** @var Document $execution */
-        $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', new Document([
+        $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
             'functionInternalId' => $function->getInternalId(),
@@ -1183,7 +1186,13 @@ App::post('/v1/functions/:functionId/executions')
             'logs' => '',
             'duration' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
-        ])));
+        ]);
+
+        if($function->getAttribute('logging')) {
+            /** @var Document $execution */
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+        }
+
 
         $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
@@ -1285,7 +1294,10 @@ App::post('/v1/functions/:functionId/executions')
             Console::error($th->getMessage());
         }
 
-        Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
+        if($function->getAttribute('logging')) {
+            $execution->setAttribute('body', \mb_strcut($execution->getAttribute('body') , 0, 1000000)); // Limit to 1MB
+            Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
+        }
 
         // TODO revise this later using route label
         $usage

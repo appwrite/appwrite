@@ -55,6 +55,12 @@ class Func extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('logging', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Function logging.',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function execution runtime.',

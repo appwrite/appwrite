@@ -2314,6 +2314,16 @@ $collections = [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('logging'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('runtime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
