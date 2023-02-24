@@ -188,7 +188,7 @@ App::post('/v1/account/sessions/email')
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
