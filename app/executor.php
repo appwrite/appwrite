@@ -548,6 +548,10 @@ App::post('/v1/execution')
                 case $statusCode >= 500:
                     $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
                     $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
+                    $res = ($executorResponse ?? [])['response'] ?? '';
+                    if (is_array($res)) {
+                        $res = json_encode($res, JSON_UNESCAPED_UNICODE);
+                    }
                     break;
                 case $statusCode >= 100:
                     $stdout = $executorResponse['stdout'];
