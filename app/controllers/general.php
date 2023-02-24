@@ -67,7 +67,7 @@ App::init()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
 
         // Only run Router when external domain
-        if($host !== $mainDomain) {
+        if($host !== $mainDomain && $host !== 'localhost') {
             $route = Authorization::skip(
                 fn() => $dbForConsole->find('routes', [
                     Query::equal('domain', [$host]),
