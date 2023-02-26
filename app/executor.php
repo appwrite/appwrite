@@ -119,7 +119,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 function getStorageDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+    switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
         case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
@@ -548,6 +548,10 @@ App::post('/v1/execution')
                 case $statusCode >= 500:
                     $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
                     $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
+                    $res = ($executorResponse ?? [])['response'] ?? '';
+                    if (is_array($res)) {
+                        $res = json_encode($res, JSON_UNESCAPED_UNICODE);
+                    }
                     break;
                 case $statusCode >= 100:
                     $stdout = $executorResponse['stdout'];

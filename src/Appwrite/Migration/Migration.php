@@ -10,7 +10,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
 use Utopia\App;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -49,6 +49,7 @@ abstract class Migration
         '1.1.1' => 'V16',
         '1.1.2' => 'V16',
         '1.2.0' => 'V17',
+        '1.2.1' => 'V17',
     ];
 
     /**
