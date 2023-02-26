@@ -17,7 +17,7 @@ class FolderBackup extends Action
     public function __construct()
     {
         $this
-            ->desc('Folder backup and restore process')
+            ->desc('Folder backup process')
             ->callback(fn() => $this->action());
     }
 
@@ -29,12 +29,9 @@ class FolderBackup extends Action
         gc_enable();
         $time = 0;
         while (!connection_aborted() || PHP_SAPI == "cli") {
-            $now  = DateTime::now();
-
-
             $now = new \DateTime();
             $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $next = new \DateTime($now->format("Y-m-d 12:10:0.0"));
+            $next = new \DateTime($now->format("Y-m-d 16:35.0"));
             $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             $sleep  = $next->getTimestamp() - $now->getTimestamp();
 
@@ -52,6 +49,7 @@ class FolderBackup extends Action
 
             $folders = [
                 'cert' => APP_STORAGE_CERTIFICATES,
+                'config' => APP_STORAGE_CONFIG,
             ];
 
              $remote = getDevice('/');
@@ -61,16 +59,15 @@ class FolderBackup extends Action
                 $filename = $key . '-' . date("Y-m-d") . '.tar.gz';
                 $source = $local->getRoot() . '/' . $filename;
                 $destination = '/' . $key . '/' . $filename;
-                $content = $local->getRoot() . '/*';
 
-//            for ($i = 0; $i < 1000; $i++) {
-//                file_put_contents($root->getRoot() . '/' . $i . '.txt', '');
-//            }
+//                for ($i = 0; $i < 1000; $i++) {
+//                    file_put_contents($local->getRoot() . '/' . $i . '.txt', '');
+//                }
 
                 $stdout = '';
                 $stderr = '';
                 Console::execute(
-                    'tar --exclude ' . $filename . ' -zcf ' . $source . ' ' . $content,
+                    'cd ' . $folder . ' && tar --exclude ' . $filename . ' -zcf ' . $source . '*',
                     '',
                     $stdout,
                     $stderr
@@ -78,7 +75,21 @@ class FolderBackup extends Action
 
                 try {
                     $local->transfer($source, $destination, $remote);
-                    console::info("backing up local $source to $remote->getName() $destination");
+                    console::info("backing up local $source to {$remote->getName()} $destination");
+
+                    /**
+                     * Clean up
+                     */
+                    $now = new \DateTime();
+                    $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                    for ($i = 0; $i < 20; $i++) {
+                        $now->sub(\DateInterval::createFromDateString('1 days'));
+                        if ($i >= 10) {
+                            $destination = '/' . $key . '/' . $key . '-' . $now->format("Y-m-d") . '.tar.gz';
+                            console::info("Trying to delete from {$remote->getName()} $destination");
+                            $remote->delete($destination);
+                        }
+                    }
                 } catch (\Exception $e) {
                     Console::error($e->getMessage());
                 }
