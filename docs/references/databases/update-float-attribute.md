@@ -1,1 +1,1 @@
-Update an email attribute.
+Update a float attribute.

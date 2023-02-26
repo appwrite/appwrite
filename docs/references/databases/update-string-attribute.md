@@ -1,1 +1,1 @@
-Update an email attribute.
+Update a string attribute.
