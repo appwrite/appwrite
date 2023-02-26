@@ -7,6 +7,7 @@ use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Platform\Service;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -18,6 +19,14 @@ use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\Storage\Device;
+use Utopia\Storage\Device\Backblaze;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\Wasabi;
+use Utopia\Storage\Storage;
 
 Authorization::disable();
 
@@ -120,6 +129,22 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 CLI::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());
 }, ['pools']);
+
+CLI::setResource('deviceLocal', function () {
+    return new Local();
+});
+
+CLI::setResource('deviceFiles', function ($project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
+
+CLI::setResource('deviceFunctions', function ($project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
+
+CLI::setResource('deviceBuilds', function ($project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
 
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
