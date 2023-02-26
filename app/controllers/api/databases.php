@@ -131,14 +131,16 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
         ->setCollection($collection)
-        ->setDocument($attribute);
+        ->setDocument($attribute)
+    ;
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId());
+        ->setParam('attributeId', $attribute->getId())
+    ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
