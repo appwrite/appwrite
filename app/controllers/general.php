@@ -9,7 +9,6 @@ use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Swoole\Http\Request as SwooleRequest;
-use Swoole\Http\Response as SwooleResponse;
 use Utopia\Cache\Cache;
 use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
@@ -44,10 +43,95 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
+function router(Database $dbForConsole, string $host, SwooleRequest $swooleRequest, Response $response) {
+    $route = Authorization::skip(
+        fn() => $dbForConsole->find('routes', [
+            Query::equal('domain', [$host]),
+            Query::limit(1)
+        ])
+    )[0] ?? null;
+
+    if($route === null) {
+        throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
+    }
+
+    $type = $route->getAttribute('resourceType');
+
+    if($type === 'function') {
+        $functionId = $route->getAttribute('resourceId');
+        $projectId = $route->getAttribute('projectId');
+
+        $path = ($swooleRequest->server['request_uri'] ?? '');
+        $query = ($swooleRequest->server['query_string'] ?? '');
+        if(!empty($query)) {
+            $path .= '?' . $query;
+        }
+
+        $body = \json_encode([
+            'async' => false,
+            'body' => $swooleRequest->getContent() ?? '',
+            'method' => $swooleRequest->server['request_method'],
+            'path' => $path,
+            'headers' => $swooleRequest->header
+        ]);
+
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body),
+            'X-Appwrite-Project: ' . $projectId
+        ];
+
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/v1/functions/{$functionId}/executions");
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // \curl_setopt($ch, CURLOPT_HEADER, true);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+
+        $executionResponse = \curl_exec($ch);
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = \curl_error($ch);
+        $errNo = \curl_errno($ch);
+
+        \curl_close($ch);
+
+        if ($errNo !== 0) {
+            $response->setStatusCode(500)->send("Internal error: " . $error);
+            return true;
+        }
+
+        if ($statusCode >= 400) {
+            $error = \json_decode($executionResponse, true)['message'];
+            $response->setStatusCode(500)->send("Execution error: " . $error);
+            return true;
+        }
+
+        $execution = \json_decode($executionResponse, true);
+
+        foreach ($execution['headers'] as $header => $value) {
+            $response->setHeader($header, $value);
+        }
+
+        $body = $execution['body'] ?? '';
+
+        if (($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
+            $body = \base64_decode($body);
+        }
+
+        $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
+        return true;
+    } else {
+        throw new AppwriteException(AppwriteException::ROUTER_INVALID_TYPE);
+    }
+
+    return false;
+}
+
 App::init()
     ->inject('utopia')
     ->inject('swooleRequest')
-    ->inject('swooleResponse')
     ->inject('request')
     ->inject('response')
     ->inject('console')
@@ -59,92 +143,16 @@ App::init()
     ->inject('servers')
     ->inject('pools')
     ->inject('cache')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, SwooleResponse $swooleResponse, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Group $pools, Cache $cache) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Group $pools, Cache $cache) {
         /*
         * Appwrite Router
         */
         $host = $swooleRequest->header['host'] ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
-
         // Only run Router when external domain
         if($host !== $mainDomain && $host !== 'localhost') {
-            $route = Authorization::skip(
-                fn() => $dbForConsole->find('routes', [
-                    Query::equal('domain', [$host]),
-                    Query::limit(1)
-                ])
-            )[0] ?? null;
-
-            if($route === null) {
-                throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
-            }
-    
-            $type = $route->getAttribute('resourceType');
-
-            if($type === 'function') {
-                $functionId = $route->getAttribute('resourceId');
-                $projectId = $route->getAttribute('projectId');
-
-                $path = ($swooleRequest->server['request_uri'] ?? '');
-                $query = ($swooleRequest->server['query_string'] ?? '');
-                if(!empty($query)) {
-                    $path .= '?' . $query;
-                }
-
-                $body = \json_encode([
-                    'async' => false,
-                    'body' => $swooleRequest->getContent() ?? '',
-                    'method' => $swooleRequest->server['request_method'],
-                    'path' => $path,
-                    'headers' => $swooleRequest->header
-                ]);
-    
-                $headers = [
-                    'Content-Type: application/json',
-                    'Content-Length: ' . \strlen($body),
-                    'X-Appwrite-Project: ' . $projectId
-                ];
-    
-                $ch = \curl_init();
-                \curl_setopt($ch, CURLOPT_URL, "http://localhost/v1/functions/{$functionId}/executions");
-                \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-                \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-                \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                // \curl_setopt($ch, CURLOPT_HEADER, true);
-                \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-    
-                $executionResponse = \curl_exec($ch);
-                $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $error = \curl_error($ch);
-                $errNo = \curl_errno($ch);
-    
-                \curl_close($ch);
-    
-                if ($errNo !== 0) {
-                    return $response->setStatusCode(500)->send("Internal error: " . $error);
-                }
-    
-                if ($statusCode >= 400) {
-                    $error = \json_decode($executionResponse, true)['message'];
-                    return $response->setStatusCode(500)->send("Execution error: " . $error);
-                }
-    
-                $execution = \json_decode($executionResponse, true);
-    
-                foreach ($execution['headers'] as $header => $value) {
-                    $response->setHeader($header, $value);
-                }
-    
-                $body = $execution['body'] ?? '';
-    
-                if (($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
-                    $body = \base64_decode($body);
-                }
-    
-                return $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
-            } else {
-                throw new AppwriteException(AppwriteException::ROUTER_INVALID_TYPE);
+            if(router($dbForConsole, $host, $swooleRequest, $response)) {
+                return;
             }
         }
 
@@ -475,9 +483,22 @@ App::init()
     });
 
 App::options()
+    ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
-    ->action(function (Request $request, Response $response) {
+    ->inject('dbForConsole')
+    ->action(function (SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole) {
+        /*
+        * Appwrite Router
+        */
+        $host = $swooleRequest->header['host'] ?? '';
+        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        // Only run Router when external domain
+        if($host !== $mainDomain && $host !== 'localhost') {
+            if(router($dbForConsole, $host, $swooleRequest, $response)) {
+                return;
+            }
+        }
 
         $origin = $request->getOrigin();
 
