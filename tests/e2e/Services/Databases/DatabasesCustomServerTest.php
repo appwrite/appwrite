@@ -3,9 +3,6 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception as ExtendException;
-use Exception;
-use SebastianBergmann\RecursionContext\InvalidArgumentException;
-use PHPUnit\Framework\ExpectationFailedException;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
