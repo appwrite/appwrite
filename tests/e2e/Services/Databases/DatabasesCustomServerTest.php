@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Databases;
 
-use Appwrite\Extend\Exception as ExtendException;
+use Appwrite\Extend\Exception as AppwriteException;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
@@ -1459,7 +1459,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/string', array_merge([
             'content-type' => 'application/json',
@@ -1471,7 +1471,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/string', array_merge([
             'content-type' => 'application/json',
@@ -1482,7 +1482,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/string', array_merge([
             'content-type' => 'application/json',
@@ -1493,7 +1493,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/string', array_merge([
             'content-type' => 'application/json',
@@ -1505,7 +1505,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -1570,7 +1570,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/email', array_merge([
             'content-type' => 'application/json',
@@ -1582,7 +1582,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/email', array_merge([
             'content-type' => 'application/json',
@@ -1593,7 +1593,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/email', array_merge([
             'content-type' => 'application/json',
@@ -1604,7 +1604,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/email', array_merge([
             'content-type' => 'application/json',
@@ -1616,7 +1616,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -1681,7 +1681,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/ip', array_merge([
             'content-type' => 'application/json',
@@ -1693,7 +1693,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/ip', array_merge([
             'content-type' => 'application/json',
@@ -1704,7 +1704,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/ip', array_merge([
             'content-type' => 'application/json',
@@ -1715,7 +1715,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/ip', array_merge([
             'content-type' => 'application/json',
@@ -1727,7 +1727,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -1792,7 +1792,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/url', array_merge([
             'content-type' => 'application/json',
@@ -1804,7 +1804,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/url', array_merge([
             'content-type' => 'application/json',
@@ -1815,7 +1815,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/url', array_merge([
             'content-type' => 'application/json',
@@ -1826,7 +1826,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/url', array_merge([
             'content-type' => 'application/json',
@@ -1838,7 +1838,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -1913,7 +1913,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -1927,7 +1927,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -1941,7 +1941,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -1955,7 +1955,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -1968,7 +1968,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -1981,7 +1981,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -1994,7 +1994,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -2007,7 +2007,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -2021,7 +2021,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -2035,7 +2035,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
             'content-type' => 'application/json',
@@ -2049,7 +2049,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
 
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/integer', array_merge([
@@ -2064,7 +2064,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
     }
 
     /**
@@ -2139,7 +2139,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2153,7 +2153,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2167,7 +2167,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2181,7 +2181,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2194,7 +2194,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2207,7 +2207,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2220,7 +2220,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2233,7 +2233,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2247,7 +2247,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2261,7 +2261,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
             'content-type' => 'application/json',
@@ -2275,7 +2275,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
 
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/float', array_merge([
@@ -2290,7 +2290,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
     }
 
     /**
@@ -2355,7 +2355,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/boolean', array_merge([
             'content-type' => 'application/json',
@@ -2367,7 +2367,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/boolean', array_merge([
             'content-type' => 'application/json',
@@ -2378,7 +2378,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/boolean', array_merge([
             'content-type' => 'application/json',
@@ -2389,7 +2389,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/boolean', array_merge([
             'content-type' => 'application/json',
@@ -2401,7 +2401,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -2466,7 +2466,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/datetime', array_merge([
             'content-type' => 'application/json',
@@ -2478,7 +2478,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/datetime', array_merge([
             'content-type' => 'application/json',
@@ -2489,7 +2489,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/datetime', array_merge([
             'content-type' => 'application/json',
@@ -2500,7 +2500,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/datetime', array_merge([
             'content-type' => 'application/json',
@@ -2512,7 +2512,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 
     /**
@@ -2587,7 +2587,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2600,7 +2600,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_VALUE_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2613,7 +2613,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2626,7 +2626,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2639,7 +2639,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2651,7 +2651,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2663,7 +2663,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2675,7 +2675,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
+        $this->assertEquals(AppwriteException::GENERAL_ARGUMENT_INVALID, $update['body']['type']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key . '/enum', array_merge([
             'content-type' => 'application/json',
@@ -2688,6 +2688,6 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $update['headers']['status-code']);
-        $this->assertEquals(ExtendException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
+        $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
 }
