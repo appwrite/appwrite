@@ -54,39 +54,45 @@ class Execution extends Model
                 'default' => '',
                 'example' => 'processing',
             ])
+            ->addRule('agent', [
+                'type' => self::TYPE_STRING,
+                'description' => 'HTTP request user agent header.',
+                'default' => '',
+                'example' => 'Chrome/51.0.2704.103',
+            ])
+            ->addRule('method', [
+                'type' => self::TYPE_STRING,
+                'description' => 'HTTP request method type.',
+                'default' => '',
+                'example' => 'GET',
+            ])
+            ->addRule('path', [
+                'type' => self::TYPE_STRING,
+                'description' => 'HTTP request path and query.',
+                'default' => '',
+                'example' => '/articles?id=5',
+            ])
             ->addRule('statusCode', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'The script status code.',
+                'description' => 'HTTP response status code.',
                 'default' => 0,
                 'example' => 200,
             ])
-            ->addRule('body', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The script response output string. Logs the last 4,000 characters of the execution response output.',
-                'default' => '',
-                'example' => '',
-            ])
-            ->addRule('headers', [
-                'type' => Response::MODEL_HEADERS,
-                'description' => 'Response headers as a key-value object',
-                'default' => new \stdClass(),
-                'example' => ['x-internal-timezone' => 'UTC'],
-            ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stdout output string. Logs the last 4,000 characters of the execution stdout output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'Function logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
             ])
             ->addRule('errors', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The script stderr output string. Logs the last 4,000 characters of the execution stderr output. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'description' => 'Function errors. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
                 'default' => '',
                 'example' => '',
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'The script execution duration in seconds.',
+                'description' => 'Function execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
             ])
