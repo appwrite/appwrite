@@ -2776,6 +2776,5 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals(404, $update['headers']['status-code']);
             $this->assertEquals(AppwriteException::ATTRIBUTE_NOT_FOUND, $update['body']['type']);
         }
-
     }
 }
