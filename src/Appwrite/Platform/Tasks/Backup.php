@@ -30,7 +30,7 @@ class Backup extends Action
         while (!connection_aborted() || PHP_SAPI == "cli") {
             $now = new \DateTime();
             $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $next = new \DateTime($now->format("Y-m-d 11:20.0"));
+            $next = new \DateTime($now->format("Y-m-d 11:30.0"));
             $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             $sleep = $next->getTimestamp() - $now->getTimestamp();
 

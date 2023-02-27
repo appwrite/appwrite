@@ -48,15 +48,19 @@ class Restore extends Action
         $source = '/' . $folder . '/' . $filename;
 
         try {
+            if (!$remote->exists($source)) {
+                Console::error("Backup file not found for folder :$folder ,date: $date");
+            }
+
             $result = $remote->transfer($source, $destination, $local);
 
             if (!$result) {
                 Console::error("Error while trying to download back file");
             }
 
-            if (!$local->exists($destination)) {
-                Console::error("Backup file not found for folder :$folder ,date $date");
-            }
+//            if (!$local->exists($destination)) {
+//                Console::error("Backup file not found for folder :$folder ,date $date");
+//            }
 
             $stdout = '';
             $stderr = '';
