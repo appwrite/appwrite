@@ -183,7 +183,11 @@ function updateAttribute(
         throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE);
     }
 
-    if ($attribute->getAttribute(('type') !== $type) || $attribute->getAttribute(('filter') !== $filter)) {
+    if ($attribute->getAttribute(('type') !== $type)) {
+        throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+    }
+
+    if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
         throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
     }
 
@@ -282,7 +286,7 @@ function updateAttribute(
             break;
         case APP_DATABASE_ATTRIBUTE_ENUM:
             if (empty($elements)) {
-                throw new Exception(message: 'to be implemented');
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
             }
 
             //TODO: before merging - this iteration is kinda hard to follow because of the $size variable?
@@ -1636,8 +1640,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('required', null, new Boolean(), 'Is attribute required?', true)
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1719,14 +1723,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('elements', null, new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('elements', null, new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?array $element, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
@@ -1736,7 +1740,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_ENUM,
             default: $default,
-            required: $required
+            required: $required,
+            elements: $elements
         );
 
         $response
