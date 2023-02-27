@@ -80,6 +80,13 @@ Server::setResource('execute', function () {
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
+            $agent = '';
+            foreach ($headers as $header => $value) {
+                if(\strtolower($header) === 'user-agent') {
+                    $agent = $value;
+                }
+            }
+            
             $executionId = ID::unique();
             $execution = new Document([
                 '$id' => $executionId,
@@ -93,6 +100,9 @@ Server::setResource('execute', function () {
                 'logs' => '',
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
+                'path' => $path,
+                'method' => $method,
+                'agent' => $agent
             ]);
 
             if($function->getAttribute('logging')) {

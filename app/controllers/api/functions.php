@@ -1170,6 +1170,13 @@ App::post('/v1/functions/:functionId/executions')
 
         $executionId = ID::unique();
 
+        $agent = '';
+        foreach ($headers as $header => $value) {
+            if(\strtolower($header) === 'user-agent') {
+                $agent = $value;
+            }
+        }
+
         $execution = new Document([
             '$id' => $executionId,
             '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
@@ -1184,6 +1191,9 @@ App::post('/v1/functions/:functionId/executions')
             'logs' => '',
             'duration' => 0.0,
             'search' => implode(' ', [$functionId, $executionId]),
+            'path' => $path,
+            'method' => $method,
+            'agent' => $agent
         ]);
 
         if($function->getAttribute('logging')) {
