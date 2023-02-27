@@ -20,9 +20,12 @@ class Base extends Queries
      * @param string $collection
      * @param string[] $allowedAttributes
      */
-    public function __construct(string $collection, array $allowedAttributes)
+    public function __construct(string $collection, array $allowedAttributes, array $collections = [])
     {
-        $collection = Config::getParam('collections', [])[$collection];
+        if(empty($collections)) {
+            $collections = Config::getParam('collections');
+        }
+        $collection = $collections[$collection];
         // array for constant lookup time
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {
