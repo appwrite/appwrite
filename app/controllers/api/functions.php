@@ -1180,8 +1180,6 @@ App::post('/v1/functions/:functionId/executions')
             'trigger' => 'http', // http / schedule / event
             'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
-            'body' => '',
-            'headers' => [],
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
@@ -1279,8 +1277,6 @@ App::post('/v1/functions/:functionId/executions')
             $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('headers', $executionResponse['headers']);
-            $execution->setAttribute('body', $executionResponse['body']);
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
@@ -1295,7 +1291,6 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         if($function->getAttribute('logging')) {
-            $execution->setAttribute('body', \mb_strcut($execution->getAttribute('body') , 0, 1000000)); // Limit to 1MB
             Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
         }
 
@@ -1314,6 +1309,8 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('logs', '');
             $execution->setAttribute('errors', '');
         }
+
+        $execution->setAttribute('body', $executionResponse['body']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

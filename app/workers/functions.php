@@ -89,8 +89,6 @@ Server::setResource('execute', function () {
                 'trigger' => $trigger,
                 'status' => 'processing',
                 'statusCode' => 0,
-                'body' => '',
-                'headers' => [],
                 'errors' => '',
                 'logs' => '',
                 'duration' => 0.0,
@@ -161,8 +159,6 @@ Server::setResource('execute', function () {
             $execution
                 ->setAttribute('status', $status)
                 ->setAttribute('statusCode', $executionResponse['statusCode'])
-                ->setAttribute('headers', $executionResponse['headers'])
-                ->setAttribute('body', $executionResponse['body'])
                 ->setAttribute('logs', $executionResponse['logs'])
                 ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
