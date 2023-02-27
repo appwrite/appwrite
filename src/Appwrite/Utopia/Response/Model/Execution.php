@@ -78,6 +78,18 @@ class Execution extends Model
                 'default' => 0,
                 'example' => 200,
             ])
+            ->addRule('body', [
+                'type' => self::TYPE_STRING,
+                'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
+                'default' => '',
+                'example' => 'Developers are awesome.',
+                ])
+            ->addRule('headers', [
+                'type' => Response::MODEL_HEADERS,
+                'description' => 'HTTP response headers as a key-value object. This will return empty unless execution is created as synchronous.',
+                'default' => new \stdClass(),
+                'example' => ['x-internal-timezone' => 'UTC'],
+            ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function logs. Includes the last 4,000 characters. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',

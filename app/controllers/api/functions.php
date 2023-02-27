@@ -1321,6 +1321,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $execution->setAttribute('body', $executionResponse['body']);
+        $execution->setAttribute('headers', $executionResponse['headers']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
