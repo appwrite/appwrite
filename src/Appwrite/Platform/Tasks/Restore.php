@@ -6,17 +6,17 @@ use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Storage\Device\Local;
 
-class FolderRestore extends Action
+class Restore extends Action
 {
     public static function getName(): string
     {
-        return 'folder-restore';
+        return 'restore';
     }
 
     public function __construct()
     {
         $this
-            ->desc('Folder restore process')
+            ->desc('Restore process')
             ->callback(fn() => $this->action());
     }
 

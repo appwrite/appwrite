@@ -3,57 +3,58 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Platform\Action;
 use Utopia\Storage\Device\Local;
 
-class FolderBackup extends Action
+class Backup extends Action
 {
     public static function getName(): string
     {
-        return 'folder-backup';
+        return 'backup';
     }
 
     public function __construct()
     {
         $this
-            ->desc('Folder backup process')
+            ->desc('Backup process')
             ->callback(fn() => $this->action());
     }
 
     public function action(): void
     {
-        Console::title('Folder backup V1');
-        Console::success(APP_NAME . ' folder backup process v1 has started');
+        Console::title('Backup V1');
+        Console::success(APP_NAME . ' backup process v1 has started');
 
         gc_enable();
         $time = 0;
         while (!connection_aborted() || PHP_SAPI == "cli") {
             $now = new \DateTime();
             $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $next = new \DateTime($now->format("Y-m-d 16:35.0"));
+            $next = new \DateTime($now->format("Y-m-d 11:20.0"));
             $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            $sleep  = $next->getTimestamp() - $now->getTimestamp();
+            $sleep = $next->getTimestamp() - $now->getTimestamp();
 
             /**
              * If time passed the target time
              */
             if ($sleep <= 0) {
                 $next->add(\DateInterval::createFromDateString('1 days'));
-                $sleep  = $next->getTimestamp() - $now->getTimestamp();
+                $sleep = $next->getTimestamp() - $now->getTimestamp();
             }
 
             console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Sleeping for ' . $sleep . ' seconds next run will be at [' . $next->format("Y-m-d H:i:s.v") . ']');
 
             sleep($sleep);
 
+            $total = 0;
+            $start = \microtime(true);
 
             $folders = [
                 'cert' => APP_STORAGE_CERTIFICATES,
                 'config' => APP_STORAGE_CONFIG,
             ];
 
-             $remote = getDevice('/');
+            $remote = getDevice('/');
 
             foreach ($folders as $key => $folder) {
                 $local = new Local($folder);
@@ -61,12 +62,13 @@ class FolderBackup extends Action
                 $source = $local->getRoot() . '/' . $filename;
                 $destination = '/' . $key . '/' . $filename;
 
-//                for ($i = 0; $i < 1000; $i++) {
-//                    file_put_contents($local->getRoot() . '/' . $i . '.txt', '');
-//                }
+                for ($i = 0; $i < 1000; $i++) {
+                    file_put_contents($local->getRoot() . '/' . $i . '.txt', '');
+                }
 
                 $stdout = '';
                 $stderr = '';
+
                 Console::execute(
                     'cd ' . $folder . ' && tar --exclude ' . $filename . ' -zcf ' . $source . '*',
                     '',
@@ -75,11 +77,15 @@ class FolderBackup extends Action
                 );
 
                 try {
+                    if (!$local->exists($source)) {
+                        continue;
+                    }
+
                     $local->transfer($source, $destination, $remote);
-                    console::info("backing up local $source to {$remote->getName()} $destination");
+                    Console::info("Backing up local $source to {$remote->getName()} $destination");
 
                     /**
-                     * Clean up
+                     * Remote storage old backup files clean-up
                      */
                     $now = new \DateTime();
                     $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
@@ -87,7 +93,7 @@ class FolderBackup extends Action
                         $now->sub(\DateInterval::createFromDateString('1 days'));
                         if ($i >= 10) {
                             $destination = '/' . $key . '/' . $key . '-' . $now->format("Y-m-d") . '.tar.gz';
-                            console::info("Trying to delete from {$remote->getName()} $destination");
+                            Console::info("Trying to delete from {$remote->getName()} $destination");
                             $remote->delete($destination);
                         }
                     }
@@ -102,6 +108,7 @@ class FolderBackup extends Action
                     }
                 }
             }
+            $total = (microtime(true) - $start);
         }
     }
 }
