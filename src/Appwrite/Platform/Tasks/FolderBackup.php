@@ -43,7 +43,7 @@ class FolderBackup extends Action
                 $sleep  = $next->getTimestamp() - $now->getTimestamp();
             }
 
-            console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Sleeping for ' . $sleep . ' seconds next run will be at [' . $next->format("Y-m-d H:i:s.v") . ']');
+            Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Sleeping for ' . $sleep . ' seconds next run will be at [' . $next->format("Y-m-d H:i:s.v") . ']');
 
             sleep($sleep);
 
