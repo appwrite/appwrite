@@ -2690,4 +2690,92 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(400, $update['headers']['status-code']);
         $this->assertEquals(AppwriteException::ATTRIBUTE_DEFAULT_UNSUPPORTED, $update['body']['type']);
     }
+
+    /**
+     * @depends testAttributeUpdate
+     */
+    public function testAttributeUpdateNotFound(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+
+        $attributes = [
+            'string' => [
+                'required' => false,
+                'default' => 'ipsum'
+            ],
+            'email' => [
+                'required' => false,
+                'default' => 'eldad@appwrite.io'
+            ],
+            'ip' => [
+                'required' => false,
+                'default' => '127.0.0.1'
+            ],
+            'url' => [
+                'required' => false,
+                'default' => 'https://appwrite.io'
+            ],
+            'integer' => [
+                'required' => false,
+                'default' => 5,
+                'min' => 0,
+                'max' => 10
+            ],
+            'float' => [
+                'required' => false,
+                'default' => 5.5,
+                'min' => 0.0,
+                'max' => 10.0
+            ],
+            'datetime' => [
+                'required' => false,
+                'default' => '1975-06-12 14:12:55+02:00'
+            ],
+            'enum' => [
+                'elements' => ['lorem', 'ipsum', 'dolor'],
+                'required' => false,
+                'default' => 'lorem'
+            ]
+        ];
+
+        foreach ($attributes as $key => $payload) {
+            /**
+             * Check if Database exists
+             */
+            $update = $this->client->call(Client::METHOD_PATCH, '/databases/i_dont_exist/collections/' . $collectionId . '/attributes/unknown_' . $key . '/' . $key, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), $payload);
+
+            $this->assertEquals(404, $update['headers']['status-code']);
+            $this->assertEquals(AppwriteException::DATABASE_NOT_FOUND, $update['body']['type']);
+
+            /**
+             * Check if Collection exists
+             */
+            $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/i_dont_exist/attributes/unknown_' . $key . '/' . $key, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), $payload);
+
+            $this->assertEquals(404, $update['headers']['status-code']);
+            $this->assertEquals(AppwriteException::COLLECTION_NOT_FOUND, $update['body']['type']);
+
+            /**
+             * Check if Attribute exists
+             */
+            $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/unknown_' . $key . '/' . $key, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), $payload);
+
+            $this->assertEquals(404, $update['headers']['status-code']);
+            $this->assertEquals(AppwriteException::ATTRIBUTE_NOT_FOUND, $update['body']['type']);
+        }
+
+    }
 }
