@@ -202,7 +202,7 @@ App::error()
                     $request->getParam('queries')
                 ]));
 
-                /* @var $document Document */
+                /** @var Document $document */
                 $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
                 if ($document->isEmpty()) {
                     $document = Authorization::skip(fn()=>$dbForProject->createDocument('slowQueries', new Document([
