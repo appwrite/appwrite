@@ -84,6 +84,7 @@ class V18 extends Migration
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
+
             $floats = \array_filter($collection, function ($attribute) {
                 return $attribute['type'] === Database::VAR_FLOAT;
             });
@@ -91,6 +92,24 @@ class V18 extends Migration
             foreach ($floats as $attribute) {
                 $this->changeAttributeInternalType($id, $attribute->getId(), 'DOUBLE');
             }
+
+            switch ($id) {
+                case 'users':
+                    try {
+                        /**
+                         * Create 'passwordHistory' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'passwordHistory');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'passwordHistory' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            usleep(50000);
         }
     }
 
@@ -105,19 +124,25 @@ class V18 extends Migration
         switch ($document->getCollection()) {
             case 'projects':
                 $document->setAttribute('version', '1.3.0');
+                $document->setAttribute('passwordHistory', []);
+                $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
+                    'passwordHistory' => 0,
+                    'passwordDictionary' => false,
+                ]));
                 break;
         }
 
         return $document;
     }
 
-    private function migrateCache(Document $document) {
+    private function migrateCache(Document $document)
+    {
         $key = "cache-_{$this->project->getInternalId()}:_{$document->getCollection()}:{$document->getId()}";
         $value = $this->redis->get($key);
 
         if ($value) {
             $this->redis->del($key);
-            $this->redis->set( $key. ':*', $value);
+            $this->redis->set($key . ':*', $value);
         }
     }
 }
