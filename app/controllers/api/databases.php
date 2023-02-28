@@ -173,11 +173,10 @@ App::error()
     ->inject('error')
     ->inject('request')
     ->inject('dbForProject')
-    ->inject('utopia')
-    ->action(function (Throwable $error, Request $request, Database $dbForProject, App $utopia) {
+    ->action(function (Throwable $error, Request $request, Database $dbForProject) {
         try {
             if ($error instanceof Timeout) {
-                $route = $utopia->match($request);
+                $route = Request::getRoute();
                 $collectionId = $route->getParamValue('collectionId');
                 $databaseId = $route->getParamValue('databaseId');
                 $queries = $request->getParam('queries', []);
@@ -206,24 +205,24 @@ App::error()
                 $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
                 if ($document->isEmpty()) {
                     $document = Authorization::skip(fn()=>$dbForProject->createDocument('slowQueries', new Document([
-                    '$id' => $key,
-                    'blocked' => false,
-                    'count' => 1,
-                    'queries' => $queries,
-                    'databaseId' => $databaseId,
-                    'collectionId' => $collectionId,
-                    'path' => $request->getURI(),
+                        '$id' => $key,
+                        'blocked' => false,
+                        'count' => 1,
+                        'queries' => $queries,
+                        'databaseId' => $databaseId,
+                        'collectionId' => $collectionId,
+                        'path' => $request->getURI()
                 ])));
                 } else {
-                    $document['count']++;
+                    $document->setAttribute('count', $document->getAttribute('count') + 1);
                     $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 9999));
-                    if ($document['count'] >= $max) {
-                        $document['blocked'] = true;
+                    if ($document->getAttribute('count') >= $max) {
+                        $document->setAttribute('blocked', true);
                     }
                     $document = Authorization::skip(fn() => $dbForProject->updateDocument('slowQueries', $document->getId(), $document));
                 }
 
-                if ($document['blocked'] === true) {
+                if ($document->getAttribute('blocked') === true) {
                     throw new Exception(Exception::TIMEOUT_BLOCKED);
                 }
 
@@ -2067,11 +2066,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-    ->inject('response')
     ->inject('request')
+    ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Request $request, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Request $request, Response $response, Database $dbForProject, string $mode) {
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
@@ -2174,7 +2173,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('project')
     ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
@@ -2884,7 +2882,6 @@ App::get('/v1/databases/:databaseId/slow-queries')
     ->desc('List Slow queries Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
-    ->label('sdk.hide', true)
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
     //->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
@@ -2906,7 +2903,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn()=>$dbForProject->getDocument('slowQueries', $documentId));
+            $cursorDocument = $dbForProject->getDocument('slowQueries', $documentId);
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Slow query '{$documentId}' for the 'cursor' value not found.");
             }
@@ -2914,8 +2911,8 @@ App::get('/v1/databases/:databaseId/slow-queries')
         }
 
         $response->dynamic(new Document([
-            'documents' => Authorization::skip(fn()=>$dbForProject->find('slowQueries', $queries)),
-            'total' => Authorization::skip(fn()=>$dbForProject->count('slowQueries', Query::groupByType($queries)['filters'], APP_LIMIT_COUNT)),
+            'documents' => $dbForProject->find('slowQueries', $queries),
+            'total' => $dbForProject->count('slowQueries', Query::groupByType($queries)['filters'], APP_LIMIT_COUNT),
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
@@ -2923,7 +2920,6 @@ App::get('/v1/databases/slow-queries/:documentId')
     ->desc('Get Slow Query Document')
     ->groups(['api', 'database'])
     ->label('docs', false)
-    ->label('sdk.hide', true)
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
    // ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
@@ -2940,7 +2936,7 @@ App::get('/v1/databases/slow-queries/:documentId')
     ->inject('mode')
     ->inject('project')
     ->action(function (string $documentId, Response $response, Database $dbForProject) {
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('slowQueries', $documentId));
+        $document = $dbForProject->getDocument('slowQueries', $documentId);
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
@@ -2953,7 +2949,6 @@ App::delete('/v1/databases/slow-queries/:documentId')
     ->desc('List  Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
-    ->label('sdk.hide', true)
     ->label('scope', 'documents.write')
     ->label('usage.metric', 'documents.{scope}.requests.delete')
     //->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
@@ -2970,13 +2965,12 @@ App::delete('/v1/databases/slow-queries/:documentId')
     ->inject('events')
     ->inject('deletes')
     ->action(function (string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
-        $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $documentId));
+        $document = $dbForProject->getDocument('slowQueries', $documentId);
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        Authorization::skip(fn() => $dbForProject->deleteDocument('slowQueries', $documentId));
-
+        $dbForProject->deleteDocument('slowQueries', $documentId);
         $dbForProject->deleteCachedDocument('slowQueries', $documentId);
 
         $deletes

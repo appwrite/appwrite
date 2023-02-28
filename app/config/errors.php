@@ -561,12 +561,12 @@ return [
     ],
     Exception::TIMEOUT_BLOCKED => [
         'name' => Exception::TIMEOUT_BLOCKED,
-        'description' => 'Api call has been blocked',
+        'description' => 'Api call has been blocked after exceeding maximum hits of slow query exception',
         'code' => 403,
     ],
     Exception::TIMEOUT => [
         'name' => Exception::TIMEOUT,
-        'description' => 'Query exceeded maximum time',
+        'description' => 'Query exceeded the maximum, the request will eventually be blocked if it keeps timing out, try adjusting the queries parameter and improve indexing',
         'code' => 408,
     ],
 ];
