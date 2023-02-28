@@ -201,7 +201,7 @@ App::error()
                     $request->getParam('queries')
                 ]));
 
-                /* @var $document Document */
+                /** @var Document $document */
                 $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
                 if ($document->isEmpty()) {
                     $document = Authorization::skip(fn()=>$dbForProject->createDocument('slowQueries', new Document([
@@ -2879,7 +2879,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     });
 
 App::get('/v1/databases/:databaseId/slow-queries')
-    ->desc('List Slow queries Documents')
+    ->desc('List Slow Queries Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
     ->label('scope', 'documents.read')
