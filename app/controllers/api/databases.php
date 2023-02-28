@@ -161,7 +161,7 @@ App::init()
             $request->getURI(), // Contains databaseId & collectionId
             $request->getParam('queries')
         ]));
-        /* @var $document Document */
+        /** @var Document $document */
         $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
         if ($document->getAttribute('blocked') === true) {
             throw new Exception(Exception::TIMEOUT_BLOCKED);
