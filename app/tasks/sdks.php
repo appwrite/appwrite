@@ -86,8 +86,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        $config->setNPMPackage('appwrite');
-                        $config->setBowerPackage('appwrite');
+                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                            $config->setNPMPackage('@appwrite.io/console');
+                            $config->setBowerPackage('@appwrite.io/console');
+                        } else {
+                            $config->setNPMPackage('appwrite');
+                            $config->setBowerPackage('appwrite');
+                        }
                         break;
                     case 'cli':
                         $config = new CLI();
