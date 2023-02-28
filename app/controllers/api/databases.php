@@ -174,7 +174,7 @@ App::error()
     ->inject('request')
     ->inject('dbForProject')
     ->inject('utopia')
-    ->action(function (throwable $error, Request $request, Database $dbForProject, App $utopia) {
+    ->action(function (Throwable $error, Request $request, Database $dbForProject, App $utopia) {
         try {
             if ($error instanceof Timeout) {
                 $route = $utopia->match($request);
