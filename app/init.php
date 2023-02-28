@@ -84,6 +84,7 @@ const APP_USERAGENT = APP_NAME . '-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
+const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;

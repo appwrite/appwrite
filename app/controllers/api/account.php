@@ -1407,8 +1407,8 @@ App::get('/v1/account/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? null;
-        $offset = $grouped['offset'] ?? null;
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
 
         $audit = new EventAudit($dbForProject);
 
