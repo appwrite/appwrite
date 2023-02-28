@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac80cafdd8c2c6deaec3dfe628084655",
+    "content-hash": "182c6b70bc5233d72760516c0e975a6a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1808,29 +1808,28 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.18.0",
+            "version": "dev-feat-remove-limits",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8496401234f73a49f8c4259d3e89ab4a7c1f9ecf"
+                "reference": "3aec5712305646e37faefb6e0f31b6da1ca5fa94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8496401234f73a49f8c4259d3e89ab4a7c1f9ecf",
-                "reference": "8496401234f73a49f8c4259d3e89ab4a7c1f9ecf",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/3aec5712305646e37faefb6e0f31b6da1ca5fa94",
+                "reference": "3aec5712305646e37faefb6e0f31b6da1ca5fa94",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.30.*"
+                "utopia-php/database": "dev-refactor-limits as 0.31.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
-                "phpunit/phpunit": "^9.4",
-                "vimeo/psalm": "4.0.1"
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpunit": "^9.4"
             },
             "type": "library",
             "autoload": {
@@ -1852,9 +1851,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.18.0"
+                "source": "https://github.com/utopia-php/abuse/tree/feat-remove-limits"
             },
-            "time": "2023-02-14T09:56:04+00:00"
+            "time": "2023-02-28T03:33:13+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1913,28 +1912,26 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.20.0",
+            "version": "dev-feat-remove-limits",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e34e229ccd3a0a68b1bdf9f45196eb0cac595bc7"
+                "reference": "96e63b08935b665923f4bf4071e6714f0170fcd0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e34e229ccd3a0a68b1bdf9f45196eb0cac595bc7",
-                "reference": "e34e229ccd3a0a68b1bdf9f45196eb0cac595bc7",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/96e63b08935b665923f4bf4071e6714f0170fcd0",
+                "reference": "96e63b08935b665923f4bf4071e6714f0170fcd0",
                 "shasum": ""
             },
             "require": {
-                "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.30.*"
+                "utopia-php/database": "dev-refactor-limits as 0.31.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "^1.8",
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -1956,9 +1953,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.20.0"
+                "source": "https://github.com/utopia-php/audit/tree/feat-remove-limits"
             },
-            "time": "2023-02-20T09:26:53+00:00"
+            "time": "2023-02-28T03:35:15+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2115,16 +2112,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.30.1",
+            "version": "dev-refactor-limits",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1cea72c1217357bf0747ae4f28ebef57e9dc0e65"
+                "reference": "0cc311fcc6453045c8abfd32d4251a23432dec21"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1cea72c1217357bf0747ae4f28ebef57e9dc0e65",
-                "reference": "1cea72c1217357bf0747ae4f28ebef57e9dc0e65",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0cc311fcc6453045c8abfd32d4251a23432dec21",
+                "reference": "0cc311fcc6453045c8abfd32d4251a23432dec21",
                 "shasum": ""
             },
             "require": {
@@ -2163,9 +2160,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.30.1"
+                "source": "https://github.com/utopia-php/database/tree/refactor-limits"
             },
-            "time": "2023-02-14T06:25:03+00:00"
+            "time": "2023-02-28T03:27:21+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5564,9 +5561,32 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/abuse",
+            "version": "dev-feat-remove-limits",
+            "alias": "0.19.0",
+            "alias_normalized": "0.19.0.0"
+        },
+        {
+            "package": "utopia-php/audit",
+            "version": "dev-feat-remove-limits",
+            "alias": "0.21.0",
+            "alias_normalized": "0.21.0.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-refactor-limits",
+            "alias": "0.31.0",
+            "alias_normalized": "0.31.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/abuse": 20,
+        "utopia-php/audit": 20,
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
