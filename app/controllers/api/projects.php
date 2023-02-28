@@ -1538,3 +1538,28 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $response->noContent();
     });
+
+App::get('v1/projects/:projectId/vcs/install')
+    ->desc('Install GitHub App')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'public')
+    ->param('projectId', '', new UID(), 'Project unique ID')
+    ->inject('response')
+    ->action(function (string $projectId, Response $response) {
+        $response
+            ->redirect("https://github.com/apps/sample-appwrite/installations/new?state=$projectId");
+    });
+
+App::get('v1/projects/vcs/github')
+    ->desc('Capture installation id, setup_action and state')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'public')
+    ->param('installation_id', '', new Text(256), 'installation_id')
+    ->param('setup_action', '', new Text(256), 'setup_action')
+    ->param('state', '', new Text(256), 'state')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $installationId, string $setupAction, string $state, Response $response) {
+        var_dump($response);
+        $response->json(["installation_id" => $installationId, "setup_action" => $setupAction, "state" => $state]);
+    });
