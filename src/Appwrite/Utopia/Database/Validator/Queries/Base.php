@@ -22,7 +22,7 @@ class Base extends Queries
      */
     public function __construct(string $collection, array $allowedAttributes, array $collections = [])
     {
-        if(empty($collections)) {
+        if (empty($collections)) {
             $collections = Config::getParam('collections');
         }
         $collection = $collections[$collection];
