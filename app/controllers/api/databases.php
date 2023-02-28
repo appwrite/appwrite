@@ -2881,7 +2881,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     });
 
 App::get('/v1/databases/:databaseId/slow-queries')
-    ->desc('List Slow queries Documents')
+    ->desc('List Slow Queries Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
     ->label('sdk.hide', true)
