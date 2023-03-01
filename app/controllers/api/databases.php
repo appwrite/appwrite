@@ -2915,7 +2915,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
-App::get('/v1/databases/slow-queries/:documentId')
+App::get('/v1/databases/:databaseId/slow-queries/:documentId')
     ->desc('Get Slow Query Document')
     ->groups(['api', 'database'])
     ->label('docs', false)
