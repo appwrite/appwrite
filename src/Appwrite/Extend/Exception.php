@@ -183,8 +183,8 @@ class Exception extends \Exception
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     /** Timeout */
-    public const TIMEOUT_BLOCKED                    = 'timeout_blocked';
-    public const TIMEOUT                            = 'timeout';
+    public const QUERY_BLOCKED                      = 'query_blocked';
+    public const QUERY_TIMEOUT                      = 'query_timeout';
 
     protected $type = '';
 
@@ -200,6 +200,7 @@ class Exception extends \Exception
 
         $this->message = $message ?? $this->message;
         $this->code = $code ?? $this->code;
+
         parent::__construct($this->message, $this->code, $previous);
     }
 

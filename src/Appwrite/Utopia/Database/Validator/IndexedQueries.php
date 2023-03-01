@@ -106,8 +106,10 @@ class IndexedQueries extends Queries
             if (!$query instanceof Query) {
                 $query = Query::parse($query);
             }
+
             $queries[] = $query;
         }
+
         $grouped = Query::groupByType($queries);
         /** @var Query[] */ $filters = $grouped['filters'];
         /** @var string[] */ $orderAttributes = $grouped['orderAttributes'];
@@ -120,6 +122,7 @@ class IndexedQueries extends Queries
             }
 
             $found = null;
+
             foreach ($this->indexes as $index) {
                 if ($this->arrayMatch($index->getAttribute('attributes'), array_keys($filtersByAttribute))) {
                     $found = $index;

@@ -150,7 +150,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     return $attribute;
 }
 
-
 App::init()
     ->groups(['timeout'])
     ->inject('request')
@@ -164,7 +163,7 @@ App::init()
         /** @var Document $document */
         $document = Authorization::skip(fn() => $dbForProject->getDocument('slowQueries', $key));
         if ($document->getAttribute('blocked') === true) {
-            throw new Exception(Exception::TIMEOUT_BLOCKED);
+            throw new Exception(Exception::QUERY_BLOCKED);
         }
     });
 
@@ -223,10 +222,10 @@ App::error()
                 }
 
                 if ($document->getAttribute('blocked') === true) {
-                    throw new Exception(Exception::TIMEOUT_BLOCKED);
+                    throw new Exception(Exception::QUERY_BLOCKED);
                 }
 
-                throw new Exception(Exception::TIMEOUT);
+                throw new Exception(Exception::QUERY_TIMEOUT);
             }
 
             throw $error;
@@ -234,7 +233,6 @@ App::error()
             App::setResource('error', fn() => $error);
         }
     });
-
 
 App::post('/v1/databases')
     ->desc('Create Database')
@@ -2888,6 +2886,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listSlowQueries')
+    ->label('sdk.description', '/docs/references/databases/list-slow-queries-documents.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
@@ -2926,15 +2925,13 @@ App::get('/v1/databases/slow-queries/:documentId')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getSlowQuery')
-    ->label('sdk.description', '/docs/references/databases/get-document.md')
+    ->label('sdk.description', '/docs/references/databases/get-slow-query.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
     ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->inject('project')
     ->action(function (string $documentId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $documentId);
         if ($document->isEmpty()) {
@@ -2954,17 +2951,14 @@ App::delete('/v1/databases/slow-queries/:documentId')
     //->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
-    ->label('event', 'slowQueries.documents.[documentId].delete')
-    ->label('audits.event', 'document.delete')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
+    ->label('sdk.method', 'deleteSlowQuery')
+    ->label('sdk.description', '/docs/references/databases/delete-slow-query-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $documentId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->action(function (string $documentId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $documentId);
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -2972,19 +2966,6 @@ App::delete('/v1/databases/slow-queries/:documentId')
 
         $dbForProject->deleteDocument('slowQueries', $documentId);
         $dbForProject->deleteCachedDocument('slowQueries', $documentId);
-
-        $deletes
-            ->setType(DELETE_TYPE_AUDIT)
-            ->setDocument($document)
-        ;
-
-        // todo: check slow Queries events
-
-        $events
-            ->setParam('collectionId', 'slowQueries')
-            ->setParam('documentId', $document->getId())
-            ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
-        ;
 
         $response->noContent();
     });

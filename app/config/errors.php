@@ -559,13 +559,13 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
-    Exception::TIMEOUT_BLOCKED => [
-        'name' => Exception::TIMEOUT_BLOCKED,
+    Exception::QUERY_BLOCKED => [
+        'name' => Exception::QUERY_BLOCKED,
         'description' => 'Api call has been blocked after exceeding maximum hits of slow query exception',
         'code' => 403,
     ],
-    Exception::TIMEOUT => [
-        'name' => Exception::TIMEOUT,
+    Exception::QUERY_TIMEOUT => [
+        'name' => Exception::QUERY_TIMEOUT,
         'description' => 'Query exceeded the maximum, the request will eventually be blocked if it keeps timing out, try adjusting the queries parameter and improve indexing',
         'code' => 408,
     ],

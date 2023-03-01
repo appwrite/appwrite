@@ -1,0 +1,1 @@
+Get a slow query by its unique ID. This endpoint response returns a JSON object with the document data.

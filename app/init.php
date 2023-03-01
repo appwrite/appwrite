@@ -936,6 +936,7 @@ App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
+
     return $database;
 }, ['db', 'cache', 'project']);
 

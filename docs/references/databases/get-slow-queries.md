@@ -1,0 +1,1 @@
+Get a list of all the slow queries documents in a given database. You can use the query params to filter your results.
