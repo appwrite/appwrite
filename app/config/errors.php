@@ -566,7 +566,7 @@ return [
     ],
     Exception::QUERY_TIMEOUT => [
         'name' => Exception::QUERY_TIMEOUT,
-        'description' => 'Query exceeded the maximum, the request will eventually be blocked if it keeps timing out, try adjusting the queries parameter and improve indexing',
+        'description' => 'Request timed out, this query will be blocked if it keeps timing out, try adjusting the "queries" parameter or adding indexes for the queried attributes.',
         'code' => 408,
     ],
 ];
