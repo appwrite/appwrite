@@ -1284,7 +1284,8 @@ class RealtimeCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code))
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';

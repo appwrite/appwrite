@@ -6,7 +6,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -48,6 +48,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
+use Utopia\Validator\Nullable;
 
 /**
  * Create attribute of varying type
@@ -1145,7 +1146,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE, min: 0), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -1641,7 +1642,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1682,7 +1683,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1725,7 +1726,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('elements', null, new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1768,7 +1769,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1810,7 +1811,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1853,7 +1854,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents')
     ->param('max', null, new Integer(), 'Maximum value to enforce on new documents')
-    ->param('default', null, new Integer(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1898,7 +1899,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents')
     ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents')
-    ->param('default', null, new FloatValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1941,7 +1942,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Boolean(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1982,7 +1983,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new DatetimeValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new DatetimeValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
