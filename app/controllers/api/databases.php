@@ -185,15 +185,6 @@ App::error()
                     throw new Exception(Exception::GENERAL_SERVER_ERROR);
                 }
 
-                $uidValidator = new UID();
-                if (!$uidValidator->isValid($databaseId)) {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR);
-                }
-
-                if (!$uidValidator->isValid($collectionId)) {
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR);
-                }
-
                 $key = md5(json_encode([
                     $request->getMethod(),
                     $request->getURI(), // Contains databaseId & collectionId
