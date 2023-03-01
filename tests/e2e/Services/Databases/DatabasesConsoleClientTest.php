@@ -306,23 +306,23 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(true, $documents['body']['documents'][0]['blocked']);
         $this->assertEquals(2, $documents['body']['documents'][0]['count']);
 
-        $document = $this->client->call(Client::METHOD_GET, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
+        $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($document['body']['queries'][0], 'notEqual("longtext", "appwrite")');
+        $this->assertEquals(200, $doc['headers']['status-code']);
+        $this->assertEquals($doc['body']['queries'][0], 'notEqual("longtext", "appwrite")');
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $data['databaseId'] . '/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $document = $this->client->call(Client::METHOD_GET, '/databases/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
+        $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(404, $document['headers']['status-code']);
+        $this->assertEquals(404, $doc['headers']['status-code']);
     }
 }

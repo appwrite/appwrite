@@ -2929,10 +2929,11 @@ App::get('/v1/databases/:databaseId/slow-queries/:documentId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $documentId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $documentId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $documentId);
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -2941,7 +2942,7 @@ App::get('/v1/databases/:databaseId/slow-queries/:documentId')
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/databases/:databaseId/slow-queries/:documentId')
+App::delete('/v1/databases/:databaseId/slow-queries/:documentId')
     ->desc('Delete Slow query Document')
     ->desc('List  Documents')
     ->groups(['api', 'database'])
@@ -2955,10 +2956,11 @@ App::get('/v1/databases/:databaseId/slow-queries/:documentId')
     ->label('sdk.description', '/docs/references/databases/delete-slow-query-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $documentId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $documentId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $documentId);
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
