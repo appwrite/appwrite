@@ -50,7 +50,6 @@ class Backup extends Action
         ];
 
         $sleep = 86400; //24 hours
-        $sleep = 60;
         $remote = getDevice('/');
 
         Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
@@ -62,10 +61,6 @@ class Backup extends Action
                 $source = $local->getRoot() . '/' . $filename;
                 $destination = '/' . $key . '/' . $filename;
 
-//                for ($i = 0; $i < 1000; $i++) {
-//                    file_put_contents($local->getRoot() . '/' . $i . '.txt', '');
-//                }
-
                 $stdout = '';
                 $stderr = '';
 
@@ -75,7 +70,6 @@ class Backup extends Action
                     $stdout,
                     $stderr
                 );
-
 
                 try {
                     if (!$local->exists($source)) {
