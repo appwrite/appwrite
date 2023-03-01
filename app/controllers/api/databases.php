@@ -124,9 +124,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
     }
 
-    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
-
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
@@ -1487,9 +1484,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
-
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
             ->setCollection($collection)
@@ -1810,8 +1804,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         if ($index->getAttribute('status') === 'available') {
             $index = $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'deleting'));
         }
-
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
         $database
             ->setType(DATABASE_TYPE_DELETE_INDEX)

@@ -108,7 +108,6 @@ App::post('/v1/teams')
             ]);
 
             $membership = $dbForProject->createDocument('memberships', $membership);
-            $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
         $events->setParam('teamId', $team->getId());
@@ -425,7 +424,6 @@ App::post('/v1/teams/:teamId/memberships')
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
-            $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
@@ -670,7 +668,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         /**
          * Replace membership on profile
          */
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
             ->setParam('teamId', $team->getId())
@@ -785,13 +782,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
         Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
@@ -869,8 +862,6 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         } catch (\Exception $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));

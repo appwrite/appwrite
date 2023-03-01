@@ -284,6 +284,8 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('database_' . $database->getInternalId(), $document['collectionId']);
+        $database->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $document['collectionInternalId']);
         return $database
             ->find('attributes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
@@ -299,6 +301,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('database_' . $document->getInternalId(), $document['collectionId']);
         return $database
             ->find('indexes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
@@ -370,6 +373,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
@@ -383,6 +387,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn() => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
@@ -397,6 +402,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('users', $document->getId());
         return Authorization::skip(fn() => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
@@ -411,6 +417,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
+        $database->deleteCachedDocument('functions', $document->getId());
         return $database
             ->find('variables', [
                 Query::equal('functionInternalId', [$document->getInternalId()]),
