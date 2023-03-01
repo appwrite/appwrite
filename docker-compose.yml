@@ -597,6 +597,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_CONNECTIONS_STORAGE
+      - _APP_BACKUP_HEARTBEAT
 
   appwrite-worker-usage:
     entrypoint: worker-usage

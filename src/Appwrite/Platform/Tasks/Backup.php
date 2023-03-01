@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Storage\Device\Local;
@@ -28,7 +29,7 @@ class Backup extends Action
         Console::title('Backup V1');
         Console::success(APP_NAME . ' backup process v1 has started');
 
-        $jobInitTime = '9:55'; // (hour:minutes)
+        $jobInitTime = '13:10'; // (hour:minutes)
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
@@ -54,7 +55,7 @@ class Backup extends Action
 
         Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
         Console::loop(function () use ($delay, $sleep, $folders, $remote) {
-
+            $success = 0;
             foreach ($folders as $key => $folder) {
                 $local = new Local($folder);
                 $filename = $key . '-' . date("Y-m-d") . '.tar.gz';
@@ -82,6 +83,11 @@ class Backup extends Action
                     }
 
                     $local->transfer($source, $destination, $remote);
+
+                    if ($remote->exists($destination)) {
+                        $success++;
+                    }
+
                     Console::info("Backing up local $source to {$remote->getName()} $destination");
                     /**
                      * Backup folder, long tail cleanup.
@@ -98,6 +104,14 @@ class Backup extends Action
                 } catch (\Exception $e) {
                     Console::error($e->getMessage());
                 }
+            }
+
+            /**
+             * heartbeat url
+             */
+            $url = App::getEnv('_APP_BACKUP_HEARTBEAT', '');
+            if ($success === count($folders) && $url !== '') {
+                file_get_contents($url);
             }
         }, $sleep, $delay);
     }

@@ -33,7 +33,7 @@
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
 - New usage metrics collection flow [#4770](https://github.com/appwrite/appwrite/pull/4770)
   - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
-  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
+  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT, _APP_USAGE_AGGREGATION_INTERVAL env variables.
   - Removed usage labels dependency.
   - Dropped type attribute from stats collection.
   - Usage metrics are processed via new usage worker.
