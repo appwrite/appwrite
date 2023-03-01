@@ -109,9 +109,6 @@ class Mapper
                     'type' => $parameterType,
                     'description' => $parameter['description'],
                 ];
-                if ($parameter['optional']) {
-                    $params[$name]['defaultValue'] = $parameter['default'];
-                }
             }
 
             $field = [
