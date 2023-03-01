@@ -47,7 +47,7 @@
         "utopia-php/analytics": "0.2.*",
         "utopia-php/audit": "0.20.*",
         "utopia-php/cache": "0.8.*",
-        "utopia-php/cli": "0.14.*",
+        "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.30.*",
         "utopia-php/queue": "0.5.*",

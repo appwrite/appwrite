@@ -28,9 +28,10 @@ class Backup extends Action
         Console::title('Backup V1');
         Console::success(APP_NAME . ' backup process v1 has started');
 
+        $jobInitTime = '9:55'; // (hour:minutes)
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        $next = new \DateTime($now->format("Y-m-d 17:25.0"));
+        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
         $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
@@ -74,6 +75,7 @@ class Backup extends Action
                     $stderr
                 );
 
+
                 try {
                     if (!$local->exists($source)) {
                         continue;
@@ -81,7 +83,6 @@ class Backup extends Action
 
                     $local->transfer($source, $destination, $remote);
                     Console::info("Backing up local $source to {$remote->getName()} $destination");
-
                     /**
                      * Backup folder, long tail cleanup.
                      */
@@ -91,7 +92,6 @@ class Backup extends Action
                         $now->sub(\DateInterval::createFromDateString('1 days'));
                         if ($i >= 10) {
                             $destination = '/' . $key . '/' . $key . '-' . $now->format("Y-m-d") . '.tar.gz';
-                            Console::info("Trying to delete from {$remote->getName()} $destination");
                             $remote->delete($destination);
                         }
                     }
