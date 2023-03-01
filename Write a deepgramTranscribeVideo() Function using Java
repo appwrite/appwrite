@@ -1,0 +1,55 @@
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+public class AppwriteFunction {
+public static JsonObject deepgramTranscribeVideo(JsonObject data) throws Exception {
+String fileUrl = data.get("fileUrl").getAsString();
+
+if (fileUrl == null || fileUrl.isEmpty()) {
+  return errorResponse("Please provide a valid file URL.");
+}
+
+String deepgramApiKey = System.getenv("DEEPGRAM_API_KEY"); // Set your Deepgram API key as an environment variable
+if (deepgramApiKey == null || deepgramApiKey.isEmpty()) {
+  return errorResponse("Please set your Deepgram API key as an environment variable.");
+}
+
+OkHttpClient client = new OkHttpClient();
+
+Request request = new Request.Builder()
+    .url("https://proxy.deepgram.com/v1/listen")
+    .post(RequestBody.create("{\n  \"url\": \"" + fileUrl + "\",\n  \"metadata\": {\n    \"client_name\": \"appwrite\",\n    \"client_version\": \"v1\",\n    \"api_key\": \"" + deepgramApiKey + "\"\n  }\n}", okhttp3.MediaType.parse("application/json")))
+    .build();
+
+Response response = client.newCall(request).execute();
+String responseBody = response.body().string();
+
+if (response.isSuccessful()) {
+  JsonObject deepgramData = JsonParser.parseString(responseBody).getAsJsonObject();
+  return successResponse(deepgramData);
+} else {
+  return errorResponse("Failed to transcribe video. " + responseBody);
+}
+}
+
+private static JsonObject successResponse(JsonObject data) {
+JsonObject response = new JsonObject();
+response.addProperty("success", true);
+response.add("deepgramData", data);
+return response;
+}
+
+private static JsonObject errorResponse(String message) {
+JsonObject response = new JsonObject();
+response.addProperty("success", false);
+response.addProperty("message", message);
+return response;
+}
+}
+This implementation uses the OkHttp library to make an HTTP request to the Deepgram API and transcribe the video. You'll need to set your Deepgram API key as an environment variable called DEEPGRAM_API_KEY. 
+You can then call the deepgramTranscribeVideo() function with a JSON payload containing the fileUrl parameter to transcribe the video.This implementation uses the OkHttp library to make an HTTP request to the Deepgram API and transcribe the video.
+You'll need to set your Deepgram API key as an environment variable called DEEPGRAM_API_KEY. You can then call the deepgramTranscribeVideo() function with a JSON payload containing the fileUrl parameter to transcribe the video.
