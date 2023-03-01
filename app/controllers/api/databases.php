@@ -2935,7 +2935,7 @@ App::get('/v1/databases/:databaseId/slow-queries/:documentId')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $documentId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $documentId);
-        if ($document->isEmpty()) {
+        if ($document->isEmpty() || $document->getAttribute('databaseId') !== $databaseId) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
@@ -2962,10 +2962,9 @@ App::delete('/v1/databases/:databaseId/slow-queries/:documentId')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $documentId, Response $response, Database $dbForProject) {
         $document = $dbForProject->getDocument('slowQueries', $documentId);
-        if ($document->isEmpty()) {
+        if ($document->isEmpty() || $document->getAttribute('databaseId') !== $databaseId) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
-
         $dbForProject->deleteDocument('slowQueries', $documentId);
         $dbForProject->deleteCachedDocument('slowQueries', $documentId);
 
