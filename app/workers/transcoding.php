@@ -111,12 +111,6 @@ class TranscodingV1 extends Worker
             console::error('Not an valid Video file "' . $inPath . '"');
         }
 
-        foreach ($this->ffprobe->streams($inPath)->audios()->getIterator() as $stream) {
-            if (!empty($stream->get('tags')['language'])) {
-                $this->audioTracks[] = $stream->get('tags')['language'];
-            }
-        }
-
         $mediaInfo = new MediaInfo();
         $mediaInfoContainer = $mediaInfo->getInfo($inPath);
         $general = $mediaInfoContainer->getGeneral();
@@ -130,7 +124,7 @@ class TranscodingV1 extends Worker
                 ->setAttribute('width', $video->get('width')->getAbsoluteValue())
                 ->setAttribute('aspectRatio', $video->get('display_aspect_ratio')->getTextValue())
                 ->setAttribute('videoFormat', $video->get('format')->getShortName())
-                ->setAttribute('videoFormatProfile', $video->get('video_format_profile'))
+                ->setAttribute('videoFormatProfile', $video->get('format_profile'))
                 ->setAttribute('videoFrameRate', strval($video->get('frame_rate')->getAbsoluteValue()))
                 ->setAttribute('videoFrameRateMode', $video->get('frame_rate_mode')->getFullName())
                 ->setAttribute('videoBitrate', strval($video->get('bit_rate')->getAbsoluteValue()));
@@ -149,8 +143,8 @@ class TranscodingV1 extends Worker
             'Input height: ' . $this->video->getAttribute('height')  . ' px' . PHP_EOL .
             'Input duration: ' . ($this->video->getAttribute('duration') / 1000) . ' sec' . PHP_EOL .
             'Input size: ' . ($this->video->getAttribute('size') / 1024 / 1024) . ' MiB' . PHP_EOL .
-            'Input videoBitrate: ' . ($this->video->getAttribute('videoBitrate') / 1000) . ' b/s' . PHP_EOL .
-            'Input audioBitrate: ' . ($this->video->getAttribute('audioBitrate') / 1000) . ' b/s');
+            'Input videoBitrate: ' . ($this->video->getAttribute('videoBitrate') / 1000) . ' kb/s' . PHP_EOL .
+            'Input audioBitrate: ' . ($this->video->getAttribute('audioBitrate') / 1000) . ' kb/s' . PHP_EOL);
 
         $this->database->updateDocument('videos', $this->video->getId(), $this->video);
         $media = $this->ffmpeg->open($inPath);
