@@ -1415,7 +1415,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'lorem'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1435,7 +1435,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1455,7 +1455,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'ipsum'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1546,7 +1546,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'torsten@appwrite.io'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1567,7 +1567,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1587,7 +1587,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'eldad@appwrite.io'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1678,7 +1678,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => '127.0.0.1'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1698,7 +1698,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1718,7 +1718,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => '192.168.0.1'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1809,7 +1809,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'http://appwrite.io'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1829,7 +1829,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1849,7 +1849,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'https://appwrite.io'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1942,7 +1942,7 @@ class DatabasesCustomServerTest extends Scope
             'max' => 1000
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1966,7 +1966,7 @@ class DatabasesCustomServerTest extends Scope
             'max' => 1000
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1990,7 +1990,7 @@ class DatabasesCustomServerTest extends Scope
             'max' => 2000
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2192,7 +2192,7 @@ class DatabasesCustomServerTest extends Scope
             'max' => 1000.0
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2216,7 +2216,7 @@ class DatabasesCustomServerTest extends Scope
             'max' => 1000.0
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2240,7 +2240,7 @@ class DatabasesCustomServerTest extends Scope
             'max' => 2000.0
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2440,7 +2440,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => true
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2460,7 +2460,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2480,7 +2480,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => false
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2571,7 +2571,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => '1975-06-12 14:12:55+02:00'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2591,7 +2591,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2611,7 +2611,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => '1965-06-12 14:12:55+02:00'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2703,7 +2703,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'lorem'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2728,7 +2728,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => null
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2753,7 +2753,7 @@ class DatabasesCustomServerTest extends Scope
             'default' => 'dolor'
         ]);
 
-        $this->assertEquals(202, $update['headers']['status-code']);
+        $this->assertEquals(200, $update['headers']['status-code']);
 
         $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/' . $key, array_merge([
             'content-type' => 'application/json',
