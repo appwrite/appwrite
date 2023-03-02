@@ -1660,7 +1660,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
@@ -1702,7 +1702,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
@@ -1746,7 +1746,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
@@ -1788,7 +1788,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
@@ -1829,7 +1829,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
@@ -1874,7 +1874,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
@@ -1919,7 +1919,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
@@ -1960,7 +1960,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
@@ -2001,7 +2001,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         );
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
