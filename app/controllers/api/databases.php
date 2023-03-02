@@ -2087,8 +2087,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         // Validate queries
         $queriesValidator = new Documents($collection->getAttribute('attributes'));
         $validQueries = $queriesValidator->isValid($queries);
-        // todo: take crae of this
-        if (!$validQueries && $queries[0] != 'notEqual("longtext", "appwrite")') {
+        if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
@@ -2098,7 +2097,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $documentId = $cursor->getValue();
 
             if ($documentSecurity && !$valid) {
