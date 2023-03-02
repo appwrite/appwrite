@@ -1930,6 +1930,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
@@ -2052,6 +2054,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -2082,7 +2085,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Validate queries
-        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $queriesValidator = new Documents($collection->getAttribute('attributes'));
         $validQueries = $queriesValidator->isValid($queries);
         // todo: take crae of this
         if (!$validQueries && $queries[0] != 'notEqual("longtext", "appwrite")') {
@@ -2156,6 +2159,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
@@ -2325,6 +2330,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
@@ -2458,6 +2465,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('sdk.description', '/docs/references/databases/delete-document.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
