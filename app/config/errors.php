@@ -561,7 +561,7 @@ return [
     ],
     Exception::QUERY_BLOCKED => [
         'name' => Exception::QUERY_BLOCKED,
-        'description' => 'Api call has been blocked after exceeding maximum hits of slow query exception',
+        'description' => 'Request blocked after exceeding the maximum number of timeouts',
         'code' => 403,
     ],
     Exception::QUERY_TIMEOUT => [
