@@ -120,43 +120,37 @@ class TranscodingV1 extends Worker
         $mediaInfo = new MediaInfo();
         $mediaInfoContainer = $mediaInfo->getInfo($inPath);
         $general = $mediaInfoContainer->getGeneral();
-        $this->video->
-            setAttribute('duration', strval($general->get('duration')->getMilliseconds()));
+        $this->video
+            ->setAttribute('duration', strval($general->get('duration')->getMilliseconds()))
+            ->setAttribute('format', $general->get('format')->getShortName());
 
-        var_dump($general->get('duration')->getMilliseconds());
-        var_dump($general->get('overall_bit_rate')->getShortName());
-
-        $videos = $mediaInfoContainer->getVideos();
-        foreach ($videos as $video) {
+        foreach ($mediaInfoContainer->getVideos() ?? [] as $video) {
             $this->video
                 ->setAttribute('height', $video->get('height')->getAbsoluteValue())
                 ->setAttribute('width', $video->get('width')->getAbsoluteValue())
-                ->setAttribute('videoCodec', strval($video->get('format')->getShortName()))
-                ->setAttribute('videoFramerate', strval($video->get('frame_rate')->getAbsoluteValue()))
+                ->setAttribute('aspectRatio', $video->get('display_aspect_ratio')->getTextValue())
+                ->setAttribute('videoFormat', $video->get('format')->getShortName())
+                ->setAttribute('videoFormatProfile', $video->get('video_format_profile'))
+                ->setAttribute('videoFrameRate', strval($video->get('frame_rate')->getAbsoluteValue()))
+                ->setAttribute('videoFrameRateMode', $video->get('frame_rate_mode')->getFullName())
                 ->setAttribute('videoBitrate', strval($video->get('bit_rate')->getAbsoluteValue()));
-
-            var_dump($video->get('format_profile'));
-            var_dump($video->get('frame_rate_mode')->getFullName());
-            var_dump($video->get('display_aspect_ratio')->getTextValue());
         }
 
-        $audios = $mediaInfoContainer->getAudios();
-
-        foreach ($audios as $audio) {
+        foreach ($mediaInfoContainer->getAudios() ?? [] as $audio) {
             $this->video
-                ->setAttribute('audioCodec', strval($audio->get('format')->getShortName()))
-                ->setAttribute('audioSamplerate', strval($audio->get('frame_rate')->getAbsoluteValue()))
+                ->setAttribute('audioFormat', strval($audio->get('format')->getShortName()))
+                ->setAttribute('audioSampleRate', strval($audio->get('sampling_rate')->getAbsoluteValue()))
                 ->setAttribute('audioBitrate', strval($audio->get('bit_rate')->getAbsoluteValue()));
         }
 
-        console::info('Input video id:' . $this->video->getId() . PHP_EOL .
+        console::info('Input video id: ' . $this->video->getId() . PHP_EOL .
             'Input name: ' . $this->file->getAttribute('name') . PHP_EOL .
-            'Input width: ' . $this->video->getAttribute('width') . PHP_EOL .
-            'Input height: ' . $this->video->getAttribute('height') . PHP_EOL .
-            'Input duration: ' . $this->video->getAttribute('duration') . PHP_EOL .
-            'Input size: ' . $this->video['size'] . PHP_EOL .
-            'Input videoBitrate: ' . $this->video->getAttribute('videoBitrate') . PHP_EOL .
-            'Input audioBitrate: ' . $this->video->getAttribute('audioBitrate') . PHP_EOL);
+            'Input width: ' . $this->video->getAttribute('width') . ' px' . PHP_EOL .
+            'Input height: ' . $this->video->getAttribute('height')  . ' px' . PHP_EOL .
+            'Input duration: ' . ($this->video->getAttribute('duration') / 1000) . ' sec' . PHP_EOL .
+            'Input size: ' . ($this->video->getAttribute('size') / 1024 / 1024) . ' MiB' . PHP_EOL .
+            'Input videoBitrate: ' . ($this->video->getAttribute('videoBitrate') / 1000) . ' b/s' . PHP_EOL .
+            'Input audioBitrate: ' . ($this->video->getAttribute('audioBitrate') / 1000) . ' b/s');
 
         $this->database->updateDocument('videos', $this->video->getId(), $this->video);
         $media = $this->ffmpeg->open($inPath);
