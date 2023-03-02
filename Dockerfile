@@ -127,6 +127,7 @@ ENV _APP_SERVER=swoole \
 RUN \
   apk update \
   && apk add --no-cache\
+  mediainfo \
   ffmpeg \
   && rm -rf /var/cache/apk/*
 

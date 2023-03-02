@@ -64,61 +64,6 @@ class Rendition extends Model
                 'default' => null,
                 'example' => 'hls',
             ])
-            ->addRule('duration', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Video duration.',
-                'default' => 0,
-                'example' => '92.739989',
-            ])
-            ->addRule('width', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Video width.',
-                'default' => 0,
-                'example' => 300,
-            ])
-            ->addRule('height', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Video height.',
-                'default' => 0,
-                'example' => 400,
-            ])
-            ->addRule('videoCodec', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Video codec.',
-                'default' => null,
-                'example' => 'h264,avc1',
-            ])
-            ->addRule('videoBitrate', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Video bitrate.',
-                'default' => 0,
-                'example' => 564790,
-            ])
-            ->addRule('videoFramerate', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Video frame rate.',
-                'default' => 0,
-                'example' => '231947377/4638947',
-            ])
-            ->addRule('audioCodec', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Audio codec.',
-                'default' => null,
-                'example' => 'aac,mp4a',
-            ])
-            ->addRule('audioBitrate', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Audio bitrate.',
-                'default' => 0,
-                'example' => 127999,
-            ])
-            ->addRule('audioSamplerate', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Audio sample rate.',
-                'default' => 0,
-                'example' => 44100,
-            ])
-
         ;
     }
 

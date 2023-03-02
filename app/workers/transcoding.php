@@ -10,7 +10,7 @@ use Streaming\Format\StreamFormat;
 use Streaming\HLSSubtitle;
 use Streaming\Media;
 use Streaming\Representation;
-use Streaming\RepresentationInterface;
+use Mhor\MediaInfo\MediaInfo;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -117,22 +117,37 @@ class TranscodingV1 extends Worker
             }
         }
 
-        $audioStreamCount = $this->ffprobe->streams($inPath)->audios()->count();
-        $videoStreamCount = $this->ffprobe->streams($inPath)->videos()->count();
-        $streams = $this->ffprobe->streams($inPath);
+        $mediaInfo = new MediaInfo();
+        $mediaInfoContainer = $mediaInfo->getInfo($inPath);
+        $general = $mediaInfoContainer->getGeneral();
+        $this->video->
+            setAttribute('duration', strval($general->get('duration')->getMilliseconds()));
 
-        $this->video
-            ->setAttribute('duration', $videoStreamCount > 0 ? $streams->videos()->first()->get('duration') : null)
-            ->setAttribute('height', $videoStreamCount > 0 ? $streams->videos()->first()->get('height') : null)
-            ->setAttribute('width', $videoStreamCount > 0 ? $streams->videos()->first()->get('width') : null)
-            ->setAttribute('videoCodec', $videoStreamCount > 0 ? $streams->videos()->first()->get('codec_name') : null)
-            ->setAttribute('videoFramerate', $videoStreamCount > 0 ? $streams->videos()->first()->get('avg_frame_rate') : null)
-            ->setAttribute('videoBitrate', $videoStreamCount > 0 ? $streams->videos()->first()->get('bit_rate') : null)
-            ->setAttribute('audioCodec', $audioStreamCount > 0 ? $streams->audios()->first()->get('codec_name') : null)
-            ->setAttribute('audioSamplerate', $audioStreamCount > 0 ? $streams->audios()->first()->get('sample_rate') : null)
-            ->setAttribute('audioBitrate', $audioStreamCount > 0 ? $streams->audios()->first()->get('bit_rate') : null)
-            ;
+        var_dump($general->get('duration')->getMilliseconds());
+        var_dump($general->get('overall_bit_rate')->getShortName());
 
+        $videos = $mediaInfoContainer->getVideos();
+        foreach ($videos as $video) {
+            $this->video
+                ->setAttribute('height', $video->get('height')->getAbsoluteValue())
+                ->setAttribute('width', $video->get('width')->getAbsoluteValue())
+                ->setAttribute('videoCodec', strval($video->get('format')->getShortName()))
+                ->setAttribute('videoFramerate', strval($video->get('frame_rate')->getAbsoluteValue()))
+                ->setAttribute('videoBitrate', strval($video->get('bit_rate')->getAbsoluteValue()));
+
+            var_dump($video->get('format_profile'));
+            var_dump($video->get('frame_rate_mode')->getFullName());
+            var_dump($video->get('display_aspect_ratio')->getTextValue());
+        }
+
+        $audios = $mediaInfoContainer->getAudios();
+
+        foreach ($audios as $audio) {
+            $this->video
+                ->setAttribute('audioCodec', strval($audio->get('format')->getShortName()))
+                ->setAttribute('audioSamplerate', strval($audio->get('frame_rate')->getAbsoluteValue()))
+                ->setAttribute('audioBitrate', strval($audio->get('bit_rate')->getAbsoluteValue()));
+        }
 
         console::info('Input video id:' . $this->video->getId() . PHP_EOL .
             'Input name: ' . $this->file->getAttribute('name') . PHP_EOL .
@@ -198,8 +213,8 @@ class TranscodingV1 extends Worker
                 ->setResize($this->profile->getAttribute('width'), $this->profile->getAttribute('height'))
             ;
 
-            console::info('Output bitrate:' . $this->video->getId() . PHP_EOL .
-                'Output resolution: ' . $this->file->getAttribute('name') . PHP_EOL .
+            console::info('Output video id:' . $this->video->getId() . PHP_EOL .
+                'Output name: ' . $this->file->getAttribute('name') . PHP_EOL .
                 'Output width: ' . $this->profile->getAttribute('width')  . PHP_EOL .
                 'Output height: ' . $this->profile->getAttribute('height') . PHP_EOL .
                 'Output video bitrate:' . $this->profile->getAttribute('videoBitrate') . PHP_EOL .
@@ -215,12 +230,8 @@ class TranscodingV1 extends Worker
                 }
             });
 
-            $general = $this->transcode($this->profile->getAttribute('output'), $media, $format, $representation, $subs);
-            if (!empty($general)) {
-                foreach ($general as $key => $value) {
-                    $query->setAttribute($key, (string)$value);
-                }
-            }
+            $this->transcode($this->profile->getAttribute('output'), $media, $format, $representation, $subs);
+
             unset($media);
             //exec('/usr/bin/ffmpeg -y -i /usr/src/code/tests/tmp/637f59c88f9ff0fe3b1f/637e1b82aeab8980400e/in/637f59ab5bce0e36d05e.mp4 -c:v libx264 -c:a aac -bf 1 -keyint_min 25 -g 250 -sc_threshold 40 -use_timeline 0 -use_template 0 -seg_duration 10 -hls_playlist 0 -f dash -dn -sn -vf scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1 -b_strategy 1 -bf 3 -force_key_frames "expr:gte(t,n_forced*2)" -map 0 -s:v:0 1024x576 -b:v:0 2538k -b:a:0 128k -strict -2 -threads 12 /usr/src/code/tests/tmp/637f59c88f9ff0fe3b1f/637e1b82aeab8980400e/out/637f59c88f9ff0fe3b1f.mpd2>&1', $o, $v);
             //var_dump($o);
@@ -346,9 +357,9 @@ class TranscodingV1 extends Worker
      * @param $format StreamFormat
      * @param $representation Representation
      * @param array $subtitles
-     * @return string|array
+     * @return void
      */
-    private function transcode(string $output, Media $media, StreamFormat $format, Representation $representation, array $subtitles): string | array
+    private function transcode(string $output, Media $media, StreamFormat $format, Representation $representation, array $subtitles): void
     {
 
         $additionalParams = [
@@ -363,14 +374,12 @@ class TranscodingV1 extends Worker
         $segmentSize = 10;
 
         if ($output === self::OUTPUT_DASH) {
-                $dash = $media->dash()
+               $media->dash()
                 ->setFormat($format)
                 ->setSegDuration($segmentSize)
                 ->addRepresentation($representation)
                 ->setAdditionalParams($additionalParams)
                 ->save($this->outPath);
-
-                return $dash->metadata()->basic($dash->metadata()->export());
         }
 
         $hls = $media->hls();
@@ -387,8 +396,6 @@ class TranscodingV1 extends Worker
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
             ->save($this->outPath);
-
-        return $hls->metadata()->basic($hls->metadata()->export());
     }
 
     /**
