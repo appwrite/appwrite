@@ -304,7 +304,7 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
-                    case 'Utopia\Database\Validator\DatetimeValidator':
+                    case 'Utopia\Database\Validator\Datetime':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
                         $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;

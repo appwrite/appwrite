@@ -6,7 +6,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;

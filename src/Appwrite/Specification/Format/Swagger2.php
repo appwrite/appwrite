@@ -305,7 +305,7 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
-                    case 'Utopia\Database\Validator\DatetimeValidator':
+                    case 'Utopia\Database\Validator\Datetime':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'datetime';
                         $node['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
