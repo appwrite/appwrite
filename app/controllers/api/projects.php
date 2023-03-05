@@ -1340,7 +1340,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            throw new Exception(Exception::ENV_VARIABLE_INCORRECT_SETUP, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
         }
 
         $domain = new Domain($domain);

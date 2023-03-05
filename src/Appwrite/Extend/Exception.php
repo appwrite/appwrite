@@ -177,6 +177,7 @@ class Exception extends \Exception
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
+    public const ENV_VARIABLE_INCORRECT_SETUP      = 'env_variable_setup_incorrectly';
 
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
