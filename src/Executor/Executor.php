@@ -130,6 +130,8 @@ class Executor
         string $method,
         array $headers,
     ) {
+        $headers['host'] = App::getEnv('_APP_DOMAIN', '');
+
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';
         $params = [

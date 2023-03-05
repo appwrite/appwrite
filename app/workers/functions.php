@@ -145,6 +145,11 @@ Server::setResource('execute', function () {
             'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
+        $body = $vars['APPWRITE_FUNCTION_EVENT_DATA'] ?? '';
+        if(empty($body)) {
+            $body = $vars['APPWRITE_FUNCTION_DATA'] ?? '';
+        }
+
         /** Execute function */
         try {
             $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
@@ -152,7 +157,7 @@ Server::setResource('execute', function () {
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
                 version: $function->getAttribute('version'),
-                body: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
+                body: $body,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
@@ -311,9 +316,11 @@ $server->job()
                         data: null,
                         executionId: null,
                         jwt: null,
-                        path: $payload['path'],
-                        method: $payload['method'],
-                        headers: $payload['headers'],
+                        path: '/',
+                        method: 'POST',
+                        headers: [
+                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE
+                        ],
                     );
                     Console::success('Triggered function: ' . $events[0]);
                 }
