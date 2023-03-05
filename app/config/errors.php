@@ -539,6 +539,11 @@ return [
         'description' => 'A Domain with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::DOMAIN_VERIFICATION_FAILED => [
+        'name' => Exception::DOMAIN_VARIABLE_INCORRECT,
+        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',
