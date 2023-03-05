@@ -93,7 +93,7 @@ class TranscodingV1 extends Worker
         $this->file = $this->database->getDocument('bucket_' . $this->bucket->getInternalId(), $this->video->getAttribute('fileId'));
         $path = basename($this->file->getAttribute('path'));
         $inPath = $this->inDir . $path;
-        $result = $this->writeData($this->project, $this->file);
+        $result = $this->write($this->project, $this->file);
 
         console::info('Transferring video from storage to [' . $this->inDir . ']');
 
@@ -101,6 +101,9 @@ class TranscodingV1 extends Worker
             console::error('Storage transfer error');
         }
 
+        /**
+         * FFMpeg init
+         */
         $this->ffprobe = FFProbe::create();
         $this->ffmpeg = FFMpeg::create([
             'timeout' => 0,
@@ -111,6 +114,9 @@ class TranscodingV1 extends Worker
             console::error('Not an valid Video file "' . $inPath . '"');
         }
 
+        /**
+         * Original asset media info
+         */
         $mediaInfo = new MediaInfo();
         $mediaInfoContainer = $mediaInfo->getInfo($inPath);
         $general = $mediaInfoContainer->getGeneral();
@@ -127,14 +133,14 @@ class TranscodingV1 extends Worker
                 ->setAttribute('videoFormatProfile', $video->get('format_profile'))
                 ->setAttribute('videoFrameRate', strval($video->get('frame_rate')->getAbsoluteValue()))
                 ->setAttribute('videoFrameRateMode', $video->get('frame_rate_mode')->getFullName())
-                ->setAttribute('videoBitrate', strval($video->get('bit_rate')->getAbsoluteValue()));
+                ->setAttribute('videoBitRate', strval($video->get('bit_rate')->getAbsoluteValue()));
         }
 
         foreach ($mediaInfoContainer->getAudios() ?? [] as $audio) {
             $this->video
                 ->setAttribute('audioFormat', strval($audio->get('format')->getShortName()))
                 ->setAttribute('audioSampleRate', strval($audio->get('sampling_rate')->getAbsoluteValue()))
-                ->setAttribute('audioBitrate', strval($audio->get('bit_rate')->getAbsoluteValue()));
+                ->setAttribute('audioBitRate', strval($audio->get('bit_rate')->getAbsoluteValue()));
         }
 
         console::info('Input video id: ' . $this->video->getId() . PHP_EOL .
@@ -143,12 +149,16 @@ class TranscodingV1 extends Worker
             'Input height: ' . $this->video->getAttribute('height')  . ' px' . PHP_EOL .
             'Input duration: ' . ($this->video->getAttribute('duration') / 1000) . ' sec' . PHP_EOL .
             'Input size: ' . ($this->video->getAttribute('size') / 1024 / 1024) . ' MiB' . PHP_EOL .
-            'Input videoBitrate: ' . ($this->video->getAttribute('videoBitrate') / 1000) . ' kb/s' . PHP_EOL .
-            'Input audioBitrate: ' . ($this->video->getAttribute('audioBitrate') / 1000) . ' kb/s' . PHP_EOL);
+            'Input videoBitRate: ' . ($this->video->getAttribute('videoBitRate') / 1000) . ' kb/s' . PHP_EOL .
+            'Input audioBitRate: ' . ($this->video->getAttribute('audioBitRate') / 1000) . ' kb/s' . PHP_EOL);
 
         $this->database->updateDocument('videos', $this->video->getId(), $this->video);
+
         $media = $this->ffmpeg->open($inPath);
-        $this->setRenditionName($this->profile);
+
+        $this->renditionName = $this->profile->getAttribute('width')
+            . 'X' . $this->profile->getAttribute('height')
+            . '@' . ($this->profile->getAttribute('videoBitRate') + $this->profile->getAttribute('audioBitRate'));
 
         $subs = [];
         $subtitles =  $this->database->find('videos_subtitles', [
@@ -163,7 +173,7 @@ class TranscodingV1 extends Worker
             $bucket = $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId'));
             $file   = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $subtitle->getAttribute('fileId'));
             $path = basename($file->getAttribute('path'));
-            $this->writeData($this->project, $file);
+            $this->write($this->project, $file);
 
             console::info('Transferring subtitle from storage to [' . $this->inDir . ']');
 
@@ -185,19 +195,19 @@ class TranscodingV1 extends Worker
         $query = $this->database->createDocument('videos_renditions', new Document([
                'videoId'  =>  $this->video->getId(),
                'profileId' => $this->profile->getId(),
-               'name'      => $this->getRenditionName(),
+               'name'      => $this->renditionName,
                'startedAt' => DateTime::now(),
                'status'    => self::STATUS_START,
                'output'  => $this->profile->getAttribute('output'),
             ]));
-        $this->sendRealtimeUpdates($query);
+        $this->send($query);
         $renditionRootPath = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/';
-        $renditionPath = $renditionRootPath . $this->getRenditionName() . '-' . $query->getId() .  '/';
+        $renditionPath = $renditionRootPath . $this->renditionName . '-' . $query->getId() .  '/';
 
         try {
             $representation = (new Representation())
-                ->setKiloBitrate($this->profile->getAttribute('videoBitrate'))
-                ->setAudioKiloBitrate($this->profile->getAttribute('audioBitrate'))
+                ->setKiloBitRate($this->profile->getAttribute('videoBitRate'))
+                ->setAudioKiloBitRate($this->profile->getAttribute('audioBitRate'))
                 ->setResize($this->profile->getAttribute('width'), $this->profile->getAttribute('height'))
             ;
 
@@ -205,8 +215,8 @@ class TranscodingV1 extends Worker
                 'Output name: ' . $this->file->getAttribute('name') . PHP_EOL .
                 'Output width: ' . $this->profile->getAttribute('width')  . PHP_EOL .
                 'Output height: ' . $this->profile->getAttribute('height') . PHP_EOL .
-                'Output video bitrate:' . $this->profile->getAttribute('videoBitrate') . PHP_EOL .
-                'Output audio bitrate:' . $this->profile->getAttribute('audioBitrate') . PHP_EOL .
+                'Output video BitRate:' . $this->profile->getAttribute('videoBitRate') . PHP_EOL .
+                'Output audio BitRate:' . $this->profile->getAttribute('audioBitRate') . PHP_EOL .
                 'Output:' . $this->profile->getAttribute('output') . PHP_EOL);
 
             $format = new Streaming\Format\X264();
@@ -214,7 +224,7 @@ class TranscodingV1 extends Worker
                 if ($percentage % 3 === 0) {
                     $query->setAttribute('progress', (string)$percentage);
                     $this->database->updateDocument('videos_renditions', $query->getId(), $query);
-                    $this->sendRealtimeUpdates($query, 'update');
+                    $this->send($query, 'update');
                 }
             });
 
@@ -228,7 +238,7 @@ class TranscodingV1 extends Worker
             if ($this->profile->getAttribute('output') === self::OUTPUT_HLS) {
                 $streams = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
                 foreach ($streams as $stream) {
-                    $m3u8 = $this->getHlsSegments($this->outDir . $stream['path']);
+                    $m3u8 = $this->getSegments(self::OUTPUT_HLS, $this->outDir . $stream['path']);
                     if (!empty($m3u8['segments'])) {
                         foreach ($m3u8['segments'] as $segment) {
                             $this->database->createDocument('videos_renditions_segments', new Document([
@@ -245,7 +255,7 @@ class TranscodingV1 extends Worker
                     $query->setAttribute('targetDuration', $m3u8['targetDuration']);
                 }
             } else {
-                $mpd = $this->getDashSegments($this->outPath . '.mpd');
+                $mpd = $this->getSegments(self::OUTPUT_DASH, $this->outPath . '.mpd');
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
                             $this->database->createDocument('videos_renditions_segments', new Document([
@@ -266,7 +276,7 @@ class TranscodingV1 extends Worker
             $query->setAttribute('status', self::STATUS_END);
             $query->setAttribute('endedAt', DateTime::now());
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
-            $this->sendRealtimeUpdates($query, 'update');
+            $this->send($query, 'update');
 
             foreach ($subtitles ?? [] as $subtitle) {
                 if ($this->profile->getAttribute('output') === 'hls') {
@@ -312,7 +322,7 @@ class TranscodingV1 extends Worker
                     $query->setAttribute('status', self::STATUS_UPLOADING);
                     $query->setAttribute('path', $renditionPath);
                     $this->database->updateDocument('videos_renditions', $query->getId(), $query);
-                    $this->sendRealtimeUpdates($query, 'update');
+                    $this->send($query, 'update');
                     $start = 1;
 
                     console::info('Uploading to [' . $to . ']');
@@ -322,7 +332,7 @@ class TranscodingV1 extends Worker
 
             $query->setAttribute('status', self::STATUS_READY);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
-            $this->sendRealtimeUpdates($query, 'update');
+            $this->send($query, 'update');
 
             Console::warning('Job total time ' . (microtime(true) - $startTime) . ' seconds');
         } catch (\Throwable $th) {
@@ -333,7 +343,7 @@ class TranscodingV1 extends Worker
 
             $query->setAttribute('status', self::STATUS_ERROR);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
-            $this->sendRealtimeUpdates($query, 'update');
+            $this->send($query, 'update');
 
             console::error($th->getMessage());
         }
@@ -387,41 +397,73 @@ class TranscodingV1 extends Worker
     }
 
     /**
+     * @param string $output
      * @param string $path
      * @return array
      */
-    private function getDashSegments(string $path): array
+    private function getSegments(string $output, string $path): array
     {
 
         $segments = [];
-        $metadata = null;
+        if ($output === self::OUTPUT_DASH) {
+            $metadata = null;
+            $handle = fopen($path, "r");
+            if ($handle) {
+                $streamId = -1;
+                while (($line = fgets($handle)) !== false) {
+                    $line = str_replace([",", "\r", "\n"], "", $line);
+                    if (str_contains($line, "<AdaptationSet")) {
+                        $streamId++;
+                    }
+
+                    if (!str_contains($line, "SegmentURL") && !str_contains($line, "Initialization")) {
+                        $metadata .= $line . PHP_EOL;
+                    } else {
+                        $segments[] = [
+                            'isInit' => str_contains($line, "Initialization") ? 1 : 0,
+                            'streamId' => $streamId,
+                            'fileName' => trim(str_replace(["<SegmentURL media=\"", "<Initialization sourceURL=\"", "\"/>", "\" />"], "", $line)),
+                        ];
+                    }
+                }
+                fclose($handle);
+            }
+
+            return [
+                'metadata' => $metadata,
+                'segments' => $segments
+            ];
+        }
+
+        $targetDuration = 0;
         $handle = fopen($path, "r");
         if ($handle) {
-            $streamId = -1;
             while (($line = fgets($handle)) !== false) {
                 $line =  str_replace([",","\r","\n"], "", $line);
-                if (str_contains($line, "<AdaptationSet")) {
-                    $streamId++;
+                if (str_contains($line, "#EXT-X-TARGETDURATION")) {
+                    $targetDuration = str_replace(["#EXT-X-TARGETDURATION:"], "", $line);
                 }
-
-                if (!str_contains($line, "SegmentURL") && !str_contains($line, "Initialization")) {
-                    $metadata .= $line . PHP_EOL;
-                } else {
-                    $segments[] = [
-                        'isInit' => str_contains($line, "Initialization") ? 1 : 0,
-                        'streamId' => $streamId,
-                        'fileName' => trim(str_replace(["<SegmentURL media=\"", "<Initialization sourceURL=\"", "\"/>", "\" />"], "", $line)),
-                    ];
+                if (str_contains($line, "#EXTINF")) {
+                    $duration = str_replace(["#EXTINF:"], "", $line);
+                }
+                if (str_contains($line, ".ts") || str_contains($line, ".vtt")) {
+                    if (!empty($duration)) {
+                        $segments[] = [
+                            'fileName' => $line,
+                            'duration' => $duration
+                        ];
+                        $duration = null;
+                    }
                 }
             }
             fclose($handle);
         }
-
         return [
-            'metadata' => $metadata,
+            'targetDuration' => $targetDuration,
             'segments' => $segments
         ];
     }
+
 
     /**
      * @param string $path
@@ -469,48 +511,13 @@ class TranscodingV1 extends Worker
     }
 
     /**
-     * @param string $path
-     * @return array
-     */
-    private function getHlsSegments(string $path): array
-    {
-
-        $segments = [];
-        $targetDuration = 0;
-        $handle = fopen($path, "r");
-        if ($handle) {
-            while (($line = fgets($handle)) !== false) {
-                $line =  str_replace([",","\r","\n"], "", $line);
-                if (str_contains($line, "#EXT-X-TARGETDURATION")) {
-                    $targetDuration = str_replace(["#EXT-X-TARGETDURATION:"], "", $line);
-                }
-                if (str_contains($line, "#EXTINF")) {
-                    $duration = str_replace(["#EXTINF:"], "", $line);
-                }
-                if (str_contains($line, ".ts") || str_contains($line, ".vtt")) {
-                    if (!empty($duration)) {
-                        $segments[] = [
-                            'fileName' => $line,
-                            'duration' => $duration
-                        ];
-                        $duration = null;
-                    }
-                }
-            }
-            fclose($handle);
-        }
-        return [
-            'targetDuration' => $targetDuration,
-            'segments' => $segments
-        ];
-    }
-
-    /**
+     * Send realtime updates
+     *
      * @param string $action
      * @param Document $payload
      * @throws Exception
      */
-    private function sendRealtimeUpdates(Document $payload, string $action = 'create')
+    private function send(Document $payload, string $action = 'create')
     {
         unset($payload['metadata']);
 
@@ -538,11 +545,13 @@ class TranscodingV1 extends Worker
     }
 
     /**
+     * Write files
+     *
      * @param $project Document
      * @param $file Document
      * @return boolean
      */
-    private function writeData(Document $project, Document $file): bool
+    private function write(Document $project, Document $file): bool
     {
 
         $fullPath = $file->getAttribute('path');
@@ -587,19 +596,6 @@ class TranscodingV1 extends Worker
 
         return $result;
     }
-
-    private function setRenditionName($profile)
-    {
-        $this->renditionName = $profile->getAttribute('width')
-            . 'X' . $profile->getAttribute('height')
-            . '@' . ($profile->getAttribute('videoBitrate') + $profile->getAttribute('audioBitrate'));
-    }
-
-    private function getRenditionName(): string
-    {
-        return $this->renditionName;
-    }
-
 
     private function cleanup(): bool
     {

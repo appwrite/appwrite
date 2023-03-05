@@ -81,14 +81,14 @@ class Video extends Model
                 'default' => '',
                 'example' => 'Baseline@L3.1',
             ])
-             ->addRule('videoBitrate', [
+             ->addRule('videoBitRate', [
             'type' => self::TYPE_INTEGER,
             'require' => false,
             'description' => 'Video bitrate.',
             'default' => 0,
             'example' => 564790,
              ])
-            ->addRule('videoFramerate', [
+            ->addRule('videoFrameRate', [
                 'type' => self::TYPE_STRING,
                 'require' => false,
                 'description' => 'Video frame rate.',
@@ -102,7 +102,7 @@ class Video extends Model
                 'default' => '',
                 'example' => 'AAC',
             ])
-            ->addRule('audioBitrate', [
+            ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
                 'require' => false,
                 'description' => 'Audio bitrate.',

@@ -174,8 +174,8 @@ App::post('/v1/projects')
                 Authorization::skip(function () use ($project, $profile, $dbForProject) {
                     return $dbForProject->createDocument('videos_profiles', new Document([
                         'name' => $profile['name'],
-                        'videoBitrate' => $profile['videoBitrate'],
-                        'audioBitrate' => $profile['audioBitrate'],
+                        'videoBitRate' => $profile['videoBitRate'],
+                        'audioBitRate' => $profile['audioBitRate'],
                         'width'  => $profile['width'],
                         'height' => $profile['height'],
                         'output' => $profile['output']

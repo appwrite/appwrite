@@ -176,11 +176,11 @@ App::put('/v1/videos/:videoId')
                 'width' =>  null,
                 'height' =>  null,
                 'videoCodec' =>  null,
-                'videoBitrate' =>  null,
-                'videoFramerate' =>  null,
+                'videoBitRate' =>  null,
+                'videoFrameRate' =>  null,
                 'audioCodec' =>  null,
-                'audioBitrate' =>  null,
-                'audioSamplerate' => null,
+                'audioBitRate' =>  null,
+                'audioSampleRate' => null,
             ])));
 
         $response->dynamic($video, Response::MODEL_VIDEO);
@@ -654,7 +654,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
                 }
 
                 $_renditions[] = [
-                    'bandwidth'  => ($rendition->getAttribute('videoBitrate') + $rendition->getAttribute('audioBitrate')),
+                    'bandwidth'  => ($rendition->getAttribute('videoBitRate') + $rendition->getAttribute('audioBitRate')),
                     'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
                     'name' => $rendition->getAttribute('name'),
                     'uri'  => $uri,
@@ -957,20 +957,20 @@ App::post('/v1/videos/profiles')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROFILE)
     ->param('name', null, new Text(128), 'Video profile name.')
-    ->param('videoBitrate', '', new Range(32, 5000), 'Video profile bitrate in Kbps.')
-    ->param('audioBitrate', '', new Range(32, 5000), 'Audio profile bit rate in Kbps.')
+    ->param('videoBitRate', '', new Range(32, 5000), 'Video profile bitrate in Kbps.')
+    ->param('audioBitRate', '', new Range(32, 5000), 'Audio profile bit rate in Kbps.')
     ->param('width', '', new Range(6, 3000), 'Video profile width.')
     ->param('height', '', new Range(6, 3000), 'Video  profile height.')
     ->param('output', false, new WhiteList(['hls', 'dash']), 'Video  profile output.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $output, Response $response, Database $dbForProject) {
+    ->action(action: function (string $name, string $videoBitRate, string $audioBitRate, string $width, string $height, string $output, Response $response, Database $dbForProject) {
 
-            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitrate, $audioBitrate, $width, $height, $output) {
+            $profile = Authorization::skip(function () use ($dbForProject, $name, $videoBitRate, $audioBitRate, $width, $height, $output) {
                 return $dbForProject->createDocument('videos_profiles', new Document([
                     'name'          => $name,
-                    'videoBitrate'  => (int)$videoBitrate,
-                    'audioBitrate'  => (int)$audioBitrate,
+                    'videoBitRate'  => (int)$videoBitRate,
+                    'audioBitRate'  => (int)$audioBitRate,
                     'width'         => (int)$width,
                     'height'        => (int)$height,
                     'output'        => $output,
@@ -1003,7 +1003,7 @@ App::patch('/v1/videos/profiles/:profileId')
     ->param('output', false, new WhiteList(['hls', 'dash']), 'Video  profile output.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $profileId, string $name, string $videoBitrate, string $audioBitrate, string $width, string $height, string $output, Response $response, Database $dbForProject) {
+    ->action(action: function (string $profileId, string $name, string $videoBitRate, string $audioBitRate, string $width, string $height, string $output, Response $response, Database $dbForProject) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('videos_profiles', $profileId));
         if ($profile->isEmpty()) {
@@ -1011,8 +1011,8 @@ App::patch('/v1/videos/profiles/:profileId')
         }
 
         $profile->setAttribute('name', $name)
-                 ->setAttribute('videoBitrate', (int)$videoBitrate)
-                ->setAttribute('audioBitrate', (int)$audioBitrate)
+                 ->setAttribute('videoBitRate', (int)$videoBitRate)
+                ->setAttribute('audioBitRate', (int)$audioBitRate)
                 ->setAttribute('width', (int)$width)
                 ->setAttribute('height', (int)$height)
                 ->setAttribute('output', $output);

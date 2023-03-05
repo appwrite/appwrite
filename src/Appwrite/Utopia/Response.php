@@ -84,9 +84,9 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Video;
-use Appwrite\Utopia\Response\Model\Profile;
-use Appwrite\Utopia\Response\Model\Rendition;
-use Appwrite\Utopia\Response\Model\Subtitle;
+use Appwrite\Utopia\Response\Model\VideoProfile;
+use Appwrite\Utopia\Response\Model\VideoRendition;
+use Appwrite\Utopia\Response\Model\VideoSubtitle;
 
 /**
  * @method int getStatusCode()
@@ -360,9 +360,9 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new Video())
-            ->setModel(new Profile())
-            ->setModel(new Rendition())
-            ->setModel(new Subtitle())
+            ->setModel(new VideoProfile())
+            ->setModel(new VideoRendition())
+            ->setModel(new VideoSubtitle())
 
             // Verification
             // Recovery

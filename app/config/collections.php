@@ -3664,7 +3664,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'videoBitrate',
+                '$id' => 'videoBitRate',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3708,7 +3708,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'audioBitrate',
+                '$id' => 'audioBitRate',
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3976,7 +3976,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'videoBitrate',
+                '$id' => 'videoBitRate',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3987,7 +3987,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'audioBitrate',
+                '$id' => 'audioBitRate',
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -4035,7 +4035,7 @@ $collections = [
             [
                 '$id' => '_key_profile',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['output', 'width', 'height', 'videoBitrate', 'audioBitrate' ],
+                'attributes' => ['output', 'width', 'height', 'videoBitRate', 'audioBitRate' ],
                 'lengths' => [],
                 'orders' => [],
             ],

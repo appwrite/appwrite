@@ -4,24 +4,24 @@ return [
     [
 
         'name' => '360p',
-        'videoBitrate' => 890, //video bitrate in Kbps
-        'audioBitrate' => 64, //audio bitrate in Kbps
+        'videoBitRate' => 890, //video BitRate in Kbps
+        'audioBitRate' => 64, //audio BitRate in Kbps
         'width' =>  640, //width resolution in px
         'height' => 360, //height resolution in px
         'output' => 'hls'
     ],
     [
         'name' => '576p',
-        'videoBitrate' => 2538,
-        'audioBitrate' => 128,
+        'videoBitRate' => 2538,
+        'audioBitRate' => 128,
         'width' => 1024,
         'height' => 576,
         'output' => 'hls'
     ],
     [
         'name' => '720p',
-        'videoBitrate' => 3551,
-        'audioBitrate' => 128,
+        'videoBitRate' => 3551,
+        'audioBitRate' => 128,
         'width' => 1280,
         'height' => 720,
         'output' => 'hls'
@@ -30,24 +30,24 @@ return [
     [
 
         'name' => '360p',
-        'videoBitrate' => 890, //video bitrate in Kbps
-        'audioBitrate' => 64, //audio bitrate in Kbps
+        'videoBitRate' => 890, //video BitRate in Kbps
+        'audioBitRate' => 64, //audio BitRate in Kbps
         'width' =>  640, //width resolution in px
         'height' => 360, //height resolution in px
         'output' => 'dash'
     ],
     [
         'name' => '576p',
-        'videoBitrate' => 2538,
-        'audioBitrate' => 128,
+        'videoBitRate' => 2538,
+        'audioBitRate' => 128,
         'width' => 1024,
         'height' => 576,
         'output' => 'dash'
     ],
     [
         'name' => '720p',
-        'videoBitrate' => 3551,
-        'audioBitrate' => 128,
+        'videoBitRate' => 3551,
+        'audioBitRate' => 128,
         'width' => 1280,
         'height' => 720,
         'output' => 'dash'
