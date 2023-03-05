@@ -11,10 +11,36 @@ class Transcoding extends Event
 
     protected Document $profile;
 
+    protected string $output;
+
     public function __construct()
     {
         parent::__construct(Event::TRANSCODING_QUEUE_NAME, Event::TRANSCODING_CLASS_NAME);
     }
+
+    /**
+     * Sets output.
+     *
+     * @param string $output
+     * @return self
+     */
+    public function setOutput(string $output): self
+    {
+        $this->output = $output;
+
+        return $this;
+    }
+
+    /**
+     * Returns output.
+     *
+     * @return string
+     */
+    public function getOutput(): string
+    {
+        return $this->output;
+    }
+
 
     /**
      * Sets video.
@@ -71,6 +97,7 @@ class Transcoding extends Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
+            'output' => $this->output,
             'project' => $this->project,
             'user' => $this->user,
             'video' => $this->video,

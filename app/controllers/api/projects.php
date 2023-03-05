@@ -177,8 +177,7 @@ App::post('/v1/projects')
                         'videoBitRate' => $profile['videoBitRate'],
                         'audioBitRate' => $profile['audioBitRate'],
                         'width'  => $profile['width'],
-                        'height' => $profile['height'],
-                        'output' => $profile['output']
+                        'height' => $profile['height']
                     ]));
                 });
             }

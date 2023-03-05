@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
@@ -87,7 +88,7 @@ class TranscodingV1 extends Worker
 
     public function run(): void
     {
-        $startTime = \microtime(true);
+        $startTime = time();
         $this->database = $this->getProjectDB($this->project->getId());
         $this->bucket = $this->database->getDocument('buckets', $this->video->getAttribute('bucketId'));
         $this->file = $this->database->getDocument('bucket_' . $this->bucket->getInternalId(), $this->video->getAttribute('fileId'));
@@ -100,6 +101,11 @@ class TranscodingV1 extends Worker
         if (empty($result)) {
             console::error('Storage transfer error');
         }
+
+        $this->renditionName = $this->profile->getAttribute('width')
+            . 'X' . $this->profile->getAttribute('height')
+            . '@' . ($this->profile->getAttribute('videoBitRate') + $this->profile->getAttribute('audioBitRate'));
+
 
         /**
          * FFMpeg init
@@ -156,10 +162,6 @@ class TranscodingV1 extends Worker
 
         $media = $this->ffmpeg->open($inPath);
 
-        $this->renditionName = $this->profile->getAttribute('width')
-            . 'X' . $this->profile->getAttribute('height')
-            . '@' . ($this->profile->getAttribute('videoBitRate') + $this->profile->getAttribute('audioBitRate'));
-
         $subs = [];
         $subtitles =  $this->database->find('videos_subtitles', [
             Query::equal('videoId', [$this->video->getId()]),
@@ -198,7 +200,7 @@ class TranscodingV1 extends Worker
                'name'      => $this->renditionName,
                'startedAt' => DateTime::now(),
                'status'    => self::STATUS_START,
-               'output'  => $this->profile->getAttribute('output'),
+               'output'    => $this->args['output'],
             ]));
         $this->send($query);
         $renditionRootPath = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/';
@@ -228,17 +230,17 @@ class TranscodingV1 extends Worker
                 }
             });
 
-            $this->transcode($this->profile->getAttribute('output'), $media, $format, $representation, $subs);
+            $this->transcode($media, $format, $representation, $subs);
 
             unset($media);
             //exec('/usr/bin/ffmpeg -y -i /usr/src/code/tests/tmp/637f59c88f9ff0fe3b1f/637e1b82aeab8980400e/in/637f59ab5bce0e36d05e.mp4 -c:v libx264 -c:a aac -bf 1 -keyint_min 25 -g 250 -sc_threshold 40 -use_timeline 0 -use_template 0 -seg_duration 10 -hls_playlist 0 -f dash -dn -sn -vf scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1 -b_strategy 1 -bf 3 -force_key_frames "expr:gte(t,n_forced*2)" -map 0 -s:v:0 1024x576 -b:v:0 2538k -b:a:0 128k -strict -2 -threads 12 /usr/src/code/tests/tmp/637f59c88f9ff0fe3b1f/637e1b82aeab8980400e/out/637f59c88f9ff0fe3b1f.mpd2>&1', $o, $v);
             //var_dump($o);
             //var_dump($v);
 
-            if ($this->profile->getAttribute('output') === self::OUTPUT_HLS) {
+            if ($this->args['output'] === self::OUTPUT_HLS) {
                 $streams = $this->getHlsSegmentsUrls($this->outDir . 'master.m3u8');
                 foreach ($streams as $stream) {
-                    $m3u8 = $this->getSegments(self::OUTPUT_HLS, $this->outDir . $stream['path']);
+                    $m3u8 = $this->getSegments($this->outDir . $stream['path']);
                     if (!empty($m3u8['segments'])) {
                         foreach ($m3u8['segments'] as $segment) {
                             $this->database->createDocument('videos_renditions_segments', new Document([
@@ -255,7 +257,7 @@ class TranscodingV1 extends Worker
                     $query->setAttribute('targetDuration', $m3u8['targetDuration']);
                 }
             } else {
-                $mpd = $this->getSegments(self::OUTPUT_DASH, $this->outPath . '.mpd');
+                $mpd = $this->getSegments($this->outPath . '.mpd');
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
                             $this->database->createDocument('videos_renditions_segments', new Document([
@@ -350,14 +352,13 @@ class TranscodingV1 extends Worker
     }
 
     /**
-     * @param string $output
      * @param $media Media
      * @param $format StreamFormat
      * @param $representation Representation
      * @param array $subtitles
      * @return void
      */
-    private function transcode(string $output, Media $media, StreamFormat $format, Representation $representation, array $subtitles): void
+    private function transcode(Media $media, StreamFormat $format, Representation $representation, array $subtitles): void
     {
 
         $additionalParams = [
@@ -371,7 +372,7 @@ class TranscodingV1 extends Worker
 
         $segmentSize = 10;
 
-        if ($output === self::OUTPUT_DASH) {
+        if ($this->args['output'] === self::OUTPUT_DASH) {
                $media->dash()
                 ->setFormat($format)
                 ->setSegDuration($segmentSize)
@@ -397,15 +398,14 @@ class TranscodingV1 extends Worker
     }
 
     /**
-     * @param string $output
      * @param string $path
      * @return array
      */
-    private function getSegments(string $output, string $path): array
+    private function getSegments(string $path): array
     {
 
         $segments = [];
-        if ($output === self::OUTPUT_DASH) {
+        if ($this->args['output'] === self::OUTPUT_DASH) {
             $metadata = null;
             $handle = fopen($path, "r");
             if ($handle) {
