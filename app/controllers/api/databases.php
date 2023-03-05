@@ -2790,3 +2790,72 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
     });
+
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/update')
+    ->alias('/v1/database/collections/:collectionId/attributes/string', ['databaseId' => 'default'])
+    ->desc('Create String Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('scope', 'collections.write')
+    ->label('audits.event', 'attribute.create')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('format', null, new Text(255), 'format', true)
+    ->param('formatOptions', null, new ArrayList(new Text(256)), 'json for formatOptions', true)
+    ->param('filters', null, new ArrayList(new Text(256)), 'Filter list', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('database')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?string $format, ?array $formatOptions, ?array $filters, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+
+        var_dump("innninininininininininininnininininininininininininininininini");
+
+        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($db->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $id = ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+
+        $attribute = $dbForProject->getDocument('attributes', $id);
+        if ($attribute->isEmpty()) {
+            throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+        }
+
+        $dbForProject->updateAttribute('attributes', 'price', Database::VAR_STRING, 255, true, null, false, false, 'maxTextLength', ['length'=>100]);
+
+
+        var_dump($attribute);
+
+        //string $collection, string $id, string $type = null, int $size = null, bool $required, mixed $default = null, bool $signed = null, bool $array = null, string $format = null, ?array $formatOptions = null, ?array $filters = null
+
+       // $attribute = $dbForProject->updateAttribute('attributes', $attribute);
+
+        $response->dynamic($attribute, Response::MODEL_DOCUMENT);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+    });

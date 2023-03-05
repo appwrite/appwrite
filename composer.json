@@ -49,7 +49,7 @@
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.30.*",
+        "utopia-php/database": "dev-updateAttributeMetaReturn as 0.30.1",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
         "utopia-php/framework": "0.26.*",
