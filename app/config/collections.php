@@ -4024,7 +4024,7 @@ $collections = [
             [
                 '$id' => '_key_profile',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['width', 'height', 'videoBitRate', 'audioBitRate' ],
+                'attributes' => ['width', 'height', 'videoBitRate', 'audioBitRate'],
                 'lengths' => [],
                 'orders' => [],
             ],
