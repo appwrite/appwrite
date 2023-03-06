@@ -22,17 +22,17 @@ class VideoProfile extends Model
                 'default' => null,
                 'example' => '360P',
             ])
-            ->addRule('videoBitrate', [
+            ->addRule('videoBitRate', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Video bitrate.',
                 'default' => 0,
-                'example' => 3,
+                'example' => 3050,
             ])
-            ->addRule('audioBitrate', [
+            ->addRule('audioBitRate', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Audio bitrate.',
                 'default' => 0,
-                'example' => 3,
+                'example' => 64,
             ])
             ->addRule('width', [
                 'type' => self::TYPE_INTEGER,
@@ -45,13 +45,6 @@ class VideoProfile extends Model
                 'description' => 'Video height.',
                 'default' => 0,
                 'example' => 400,
-            ])
-
-            ->addRule('output', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Video out type.',
-                'default' => null,
-                'example' => 'dash',
             ])
         ;
     }

@@ -28,7 +28,7 @@ use Utopia\Swoole\Request;
  * @param string $fileId
  * @param string $mode
  * @return Document $file
- * @throws Exception
+ * @throws Exception|Throwable
  */
 function validateFilePermissions(Database $dbForProject, string $bucketId, string $fileId, string $mode): Document
 {
@@ -40,8 +40,6 @@ function validateFilePermissions(Database $dbForProject, string $bucketId, strin
     }
 
     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-    //var_dump($fileSecurity);
-    //var_dump($bucket->getRead());
     $validator = new Authorization(Database::PERMISSION_READ);
     $valid = $validator->isValid($bucket->getRead());
 
@@ -535,6 +533,29 @@ App::get('/v1/videos/:videoId/renditions')
         ]), Response::MODEL_RENDITION_LIST);
     });
 
+App::get('/v1/videos/renditions')
+    ->desc('Get all videos renditions')
+    ->groups(['api', 'videos'])
+    ->label('scope', 'videos.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'videos')
+    ->label('sdk.method', 'getAllRenditions')
+    ->label('sdk.description', '/docs/references/videos/get-all-renditions.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_RENDITION_LIST)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (Response $response, Database $dbForProject) {
+
+        $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions'));
+
+        $response->dynamic(new Document([
+            'total'      => $dbForProject->count('videos_renditions', [], APP_LIMIT_COUNT),
+            'renditions' => $renditions,
+        ]), Response::MODEL_RENDITION_LIST);
+    });
+
 App::delete('/v1/videos/:videoId/renditions/:renditionId')
     ->desc('Delete video rendition')
     ->groups(['api', 'videos'])
@@ -878,7 +899,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        if ($output == 'hls') {
+        if ($output === 'hls') {
             $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
                 Query::equal('subtitleId', [$subtitleId]),
             ]));
@@ -996,8 +1017,8 @@ App::patch('/v1/videos/profiles/:profileId')
     ->label('sdk.response.model', Response::MODEL_PROFILE)
     ->param('profileId', '', new UID(), 'Video profile unique ID.')
     ->param('name', null, new Text(128), 'Video profile name.')
-    ->param('videoBitrate', '', new Range(64, 4000), 'Video profile bitrate in Kbps.')
-    ->param('audioBitrate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
+    ->param('videoBitRate', '', new Range(64, 4000), 'Video profile bitrate in Kbps.')
+    ->param('audioBitRate', '', new Range(64, 4000), 'Audio profile bit rate in Kbps.')
     ->param('width', '', new Range(100, 2000), 'Video profile width.')
     ->param('height', '', new Range(100, 2000), 'Video  profile height.')
     ->inject('response')

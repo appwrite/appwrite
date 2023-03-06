@@ -17,6 +17,7 @@ class VideosCustomClientTest extends Scope
     use SideClient;
     use VideosPermissionsScope;
 
+    private array $outputs = ['hls', 'dash'];
 
     public function testDeleteProfiles()
     {
@@ -29,7 +30,7 @@ class VideosCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals(6, $response['body']['total']);
+        $this->assertEquals(3, $response['body']['total']);
 
         $profiles = $response['body']['profiles'];
         foreach ($profiles as $profile) {
@@ -128,11 +129,10 @@ class VideosCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'Profile A',
-            'videoBitrate' => 770,
-            'audioBitrate' => 64,
+            'videoBitRate' => 770,
+            'audioBitRate' => 64,
             'width' => 600,
             'height' => 400,
-            'output' => 'hls',
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -142,11 +142,10 @@ class VideosCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'Profile B',
-            'videoBitrate' => 570,
-            'audioBitrate' => 64,
+            'videoBitRate' => 570,
+            'audioBitRate' => 64,
             'width' => 300,
             'height' => 200,
-            'output' => 'dash',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -161,12 +160,13 @@ class VideosCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['profiles']);
         $profiles = $response['body']['profiles'];
 
-        foreach ($profiles as $profile) {
+        foreach ($profiles as $index => $profile) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/rendition', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
+               'output' => $this->outputs[$index % 2],
                 'profileId' => $profile['$id'],
             ]);
 
@@ -179,14 +179,11 @@ class VideosCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-
-
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(3, count($match[0]));
+        $this->assertEquals(4, count($match[0]));
+        $renditionUri = $match[0][0];
         $subtitleUri  = $match[0][1];
-        $renditionUri = $match[0][2];
-
         $response = $this->client->call(
             Client::METHOD_GET,
             $renditionUri,

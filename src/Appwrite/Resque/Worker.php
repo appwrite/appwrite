@@ -290,7 +290,7 @@ abstract class Worker
      * @param string $projectId of the project
      * @return Device
      */
-    protected function getVideoDevice($projectId): Device
+    protected function getVideoDevice(string $projectId): Device
     {
         return $this->getDevice(APP_STORAGE_VIDEOS . '/app-' . $projectId);
     }

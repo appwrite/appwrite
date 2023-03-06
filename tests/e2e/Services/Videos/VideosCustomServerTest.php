@@ -14,6 +14,9 @@ class VideosCustomServerTest extends Scope
     use VideoCustom;
     use SideServer;
 
+    private array $outputs = ['hls', 'dash'];
+
+
     public function testDeleteAllProfiles()
     {
 
@@ -25,7 +28,7 @@ class VideosCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals(6, $response['body']['total']);
+        $this->assertEquals(3, $response['body']['total']);
 
         $profiles = $response['body']['profiles'];
         foreach ($profiles as $profile) {
@@ -56,11 +59,10 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'My test profile',
-            'videoBitrate' => 570,
-            'audioBitrate' => 120,
+            'videoBitRate' => 570,
+            'audioBitRate' => 120,
             'width' => 600,
             'height' => 400,
-            'output' => 'hls',
         ]);
 
         $this->assertNotEmpty($response['body']);
@@ -82,11 +84,10 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'My updated test profile',
-            'videoBitrate' => 590,
-            'audioBitrate' => 120,
+            'videoBitRate' => 590,
+            'audioBitRate' => 120,
             'width' => 300,
             'height' => 400,
-            'output' => 'dash',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -114,7 +115,6 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals('My updated test profile', $response['body']['name']);
         $this->assertEquals(300, $response['body']['width']);
         $this->assertEquals(400, $response['body']['height']);
-        $this->assertEquals('dash', $response['body']['output']);
 
         return $response['body']['$id'];
     }
@@ -162,11 +162,10 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'My test profile',
-            'videoBitrate' => 570,
-            'audioBitrate' => 120,
+            'videoBitRate' => 570,
+            'audioBitRate' => 120,
             'width' => 600,
             'height' => 400,
-            'output' => 'hls',
         ]);
 
         $this->assertNotEmpty($response['body']);
@@ -179,11 +178,10 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => '576p',
-            'videoBitrate' => 2538,
-            'audioBitrate' => 128,
+            'videoBitRate' => 2538,
+            'audioBitRate' => 128,
             'width' => 1024,
             'height' => 576,
-            'output' => 'hls',
         ]);
 
         $this->assertNotEmpty($response['body']);
@@ -363,7 +361,7 @@ class VideosCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['profiles']);
         $this->assertEquals(2, $response['body']['total']);
 
         $profiles = $response['body']['profiles'];
@@ -415,6 +413,7 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'output' => $this->outputs[0],
             'profileId' => $videoId,
         ]);
 
@@ -428,11 +427,10 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'Profile A',
-            'videoBitrate' => 770,
-            'audioBitrate' => 64,
+            'videoBitRate' => 770,
+            'audioBitRate' => 64,
             'width' => 600,
             'height' => 400,
-            'output' => 'hls',
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
@@ -442,11 +440,10 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'Profile B',
-            'videoBitrate' => 570,
-            'audioBitrate' => 64,
+            'videoBitRate' => 570,
+            'audioBitRate' => 64,
             'width' => 300,
             'height' => 200,
-            'output' => 'dash',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -469,6 +466,7 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
+            'output' => $this->outputs[0],
             'profileId' => $profiles[0]['$id'],
         ]);
 
@@ -476,12 +474,13 @@ class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('Video not found.', $response['body']['message']);
 
-        foreach ($profiles as $profile) {
+        foreach ($profiles as $index => $profile) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/rendition', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
+                'output' => $this->outputs[$index % 2],
                 'profileId' => $profile['$id'],
             ]);
 
@@ -513,8 +512,6 @@ class VideosCustomServerTest extends Scope
         foreach ($response['body']['renditions'] as $rendition) {
             $this->assertEquals('ready', $rendition['status']);
             $this->assertEquals('100', $rendition['progress']);
-            $this->assertNotEmpty($rendition['videoBitrate']);
-            $this->assertNotEmpty($rendition['videoCodec']);
         }
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -544,10 +541,11 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
+
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(3, count($match[0]));
+        $this->assertEquals(4, count($match[0]));
+        $renditionUri = $match[0][0];
         $subtitleUri = $match[0][1];
-        $renditionUri = $match[0][2];
 
         $response = $this->client->call(Client::METHOD_GET, $renditionUri, [
             'content-type' => 'application/json',
@@ -573,7 +571,6 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
-
 
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
         $segmentUri = $match[0][0];
@@ -752,12 +749,13 @@ class VideosCustomServerTest extends Scope
         $profiles = $response['body']['profiles'];
         $this->assertEquals(2, count($response['body']['profiles']));
 
-        foreach ($profiles as $profile) {
+        foreach ($profiles as $index => $profile) {
             $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/rendition', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
+                'output' => $this->outputs[$index % 2],
                 'profileId' => $profile['$id'],
             ]);
 
@@ -783,7 +781,8 @@ class VideosCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(1, count($match[0]));
+
+        $this->assertEquals(2, count($match[0]));
 
         $renditionUri = $match[0][0];
         $response = $this->client->call(Client::METHOD_GET, $renditionUri, [

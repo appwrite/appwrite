@@ -46,6 +46,30 @@ class VideoRendition extends Model
                 'default' => 0,
                 'example' => 1592981290,
             ])
+            ->addRule('videoBitRate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video bitrate.',
+                'default' => 0,
+                'example' => 3050,
+            ])
+            ->addRule('audioBitRate', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Audio bitrate.',
+                'default' => 0,
+                'example' => 64,
+            ])
+            ->addRule('width', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video width.',
+                'default' => 0,
+                'example' => 300,
+            ])
+            ->addRule('height', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Video height.',
+                'default' => 0,
+                'example' => 400,
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Rendition transcoding status',

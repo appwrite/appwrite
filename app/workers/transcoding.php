@@ -21,6 +21,7 @@ use Utopia\Database\Query;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
 use Captioning\Format\SubripFile;
+use Utopia\Storage\Device\Local;
 
 require_once __DIR__ . '/../init.php';
 
@@ -200,6 +201,10 @@ class TranscodingV1 extends Worker
                'name'      => $this->renditionName,
                'startedAt' => DateTime::now(),
                'status'    => self::STATUS_START,
+               'width'     => $this->profile->getAttribute('width'),
+               'height'    => $this->profile->getAttribute('height'),
+               'videoBitRate' => $this->profile->getAttribute('videoBitRate'),
+               'audioBitRate' =>  $this->profile->getAttribute('audioBitRate'),
                'output'    => $this->args['output'],
             ]));
         $this->send($query);
@@ -219,7 +224,7 @@ class TranscodingV1 extends Worker
                 'Output height: ' . $this->profile->getAttribute('height') . PHP_EOL .
                 'Output video BitRate:' . $this->profile->getAttribute('videoBitRate') . PHP_EOL .
                 'Output audio BitRate:' . $this->profile->getAttribute('audioBitRate') . PHP_EOL .
-                'Output:' . $this->profile->getAttribute('output') . PHP_EOL);
+                'Output:' . $this->args['output'] . PHP_EOL);
 
             $format = new Streaming\Format\X264();
             $format->on('progress', function ($media, $format, $percentage) use ($query) {
@@ -281,8 +286,8 @@ class TranscodingV1 extends Worker
             $this->send($query, 'update');
 
             foreach ($subtitles ?? [] as $subtitle) {
-                if ($this->profile->getAttribute('output') === 'hls') {
-                    $m3u8 = $this->getHlsSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
+                if ($this->args['output'] === self::OUTPUT_HLS) {
+                    $m3u8 = $this->getSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                     foreach ($m3u8['segments'] ?? [] as $segment) {
                             $this->database->createDocument('videos_subtitles_segments', new Document([
                                 'subtitleId'  =>  $subtitle->getId(),
@@ -302,7 +307,6 @@ class TranscodingV1 extends Worker
             }
 
             console::info('Rendition ' . $query->getId() . ' conversion, done');
-
             /** Upload & cleanup **/
             $start = 0;
             $fileNames = scandir($this->outDir);
@@ -312,7 +316,7 @@ class TranscodingV1 extends Worker
                     continue;
                 }
 
-                $data = $this->getFilesDevice($this->project->getId())->read($this->outDir . $fileName);
+                $data = (new Local('/'))->read($this->outDir . $fileName);
                 $to = $renditionPath;
                 if (str_contains($fileName, "_subtitles_") || str_contains($fileName, ".vtt")) {
                     $to = $renditionRootPath;
@@ -550,13 +554,14 @@ class TranscodingV1 extends Worker
      * @param $project Document
      * @param $file Document
      * @return boolean
+     * @throws \Exception
      */
     private function write(Document $project, Document $file): bool
     {
 
         $fullPath = $file->getAttribute('path');
         $path = basename($file->getAttribute('path'));
-
+        $local = new Local('/');
         if (
             !empty($file->getAttribute('openSSLCipher')) ||
             $file->getAttribute('algorithm', 'none') !== 'none'
@@ -584,14 +589,12 @@ class TranscodingV1 extends Worker
                     $data = $compressor->decompress($data);
                     break;
             }
-
-            $result = $this->getFilesDevice(
-                $project->getId()
-            )->write($this->inDir . $path, $data, $file->getAttribute('mimeType'));
+            $result = $local
+                ->write($this->inDir . $path, $data, $file->getAttribute('mimeType'));
         } else {
             $result = $this->getFilesDevice(
                 $project->getId()
-            )->transfer($fullPath, $this->inDir . $path, $this->getFilesDevice($project->getId()));
+            )->transfer($fullPath, $this->inDir . $path, $local);
         }
 
         return $result;
