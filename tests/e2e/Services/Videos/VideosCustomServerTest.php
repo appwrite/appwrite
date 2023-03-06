@@ -487,6 +487,20 @@ class VideosCustomServerTest extends Scope
             $this->assertEquals(204, $response['headers']['status-code']);
         }
 
+        sleep(20);
+
+        /**
+         * Job list
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/videos/renditions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(2, $response['body']['total']);
+
+
         return $videoId;
     }
 
@@ -510,6 +524,11 @@ class VideosCustomServerTest extends Scope
         $renditionId = $response['body']['renditions'][0]['$id'];
 
         foreach ($response['body']['renditions'] as $rendition) {
+            $this->assertEquals('600X400@834', $rendition['name']);
+            $this->assertEquals('600', $rendition['width']);
+            $this->assertEquals('400', $rendition['height']);
+            $this->assertEquals('770', $rendition['videoBitRate']);
+            $this->assertEquals('64', $rendition['audioBitRate']);
             $this->assertEquals('ready', $rendition['status']);
             $this->assertEquals('100', $rendition['progress']);
         }
