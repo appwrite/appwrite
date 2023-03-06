@@ -2882,7 +2882,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listSlowQueries')
-    ->label('sdk.description', '/docs/references/databases/list-slow-queries-documents.md')
+    ->label('sdk.description', '/docs/references/databases/list-slow-queries.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
@@ -2949,7 +2949,7 @@ App::delete('/v1/databases/:databaseId/slow-queries/:documentId')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteSlowQuery')
-    ->label('sdk.description', '/docs/references/databases/delete-slow-query-document.md')
+    ->label('sdk.description', '/docs/references/databases/delete-slow-query.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
@@ -2962,7 +2962,6 @@ App::delete('/v1/databases/:databaseId/slow-queries/:documentId')
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
         $dbForProject->deleteDocument('slowQueries', $documentId);
-        $dbForProject->deleteCachedDocument('slowQueries', $documentId);
 
         $response->noContent();
     });
