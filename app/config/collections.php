@@ -188,10 +188,10 @@ $collections = [
         'attributes' => [
             [
                 '$id' => ID::custom('databaseInternalId'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_INTSTRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
+                'size' => 8,
+                'signed' => false,
                 'required' => false,
                 'default' => null,
                 'array' => false,
@@ -352,7 +352,7 @@ $collections = [
                 '$id' => ID::custom('_key_db_collection'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['databaseInternalId', 'collectionInternalId'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
         ],
