@@ -777,6 +777,53 @@ trait WebhooksBase
         return ['teamId' => $team['body']['$id']];
     }
 
+    /**
+     * @depends testCreateTeam
+     */
+    public function testUpdateTeamPrefs(array $data): array
+    {
+        $id = $data['teamId'] ?? '';
+
+        $team = $this->client->call(Client::METHOD_PATCH, '/teams/' . $id . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'prefs' => [
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
+            ]
+        ]);
+
+        $this->assertEquals($team['headers']['status-code'], 200);
+        $this->assertIsArray($team['body']);
+
+        $webhook = $this->getLastRequest();
+        $signatureKey = $this->getProject()['signatureKey'];
+        $payload = json_encode($webhook['data']);
+        $url     = $webhook['url'];
+        $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+
+        $this->assertEquals($webhook['method'], 'POST');
+        $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
+        $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
+        $this->assertStringContainsString('teams.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('teams.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('teams.*.update.prefs', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("teams.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("teams.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("teams.{$id}.update.prefs", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
+        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
+        $this->assertEquals($webhook['data'], [
+            'prefKey1' => 'prefValue1',
+            'prefKey2' => 'prefValue2',
+        ]);
+
+        return $data;
+    }
+
     public function testDeleteTeam(): array
     {
         /**

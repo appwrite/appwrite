@@ -190,6 +190,9 @@ return [
         ],
         'update' => [
             '$description' => 'This event triggers when a bucket is updated.',
+            'prefs' => [
+                '$description' => 'This event triggers when a team\'s preferences is updated.',
+            ],
         ]
     ],
     'functions' => [
