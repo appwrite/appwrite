@@ -1049,7 +1049,7 @@ trait DatabasesBase
         }
 
         $docs = [];
-        for ($i = 0; $i <= 5; $i++) {
+        for ($i = 0; $i <= 5; $i++) {  // _APP_SLOW_QUERIES_MAX_HITS = 5
             $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1060,11 +1060,11 @@ trait DatabasesBase
         }
 
         $this->assertEquals(408, $docs[0]['headers']['status-code']); // insert
-        $this->assertEquals(408, $docs[0]['headers']['status-code']); // update
-        $this->assertEquals(408, $docs[0]['headers']['status-code']); // update
-        $this->assertEquals(408, $docs[0]['headers']['status-code']); // update
-        $this->assertEquals(403, $docs[1]['headers']['status-code']); // update
-        $this->assertEquals(403, $docs[2]['headers']['status-code']); // blocked
+        $this->assertEquals(408, $docs[1]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[2]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[3]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[4]['headers']['status-code']); // update
+        $this->assertEquals(403, $docs[5]['headers']['status-code']); // blocked
     }
 
     /**
