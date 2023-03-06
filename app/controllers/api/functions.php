@@ -1284,7 +1284,7 @@ App::post('/v1/functions/:functionId/executions')
             );
 
             /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('statusCode', $executionResponse['statusCode']);
             $execution->setAttribute('logs', $executionResponse['logs']);

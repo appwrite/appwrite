@@ -168,7 +168,7 @@ Server::setResource('execute', function () {
                 headers: $headers,
             );
 
-            $status = $executionResponse['statusCode'] >= 500 ? 'failed' : 'completed';
+            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
 
             /** Update execution status */
             $execution
