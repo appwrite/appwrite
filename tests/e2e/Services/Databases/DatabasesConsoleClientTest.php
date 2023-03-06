@@ -266,7 +266,7 @@ class DatabasesConsoleClientTest extends Scope
         }
 
         $docs = [];
-        for ($i = 0; $i <= 2; $i++) {
+        for ($i = 0; $i <= 5; $i++) {
             $docs[] = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -277,6 +277,9 @@ class DatabasesConsoleClientTest extends Scope
         }
 
         $this->assertEquals(408, $docs[0]['headers']['status-code']); // insert
+        $this->assertEquals(408, $docs[0]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[0]['headers']['status-code']); // update
+        $this->assertEquals(408, $docs[0]['headers']['status-code']); // update
         $this->assertEquals(403, $docs[1]['headers']['status-code']); // update
         $this->assertEquals(403, $docs[2]['headers']['status-code']); // blocked
     }

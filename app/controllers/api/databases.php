@@ -204,7 +204,7 @@ App::error()
             ])));
             } else {
                 $document->setAttribute('count', $document->getAttribute('count') + 1);
-                $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 9999));
+                $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 5));
                 if ($document->getAttribute('count') >= $max) {
                     $document->setAttribute('blocked', true);
                 }
