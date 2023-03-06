@@ -202,9 +202,6 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertIsNumeric($logs['body']['total']);
     }
 
-
-
-
     /**
      * @depends testCreateDatabase
      */
@@ -245,7 +242,6 @@ class DatabasesConsoleClientTest extends Scope
 
         return $data;
     }
-
 
     /**
      * @depends testTimeoutCollection
