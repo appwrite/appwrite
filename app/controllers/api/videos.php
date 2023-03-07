@@ -346,8 +346,8 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
     ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
-    ->param('name', '', new Text(128), 'Subtitle name.')
-    ->param('code', '', new Text(128), 'Subtitle code name.')
+    ->param('name', '', new Text(32), 'Subtitle customized name.')
+    ->param('code', '', new Text(3), 'Subtitle 3 letter code name.')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('response')
     ->inject('dbForProject')
@@ -748,7 +748,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
                 $_subtitles[] = [
                     'id' => $adaptationId,
                     'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId(),
-                    'code' => $subtitle->getAttribute('code'),
+                    'name' => $subtitle->getAttribute('name'),
                 ];
                 $adaptationId++;
             }
