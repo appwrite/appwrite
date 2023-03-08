@@ -78,6 +78,13 @@ App::post('/v1/proxy/rules')
         $domain = new Domain($domain);
 
         $ruleId = ID::unique();
+
+        $status = 'created';
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
+        if($functionsDomain !== 'disabled' && \str_ends_with($domain->get(), $functionsDomain)) {
+            $status = 'verified';
+        }
+
         $rule = $dbForConsole->createDocument('rules', new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
@@ -87,7 +94,7 @@ App::post('/v1/proxy/rules')
             'resourceId' => $resourceId,
             'resourceInternalId' => $resourceInternalId,
             'redirect' => $redirect,
-            'status' => 'created',
+            'status' => $status,
             'certificateId' => '',
             'search' => implode(' ', [ $domain, $ruleId, $resourceId, $resourceType, $redirect ]),
         ]));
