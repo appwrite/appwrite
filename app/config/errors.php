@@ -529,6 +529,11 @@ return [
         'description' => 'With resourceType you provided, the resourceId is required.',
         'code' => 400,
     ],
+    Exception::RULE_CONFIGURATION_MISSING => [
+        'name' => Exception::RULE_CONFIGURATION_MISSING,
+        'description' => 'Configuration for _APP_DOMAIN_TARGET missing proper domain.',
+        'code' => 403,
+    ],
     Exception::RULE_RESOURCE_ID_NOT_FOUND => [
         'name' => Exception::RULE_RESOURCE_ID_NOT_FOUND,
         'description' => 'Resource could not be found. Check resourceId and resourceType.',

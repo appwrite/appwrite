@@ -122,7 +122,7 @@ App::post('/v1/functions')
                     'resourceId' => $function->getId(),
                     'resourceInternalId' => $function->getInternalId(),
                     'redirect' => '',
-                    'verification' => true,
+                    'status' => 'verified',
                     'certificateId' => '',
                     'search' => implode(' ', [ $domain, $ruleId, $function->getId(), 'function' ]),
                 ]))

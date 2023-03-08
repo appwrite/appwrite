@@ -49,7 +49,8 @@ $admins = [
     'functions.write',
     'execution.read',
     'execution.write',
-    'rules.read'
+    'rules.read',
+    'rules.write'
 ];
 
 return [

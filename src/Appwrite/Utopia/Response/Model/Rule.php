@@ -54,11 +54,11 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'https://appwrite.io/',
             ])
-            ->addRule('verification', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Domain verification status.',
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "failed"',
                 'default' => false,
-                'example' => true,
+                'example' => 'verified',
             ])
         ;
     }

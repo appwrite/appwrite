@@ -84,6 +84,8 @@ class CertificatesV1 extends Worker
             $certificate->setAttribute('domain', $domain->get());
         }
 
+        $success = false;
+
         try {
             // Email for alerts is required by LetsEncrypt
             $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
@@ -123,6 +125,8 @@ class CertificatesV1 extends Worker
             $certificate->setAttribute('renewDate', $this->getRenewDate($domain->get()));
             $certificate->setAttribute('attempts', 0);
             $certificate->setAttribute('issueDate', DateTime::now());
+
+            $success = true;
         } catch (Throwable $e) {
             // Set exception as log in certificate document
             $certificate->setAttribute('log', $e->getMessage());
@@ -141,7 +145,7 @@ class CertificatesV1 extends Worker
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
-            $this->saveCertificateDocument($domain->get(), $certificate);
+            $this->saveCertificateDocument($domain->get(), $certificate, $success);
         }
     }
 
@@ -154,10 +158,11 @@ class CertificatesV1 extends Worker
      *
      * @param string $domain Domain name that certificate is for
      * @param Document $certificate Certificate document that we need to save
+     * @param bool $success Was certificate generation successful?
      *
      * @return void
      */
-    private function saveCertificateDocument(string $domain, Document $certificate): void
+    private function saveCertificateDocument(string $domain, Document $certificate, bool $success): void
     {
         // Check if update or insert required
         $certificateDocument = $this->dbForConsole->findOne('certificates', [Query::equal('domain', [$domain])]);
@@ -171,7 +176,7 @@ class CertificatesV1 extends Worker
         }
 
         $certificateId = $certificate->getId();
-        $this->updateDomainDocuments($certificateId, $domain);
+        $this->updateDomainDocuments($certificateId, $domain, $success);
     }
 
     /**
@@ -395,10 +400,11 @@ class CertificatesV1 extends Worker
      *
      * @param string $certificateId ID of a new or updated certificate document
      * @param string $domain Domain that is affected by new certificate
+     * @param bool $success Was certificate generation successful?
      *
      * @return void
      */
-    private function updateDomainDocuments(string $certificateId, string $domain): void
+    private function updateDomainDocuments(string $certificateId, string $domain, bool $success): void
     {
         $rule = $this->dbForConsole->findOne('rules', [
             Query::equal('domain', [$domain]),
@@ -406,6 +412,7 @@ class CertificatesV1 extends Worker
 
         if(!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
+            $rule->setAttribute('status', $success ? 'verified' : 'failed');
             $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);
         }
     }

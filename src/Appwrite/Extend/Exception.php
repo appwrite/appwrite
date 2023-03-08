@@ -168,6 +168,7 @@ class Exception extends \Exception
     public const ROUTER_INVALID_TYPE                = 'router_unknown_type';
 
     /** Proxy */
+    public const RULE_CONFIGURATION_MISSING         = 'rule_configuration_missing';
     public const RULE_RESOURCE_ID_MISSING           = 'rule_resource_id_missing';
     public const RULE_RESOURCE_ID_NOT_FOUND         = 'rule_resource_id_not_found';
     public const RULE_NOT_FOUND                     = 'rule_not_found';

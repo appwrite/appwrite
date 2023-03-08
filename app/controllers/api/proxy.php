@@ -56,7 +56,7 @@ App::post('/v1/proxy/rules')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
         }
 
         $resourceInternalId = '';
@@ -87,7 +87,7 @@ App::post('/v1/proxy/rules')
             'resourceId' => $resourceId,
             'resourceInternalId' => $resourceInternalId,
             'redirect' => $redirect,
-            'verification' => false,
+            'status' => 'created',
             'certificateId' => '',
             'search' => implode(' ', [ $domain, $ruleId, $resourceId, $resourceType, $redirect ]),
         ]));
@@ -200,7 +200,7 @@ App::delete('/v1/proxy/rules/:ruleId')
         }
 
         if (!$dbForConsole->deleteDocument('rules', $rule->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove rule from DB');
+            throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
         }
 
         // TODO: Ensure certificate is deleted. Previously DELETE_TYPE_CERTIFICATES
@@ -250,7 +250,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 
-        $dbForConsole->updateDocument('rules', $rule->getId(), $rule->setAttribute('verification', true));
+        $dbForConsole->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
 
         // Issue a TLS certificate when domain is verified
         $event = new Certificate();
