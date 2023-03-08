@@ -1,1 +1,1 @@
-Update the team name by its unique ID.
+Update the team's name by its unique ID.

@@ -1,1 +1,1 @@
-Get the team preferences by its unique ID.
+Get the team's preferences by its unique ID.
