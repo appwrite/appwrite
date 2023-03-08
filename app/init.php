@@ -1057,7 +1057,7 @@ App::setResource('servers', function () {
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);
-    }, $server['languages']);
+    }, $server['sdks']);
 
     return $languages;
 });
