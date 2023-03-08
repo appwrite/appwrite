@@ -188,7 +188,7 @@ $collections = [
         'attributes' => [
             [
                 '$id' => ID::custom('databaseInternalId'),
-                'type' => Database::VAR_INTSTRING,
+                'type' => Database::VAR_ID,
                 'format' => '',
                 'size' => 8,
                 'signed' => false,

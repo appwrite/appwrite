@@ -2118,12 +2118,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "897e5532b39e2046c2e9a592b8e27ded0cfa5f63"
+                "reference": "50227c24df8c5d35d5b1eff97a2b80619dbc8325"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/897e5532b39e2046c2e9a592b8e27ded0cfa5f63",
-                "reference": "897e5532b39e2046c2e9a592b8e27ded0cfa5f63",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/50227c24df8c5d35d5b1eff97a2b80619dbc8325",
+                "reference": "50227c24df8c5d35d5b1eff97a2b80619dbc8325",
                 "shasum": ""
             },
             "require": {
@@ -2164,7 +2164,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/dynamic-primary-key"
             },
-            "time": "2023-03-06T14:08:49+00:00"
+            "time": "2023-03-08T10:18:45+00:00"
         },
         {
             "name": "utopia-php/domains",
