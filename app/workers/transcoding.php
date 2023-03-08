@@ -97,7 +97,7 @@ class TranscodingV1 extends Worker
         $inPath = $this->inDir . $path;
         $result = $this->write($this->project, $this->file);
 
-        console::info('Transferring video from storage to [' . $this->inDir . ']');
+        console::info('Transferring video from storage to ' . $this->inDir);
 
         if (empty($result)) {
             console::error('Storage transfer error');
@@ -128,26 +128,26 @@ class TranscodingV1 extends Worker
         $mediaInfoContainer = $mediaInfo->getInfo($inPath);
         $general = $mediaInfoContainer->getGeneral();
         $this->video
-            ->setAttribute('duration', strval($general->get('duration')->getMilliseconds()))
-            ->setAttribute('format', $general->get('format')->getShortName());
+            ->setAttribute('duration', $general->has('duration') ? strval($general->get('duration')->getMilliseconds()) : '')
+            ->setAttribute('format', $general->has('format') ? $general->get('format')->getShortName() : '');
 
         foreach ($mediaInfoContainer->getVideos() ?? [] as $video) {
             $this->video
-                ->setAttribute('height', $video->get('height')->getAbsoluteValue())
-                ->setAttribute('width', $video->get('width')->getAbsoluteValue())
-                ->setAttribute('aspectRatio', $video->get('display_aspect_ratio')->getTextValue())
-                ->setAttribute('videoFormat', $video->get('format')->getShortName())
-                ->setAttribute('videoFormatProfile', $video->get('format_profile'))
-                ->setAttribute('videoFrameRate', strval($video->get('frame_rate')->getAbsoluteValue()))
-                ->setAttribute('videoFrameRateMode', $video->get('frame_rate_mode')->getFullName())
-                ->setAttribute('videoBitRate', strval($video->get('bit_rate')->getAbsoluteValue()));
+                ->setAttribute('height', $video->has('height') ? $video->get('height')->getAbsoluteValue() : 0)
+                ->setAttribute('width', $video->has('width') ? $video->get('width')->getAbsoluteValue() : 0)
+                ->setAttribute('aspectRatio', $video->has('display_aspect_ratio') ? $video->get('display_aspect_ratio')->getTextValue() : '')
+                ->setAttribute('videoFormat', $video->has('format') ? $video->get('format')->getShortName() : '')
+                ->setAttribute('videoFormatProfile', $video->has('format_profile') ? $video->get('format_profile') : '')
+                ->setAttribute('videoFrameRate', $video->has('frame_rate') ? strval($video->get('frame_rate')->getAbsoluteValue()) : '')
+                ->setAttribute('videoFrameRateMode', $video->has('frame_rate_mode') ? $video->get('frame_rate_mode')->getFullName() : '')
+                ->setAttribute('videoBitRate', $video->has('bit_rate') ? strval($video->get('bit_rate')->getAbsoluteValue()) : '');
         }
 
         foreach ($mediaInfoContainer->getAudios() ?? [] as $audio) {
             $this->video
-                ->setAttribute('audioFormat', strval($audio->get('format')->getShortName()))
-                ->setAttribute('audioSampleRate', strval($audio->get('sampling_rate')->getAbsoluteValue()))
-                ->setAttribute('audioBitRate', strval($audio->get('bit_rate')->getAbsoluteValue()));
+                ->setAttribute('audioFormat', $audio->has('format') ? strval($audio->get('format')->getShortName()) : '')
+                ->setAttribute('audioSampleRate', $audio->has('sampling_rate') ? strval($audio->get('sampling_rate')->getAbsoluteValue()) : '')
+                ->setAttribute('audioBitRate', $audio->has('bit_rate') ? strval($audio->get('bit_rate')->getAbsoluteValue()) : '');
         }
 
         console::info('Input video id: ' . $this->video->getId() . PHP_EOL .
@@ -351,7 +351,10 @@ class TranscodingV1 extends Worker
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
             $this->send($query, 'update');
 
-            console::error($th->getMessage());
+            console::error('Error video id:' . $this->video->getId() . PHP_EOL
+                . 'Message: ' . $th->getMessage() . PHP_EOL
+                . 'File: ' . $th->getFile() . PHP_EOL
+                . 'line: ' . $th->getLine() . PHP_EOL);
         }
     }
 
@@ -383,6 +386,7 @@ class TranscodingV1 extends Worker
                 ->addRepresentation($representation)
                 ->setAdditionalParams($additionalParams)
                 ->save($this->outPath);
+               return;
         }
 
         $hls = $media->hls();
