@@ -135,7 +135,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shimonewman/PHP-FFmpeg-video-streaming.git",
-                "reference": "1a7dbe4c3ca1ece51ab870ac579a7f66a7a2f770"
+                "reference": "a87c1648c7a967eb8f0e48450c0cbcaa8d3de52e"
             },
             "require": {
                 "php": "^7.2 || ^8.0",
@@ -209,7 +209,7 @@
                 "video-streaming",
                 "video-streaming"
             ],
-            "time": "2023-02-22T13:23:07+00:00"
+            "time": "2023-03-02T08:09:58+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -3858,22 +3858,26 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "00b26ef3d04b04f2df64a64636f6b81f8ae1a166"
+                "reference": "7eb73332d1ae900a0ff6ee79aab18c384ad61dd7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/00b26ef3d04b04f2df64a64636f6b81f8ae1a166",
-                "reference": "00b26ef3d04b04f2df64a64636f6b81f8ae1a166",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/7eb73332d1ae900a0ff6ee79aab18c384ad61dd7",
+                "reference": "7eb73332d1ae900a0ff6ee79aab18c384ad61dd7",
                 "shasum": ""
             },
             "require": {
+                "ext-brotli": "*",
                 "ext-fileinfo": "*",
+                "ext-lz4": "*",
+                "ext-snappy": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -3887,12 +3891,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple Storage library to manage application storage",
             "keywords": [
                 "framework",
@@ -3905,7 +3903,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/feat-transfer"
             },
-            "time": "2022-11-02T07:42:34+00:00"
+            "time": "2023-03-03T00:45:59+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -4205,12 +4203,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "21d97a24fd447a7ce57fe79b302734f916958d8c"
+                "reference": "46c21e05a2f5f16878ba316ca1752b2a4649f076"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/21d97a24fd447a7ce57fe79b302734f916958d8c",
-                "reference": "21d97a24fd447a7ce57fe79b302734f916958d8c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/46c21e05a2f5f16878ba316ca1752b2a4649f076",
+                "reference": "46c21e05a2f5f16878ba316ca1752b2a4649f076",
                 "shasum": ""
             },
             "require": {
@@ -4248,7 +4246,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/shimon-video-test"
             },
-            "time": "2023-01-11T14:52:25+00:00"
+            "time": "2023-03-07T07:52:09+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -4505,16 +4503,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.15.3",
+            "version": "v4.15.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "570e980a201d8ed0236b0a62ddf2c9cbb2034039"
+                "reference": "6bb5176bc4af8bcb7d926f88718db9b96a2d4290"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/570e980a201d8ed0236b0a62ddf2c9cbb2034039",
-                "reference": "570e980a201d8ed0236b0a62ddf2c9cbb2034039",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/6bb5176bc4af8bcb7d926f88718db9b96a2d4290",
+                "reference": "6bb5176bc4af8bcb7d926f88718db9b96a2d4290",
                 "shasum": ""
             },
             "require": {
@@ -4555,9 +4553,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.15.3"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.15.4"
             },
-            "time": "2023-01-16T22:05:37+00:00"
+            "time": "2023-03-05T19:49:14+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -4905,16 +4903,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.25",
+            "version": "9.2.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "0e2b40518197a8c0d4b08bc34dfff1c99c508954"
+                "reference": "443bc6912c9bd5b409254a40f4b0f4ced7c80ea1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/0e2b40518197a8c0d4b08bc34dfff1c99c508954",
-                "reference": "0e2b40518197a8c0d4b08bc34dfff1c99c508954",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/443bc6912c9bd5b409254a40f4b0f4ced7c80ea1",
+                "reference": "443bc6912c9bd5b409254a40f4b0f4ced7c80ea1",
                 "shasum": ""
             },
             "require": {
@@ -4936,8 +4934,8 @@
                 "phpunit/phpunit": "^9.3"
             },
             "suggest": {
-                "ext-pcov": "*",
-                "ext-xdebug": "*"
+                "ext-pcov": "PHP extension that provides line coverage",
+                "ext-xdebug": "PHP extension that provides line coverage as well as branch and path coverage"
             },
             "type": "library",
             "extra": {
@@ -4970,7 +4968,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.25"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.26"
             },
             "funding": [
                 {
@@ -4978,7 +4976,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-02-25T05:32:00+00:00"
+            "time": "2023-03-06T12:58:08+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
