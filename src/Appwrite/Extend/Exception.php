@@ -167,6 +167,13 @@ class Exception extends \Exception
     public const ROUTER_UNKNOWN_HOST                = 'router_unknown_host';
     public const ROUTER_INVALID_TYPE                = 'router_unknown_type';
 
+    /** Proxy */
+    public const RULE_RESOURCE_ID_MISSING           = 'rule_resource_id_missing';
+    public const RULE_RESOURCE_ID_NOT_FOUND         = 'rule_resource_id_not_found';
+    public const RULE_NOT_FOUND                     = 'rule_not_found';
+    public const RULE_ALREADY_EXISTS                = 'rule_already_exists';
+    public const RULE_VERIFICATION_FAILED           = 'rule_verification_failed';
+
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
 
@@ -176,11 +183,6 @@ class Exception extends \Exception
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
-
-    /** Domain */
-    public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
-    public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
-    public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
     protected $type = '';
 

@@ -2,11 +2,8 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
-use Appwrite\Network\Validator\CNAME;
-use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -24,7 +21,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Domains\Domain;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Cache\Cache;
@@ -124,7 +120,6 @@ App::post('/v1/projects')
             'authProviders' => [],
             'webhooks' => null,
             'keys' => null,
-            'domains' => null,
             'auths' => $auths,
             'search' => implode(' ', [$projectId, $name]),
             'database' => $database,
@@ -1163,241 +1158,6 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         $dbForConsole->deleteDocument('platforms', $platformId);
 
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
-
-        $response->noContent();
-    });
-
-// Domains
-
-App::post('/v1/projects/:projectId/domains')
-    ->desc('Create Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createDomain')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domain', null, new DomainValidator(), 'Domain name.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domain, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $document = $dbForConsole->findOne('domains', [
-            Query::equal('domain', [$domain]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
-
-        if ($document && !$document->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
-        }
-
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
-
-        if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
-        }
-
-        $domain = new Domain($domain);
-
-        $domain = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'projectInternalId' => $project->getInternalId(),
-            'projectId' => $project->getId(),
-            'updated' => DateTime::now(),
-            'domain' => $domain->get(),
-            'tld' => $domain->getSuffix(),
-            'registerable' => $domain->getRegisterable(),
-            'verification' => false,
-            'certificateId' => null,
-        ]);
-
-        $domain = $dbForConsole->createDocument('domains', $domain);
-
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($domain, Response::MODEL_DOMAIN);
-    });
-
-App::get('/v1/projects/:projectId/domains')
-    ->desc('List Domains')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listDomains')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
-
-        $response->dynamic(new Document([
-            'domains' => $domains,
-            'total' => count($domains),
-        ]), Response::MODEL_DOMAIN_LIST);
-    });
-
-App::get('/v1/projects/:projectId/domains/:domainId')
-    ->desc('Get Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getDomain')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domainId', '', new UID(), 'Domain unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
-
-        if ($domain === false || $domain->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_NOT_FOUND);
-        }
-
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
-    });
-
-App::patch('/v1/projects/:projectId/domains/:domainId/verification')
-    ->desc('Update Domain Verification Status')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateDomainVerification')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domainId', '', new UID(), 'Domain unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
-
-        if ($domain === false || $domain->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_NOT_FOUND);
-        }
-
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
-
-        if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
-        }
-
-        if ($domain->getAttribute('verification') === true) {
-            return $response->dynamic($domain, Response::MODEL_DOMAIN);
-        }
-
-        $validator = new CNAME($target->get()); // Verify Domain with DNS records
-
-        if (!$validator->isValid($domain->getAttribute('domain', ''))) {
-            throw new Exception(Exception::DOMAIN_VERIFICATION_FAILED);
-        }
-
-
-        $dbForConsole->updateDocument('domains', $domain->getId(), $domain->setAttribute('verification', true));
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
-
-        // Issue a TLS certificate when domain is verified
-        $event = new Certificate();
-        $event
-            ->setDomain($domain)
-            ->trigger();
-
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
-    });
-
-App::delete('/v1/projects/:projectId/domains/:domainId')
-    ->desc('Delete Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteDomain')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domainId', '', new UID(), 'Domain unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
-
-        if ($domain === false || $domain->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_NOT_FOUND);
-        }
-
-        $dbForConsole->deleteDocument('domains', $domain->getId());
-
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
-
-        $deletes
-            ->setType(DELETE_TYPE_CERTIFICATES)
-            ->setDocument($domain);
 
         $response->noContent();
     });

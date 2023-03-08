@@ -142,13 +142,6 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('domains', [
-                'type' => Response::MODEL_DOMAIN,
-                'description' => 'List of Domains.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
         ;
 
         $services = Config::getParam('services', []);

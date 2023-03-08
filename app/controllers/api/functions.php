@@ -106,18 +106,30 @@ App::post('/v1/functions')
             ]))
         );
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
-        $routeSubdomain = ID::unique();
-        $route = Authorization::skip(
-            fn() => $dbForConsole->createDocument('routes', new Document([
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
-                'domain' => "{$routeSubdomain}.{$functionsDomain}",
-                'resourceType' => 'function',
-                'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
-            ]))
-        );
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
+        if($functionsDomain !== 'disabled') {
+            $ruleId = ID::unique();
+            $routeSubdomain = ID::unique();
+            $domain = "{$routeSubdomain}.{$functionsDomain}";
+
+            $route = Authorization::skip(
+                fn() => $dbForConsole->createDocument('rules', new Document([
+                    '$id' => $ruleId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getInternalId(),
+                    'domain' => $domain,
+                    'resourceType' => 'function',
+                    'resourceId' => $function->getId(),
+                    'resourceInternalId' => $function->getInternalId(),
+                    'redirect' => '',
+                    'verification' => true,
+                    'certificateId' => '',
+                    'search' => implode(' ', [ $domain, $ruleId, $function->getId(), 'function' ]),
+                ]))
+            );
+
+            // TODO: Probably trigger event for rules.create
+        }
 
         $function->setAttribute('scheduleId', $schedule->getId());
         $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
@@ -143,11 +155,9 @@ App::get('/v1/functions')
     ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
     ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (array $queries, string $search, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
         $queries = Query::parseQueries($queries);
 
@@ -172,23 +182,8 @@ App::get('/v1/functions')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $functions = $dbForProject->find('functions', $queries);
-        $functions = \array_map(function (Document $function) use ($dbForConsole, $project) {
-            $route = Authorization::skip(
-                fn() => $dbForConsole->find('routes', [
-                    Query::equal('resourceType', ['function']),
-                    Query::equal('resourceInternalId', [ $function->getInternalId() ]),
-                    Query::equal('projectInternalId', [ $project->getInternalId() ]),
-                    Query::limit(1),
-                    Query::orderAsc('_createdAt')
-                ])
-            )[0] ?? null;
-            $function = $function->setAttribute('url', $route ? $route->getAttribute('domain') : '');
-            return $function;
-        }, $functions);
-
         $response->dynamic(new Document([
-            'functions' => $functions,
+            'functions' => $dbForProject->find('functions', $queries),
             'total' => $dbForProject->count('functions', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FUNCTION_LIST);
     });
@@ -232,27 +227,14 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
-    ->action(function (string $functionId, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
-
-        $route = Authorization::skip(
-            fn() => $dbForConsole->find('routes', [
-                Query::equal('resourceType', ['function']),
-                Query::equal('resourceInternalId', [ $function->getInternalId() ]),
-                Query::equal('projectInternalId', [ $project->getInternalId() ]),
-                Query::limit(1),
-                Query::orderAsc('_createdAt')
-            ])
-        )[0] ?? null;
-        $function = $function->setAttribute('url', $route ? $route->getAttribute('domain') : '');
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });

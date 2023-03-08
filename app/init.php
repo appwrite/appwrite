@@ -149,7 +149,6 @@ const DELETE_TYPE_TEAMS = 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
@@ -316,20 +315,6 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                Query::equal('projectInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]);
-    }
-);
-
-Database::addFilter(
-    'subQueryDomains',
-    function (mixed $value) {
-        return null;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('domains', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);

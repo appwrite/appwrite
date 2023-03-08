@@ -524,6 +524,31 @@ return [
         'description' => 'Host is not trusted. Add a custom domain to your project first.',
         'code' => 400,
     ],
+    Exception::RULE_RESOURCE_ID_MISSING => [
+        'name' => Exception::RULE_RESOURCE_ID_MISSING,
+        'description' => 'With resourceType you provided, the resourceId is required.',
+        'code' => 400,
+    ],
+    Exception::RULE_RESOURCE_ID_NOT_FOUND => [
+        'name' => Exception::RULE_RESOURCE_ID_NOT_FOUND,
+        'description' => 'Resource could not be found. Check resourceId and resourceType.',
+        'code' => 404,
+    ],
+    Exception::RULE_NOT_FOUND => [
+        'name' => Exception::RULE_NOT_FOUND,
+        'description' => 'Rule with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::RULE_ALREADY_EXISTS => [
+        'name' => Exception::RULE_ALREADY_EXISTS,
+        'description' => 'A rule with the requested domain already exists.',
+        'code' => 409,
+    ],
+    Exception::RULE_VERIFICATION_FAILED => [
+        'name' => Exception::RULE_VERIFICATION_FAILED,
+        'description' => 'Rule verification for it\'s domain has failed.',
+        'code' => 401,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',
@@ -539,16 +564,6 @@ return [
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::DOMAIN_NOT_FOUND => [
-        'name' => Exception::DOMAIN_NOT_FOUND,
-        'description' => 'Domain with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::DOMAIN_ALREADY_EXISTS => [
-        'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
-        'code' => 409,
-    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',
@@ -558,10 +573,5 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in your project.',
         'code' => 409,
-    ],
-    Exception::DOMAIN_VERIFICATION_FAILED => [
-        'name' => Exception::DOMAIN_VERIFICATION_FAILED,
-        'description' => 'Domain verification for the requested domain has failed.',
-        'code' => 401,
     ],
 ];

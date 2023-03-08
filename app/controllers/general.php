@@ -45,7 +45,7 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(Database $dbForConsole, string $host, SwooleRequest $swooleRequest, Response $response) {
     $route = Authorization::skip(
-        fn() => $dbForConsole->find('routes', [
+        fn() => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
         ])
@@ -186,60 +186,6 @@ App::init()
             }
         } else {
             Request::setFilter(null);
-        }
-
-        $domain = $request->getHostname();
-        $domains = Config::getParam('domains', []);
-        if (!array_key_exists($domain, $domains)) {
-            $domain = new Domain(!empty($domain) ? $domain : '');
-
-            if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-                $domains[$domain->get()] = false;
-                Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
-            } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
-                Console::warning('Skipping SSL certificates generation on ACME challenge.');
-            } else {
-                Authorization::disable();
-
-                $envDomain = App::getEnv('_APP_DOMAIN', '');
-                $mainDomain = null;
-                if (!empty($envDomain) && $envDomain !== 'localhost') {
-                    $mainDomain = $envDomain;
-                } else {
-                    $domainDocument = $dbForConsole->findOne('domains', [Query::orderAsc('_id')]);
-                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
-                }
-
-                if ($mainDomain !== $domain->get()) {
-                    Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
-                } else {
-                    $domainDocument = $dbForConsole->findOne('domains', [
-                        Query::equal('domain', [$domain->get()])
-                    ]);
-
-                    if (!$domainDocument) {
-                        $domainDocument = new Document([
-                            'domain' => $domain->get(),
-                            'tld' => $domain->getSuffix(),
-                            'registerable' => $domain->getRegisterable(),
-                            'verification' => false,
-                            'certificateId' => null,
-                        ]);
-
-                        $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
-
-                        Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
-
-                        (new Certificate())
-                            ->setDomain($domainDocument)
-                            ->trigger();
-                    }
-                }
-                $domains[$domain->get()] = true;
-
-                Authorization::reset(); // ensure authorization is re-enabled
-            }
-            Config::setParam('domains', $domains);
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));

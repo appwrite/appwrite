@@ -43,12 +43,6 @@ class Func extends Model
                 'default' => '',
                 'example' => 'My Function',
             ])
-            ->addRule('url', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Function URL to trigger execution.',
-                'default' => '',
-                'example' => 'functions.localhost',
-            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Function enabled.',

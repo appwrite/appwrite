@@ -4,32 +4,29 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
+use Utopia\Database\Document;
 
-class Domain extends Model
+class Rule extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Domain ID.',
+                'description' => 'Function ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Domain creation date in ISO 8601 format.',
+                'description' => 'Function creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Domain update date in ISO 8601 format.',
+                'description' => 'Function update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
@@ -39,29 +36,29 @@ class Domain extends Model
                 'default' => '',
                 'example' => 'appwrite.company.com',
             ])
-            ->addRule('registerable', [
+            ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Registerable domain name.',
+                'description' => 'Action definition for the rule. Possible values are "api", "function", or "redirect"',
                 'default' => '',
-                'example' => 'company.com',
+                'example' => 'function',
             ])
-            ->addRule('tld', [
+            ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'TLD name.',
+                'description' => 'ID of resource for the action type. If resourceType is "api" or "url", leave empty. If resourceType is "function", provide ID of the function.',
                 'default' => '',
-                'example' => 'com',
+                'example' => 'myAwesomeFunction',
+            ])
+            ->addRule('redirect', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Redirect URL for redirect action. Only provide if resourceType is "redirect"',
+                'default' => '',
+                'example' => 'https://appwrite.io/',
             ])
             ->addRule('verification', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Verification process status.',
+                'description' => 'Domain verification status.',
                 'default' => false,
                 'example' => true,
-            ])
-            ->addRule('certificateId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Certificate ID.',
-                'default' => '',
-                'example' => '6ejea5c13377e',
             ])
         ;
     }
@@ -73,7 +70,7 @@ class Domain extends Model
      */
     public function getName(): string
     {
-        return 'Domain';
+        return 'Rule';
     }
 
     /**
@@ -83,6 +80,6 @@ class Domain extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_DOMAIN;
+        return Response::MODEL_PROXY_RULE;
     }
 }

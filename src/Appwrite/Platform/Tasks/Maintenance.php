@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;

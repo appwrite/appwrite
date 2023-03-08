@@ -34,7 +34,7 @@ class BaseList extends Model
             $namesWithCap = [
                 'documents', 'collections', 'users', 'files', 'buckets', 'functions',
                 'deployments', 'executions', 'projects', 'webhooks', 'keys',
-                'platforms', 'domains', 'memberships', 'teams'
+                'platforms', 'rules', 'memberships', 'teams'
             ];
 
             if (\in_array($name, $namesWithCap)) {

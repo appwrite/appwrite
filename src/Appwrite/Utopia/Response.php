@@ -190,6 +190,10 @@ class Response extends SwooleResponse
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
 
+    // Proxy
+    public const MODEL_PROXY_RULE = 'proxyRule';
+    public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
+
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
@@ -267,7 +271,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
             ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
-            ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
             ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
@@ -276,6 +279,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
+            ->setModel(new BaseList('Rule List', self::MODEL_PROXY_RULE_LIST, 'rules', self::MODEL_PROXY_RULE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -319,7 +323,6 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Domain())
             ->setModel(new Provider())
             ->setModel(new Platform())
             ->setModel(new Variable())
@@ -344,6 +347,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new Headers())
+            ->setModel(new Rule())
             // Verification
             // Recovery
             // Tests (keep last)

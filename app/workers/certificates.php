@@ -12,6 +12,8 @@ use Utopia\Database\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
 
+// TODO: Update with rules collection
+
 require_once __DIR__ . '/../init.php';
 
 Console::title('Certificates V1 Worker');
@@ -182,11 +184,6 @@ class CertificatesV1 extends Worker
         $envDomain = App::getEnv('_APP_DOMAIN', '');
         if (!empty($envDomain) && $envDomain !== 'localhost') {
             return $envDomain;
-        } else {
-            $domainDocument = $this->dbForConsole->findOne('domains', [Query::orderAsc('_id')]);
-            if ($domainDocument) {
-                return $domainDocument->getAttribute('domain');
-            }
         }
 
         return null;
@@ -403,20 +400,13 @@ class CertificatesV1 extends Worker
      */
     private function updateDomainDocuments(string $certificateId, string $domain): void
     {
-        $domains = $this->dbForConsole->find('domains', [
+        $rule = $this->dbForConsole->findOne('rules', [
             Query::equal('domain', [$domain]),
-            Query::limit(1000),
         ]);
 
-        foreach ($domains as $domainDocument) {
-            $domainDocument->setAttribute('updated', DateTime::now());
-            $domainDocument->setAttribute('certificateId', $certificateId);
-
-            $this->dbForConsole->updateDocument('domains', $domainDocument->getId(), $domainDocument);
-
-            if ($domainDocument->getAttribute('projectId')) {
-                $this->dbForConsole->deleteCachedDocument('projects', $domainDocument->getAttribute('projectId'));
-            }
+        if(!$rule->isEmpty()) {
+            $rule->setAttribute('certificateId', $certificateId);
+            $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);
         }
     }
 }

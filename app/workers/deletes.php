@@ -101,11 +101,6 @@ class DeletesV1 extends Worker
                 $this->deleteExpiredSessions();
                 break;
 
-            case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($this->args['document']);
-                $this->deleteCertificates($document);
-                break;
-
             case DELETE_TYPE_USAGE:
                 $this->deleteUsageStats($this->args['hourlyUsageRetentionDatetime']);
                 break;
@@ -457,7 +452,7 @@ class DeletesV1 extends Worker
          * Delete routes
          */
         Console::info("Deleting routes for function " . $functionId);
-        $this->deleteByGroup('routes', [
+        $this->deleteByGroup('rules', [
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$document->getInternalId()]),
             Query::equal('projectInternalId', [$project->getInternalId()])
@@ -686,6 +681,7 @@ class DeletesV1 extends Worker
         Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
+    // TODO: Update to new routes delete action
     /**
      * @param Document $document certificates document
      */
@@ -695,7 +691,7 @@ class DeletesV1 extends Worker
 
         // If domain has certificate generated
         if (isset($document['certificateId'])) {
-            $domainUsingCertificate = $consoleDB->findOne('domains', [
+            $domainUsingCertificate = $consoleDB->findOne('rules', [
                 Query::equal('certificateId', [$document['certificateId']])
             ]);
 
