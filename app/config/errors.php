@@ -473,12 +473,6 @@ return [
         'name' => Exception::PROJECT_NOT_FOUND,
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
-    ],
-    Exception::ENV_VARIABLE_INCORRECT_SETUP => [
-        'name' => Exception::ENV_VARIABLE_INCORRECT_SETUP,
-        'description' => 'For Custom Domain ENV Variable is not setup correctly',
-        'code' => 501,
-    ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
         'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
