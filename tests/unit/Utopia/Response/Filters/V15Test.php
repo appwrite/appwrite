@@ -4,8 +4,8 @@ namespace Tests\Unit\Utopia\Response\Filters;
 
 use Appwrite\Utopia\Response\Filters\V15;
 use Appwrite\Utopia\Response;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 

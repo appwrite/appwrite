@@ -14,10 +14,10 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 
 require_once __DIR__ . '/../init.php';
 
@@ -368,6 +368,7 @@ class FunctionsV1 extends Worker
             $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())
+                ->setParam('projectInternalId', $project->getInternalId())
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))

@@ -3,7 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 trait ProjectCustom
 {
@@ -42,6 +42,7 @@ trait ProjectCustom
             'x-appwrite-project' => 'console',
         ], [
             'projectId' => ID::unique(),
+            'region' => 'default',
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',

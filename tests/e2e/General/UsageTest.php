@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use CURLFile;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\DateTime;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\DatetimeValidator;
 
 class UsageTest extends Scope
 {
@@ -85,7 +85,7 @@ class UsageTest extends Scope
     #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
-        sleep(35);
+        sleep(20);
 
         $projectId = $data['projectId'];
         $headers = $data['headers'];
@@ -102,7 +102,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $cheaders);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['users']));
         $this->assertEquals($usersCount, $res['users'][array_key_last($res['users'])]['value']);
@@ -114,6 +114,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals(10, $res['usersCreate'][array_key_last($res['usersCreate'])]['value']);
         $this->validateDates($res['usersCreate']);
@@ -255,7 +256,7 @@ class UsageTest extends Scope
         $filesCreate = $data['filesCreate'];
         $filesDelete = $data['filesDelete'];
 
-        sleep(35);
+        sleep(20);
 
         // console request
         $headers = [
@@ -267,7 +268,7 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
@@ -279,6 +280,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['storage'][array_key_last($res['storage'])]['value']);
         $this->validateDates($res['storage']);
@@ -303,6 +305,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-mode' => 'admin'
         ]));
+        $requestsCount++;
         $res = $res['body'];
         $this->assertEquals($storageTotal, $res['filesStorage'][array_key_last($res['filesStorage'])]['value']);
         $this->assertEquals($filesCount, $res['filesCount'][array_key_last($res['filesCount'])]['value']);
@@ -411,7 +414,7 @@ class UsageTest extends Scope
         $this->assertEquals('name', $res['body']['key']);
         $collectionsUpdate++;
         $requestsCount++;
-        sleep(10);
+        sleep(20);
 
         for ($i = 0; $i < 10; $i++) {
             $name = uniqid() . ' collection';
@@ -493,7 +496,7 @@ class UsageTest extends Scope
         $documentsRead = $data['documentsRead'];
         $documentsDelete = $data['documentsDelete'];
 
-        sleep(35);
+        sleep(20);
 
         // check datbase stats
         $headers = [
@@ -504,13 +507,13 @@ class UsageTest extends Scope
         $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
-        $this->assertEquals(8, count($res));
+        $this->assertEquals(9, count($res));
         $this->assertEquals(30, count($res['requests']));
         $this->assertEquals(30, count($res['storage']));
         $this->assertEquals($requestsCount, $res['requests'][array_key_last($res['requests'])]['value']);
         $this->validateDates($res['requests']);
-        $this->assertEquals($collectionsCount, $res['collections'][array_key_last($res['collections'])]['value']);
-        $this->validateDates($res['collections']);
+        $this->assertEquals($databasesCount, $res['databases'][array_key_last($res['databases'])]['value']);
+        $this->validateDates($res['databases']);
         $this->assertEquals($documentsCount, $res['documents'][array_key_last($res['documents'])]['value']);
         $this->validateDates($res['documents']);
 
@@ -598,6 +601,7 @@ class UsageTest extends Scope
     /** @depends testDatabaseStats */
     public function testPrepareFunctionsStats(array $data): array
     {
+        $dateValidator = new DatetimeValidator();
         $headers = $data['headers'];
         $functionId = '';
         $executionTime = 0;
@@ -639,7 +643,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($deployment['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
@@ -649,8 +653,8 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($deploymentId, $response['body']['deployment']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
@@ -681,6 +685,25 @@ class UsageTest extends Scope
         }
         $executionTime += (int) ($execution['body']['duration'] * 1000);
 
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', $headers, [
+            'async' => true,
+        ]);
+
+        $this->assertEquals(202, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertEquals($functionId, $execution['body']['functionId']);
+
+        sleep(10);
+
+        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $execution['body']['$id'], $headers);
+
+        if ($execution['body']['status'] == 'failed') {
+            $failures++;
+        } elseif ($execution['body']['status'] == 'completed') {
+            $executions++;
+        }
+        $executionTime += (int) ($execution['body']['duration'] * 1000);
+
         $data = array_merge($data, [
             'functionId' => $functionId,
             'executionTime' => $executionTime,
@@ -701,7 +724,7 @@ class UsageTest extends Scope
         $executions = $data['executions'];
         $failures = $data['failures'];
 
-        sleep(25);
+        sleep(20);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/usage', $headers, [
             'range' => '30d'

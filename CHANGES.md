@@ -1,3 +1,73 @@
+# Version TBD
+- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+- Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
+
+# Version 1.2.1
+## Changes
+- Upgrade Console to [2.2.0](https://github.com/appwrite/console/releases/tag/2.2.0)
+- Update DBIP Database [#5049](https://github.com/appwrite/appwrite/pull/5049)
+
+## Bugs
+- Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+- Fix timestamp format in Realtime response [#4515](https://github.com/appwrite/appwrite/pull/4515)
+- Add flutter-web as a platform type [#4992](https://github.com/appwrite/appwrite/pull/4992)
+- Fix typo in Model/Locale.php [#4669](https://github.com/appwrite/appwrite/pull/4669)
+- Fix deletes worker not deleting project database tables [#4984](https://github.com/appwrite/appwrite/pull/4984)
+- Fix deletes worker not deleting database collections [#4983](https://github.com/appwrite/appwrite/pull/4983)
+- Fix restart policy for worker-messaging container [#4994](https://github.com/appwrite/appwrite/pull/4994)
+- Fix validating origin for apple platforms [#5089](https://github.com/appwrite/appwrite/pull/5089)
+
+# Version 1.2.0
+## Features
+- Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added GraphQL Explorer [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added ability to set max sessions per user per project [#4831](https://github.com/appwrite/appwrite/pull/4831)
+
+## Changes
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+- Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
+- Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
+
+## Bugs
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
+
+# Version 1.1.2
+## Changes
+- Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
+- Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+
+## Bugs
+- Fix default oauth paths [#4725](https://github.com/appwrite/appwrite/pull/4725)
+- Fix session expiration, and expired session deletion [#4739](https://github.com/appwrite/appwrite/pull/4739)
+- Fix processing status on sync executions [#4737](https://github.com/appwrite/appwrite/pull/4737)
+- Fix Locale API returning Unknown continent [#4761](https://github.com/appwrite/appwrite/pull/4761)
+
+# Version 1.1.1
+## Bugs
+- Fix Deletes worker using incorrect device for file deletion [#4662](https://github.com/appwrite/appwrite/pull/4662)
+- Fix Migration for Stats adding the region attribute [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Migration stopping scheduled functions [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Migration enabling OAuth providers with data by default [#4704](https://github.com/appwrite/appwrite/pull/4704)
+- Fix Error pages when OAuth providers are disabled [#4704](https://github.com/appwrite/appwrite/pull/4704)
+
+# Version 1.1.0
+## Features
+- Added support for the new Appwrite Console [#4655](https://github.com/appwrite/appwrite/pull/4655)
+- Added new property to projects configuration: `authDuration` which allows you to alter the duration of signed in sessions for your project. [#4618](https://github.com/appwrite/appwrite/pull/4618)
+
+## Bugs
+- Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
+- Fix missing `status`, `buildStderr` and `buildStderr` from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
+- Fix project pagination in DB usage aggregation [#4517](https://github.com/appwrite/appwrite/pull/4517)
+- Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
+- Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
+
+# Version 1.0.3
+## Bugs
+- Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
+- Fix attribute and index deletion when deleting a collection [#4429](https://github.com/appwrite/appwrite/pull/4429)
+
 # Version 1.0.2
 ## Bugs
 - Fixed nullable values in functions variables [#3885](https://github.com/appwrite/appwrite/pull/3885)

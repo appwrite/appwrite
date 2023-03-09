@@ -1,42 +1,49 @@
 <?php
 
-use Utopia\Config\Config;
-use Utopia\CLI\Console;
-use Appwrite\Spec\Swagger2;
-use Appwrite\SDK\SDK;
+use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\CLI;
-use Appwrite\SDK\Language\PHP;
-use Appwrite\SDK\Language\Web;
-use Appwrite\SDK\Language\Node;
-use Appwrite\SDK\Language\Python;
-use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\DotNet;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
+use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
-use Appwrite\SDK\Language\Android;
+use Appwrite\SDK\Language\Node;
+use Appwrite\SDK\Language\PHP;
+use Appwrite\SDK\Language\Python;
+use Appwrite\SDK\Language\REST;
+use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
-use Appwrite\SDK\Language\SwiftClient;
+use Appwrite\SDK\Language\Apple;
+use Appwrite\SDK\Language\Web;
+use Appwrite\SDK\SDK;
+use Appwrite\Spec\Swagger2;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
 
 $cli
     ->task('sdks')
     ->action(function () {
         $platforms = Config::getParam('platforms');
-        $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        $selectedPlatform = Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+        $selectedSDK = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $version = Console::confirm('Choose an Appwrite version');
         $git = (Console::confirm('Should we use git push? (yes/no)') == 'yes');
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', 'latest'])) {
+        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', 'latest'])) {
             throw new Exception('Unknown version given');
         }
 
         foreach ($platforms as $key => $platform) {
-            foreach ($platform['languages'] as $language) {
-                if ($selected !== $language['key'] && $selected !== '*') {
+            if ($selectedPlatform !== $key && $selectedPlatform !== '*') {
+                continue;
+            }
+
+            foreach ($platform['sdks'] as $language) {
+                if ($selectedSDK !== $language['key'] && $selectedSDK !== '*') {
                     continue;
                 }
 
@@ -72,15 +79,20 @@ Redistribution and use in source and binary forms, with or without modification,
 
     2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
-    3. Neither the name Appwrite nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+    3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.';
 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        $config->setNPMPackage('appwrite');
-                        $config->setBowerPackage('appwrite');
+                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                            $config->setNPMPackage('@appwrite.io/console');
+                            $config->setBowerPackage('@appwrite.io/console');
+                        } else {
+                            $config->setNPMPackage('appwrite');
+                            $config->setBowerPackage('appwrite');
+                        }
                         break;
                     case 'cli':
                         $config = new CLI();
@@ -148,7 +160,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $warning = $warning . "\n\n > This is the Swift SDK for integrating with Appwrite from your Swift server-side code. If you're looking for the Apple SDK you should check [appwrite/sdk-for-apple](https://github.com/appwrite/sdk-for-apple)";
                         break;
                     case 'apple':
-                        $config = new SwiftClient();
+                        $config = new Apple();
                         break;
                     case 'dotnet':
                         $cover = '';
@@ -161,9 +173,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         $config = new Kotlin();
                         $warning = $warning . "\n\n > This is the Kotlin SDK for integrating with Appwrite from your Kotlin server-side code. If you're looking for the Android SDK you should check [appwrite/sdk-for-android](https://github.com/appwrite/sdk-for-android)";
                         break;
+                    case 'graphql':
+                        $config = new GraphQL();
+                        break;
+                    case 'rest':
+                        $config = new REST();
+                        break;
                     default:
                         throw new Exception('Language "' . $language['key'] . '" not supported');
-                        break;
                 }
 
                 Console::info("Generating {$language['name']} SDK...");

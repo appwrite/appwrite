@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Users;
 
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 trait UsersBase
 {
@@ -644,6 +644,19 @@ trait UsersBase
         $this->assertIsInt($users['body']['total']);
         $this->assertGreaterThan(0, $users['body']['total']);
 
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->client->call(Client::METHOD_GET, '/users/non_existent', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 404);
+        $this->assertEquals($user['body']['code'], 404);
+        $this->assertEquals($user['body']['message'], 'User with the requested ID could not be found.');
+        $this->assertEquals($user['body']['type'], 'user_not_found');
+
         return $data;
     }
 
@@ -874,6 +887,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    #[Retry(count: 1)]
     public function testUpdateAndGetUserPrefs(array $data): array
     {
         /**
@@ -924,6 +938,81 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 400);
 
         return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateUserNumber(array $data): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $updatedNumber = "+910000000000"; //dummy number
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'number' => $updatedNumber,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['phone'], $updatedNumber);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['phone'], $updatedNumber);
+
+         /**
+         * Test for FAILURE
+         */
+
+        $errorType = "user_phone_already_exists";
+        $user1Id = "user1";
+        $statusCodeForUserPhoneAlredyExists = 409;
+
+        // adding same number ($updatedNumber) to different user i.e user1
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $user1Id . '/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'number' => $updatedNumber,
+        ]);
+        $this->assertEquals($response['headers']['status-code'], $statusCodeForUserPhoneAlredyExists);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals($response['body']['type'], $errorType);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateUserNumber
+     */
+    public function testUpdateUserNumberSearch($data): void
+    {
+        $id = $data['userId'] ?? '';
+        $newNumber = "+910000000000"; //dummy number
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => $newNumber,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['users']);
+        $this->assertCount(1, $response['body']['users']);
+        $this->assertEquals($response['body']['users'][0]['$id'], $id);
+        $this->assertEquals($response['body']['users'][0]['phone'], $newNumber);
     }
 
 

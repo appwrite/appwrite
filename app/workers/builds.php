@@ -11,7 +11,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
@@ -91,7 +91,7 @@ class BuildsV1 extends Worker
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
-                'sourceType' => App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL),
+                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,
@@ -180,6 +180,9 @@ class BuildsV1 extends Worker
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['response']);
+
+            /* Also update the deployment buildTime */
+            $deployment->setAttribute('buildTime', $response['duration']);
 
             Console::success("Build id: $buildId created");
 
