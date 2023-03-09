@@ -27,7 +27,7 @@ class IndexedQueries extends Queries
      * @param Document[] $attributes
      * @param Document[] $indexes
      * @param Base ...$validators
-     * @param bool $strict
+     * @throws \Exception
      */
     public function __construct($attributes = [], $indexes = [], Base ...$validators)
     {
