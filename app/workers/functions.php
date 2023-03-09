@@ -108,7 +108,7 @@ Server::setResource('execute', function () {
 
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
         }
 
         $execution->setAttribute('status', 'processing');
