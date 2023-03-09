@@ -28,10 +28,12 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -1600,3 +1602,49 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $response->noContent();
     });
+
+// CUSTOM SMTP and Templates
+App::patch('/v1/projects/:projectId/smtp')
+    ->desc('Update SMTP configuration')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateSmtpConfiguration')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
+    ->param('sender', '', new Email(), 'SMTP sender email')
+    ->param('host', '', new HostName(), 'SMTP server host name')
+    ->param('port', null, new Integer(), 'SMTP server port')
+    ->param('username', null, new Text(0), 'SMTP server username')
+    ->param('password', null, new Text(0), 'SMTP server password')
+    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $enabled, string $sender, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $smtp = [
+            'enabled' => $enabled,
+            'sender' => $sender,
+            'host' => $host,
+            'port' => $port,
+            'username' => $username,
+            'password' => $password,
+            'secure' => $secure,
+        ];
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('smtp', $smtp));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+
