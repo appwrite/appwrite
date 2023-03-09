@@ -1340,7 +1340,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::DOMAIN_VERIFICATION_FAILED, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
+            throw new Exception(Exception::DOMAIN_VARIABLE_INCORRECT, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
         }
 
         $domain = new Domain($domain);

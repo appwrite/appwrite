@@ -534,11 +534,6 @@ return [
         'description' => 'A Domain with the requested ID already exists.',
         'code' => 409,
     ],
-    Exception::DOMAIN_VERIFICATION_FAILED => [
-        'name' => Exception::DOMAIN_VARIABLE_INCORRECT,
-        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
-        'code' => 501,
-    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',
@@ -553,6 +548,11 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
+    ],
+    Exception::DOMAIN_VARIABLE_INCORRECT => [
+        'name' => Exception::DOMAIN_VARIABLE_INCORRECT,
+        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
+        'code' => 501,
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
