@@ -667,6 +667,17 @@ $collections = [
                 'filters' => ['json', 'encrypt'],
             ],
             [
+                '$id' => ID::custom('templates'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1000000, // TODO make sure size fits
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('auths'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
