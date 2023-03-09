@@ -205,6 +205,7 @@ Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
 Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
 Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
 Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
+Config::load('locale-templates', __DIR__ . '/config/locale/templates.php');
 Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
