@@ -776,9 +776,9 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
     ->label('sdk.methodType', 'location')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
-    ->param('output', '', new WhiteList(['hls']), 'output name.')
-    ->param('renditionId', '', new UID(), 'Rendition unique ID.')
-    ->param('streamId', '', new Range(0, 10), 'Stream id.')
+    ->param('output', '', new WhiteList(['hls']), 'Output name.')
+    ->param('renditionId', null, new UID(), 'Rendition unique ID.')
+    ->param('streamId', '', new Range(0, 10), 'Stream ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
@@ -852,14 +852,14 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:
             throw new Exception(Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND);
         }
 
-        $output = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
+        $data = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
 
         if ($output === 'hls') {
             $response->setContentType('video/MP2T')
-                ->send($output);
+                ->send($data);
         } else {
             $response->setContentType('video/iso.segment')
-                ->send($output);
+                ->send($data);
         }
     });
 
@@ -922,9 +922,9 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
             $response->setContentType('application/x-mpegurl')
                 ->send($template->render(false));
         } else {
-            $output = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId')) . '/'  . $subtitle->getId() . '.vtt');
+            $data = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId')) . '/'  . $subtitle->getId() . '.vtt');
             $response->setContentType('text/vtt')
-                ->send($output);
+                ->send($data);
         }
     });
 
@@ -961,9 +961,9 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:se
             throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
         }
 
-        $output = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
+        $data = $deviceVideos->read($segment->getAttribute('path') .  $segment->getAttribute('fileName'));
         $response->setContentType('text/vtt')
-            ->send($output);
+            ->send($data);
     });
 
 App::post('/v1/videos/profiles')

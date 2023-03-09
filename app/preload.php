@@ -38,6 +38,7 @@ foreach (
     realpath(__DIR__ . '/../vendor/utopia-php/cache'),
     realpath(__DIR__ . '/../vendor/alchemy'),
     realpath(__DIR__ . '/../vendor/php-ffmpeg'),
+        realpath(__DIR__ . '/../vendor/utopia-php/storage'),
     ] as $key => $value
 ) {
     if ($value !== false) {

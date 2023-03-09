@@ -135,7 +135,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shimonewman/PHP-FFmpeg-video-streaming.git",
-                "reference": "a87c1648c7a967eb8f0e48450c0cbcaa8d3de52e"
+                "reference": "fc1c0f4c9ce9b2136e4180f0012002c38e032728"
             },
             "require": {
                 "php": "^7.2 || ^8.0",
@@ -209,7 +209,7 @@
                 "video-streaming",
                 "video-streaming"
             ],
-            "time": "2023-03-02T08:09:58+00:00"
+            "time": "2023-03-08T14:20:59+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4444,16 +4444,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.11.0",
+            "version": "1.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "14daed4296fae74d9e3201d2c4925d1acb7aa614"
+                "reference": "7284c22080590fb39f2ffa3e9057f10a4ddd0e0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/14daed4296fae74d9e3201d2c4925d1acb7aa614",
-                "reference": "14daed4296fae74d9e3201d2c4925d1acb7aa614",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/7284c22080590fb39f2ffa3e9057f10a4ddd0e0c",
+                "reference": "7284c22080590fb39f2ffa3e9057f10a4ddd0e0c",
                 "shasum": ""
             },
             "require": {
@@ -4491,7 +4491,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.11.0"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.11.1"
             },
             "funding": [
                 {
@@ -4499,7 +4499,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-03-03T13:19:32+00:00"
+            "time": "2023-03-08T13:26:56+00:00"
         },
         {
             "name": "nikic/php-parser",
