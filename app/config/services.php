@@ -186,4 +186,17 @@ return [
         'optional' => true,
         'icon' => '/images/services/graphql.png',
     ],
+    'vcs' => [
+        'key' => 'vcs',
+        'name' => 'VCS',
+        'subtitle' => 'The VCS service allows you to interact with providers like GitHub, GitLab etc.',
+        'description' => '',
+        'controller' => 'api/vcs.php',
+        'sdk' => false,
+        'docs' => false,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => true,
+        'icon' => '',
+    ]
 ];

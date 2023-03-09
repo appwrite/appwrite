@@ -176,6 +176,8 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
+      - _APP_GITHUB_PRIVATE_KEY
+      - _APP_GITHUB_APP_ID
 
   appwrite-realtime:
     entrypoint: realtime

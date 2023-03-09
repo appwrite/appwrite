@@ -205,6 +205,7 @@ class Response extends SwooleResponse
     public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
+    public const MODEL_VCS = 'vcs';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
