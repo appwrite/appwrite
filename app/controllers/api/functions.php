@@ -129,6 +129,7 @@ App::post('/v1/functions')
                 ]))
             );
 
+            // TODO: @Meldiron this doesnt seem to work. Same for certificate.php worker. When working, implement with Console (instead of interval)
             /** Trigger Webhook */
             $ruleModel = new Rule();
             $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);

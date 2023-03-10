@@ -531,8 +531,8 @@ return [
     ],
     Exception::RULE_CONFIGURATION_MISSING => [
         'name' => Exception::RULE_CONFIGURATION_MISSING,
-        'description' => 'Configuration for _APP_DOMAIN_TARGET missing proper domain.',
-        'code' => 500,
+        'description' => '_APP_DOMAIN_TARGET must be a public domain.',
+        'code' => 501,
     ],
     Exception::RULE_RESOURCE_ID_NOT_FOUND => [
         'name' => Exception::RULE_RESOURCE_ID_NOT_FOUND,

@@ -65,12 +65,6 @@ App::post('/v1/proxy/rules')
             throw new Exception(Exception::RULE_ALREADY_EXISTS, $message);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
-
-        if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
-        }
-
         $resourceInternalId = '';
 
         if($resourceType == 'function') {
@@ -258,7 +252,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
         }
 
         if ($rule->getAttribute('verification') === true) {

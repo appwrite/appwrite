@@ -413,7 +413,7 @@ class CertificatesV1 extends Worker
 
         if(!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
-            $rule->setAttribute('status', $success ? 'verified' : 'failed');
+            $rule->setAttribute('status', $success ? 'verified' : 'unverified');
             $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);
 
             $projectId = $rule->getAttribute('projectId');

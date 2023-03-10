@@ -55,11 +55,6 @@ function router(Database $dbForConsole, string $host, SwooleRequest $swooleReque
         throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
     }
 
-    // Un-verified ignores Appwrite Router. Behaves as Appwrite API. Needed for certificate generation (well-known route)
-    if($route->getAttribute('status') !== 'verified') {
-        return false;
-    }
-
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
         fn() => $dbForConsole->getDocument('projects', $projectId)
@@ -665,6 +660,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
+// TODO: @Meldiron this must run before Appwrite Router. Router makes it NOT get here. But it needs to. This must be endpoint reserved by Appwrite for certificate generation and re-generation
 App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')

@@ -50,7 +50,7 @@ class Rule extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "failed"',
+                'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "unverified"',
                 'default' => false,
                 'example' => 'verified',
             ])
