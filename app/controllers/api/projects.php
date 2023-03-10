@@ -1540,7 +1540,6 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         $response->noContent();
     });
 
-/** Create CRUD endpoints for creating, getting, deleting and updating backups */
 App::post('/v1/projects/:projectId/backups')
     ->desc('Create Backup')
     ->groups(['api', 'projects'])
