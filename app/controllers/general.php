@@ -60,6 +60,17 @@ function router(Database $dbForConsole, string $host, SwooleRequest $swooleReque
         return false;
     }
 
+    $projectId = $route->getAttribute('projectId');
+    $project = Authorization::skip(
+        fn() => $dbForConsole->getDocument('projects', $projectId)
+    );
+    if(array_key_exists('proxy', $project->getAttribute('services', []))) {
+        $status = $project->getAttribute('services', [])['proxy'];
+        if(!$status) {
+            throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
+        }
+    }
+
     $type = $route->getAttribute('resourceType');
 
     if($type === 'function') {
@@ -127,6 +138,8 @@ function router(Database $dbForConsole, string $host, SwooleRequest $swooleReque
 
         $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
         return true;
+    } else if($type === 'api') {
+        return false;
     } else {
         throw new AppwriteException(AppwriteException::ROUTER_INVALID_TYPE);
     }

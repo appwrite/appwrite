@@ -830,17 +830,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('redirect'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('status'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

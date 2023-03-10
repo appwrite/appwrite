@@ -458,7 +458,9 @@ class DeletesV1 extends Worker
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$document->getInternalId()]),
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole);
+        ], $dbForConsole, function(Document $document) use ($project) {
+            $this->deleteRule($document, $project);
+        });
 
         /**
          * Delete Variables

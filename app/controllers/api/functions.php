@@ -7,8 +7,10 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
+use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
@@ -112,7 +114,7 @@ App::post('/v1/functions')
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
 
-            $route = Authorization::skip(
+            $rule = Authorization::skip(
                 fn() => $dbForConsole->createDocument('rules', new Document([
                     '$id' => $ruleId,
                     'projectId' => $project->getId(),
@@ -121,14 +123,52 @@ App::post('/v1/functions')
                     'resourceType' => 'function',
                     'resourceId' => $function->getId(),
                     'resourceInternalId' => $function->getInternalId(),
-                    'redirect' => '',
                     'status' => 'verified',
                     'certificateId' => '',
                     'search' => implode(' ', [ $domain, $ruleId, $function->getId(), 'function' ]),
                 ]))
             );
 
-            // TODO: Probably trigger event for rules.create
+            /** Trigger Webhook */
+            $ruleModel = new Rule();
+            $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $ruleCreate
+                ->setProject($project)
+                ->setEvent('rules.[ruleId].create')
+                ->setParam('ruleId', $rule->getId())
+                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
+                ->trigger();
+
+            /** Trigger Functions */
+            $ruleCreate
+                ->setClass(Event::FUNCTIONS_CLASS_NAME)
+                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+                ->trigger();
+
+            /** Trigger realtime event */
+            $allEvents = Event::generateEvents('rules.[ruleId].create', [
+                'ruleId' => $rule->getId(),
+            ]);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $allEvents[0],
+                payload: $rule,
+                project: $project
+            );
+            Realtime::send(
+                projectId: 'console',
+                payload: $rule->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
+            Realtime::send(
+                projectId: $project->getId(),
+                payload: $rule->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
         }
 
         $function->setAttribute('scheduleId', $schedule->getId());

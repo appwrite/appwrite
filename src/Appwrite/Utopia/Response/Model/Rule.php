@@ -48,12 +48,6 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'myAwesomeFunction',
             ])
-            ->addRule('redirect', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Redirect URL for redirect action. Only provide if resourceType is "redirect"',
-                'default' => '',
-                'example' => 'https://appwrite.io/',
-            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Domain verification status. Possible values are "created", "verifying", "verified" and "failed"',

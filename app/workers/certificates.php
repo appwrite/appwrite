@@ -2,6 +2,9 @@
 
 use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\CNAME;
+use Appwrite\Utopia\Response\Model\Rule;
+use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Event\Event;
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -11,8 +14,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
-
-// TODO: Update with rules collection
 
 require_once __DIR__ . '/../init.php';
 
@@ -415,7 +416,49 @@ class CertificatesV1 extends Worker
             $rule->setAttribute('status', $success ? 'verified' : 'failed');
             $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);
 
-            // TODO: Event (realtime+webhook+function)
+            $projectId = $rule->getAttribute('projectId');
+            $project = $this->dbForConsole->getDocument('projects', $projectId);
+
+            /** Trigger Webhook */
+            $ruleModel = new Rule();
+            $ruleUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $ruleUpdate
+                ->setProject($project)
+                ->setEvent('rules.[ruleId].update')
+                ->setParam('ruleId', $rule->getId())
+                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
+                ->trigger();
+
+            /** Trigger Functions */
+            $ruleUpdate
+                ->setClass(Event::FUNCTIONS_CLASS_NAME)
+                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+                ->trigger();
+
+            /** Trigger realtime event */
+            $allEvents = Event::generateEvents('rules.[ruleId].update', [
+                'ruleId' => $rule->getId(),
+            ]);
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $allEvents[0],
+                payload: $rule,
+                project: $project
+            );
+            Realtime::send(
+                projectId: 'console',
+                payload: $rule->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
+            Realtime::send(
+                projectId: $project->getId(),
+                payload: $rule->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
         }
     }
 }

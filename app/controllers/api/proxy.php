@@ -19,7 +19,7 @@ use Utopia\Domains\Domain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-// TODO: Certificate generation
+// TODO: @Meldiron Realtime and events QA
 
 App::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
@@ -36,15 +36,14 @@ App::post('/v1/proxy/rules')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('domain', null, new DomainValidator(), 'Domain name.')
-    ->param('resourceType', null, new WhiteList(['api', 'function', 'redirect']), 'Action definition for the rule. Possible values are "api", "function", or "redirect"')
+    ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function", or "redirect"')
     ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api" or "url", leave empty. If resourceType is "function", provide ID of the function.', true)
-    ->param('redirect', '', new URL(), 'Redirect URL for redirect action. Only provide if resourceType is "redirect"', true)
     ->inject('response')
     ->inject('project')
     ->inject('events')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $domain, string $resourceType, string $resourceId, string $redirect, Response $response, Document $project, Event $eventsInstance, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Event $events, Database $dbForConsole, Database $dbForProject) {
         $document = $dbForConsole->findOne('rules', [
             Query::equal('domain', [$domain]),
         ]);
@@ -93,13 +92,12 @@ App::post('/v1/proxy/rules')
             'resourceType' => $resourceType,
             'resourceId' => $resourceId,
             'resourceInternalId' => $resourceInternalId,
-            'redirect' => $redirect,
             'status' => $status,
             'certificateId' => '',
             'search' => implode(' ', [ $domain->get(), $ruleId, $resourceId, $resourceType, $redirect ]),
         ]));
 
-        $eventsInstance->setParam('ruleId', $rule->getId());
+        $events->setParam('ruleId', $rule->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -210,7 +208,6 @@ App::delete('/v1/proxy/rules/:ruleId')
             throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
         }
 
-        // TODO: Ensure certificate is deleted. Previously DELETE_TYPE_CERTIFICATES
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($rule);
@@ -224,6 +221,9 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->desc('Update Rule Verification Status')
     ->groups(['api', 'proxy'])
     ->label('scope', 'rules.write')
+    ->label('event', 'rules.[ruleId].update')
+    ->label('audits.event', 'rule.update')
+    ->label('audits.resource', 'rule/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'proxy')
     ->label('sdk.method', 'updateRuleVerification')
@@ -232,9 +232,10 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
+    ->inject('events')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole) {
+    ->action(function (string $ruleId, Response $response, Event $events, Document $project, Database $dbForConsole) {
         $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
@@ -267,6 +268,8 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
                 'domain' => $rule->getAttribute('domain')
             ]))
             ->trigger();
+
+        $events->setParam('ruleId', $rule->getId());
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });

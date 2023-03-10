@@ -205,8 +205,6 @@ class Response extends SwooleResponse
     public const MODEL_PROVIDER_LIST = 'providerList';
     public const MODEL_PLATFORM = 'platform';
     public const MODEL_PLATFORM_LIST = 'platformList';
-    public const MODEL_DOMAIN = 'domain';
-    public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
 
