@@ -432,7 +432,8 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * @depends testCreateProject
      */
-    public function testUpdateProjectSMTP($data): array {
+    public function testUpdateProjectSMTP($data): array
+    {
         $id = $data['projectId'];
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
             'content-type' => 'application/json',

@@ -1672,7 +1672,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['sms.'.$type.'-'.$locale] = [
+        $templates['sms.' . $type . '-' . $locale] = [
             'message' => $message
         ];
 
@@ -1710,7 +1710,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['email.'.$type.'-'.$locale] = [
+        $templates['email.' . $type . '-' . $locale] = [
             'senderName' => $senderName,
             'senderEmail' => $senderEmail,
             'subject' => $subject,
@@ -1722,5 +1722,3 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
-
-
