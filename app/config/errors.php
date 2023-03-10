@@ -546,7 +546,7 @@ return [
     ],
     Exception::RULE_ALREADY_EXISTS => [
         'name' => Exception::RULE_ALREADY_EXISTS,
-        'description' => 'A rule with the requested domain already exists.',
+        'description' => 'Domain already used.',
         'code' => 409,
     ],
     Exception::RULE_VERIFICATION_FAILED => [

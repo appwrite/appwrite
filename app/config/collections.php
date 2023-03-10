@@ -893,13 +893,6 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_redirect'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['redirect'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_status'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],

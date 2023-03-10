@@ -49,7 +49,20 @@ App::post('/v1/proxy/rules')
         ]);
 
         if ($document && !$document->isEmpty()) {
-            throw new Exception(Exception::RULE_ALREADY_EXISTS);
+            if($document->getAttribute('projectId') === $project->getId()) {
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+                $message = "Domain already assigned to '{$resourceType}' service";
+                if(!empty($resourceId)) {
+                    $message .= " with ID '{$resourceId}'";
+                }
+
+                $message .= '.';
+            } else {
+                $message = "Domain already assigned to different project.";
+            }
+            
+            throw new Exception(Exception::RULE_ALREADY_EXISTS, $message);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
