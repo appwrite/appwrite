@@ -252,6 +252,34 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
+  appwrite-worker-backups:
+    entrypoint: worker-backups
+    <<: *x-logging
+    container_name: appwrite-worker-backups
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
     <<: *x-logging

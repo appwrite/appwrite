@@ -185,7 +185,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '0.0.1',
+                'version' => '0.0.3',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -197,8 +197,8 @@ return [
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
                 'gitBranch' => 'main',
-                'gitRepoName' => 'sdk-for-console',
-                'gitUserName' => 'appwrite',
+                'gitRepoName' => 'christyjacob4-appwrite-console',
+                'gitUserName' => '',
             ],
             [
                 'key' => 'cli',

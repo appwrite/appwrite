@@ -114,6 +114,7 @@ const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
+const APP_STORAGE_BACKUPS = '/storage/backups';
 const APP_STORAGE_CONFIG = '/storage/config';
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';

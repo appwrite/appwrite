@@ -4,7 +4,8 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Appwrite\Event\Validator\Event;
+use Appwrite\Event\Event;
+use Appwrite\Event\Validator\Event as EventValidator;
 use Appwrite\Network\Validator\CNAME;
 use Utopia\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
@@ -659,7 +660,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('events', null, new ArrayList(new EventValidator(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -782,7 +783,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('events', null, new ArrayList(new EventValidator(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -1538,3 +1539,308 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         $response->noContent();
     });
+
+/** Create CRUD endpoints for creating, getting, deleting and updating backups */
+App::post('/v1/projects/:projectId/backups')
+    ->desc('Create Backup')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createBackup')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('name', '', new Text(256), 'Backup name.')
+    ->param('description', '', new Text(1024), 'Backup description.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $name, string $description, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $backup = $dbForConsole->createDocument('backups', new Document([
+            '$id' => ID::unique(),
+            'projectId' => $project->getId(),
+            'projectInternalId' => $project->getInternalId(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'name' => $name,
+            'description' => $description,
+            'status' => 'pending',
+        ]));
+
+        $event = new Event(Event::BACKUPS_QUEUE_NAME, Event::BACKUPS_CLASS_NAME);
+        $event
+            ->setProject($project)
+            ->setPayload([
+                'type' => 'backup',
+                'backupId' => $backup->getId(),
+            ])
+            ->trigger();
+
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($backup, Response::MODEL_BACKUP);
+    });
+
+App::get('/v1/projects/:projectId/backups')
+    ->desc('List Backups')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listBackups')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_LIST)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $backups = $dbForConsole->find('backups', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::limit(5000)
+        ]);
+
+        $response->dynamic(new Document([
+            'backups' => $backups,
+            'total' => count($backups),
+        ]), Response::MODEL_BACKUP_LIST);
+    });
+
+App::get('/v1/projects/:projectId/backups/:backupId')
+    ->desc('Get Backup')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getBackup')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('backupId', '', new UID(), 'Backup unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $backupId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $backup = $dbForConsole->findOne('backups', [
+            Query::equal('$id', [$backupId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+
+        if ($backup === false || $backup->isEmpty()) {
+            throw new Exception(Exception::BACKUP_NOT_FOUND);
+        }
+
+        $response->dynamic($backup, Response::MODEL_BACKUP);
+    });
+
+App::delete('/v1/projects/:projectId/backups/:backupId')
+    ->desc('Delete Backup')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'deleteBackup')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('backupId', '', new UID(), 'Backup unique ID.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $backupId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $backup = $dbForConsole->findOne('backups', [
+            Query::equal('$id', [$backupId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+
+        if ($backup === false || $backup->isEmpty()) {
+            throw new Exception(Exception::BACKUP_NOT_FOUND);
+        }
+
+        if (!$dbForConsole->deleteDocument('backups', $backupId)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete backup from DB.');
+        }
+
+        $response->noContent();
+    });
+
+App::patch('/v1/projects/:projectId/backups/:backupId')
+    ->desc('Update Backup')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateBackup')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('backupId', '', new UID(), 'Backup unique ID.')
+    ->param('name', null, new Text(256), 'Backup name.', true)
+    ->param('description', null, new Text(1024), 'Backup description.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $backupId, ?string $name, ?string $description, ?string $schedule, ?int $keep, ?array $webhooks, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $backup = $dbForConsole->findOne('backups', [
+            Query::equal('$id', [$backupId]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+
+        if ($backup === false || $backup->isEmpty()) {
+            throw new Exception(Exception::BACKUP_NOT_FOUND);
+        }
+
+        $backup
+            ->setAttribute('name', $name ?? $backup->getAttribute('name'))
+            ->setAttribute('description', $description ?? $backup->getAttribute('description'));
+        
+        if(!$dbForConsole->updateDocument('backups', $backup->getId(), $backup)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to update backup in DB.');
+        }
+
+        $response->dynamic($backup, Response::MODEL_BACKUP);
+    });
+
+// App::post('/v1/projects/:projectId/backups/:backupId/restore')
+//     ->desc('Restore Backup')
+//     ->groups(['api', 'projects'])
+//     ->label('scope', 'projects.write')
+//     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+//     ->label('sdk.namespace', 'projects')
+//     ->label('sdk.method', 'restoreBackup')
+//     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+//     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+//     ->param('projectId', '', new UID(), 'Project unique ID.')
+//     ->param('backupId', '', new UID(), 'Backup unique ID.')
+//     ->inject('response')
+//     ->inject('dbForConsole')
+//     ->action(function (string $projectId, string $backupId, Response $response, Database $dbForConsole) {
+
+//         $project = $dbForConsole->getDocument('projects', $projectId);
+
+//         if ($project->isEmpty()) {
+//             throw new Exception(Exception::PROJECT_NOT_FOUND);
+//         }
+
+//         $backup = $dbForConsole->findOne('backups', [
+//             Query::equal('_uid', [$backupId]),
+//             Query::equal('projectInternalId', [$project->getInternalId()]),
+//         ]);
+
+//         if ($backup === false || $backup->isEmpty()) {
+//             throw new Exception(Exception::BACKUP_NOT_FOUND);
+//         }
+
+//         $backupCollection = $dbForConsole->getCollection('backup_' . $backup->getId());
+
+//         $collections = $dbForConsole->listCollections();
+
+//         foreach ($collections as $collection) {
+//             if ($collection->getId() === 'backup_' . $backup->getId()) {
+//                 continue;
+//             }
+
+//             $dbForConsole->deleteCollection($collection->getId());
+//         }
+
+//         $collections = $backupCollection->listCollections();
+
+//         foreach ($collections as $collection) {
+//             $dbForConsole->createCollection($collection->getId());
+
+//             $documents = $collection->find();
+
+//             foreach ($documents as $document) {
+//                 $dbForConsole->createDocument($collection->getId(), $document->getArrayCopy());
+//             }
+//         }
+
+//         $response->noContent();
+//     });
+
+// App::get('/v1/projects/:projectId/backups/:backupId/export')
+//     ->desc('Export Backup')
+//     ->groups(['api', 'projects'])
+//     ->label('scope', 'projects.write')
+//     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+//     ->label('sdk.namespace', 'projects')
+//     ->label('sdk.method', 'exportBackup')
+//     ->label('sdk.response.code', Response::STATUS_CODE_OK)
+//     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+//     ->label('sdk.response.model', Response::MODEL_BACKUP)
+//     ->param('projectId', '', new UID(), 'Project unique ID.')
+//     ->param('backupId', '', new UID(), 'Backup unique ID.')
+//     ->inject('response')
+//     ->inject('dbForConsole')
+//     ->action(function (string $projectId, string $backupId, Response $response, Database $dbForConsole) {
+
+//         $project = $dbForConsole->getDocument('projects', $projectId);
+
+//         if ($project->isEmpty()) {
+//             throw new Exception(Exception::PROJECT_NOT_FOUND);
+//         }
+
+//         $backup = $dbForConsole->findOne('backups', [
+//             Query::equal('_uid', [$backupId]),
+//             Query::equal('projectInternalId', [$project->getInternalId()]),
+//         ]);
+
+//         if ($backup === false || $backup->isEmpty()) {
+//             throw new Exception(Exception::BACKUP_NOT_FOUND);
+//         }
+
+//         $backupCollection = $dbForConsole->getCollection('backup_' . $backup->getId());
+
+//         $collections = $backupCollection->listCollections();
+
+//         $export = [];
+
+//         foreach ($collections as $collection) {
+//             $documents = $collection->find();
+
+//             foreach ($documents as $document) {
+//                 $export[$collection->getId()][] = $document->getArrayCopy();
+//             }
+//         }
+
+//         $response->json($export);
+//     });

@@ -30,6 +30,7 @@ use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeDatetime;
+use Appwrite\Utopia\Response\Model\Backup;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
@@ -205,6 +206,8 @@ class Response extends SwooleResponse
     public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
+    public const MODEL_BACKUP = 'backup';
+    public const MODEL_BACKUP_LIST = 'backupList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -274,6 +277,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+            ->setModel(new BaseList('Backups List', self::MODEL_BACKUP_LIST, 'backups', self::MODEL_BACKUP))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -288,6 +292,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
             ->setModel(new AttributeDatetime())
+            ->setModel(new Backup())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
