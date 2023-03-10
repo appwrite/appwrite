@@ -44,7 +44,7 @@ class EmailTemplate extends Template
      */
     public function getName(): string
     {
-        return 'Template';
+        return 'EmailTemplate';
     }
 
     /**
@@ -54,6 +54,6 @@ class EmailTemplate extends Template
      */
     public function getType(): string
     {
-        return Response::MODEL_TEMPLATE;
+        return Response::MODEL_EMAIL_TEMPLATE;
     }
 }

@@ -1786,11 +1786,6 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', new Text(6), 'Template locale')
-    ->param('senderName', '', new Text(255), 'Name of the email sender')
-    ->param('senderEmail', '', new Email(), 'Email of the sender')
-    ->param('subject', '', new Text(255), 'Email Subject')
-    ->param('message', '', new Text(0), 'Template message')
-    ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
@@ -1808,8 +1803,8 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $template = [
                 'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl'),
                 'subject' => (new Locale($locale))->getText('emails.' . $type . '.subject'),
-                'senderEmail' => App::getEnv('APP_SYSTEM_EMAIL_ADDRESS', ''),
-                'senderName' => App::getEnv('APP_SYSTEM_NAME', '')
+                'senderEmail' => App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', ''),
+                'senderName' => App::getEnv('_APP_SYSTEM_EMAIL_NAME', '')
             ];
         }
 

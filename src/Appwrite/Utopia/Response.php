@@ -62,6 +62,7 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\EmailTemplate;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
@@ -73,6 +74,7 @@ use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\Template;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -206,7 +208,7 @@ class Response extends SwooleResponse
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
     public const MODEL_TEMPLATE = 'template';
-    public const MODEL_EMAIL_TEMPLATE = 'email_template';
+    public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -343,6 +345,8 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new Template())
+            ->setModel(new EmailTemplate())
             // Verification
             // Recovery
             // Tests (keep last)
