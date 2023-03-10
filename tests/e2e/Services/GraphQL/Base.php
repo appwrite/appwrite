@@ -460,15 +460,15 @@ trait Base
                         array
                     }
                 }';
-                case self::$UPDATE_STRING_ATTRIBUTE:
-                    return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+            case self::$UPDATE_STRING_ATTRIBUTE:
+                return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-                case self::$UPDATE_INTEGER_ATTRIBUTE:
-                    return 'mutation updateIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
+            case self::$UPDATE_INTEGER_ATTRIBUTE:
+                return 'mutation updateIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
                         databasesUpdateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, min: $min, max: $max, default: $default) {
                             required
                             min
@@ -476,8 +476,8 @@ trait Base
                             default
                         }
                     }';
-                case self::$UPDATE_FLOAT_ATTRIBUTE:
-                    return 'mutation updateFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
+            case self::$UPDATE_FLOAT_ATTRIBUTE:
+                return 'mutation updateFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
                         databasesUpdateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default) {
                             required
                             min
@@ -485,44 +485,44 @@ trait Base
                             default
                         }
                     }';
-                case self::$UPDATE_BOOLEAN_ATTRIBUTE:
-                    return 'mutation updateBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean){
+            case self::$UPDATE_BOOLEAN_ATTRIBUTE:
+                return 'mutation updateBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean){
                         databasesUpdateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-                case self::$UPDATE_URL_ATTRIBUTE:
-                    return 'mutation updateUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+            case self::$UPDATE_URL_ATTRIBUTE:
+                return 'mutation updateUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-                case self::$UPDATE_EMAIL_ATTRIBUTE:
-                    return 'mutation updateEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+            case self::$UPDATE_EMAIL_ATTRIBUTE:
+                return 'mutation updateEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-                case self::$UPDATE_IP_ATTRIBUTE:
-                    return 'mutation updateIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+            case self::$UPDATE_IP_ATTRIBUTE:
+                return 'mutation updateIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
                         }
                     }';
-                case self::$UPDATE_ENUM_ATTRIBUTE:
-                    return 'mutation updateEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
+            case self::$UPDATE_ENUM_ATTRIBUTE:
+                return 'mutation updateEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
                         databasesUpdateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default) {
                             elements
                             required
                             default
                         }
                     }';
-                case self::$UPDATE_DATETIME_ATTRIBUTE:
-                    return 'mutation updateDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+            case self::$UPDATE_DATETIME_ATTRIBUTE:
+                return 'mutation updateDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
