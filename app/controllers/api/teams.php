@@ -6,6 +6,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -21,7 +22,6 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -37,10 +37,7 @@ use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\Text;
-use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
-use Appwrite\Event\Phone as EventPhone;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -135,6 +132,7 @@ App::get('/v1/teams')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM_LIST)
+    ->label('sdk.offline.model', '/teams')
     ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
@@ -184,6 +182,8 @@ App::get('/v1/teams/:teamId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->label('sdk.offline.model', '/teams')
+    ->label('sdk.offline.key', '{teamId}')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -212,12 +212,15 @@ App::put('/v1/teams/:teamId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->label('sdk.offline.model', '/teams')
+    ->label('sdk.offline.key', '{teamId}')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -225,9 +228,13 @@ App::put('/v1/teams/:teamId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team
+        $team
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$teamId, $name])));
+            ->setAttribute('search', implode(' ', [$teamId, $name]));
+
+        $team = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $team) {
+            return $dbForProject->updateDocument('teams', $team->getId(), $team);
+        });
 
         $events->setParam('teamId', $team->getId());
 
@@ -532,6 +539,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
+    ->label('sdk.offline.model', '/teams/{teamId}/memberships')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
@@ -613,6 +621,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
+    ->label('sdk.offline.model', '/teams/{teamId}/memberships')
+    ->label('sdk.offline.key', '{membershipId}')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')

@@ -121,6 +121,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -135,6 +136,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         /**
          * Test for FAILURE
