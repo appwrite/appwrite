@@ -551,7 +551,7 @@ return [
     ],
     Exception::RULE_VERIFICATION_FAILED => [
         'name' => Exception::RULE_VERIFICATION_FAILED,
-        'description' => 'Rule verification for it\'s domain has failed.',
+        'description' => 'Domain verification for failed. Please check your DNS records.',
         'code' => 401,
     ],
     Exception::WEBHOOK_NOT_FOUND => [

@@ -414,6 +414,8 @@ class CertificatesV1 extends Worker
             $rule->setAttribute('certificateId', $certificateId);
             $rule->setAttribute('status', $success ? 'verified' : 'failed');
             $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);
+
+            // TODO: Event (realtime+webhook+function)
         }
     }
 }

@@ -4,7 +4,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\ID;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\URL;
@@ -15,6 +14,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Database\ID;
 use Utopia\Domains\Domain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -96,14 +96,14 @@ App::post('/v1/proxy/rules')
             'redirect' => $redirect,
             'status' => $status,
             'certificateId' => '',
-            'search' => implode(' ', [ $domain, $ruleId, $resourceId, $resourceType, $redirect ]),
+            'search' => implode(' ', [ $domain->get(), $ruleId, $resourceId, $resourceType, $redirect ]),
         ]));
 
         $eventsInstance->setParam('ruleId', $rule->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($rule, Response::MODEL_RULE);
+            ->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
 
@@ -171,7 +171,7 @@ App::get('/v1/proxy/rules/:ruleId')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole) {
-        $rule = $dbForConsole->getDocument('rule', $ruleId);
+        $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
@@ -252,8 +252,9 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         }
 
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
+        $domain = new Domain($rule->getAttribute('domain', ''));
 
-        if (!$validator->isValid($rule->getAttribute('domain', ''))) {
+        if (!$validator->isValid($domain->get())) {
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);
         }
 

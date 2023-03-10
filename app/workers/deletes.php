@@ -64,6 +64,8 @@ class DeletesV1 extends Worker
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project);
+                    case DELETE_TYPE_RULES:
+                        $this->deleteRule($document, $project);
                         break;
                     default:
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
@@ -681,51 +683,30 @@ class DeletesV1 extends Worker
         Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    // TODO: Update to new routes delete action
     /**
-     * @param Document $document certificates document
+     * @param Document $document rule document
+     * @param Document $project project document
      */
-    protected function deleteCertificates(Document $document): void
+    protected function deleteRule(Document $document, Document $project): void
     {
         $consoleDB = $this->getConsoleDB();
-
-        // If domain has certificate generated
-        if (isset($document['certificateId'])) {
-            $domainUsingCertificate = $consoleDB->findOne('rules', [
-                Query::equal('certificateId', [$document['certificateId']])
-            ]);
-
-            if (!$domainUsingCertificate) {
-                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
-                if ($mainDomain === $document->getAttribute('domain')) {
-                    $domainUsingCertificate = $mainDomain;
-                }
-            }
-
-            // If certificate is still used by some domain, mark we can't delete.
-            // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
-            if ($domainUsingCertificate) {
-                Console::warning("Skipping certificate deletion, because a domain is still using it.");
-                return;
-            }
-        }
 
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;
 
-        if ($domain && $checkTraversal && is_dir($directory)) {
-            // Delete certificate document, so Appwrite is aware of change
-            if (isset($document['certificateId'])) {
-                $consoleDB->deleteDocument('certificates', $document['certificateId']);
-            }
-
+        if ($checkTraversal && is_dir($directory)) {
             // Delete files, so Traefik is aware of change
             array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
         } else {
             Console::info("No certificate files found for {$domain}");
+        }
+
+        // Delete certificate document, so Appwrite is aware of change
+        if (isset($document['certificateId'])) {
+            $consoleDB->deleteDocument('certificates', $document['certificateId']);
         }
     }
 

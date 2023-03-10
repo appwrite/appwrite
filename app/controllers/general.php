@@ -55,6 +55,11 @@ function router(Database $dbForConsole, string $host, SwooleRequest $swooleReque
         throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
     }
 
+    // Un-verified ignores Appwrite Router. Behaves as Appwrite API. Needed for certificate generation (well-known route)
+    if($route->getAttribute('status') !== 'verified') {
+        return false;
+    }
+
     $type = $route->getAttribute('resourceType');
 
     if($type === 'function') {

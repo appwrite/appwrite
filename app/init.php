@@ -152,6 +152,7 @@ const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
