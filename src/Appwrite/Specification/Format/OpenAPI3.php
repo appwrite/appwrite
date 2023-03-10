@@ -8,6 +8,7 @@ use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
+use Utopia\Validator\Nullable;
 
 class OpenAPI3 extends Format
 {
@@ -279,6 +280,11 @@ class OpenAPI3 extends Format
                     if ($route->getLabel('sdk.namespace', 'default') === $service['name'] && in_array($name, $service['x-globalAttributes'] ?? [])) {
                         $node['x-global'] = true;
                     }
+                }
+
+                if ($validator instanceof Nullable) {
+                    $validator = $validator->getValidator();
+                    $node['schema']['x-nullable'] = true;
                 }
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {

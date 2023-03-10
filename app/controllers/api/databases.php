@@ -200,29 +200,11 @@ function updateAttribute(
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
     }
 
-    $attributeChanged = false;
-
     $collectionId =  'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
 
-    if ($default !== $attribute->getAttribute('default')) {
-        $attributeChanged = true;
-        $attribute->setAttribute('default', $default);
-        $dbForProject->updateAttributeDefault(
-            collection: $collectionId,
-            id: $key,
-            default: $default
-        );
-    }
-
-    if ($required !== $attribute->getAttribute('required')) {
-        $attributeChanged = true;
-        $attribute->setAttribute('required', $required);
-        $dbForProject->updateAttributeRequired(
-            collection: $collectionId,
-            id: $key,
-            required: $required
-        );
-    }
+    $attribute
+        ->setAttribute('default', $default)
+        ->setAttribute('required', $required);
 
     $formatOptions = $attribute->getAttribute('formatOptions');
 
@@ -250,8 +232,6 @@ function updateAttribute(
                 'max' => $max
             ];
             $attribute->setAttribute('formatOptions', $options);
-            $dbForProject->updateAttributeFormatOptions(collection: $collectionId, id: $key, formatOptions: $options);
-            $attributeChanged = true;
 
             break;
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
@@ -281,8 +261,6 @@ function updateAttribute(
                 'max' => $max
             ];
             $attribute->setAttribute('formatOptions', $options);
-            $dbForProject->updateAttributeFormatOptions(collection: $collectionId, id: $key, formatOptions: $options);
-            $attributeChanged = true;
 
             break;
         case APP_DATABASE_ATTRIBUTE_ENUM:
@@ -303,28 +281,32 @@ function updateAttribute(
             if (!is_null($default) && !in_array($default, $elements)) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
             }
+
             $options = [
                 'elements' => $elements
             ];
             $attribute->setAttribute('formatOptions', $options);
-            $dbForProject->updateAttributeFormatOptions(collection: $collectionId, id: $key, formatOptions: $options);
-            $attributeChanged = true;
 
             break;
     }
 
-    if ($attributeChanged) {
-        $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
-        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-    }
+    $dbForProject->updateAttribute(
+        collection: $collectionId,
+        id: $key,
+        required: $required,
+        default: $default,
+        formatOptions: $options ?? null
+    );
+
+    $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId())
-    ;
+        ->setParam('attributeId', $attribute->getId());
 
     return $attribute;
 }
