@@ -214,9 +214,6 @@ function updateAttribute(
                 break;
             }
 
-            $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
-            $max = (is_null($max)) ? PHP_INT_MAX : \intval($max);
-
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
@@ -238,9 +235,6 @@ function updateAttribute(
             if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
                 break;
             }
-
-            $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
-            $max = (is_null($max)) ? PHP_FLOAT_MAX : \floatval($max);
 
             if ($min > $max) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
@@ -1627,7 +1621,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1668,7 +1661,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1711,7 +1703,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1754,7 +1745,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1796,7 +1786,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
+    ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
@@ -1839,7 +1829,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1854,6 +1843,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             min: $min,
             max: $max
         );
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \intval($formatOptions['min']));
+            $attribute->setAttribute('max', \intval($formatOptions['max']));
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -1884,7 +1880,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1899,6 +1894,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             min: $min,
             max: $max
         );
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \floatval($formatOptions['min']));
+            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
@@ -1916,7 +1918,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateBooleantAttribute')
+    ->label('sdk.method', 'updateBooleanAttribute')
     ->label('sdk.description', '/docs/references/databases/update-boolean-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
@@ -1927,7 +1929,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
@@ -1968,7 +1969,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('default', null, new Nullable(new DatetimeValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('database')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
         $attribute = updateAttribute(
