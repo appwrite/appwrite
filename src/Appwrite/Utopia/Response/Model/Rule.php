@@ -44,7 +44,7 @@ class Rule extends Model
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'ID of resource for the action type. If resourceType is "api" or "url", leave empty. If resourceType is "function", provide ID of the function.',
+                'description' => 'ID of resource for the action type. If resourceType is "api" or "url", it is empty. If resourceType is "function", it is ID of the function.',
                 'default' => '',
                 'example' => 'myAwesomeFunction',
             ])

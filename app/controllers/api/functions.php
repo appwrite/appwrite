@@ -47,6 +47,8 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
+// TODO: @Meldiron Changes to variables must delete runtime on executor
+
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
@@ -1270,11 +1272,24 @@ App::post('/v1/functions/:functionId/executions')
                 ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
-        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
+        $vars = [];
+
+        // Shared vars
+        $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
+            Query::equal('resourceType', ['project']),
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
-        }, []);
+        }, []));
 
+        // Function vars
+        $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
+            return $carry;
+        }, []));
+
+        // Appwrite vars
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
@@ -1507,11 +1522,12 @@ App::post('/v1/functions/:functionId/variables')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
+            'resourceInternalId' => $function->getInternalId(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'function',
             'key' => $key,
             'value' => $value,
-            'search' => implode(' ', [$variableId, $function->getId(), $key]),
+            'search' => implode(' ', [$variableId, $function->getId(), $key, 'function']),
         ]);
 
         try {
@@ -1578,7 +1594,8 @@ App::get('/v1/functions/:functionId/variables/:variableId')
 
         $variable = $dbForProject->findOne('variables', [
             Query::equal('$id', [$variableId]),
-            Query::equal('functionInternalId', [$function->getInternalId()]),
+            Query::equal('resourceInternalId', [$function->getInternalId()]),
+            Query::equal('resourceType', ['function']),
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
@@ -1617,7 +1634,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
 
         $variable = $dbForProject->findOne('variables', [
             Query::equal('$id', [$variableId]),
-            Query::equal('functionInternalId', [$function->getInternalId()]),
+            Query::equal('resourceInternalId', [$function->getInternalId()]),
+            Query::equal('resourceType', ['function']),
         ]);
 
         if ($variable === false || $variable->isEmpty()) {
@@ -1627,7 +1645,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
-            ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key]))
+            ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']))
         ;
 
         try {
@@ -1666,7 +1684,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 
         $variable = $dbForProject->findOne('variables', [
             Query::equal('$id', [$variableId]),
-            Query::equal('functionInternalId', [$function->getInternalId()]),
+            Query::equal('resourceInternalId', [$function->getInternalId()]),
+            Query::equal('resourceType', ['function']),
         ]);
 
         if ($variable === false || $variable->isEmpty()) {

@@ -1,0 +1,1 @@
+Create a new project variable. These variables can be accessed by every function.

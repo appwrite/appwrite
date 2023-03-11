@@ -467,7 +467,8 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting variables for function " . $functionId);
         $this->deleteByGroup('variables', [
-            Query::equal('functionId', [$functionId])
+            Query::equal('resourceType', ['function']),
+            Query::equal('resourceInternalId', [$document->getInternalId()])
         ], $dbForProject);
 
         /**
@@ -512,7 +513,7 @@ class DeletesV1 extends Worker
             Query::equal('functionId', [$functionId])
         ], $dbForProject);
 
-        // TODO: Request executor to delete runtime
+        // TODO: @Meldiron Request executor to delete runtime
     }
 
     /**
@@ -552,7 +553,7 @@ class DeletesV1 extends Worker
             }
         });
 
-        // TODO: Request executor to delete runtime
+        // TODO: @Meldiron Request executor to delete runtime
     }
 
 

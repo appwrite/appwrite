@@ -124,12 +124,24 @@ Server::setResource('execute', function () {
             }
         }
 
-        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
+        $vars = [];
+
+        // Shared vars
+        $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
+            Query::equal('resourceType', ['project']),
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]), function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
+            return $carry;
+        }, []));
+
+        // Function vars
+        $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
             return $carry;
-        }, []);
+        }, []));
 
-        /** Collect environment variables */
+        // Appwrite vars
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),

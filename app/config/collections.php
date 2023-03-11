@@ -3715,7 +3715,18 @@ $collections = [
         'name' => 'variables',
         'attributes' => [
             [
-                '$id' => 'functionInternalId',
+                '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 100,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3726,7 +3737,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'functionId',
+                '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3772,18 +3783,32 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => '_key_function',
+                '$id' => '_key_resourceInternalId',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['functionInternalId'],
+                'attributes' => ['resourceInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resourceId',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resourceType',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceType'],
+                'lengths' => [100],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_uniqueKey',
                 'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['functionInternalId', 'key'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+                'attributes' => ['resourceId', 'key', 'resourceType'],
+                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY, 100],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_key',

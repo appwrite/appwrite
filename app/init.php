@@ -399,7 +399,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
-                Query::equal('functionInternalId', [$document->getInternalId()]),
+                Query::equal('resourceInternalId', [$document->getInternalId()]),
+                Query::equal('resourceType', ['function']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
