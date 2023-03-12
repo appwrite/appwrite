@@ -307,6 +307,7 @@ class TranscodingV1 extends Worker
             }
 
             console::info('Rendition ' . $query->getId() . ' conversion, done');
+
             /** Upload & cleanup **/
             $start = 0;
             $fileNames = scandir($this->outDir);

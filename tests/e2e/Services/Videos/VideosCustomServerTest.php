@@ -197,6 +197,17 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $this->getSubtitle()['$id']
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getVideo()['$id']
         ]);
 
@@ -212,6 +223,20 @@ class VideosCustomServerTest extends Scope
      */
     public function testCreateSubtitles($videoId)
     {
+
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => $this->getBucket()['$id'],
+            'fileId' => $this->getSubtitle()['$id'],
+            'name' => 'English',
+            'code' => 'xxx',
+            'default' => true,
+        ]);
+        $this->assertEquals(404, $response['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -236,7 +261,7 @@ class VideosCustomServerTest extends Scope
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
             'name' => 'Italian',
-            'code' => 'It',
+            'code' => 'ita',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -398,7 +423,7 @@ class VideosCustomServerTest extends Scope
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
             'name' => 'Italian',
-            'code' => 'It',
+            'code' => 'Ita',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);

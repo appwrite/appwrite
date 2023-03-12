@@ -84,6 +84,15 @@ App::post('/v1/videos')
     ->action(action: function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode) {
 
         $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
+
+        if (
+            !str_starts_with($file->getAttribute('mimeType'), 'video/') &&
+            !str_starts_with($file->getAttribute('mimeType'), 'audio/') &&
+            $file->getAttribute('mimeType') !== 'application/ogg'
+        ) {
+            throw new Exception(Exception::VIDEO_NOT_VALID);
+        }
+
         $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
             return $dbForProject->createDocument('videos', new Document([
                 'bucketId'  => $bucketId,
@@ -275,8 +284,10 @@ App::post('/v1/videos/:videoId/subtitles')
     ->inject('mode')
     ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, string $mode) {
 
+        $code = strtolower($code);
         $languages = Config::getParam('locale-languages');
         $found = array_search($code, array_column($languages, 'code2'));
+
         if (!$found) {
             throw new Exception(Exception::VIDEO_LANGUAGE_CODE_NOT_FOUND);
         }
@@ -288,7 +299,16 @@ App::post('/v1/videos/:videoId/subtitles')
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
-        validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
+
+        if (
+            $file->getAttribute('mimeType') !== 'text/vtt' &&
+            $file->getAttribute('mimeType') !== 'text/plain'
+        ) {
+            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
+        }
+
+
 
         $subtitle = Authorization::skip(fn() =>
             $dbForProject->createDocument('videos_subtitles', new Document([

@@ -188,6 +188,7 @@ class Exception extends \Exception
     public const VIDEO_RENDITION_SEGMENT_NOT_FOUND  = 'video_rendition_segment_not_found';
     public const VIDEO_LANGUAGE_CODE_NOT_FOUND      = 'video_language_code_not_found';
     public const VIDEO_SUBTITLE_SEGMENT_NOT_FOUND   = 'video_subtitle_segment_not_found';
+    public const VIDEO_SUBTITLE_NOT_VALID           = 'video_subtitle_not_valid';
 
 
     /** GraphqQL */
