@@ -6,7 +6,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -1329,6 +1329,69 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relation')
+    ->alias('/v1/database/collections/:collectionId/attributes/relation', ['databaseId' => 'default'])
+    ->desc('Create relation Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('scope', 'collections.write')
+    ->label('audits.event', 'attribute.create')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createRelationAttribute')
+    ->label('sdk.description', '/docs/references/databases/create-relation-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATION)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('relatedCollectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
+    ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
+    ->param('twoWayKey', '', new Text(40), 'Two Way Key', true)
+    ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
+    ->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    ->param('onDelete', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('database')
+    ->inject('events')
+    ->action(function (
+        string $databaseId,
+        string $collectionId,
+        string $relatedCollectionId,
+        string $type,
+        bool $twoWay,
+        string $twoWayKey,
+        string $onUpdate,
+        string $onDelete,
+        string $key,
+        Response $response,
+        Database $dbForProject,
+        EventDatabase $database,
+        Event $events
+) {
+
+        $dbForProject->createRelationship();
+
+        $attribute = createAttribute($databaseId, $collectionId, new Document([
+            'key' => $key,
+            'type' => Database::VAR_DATETIME,
+            'size' => 0,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => []
+        ]), $response, $dbForProject, $database, $events);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+    });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->alias('/v1/database/collections/:collectionId/attributes', ['databaseId' => 'default'])
