@@ -760,6 +760,7 @@ App::post('/v1/account/sessions/magic-url')
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
+            ->setSmtp($project->getAttribute('smtp', []))
             ->trigger()
         ;
 
@@ -2113,6 +2114,7 @@ App::post('/v1/account/recovery')
 
 
         $mails
+            ->setSmtp($project->getAttribute('smtp', []))
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name'))
             ->setBody($body)
@@ -2300,6 +2302,7 @@ App::post('/v1/account/verification')
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name'))
+            ->setSmtp($project->getAttribute('smtp', []))
             ->trigger()
         ;
 
