@@ -1927,7 +1927,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $data = array_merge($data, ['platformFultterWebId' => $response['body']['$id']]);
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/project/' . $id . '/platforms', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
