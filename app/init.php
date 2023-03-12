@@ -1155,3 +1155,17 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $params,
     );
 }, ['utopia', 'dbForProject']);
+
+App::setResource('requestTimestamp', function ($request) {
+    // Validate x-appwrite-timestamp header
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);
