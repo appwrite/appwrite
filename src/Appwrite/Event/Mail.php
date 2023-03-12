@@ -12,6 +12,7 @@ class Mail extends Event
     protected string $name = '';
     protected string $subject = '';
     protected string $body = '';
+    protected array $smtp = [];
 
     public function __construct()
     {
@@ -131,6 +132,28 @@ class Mail extends Event
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * Set SMTP
+     *
+     * @param array $smtp
+     * @return self
+     */
+    public function setSmtp(array $smtp): self
+    {
+        $this->smtp = $smtp;
+        return $this;
+    }
+
+    /**
+     * Get SMTP
+     *
+     * @return string
+     */
+    public function getSmtp(): array
+    {
+        return $this->smtp;
     }
 
     /**
