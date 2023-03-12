@@ -7,6 +7,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -266,13 +267,19 @@ App::post('/v1/videos/:videoId/subtitles')
     ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
     ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
     ->param('name', '', new Text(128), 'Subtitle name.')
-    ->param('code', '', new Text(128), 'Subtitle code name.')
+    ->param('code', '', new Text(3), 'Subtitle  ISO 639-2 three letters alpha code.')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, string $mode) {
+
+        $languages = Config::getParam('locale-languages');
+        $found = array_search($code, array_column($languages, 'code2'));
+        if (!$found) {
+            throw new Exception(Exception::VIDEO_LANGUAGE_CODE_NOT_FOUND);
+        }
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
