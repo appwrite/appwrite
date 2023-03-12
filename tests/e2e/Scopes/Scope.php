@@ -5,21 +5,14 @@ namespace Tests\E2E\Scopes;
 use Appwrite\Tests\Retryable;
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 abstract class Scope extends TestCase
 {
     use Retryable;
 
-    /**
-     * @var Client
-     */
-    protected $client = null;
-
-    /**
-     * @var string
-     */
-    protected $endpoint = 'http://localhost/v1';
+    protected ?Client $client = null;
+    protected string $endpoint = 'http://localhost/v1';
 
     protected function setUp(): void
     {

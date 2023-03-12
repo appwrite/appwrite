@@ -14,7 +14,7 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -135,6 +135,8 @@ App::post('/v1/mock/tests/bar')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MOCK)
+    ->label('sdk.offline.model', '/mock/tests/bar')
+    ->label('sdk.offline.key', '{required}')
     ->label('sdk.mock', true)
     ->param('required', '', new Text(100), 'Sample string param')
     ->param('default', '', new Integer(true), 'Sample numeric param')
