@@ -1329,9 +1329,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relation')
-    ->alias('/v1/database/collections/:collectionId/attributes/relation', ['databaseId' => 'default'])
-    ->desc('Create relation Attribute')
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
+    ->alias('/v1/database/collections/:collectionId/attributes/relationship', ['databaseId' => 'default'])
+    ->desc('Create relationship Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1341,8 +1341,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createRelationAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-relation-attribute.md')
+    ->label('sdk.method', 'createRelationshipAttribute')
+    ->label('sdk.description', '/docs/references/databases/create-relationship-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATION)
