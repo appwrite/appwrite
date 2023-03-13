@@ -200,6 +200,7 @@ class VideosCustomServerTest extends Scope
             'fileId' => $this->getSubtitle()['$id']
         ]);
 
+
         $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/videos', [
@@ -235,7 +236,7 @@ class VideosCustomServerTest extends Scope
             'code' => 'xxx',
             'default' => true,
         ]);
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
             'content-type' => 'application/json',
@@ -301,7 +302,7 @@ class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['subtitles']);
         $this->assertNotEmpty($response['body']['subtitles'][0]['$id']);
         $this->assertEquals('English', $response['body']['subtitles'][0]['name']);
-        $this->assertEquals('Eng', $response['body']['subtitles'][0]['code']);
+        $this->assertEquals('eng', $response['body']['subtitles'][0]['code']);
         $this->assertEquals(true, $response['body']['subtitles'][0]['default']);
 
         return $response['body']['subtitles'];
@@ -525,7 +526,6 @@ class VideosCustomServerTest extends Scope
 
         $this->assertEquals(2, $response['body']['total']);
 
-
         return $videoId;
     }
 
@@ -535,7 +535,7 @@ class VideosCustomServerTest extends Scope
     public function testGetRenditions(string $videoId): string
     {
 
-        sleep(50);
+        sleep(30);
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', [
             'content-type' => 'application/json',
@@ -543,29 +543,35 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
         $this->assertNotEmpty($response['body']['renditions']);
 
+        $rendition = $response['body']['renditions'][0];
+        $this->assertEquals('600X400@834', $rendition['name']);
+        $this->assertEquals('600', $rendition['width']);
+        $this->assertEquals('400', $rendition['height']);
+        $this->assertEquals('770', $rendition['videoBitRate']);
+        $this->assertEquals('64', $rendition['audioBitRate']);
+        $this->assertEquals('ready', $rendition['status']);
+        $this->assertEquals('100', $rendition['progress']);
+
+        $rendition = $response['body']['renditions'][1];
+        $this->assertEquals('300X200@634', $rendition['name']);
+        $this->assertEquals('300', $rendition['width']);
+        $this->assertEquals('200', $rendition['height']);
+        $this->assertEquals('570', $rendition['videoBitRate']);
+        $this->assertEquals('64', $rendition['audioBitRate']);
+        $this->assertEquals('ready', $rendition['status']);
+        $this->assertEquals('100', $rendition['progress']);
+
         $renditionId = $response['body']['renditions'][0]['$id'];
-
-        foreach ($response['body']['renditions'] as $rendition) {
-            $this->assertEquals('600X400@834', $rendition['name']);
-            $this->assertEquals('600', $rendition['width']);
-            $this->assertEquals('400', $rendition['height']);
-            $this->assertEquals('770', $rendition['videoBitRate']);
-            $this->assertEquals('64', $rendition['audioBitRate']);
-            $this->assertEquals('ready', $rendition['status']);
-            $this->assertEquals('100', $rendition['progress']);
-        }
-
-        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
-
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($renditionId, $response['body']['$id']);
@@ -585,17 +591,19 @@ class VideosCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        $this->assertEquals(4, count($match[0]));
-        $renditionUri = $match[0][0];
-        $subtitleUri = $match[0][1];
+
+        $this->assertEquals(3, count($match[0]));
+        $subtitleUri = $match[0][0];
+        $renditionUri = $match[0][2];
+
 
         $response = $this->client->call(Client::METHOD_GET, $renditionUri, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
         $this->assertEquals(10, count($match[0]));
@@ -635,28 +643,27 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         $xml = simplexml_load_string($response['body']);
-
         $this->assertEquals("PT1M32.7S", $xml->attributes()->mediaPresentationDuration);
         $this->assertEquals("PT10.0S", $xml->attributes()->maxSegmentDuration);
         $this->assertEquals("PT20.0S", $xml->attributes()->minBufferTime);
         $subsCount = 0;
         $isVideo = false;
         $isAudio = false;
-        $subs[] = ['id' => '2', 'lang' => 'Eng',];
-        $subs[] = ['id' => '3', 'lang' => 'It',];
+        $subs[] = ['id' => '2', 'lang' => 'English',];
+        $subs[] = ['id' => '3', 'lang' => 'Italian',];
         foreach ($xml->Period->AdaptationSet as $adaptation) {
             if ((string)$adaptation['contentType'] === 'video') {
                 $isVideo = true;
                 $this->assertEquals("50/1", $adaptation['frameRate']);
-                $this->assertEquals("300", $adaptation['maxWidth']);
+                $this->assertEquals("960", $adaptation['maxWidth']);
                 $this->assertEquals("30:17", $adaptation['par']);
                 $this->assertEquals("und", $adaptation['lang']);
                 foreach ($adaptation->Representation as $representation) {
                     $this->assertEquals("video/mp4", $representation['mimeType']);
-                    $this->assertEquals("avc1.640015", $representation['codecs']);
-                    $this->assertEquals("300", $representation['width']);
-                    $this->assertEquals("200", $representation['height']);
-                    $this->assertEquals("20:17", $representation['sar']);
+                    $this->assertEquals("avc1.64001f", $representation['codecs']);
+                    $this->assertEquals("960", $representation['width']);
+                    $this->assertEquals("544", $representation['height']);
+                    $this->assertEquals("1:1", $representation['sar']);
                     $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
                     $videoSegmentBaseUrl = (string)$representation->BaseURL;
                     $videoSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
@@ -825,7 +832,7 @@ class VideosCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-
+        var_dump($response['body']);
         $this->assertEquals(2, count($match[0]));
 
         $renditionUri = $match[0][0];

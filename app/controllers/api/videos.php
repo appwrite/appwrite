@@ -163,6 +163,15 @@ App::put('/v1/videos/:videoId')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
+
+        if (
+            !str_starts_with($file->getAttribute('mimeType'), 'video/') &&
+            !str_starts_with($file->getAttribute('mimeType'), 'audio/') &&
+            $file->getAttribute('mimeType') !== 'application/ogg'
+        ) {
+            throw new Exception(Exception::VIDEO_NOT_VALID);
+        }
+
         $video = Authorization::skip(fn() =>
         $dbForProject->updateDocument('videos', $videoId, new Document([
             'bucketId'  => $bucketId,
@@ -275,7 +284,7 @@ App::post('/v1/videos/:videoId/subtitles')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
     ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
-    ->param('name', '', new Text(128), 'Subtitle name.')
+    ->param('name', '', new Text(32), 'Subtitle name.')
     ->param('code', '', new Text(3), 'Subtitle  ISO 639-2 three letters alpha code.')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('request')
@@ -289,7 +298,7 @@ App::post('/v1/videos/:videoId/subtitles')
         $found = array_search($code, array_column($languages, 'code2'));
 
         if (!$found) {
-            throw new Exception(Exception::VIDEO_LANGUAGE_CODE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_LANGUAGE_CODE_NOT_VALID);
         }
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
@@ -301,14 +310,9 @@ App::post('/v1/videos/:videoId/subtitles')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
         $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
 
-        if (
-            $file->getAttribute('mimeType') !== 'text/vtt' &&
-            $file->getAttribute('mimeType') !== 'text/plain'
-        ) {
+        if (!in_array($file->getAttribute('mimeType'), ['text/vtt','text/plain'])) {
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
         }
-
-
 
         $subtitle = Authorization::skip(fn() =>
             $dbForProject->createDocument('videos_subtitles', new Document([
@@ -374,11 +378,19 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
     ->param('bucketId', '', new CustomId(), 'Subtitle bucket unique ID.')
     ->param('fileId', '', new CustomId(), 'Subtitle file unique ID.')
     ->param('name', '', new Text(32), 'Subtitle customized name.')
-    ->param('code', '', new Text(3), 'Subtitle 3 letter code name.')
+    ->param('code', '', new Text(3), 'Subtitle  ISO 639-2 three letters alpha code.')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('response')
     ->inject('dbForProject')
     ->action(action: function (string $subtitleId, string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Response $response, Database $dbForProject) {
+
+        $code = strtolower($code);
+        $languages = Config::getParam('locale-languages');
+        $found = array_search($code, array_column($languages, 'code2'));
+
+        if (!$found) {
+            throw new Exception(Exception::VIDEO_LANGUAGE_CODE_NOT_VALID);
+        }
 
         $subtitle = Authorization::skip(fn() => $dbForProject->getDocument('videos_subtitles', $subtitleId));
 

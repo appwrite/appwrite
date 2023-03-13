@@ -569,6 +569,16 @@ return [
         'description' => 'Video subtitle not found.',
         'code' => 404,
     ],
+    Exception::VIDEO_LANGUAGE_CODE_NOT_VALID => [
+        'name' => Exception::VIDEO_LANGUAGE_CODE_NOT_VALID,
+        'description' => 'Video language code not valid.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_SUBTITLE_NOT_VALID => [
+        'name' => Exception::VIDEO_SUBTITLE_NOT_VALID,
+        'description' => 'Video subtitle not valid.',
+        'code' => 400,
+    ],
     Exception::VIDEO_NOT_FOUND => [
         'name' => Exception::VIDEO_NOT_FOUND,
         'description' => 'Video not found.',
