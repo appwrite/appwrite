@@ -99,7 +99,7 @@ class UsageTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
 
-        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $cheaders);
+        $res = $this->client->call(Client::METHOD_GET, '/project/' . $projectId . '/usage?range=30d', $cheaders);
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
@@ -265,7 +265,7 @@ class UsageTest extends Scope
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
 
-        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
+        $res = $this->client->call(Client::METHOD_GET, '/project/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));
@@ -504,7 +504,7 @@ class UsageTest extends Scope
             'x-appwrite-project' => 'console',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
-        $res = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/usage?range=30d', $headers);
+        $res = $this->client->call(Client::METHOD_GET, '/project/' . $projectId . '/usage?range=30d', $headers);
         $res = $res['body'];
 
         $this->assertEquals(9, count($res));

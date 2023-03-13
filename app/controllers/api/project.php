@@ -28,7 +28,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -37,7 +36,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::init()
-    ->groups(['projects'])
+    ->groups(['project'])
     ->inject('project')
     ->action(function (Document $project) {
         if ($project->getId() !== 'console') {
@@ -45,12 +44,12 @@ App::init()
         }
     });
 
-App::post('/v1/projects')
+App::post('/v1/project')
     ->desc('Create Project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'create')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -174,57 +173,12 @@ App::post('/v1/projects')
             ->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/projects')
-    ->desc('List Projects')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'list')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
-
-        $queries = Query::parseQueries($queries);
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
-
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
-            $projectId = $cursor->getValue();
-            $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $filterQueries = Query::groupByType($queries)['filters'];
-
-        $response->dynamic(new Document([
-            'projects' => $dbForConsole->find('projects', $queries),
-            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
-        ]), Response::MODEL_PROJECT_LIST);
-    });
-
-App::get('/v1/projects/:projectId')
+App::get('/v1/project/:projectId')
     ->desc('Get Project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'get')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -243,12 +197,12 @@ App::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/projects/:projectId/usage')
+App::get('/v1/project/:projectId/usage')
     ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'getUsage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -357,12 +311,12 @@ App::get('/v1/projects/:projectId/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId')
+App::patch('/v1/project/:projectId')
     ->desc('Update Project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'update')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -404,12 +358,14 @@ App::patch('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service')
+
+
+App::patch('/v1/project/:projectId/service')
     ->desc('Update service status')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateServiceStatus')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -435,12 +391,12 @@ App::patch('/v1/projects/:projectId/service')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/oauth2')
+App::patch('/v1/project/:projectId/oauth2')
     ->desc('Update Project OAuth2')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateOAuth2')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -479,12 +435,12 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/limit')
+App::patch('/v1/project/:projectId/auth/limit')
     ->desc('Update Project users limit')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateAuthLimit')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -510,12 +466,12 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/duration')
+App::patch('/v1/project/:projectId/auth/duration')
     ->desc('Update Project Authentication Duration')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateAuthDuration')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -541,12 +497,12 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/:method')
+App::patch('/v1/project/:projectId/auth/:method')
     ->desc('Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateAuthStatus')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -575,12 +531,12 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/max-sessions')
+App::patch('/v1/project/:projectId/auth/max-sessions')
     ->desc('Update Project user sessions limit')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateAuthSessionsLimit')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -606,12 +562,12 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::delete('/v1/projects/:projectId')
+App::delete('/v1/project/:projectId')
     ->desc('Delete Project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'delete')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
@@ -647,12 +603,12 @@ App::delete('/v1/projects/:projectId')
 
 // Webhooks
 
-App::post('/v1/projects/:projectId/webhooks')
+App::post('/v1/project/:projectId/webhooks')
     ->desc('Create Webhook')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'createWebhook')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -703,12 +659,12 @@ App::post('/v1/projects/:projectId/webhooks')
             ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::get('/v1/projects/:projectId/webhooks')
+App::get('/v1/project/:projectId/webhooks')
     ->desc('List Webhooks')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'listWebhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -735,12 +691,12 @@ App::get('/v1/projects/:projectId/webhooks')
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
-App::get('/v1/projects/:projectId/webhooks/:webhookId')
+App::get('/v1/project/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'getWebhook')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -769,12 +725,12 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::put('/v1/projects/:projectId/webhooks/:webhookId')
+App::put('/v1/project/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateWebhook')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -823,12 +779,12 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
+App::patch('/v1/project/:projectId/webhooks/:webhookId/signature')
     ->desc('Update Webhook Signature Key')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateWebhookSignature')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -862,12 +818,12 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::delete('/v1/projects/:projectId/webhooks/:webhookId')
+App::delete('/v1/project/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'deleteWebhook')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
@@ -901,12 +857,12 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-App::post('/v1/projects/:projectId/keys')
+App::post('/v1/project/:projectId/keys')
     ->desc('Create Key')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'createKey')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -951,12 +907,12 @@ App::post('/v1/projects/:projectId/keys')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/projects/:projectId/keys')
+App::get('/v1/project/:projectId/keys')
     ->desc('List Keys')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'listKeys')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -983,12 +939,12 @@ App::get('/v1/projects/:projectId/keys')
         ]), Response::MODEL_KEY_LIST);
     });
 
-App::get('/v1/projects/:projectId/keys/:keyId')
+App::get('/v1/project/:projectId/keys/:keyId')
     ->desc('Get Key')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'getKey')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1017,12 +973,12 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::put('/v1/projects/:projectId/keys/:keyId')
+App::put('/v1/project/:projectId/keys/:keyId')
     ->desc('Update Key')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateKey')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1064,12 +1020,12 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::delete('/v1/projects/:projectId/keys/:keyId')
+App::delete('/v1/project/:projectId/keys/:keyId')
     ->desc('Delete Key')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'deleteKey')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
@@ -1103,12 +1059,12 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
 // Platforms
 
-App::post('/v1/projects/:projectId/platforms')
+App::post('/v1/project/:projectId/platforms')
     ->desc('Create Platform')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'createPlatform')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1153,12 +1109,12 @@ App::post('/v1/projects/:projectId/platforms')
             ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::get('/v1/projects/:projectId/platforms')
+App::get('/v1/project/:projectId/platforms')
     ->desc('List Platforms')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'listPlatforms')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1185,12 +1141,12 @@ App::get('/v1/projects/:projectId/platforms')
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
-App::get('/v1/projects/:projectId/platforms/:platformId')
+App::get('/v1/project/:projectId/platforms/:platformId')
     ->desc('Get Platform')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'getPlatform')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1219,12 +1175,12 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::put('/v1/projects/:projectId/platforms/:platformId')
+App::put('/v1/project/:projectId/platforms/:platformId')
     ->desc('Update Platform')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updatePlatform')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1267,12 +1223,12 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::delete('/v1/projects/:projectId/platforms/:platformId')
+App::delete('/v1/project/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'deletePlatform')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
@@ -1306,12 +1262,12 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 // Domains
 
-App::post('/v1/projects/:projectId/domains')
+App::post('/v1/project/:projectId/domains')
     ->desc('Create Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'createDomain')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1371,12 +1327,12 @@ App::post('/v1/projects/:projectId/domains')
             ->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-App::get('/v1/projects/:projectId/domains')
+App::get('/v1/project/:projectId/domains')
     ->desc('List Domains')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'listDomains')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1403,12 +1359,13 @@ App::get('/v1/projects/:projectId/domains')
         ]), Response::MODEL_DOMAIN_LIST);
     });
 
-App::get('/v1/projects/:projectId/domains/:domainId')
+
+App::get('/v1/project/:projectId/domains/:domainId')
     ->desc('Get Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'getDomain')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1437,12 +1394,12 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-App::patch('/v1/projects/:projectId/domains/:domainId/verification')
+App::patch('/v1/project/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'updateDomainVerification')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1497,12 +1454,12 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-App::delete('/v1/projects/:projectId/domains/:domainId')
+App::delete('/v1/project/:projectId/domains/:domainId')
     ->desc('Delete Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->groups(['api', 'project'])
+    ->label('scope', 'project.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
+    ->label('sdk.namespace', 'project')
     ->label('sdk.method', 'deleteDomain')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
