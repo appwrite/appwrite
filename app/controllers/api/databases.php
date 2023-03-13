@@ -99,7 +99,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     if ($type === Database::VAR_RELATIONSHIP) {
         $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollectionId']);
-        $options['relatedCollectionInternalId'] = $relatedCollection->getInternalId();
         if ($relatedCollection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }

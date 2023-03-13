@@ -95,10 +95,11 @@ class DatabaseV1 extends Worker
 
         try {
             if ($type === Database::VAR_RELATIONSHIP) {
+                $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollectionId']);
                 if (
                     !$dbForProject->createRelationship(
-                        collection: 'make',
-                        relatedCollection: 'model',
+                        collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                        relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                         type: $options['type'],
                         twoWay: $options['twoWay'],
                         id: $options['id'],
