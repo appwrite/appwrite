@@ -6,6 +6,7 @@ use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 
 require_once __DIR__ . '/../init.php';
 
@@ -162,6 +163,8 @@ class DatabaseV1 extends Worker
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
+        $type = $attribute->getAttribute('type', '');
+        $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         // possible states at this point:
@@ -170,9 +173,16 @@ class DatabaseV1 extends Worker
         // - deleting: was available, in deletion queue for first time
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
+
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                throw new Exception('Failed to delete Attribute');
+            if ($status !== 'failed') {
+                if ($type === Database::VAR_RELATIONSHIP) {
+                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                        throw new Exception('Failed to delete Attribute');
+                    }
+                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                    throw new Exception('Failed to delete Attribute');
+                }
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
         } catch (\Throwable $th) {
