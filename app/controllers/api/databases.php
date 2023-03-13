@@ -99,7 +99,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 
     if ($type === Database::VAR_RELATIONSHIP) {
         $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollectionId']);
-
+        $options['relatedCollectionInternalId'] = $relatedCollection->getInternalId();
         if ($relatedCollection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
@@ -1396,12 +1396,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             'array' => false,
             'filters' => [],
             'options' => [
-                '$relatedCollectionId' => $relatedCollectionId,
-                '$type' => $type,
-                '$twoWay' => $twoWay,
-                '$twoWayKey' => $twoWayKey,
-                '$onUpdate' => $onUpdate,
-                '$onDelete' => $onDelete
+                'relatedCollectionId' => $relatedCollectionId,
+                'type' => $type,
+                'twoWay' => $twoWay,
+                'twoWayKey' => $twoWayKey,
+                'onUpdate' => $onUpdate,
+                'onDelete' => $onDelete
             ]
             ]),
             $response,
