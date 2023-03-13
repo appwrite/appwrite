@@ -3,7 +3,10 @@
 return [
     'email' => [
         'verification',
-        'reset'
+        'magicSession',
+        'recovery',
+        'invitation',
+        'certificate'
     ],
     'sms' => [
         'verification'
