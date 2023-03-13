@@ -4,6 +4,7 @@ use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 require_once __DIR__ . '/../init.php';
@@ -73,7 +74,7 @@ class DatabaseV1 extends Worker
             'collectionId' => $collection->getId(),
             'attributeId' => $attribute->getId()
         ]);
-        /**
+        /**x
          * Fetch attribute from the database, since with Resque float values are loosing informations.
          */
         $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
@@ -89,12 +90,29 @@ class DatabaseV1 extends Worker
         $format = $attribute->getAttribute('format', '');
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
+        $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if ($type === Database::VAR_RELATIONSHIP) {
+                if (
+                    !$dbForProject->createRelationship(
+                        collection: 'make',
+                        relatedCollection: 'model',
+                        type: $options['type'],
+                        twoWay: $options['twoWay'],
+                        id: $options['id'],
+                        twoWayKey: $options['twoWayKey'],
+                        onUpdate: $options['onUpdate'],
+                        onDelete: $options['onDelete'],
+                    )
+                ) {
+                    throw new Exception('Failed to create Attribute');
+                }
+            } elseif (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
+
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Throwable $th) {
             Console::error($th->getMessage());

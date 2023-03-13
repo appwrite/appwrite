@@ -123,7 +123,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'format' => $format,
             'formatOptions' => $formatOptions,
             'filters' => $filters,
-            'options' => $options, // Do we want all of the options?
+            'options' => $options, // Do we want all options?
         ]);
 
         $dbForProject->checkAttribute($collection, $attribute);
