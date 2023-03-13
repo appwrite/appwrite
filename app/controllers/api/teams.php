@@ -271,7 +271,7 @@ App::put('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::patch('/v1/teams/:teamId/prefs')
+App::put('/v1/teams/:teamId/prefs')
     ->desc('Update Preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
@@ -286,7 +286,7 @@ App::patch('/v1/teams/:teamId/prefs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PREFERENCES)
-    ->label('sdk.offline.model', '/teams/{teamId}')
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')

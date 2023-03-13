@@ -369,7 +369,7 @@ trait TeamsBase
         /**
          * Test for SUCCESS
          */
-        $team = $this->client->call(Client::METHOD_PATCH, '/teams/' . $id . '/prefs', array_merge([
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/' . $id . '/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -408,7 +408,7 @@ trait TeamsBase
         /**
          * Test for FAILURE
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/teams/' . $id . '/prefs', array_merge([
+        $user = $this->client->call(Client::METHOD_PUT, '/teams/' . $id . '/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
