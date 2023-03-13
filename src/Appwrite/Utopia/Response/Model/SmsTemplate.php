@@ -7,7 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class SmsTemplate extends Model
 {
-
     /**
      * Get Name
      *
