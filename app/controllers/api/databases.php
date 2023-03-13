@@ -68,6 +68,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
     $default = $attribute->getAttribute('default');
+    $options = $attribute->getAttribute('options', []);
 
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -96,6 +97,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
     }
 
+    if ($type === Database::VAR_RELATIONSHIP) {
+        $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollectionId']);
+
+        if ($relatedCollection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+    }
+
     try {
         $attribute = new Document([
             '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
@@ -114,6 +123,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'format' => $format,
             'formatOptions' => $formatOptions,
             'filters' => $filters,
+            'options' => $options, // Do we want all of the options?
         ]);
 
         $dbForProject->checkAttribute($collection, $attribute);
@@ -1348,14 +1358,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATION)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('relatedCollectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
     ->param('twoWayKey', '', new Text(40), 'Two Way Key', true)
-    ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->param('onDelete', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
-    ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1363,13 +1372,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->action(function (
         string $databaseId,
         string $collectionId,
+        string $key,
         string $relatedCollectionId,
         string $type,
         bool $twoWay,
         string $twoWayKey,
         string $onUpdate,
         string $onDelete,
-        string $key,
         Response $response,
         Database $dbForProject,
         EventDatabase $database,
@@ -1378,15 +1387,31 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
 
         $dbForProject->createRelationship();
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
+        $attribute = createAttribute(
+            $databaseId,
+            $collectionId,
+            new Document([
             'key' => $key,
-            'type' => Database::VAR_DATETIME,
+            'type' => Database::VAR_RELATIONSHIP,
             'size' => 0,
             'required' => false,
             'default' => null,
             'array' => false,
             'filters' => []
-        ]), $response, $dbForProject, $database, $events);
+            ]),
+            $response,
+            $dbForProject,
+            $database,
+            $events,
+            [
+                '$relatedCollectionId' => $relatedCollectionId,
+                '$type' => $type,
+                '$twoWay' => $twoWay,
+                '$twoWayKey' => $twoWayKey,
+                '$onUpdate' => $onUpdate,
+                '$onDelete' => $onDelete
+            ]
+        );
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
