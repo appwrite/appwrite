@@ -1396,7 +1396,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             'filters' => [],
             'options' => [
                 'relatedCollectionId' => $relatedCollectionId,
-                'type' => $type,
+                'relationType' => $type,
                 'twoWay' => $twoWay,
                 'twoWayKey' => $twoWayKey,
                 'onUpdate' => $onUpdate,

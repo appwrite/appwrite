@@ -100,7 +100,7 @@ class DatabaseV1 extends Worker
                     !$dbForProject->createRelationship(
                         collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                         relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                        type: $options['type'],
+                        type: $options['relationType'],
                         twoWay: $options['twoWay'],
                         id: $options['id'],
                         twoWayKey: $options['twoWayKey'],
