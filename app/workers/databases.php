@@ -164,7 +164,6 @@ class DatabaseV1 extends Worker
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
         $type = $attribute->getAttribute('type', '');
-        $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         // possible states at this point:
