@@ -2111,7 +2111,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $platformFultterWebId = $data['platformFultterWebId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/project/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -2274,7 +2274,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $platformFultterWebId = $data['platformFultterWebId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/project/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2455,7 +2455,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $platformFultterWebId = $data['platformFultterWebId'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/project/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -2463,7 +2463,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
         $this->assertEmpty($response['body']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/project/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
