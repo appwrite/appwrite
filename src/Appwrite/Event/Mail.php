@@ -135,14 +135,86 @@ class Mail extends Event
     }
 
     /**
-     * Set SMTP
+     * Set SMTP Host
      *
-     * @param array $smtp
+     * @param string $host
      * @return self
      */
-    public function setSmtp(array $smtp): self
+    public function setSmtpHost(string $host): self
     {
-        $this->smtp = $smtp;
+        $this->smtp['host'] = $host;
+        return $this;
+    }
+
+    /**
+     * Set SMTP port
+     *
+     * @param int port
+     * @return self
+     */
+    public function setSmtpPort(int $port): self
+    {
+        $this->smtp['port'] = $port;
+        return $this;
+    }
+
+    /**
+     * Set SMTP username
+     *
+     * @param string $username
+     * @return self
+     */
+    public function setSmtpUsername(string $username): self
+    {
+        $this->smtp['username'];
+        return $this;
+    }
+
+    /**
+     * Set SMTP password
+     *
+     * @param string $password
+     * @return self
+     */
+    public function setSmtpPassword(string $password): self
+    {
+        $this->smtp['password'];
+        return $this;
+    }
+
+    /**
+     * Set SMTP sender name
+     *
+     * @param string $senderName
+     * @return self
+     */
+    public function setSmtpSenderName(string $senderName): self
+    {
+        $this->smtp['senderName'] = $senderName;
+        return $this;
+    }
+
+    /**
+     * Set SMTP sender email
+     *
+     * @param string $senderEmail
+     * @return self
+     */
+    public function setSmtpSenderEmail(string $senderEmail): self
+    {
+        $this->smtp['senderEmail'] = $senderEmail;
+        return $this;
+    }
+
+    /**
+     * Set SMTP reply to
+     *
+     * @param string $replyTo
+     * @return self
+     */
+    public function setSmtpReplyTo(string $replyTo): self
+    {
+        $this->smtp['replyTo'] = $replyTo;
         return $this;
     }
 
@@ -151,9 +223,69 @@ class Mail extends Event
      *
      * @return string
      */
-    public function getSmtp(): array
+    public function getSmtpHost(): string
     {
-        return $this->smtp;
+        return $this->smtp['host'] ?? '';
+    }
+
+    /**
+     * Get SMTP port
+     *
+     * @return integer
+     */
+    public function getSmtpPort(): int
+    {
+        return $this->smtp['port'] ?? 0;
+    }
+
+    /**
+     * Get SMTP username
+     *
+     * @return string
+     */
+    public function getSmtpUsername(): string
+    {
+        return $this->smtp['username'] ?? '';
+    }
+
+    /**
+     * Get SMTP password
+     *
+     * @return string
+     */
+    public function getSmtpPassword(): string
+    {
+        return $this->smtp['password'] ?? '';
+    }
+
+    /**
+     * Get SMTP sender name
+     *
+     * @return string
+     */
+    public function getSmtpSenderName(): string
+    {
+        return $this->smtp['senderName'] ?? '';
+    }
+
+    /**
+     * Get SMTP sender email
+     *
+     * @return string
+     */
+    public function getSmtpSenderEmail(): string
+    {
+        return $this->smtp['senderEmail'] ?? '';
+    }
+
+    /**
+     * Get SMTP reply to
+     *
+     * @return string
+     */
+    public function getSmtpReplyTo(): string
+    {
+        return $this->smtp['replyTo'] ?? '';
     }
 
     /**
