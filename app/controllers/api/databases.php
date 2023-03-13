@@ -1384,9 +1384,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         EventDatabase $database,
         Event $events
 ) {
-
-        $dbForProject->createRelationship();
-
         $attribute = createAttribute(
             $databaseId,
             $collectionId,
@@ -1397,13 +1394,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             'required' => false,
             'default' => null,
             'array' => false,
-            'filters' => []
-            ]),
-            $response,
-            $dbForProject,
-            $database,
-            $events,
-            [
+            'filters' => [],
+            'options' => [
                 '$relatedCollectionId' => $relatedCollectionId,
                 '$type' => $type,
                 '$twoWay' => $twoWay,
@@ -1411,6 +1403,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 '$onUpdate' => $onUpdate,
                 '$onDelete' => $onDelete
             ]
+            ]),
+            $response,
+            $dbForProject,
+            $database,
+            $events
         );
 
         $response
