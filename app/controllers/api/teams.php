@@ -502,7 +502,6 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setFrom($from)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
-                    ->setSmtp($project->getAttribute('smtp', []))
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {

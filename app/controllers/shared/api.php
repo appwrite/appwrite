@@ -5,6 +5,7 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
@@ -101,7 +102,8 @@ App::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->inject('mails')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -190,6 +192,18 @@ App::init()
             ->setParam('httpMethod', $request->getMethod())
             ->setParam('project.{scope}.network.inbound', 0)
             ->setParam('project.{scope}.network.outbound', 0);
+        
+        $smtp = $project->getAttribute('smtp', []);
+        if(!empty($smtp)) {
+            $mails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpHost($smtp['port'] ?? 25)
+                ->setSmtpHost($smtp['username'] ?? '')
+                ->setSmtpHost($smtp['password'] ?? '')
+                ->setSmtpHost($smtp['senderEmail'] ?? '')
+                ->setSmtpHost($smtp['senderName'] ?? '')
+                ->setSmtpPort($smtp['replyTo'] ?? '');
+        }
 
         $deletes->setProject($project);
         $database->setProject($project);

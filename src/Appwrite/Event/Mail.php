@@ -33,7 +33,7 @@ class Mail extends Event
     }
 
     /**
-     * Returns set team for the mail event.
+     * Returns subject for the mail event.
      *
      * @return string
      */
@@ -302,6 +302,7 @@ class Mail extends Event
             'name' => $this->name,
             'subject' => $this->subject,
             'body' => $this->body,
+            'smtp' => $this->smtp,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
