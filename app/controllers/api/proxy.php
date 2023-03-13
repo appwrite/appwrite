@@ -106,6 +106,8 @@ App::post('/v1/proxy/rules')
 
         $events->setParam('ruleId', $rule->getId());
 
+        $rule->setAttribute('logs', '');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
@@ -154,8 +156,14 @@ App::get('/v1/proxy/rules')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
+        $rules = $dbForConsole->find('rules', $queries);
+        foreach ($rules as $rule) {
+            $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+            $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+        }
+
         $response->dynamic(new Document([
-            'rules' => $dbForConsole->find('rules', $queries),
+            'rules' => $rules,
             'total' => $dbForConsole->count('rules', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROXY_RULE_LIST);
     });
@@ -181,6 +189,9 @@ App::get('/v1/proxy/rules/:ruleId')
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
+
+        $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+        $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
@@ -277,6 +288,9 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             ->trigger();
 
         $events->setParam('ruleId', $rule->getId());
+
+        $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
+        $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });

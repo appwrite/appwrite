@@ -47,7 +47,7 @@ class CertificatesV1 extends Worker
          * 4. Validate security email. Cannot be empty, required by LetsEncrypt
          * 5. Validate renew date with certificate file, unless requested to skip by parameter
          * 6. Issue a certificate using certbot CLI
-         * 7. Update 'log' attribute on certificate document with Certbot message
+         * 7. Update 'logs' attribute on certificate document with Certbot message
          * 8. Create storage folder for certificate, if not ready already
          * 9. Move certificates from Certbot location to our Storage
          * 10. Create/Update our Storage with new Traefik config with new certificate paths
@@ -57,7 +57,7 @@ class CertificatesV1 extends Worker
          * If at any point unexpected error occurs, program stops without applying changes to document, and error is thrown into worker
          *
          * If code stops with expected error:
-         * 1. 'log' attribute on document is updated with error message
+         * 1. 'logs' attribute on document is updated with error message
          * 2. 'attempts' amount is increased
          * 3. Console log is shown
          * 4. Email is sent to security email
@@ -113,11 +113,8 @@ class CertificatesV1 extends Worker
             $letsEncryptData = $this->issueCertificate($folder, $domain->get(), $email);
 
             // Command succeeded, store all data into document
-            // We store stderr too, because it may include warnings
-            $certificate->setAttribute('log', \json_encode([
-                'stdout' => $letsEncryptData['stdout'],
-                'stderr' => $letsEncryptData['stderr'],
-            ]));
+            $logs = 'Certificate successfully generated.';
+            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
 
             // Give certificates to Traefik
             $this->applyCertificateFiles($folder, $domain->get(), $letsEncryptData);
@@ -129,8 +126,10 @@ class CertificatesV1 extends Worker
 
             $success = true;
         } catch (Throwable $e) {
+            $logs = $e->getMessage();
+
             // Set exception as log in certificate document
-            $certificate->setAttribute('log', $e->getMessage());
+            $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
 
             // Increase attempts count
             $attempts = $certificate->getAttribute('attempts', 0) + 1;
@@ -280,7 +279,7 @@ class CertificatesV1 extends Worker
         $stderr = '';
 
         $staging = (App::isProduction()) ? '' : ' --dry-run';
-        $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
+        $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
             . " -w " . APP_STORAGE_CERTIFICATES

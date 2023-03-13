@@ -3064,10 +3064,10 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('log'),
+                '$id' => ID::custom('logs'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 16384,
+                'size' => 1000000,
                 'signed' => true,
                 'required' => false,
                 'default' => null,

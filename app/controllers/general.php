@@ -43,7 +43,9 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(Database $dbForConsole, string $host, SwooleRequest $swooleRequest, Response $response) {
+function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $response) {
+    $host = $swooleRequest->header['host'] ?? '';
+
     $route = Authorization::skip(
         fn() => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
@@ -64,6 +66,12 @@ function router(Database $dbForConsole, string $host, SwooleRequest $swooleReque
         if(!$status) {
             throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
         }
+    }
+
+    // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
+    $path = ($swooleRequest->server['request_uri'] ?? '');
+    if(\str_starts_with($path, '/.well-known/acme-challenge')) {
+        return false;
     }
 
     $type = $route->getAttribute('resourceType');
@@ -164,7 +172,7 @@ App::init()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if($host !== $mainDomain && $host !== 'localhost') {
-            if(router($dbForConsole, $host, $swooleRequest, $response)) {
+            if(router($dbForConsole, $swooleRequest, $response)) {
                 return;
             }
         }
@@ -454,7 +462,7 @@ App::options()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if($host !== $mainDomain && $host !== 'localhost') {
-            if(router($dbForConsole, $host, $swooleRequest, $response)) {
+            if(router($dbForConsole, $swooleRequest, $response)) {
                 return;
             }
         }
@@ -660,7 +668,6 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-// TODO: @Meldiron this must run before Appwrite Router. Router makes it NOT get here. But it needs to. This must be endpoint reserved by Appwrite for certificate generation and re-generation
 App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')

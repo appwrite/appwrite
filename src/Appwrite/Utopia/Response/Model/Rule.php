@@ -54,6 +54,12 @@ class Rule extends Model
                 'default' => false,
                 'example' => 'verified',
             ])
+            ->addRule('logs', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate generation logs. This will return an empty string if generation did not run, or succeeded.',
+                'default' => '',
+                'example' => 'HTTP challegne failed.',
+            ])
         ;
     }
 
