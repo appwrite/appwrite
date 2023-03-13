@@ -285,9 +285,11 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                if ($validator instanceof Nullable) {
+                $isNullable = $validator instanceof Nullable;
+
+                if ($isNullable) {
+                    /** @var Nullable $validator */
                     $validator = $validator->getValidator();
-                    $node['schema']['x-nullable'] = true;
                 }
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
@@ -454,6 +456,10 @@ class OpenAPI3 extends Format
 
                     if ($node['x-global'] ?? false) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-global'] = true;
+                    }
+
+                    if ($isNullable) {
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-nullable'] = true;
                     }
                 }
 
