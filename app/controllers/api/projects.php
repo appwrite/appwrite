@@ -1658,7 +1658,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.method', 'updateSmsTemplate')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEMPLATE)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', new Text(6), 'Template locale')
@@ -1684,7 +1684,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
             'message' => $message,
             'type' => $type,
             'locale' => $locale,
-        ]), Response::MODEL_TEMPLATE);
+        ]), Response::MODEL_SMS_TEMPLATE);
     });
 
 App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
@@ -1746,7 +1746,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.method', 'getSmsTemplate')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', new Text(6), 'Template locale')
@@ -1770,7 +1770,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
         $template['type'] = $type;
         $template['locale'] = $locale;
 
-        $response->dynamic(new Document($template), Response::MODEL_TEMPLATE);
+        $response->dynamic(new Document($template), Response::MODEL_SMS_TEMPLATE);
     });
 
 App::get('/v1/projects/:projectId/templates/email/:type/:locale')

@@ -192,9 +192,9 @@ App::init()
             ->setParam('httpMethod', $request->getMethod())
             ->setParam('project.{scope}.network.inbound', 0)
             ->setParam('project.{scope}.network.outbound', 0);
-        
+
         $smtp = $project->getAttribute('smtp', []);
-        if(!empty($smtp)) {
+        if (!empty($smtp)) {
             $mails
                 ->setSmtpHost($smtp['host'] ?? '')
                 ->setSmtpHost($smtp['port'] ?? 25)
