@@ -135,7 +135,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shimonewman/PHP-FFmpeg-video-streaming.git",
-                "reference": "fc1c0f4c9ce9b2136e4180f0012002c38e032728"
+                "reference": "aa5c1849cf95209901b7a7ea0f550d104b42fe6c"
             },
             "require": {
                 "php": "^7.2 || ^8.0",
@@ -209,7 +209,7 @@
                 "video-streaming",
                 "video-streaming"
             ],
-            "time": "2023-03-08T14:20:59+00:00"
+            "time": "2023-03-13T08:04:21+00:00"
         },
         {
             "name": "appwrite/php-clamav",

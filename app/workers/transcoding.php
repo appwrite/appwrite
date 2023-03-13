@@ -95,6 +95,10 @@ class TranscodingV1 extends Worker
         $this->file = $this->database->getDocument('bucket_' . $this->bucket->getInternalId(), $this->video->getAttribute('fileId'));
         $path = basename($this->file->getAttribute('path'));
         $inPath = $this->inDir . $path;
+
+        /**
+         * Write original asset to tmp
+         */
         $result = $this->write($this->project, $this->file);
 
         console::info('Transferring video from storage to ' . $this->inDir);
@@ -172,13 +176,12 @@ class TranscodingV1 extends Worker
         foreach ($subtitles as $subtitle) {
             $subtitle->setAttribute('status', self::STATUS_START);
             $this->database->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle);
-
             $bucket = $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId'));
             $file   = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $subtitle->getAttribute('fileId'));
             $path = basename($file->getAttribute('path'));
             $this->write($this->project, $file);
 
-            console::info('Transferring subtitle from storage to [' . $this->inDir . ']');
+            console::info('Transferring subtitle from storage to ' . $this->inDir);
 
             $ext = pathinfo($path, PATHINFO_EXTENSION);
             $subtitlePath = $this->inDir . $subtitle->getId() . '.vtt';
