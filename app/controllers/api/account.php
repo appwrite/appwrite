@@ -1000,9 +1000,13 @@ App::post('/v1/account/sessions/phone')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        $message = $message->setParam('token', $secret);
+        $message = $message->render();
+
         $messaging
             ->setRecipient($phone)
-            ->setMessage($secret)
+            ->setMessage($message)
             ->trigger();
 
         $events->setPayload(
@@ -2442,10 +2446,14 @@ App::post('/v1/account/verification/phone')
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
+        
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        $message = $message->setParam('token', $secret);
+        $message = $message->render();
 
         $messaging
             ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($secret)
+            ->setMessage($message)
             ->trigger()
         ;
 

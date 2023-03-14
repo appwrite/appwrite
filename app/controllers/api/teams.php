@@ -505,9 +505,13 @@ App::post('/v1/teams/:teamId/memberships')
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+                $message = $message->setParam('token', $url);
+                $message = $message->render();
+
                 $messaging
                     ->setRecipient($phone)
-                    ->setMessage($url)
+                    ->setMessage($message)
                     ->trigger();
             }
         }
