@@ -81,37 +81,35 @@ class V17 extends Migration
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
 
-                    break;
+                    try {
+                        /**
+                         * Delete 'endTime' attribute (use startTime+duration if needed)
+                         */
+                        $this->projectDB->deleteAttribute($id, 'endTime');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'endTime' from {$id}: {$th->getMessage()}");
+                    }
 
-                try {
-                    /**
-                     * Delete 'endTime' attribute (use startTime+duration if needed)
-                     */
-                    $this->projectDB->deleteAttribute($id, 'endTime');
-                    $this->projectDB->deleteCachedCollection($id);
-                } catch (\Throwable $th) {
-                    Console::warning("'endTime' from {$id}: {$th->getMessage()}");
-                }
+                    try {
+                        /**
+                         * Rename 'outputPath' to 'path'
+                         */
+                        $this->projectDB->renameAttribute($id, 'outputPath', 'path');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'path' from {$id}: {$th->getMessage()}");
+                    }
 
-                try {
-                    /**
-                     * Rename 'outputPath' to 'path'
-                     */
-                    $this->projectDB->renameAttribute($id, 'outputPath', 'path');
-                    $this->projectDB->deleteCachedCollection($id);
-                } catch (\Throwable $th) {
-                    Console::warning("'path' from {$id}: {$th->getMessage()}");
-                }
-
-                try {
-                    /**
-                     * Create 'deploymentInternalId' attribute
-                     */
-                    $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                    $this->projectDB->deleteCachedCollection($id);
-                } catch (\Throwable $th) {
-                    Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
-                }
+                    try {
+                        /**
+                         * Create 'deploymentInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    }
                     break;
 
                 case 'stats':
