@@ -81,15 +81,17 @@ Server::setResource('execute', function () {
             $execution = $dbForProject->createDocument('executions', new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionId' => $functionId,
-                'deploymentId' => $deploymentId,
+                'functionId' => $function->getId(),
+                'deploymentId' => $deployment->getId(),
+                'functionInternalId' => $function->getInternalId(),
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'trigger' => $trigger,
                 'status' => 'waiting',
                 'statusCode' => 0,
                 'response' => '',
                 'stderr' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
+                'search' => implode(' ', [$function->getId(), $executionId]),
             ]));
 
             // TODO: @Meldiron Trigger executions.create event here
