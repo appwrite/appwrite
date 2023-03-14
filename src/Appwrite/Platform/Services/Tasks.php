@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Services;
 
+use Appwrite\Platform\Tasks\MigrateUsage;
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
@@ -37,6 +38,7 @@ class Tasks extends Service
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(VolumeSync::getName(), new VolumeSync())
-            ->addAction(Specs::getName(), new Specs());
+            ->addAction(Specs::getName(), new Specs())
+            ->addAction(MigrateUsage::getName(), new MigrateUsage());
     }
 }

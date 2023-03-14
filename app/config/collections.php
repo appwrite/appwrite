@@ -3105,6 +3105,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('metricV2'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('region'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
