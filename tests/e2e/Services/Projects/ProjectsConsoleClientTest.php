@@ -478,7 +478,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group smtpAndTemplates 
+     * @group smtpAndTemplates
      * @depends testCreateProject */
     public function testUpdateTemplates($data): array
     {
@@ -497,7 +497,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en_us', $response['body']['locale']);
         $this->assertMatchesRegularExpression('/<!doctype html>/', $response['body']['message']);
-        
+
         /** Update template */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
             'content-type' => 'application/json',
