@@ -1354,7 +1354,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('sdk.description', '/docs/references/databases/create-relationship-attribute.md')
     ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATION)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
@@ -1411,7 +1411,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
@@ -1467,6 +1467,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
+        Response::MODEL_ATTRIBUTE_RELATIONSHIP,
         Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_BOOLEAN,
         Response::MODEL_ATTRIBUTE_INTEGER,
@@ -1475,7 +1476,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_ENUM,
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
-        Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1507,6 +1507,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
@@ -1586,6 +1587,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
+            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,

@@ -13,6 +13,7 @@ abstract class Model
     public const TYPE_JSON = 'json';
     public const TYPE_DATETIME = 'datetime';
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
+    public const TYPE_RELATIONSHIP = 'RELATIONSHIP';
 
     /**
      * @var bool
@@ -80,6 +81,7 @@ abstract class Model
      *
      * @param string $key
      * @param array $options
+     * @return Model
      */
     protected function addRule(string $key, array $options): self
     {
@@ -98,7 +100,7 @@ abstract class Model
      * If rule exists, it will be removed
      *
      * @param string $key
-     * @param array $options
+     * @return Model
      */
     protected function removeRule(string $key): self
     {
@@ -109,7 +111,10 @@ abstract class Model
         return $this;
     }
 
-    public function getRequired()
+    /**
+     * @return array
+     */
+    public function getRequired(): array
     {
         $list = [];
 

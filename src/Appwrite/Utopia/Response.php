@@ -132,7 +132,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_IP = 'attributeIp';
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
-    public const MODEL_ATTRIBUTE_RELATION = 'attributeRelation';
+    public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
