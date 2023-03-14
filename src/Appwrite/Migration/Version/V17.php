@@ -80,17 +80,8 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
+
                     break;
-                case 'builds':
-                    try {
-                        /**
-                         * Create 'size' attribute
-                         */
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'size' from {$id}: {$th->getMessage()}");
-                    }
 
                     try {
                         /**
