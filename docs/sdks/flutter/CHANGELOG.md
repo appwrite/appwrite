@@ -1,3 +1,25 @@
+## 9.0.0
+
+* Add offline support
+* Support for Appwrite 1.3.x
+
+**Full Changelog for Appwrite 1.3.0 can be found here**: 
+https://github.com/appwrite/appwrite/blob/master/CHANGES.md
+
+## 8.3.0
+
+* Fix: back navigation bringing back web browser after OAuth session creation
+* Update: Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+
+## 8.2.2
+
+* Fix: notify callback when websocket closes [#604](https://github.com/appwrite/sdk-generator/pull/604)
+
+## 8.2.1
+
+* Fix OAuth on web
+* Improve helper classes
+
 ## 8.2.0
 
 * Support for GraphQL
