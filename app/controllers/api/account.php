@@ -2446,7 +2446,7 @@ App::post('/v1/account/verification/phone')
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
-        
+
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
         $message = $message->setParam('token', $secret);
         $message = $message->render();

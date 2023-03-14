@@ -1764,7 +1764,9 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
         $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
-            // get default template from file
+            $template = [
+            'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
+            ];
         }
 
         $template['type'] = $type;
