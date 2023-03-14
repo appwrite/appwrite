@@ -18,6 +18,9 @@ class ProjectsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
+    /**
+     * @group smtpAndTemplates
+     */
     public function testCreateProject(): array
     {
         /**
@@ -430,6 +433,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
+     * @group smtpAndTemplates
      * @depends testCreateProject
      */
     public function testUpdateProjectSMTP($data): array
@@ -455,6 +459,78 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('emailuser', $response['body']['smtpUsername']);
         $this->assertEquals('securepassword', $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
+
+        /** Test Reading Project */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['smtpEnabled']);
+        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSender']);
+        $this->assertEquals('mail.appwrite.io', $response['body']['smtpHost']);
+        $this->assertEquals(25, $response['body']['smtpPort']);
+        $this->assertEquals('emailuser', $response['body']['smtpUsername']);
+        $this->assertEquals('securepassword', $response['body']['smtpPassword']);
+        $this->assertEquals('', $response['body']['smtpSecure']);
+        return $data;
+    }
+
+    /**
+     * @group smtpAndTemplates 
+     * @depends testCreateProject */
+    public function testUpdateTemplates($data): array
+    {
+        $id = $data['projectId'];
+
+        /** Get Default Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Account Verification', $response['body']['subject']);
+        $this->assertEquals('Appwrite', $response['body']['senderName']);
+        $this->assertEquals('team@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en_us', $response['body']['locale']);
+        $this->assertMatchesRegularExpression('/<!doctype html>/', $response['body']['message']);
+        
+        /** Update template */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subject' => 'Please verify your email',
+            'message' => 'Please verify your email {{url}}',
+            'senderName' => 'Appwrite Custom',
+            'senderEmail' => 'custom@appwrite.io',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Please verify your email', $response['body']['subject']);
+        $this->assertEquals('Appwrite Custom', $response['body']['senderName']);
+        $this->assertEquals('custom@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en_us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
+
+        /** Get Updated Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Please verify your email', $response['body']['subject']);
+        $this->assertEquals('Appwrite Custom', $response['body']['senderName']);
+        $this->assertEquals('custom@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en_us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
+
         return $data;
     }
 

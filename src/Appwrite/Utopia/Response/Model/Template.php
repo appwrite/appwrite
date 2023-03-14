@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
 abstract class Template extends Model

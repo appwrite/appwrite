@@ -1800,9 +1800,10 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
+            $localeFormated = substr($locale, 0, 2);
             $template = [
-                'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl'),
-                'subject' => (new Locale($locale))->getText('emails.' . $type . '.subject'),
+                'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl')->render(),
+                'subject' => (new Locale($localeFormated))->getText('emails.' . $type . '.subject'),
                 'senderEmail' => App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', ''),
                 'senderName' => App::getEnv('_APP_SYSTEM_EMAIL_NAME', '')
             ];

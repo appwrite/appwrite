@@ -3,10 +3,13 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
-class SmsTemplate extends Model
+class SmsTemplate extends Template
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
     /**
      * Get Name
      *

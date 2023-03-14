@@ -3,12 +3,12 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 
 class EmailTemplate extends Template
 {
     public function __construct()
     {
+        parent::__construct();
         $this
             ->addRule('senderName', [
                 'type' => self::TYPE_STRING,

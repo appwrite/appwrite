@@ -74,7 +74,7 @@ use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
-use Appwrite\Utopia\Response\Model\Template;
+use Appwrite\Utopia\Response\Model\SmsTemplate;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -345,7 +345,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
-            ->setModel(new Template())
+            ->setModel(new SmsTemplate())
             ->setModel(new EmailTemplate())
             // Verification
             // Recovery
