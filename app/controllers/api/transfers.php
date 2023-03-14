@@ -23,7 +23,6 @@ use Utopia\Transfer\Sources\Appwrite as SourcesAppwrite;
 use Utopia\Transfer\Sources\Firebase;
 use Utopia\Transfer\Sources\NHost;
 use Utopia\Transfer\Sources\Supabase;
-use Utopia\Transfer\Transfer as TransferTransfer;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
@@ -285,7 +284,7 @@ App::post('/v1/transfers/sources/:sourceId/validate')
     ->label('sdk.description', '/docs/references/transfers/validate-source.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ANY)
+    ->label('sdk.response.model', Response::MODEL_SOURCE_VALIDATION)
     ->param('sourceId', '', new UID(), 'Source unique ID.')
     ->param('resources', TRANSFER_RESOURCES, new ArrayList(new WhiteList(TRANSFER_RESOURCES)), 'List of resources to test. If none are sent then all resources are tested. [A list of resources can be found here.](https://appwrite.io/docs/transfers#resources)', true)
     ->inject('response')
@@ -328,7 +327,13 @@ App::post('/v1/transfers/sources/:sourceId/validate')
 
             return $response->json($result);
         } catch (Throwable $e) {
-            throw new Exception(Exception::TRANSFER_SOURCE_FAILED, $e->getMessage(), 400);
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'success' => false,
+                'message' => 'Missing Permissions',
+                'errors' => [
+                    'Databases' => [$e->getMessage()],
+                ],
+            ]), Response::MODEL_DESTINATION_VALIDATION);
         }
     });
 
@@ -467,18 +472,17 @@ App::post('/v1/transfers/destinations/:destinationId/validate')
             $result = $testAdapter->check($resources);
 
             $result = array_filter($result, function ($value) {
-                return $value !== true;
+                return $value !== [];
             });
-    
+
             if (count($result) == 0) {
                 return $response->dynamic(new Document([
-                    'status' => 'success',
-                    'message' => 'Destination is valid',
-                    'errors' => $result
+                    'success' => true,
+                    'message' => 'Destination is valid'
                 ]), Response::MODEL_DESTINATION_VALIDATION);
             } else {
                 return $response->setStatusCode(401)->dynamic(new Document([
-                    'status' => 'failed',
+                    'success' => false,
                     'message' => 'Missing Permissions',
                     'errors' => $result
                 ]), Response::MODEL_DESTINATION_VALIDATION);
@@ -567,8 +571,6 @@ App::post('/v1/transfers/sources/appwrite/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Appwrite Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.[sourceId].validateAppwriteSource')
-    ->label('audits.event', 'transfers.validateAppwriteSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'transfers')
@@ -586,8 +588,16 @@ App::post('/v1/transfers/sources/appwrite/validate')
         try {
             $testAdapter->check(); // Throws exception on failure
         } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 400);
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'success' => false,
+                'message' => 'Missing Permissions',
+                'errors' => [
+                    'Databases' => [$e->getMessage()],
+                ],
+            ]), Response::MODEL_DESTINATION_VALIDATION);
         }
+
+        
 
         return $response->json(TRANSFER_RESOURCES);
     });
@@ -641,8 +651,6 @@ App::post('/v1/transfers/sources/firebase/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Firebase Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.validateFirebaseSource')
-    ->label('audits.event', 'transfers.validateFirebaseSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'transfers')
@@ -722,8 +730,6 @@ App::post('/v1/transfers/sources/supabase/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Supabase Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.validateSupabaseSource')
-    ->label('audits.event', 'transfers.validateSupabaseSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'transfers')
@@ -744,21 +750,21 @@ App::post('/v1/transfers/sources/supabase/validate')
         $result = $testAdapter->check();
 
         $result = array_filter($result, function ($value) {
-            return $value !== true;
+            return $value !== [];
         });
 
         if (count($result) == 0) {
             return $response->dynamic(new Document([
-                'status' => 'success',
-                'message' => 'Destination is valid',
+                'success' => true,
+                'message' => 'Source is valid',
                 'errors' => $result
-            ]), Response::MODEL_DESTINATION_VALIDATION);
+            ]), Response::MODEL_SOURCE_VALIDATION);
         } else {
             return $response->setStatusCode(401)->dynamic(new Document([
-                'status' => 'failed',
+                'success' => false,
                 'message' => 'Missing Permissions',
                 'errors' => $result
-            ]), Response::MODEL_DESTINATION_VALIDATION);
+            ]), Response::MODEL_SOURCE_VALIDATION);
         }
     });
 
@@ -819,8 +825,6 @@ App::post('/v1/transfers/sources/nhost/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Nhost Source')
     ->label('scope', 'transfers.write')
-    ->label('event', 'transfers.validateNhostSource')
-    ->label('audits.event', 'transfers.validateNhostSource')
     ->label('audits.resource', 'sources/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'transfers')
@@ -836,24 +840,36 @@ App::post('/v1/transfers/sources/nhost/validate')
     ->param('port', '5432', new Integer(true), 'Nhost Database Port. The port of the database to validate.', true)
     ->inject('response')
     ->action(function (string $url, string $database, string $username, string $password, string $port, Response $response) {
-        $testAdapter = new NHost($url, $database, $username, $password, $port);
+        try {
+            $testAdapter = new NHost($url, $database, $username, $password, $port);
+        } catch (Throwable $e) {
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'success' => false,
+                'message' => 'Invalid Nhost Source',
+                'errors' => [
+                    'Databases' => [$e->getMessage()],
+                ]
+            ]), Response::MODEL_SOURCE_VALIDATION);
+        };
+
+        $result = $testAdapter->check();
 
         $result = array_filter($result, function ($value) {
-            return $value !== true;
+            return $value !== [];
         });
 
         if (count($result) == 0) {
             return $response->dynamic(new Document([
-                'status' => 'success',
-                'message' => 'Destination is valid',
+                'success' => true,
+                'message' => 'Source is valid',
                 'errors' => $result
-            ]), Response::MODEL_DESTINATION_VALIDATION);
+            ]), Response::MODEL_SOURCE_VALIDATION);
         } else {
             return $response->setStatusCode(401)->dynamic(new Document([
-                'status' => 'failed',
+                'success' => false,
                 'message' => 'Missing Permissions',
                 'errors' => $result
-            ]), Response::MODEL_DESTINATION_VALIDATION);
+            ]), Response::MODEL_SOURCE_VALIDATION);
         }
     });
 
@@ -888,7 +904,7 @@ App::post('/v1/transfers/destinations/appwrite')
         $result = $testAdapter->check();
 
         $result = array_filter($result, function ($value) {
-            return $value !== true;
+            return $value !== [];
         });
 
         if (count($result) > 0) {
@@ -936,18 +952,18 @@ App::post('/v1/transfers/destinations/appwrite/validate')
         $result = $testAdapter->check();
 
         $result = array_filter($result, function ($value) {
-            return $value !== true;
+            return $value !== [];
         });
 
         if (count($result) == 0) {
             return $response->dynamic(new Document([
-                'status' => 'success',
+                'success' => true,
                 'message' => 'Destination is valid',
                 'errors' => $result
             ]), Response::MODEL_DESTINATION_VALIDATION);
         } else {
             return $response->setStatusCode(401)->dynamic(new Document([
-                'status' => 'failed',
+                'success' => false,
                 'message' => 'Missing Permissions',
                 'errors' => $result
             ]), Response::MODEL_DESTINATION_VALIDATION);

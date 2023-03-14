@@ -10,24 +10,27 @@ class SourceValidation extends Model
     public function __construct()
     {
         $this
-            ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Success status. "success" or "failed".',
-                'default' => "failed",
-                'example' => "success",
+            ->addRule('success', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'If the validation was successful or not.',
+                'default' => false,
+                'example' => true,
             ])
             ->addRule('message', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Extra details about the status.',
+                'description' => 'Validation message.',
                 'default' => '',
-                'example' => 'Source is valid.',
+                'example' => 'Validation completed successfully',
             ])
             ->addRule('errors', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Missing roles.',
-                'default' => '',
-                'example' => '[]',
-                'array' => true
+                'type' => Response::MODEL_TRANSFER_VALIDATION_ERROR,
+                'description' => 'A key-value array of all the validation errors.',
+                'default' => [],
+                'example' => [
+                    'Users' => ['Access to table "public.users" is denied.'],
+                    'Documents' => ['Failed to access database. Please check your connection.'],
+                ],
+                'requried' => false
             ])
         ;
     }

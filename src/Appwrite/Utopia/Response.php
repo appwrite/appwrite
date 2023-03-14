@@ -88,6 +88,7 @@ use Appwrite\Utopia\Response\Model\Source;
 use Appwrite\Utopia\Response\Model\Destination;
 use Appwrite\Utopia\Response\Model\DestinationValidation;
 use Appwrite\Utopia\Response\Model\SourceValidation;
+use Appwrite\Utopia\Response\Model\TransferValidationError;
 
 /**
  * @method int getStatusCode()
@@ -221,6 +222,7 @@ class Response extends SwooleResponse
     // Transfers
     public const MODEL_TRANSFER = 'transfer';
     public const MODEL_TRANSFER_LIST = 'transferList';
+    public const MODEL_TRANSFER_VALIDATION_ERROR = 'transferValidationError';
     public const MODEL_SOURCE = 'source';
     public const MODEL_SOURCE_LIST = 'sourceList';
     public const MODEL_SOURCE_VALIDATION = 'sourceValidation';
@@ -364,6 +366,7 @@ class Response extends SwooleResponse
             ->setModel(new DestinationValidation())
             ->setModel(new Source())
             ->setModel(new SourceValidation())
+            ->setModel(new TransferValidationError())
             // Verification
             // Recovery
             // Tests (keep last)
