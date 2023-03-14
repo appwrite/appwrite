@@ -116,6 +116,10 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($this->args['datetime']);
                 break;
+            case DELETE_TYPE_RUNTIMES:
+                $function = $this->args['function'] == null ? null : new Document($this->args['function']);
+                $this->deleteRuntimes($function, $project);
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -513,7 +517,11 @@ class DeletesV1 extends Worker
             Query::equal('functionId', [$functionId])
         ], $dbForProject);
 
-        // TODO: @Meldiron Request executor to delete runtime
+        /**
+         * Request executor to delete all deployment containers
+         */
+        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
+        $this->deleteRuntimes($document, $project);
     }
 
     /**
@@ -553,7 +561,12 @@ class DeletesV1 extends Worker
             }
         });
 
-        // TODO: @Meldiron Request executor to delete runtime
+
+        /**
+         * Request executor to delete all deployment containers
+         */
+        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
+        $this->deleteRuntimes($document, $project);
     }
 
 
@@ -722,5 +735,49 @@ class DeletesV1 extends Worker
         $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
+    }
+
+    protected function deleteRuntimes(?Document $function, Document $project) {
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+
+        $deleteByFunction = function(Document $function) use ($project, $executor) {
+            $this->listByGroup(
+                'deployments',
+                [
+                    Query::equal('resourceInternalId', [$function->getInternalId()]),
+                    Query::equal('resourceType', ['functions']),
+                ],
+                $this->getProjectDB($project),
+                function (Document $deployment) use ($project, $executor) {
+                    $deploymentId = $deployment->getId();
+
+                    try {
+                        $executor->deleteRuntime($project->getId(), $deploymentId);
+                        Console::info("Runtime for deployment {$deploymentId} deleted.");
+                    } catch (Throwable $th) {
+                        Console::warning("Runtime for deployment {$deploymentId} skipped:");
+                        Console::error('[Error] Type: ' . get_class($th));
+                        Console::error('[Error] Message: ' . $th->getMessage());
+                        Console::error('[Error] File: ' . $th->getFile());
+                        Console::error('[Error] Line: ' . $th->getLine());
+                    }
+                }
+            );
+        };
+
+        if($function !== null) {
+            // Delete function runtimes
+            $deleteByFunction($function);
+        } else {
+            // Delete all project runtimes
+            $this->listByGroup(
+                'functions',
+                [],
+                $this->getProjectDB($project),
+                function (Document $function) use ($deleteByFunction) {
+                    $deleteByFunction($function);
+                }
+            );
+        }
     }
 }

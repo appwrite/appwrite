@@ -108,7 +108,6 @@ class Maintenance extends Action
 
         function notifyDeleteCache($interval)
         {
-
             (new Delete())
                 ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
@@ -117,7 +116,6 @@ class Maintenance extends Action
 
         function notifyDeleteSchedules($interval)
         {
-
             (new Delete())
                 ->setType(DELETE_TYPE_SCHEDULES)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))

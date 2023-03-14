@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -15,8 +16,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-
-// TODO: @Meldiron Changes to variables must delete runtime on executor
 
 App::get('/v1/project/usage')
     ->desc('Get usage stats for a project')
@@ -166,6 +165,12 @@ App::post('/v1/project/variables')
 
         $dbForProject->deleteCachedDocument('projects', $project->getId());
 
+        // Stop all running runtimes with this variable
+        (new Delete())
+            ->setType(DELETE_TYPE_RUNTIMES)
+            ->setProject($project)
+            ->trigger();
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($variable, Response::MODEL_VARIABLE);
@@ -264,6 +269,12 @@ App::put('/v1/project/variables/:variableId')
 
         $dbForProject->deleteCachedDocument('projects', $project->getId());
 
+        // Stop all running runtimes with this variable
+        (new Delete())
+            ->setType(DELETE_TYPE_RUNTIMES)
+            ->setProject($project)
+            ->trigger();
+
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
@@ -293,6 +304,12 @@ App::delete('/v1/project/variables/:variableId')
 
         $dbForProject->deleteDocument('variables', $variable->getId());
         $dbForProject->deleteCachedDocument('projects', $project->getId());
+
+        // Stop all running runtimes with this variable
+        (new Delete())
+            ->setType(DELETE_TYPE_RUNTIMES)
+            ->setProject($project)
+            ->trigger();
 
         $response->noContent();
     });

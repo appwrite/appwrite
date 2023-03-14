@@ -103,6 +103,30 @@ class Executor
     }
 
     /**
+     * Delete Runtime
+     *
+     * Deletes a runtime and cleans up any containers remaining.
+     *
+     * @param string $projectId
+     * @param string $deploymentId
+     */
+    public function deleteRuntime(string $projectId, string $deploymentId)
+    {
+        $runtimeId = "$projectId-$deploymentId";
+        $route = "/runtimes/$runtimeId";
+
+        $response = $this->call(self::METHOD_DELETE, $route, [], [], true, 30);
+
+        $status = $response['headers']['status-code'];
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
+        }
+
+        return $response['body'];
+    }
+
+    /**
      * Create an execution
      *
      * @param string $projectId

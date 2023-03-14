@@ -19,8 +19,6 @@ use Utopia\Domains\Domain;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-// TODO: @Meldiron Realtime and events QA
-
 App::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('Create Rule')
@@ -101,7 +99,7 @@ App::post('/v1/proxy/rules')
             'resourceInternalId' => $resourceInternalId,
             'status' => $status,
             'certificateId' => '',
-            'search' => implode(' ', [ $domain->get(), $ruleId, $resourceId, $resourceType, $redirect ]),
+            'search' => implode(' ', [ $domain->get(), $ruleId, $resourceId, $resourceType ]),
         ]));
 
         $events->setParam('ruleId', $rule->getId());

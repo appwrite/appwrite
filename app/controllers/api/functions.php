@@ -47,8 +47,6 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
-// TODO: @Meldiron Changes to variables must delete runtime on executor
-
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
@@ -131,7 +129,6 @@ App::post('/v1/functions')
                 ]))
             );
 
-            // TODO: @Meldiron this doesnt seem to work. Same for certificate.php worker. When working, implement with Console (instead of interval)
             /** Trigger Webhook */
             $ruleModel = new Rule();
             $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
@@ -1504,9 +1501,10 @@ App::post('/v1/functions/:functionId/variables')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $key, string $value, Document $project, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1537,6 +1535,13 @@ App::post('/v1/functions/:functionId/variables')
         }
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
+
+        // Stop all running runtimes with this variable
+        (new Delete())
+            ->setType(DELETE_TYPE_RUNTIMES)
+            ->setProject($project)
+            ->setFunction($function)
+            ->trigger();
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1622,9 +1627,10 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1656,6 +1662,13 @@ App::put('/v1/functions/:functionId/variables/:variableId')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
+        // Stop all running runtimes with this variable
+        (new Delete())
+            ->setType(DELETE_TYPE_RUNTIMES)
+            ->setProject($project)
+            ->setFunction($function)
+            ->trigger();
+
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
@@ -1673,9 +1686,10 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
+    ->action(function (string $functionId, string $variableId, Document $project, Response $response, Database $dbForProject) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1694,6 +1708,13 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 
         $dbForProject->deleteDocument('variables', $variable->getId());
         $dbForProject->deleteCachedDocument('functions', $function->getId());
+
+        // Stop all running runtimes with this variable
+        (new Delete())
+            ->setType(DELETE_TYPE_RUNTIMES)
+            ->setProject($project)
+            ->setFunction($function)
+            ->trigger();
 
         $response->noContent();
     });

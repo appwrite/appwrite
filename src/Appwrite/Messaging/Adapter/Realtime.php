@@ -261,8 +261,8 @@ class Realtime extends Adapter
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'rules':
-                $channels[] = 'rules';
-                $channels[] = 'rules.' . $parts[1];
+                $channels[] = 'console';
+                $projectId = 'console';
                 $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
             case 'teams':
