@@ -484,7 +484,7 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'];
 
-        /** Get Default Template */
+        /** Get Default Email Template */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -498,7 +498,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('en_us', $response['body']['locale']);
         $this->assertMatchesRegularExpression('/<!doctype html>/', $response['body']['message']);
 
-        /** Update template */
+        /** Update Email template */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -517,7 +517,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('en_us', $response['body']['locale']);
         $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
 
-        /** Get Updated Template */
+        /** Get Updated Email Template */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en_us', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -530,6 +530,41 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en_us', $response['body']['locale']);
         $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
+
+        /** Get Default SMS Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en_us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en_us', $response['body']['locale']);
+        $this->assertEquals('{{token}}', $response['body']['message']);
+
+        /** Update SMS template */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/sms/verification/en_us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'message' => 'Please verify your email {{token}}',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en_us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
+
+        /** Get Updated SMS Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en_us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en_us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
 
         return $data;
     }

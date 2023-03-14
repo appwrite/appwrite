@@ -9,6 +9,7 @@ return [
         'certificate'
     ],
     'sms' => [
-        'verification'
+        'verification',
+        'invitation'
     ]
 ];
