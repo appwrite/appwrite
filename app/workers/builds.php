@@ -208,8 +208,6 @@ class BuildsV1 extends Worker
 
             Console::success("Build id: $buildId created");
 
-            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
-
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
@@ -220,7 +218,7 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $dbForConsole = $this->getConsoleDB();
             $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+            $schedule->setAttribute('resourceUpdatedAt', DateTime::now());
 
             $schedule
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
