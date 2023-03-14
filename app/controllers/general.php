@@ -43,7 +43,8 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $response) {
+function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $response)
+{
     $host = $swooleRequest->header['host'] ?? '';
 
     $route = Authorization::skip(
@@ -53,7 +54,7 @@ function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $
         ])
     )[0] ?? null;
 
-    if($route === null) {
+    if ($route === null) {
         throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
     }
 
@@ -61,28 +62,28 @@ function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $
     $project = Authorization::skip(
         fn() => $dbForConsole->getDocument('projects', $projectId)
     );
-    if(array_key_exists('proxy', $project->getAttribute('services', []))) {
+    if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
-        if(!$status) {
+        if (!$status) {
             throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
         }
     }
 
     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
     $path = ($swooleRequest->server['request_uri'] ?? '');
-    if(\str_starts_with($path, '/.well-known/acme-challenge')) {
+    if (\str_starts_with($path, '/.well-known/acme-challenge')) {
         return false;
     }
 
     $type = $route->getAttribute('resourceType');
 
-    if($type === 'function') {
+    if ($type === 'function') {
         $functionId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
         $path = ($swooleRequest->server['request_uri'] ?? '');
         $query = ($swooleRequest->server['query_string'] ?? '');
-        if(!empty($query)) {
+        if (!empty($query)) {
             $path .= '?' . $query;
         }
 
@@ -141,7 +142,7 @@ function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $
 
         $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
         return true;
-    } else if($type === 'api') {
+    } elseif ($type === 'api') {
         return false;
     } else {
         throw new AppwriteException(AppwriteException::ROUTER_INVALID_TYPE);
@@ -171,8 +172,8 @@ App::init()
         $host = $swooleRequest->header['host'] ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if($host !== $mainDomain && $host !== 'localhost') {
-            if(router($dbForConsole, $swooleRequest, $response)) {
+        if ($host !== $mainDomain && $host !== 'localhost') {
+            if (router($dbForConsole, $swooleRequest, $response)) {
                 return;
             }
         }
@@ -461,8 +462,8 @@ App::options()
         $host = $swooleRequest->header['host'] ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if($host !== $mainDomain && $host !== 'localhost') {
-            if(router($dbForConsole, $swooleRequest, $response)) {
+        if ($host !== $mainDomain && $host !== 'localhost') {
+            if (router($dbForConsole, $swooleRequest, $response)) {
                 return;
             }
         }

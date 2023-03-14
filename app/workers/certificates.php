@@ -410,7 +410,7 @@ class CertificatesV1 extends Worker
             Query::equal('domain', [$domain]),
         ]);
 
-        if(!$rule->isEmpty()) {
+        if (!$rule->isEmpty()) {
             $rule->setAttribute('certificateId', $certificateId);
             $rule->setAttribute('status', $success ? 'verified' : 'unverified');
             $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);

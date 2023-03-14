@@ -462,7 +462,7 @@ class DeletesV1 extends Worker
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$document->getInternalId()]),
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ], $dbForConsole, function(Document $document) use ($project) {
+        ], $dbForConsole, function (Document $document) use ($project) {
             $this->deleteRule($document, $project);
         });
 
@@ -737,10 +737,11 @@ class DeletesV1 extends Worker
         $device->deletePath($document->getId());
     }
 
-    protected function deleteRuntimes(?Document $function, Document $project) {
+    protected function deleteRuntimes(?Document $function, Document $project)
+    {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
-        $deleteByFunction = function(Document $function) use ($project, $executor) {
+        $deleteByFunction = function (Document $function) use ($project, $executor) {
             $this->listByGroup(
                 'deployments',
                 [
@@ -765,7 +766,7 @@ class DeletesV1 extends Worker
             );
         };
 
-        if($function !== null) {
+        if ($function !== null) {
             // Delete function runtimes
             $deleteByFunction($function);
         } else {

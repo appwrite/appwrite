@@ -109,7 +109,7 @@ App::post('/v1/functions')
         );
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
-        if($functionsDomain !== 'disabled') {
+        if ($functionsDomain !== 'disabled') {
             $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
@@ -1194,7 +1194,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $agent = '';
         foreach ($headers as $header => $value) {
-            if(\strtolower($header) === 'user-agent') {
+            if (\strtolower($header) === 'user-agent') {
                 $agent = $value;
             }
         }
@@ -1218,7 +1218,7 @@ App::post('/v1/functions/:functionId/executions')
             'agent' => $agent
         ]);
 
-        if($function->getAttribute('logging')) {
+        if ($function->getAttribute('logging')) {
             /** @var Document $execution */
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
@@ -1335,7 +1335,7 @@ App::post('/v1/functions/:functionId/executions')
             Console::error($th->getMessage());
         }
 
-        if($function->getAttribute('logging')) {
+        if ($function->getAttribute('logging')) {
             Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
         }
 

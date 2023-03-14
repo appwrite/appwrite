@@ -82,11 +82,11 @@ Server::setResource('execute', function () {
         if ($execution->isEmpty()) {
             $agent = '';
             foreach ($headers as $header => $value) {
-                if(\strtolower($header) === 'user-agent') {
+                if (\strtolower($header) === 'user-agent') {
                     $agent = $value;
                 }
             }
-            
+
             $executionId = ID::unique();
             $execution = new Document([
                 '$id' => $executionId,
@@ -105,7 +105,7 @@ Server::setResource('execute', function () {
                 'agent' => $agent
             ]);
 
-            if($function->getAttribute('logging')) {
+            if ($function->getAttribute('logging')) {
                 $execution = $dbForProject->createDocument('executions', $execution);
             }
 
@@ -116,10 +116,10 @@ Server::setResource('execute', function () {
             }
         }
 
-        if($execution->getAttribute('status') !== 'processing') {
+        if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            if($function->getAttribute('logging')) {
+            if ($function->getAttribute('logging')) {
                 $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
             }
         }
@@ -158,7 +158,7 @@ Server::setResource('execute', function () {
         ]);
 
         $body = $vars['APPWRITE_FUNCTION_EVENT_DATA'] ?? '';
-        if(empty($body)) {
+        if (empty($body)) {
             $body = $vars['APPWRITE_FUNCTION_DATA'] ?? '';
         }
 
@@ -203,7 +203,7 @@ Server::setResource('execute', function () {
             Console::error($th->getMessage());
         }
 
-        if($function->getAttribute('logging')) {
+        if ($function->getAttribute('logging')) {
             $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
 

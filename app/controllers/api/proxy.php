@@ -47,11 +47,11 @@ App::post('/v1/proxy/rules')
         ]);
 
         if ($document && !$document->isEmpty()) {
-            if($document->getAttribute('projectId') === $project->getId()) {
+            if ($document->getAttribute('projectId') === $project->getId()) {
                 $resourceType = $document->getAttribute('resourceType');
                 $resourceId = $document->getAttribute('resourceId');
                 $message = "Domain already assigned to '{$resourceType}' service";
-                if(!empty($resourceId)) {
+                if (!empty($resourceId)) {
                     $message .= " with ID '{$resourceId}'";
                 }
 
@@ -59,14 +59,14 @@ App::post('/v1/proxy/rules')
             } else {
                 $message = "Domain already assigned to different project.";
             }
-            
+
             throw new Exception(Exception::RULE_ALREADY_EXISTS, $message);
         }
 
         $resourceInternalId = '';
 
-        if($resourceType == 'function') {
-            if(empty($resourceId)) {
+        if ($resourceType == 'function') {
+            if (empty($resourceId)) {
                 throw new Exception(Exception::RULE_RESOURCE_ID_MISSING);
             }
 
@@ -85,7 +85,7 @@ App::post('/v1/proxy/rules')
 
         $status = 'created';
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
-        if($functionsDomain !== 'disabled' && \str_ends_with($domain->get(), $functionsDomain)) {
+        if ($functionsDomain !== 'disabled' && \str_ends_with($domain->get(), $functionsDomain)) {
             $status = 'verified';
         }
 
