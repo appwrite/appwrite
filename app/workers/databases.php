@@ -91,22 +91,22 @@ class DatabaseV1 extends Worker
         $format = $attribute->getAttribute('format', '');
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
-        $options = $attribute->getAttribute('options', []);
+        $relationshipOptions = $attribute->getAttribute('relationshipOptions', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
             if ($type === Database::VAR_RELATIONSHIP) {
-                $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollectionId']);
+                $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $relationshipOptions['relatedCollection']);
                 if (
                     !$dbForProject->createRelationship(
                         collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                         relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                        type: $options['relationType'],
-                        twoWay: $options['twoWay'],
-                        id: $options['id'],
-                        twoWayKey: $options['twoWayKey'],
-                        onUpdate: $options['onUpdate'],
-                        onDelete: $options['onDelete'],
+                        type: $relationshipOptions['relationType'],
+                        twoWay: $relationshipOptions['twoWay'],
+                        id: $relationshipOptions['id'],
+                        twoWayKey: $relationshipOptions['twoWayKey'],
+                        onUpdate: $relationshipOptions['onUpdate'],
+                        onDelete: $relationshipOptions['onDelete'],
                     )
                 ) {
                     throw new Exception('Failed to create Attribute');

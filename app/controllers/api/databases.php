@@ -68,7 +68,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
     $default = $attribute->getAttribute('default');
-    $options = $attribute->getAttribute('options', []);
+    $relationshipOptions = $attribute->getAttribute('relationshipOptions', []);
 
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -98,7 +98,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollectionId']);
+        $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $relationshipOptions['relatedCollection']);
         if ($relatedCollection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
@@ -122,7 +122,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'format' => $format,
             'formatOptions' => $formatOptions,
             'filters' => $filters,
-            'options' => $options, // Do we want all options?
+            'relationshipOptions' => $relationshipOptions,
         ]);
 
         $dbForProject->checkAttribute($collection, $attribute);
@@ -1394,8 +1394,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             'default' => null,
             'array' => false,
             'filters' => [],
-            'options' => [
-                'relatedCollectionId' => $relatedCollectionId,
+            'relationshipOptions' => [
+                'relatedCollection' => $relatedCollectionId,
                 'relationType' => $type,
                 'twoWay' => $twoWay,
                 'twoWayKey' => $twoWayKey,
@@ -1408,6 +1408,18 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             $database,
             $events
         );
+
+        $options = $attribute->getAttribute('relationshipOptions', []);
+
+        if (!empty($options)) {
+            $attribute->setAttribute('relatedCollection', $options['relatedCollection']);
+            $attribute->setAttribute('relationType', $options['relationType']);
+            $attribute->setAttribute('twoWay', $options['twoWay']);
+            $attribute->setAttribute('twoWayKey', $options['twoWayKey']);
+            $attribute->setAttribute('onUpdate', $options['onUpdate']);
+            $attribute->setAttribute('onDelete', $options['onDelete']);
+            $attribute->setAttribute('side', $options['side']);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
