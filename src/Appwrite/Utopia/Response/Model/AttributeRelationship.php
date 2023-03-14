@@ -15,7 +15,7 @@ class AttributeRelationship extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Attribute Key.',
                 'default' => '',
-                'example' => 'percentageCompleted',
+                'example' => 'relationship',
             ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
@@ -27,9 +27,7 @@ class AttributeRelationship extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Only null is optional',
                 'default' => null,
-                'example' => self::TYPE_DATETIME_EXAMPLE,
-                'array' => false,
-                'required' => false,
+                'example' => 'relationship',
             ])
             ->addRule('options', [
                 'type' => [

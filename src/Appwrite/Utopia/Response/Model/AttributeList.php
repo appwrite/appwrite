@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Document;
 
 class AttributeList extends Model
 {
