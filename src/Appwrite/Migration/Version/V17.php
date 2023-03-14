@@ -81,8 +81,6 @@ class V17 extends Migration
                         Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
 
-                    break;
-
                     try {
                         /**
                          * Delete 'endTime' attribute (use startTime+duration if needed)
