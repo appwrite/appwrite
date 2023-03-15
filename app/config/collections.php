@@ -2695,7 +2695,18 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'deploymentInternalId',
+                '$id' => ID::custom('size'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('deploymentInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2739,7 +2750,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('outputPath'),
+                '$id' => ID::custom('path'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,

@@ -46,6 +46,18 @@ class V17 extends Migration
             $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
+                case 'builds':
+                    try {
+                        /**
+                         * Create 'size' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'size');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'size' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
                 case 'files':
                     try {
                         /**

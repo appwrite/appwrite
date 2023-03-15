@@ -100,14 +100,15 @@ class BuildsV1 extends Worker
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
-                'outputPath' => '',
+                'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
                 'sourceType' => $device,
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,
-                'duration' => 0
+                'duration' => 0,
+                'size' => 0
             ]));
             $deployment->setAttribute('buildId', $build->getId());
             $deployment->setAttribute('buildInternalId', $build->getInternalId());
@@ -189,15 +190,14 @@ class BuildsV1 extends Worker
                 ]
             );
 
-            $endTime = new \DateTime();
-            $endTime->setTimestamp($response['endTimeUnix']);
+            $endTime = DateTime::now();
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
-            $build->setAttribute('endTime', DateTime::format($endTime));
+            $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($response['duration'])));
             $build->setAttribute('status', 'ready');
-            $build->setAttribute('outputPath', $response['path']);
+            $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
