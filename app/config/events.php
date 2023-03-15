@@ -189,7 +189,7 @@ return [
             '$description' => 'This event triggers when a bucket is deleted.',
         ],
         'update' => [
-            '$description' => 'This event triggers when a bucket is updated.',
+            '$description' => 'This event triggers when a team is updated.',
             'prefs' => [
                 '$description' => 'This event triggers when a team\'s preferences are updated.',
             ],
