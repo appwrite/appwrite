@@ -3719,6 +3719,17 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('lastCheck'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => new \stdClass(),
+                'array' => false,
+                'filters' => ['json'],
             ]
         ],
         'indexes' => [
@@ -3776,6 +3787,17 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('lastCheck'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => new \stdClass(),
+                'array' => false,
+                'filters' => ['json'],
             ]
         ],
         'indexes' => [

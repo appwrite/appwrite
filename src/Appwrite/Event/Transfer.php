@@ -21,7 +21,7 @@ class Transfer extends Event
 
     /**
      * Sets type for the transfer event.
-     * 
+     *
      * @param string $type
      * @return self
      */
@@ -34,7 +34,7 @@ class Transfer extends Event
 
     /**
      * Returns set type for the function event.
-     * 
+     *
      * @return string
      */
     public function getType(): string

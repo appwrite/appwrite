@@ -250,7 +250,7 @@ App::get('/v1/transfers/sources')
 
 
 
-App::get('/v1/transfers/sources/:sourceId')
+App::get('/v1/transfers/source/:sourceId')
     ->groups(['api', 'transfers'])
     ->desc('Get Source')
     ->label('scope', 'transfers.read')
@@ -274,7 +274,7 @@ App::get('/v1/transfers/sources/:sourceId')
         $response->dynamic($source, Response::MODEL_SOURCE);
     });
 
-App::post('/v1/transfers/sources/:sourceId/validate')
+App::post('/v1/transfers/source/:sourceId/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Source')
     ->label('scope', 'transfers.write')
@@ -305,39 +305,75 @@ App::post('/v1/transfers/sources/:sourceId/validate')
                 case 'appwrite': {
                         $testAdapter = new SourcesAppwrite($authData['project'], $authData['endpoint'], $authData['key']);
                         break;
-                    }
+                }
                 case 'firebase': {
                         $testAdapter = new Firebase($authData['authObject'], Firebase::AUTH_SERVICEACCOUNT);
                         break;
-                    }
+                }
                 case 'supabase': {
                         $testAdapter = new Supabase($authData['url'], $authData['database'], $authData['username'], $authData['password'], $authData['port']);
                         break;
-                    }
+                }
                 case 'nhost': {
                         $testAdapter = new NHost($authData['url'], $authData['database'], $authData['username'], $authData['password'], $authData['port']);
                         break;
-                    }
+                }
                 default: {
                         throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found', 404);
-                    }
+                }
             }
 
-            $result = $testAdapter->check($resources); // Throws exception on failure
+            $result = $testAdapter->check($resources);
 
-            return $response->json($result);
+            $result = array_filter($result, function ($value) {
+                return $value !== [];
+            });
+
+            if (count($result) == 0) {
+                $source->setAttribute('lastCheck', json_encode([
+                    'success' => true,
+                    'message' => 'Source is valid'
+                ]));
+
+                return $response->dynamic(new Document([
+                    'success' => true,
+                    'message' => 'Source is valid'
+                ]), Response::MODEL_SOURCE_VALIDATION);
+            } else {
+                $source->setAttribute('lastCheck', json_encode([
+                    'success' => false,
+                    'message' => 'Missing Permissions',
+                    'errors' => $result
+                ]));
+
+                return $response->setStatusCode(401)->dynamic(new Document([
+                    'success' => false,
+                    'message' => 'Missing Permissions',
+                    'errors' => $result
+                ]), Response::MODEL_SOURCE_VALIDATION);
+            }
         } catch (Throwable $e) {
+            $source->setAttribute('lastCheck', json_encode([
+                'success' => false,
+                'message' => 'Missing Permissions',
+                'errors' => [
+                    'Databases' => [$e->getMessage()],
+                ],
+            ]));
+
             return $response->setStatusCode(401)->dynamic(new Document([
                 'success' => false,
                 'message' => 'Missing Permissions',
                 'errors' => [
                     'Databases' => [$e->getMessage()],
                 ],
-            ]), Response::MODEL_DESTINATION_VALIDATION);
+            ]), Response::MODEL_SOURCE_VALIDATION);
+        } finally {
+            $dbForProject->updateDocument('sources', $source->getId(), $source);
         }
     });
 
-App::delete('/v1/transfers/sources/:sourceId')
+App::delete('/v1/transfers/source/:sourceId')
     ->groups(['api', 'transfers'])
     ->desc('Delete Source')
     ->label('scope', 'transfers.write')
@@ -408,7 +444,7 @@ App::get('/v1/transfers/destinations')
         ]), Response::MODEL_DESTINATION_LIST);
     });
 
-App::get('/v1/transfers/destinations/:destinationId')
+App::get('/v1/transfers/destination/:destinationId')
     ->groups(['api', 'transfers'])
     ->desc('Get Destination')
     ->label('scope', 'transfers.read')
@@ -432,7 +468,7 @@ App::get('/v1/transfers/destinations/:destinationId')
         $response->dynamic($destination, Response::MODEL_DESTINATION);
     });
 
-App::post('/v1/transfers/destinations/:destinationId/validate')
+App::post('/v1/transfers/destination/:destinationId/validate')
     ->groups(['api', 'transfers'])
     ->desc('Validate Destination')
     ->label('scope', 'transfers.write')
@@ -461,12 +497,12 @@ App::post('/v1/transfers/destinations/:destinationId/validate')
 
             switch ($destination['type']) {
                 case 'appwrite': {
-                        $testAdapter = new Appwrite($authData['projectId'], $authData['endpoint'], $authData['key']);
-                        break;
-                    }
+                    $testAdapter = new Appwrite($authData['projectId'], $authData['endpoint'], $authData['key']);
+                    break;
+                }
                 default: {
-                        throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
-                    }
+                    throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
+                }
             }
 
             $result = $testAdapter->check($resources);
@@ -476,19 +512,46 @@ App::post('/v1/transfers/destinations/:destinationId/validate')
             });
 
             if (count($result) == 0) {
+                $destination->setAttribute('lastCheck', json_encode([
+                    'success' => true,
+                    'message' => 'Destination is valid'
+                ]));
+
                 return $response->dynamic(new Document([
                     'success' => true,
                     'message' => 'Destination is valid'
                 ]), Response::MODEL_DESTINATION_VALIDATION);
             } else {
+                $destination->setAttribute('lastCheck', json_encode([
+                    'success' => false,
+                    'message' => 'Missing Permissions',
+                    'errors' => $result
+                ]));
+
                 return $response->setStatusCode(401)->dynamic(new Document([
                     'success' => false,
                     'message' => 'Missing Permissions',
                     'errors' => $result
                 ]), Response::MODEL_DESTINATION_VALIDATION);
             }
-        } catch (Exception $e) {
-            throw new Exception(Exception::TRANSFER_DESTINATION_FAILED, $e->getMessage(), 400);
+        } catch (Throwable $e) {
+            $destination->setAttribute('lastCheck', json_encode([
+                'success' => false,
+                'message' => 'Missing Permissions',
+                'errors' => [
+                    'Databases' => [$e->getMessage()],
+                ],
+            ]));
+
+            return $response->setStatusCode(401)->dynamic(new Document([
+                'success' => false,
+                'message' => 'Missing Permissions',
+                'errors' => [
+                    'Databases' => [$e->getMessage()],
+                ],
+            ]), Response::MODEL_DESTINATION_VALIDATION);
+        } finally {
+            $dbForProject->updateDocument('destinations', $destination->getId(), $destination);
         }
     });
 
@@ -553,6 +616,10 @@ App::post('/v1/transfers/sources/appwrite')
             '$collection' => ID::custom('sources'),
             'type' => 'appwrite',
             'name' => empty($name) ? 'Appwrite Project: ' . $sourceId : $name,
+            'lastCheck' => json_encode([
+                'success' => true,
+                'message' => 'Source is valid'
+            ]),
             'data' => json_encode([
                 'projectId' => $projectId,
                 'endpoint' => $endpoint,
@@ -597,7 +664,7 @@ App::post('/v1/transfers/sources/appwrite/validate')
             ]), Response::MODEL_DESTINATION_VALIDATION);
         }
 
-        
+
 
         return $response->json(TRANSFER_RESOURCES);
     });
@@ -635,6 +702,10 @@ App::post('/v1/transfers/sources/firebase')
             '$collection' => ID::custom('sources'),
             'type' => 'firebase',
             'name' => empty($name) ? 'Firebase Project ' . $serviceAccount['project_id'] : $name,
+            'lastCheck' => json_encode([
+                'success' => true,
+                'message' => 'Source is valid'
+            ]),
             'data' => json_encode([
                 'serviceAccount' => $serviceAccount,
             ])
@@ -710,6 +781,10 @@ App::post('/v1/transfers/sources/supabase')
             '$collection' => ID::custom('sources'),
             'type' => 'supabase',
             'name' => empty($name) ? 'Supabase Project ' . $sourceId : $name,
+            'lastCheck' => json_encode([
+                'success' => true,
+                'message' => 'Source is valid'
+            ]),
             'data' => json_encode([
                 'url' => $url,
                 'database' => $database,
@@ -805,6 +880,10 @@ App::post('/v1/transfers/sources/nhost')
             '$collection' => ID::custom('sources'),
             'type' => 'nhost',
             'name' => empty($name) ? 'Nhost Project ' . $sourceId : $name,
+            'lastCheck' => json_encode([
+                'success' => true,
+                'message' => 'Source is valid'
+            ]),
             'data' => json_encode([
                 'url' => $url,
                 'database' => $database,
@@ -916,6 +995,10 @@ App::post('/v1/transfers/destinations/appwrite')
             '$collection' => ID::custom('destinations'),
             'type' => 'appwrite',
             'name' => empty($name) ? 'Appwrite Project ' . $destinationId : $name,
+            'lastCheck' => json_encode([
+                'success' => true,
+                'message' => 'Source is valid'
+            ]),
             'data' => json_encode([
                 'projectId' => $projectId,
                 'endpoint' => $endpoint,

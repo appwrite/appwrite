@@ -40,6 +40,15 @@ class Destination extends Model
                 'default' => '',
                 'example' => 'Appwrite',
             ])
+            ->addRule('lastCheck', [
+                'type' => self::TYPE_JSON,
+                'description' => 'A JSON Object with the result of the last source check.',
+                'default' => '',
+                'example' => [
+                    'success' => false,
+                    'message' => 'Transfer completed successfully'
+                ],
+            ])
         ;
     }
 

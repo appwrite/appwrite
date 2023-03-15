@@ -61,7 +61,7 @@ class TransfersV1 extends Worker
 
     /**
      * Process Source
-     * 
+     *
      * @return Source
      * @throws \Exception
      */
@@ -153,7 +153,7 @@ class TransfersV1 extends Worker
                 ]));
                 $this->dbForConsole->updateDocument($transferDocument->getCollection(), $transferDocument->getId(), $transferDocument);
             });
-            
+
             if (!empty($transfer->getLogs('error'))) {
                 $transferDocument->setAttribute('status', 'failed');
                 $transferDocument->setAttribute('errorData', $transfer->getLogs('error'));
@@ -176,6 +176,5 @@ class TransfersV1 extends Worker
      */
     protected function processVerification(): void
     {
-
     }
 }
