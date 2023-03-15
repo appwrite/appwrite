@@ -173,7 +173,7 @@ Server::setResource('execute', function () {
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $deployment->getAttribute('path', ''),
+                source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
                 path: $path,
                 method: $method,
