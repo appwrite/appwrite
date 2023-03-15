@@ -300,15 +300,6 @@ App::put('/v1/teams/:teamId/prefs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
-        $isOwner = Authorization::isRole("team:{$team->getId()}/owner");
-
-        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to update preferences for this team');
-        }
-
         $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
 
         $events->setParam('teamId', $team->getId());
