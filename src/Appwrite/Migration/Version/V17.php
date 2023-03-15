@@ -46,17 +46,6 @@ class V17 extends Migration
             $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
-                case 'files':
-                    try {
-                        /**
-                         * Update 'mimeType' attribute size (127->255)
-                         */
-                        $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
                 case 'builds':
                     try {
                         /**
@@ -66,6 +55,18 @@ class V17 extends Migration
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'size' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
+                case 'files':
+                    try {
+                        /**
+                         * Update 'mimeType' attribute size (127->255)
+                         */
+                        $this->projectDB->updateAttribute($id, 'mimeType', Database::VAR_STRING, 255, true, false);
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
