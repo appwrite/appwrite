@@ -51,17 +51,17 @@ class Build extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('endTime', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The time the build was finished in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('duration', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'The build duration in seconds.',
                 'default' => 0,
                 'example' => 0,
-            ])
-            ->addRule('size', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The code size in bytes.',
-                'default' => 0,
-                'example' => 128,
             ])
         ;
     }
