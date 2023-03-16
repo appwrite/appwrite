@@ -91,22 +91,22 @@ class DatabaseV1 extends Worker
         $format = $attribute->getAttribute('format', '');
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
-        $relationshipOptions = $attribute->getAttribute('relationshipOptions', []);
+        $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
             if ($type === Database::VAR_RELATIONSHIP) {
-                $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $relationshipOptions['relatedCollection']);
+                $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
                 if (
                     !$dbForProject->createRelationship(
                         collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                         relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                        type: $relationshipOptions['relationType'],
-                        twoWay: $relationshipOptions['twoWay'],
-                        id: $relationshipOptions['id'],
-                        twoWayKey: $relationshipOptions['twoWayKey'],
-                        onUpdate: $relationshipOptions['onUpdate'],
-                        onDelete: $relationshipOptions['onDelete'],
+                        type: $options['relationType'] || null,
+                        twoWay: $options['twoWay'] || null,
+                        id: $options['id'] || null,
+                        twoWayKey: $options['twoWayKey'] || null,
+                        onUpdate: $options['onUpdate'] || null,
+                        onDelete: $options['onDelete'] || null,
                     )
                 ) {
                     throw new Exception('Failed to create Attribute');
