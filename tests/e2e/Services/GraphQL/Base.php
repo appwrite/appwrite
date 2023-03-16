@@ -26,6 +26,15 @@ trait Base
     public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public static string $CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+    public static string $UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
+    public static string $UPDATE_INTEGER_ATTRIBUTE = 'update_integer_attribute';
+    public static string $UPDATE_FLOAT_ATTRIBUTE = 'update_float_attribute';
+    public static string $UPDATE_BOOLEAN_ATTRIBUTE = 'update_boolean_attribute';
+    public static string $UPDATE_URL_ATTRIBUTE = 'update_url_attribute';
+    public static string $UPDATE_EMAIL_ATTRIBUTE = 'update_email_attribute';
+    public static string $UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
+    public static string $UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
+    public static string $UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
     public static string $GET_ATTRIBUTES = 'get_attributes';
     public static string $GET_ATTRIBUTE = 'get_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
@@ -451,6 +460,74 @@ trait Base
                         array
                     }
                 }';
+            case self::$UPDATE_STRING_ATTRIBUTE:
+                return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_INTEGER_ATTRIBUTE:
+                return 'mutation updateIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
+                        databasesUpdateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, min: $min, max: $max, default: $default) {
+                            required
+                            min
+                            max
+                            default
+                        }
+                    }';
+            case self::$UPDATE_FLOAT_ATTRIBUTE:
+                return 'mutation updateFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
+                        databasesUpdateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default) {
+                            required
+                            min
+                            max
+                            default
+                        }
+                    }';
+            case self::$UPDATE_BOOLEAN_ATTRIBUTE:
+                return 'mutation updateBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean){
+                        databasesUpdateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_URL_ATTRIBUTE:
+                return 'mutation updateUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_EMAIL_ATTRIBUTE:
+                return 'mutation updateEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_IP_ATTRIBUTE:
+                return 'mutation updateIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_ENUM_ATTRIBUTE:
+                return 'mutation updateEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
+                        databasesUpdateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default) {
+                            elements
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_DATETIME_ATTRIBUTE:
+                return 'mutation updateDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
             case self::$CREATE_INDEX:
                 return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
                     databasesCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "65ec111f49af9c148eb69dc16aec7a10",
+    "content-hash": "db9e7adb4caf775eaa200d3888b65579",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2113,20 +2113,19 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-relationships",
+            "version": "0.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "dc842d7c1c209ef55c7ce84c056efbc1dcd24283"
+                "reference": "7453256728053cddfb0c872ac8ca60157c4d8a11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/dc842d7c1c209ef55c7ce84c056efbc1dcd24283",
-                "reference": "dc842d7c1c209ef55c7ce84c056efbc1dcd24283",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/7453256728053cddfb0c872ac8ca60157c4d8a11",
+                "reference": "7453256728053cddfb0c872ac8ca60157c4d8a11",
                 "shasum": ""
             },
             "require": {
-                "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
                 "utopia-php/framework": "0.*.*",
@@ -2136,14 +2135,11 @@
                 "ext-mongodb": "*",
                 "ext-redis": "*",
                 "fakerphp/faker": "^1.14",
-                "laravel/pint": "1.4.*",
                 "mongodb/mongodb": "1.8.0",
-                "pcov/clobber": "^2.0",
-                "phpstan/phpstan": "1.9.*",
                 "phpunit/phpunit": "^9.4",
-                "rregeer/phpunit-coverage-check": "^0.3.1",
                 "swoole/ide-helper": "4.8.0",
-                "utopia-php/cli": "^0.14.0"
+                "utopia-php/cli": "^0.14.0",
+                "vimeo/psalm": "4.0.1"
             },
             "type": "library",
             "autoload": {
@@ -2155,7 +2151,7 @@
             "license": [
                 "MIT"
             ],
-            "description": "A simple library to manage application persistence using multiple database adapters",
+            "description": "A simple library to manage application persistency using multiple database adapters",
             "keywords": [
                 "database",
                 "framework",
@@ -2165,9 +2161,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-relationships"
+                "source": "https://github.com/utopia-php/database/tree/0.33.0"
             },
-            "time": "2023-03-15T07:38:26+00:00"
+            "time": "2023-03-08T08:46:35+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5567,18 +5563,9 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-relationships",
-            "alias": "0.33.0",
-            "alias_normalized": "0.33.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5602,5 +5589,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }

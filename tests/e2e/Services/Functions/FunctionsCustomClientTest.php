@@ -109,6 +109,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -223,6 +224,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -321,6 +323,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -549,6 +552,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';

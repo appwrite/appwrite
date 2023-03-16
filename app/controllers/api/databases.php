@@ -48,6 +48,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
+use Utopia\Validator\Nullable;
 
 /**
  * Create attribute of varying type
@@ -152,6 +153,163 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
+
+    return $attribute;
+}
+
+function updateAttribute(
+    string $databaseId,
+    string $collectionId,
+    string $key,
+    Database $dbForProject,
+    Event $events,
+    string $type,
+    string $filter = null,
+    string|bool|int|float $default = null,
+    bool $required = null,
+    int|float $min = null,
+    int|float $max = null,
+    array $elements = null
+): Document {
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+    if ($db->isEmpty()) {
+        throw new Exception(Exception::DATABASE_NOT_FOUND);
+    }
+
+    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+
+    if ($collection->isEmpty()) {
+        throw new Exception(Exception::COLLECTION_NOT_FOUND);
+    }
+
+    $attribute = $dbForProject->getDocument('attributes', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key));
+
+    if ($attribute->isEmpty()) {
+        throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+    }
+
+    if ($attribute->getAttribute('status') !== 'available') {
+        throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE);
+    }
+
+    if ($attribute->getAttribute(('type') !== $type)) {
+        throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+    }
+
+    if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+    }
+
+    if ($required && isset($default)) {
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required attribute');
+    }
+
+    if ($attribute->getAttribute('array', false) && isset($default)) {
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
+    }
+
+    $collectionId =  'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
+
+    $attribute
+        ->setAttribute('default', $default)
+        ->setAttribute('required', $required);
+
+    $formatOptions = $attribute->getAttribute('formatOptions');
+
+    switch ($attribute->getAttribute('format')) {
+        case APP_DATABASE_ATTRIBUTE_INT_RANGE:
+            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
+                break;
+            }
+
+            if ($min > $max) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+            }
+
+            $validator = new Range($min, $max, Database::VAR_INTEGER);
+
+            if (!is_null($default) && !$validator->isValid($default)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            }
+
+            $options = [
+                'min' => $min,
+                'max' => $max
+            ];
+            $attribute->setAttribute('formatOptions', $options);
+
+            break;
+        case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
+            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
+                break;
+            }
+
+            if ($min > $max) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+            }
+
+            if (!is_null($default)) {
+                $default = \floatval($default);
+            }
+
+            $validator = new Range($min, $max, Database::VAR_FLOAT);
+
+            if (!is_null($default) && !$validator->isValid($default)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            }
+
+            $options = [
+                'min' => $min,
+                'max' => $max
+            ];
+            $attribute->setAttribute('formatOptions', $options);
+
+            break;
+        case APP_DATABASE_ATTRIBUTE_ENUM:
+            if (empty($elements)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
+            }
+
+            //TODO: before merging - this iteration is kinda hard to follow because of the $size variable?
+            $size = 0;
+            foreach ($elements as $element) {
+                $length = \strlen($element);
+                if ($length === 0) {
+                    throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
+                }
+                $size = ($length > $size) ? $length : $size;
+            }
+
+            if (!is_null($default) && !in_array($default, $elements)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
+            }
+
+            $options = [
+                'elements' => $elements
+            ];
+            $attribute->setAttribute('formatOptions', $options);
+
+            break;
+    }
+
+    $dbForProject->updateAttribute(
+        collection: $collectionId,
+        id: $key,
+        required: $required,
+        default: $default,
+        formatOptions: $options ?? null
+    );
+
+    $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+
+    $events
+        ->setContext('collection', $collection)
+        ->setContext('database', $db)
+        ->setParam('databaseId', $databaseId)
+        ->setParam('collectionId', $collection->getId())
+        ->setParam('attributeId', $attribute->getId());
 
     return $attribute;
 }
@@ -973,7 +1131,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE, min: 0), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -1534,6 +1692,394 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $response->dynamic($attribute, $model);
     });
 
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/string')
+    ->desc('Update String Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateStringAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-string-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/email')
+    ->desc('Update Email Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateEmailAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-email-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_EMAIL,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/enum')
+    ->desc('Update Enum Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateEnumAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-enum-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('elements', null, new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_ENUM,
+            default: $default,
+            required: $required,
+            elements: $elements
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/ip')
+    ->desc('Update IP Address Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateIpAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-ip-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_IP,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/url')
+    ->desc('Update URL Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateUrlAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-url-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_URL,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/integer')
+    ->desc('Update Integer Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateIntegerAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-integer-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents')
+    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents')
+    ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_INTEGER,
+            default: $default,
+            required: $required,
+            min: $min,
+            max: $max
+        );
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \intval($formatOptions['min']));
+            $attribute->setAttribute('max', \intval($formatOptions['max']));
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/float')
+    ->desc('Update Float Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateFloatAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-float-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents')
+    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents')
+    ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_FLOAT,
+            default: $default,
+            required: $required,
+            min: $min,
+            max: $max
+        );
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \floatval($formatOptions['min']));
+            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/boolean')
+    ->desc('Update Boolean Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateBooleanAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-boolean-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_BOOLEAN,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/datetime')
+    ->desc('Update DateTime Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateDatetimeAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-datetime-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new DatetimeValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_DATETIME,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+    });
+
 App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->alias('/v1/database/collections/:collectionId/attributes/:key', ['databaseId' => 'default'])
     ->desc('Delete Attribute')
@@ -1577,7 +2123,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         }
 
         // Only update status if removing available attribute
-        if ($attribute->getAttribute('status' === 'available')) {
+        if ($attribute->getAttribute('status') === 'available') {
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
