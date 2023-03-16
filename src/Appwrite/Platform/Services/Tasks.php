@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\MigrateUsage;
+use Appwrite\Platform\Tasks\UsageInfCalc;
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
@@ -39,6 +40,7 @@ class Tasks extends Service
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(VolumeSync::getName(), new VolumeSync())
             ->addAction(Specs::getName(), new Specs())
-            ->addAction(MigrateUsage::getName(), new MigrateUsage());
+            ->addAction(MigrateUsage::getName(), new MigrateUsage())
+            ->addAction(UsageInfCalc::getName(), new UsageInfCalc());
     }
 }

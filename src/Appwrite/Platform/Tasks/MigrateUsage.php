@@ -27,9 +27,7 @@ class MigrateUsage extends Action
             ->callback(fn(bool $structure, Database $dbForConsole, callable $getProjectDB) => $this->action($structure, $dbForConsole, $getProjectDB));
     }
 
-    /**
-     * Iterate over every function on every project to make sure there is a schedule. If not, recreate the schedule.
-     */
+
     public function action(bool $structure, Database $dbForConsole, callable $getProjectDB): void
     {
         Authorization::disable();
@@ -55,9 +53,6 @@ class MigrateUsage extends Action
 
                 if ($structure) {
                     try {
-                        /**
-                         * Update 'mimeType' attribute size (127->255)
-                         */
                         $dbForProject->renameAttribute('stats', 'metric', 'metricOld');
                         $dbForProject->renameAttribute('stats', 'metricV2', 'metric');
                     } catch (\Throwable $th) {
