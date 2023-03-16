@@ -44,7 +44,7 @@ class Deployment extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The entrypoint file to use to execute the deployment code.',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'index.js',
             ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,

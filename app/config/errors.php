@@ -335,6 +335,11 @@ return [
         'description' => 'The requested runtime is either inactive or unsupported. Please check the value of the _APP_FUNCTIONS_RUNTIMES environment variable.',
         'code' => 404,
     ],
+    Exception::FUNCTION_ENTRYPOINT_MISSING => [
+        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'description' => 'Entrypoint missing. Specify it on deployment or in function settings.',
+        'code' => 404,
+    ],
 
     /** Builds  */
     Exception::BUILD_NOT_FOUND => [

@@ -2400,6 +2400,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                'array' => false,
+                '$id' => ID::custom('entrypoint'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

@@ -70,13 +70,14 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
+    ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, ?string $entrypoint, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -92,6 +93,7 @@ App::post('/v1/functions')
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
+            'entrypoint' => $entrypoint,
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v3'
         ]));
@@ -514,13 +516,14 @@ App::put('/v1/functions/:functionId')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
+    ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, ?string $entrypoint, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -539,6 +542,7 @@ App::put('/v1/functions/:functionId')
             'timeout' => $timeout,
             'enabled' => $enabled,
             'logging' => $logging,
+            'entrypoint' => $entrypoint,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -697,7 +701,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
+    ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', false)
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
     ->inject('request')
@@ -708,12 +712,20 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
+    ->action(function (string $functionId, ?string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if ($entrypoint === null || empty($entrypoint)) {
+            $entrypoint = $function->getAttribute('entrypoint', null);
+        }
+
+        if ($entrypoint === null || empty($entrypoint)) {
+            throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
         }
 
         $file = $request->getFiles('code');

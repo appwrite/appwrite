@@ -93,6 +93,12 @@ class Func extends Model
                 'default' => 15,
                 'example' => 1592981237,
             ])
+            ->addRule('entrypoint', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The entrypoint file to use to execute the deployment code.',
+                'default' => '',
+                'example' => 'index.js',
+            ])
         ;
     }
 
