@@ -347,7 +347,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('relationshipOptions'),
+                '$id' => ID::custom('options'),
                 'type' => Database::VAR_STRING,
                 'size' => 16384,
                 'signed' => false,
