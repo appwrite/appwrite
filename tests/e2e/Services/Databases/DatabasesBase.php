@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -231,6 +232,81 @@ trait DatabasesBase
 
         return $data;
     }
+
+
+
+
+    /**
+     * @depends testCreateAttributes
+     */
+    public function testRelations(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'person',
+            'name' => 'person',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                //Permission::update(Role::user($this->getUser()['$id'])),
+               // Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $library = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'library',
+            'name' => 'library',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                //Permission::update(Role::user($this->getUser()['$id'])),
+                // Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'library',
+            'relatedCollectionId' => 'library',
+            'type' => Database::RELATION_ONE_TO_ONE,
+        ]);
+
+        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $library['body']['$id'] . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $area = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'area',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        die;
+
+        return [];
+    }
+
 
     /**
      * @depends testCreateAttributes
