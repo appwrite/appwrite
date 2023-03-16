@@ -84,6 +84,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
