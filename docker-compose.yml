@@ -576,6 +576,7 @@ services:
       - _APP_CONNECTIONS_CACHE
       - _APP_HAMSTER_RECIPIENTS
       - _APP_HAMSTER_INTERVAL
+      - _APP_MIXPANEL_TOKEN
 
   appwrite-maintenance:
     entrypoint: maintenance

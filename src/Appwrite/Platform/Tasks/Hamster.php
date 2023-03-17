@@ -13,53 +13,29 @@ use Utopia\Database\Validator\Authorization;
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Analytics\Adapter\Mixpanel;
+use Utopia\Analytics\Event;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 
 class Hamster extends Action
 {
-    private array $columns = [
-        'Timestamp',
-        'Project ID',
-        'Project Name',
-        'Functions',
-        'Deployments',
-        'Members',
-        'Domains',
-        'Platforms - Web',
-        'Platforms - Android',
-        'Platforms - iOS',
-        'Platforms - Flutter',
-        'Files',
-        'Buckets',
-        'Databases',
-        'Documents',
-        'Collections',
-        'Storage',
-        'Requests',
-        'Bandwidth',
-        'Users',
-        'Sessions',
-        'Executions'
-    ];
-
     private array $usageStats = [
-        'Files' => 'files.$all.count.total',
-        'Buckets' => 'buckets.$all.count.total',
-        'Databases' => 'databases.$all.count.total',
-        'Documents' => 'documents.$all.count.total',
-        'Collections' => 'collections.$all.count.total',
-        'Storage' => 'project.$all.storage.size',
-        'Requests' => 'project.$all.network.requests',
-        'Bandwidth' => 'project.$all.network.bandwidth',
-        'Users' => 'users.$all.count.total',
-        'Sessions' => 'sessions.$all.requests.create',
-        'Executions' => 'executions.$all.compute.total',
+        'files' => 'files.$all.count.total',
+        'buckets' => 'buckets.$all.count.total',
+        'databases' => 'databases.$all.count.total',
+        'documents' => 'documents.$all.count.total',
+        'collections' => 'collections.$all.count.total',
+        'storage' => 'project.$all.storage.size',
+        'requests' => 'project.$all.network.requests',
+        'bandwidth' => 'project.$all.network.bandwidth',
+        'users' => 'users.$all.count.total',
+        'sessions' => 'sessions.email.requests.create',
+        'executions' => 'executions.$all.compute.total',
     ];
 
     protected string $directory = '/usr/local';
-    
+
     protected string $path;
 
     protected string $date;
@@ -73,7 +49,7 @@ class Hamster extends Action
 
     public function __construct()
     {
-        $this->mixpanel = new Mixpanel('bce512333a58ec62f44541328607f53c');
+        $this->mixpanel = new Mixpanel(App::getEnv('_APP_MIXPANEL_TOKEN', ''));
 
         $this
             ->desc('Get stats for projects')
@@ -90,54 +66,70 @@ class Hamster extends Action
     {
         $stats = [];
 
-        /** Set the timestamp in ISO 8601 format */
-        $stats['Timestamp'] = \date('c');
+        $stats['time'] = microtime(true);
 
         /** Get Project ID */
-        $stats['Project ID'] = $project->getId();
+        $stats['projectId'] = $project->getId();
 
         /** Get Project Name */
-        $stats['Project Name'] = $project->getAttribute('name');
+        $stats['projectName'] = $project->getAttribute('name');
 
         /** Get Total Functions */
-        $stats['Functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
+        $stats['functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
 
         /** Get Total Deployments */
-        $stats['Deployments'] = $dbForProject->count('deployments', [], APP_LIMIT_COUNT);
+        $stats['deployments'] = $dbForProject->count('deployments', [], APP_LIMIT_COUNT);
 
         /** Get Total Members */
         $teamInternalId = $project->getAttribute('teamInternalId', null);
         if ($teamInternalId) {
-            $stats['Members'] = $dbForConsole->count('memberships', [
+            $stats['members'] = $dbForConsole->count('memberships', [
                 Query::equal('teamInternalId', [$teamInternalId])
             ], APP_LIMIT_COUNT);
         } else {
-            $stats['Members'] = 0;
+            $stats['members'] = 0;
+        }
+
+        /** Get Email and Name of the project owner */
+        if ($teamInternalId) {
+            $membership = $dbForConsole->findOne('memberships', [
+                Query::equal('teamInternalId', [$teamInternalId]),
+            ]);
+
+            $userInternalId = $membership->getAttribute('userInternalId', null);
+            if ($userInternalId) {
+                $user = $dbForConsole->findOne('users', [
+                    Query::equal('_id', [$userInternalId]),
+                ]);
+
+                $stats['email'] = $user->getAttribute('email', null);
+                $stats['name'] = $user->getAttribute('name', null);
+            }
         }
 
         /** Get Domains */
-        $stats['Domains'] = $dbForProject->count('domains', [], APP_LIMIT_COUNT);
+        $stats['domains'] = $dbForProject->count('domains', [], APP_LIMIT_COUNT);
 
         /** Get Platforms */
         $platforms = $dbForConsole->find('platforms', [
             Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(100)
+            Query::limit(APP_LIMIT_COUNT)
         ]);
 
-        $stats['Platforms - Web'] = array_count_values(array_filter($platforms, function ($platform) {
-            return $platform['platform'] === 'web';
+        $stats['platforms_web'] = sizeof(array_filter($platforms, function ($platform) {
+            return $platform['type'] === 'web';
         }));
 
-        $stats['Platforms - Android'] = array_count_values(array_filter($platforms, function ($platform) {
-            return $platform['platform'] === 'android';
+        $stats['platforms_android'] = sizeof(array_filter($platforms, function ($platform) {
+            return $platform['type'] === 'android';
         }));
 
-        $stats['Platforms - iOS'] = array_count_values(array_filter($platforms, function ($platform) {
-            return str_contains($platform['platform'], 'apple');
+        $stats['platforms_iOS'] = sizeof(array_filter($platforms, function ($platform) {
+            return str_contains($platform['type'], 'apple');
         }));
 
-        $stats['Platforms - Flutter'] = array_count_values(array_filter($platforms, function ($platform) {
-            return str_contains($platform['platform'],'flutter');
+        $stats['platforms_flutter'] = sizeof(array_filter($platforms, function ($platform) {
+            return str_contains($platform['type'],'flutter');
         }));
 
         /** Get Usage stats */
@@ -183,25 +175,35 @@ class Hamster extends Action
     {
 
         Console::title('Cloud Hamster V1');
-        Console::success(APP_NAME . ' cloud hamster process v1 has started');
+        Console::success(APP_NAME . ' cloud hamster process has started');
 
-        $interval = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
+        $sleep = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
-        Console::loop(function () use ($register, $pools, $cache, $dbForConsole, $interval) {
+        $jobInitTime = '22:00'; // (hour:minutes)
+        $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
+        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $delay = $next->getTimestamp() - $now->getTimestamp();
 
+        /**
+         * If time passed for the target day.
+         */
+        if ($delay <= 0) {
+            $next->add(\DateInterval::createFromDateString('1 days'));
+            $delay = $next->getTimestamp() - $now->getTimestamp();
+        }
+
+        Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
+
+        Console::loop(function () use ($register, $pools, $cache, $dbForConsole, $sleep) {
             $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] Getting Cloud Usage Stats every {$interval} seconds");
+            Console::info("[{$now}] Getting Cloud Usage Stats every {$sleep} seconds");
             $loopStart = microtime(true);
 
             /* Initialise new Utopia app */
             $app = new App('UTC');
             $console = $app->getResource('console');
-
-            /** CSV stuff */
-            $this->date = date('Y-m-d');
-            $this->path = "{$this->directory}/stats_{$this->date}.csv";
-            $csv = Writer::createFromPath($this->path, 'w');
-            $csv->insertOne($this->columns);
 
             /** Database connections */
             $totalProjects = $dbForConsole->count('projects') + 1;
@@ -235,7 +237,26 @@ class Hamster extends Action
                         $dbForProject->setNamespace('_' . $project->getInternalId());
 
                         $statsPerProject = $this->getStats($dbForConsole, $dbForProject, $project);
-                        $csv->insertOne(array_values($statsPerProject));
+
+                        /** Send data to mixpanel */
+                        $res = $this->mixpanel->createProfile($statsPerProject['email'], '', [
+                            'name' => $statsPerProject['name'],
+                            'email' => $statsPerProject['email']
+                        ]);
+                        
+                        if (!$res) {
+                            Console::error('Failed to create user profile for project: ' . $project->getId());
+                        }
+
+                        $event = new Event();
+                        $event
+                            ->setName('Appwrite Cloud Project Stats')
+                            ->setProps($statsPerProject);
+                        $res = $this->mixpanel->createEvent($event);
+                        if (!$res) {
+                            Console::error('Failed to create event for project: ' . $project->getId());
+                        }
+
                     } catch (\Throwable $th) {
                         throw $th;
                         Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
@@ -259,8 +280,6 @@ class Hamster extends Action
                 Console::log('Iterated through ' . $count . '/' . $totalProjects . ' projects...');
             }
 
-            // var_dump($csv->toString());
-            // $this->sendEmail($register);
 
             $pools
                 ->get('console')
@@ -269,40 +288,7 @@ class Hamster extends Action
             $loopTook = microtime(true) - $loopStart;
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Cloud Stats took {$loopTook} seconds");
-        }, $interval);
-    }
 
-    private function sendEmail(Registry $register)
-    {
-        /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
-        $mail = $register->get('smtp');
-
-        $mail->clearAddresses();
-        $mail->clearAllRecipients();
-        $mail->clearReplyTos();
-        $mail->clearAttachments();
-        $mail->clearBCCs();
-        $mail->clearCCs();
-
-        try {
-            /** Addresses */
-            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_HAMSTER_RECIPIENTS', ''));
-            foreach ($recipients as $recipient) {
-                $mail->addAddress($recipient);
-            }
-
-            /** Attachments */
-            $mail->addAttachment($this->path);
-
-            /** Content */
-            $mail->Subject = "Cloud Report for {$this->date}";
-            $mail->Body = "Please find the daily cloud report atttached";
-
-            $mail->send();
-            Console::success('Email has been sent!');
-        } catch (Exception $e) {
-            Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
-        }
+        }, $sleep, $delay);
     }
 }
