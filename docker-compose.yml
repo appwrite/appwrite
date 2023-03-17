@@ -53,7 +53,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-        VITE_CONSOLE_MODE: self-hosted
+        VITE_CONSOLE_MODE: cloud
     ports: 
       - 9501:80
     networks:

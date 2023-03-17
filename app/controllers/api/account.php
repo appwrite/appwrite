@@ -174,7 +174,7 @@ App::post('/v1/account')
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
+            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails) && !\in_array(strtoupper($email), $whitelistEmails)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 

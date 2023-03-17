@@ -1,4 +1,4 @@
 [submodule "app/console"]
 	path = app/console
 	url = https://github.com/appwrite/console
-	branch = db-pools-support
+	branch = 2.2.2
