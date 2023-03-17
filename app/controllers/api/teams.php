@@ -506,7 +506,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ;
             } elseif (!empty($phone)) {
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
-                $message = $message->setParam('token', $url);
+                $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
                 $messaging
