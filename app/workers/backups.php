@@ -29,14 +29,16 @@ class BackupsV1 extends Worker
         $type = $this->args['payload']['type'];
         $backupId = $this->args['payload']['backupId'];
 
+        $project = new Document($project);
+
         /** Create a database dump of all the tables in this project database */
         switch ($type) {
             case 'backup': 
                 $this->backup($project, $backupId);
                 break;
-            // case 'restore':
-            //     $this->restore($project, $backupId);
-            //     break;
+            case 'restore':
+                $this->restore($project, $backupId);
+                break;
             default:
                 Console::error('Unknown backup type: ' . $type);
                 break;
@@ -45,44 +47,101 @@ class BackupsV1 extends Worker
 
     private function backup(Document $project, string $backupId)
     {
-        $dbForProject = $this->getProjectDB($project->getId(), $project);
+        try {
+            $dbForConsole = $this->getConsoleDB();
 
-        /** Update the backup state */
-        $backup = $dbForProject->getDocument('backups', $backupId);
-        if ($backup->isEmpty()) {
-            Console::error('Backup not found: ' . $backupId);
-            return;
-        }
-        $backup->setAttribute('status', 'processing');
-        $dbForProject->updateDocument('backups', $backupId, $backup);
-
-
-        /** Start the backup process */
-        $tables = $dbForProject->listCollections();
-        $tablesToBackup = [];
-        foreach ($tables as $table) {
-            if ($table->getId() === 'backups') {
-                continue;
+            /** Update the backup state */
+            $backup = $dbForConsole->getDocument('backups', $backupId);
+            if ($backup->isEmpty()) {
+                Console::error('Backup not found: ' . $backupId);
+                return;
             }
 
-            $tablesToBackup[] = $table->getId();
+            $backup->setAttribute('status', 'processing');
+            $dbForConsole->updateDocument('backups', $backupId, $backup);
+
+            /** Create list of tables to backup */
+            $dbForProject = $this->getProjectDB($project->getId(), $project);
+            $tables = $dbForProject->listCollections();
+            $tablesToBackup = [];
+            foreach ($tables as $table) {
+                if ($table->getId() === 'backups') {
+                    continue;
+                }
+                $tablesToBackup[] = $dbForProject->getNamespace() . '_' .$table->getId();
+            }
+
+            /**
+             * Create Temporary Backup File
+             */
+            $sqldumpFilename = $backupId . '.sql';
+            $compressedFilename = $backupId . '.tar.gz';
+            $tmpSqlDump = "/tmp/backups/$backupId/$sqldumpFilename";
+            $tmpBackup = "/tmp/backups/$backupId/$compressedFilename";
+            if (!\file_exists(\dirname($tmpBackup))) {
+                if (!@\mkdir(\dirname($tmpBackup), 0755, true)) {
+                    throw new Exception("Failed to create temporary directory", 500);
+                }
+            }
+
+            $deviceBackups = $this->getBackupsDevice($project->getId());
+            $path = $deviceBackups->getPath($compressedFilename);
+
+            $command = 'mysqldump -alv -h' . App::getEnv('_APP_DB_HOST') . ' -u' . App::getEnv('_APP_DB_USER') . ' -p' . App::getEnv('_APP_DB_PASS') . ' ' . App::getEnv('_APP_DB_SCHEMA') . ' ' . implode(' ', $tablesToBackup) . ' > ' . $tmpSqlDump;
+
+            Console::info('Running command: ' . $command);
+            $stdout = '';
+            $stderr = '';
+            $stdin = '';
+            $return = Console::execute($command, $stdin, $stdout, $stderr);
+
+            if ($return !== 0) {
+                throw new Exception('Failed to create backup: ' . $backupId);
+            }
+
+            /** Compress the SQL dump file */
+            $command = 'tar -czf ' . $tmpBackup . ' -C /tmp/backups/' . $backupId . ' ' . $sqldumpFilename;
+            Console::info('Running command: ' . $command);
+            $return = Console::execute($command, $stdin, $stdout, $stderr);
+            if ($return !== 0) {
+                throw new Exception('Failed to compress backup: ' . $backupId);
+            }
+
+            /** Zip the Backup file and move it to the path */
+            $return = $deviceBackups->move($tmpBackup, $path);
+            if ($return === false) {
+                throw new Exception('Failed to move backup: ' . $backupId);
+            }
+
+            $backup->setAttribute('path', $path);
+            $backup->setAttribute('status', 'success');
+            $dbForConsole->updateDocument('backups', $backup->getId(), $backup);
+
+        } catch (Exception $e) {
+            Console::error($e->getMessage());
+            $backup->setAttribute('status', 'failed');
+            $dbForConsole->updateDocument('backups', $backup->getId(), $backup);
         }
+        
+    }
 
-        $backupPath = APP_STORAGE_BACKUPS . '/' . $project . '/' . $backupId . '.tar.gz';
+    private function restore(Document $project, string $backupId) {
+        /** Write a function to read the backup and restore it */
+        try {
+            $dbForConsole = $this->getConsoleDB();
 
-        $command = 'mysqldump -h ' . App::getEnv('_APP_DB_HOST') . ' -u ' . App::getEnv('_APP_DB_USER') . ' -p' . App::getEnv('_APP_DB_PASS') . ' ' . App::getEnv('_APP_DB_SCHEMA') . ' ' . implode(' ', $tablesToBackup) . ' | gzip > ' . escapeshellarg($backupPath);
+            /** Update the backup state */
+            $backup = $dbForConsole->getDocument('backups', $backupId);
+            if ($backup->isEmpty()) {
+                Console::error('Backup not found: ' . $backupId);
+                return;
+            }
 
-        Console::info('Running command: ' . $command);
-
-        // exec($command, $output, $return);
-
-        // if ($return !== 0) {
-        //     Console::error('Failed to create backup: ' . $backupId);
-        //     return;
-        // }
-
-        // $backup->setAttribute('status', 'created');
-        // $dbForInternal->updateDocument('backups', $backup);
+            /** load the backup file */
+            $deviceBackups = $this->getBackupsDevice($project->getId());
+        } catch (Exception $e) {
+            Console::error($e->getMessage());
+        }
     }
 
     public function shutdown(): void

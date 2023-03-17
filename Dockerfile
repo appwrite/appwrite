@@ -31,6 +31,8 @@ RUN npm run build
 
 FROM appwrite/base:0.1.0 as final
 
+RUN apk add mysql-client
+
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
@@ -147,12 +149,14 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
+    mkdir -p /storage/backups && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
     chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
-    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
+    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug && \
+    chown -Rf www-data.www-data /storage/backups && chmod -Rf 0755 /storage/backups
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \

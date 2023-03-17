@@ -285,6 +285,16 @@ abstract class Worker
         return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
 
+    /**
+     * Get Backups Device
+     * @param string $projectId of the project
+     * @return Device
+     */
+    protected function getBackupsDevice(string $projectId): Device
+    {
+        return $this->getDevice(APP_STORAGE_BACKUPS . '/app-' . $projectId);
+    }
+
 
     /**
      * Get Builds Storage Device
