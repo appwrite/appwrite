@@ -15,6 +15,7 @@ use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
+use Utopia\Validator\Nullable;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -426,6 +427,17 @@ App::get('/v1/mock/tests/general/empty')
     ->action(function (Response $response) {
 
         $response->noContent();
+    });
+
+App::post('/v1/mock/tests/general/nullable')
+    ->desc('Nullable Test')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('nullable', '', new Nullable(new Text(100)), 'Sample string param')
+    ->param('optional', '', new Text(100), 'Sample string param', true)
+    ->action(function (string $required, string $nullable, ?string $optional) {
     });
 
 /** Endpoint to test if required headers are sent from the SDK */
