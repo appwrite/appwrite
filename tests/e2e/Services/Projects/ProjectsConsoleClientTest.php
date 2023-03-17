@@ -474,6 +474,19 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('emailuser', $response['body']['smtpUsername']);
         $this->assertEquals('securepassword', $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
+
+        /** Reset */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => false,
+            'sender' => 'mailer@appwrite.io',
+            'host' => 'mail.appwrite.io',
+            'port' => 25,
+            'username' => 'emailuser',
+            'password' => 'securepassword',
+        ]);
         return $data;
     }
 

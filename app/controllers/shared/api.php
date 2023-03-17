@@ -194,15 +194,15 @@ App::init()
             ->setParam('project.{scope}.network.outbound', 0);
 
         $smtp = $project->getAttribute('smtp', []);
-        if (!empty($smtp)) {
+        if (!empty($smtp) && ($smtp['enabled'] ?? false)) {
             $mails
                 ->setSmtpHost($smtp['host'] ?? '')
-                ->setSmtpHost($smtp['port'] ?? 25)
-                ->setSmtpHost($smtp['username'] ?? '')
-                ->setSmtpHost($smtp['password'] ?? '')
-                ->setSmtpHost($smtp['senderEmail'] ?? '')
-                ->setSmtpHost($smtp['senderName'] ?? '')
-                ->setSmtpPort($smtp['replyTo'] ?? '');
+                ->setSmtpPort($smtp['port'] ?? 25)
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSenderEmail($smtp['senderEmail'] ?? '')
+                ->setSmtpSenderName($smtp['senderName'] ?? '')
+                ->setSmtpReplyTo($smtp['replyTo'] ?? '');
         }
 
         $deletes->setProject($project);
