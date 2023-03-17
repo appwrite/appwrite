@@ -80,13 +80,7 @@ class V18 extends Migration
                 /**
                  * Bump version number.
                  */
-                $document->setAttribute('version', '1.2.0');
-                break;
-            case 'projects':
-                /**
-                 * Bump version number.
-                 */
-                $document->setAttribute('passwordHistory', []);
+                $document->setAttribute('version', '1.3.0');
 
                 /**
                  * Set default passwordHistory
@@ -95,7 +89,12 @@ class V18 extends Migration
                     'passwordHistory' => 0,
                     'passwordDictionary' => false,
                 ]));
-
+                break;
+            case 'users':
+                /**
+                 * Default Password history
+                 */
+                $document->setAttribute('passwordHistory', []);
                 break;
         }
 
