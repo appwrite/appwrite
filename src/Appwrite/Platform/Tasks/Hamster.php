@@ -129,7 +129,7 @@ class Hamster extends Action
         }));
 
         $stats['platforms_flutter'] = sizeof(array_filter($platforms, function ($platform) {
-            return str_contains($platform['type'],'flutter');
+            return str_contains($platform['type'], 'flutter');
         }));
 
         /** Get Usage stats */
@@ -243,7 +243,7 @@ class Hamster extends Action
                             'name' => $statsPerProject['name'],
                             'email' => $statsPerProject['email']
                         ]);
-                        
+
                         if (!$res) {
                             Console::error('Failed to create user profile for project: ' . $project->getId());
                         }
@@ -256,7 +256,6 @@ class Hamster extends Action
                         if (!$res) {
                             Console::error('Failed to create event for project: ' . $project->getId());
                         }
-
                     } catch (\Throwable $th) {
                         throw $th;
                         Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
@@ -288,7 +287,6 @@ class Hamster extends Action
             $loopTook = microtime(true) - $loopStart;
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Cloud Stats took {$loopTook} seconds");
-
         }, $sleep, $delay);
     }
 }
