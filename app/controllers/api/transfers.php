@@ -77,16 +77,13 @@ App::post('/v1/transfers')
 
         $eventsInstance->setParam('transferId', $transfer->getId());
 
-        if ($next) {
-            // Async task reschedule
-            $functionEvent = new Transfer();
-            $functionEvent
-                ->setTransfer($transfer)
-                ->setType('schedule')
-                ->setUser($user)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
+        // Trigger Transfer
+        $event = new Transfer();
+        $event
+            ->setTransfer($transfer)
+            ->setProject($project)
+            ->setUser($user)
+            ->trigger();
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -161,6 +158,52 @@ App::get('/v1/transfers/:transferId')
         }
 
         $response->dynamic($transfer, Response::MODEL_TRANSFER);
+    });
+
+App::post('/v1/transfers/:transferId')
+    ->groups(['api', 'transfers'])
+    ->desc('Retry Transfer')
+    ->label('scope', 'transfers.write')
+    ->label('event', 'transfers.[transferId].retry')
+    ->label('audits.event', 'transfer.retry')
+    ->label('audits.resource', 'transfer/{request.transferId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'transfers')
+    ->label('sdk.method', 'retry')
+    ->label('sdk.description', '/docs/references/transfers/retry-transfer.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TRANSFER)
+    ->param('transferId', '', new UID(), 'Transfer unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('events')
+    ->action(function (string $transferId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventInstance) {
+        $transfer = $dbForProject->getDocument('transfers', $transferId);
+
+        if ($transfer->isEmpty()) {
+            throw new Exception(Exception::TRANSFER_NOT_FOUND);
+        }
+
+        // if ($transfer->getAttribute('status') !== 'failed') {
+        //     throw new Exception(Exception::TRANSFER_IN_PROGRESS, 'Transfer not failed');
+        // }
+
+        $transfer
+            ->setAttribute('status', 'pending')
+            ->setAttribute('dateUpdated', \time());
+
+        // Trigger Transfer
+        $event = new Transfer();
+        $event
+            ->setTransfer($transfer)
+            ->setProject($project)
+            ->setUser($user)
+            ->trigger();
+        
+        $response->noContent();
     });
 
 App::delete('/v1/transfers/:transferId')
@@ -305,22 +348,22 @@ App::post('/v1/transfers/source/:sourceId/validate')
                 case 'appwrite': {
                         $testAdapter = new SourcesAppwrite($authData['project'], $authData['endpoint'], $authData['key']);
                         break;
-                }
+                    }
                 case 'firebase': {
                         $testAdapter = new Firebase($authData['authObject'], Firebase::AUTH_SERVICEACCOUNT);
                         break;
-                }
+                    }
                 case 'supabase': {
                         $testAdapter = new Supabase($authData['url'], $authData['database'], $authData['username'], $authData['password'], $authData['port']);
                         break;
-                }
+                    }
                 case 'nhost': {
                         $testAdapter = new NHost($authData['url'], $authData['database'], $authData['username'], $authData['password'], $authData['port']);
                         break;
-                }
+                    }
                 default: {
                         throw new Exception(Exception::TRANSFER_SOURCE_NOT_FOUND, 'Source not found', 404);
-                }
+                    }
             }
 
             $result = $testAdapter->check($resources);
@@ -497,12 +540,12 @@ App::post('/v1/transfers/destination/:destinationId/validate')
 
             switch ($destination['type']) {
                 case 'appwrite': {
-                    $testAdapter = new Appwrite($authData['projectId'], $authData['endpoint'], $authData['key']);
-                    break;
-                }
+                        $testAdapter = new Appwrite($authData['projectId'], $authData['endpoint'], $authData['key']);
+                        break;
+                    }
                 default: {
-                    throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
-                }
+                        throw new Exception(Exception::TRANSFER_DESTINATION_NOT_FOUND, 'Destination not found', 404);
+                    }
             }
 
             $result = $testAdapter->check($resources);

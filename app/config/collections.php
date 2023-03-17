@@ -3641,6 +3641,17 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('search'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ]
         ],
         'indexes' => [
@@ -3679,6 +3690,13 @@ $collections = [
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
+            [
+                '$id' => ID::custom('_fulltext_search'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [],
+                'orders' => [],
+            ]
         ],
     ],
 
@@ -3730,6 +3748,17 @@ $collections = [
                 'default' => new \stdClass(),
                 'array' => false,
                 'filters' => ['json'],
+            ],
+            [
+                '$id' => ID::custom('search'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ]
         ],
         'indexes' => [
@@ -3746,6 +3775,13 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_fulltext_search'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [],
+                'orders' => [],
             ]
         ]
     ],
@@ -3798,6 +3834,17 @@ $collections = [
                 'default' => new \stdClass(),
                 'array' => false,
                 'filters' => ['json'],
+            ],
+            [
+                '$id' => ID::custom('search'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ]
         ],
         'indexes' => [
@@ -3814,6 +3861,13 @@ $collections = [
                 'attributes' => ['name'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_fulltext_search'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [],
+                'orders' => [],
             ]
         ]
     ]

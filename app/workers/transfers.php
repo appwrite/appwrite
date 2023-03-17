@@ -1,19 +1,10 @@
 <?php
 
-use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
-use Appwrite\Template\Template;
 use MongoDB\Operation\Update;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
-use Utopia\Domains\Domain;
-use Utopia\Locale\Locale;
 use Utopia\Transfer\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Transfer\Source;
 use Utopia\Transfer\Sources\Appwrite;
@@ -37,7 +28,7 @@ class TransfersV1 extends Worker
 
     public function getName(): string
     {
-        return "Transfers";
+        return "transfers";
     }
 
     public function init(): void
@@ -46,17 +37,10 @@ class TransfersV1 extends Worker
 
     public function run(): void
     {
-        switch ($this->args['type']) {
-            case 'processTransfer':
-                $this->processTransfer();
-                break;
-            case 'processVerification':
-                $this->processVerification();
-                break;
-            default:
-                throw new \Exception('Invalid transfer type');
-                break;
-        }
+        var_dump("Test");
+
+        // Process
+        $this->processTransfer();
     }
 
     /**

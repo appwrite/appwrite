@@ -190,6 +190,7 @@ class Exception extends \Exception
     public const TRANSFER_DESTINATION_NOT_FOUND         = 'transfer_destination_not_found';
     public const TRANSFER_SOURCE_FAILED = 'transfer_source_failed';
     public const TRANSFER_DESTINATION_FAILED = 'transfer_destination_failed';
+    public const TRANSFER_IN_PROGRESS = 'transfer_in_progress';
 
     protected $type = '';
 
