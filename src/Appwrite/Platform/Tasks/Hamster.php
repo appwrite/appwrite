@@ -12,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -58,9 +59,12 @@ class Hamster extends Action
     ];
 
     protected string $directory = '/usr/local';
+    
     protected string $path;
 
     protected string $date;
+
+    protected Mixpanel $mixpanel;
 
     public static function getName(): string
     {
@@ -69,6 +73,8 @@ class Hamster extends Action
 
     public function __construct()
     {
+        $this->mixpanel = new Mixpanel('bce512333a58ec62f44541328607f53c');
+
         $this
             ->desc('Get stats for projects')
             ->inject('register')
