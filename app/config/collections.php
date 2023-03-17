@@ -488,7 +488,7 @@ $collections = [
     'vcs' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('vcs'),
-        'name' => 'VCS',
+        'name' => 'vcs',
         'attributes' => [
             [
                 '$id' => ID::custom('installationId'),
@@ -523,7 +523,8 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
-            '$id' => ID::custom('accessToken'),
+            [
+                '$id' => ID::custom('accessToken'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -532,6 +533,7 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['encrypt']
+            ]
         ]
     ],
 

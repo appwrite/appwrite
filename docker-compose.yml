@@ -393,6 +393,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_GITHUB_PRIVATE_KEY
+      - _APP_GITHUB_APP_ID
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates

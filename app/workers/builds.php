@@ -16,6 +16,10 @@ use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Query;
+use Utopia\Storage\Validator\File;
+use Utopia\Storage\Validator\FileExt;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
 
 require_once __DIR__ . '/../init.php';
 
@@ -82,6 +86,35 @@ class BuildsV1 extends Worker
         $startTime = DateTime::now();
         if (empty($buildId)) {
             $buildId = ID::unique();
+            // convert output to .tar.gz
+            // upload it to some storage
+            // pass the path to source attribute in the below method
+
+            $gitCloneCommand = $deployment->getAttribute('path');
+            $stdout = '';
+            $stderr = '';
+            Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
+            Console::execute($gitCloneCommand . ' /tmp/builds/' . $buildId . '/code', '', $stdout, $stderr);
+            Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId .'/code.tar.gz -C /tmp/builds/' . $buildId .'/code .', '', $stdout, $stderr);
+
+            $deviceFunctions = $this->getFunctionsDevice($project->getId());
+            var_dump($project->getId());
+
+            $fileName = 'code.tar.gz';
+            $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+
+            $deploymentId = $deployment->getId();
+            $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+
+            var_dump("path");
+            var_dump($path);
+
+            $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path);
+            var_dump($chunksUploaded);
+
+            var_dump("hello");
+            var_dump($path);
+
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
                 '$permissions' => [],
@@ -90,7 +123,7 @@ class BuildsV1 extends Worker
                 'status' => 'processing',
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path'),
+                'source' => $path,
                 'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
                 'stdout' => '',
                 'stderr' => '',

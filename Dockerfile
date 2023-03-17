@@ -154,6 +154,8 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
+ RUN apk add git
+
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance && \

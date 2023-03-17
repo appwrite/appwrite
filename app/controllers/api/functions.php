@@ -779,6 +779,103 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
+    App::post('/v1/functions/:functionId/vcs/deployments')
+    ->groups(['api', 'functions'])
+    ->desc('Create Deployment using VCS')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'createDeploymentUsingVcs')
+    ->label('sdk.description', '')
+    ->label('sdk.packaging', true)
+    ->label('sdk.request.type', 'multipart/form-data')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
+    ->param('path', '', new Text(256), 'Git Clone Command', false)
+    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->inject('project')
+    ->inject('deviceFunctions')
+    ->inject('deviceLocal')
+    ->action(function (string $functionId, string $entrypoint, string $path, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+
+        // create a new function
+        // map function id and repo id
+        // create a new deployment
+        // trigger a build
+        // call OPR
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $deploymentId = ID::unique();
+
+        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+
+            if ($activate) {
+                // Remove deploy for all other deployments.
+                $activeDeployments = $dbForProject->find('deployments', [
+                    Query::equal('activate', [true]),
+                    Query::equal('resourceId', [$functionId]),
+                    Query::equal('resourceType', ['functions'])
+                ]);
+
+                foreach ($activeDeployments as $activeDeployment) {
+                    $activeDeployment->setAttribute('activate', false);
+                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+                }
+            }
+
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+            if ($deployment->isEmpty()) {
+                $deployment = $dbForProject->createDocument('deployments', new Document([
+                    '$id' => $deploymentId,
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                    'resourceId' => $function->getId(),
+                    'resourceType' => 'functions',
+                    'entrypoint' => $entrypoint,
+                    'path' => $path,
+                    'search' => implode(' ', [$deploymentId, $entrypoint]),
+                    'activate' => $activate,
+
+                ]));
+            } else {
+                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', null)->setAttribute('metadata', null));
+            }
+
+            // Start the build
+            $buildEvent = new Build();
+            $buildEvent
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setProject($project)
+                ->trigger();
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
+    });
+
 App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List Deployments')

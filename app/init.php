@@ -75,6 +75,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -1143,3 +1144,10 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $params,
     );
 }, ['utopia', 'dbForProject']);
+
+App::setResource('GitHub', function($installationId) {
+    $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
+    $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
+    $github = new GitHub('vermakhushboo', $installationId, $privateKey, $githubAppId);
+    return $github;
+}, []);
