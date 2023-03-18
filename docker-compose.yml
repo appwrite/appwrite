@@ -374,6 +374,8 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
       - mariadb

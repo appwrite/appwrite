@@ -822,19 +822,19 @@ App::post('/v1/functions/:functionId/deployments')
 
         $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
-            if ($activate) {
-                // Remove deploy for all other deployments.
-                $activeDeployments = $dbForProject->find('deployments', [
-                    Query::equal('activate', [true]),
-                    Query::equal('resourceId', [$functionId]),
-                    Query::equal('resourceType', ['functions'])
-                ]);
+            // if ($activate) {
+            //     // Remove deploy for all other deployments.
+            //     $activeDeployments = $dbForProject->find('deployments', [
+            //         Query::equal('activate', [true]),
+            //         Query::equal('resourceId', [$functionId]),
+            //         Query::equal('resourceType', ['functions'])
+            //     ]);
 
-                foreach ($activeDeployments as $activeDeployment) {
-                    $activeDeployment->setAttribute('activate', false);
-                    $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
-                }
-            }
+            //     foreach ($activeDeployments as $activeDeployment) {
+            //         $activeDeployment->setAttribute('activate', false);
+            //         $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
+            //     }
+            // }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
@@ -855,7 +855,7 @@ App::post('/v1/functions/:functionId/deployments')
 
                 ]));
             } else {
-                $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', null)->setAttribute('metadata', null));
+                // $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', null)->setAttribute('metadata', null));
             }
 
             // Start the build
@@ -865,6 +865,7 @@ App::post('/v1/functions/:functionId/deployments')
                 ->setResource($function)
                 ->setDeployment($deployment)
                 ->setProject($project)
+                
                 ->trigger();
 
         $events

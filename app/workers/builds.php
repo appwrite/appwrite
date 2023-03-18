@@ -86,56 +86,89 @@ class BuildsV1 extends Worker
         $startTime = DateTime::now();
         if (empty($buildId)) {
             $buildId = ID::unique();
-            // convert output to .tar.gz
-            // upload it to some storage
-            // pass the path to source attribute in the below method
+            
+            $isVcsEnabled = true;
+            if($isVcsEnabled){
+                // convert output to .tar.gz
+                // upload it to some storage
+                // pass the path to source attribute in the below method
 
-            $gitCloneCommand = $deployment->getAttribute('path');
-            $stdout = '';
-            $stderr = '';
-            Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
-            Console::execute($gitCloneCommand . ' /tmp/builds/' . $buildId . '/code', '', $stdout, $stderr);
-            Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId .'/code.tar.gz -C /tmp/builds/' . $buildId .'/code .', '', $stdout, $stderr);
+                $gitCloneCommand = $deployment->getAttribute('path');
+                $stdout = '';
+                $stderr = '';
+                Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                Console::execute($gitCloneCommand . ' /tmp/builds/' . $buildId . '/code', '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId .'/code.tar.gz -C /tmp/builds/' . $buildId .'/code .', '', $stdout, $stderr);
 
-            $deviceFunctions = $this->getFunctionsDevice($project->getId());
-            var_dump($project->getId());
+                $deviceFunctions = $this->getFunctionsDevice($project->getId());
+                var_dump($project->getId());
 
-            $fileName = 'code.tar.gz';
-            $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+                $fileName = 'code.tar.gz';
+                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
 
-            $deploymentId = $deployment->getId();
-            $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+                $deploymentId = $deployment->getId();
+                $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
 
-            var_dump("path");
-            var_dump($path);
+                // if (!\file_exists(\dirname($path))) {
+                //     if (!@\mkdir(\dirname($path), 0755, true)) {
+                //         throw new Exception("Failed to create temporary directory", 500);
+                //     }
+                // }
 
-            $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path);
-            var_dump($chunksUploaded);
+                var_dump("path");
+                var_dump($path);
 
-            var_dump("hello");
-            var_dump($path);
+                $result = $deviceFunctions->move($fileTmpName, $path);
+                var_dump($result);
 
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => $startTime,
-                'deploymentId' => $deployment->getId(),
-                'status' => 'processing',
-                'outputPath' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $path,
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
-                'stdout' => '',
-                'stderr' => '',
-                'endTime' => null,
-                'duration' => 0
-            ]));
+                if(!$result){
+                    throw new \Exception("Unable to move file");
+                }
+
+                var_dump("hello");
+                var_dump($path);
+            }
+
+            if($isVcsEnabled){
+                $build = $dbForProject->createDocument('builds', new Document([
+                    '$id' => $buildId,
+                    '$permissions' => [],
+                    'startTime' => $startTime,
+                    'deploymentId' => $deployment->getId(),
+                    'status' => 'processing',
+                    'outputPath' => '',
+                    'runtime' => $function->getAttribute('runtime'),
+                    'source' => $path,
+                    'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                    'stdout' => '',
+                    'stderr' => '',
+                    'endTime' => null,
+                    'duration' => 0
+                ]));
+            }else{
+                $build = $dbForProject->createDocument('builds', new Document([
+                    '$id' => $buildId,
+                    '$permissions' => [],
+                    'startTime' => $startTime,
+                    'deploymentId' => $deployment->getId(),
+                    'status' => 'processing',
+                    'outputPath' => '',
+                    'runtime' => $function->getAttribute('runtime'),
+                    'source' => $deployment->getAttribute('path'),
+                    'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                    'stdout' => '',
+                    'stderr' => '',
+                    'endTime' => null,
+                    'duration' => 0
+                ]));
+            }
             $deployment->setAttribute('buildId', $buildId);
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
         }
 
+        var_dump($build);
         /** Request the executor to build the code... */
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -179,6 +212,8 @@ class BuildsV1 extends Worker
         );
 
         $source = $deployment->getAttribute('path');
+        if($isVcsEnabled)
+            $source = $path;
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
