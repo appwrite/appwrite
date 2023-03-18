@@ -234,6 +234,9 @@ App::get('/v1/functions/:functionId/usage')
         }
 
         $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
@@ -337,6 +340,9 @@ App::get('/v1/functions/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
