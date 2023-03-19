@@ -262,6 +262,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - appwrite-backups:/storage/backups:rw
     depends_on:
       - redis
       - mariadb
@@ -873,6 +874,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-backups:
   appwrite-certificates:
   appwrite-functions:
   appwrite-builds:

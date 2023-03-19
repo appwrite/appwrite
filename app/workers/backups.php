@@ -5,8 +5,18 @@ use Appwrite\Resque\Worker;
 use Utopia\Audit\Audit;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Storage\Device\Local;
 
+/**
+ * Todo - allow backups of specific tables
+ * Todo - delete temporary files generated during backup
+ * Todo - Backup certificates ? 
+ * Todo - Backup Functions
+ * Todo - How to backup files? 
+ */
 require_once __DIR__ . '/../init.php';
 
 Console::title('Backups V1 Worker');
@@ -62,14 +72,16 @@ class BackupsV1 extends Worker
 
             /** Create list of tables to backup */
             $dbForProject = $this->getProjectDB($project->getId(), $project);
-            $tables = $dbForProject->listCollections();
+            $tables = $dbForProject->listCollections(1000);
             $tablesToBackup = [];
             foreach ($tables as $table) {
-                if ($table->getId() === 'backups') {
-                    continue;
-                }
                 $tablesToBackup[] = $dbForProject->getNamespace() . '_' .$table->getId();
+                $tablesToBackup[] = $dbForProject->getNamespace() . '_' .$table->getId() . '_perms';
             }
+
+            /** Backup the metadata tables */
+            $tablesToBackup[] = $dbForProject->getNamespace() . '__metadata';
+            $tablesToBackup[] = $dbForProject->getNamespace() . '__metadata_perms';
 
             /**
              * Create Temporary Backup File
@@ -114,7 +126,7 @@ class BackupsV1 extends Worker
             }
 
             $backup->setAttribute('path', $path);
-            $backup->setAttribute('status', 'success');
+            $backup->setAttribute('status', 'completed');
             $dbForConsole->updateDocument('backups', $backup->getId(), $backup);
 
         } catch (Exception $e) {
@@ -137,8 +149,53 @@ class BackupsV1 extends Worker
                 return;
             }
 
-            /** load the backup file */
+            /**
+             * Create Temporary file to untar and store the resultant backup
+             */
+            $sqldumpFilename = $backupId . '.sql';
+            $compressedFilename = $backupId . '.tar.gz';
+            $tmpSqlDump = "/tmp/backups/$backupId/$sqldumpFilename";
+            $tmpBackup = "/tmp/backups/$backupId/$compressedFilename";
+            if (!\file_exists(\dirname($tmpBackup))) {
+                if (!@\mkdir(\dirname($tmpBackup), 0755, true)) {
+                    throw new Exception("Failed to create temporary directory", 500);
+                }
+            }
+
+            /** load the backup file to a temporary directory */
+            $localDevice = new Local();
             $deviceBackups = $this->getBackupsDevice($project->getId());
+            
+            $path = $backup->getAttribute('path', '');
+            
+            $buffer = $deviceBackups->read($path);
+            if (!$localDevice->write($tmpBackup, $buffer)) {
+                throw new Exception('Failed to copy backup to temporary directory', 500);
+            };
+
+            // Untar the file in path and store the resulting sql file in tmpSqlDump
+            $command = 'tar -xzf ' . $tmpBackup . ' -C /tmp/backups/' . $backupId . ' ' . $sqldumpFilename;
+            Console::info('Running command: ' . $command);
+
+            $stdout = '';
+            $stderr = '';
+            $stdin = '';
+            $return = Console::execute($command, $stdin, $stdout, $stderr);
+
+            if ($return !== 0) {
+                throw new Exception('Failed to extract backup: ' . $backupId);
+            }
+
+            /** Restore the backup from the .sql file located at $tmpSqlDump */
+            $command = 'mysql -h' . App::getEnv('_APP_DB_HOST') . ' -u' . App::getEnv('_APP_DB_USER') . ' -p' . App::getEnv('_APP_DB_PASS') . ' ' . App::getEnv('_APP_DB_SCHEMA') . ' < ' . $tmpSqlDump;
+
+            Console::info('Running command: ' . $command);
+            $return = Console::execute($command, $stdin, $stdout, $stderr);
+
+            if ($return !== 0) {
+                throw new Exception('Failed to restore backup: ' . $backupId);
+            }
+
         } catch (Exception $e) {
             Console::error($e->getMessage());
         }
