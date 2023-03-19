@@ -58,6 +58,17 @@ class V17 extends Migration
                     }
 
                     break;
+                case 'functions':
+                    try {
+                        /**
+                         * Delete 'scheduleUpdatedAt' attribute
+                         */
+                        $this->projectDB->deleteAttribute($id, 'scheduleUpdatedAt');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleUpdatedAt' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
 
                 default:
                     break;
