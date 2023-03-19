@@ -3183,7 +3183,7 @@ $collections = [
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 255,
                 'signed' => true,
