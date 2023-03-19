@@ -97,16 +97,19 @@ class DatabaseV1 extends Worker
         try {
             if ($type === Database::VAR_RELATIONSHIP) {
                 $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                if ($relatedCollection->isEmpty()) {
+                    throw new Exception('Missing collection');
+                }
                 if (
                     !$dbForProject->createRelationship(
                         collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                         relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                        type: $options['relationType'] || null,
-                        twoWay: $options['twoWay'] || null,
-                        id: $options['id'] || null,
-                        twoWayKey: $options['twoWayKey'] || null,
-                        onUpdate: $options['onUpdate'] || null,
-                        onDelete: $options['onDelete'] || null,
+                        type: $options['relationType'],
+                        twoWay: $options['twoWay'],
+                        id: $options['id'],
+                        twoWayKey: $options['twoWayKey'],
+                        onUpdate: $options['onUpdate'],
+                        onDelete: $options['onDelete'],
                     )
                 ) {
                     throw new Exception('Failed to create Attribute');

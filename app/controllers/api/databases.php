@@ -1558,7 +1558,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 'twoWay' => $twoWay,
                 'twoWayKey' => $twoWayKey,
                 'onUpdate' => $onUpdate,
-                'onDelete' => $onDelete
+                'onDelete' => $onDelete,
+                'id' => $key
             ]
             ]),
             $response,
@@ -1568,13 +1569,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         );
 
         $options = $attribute->getAttribute('options', []);
-        $attribute->setAttribute('relatedCollection', $options['relatedCollection'] || null);
-        $attribute->setAttribute('relationType', $options['relationType'] || null);
-        $attribute->setAttribute('twoWay', $options['twoWay'] || null);
-        $attribute->setAttribute('twoWayKey', $options['twoWayKey'] || null);
-        $attribute->setAttribute('onUpdate', $options['onUpdate'] || null);
-        $attribute->setAttribute('onDelete', $options['onDelete'] || null);
-        $attribute->setAttribute('side', $options['side'] || null);
+        $attribute->setAttribute('relatedCollection', $options['relatedCollection'] ?? null);
+        $attribute->setAttribute('relationType', $options['relationType'] ?? null);
+        $attribute->setAttribute('twoWay', $options['twoWay'] ?? null);
+        $attribute->setAttribute('twoWayKey', $options['twoWayKey'] ?? null);
+        $attribute->setAttribute('onUpdate', $options['onUpdate'] ?? null);
+        $attribute->setAttribute('onDelete', $options['onDelete'] ?? null);
+        $attribute->setAttribute('side', $options['side'] ?? null);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

@@ -61,6 +61,7 @@ class Filter extends Base
 
         foreach ($values as $value) {
             $condition = match ($attributeType) {
+                Database::VAR_RELATIONSHIP => true, // Todo: ?
                 Database::VAR_DATETIME => gettype($value) === Database::VAR_STRING,
                 default => gettype($value) === $attributeType
             };
