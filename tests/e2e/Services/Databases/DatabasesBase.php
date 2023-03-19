@@ -366,11 +366,16 @@ trait DatabasesBase
 //
 //        var_dump($documents);
 
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/libraryId', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        var_dump($response);
 
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         die;
-
-
 
 
         return [];
