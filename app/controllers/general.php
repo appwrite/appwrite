@@ -116,6 +116,8 @@ App::init()
                             'registerable' => $domain->getRegisterable(),
                             'verification' => false,
                             'certificateId' => null,
+                            'projectId' => $project->getId(),
+                            'projectInternalId' => $project->getInternalId(),
                         ]);
 
                         $domainDocument = $dbForConsole->createDocument('domains', $domainDocument);
