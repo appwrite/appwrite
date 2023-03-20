@@ -42,10 +42,12 @@ Server::setResource('execute', function () {
 
         $user ??= new Document();
         $functionId = $function->getId();
+        $functionInternalId = $function->getInternalId();
         $deploymentId = $function->getAttribute('deployment', '');
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deploymentInternalId = $deployment->getInternalId();
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
@@ -82,6 +84,8 @@ Server::setResource('execute', function () {
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
                 'functionId' => $functionId,
+                'functionInternalId' => $functionInternalId,
+                'deploymentInternalId' => $deploymentInternalId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
                 'status' => 'waiting',
@@ -104,7 +108,7 @@ Server::setResource('execute', function () {
 
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
         }
 
         $execution->setAttribute('status', 'processing');
