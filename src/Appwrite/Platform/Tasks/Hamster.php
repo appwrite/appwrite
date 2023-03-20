@@ -10,8 +10,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use League\Csv\Writer;
-use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event;
 use Utopia\Database\Document;
