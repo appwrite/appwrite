@@ -94,14 +94,16 @@ class Hamster extends Action
                 Query::equal('teamInternalId', [$teamInternalId]),
             ]);
 
-            $userInternalId = $membership->getAttribute('userInternalId', null);
-            if ($userInternalId) {
-                $user = $dbForConsole->findOne('users', [
-                    Query::equal('_id', [$userInternalId]),
-                ]);
+            if($membership && !$membership->isEmpty()) {
+                $userInternalId = $membership->getAttribute('userInternalId', null);
+                if ($userInternalId) {
+                    $user = $dbForConsole->findOne('users', [
+                        Query::equal('_id', [$userInternalId]),
+                    ]);
 
-                $stats['email'] = $user->getAttribute('email', null);
-                $stats['name'] = $user->getAttribute('name', null);
+                    $stats['email'] = $user->getAttribute('email', null);
+                    $stats['name'] = $user->getAttribute('name', null);
+                }
             }
         }
 
@@ -255,8 +257,7 @@ class Hamster extends Action
                             Console::error('Failed to create event for project: ' . $project->getId());
                         }
                     } catch (\Throwable $th) {
-                        throw $th;
-                        Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                        Console::error('Failed to get stats for project ("' . $project->getId() . '") with error: ' . $th->getMessage());
                     } finally {
                         $pools
                             ->get($db)
