@@ -177,7 +177,7 @@ class Hamster extends Action
 
         $sleep = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
-        $jobInitTime = '22:00'; // (hour:minutes)
+        $jobInitTime = App::getEnv('_APP_HAMSTER_TIME', '22:00');// (hour:minutes)
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
