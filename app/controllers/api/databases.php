@@ -210,27 +210,6 @@ function updateAttribute(
 
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
-            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
-                break;
-            }
-
-            if ($min > $max) {
-                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
-            }
-
-            $validator = new Range($min, $max, Database::VAR_INTEGER);
-
-            if (!is_null($default) && !$validator->isValid($default)) {
-                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
-            }
-
-            $options = [
-                'min' => $min,
-                'max' => $max
-            ];
-            $attribute->setAttribute('formatOptions', $options);
-
-            break;
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
             if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
                 break;
@@ -240,11 +219,15 @@ function updateAttribute(
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
 
-            if (!is_null($default)) {
-                $default = \floatval($default);
-            }
+            if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
+                $validator = new Range($min, $max, Database::VAR_INTEGER);
+            } else {
+                $validator = new Range($min, $max, Database::VAR_FLOAT);
 
-            $validator = new Range($min, $max, Database::VAR_FLOAT);
+                if (!is_null($default)) {
+                    $default = \floatval($default);
+                }
+            }
 
             if (!is_null($default) && !$validator->isValid($default)) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
@@ -262,14 +245,10 @@ function updateAttribute(
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
             }
 
-            //TODO: before merging - this iteration is kinda hard to follow because of the $size variable?
-            $size = 0;
             foreach ($elements as $element) {
-                $length = \strlen($element);
-                if ($length === 0) {
+                if (\strlen($element) === 0) {
                     throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
                 }
-                $size = ($length > $size) ? $length : $size;
             }
 
             if (!is_null($default) && !in_array($default, $elements)) {
@@ -279,6 +258,7 @@ function updateAttribute(
             $options = [
                 'elements' => $elements
             ];
+
             $attribute->setAttribute('formatOptions', $options);
 
             break;
