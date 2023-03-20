@@ -94,16 +94,18 @@ class Hamster extends Action
                 Query::equal('teamInternalId', [$teamInternalId]),
             ]);
 
-            if($membership && !$membership->isEmpty()) {
-                $userInternalId = $membership->getAttribute('userInternalId', null);
-                if ($userInternalId) {
-                    $user = $dbForConsole->findOne('users', [
-                        Query::equal('_id', [$userInternalId]),
-                    ]);
+            if (!$membership || $membership->isEmpty()) {
+                throw new Exception('Membership not found. Skipping project : ' . $project->getId());
+            }
 
-                    $stats['email'] = $user->getAttribute('email', null);
-                    $stats['name'] = $user->getAttribute('name', null);
-                }
+            $userInternalId = $membership->getAttribute('userInternalId', null);
+            if ($userInternalId) {
+                $user = $dbForConsole->findOne('users', [
+                    Query::equal('_id', [$userInternalId]),
+                ]);
+
+                $stats['email'] = $user->getAttribute('email', null);
+                $stats['name'] = $user->getAttribute('name', null);
             }
         }
 
@@ -238,23 +240,25 @@ class Hamster extends Action
 
                         $statsPerProject = $this->getStats($dbForConsole, $dbForProject, $project);
 
-                        /** Send data to mixpanel */
-                        $res = $this->mixpanel->createProfile($statsPerProject['email'], '', [
-                            'name' => $statsPerProject['name'],
-                            'email' => $statsPerProject['email']
-                        ]);
+                        if (isset($statsPerProject['email'])) {
+                            /** Send data to mixpanel */
+                            $res = $this->mixpanel->createProfile($statsPerProject['email'], '', [
+                                'name' => $statsPerProject['name'],
+                                'email' => $statsPerProject['email']
+                            ]);
 
-                        if (!$res) {
-                            Console::error('Failed to create user profile for project: ' . $project->getId());
-                        }
+                            if (!$res) {
+                                Console::error('Failed to create user profile for project: ' . $project->getId());
+                            }
 
-                        $event = new Event();
-                        $event
-                            ->setName('Appwrite Cloud Project Stats')
-                            ->setProps($statsPerProject);
-                        $res = $this->mixpanel->createEvent($event);
-                        if (!$res) {
-                            Console::error('Failed to create event for project: ' . $project->getId());
+                            $event = new Event();
+                            $event
+                                ->setName('Appwrite Cloud Project Stats')
+                                ->setProps($statsPerProject);
+                            $res = $this->mixpanel->createEvent($event);
+                            if (!$res) {
+                                Console::error('Failed to create event for project: ' . $project->getId());
+                            }
                         }
                     } catch (\Throwable $th) {
                         Console::error('Failed to get stats for project ("' . $project->getId() . '") with error: ' . $th->getMessage());
