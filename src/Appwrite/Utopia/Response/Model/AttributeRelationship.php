@@ -27,22 +27,43 @@ class AttributeRelationship extends Attribute
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Only null is optional',
                 'default' => null,
+                'example' => '',
+            ])
+            ->addRule('relatedCollection', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The Id of the related collection',
+                'default' => null,
+                'example' => 'collection',
+            ])
+            ->addRule('relationType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The type of the relationship ',
+                'default' => null,
+                'example' => 'oneToOne|oneToMany|manyToOne|manyToMany',
+            ])
+            ->addRule('twoWay', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is the relationship going two ways?',
+                'default' => null,
                 'example' => 'relationship',
             ])
-            ->addRule('options', [
-                'type' => [
-                    'relatedCollection',
-                    'relationType',
-                    'twoWay',
-                    'twoWayKey',
-                    'onUpdate',
-                    'onDelete',
-                    'side',
-                ],
-                'description' => 'Options attributes.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+            ->addRule('twoWayKey', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The key of the 2 way relationship',
+                'default' => null,
+                'example' => 'string',
+            ])
+            ->addRule('onUpdate', [
+                'type' => self::TYPE_STRING,
+                'description' => 'How to set related documents after parent document is updated',
+                'default' => null,
+                'example' => 'restrict|cascade|setNull',
+            ])
+            ->addRule('onDelete', [
+                'type' => self::TYPE_STRING,
+                'description' => 'How to set related documents after parent document is deleted',
+                'default' => null,
+                'example' => 'restrict|cascade|setNull',
             ])
         ;
     }

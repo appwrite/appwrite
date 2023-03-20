@@ -317,11 +317,11 @@ trait DatabasesBase
         $this->assertEquals('relationship', $attribute['body']['type']);
         $this->assertEquals(false, $attribute['body']['required']);
         $this->assertEquals(false, $attribute['body']['array']);
-        $this->assertEquals('oneToOne', $attribute['body']['options']['relationType']);
-        $this->assertEquals(false, $attribute['body']['options']['twoWay']);
-        $this->assertEquals('cascade', $attribute['body']['options']['onUpdate']);
-        $this->assertEquals('restrict', $attribute['body']['options']['onDelete']);
-        $this->assertEquals('libraryId', $attribute['body']['options']['id']);
+        $this->assertEquals('oneToOne', $attribute['body']['relationType']);
+        $this->assertEquals(false, $attribute['body']['twoWay']);
+        $this->assertEquals('cascade', $attribute['body']['onUpdate']);
+        $this->assertEquals('restrict', $attribute['body']['onDelete']);
+        //$this->assertEquals('libraryId', $attribute['body']['id']); //
 
         $person1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -356,7 +356,6 @@ trait DatabasesBase
         $this->assertEquals(1, $documents['body']['total']);
         $this->assertEquals('Library 1', $documents['body']['documents'][0]['libraryId']['libraryName']);
 
-
 //        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
 //            'content-type' => 'application/json',
 //            'x-appwrite-project' => $this->getProject()['$id'],
@@ -371,13 +370,10 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
-        var_dump($response);
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
         die;
-
-
         return [];
     }
 

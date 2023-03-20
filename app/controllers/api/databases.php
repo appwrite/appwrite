@@ -1569,13 +1569,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         );
 
         $options = $attribute->getAttribute('options', []);
-        $attribute->setAttribute('relatedCollection', $options['relatedCollection'] ?? null);
-        $attribute->setAttribute('relationType', $options['relationType'] ?? null);
-        $attribute->setAttribute('twoWay', $options['twoWay'] ?? null);
-        $attribute->setAttribute('twoWayKey', $options['twoWayKey'] ?? null);
-        $attribute->setAttribute('onUpdate', $options['onUpdate'] ?? null);
-        $attribute->setAttribute('onDelete', $options['onDelete'] ?? null);
-        $attribute->setAttribute('side', $options['side'] ?? null);
+
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1673,6 +1670,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
+        $options = $attribute->getAttribute('options', []);
+
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
 
         $model = match ($type) {
             Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
