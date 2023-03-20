@@ -44,10 +44,10 @@
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.11.*",
         "utopia-php/abuse": "0.16.*",
-        "utopia-php/analytics": "0.2.*",
+        "utopia-php/analytics": "0.10.1",
         "utopia-php/audit": "0.17.*",
         "utopia-php/cache": "0.8.*",
-        "utopia-php/cli": "0.14.*",
+        "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.28.*",
         "utopia-php/queue": "0.5.*",
@@ -56,7 +56,7 @@
         "utopia-php/pools": "0.4.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/framework": "0.25.*",
+        "utopia-php/framework": "0.26.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/dsn": "0.1.*",
         "utopia-php/locale": "0.4.*",
@@ -73,8 +73,7 @@
         "phpmailer/phpmailer": "6.6.0",
         "chillerlan/php-qrcode": "4.3.3",
         "adhocore/jwt": "1.1.2",
-        "slickdeals/statsd": "3.1.0",
-        "league/csv": "^9.0.0"
+        "slickdeals/statsd": "3.1.0"
     },
     "repositories": [
         {
