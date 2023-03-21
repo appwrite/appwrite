@@ -365,7 +365,7 @@ trait DatabasesBase
             'queries' => ['equal("library.libraryNameNotFound", "Library 1")'],
         ]);
 
-        $this->assertEquals(1, $documents['body']['total']); // we skip count for nested
+        $this->assertEquals(1, $documents['body']['total']); // Count is on parent level
         $this->assertEquals('Library 1', $documents['body']['documents'][0]['libraryId']['libraryName']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/libraryId', array_merge([
@@ -384,6 +384,43 @@ trait DatabasesBase
         ]));
         $this->assertEquals(404, $attribute['headers']['status-code']);
 
+        // One person can own several libraries
+        $oneToMany = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'xxx',
+            'relatedCollectionId' => 'library',
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'twoWay' => true,
+            'twoWayKey' => 'personId',
+        ]);
+
+        sleep(2);
+
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/xxx", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        var_dump($attribute);
+
+die;
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals('people', $attribute['body']['key']);
+        $this->assertEquals('relationship', $attribute['body']['type']);
+        $this->assertEquals(false, $attribute['body']['required']);
+        $this->assertEquals(false, $attribute['body']['array']);
+        $this->assertEquals('oneToMany', $attribute['body']['relationType']);
+        $this->assertEquals(false, $attribute['body']['twoWay']);
+        $this->assertEquals('restrict', $attribute['body']['onUpdate']);
+        $this->assertEquals('restrict', $attribute['body']['onDelete']);
+
+var_dump($attribute);
         die;
         return [];
     }
