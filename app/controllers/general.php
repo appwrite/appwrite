@@ -346,6 +346,11 @@ App::init()
             Authorization::setRole($authRole);
         }
 
+        $paused = $project->getAttribute('paused', false);
+        if ($paused && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))) {
+            throw new AppwriteException(AppwriteException::GENERAL_PROJECT_PAUSED);
+        }
+
         $service = $route->getLabel('sdk.namespace', '');
         if (!empty($service)) {
             if (
