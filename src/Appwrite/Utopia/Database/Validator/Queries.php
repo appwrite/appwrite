@@ -57,8 +57,11 @@ class Queries extends Validator
             if (!$query instanceof Query) {
                 try {
                     $query = Query::parse($query);
+                    if (\str_contains($query->getAttribute(), '.')) {
+                        return true;
+                    }
                 } catch (\Throwable $th) {
-                    $this->message = 'Invalid query: ${query}';
+                    $this->message = "Invalid query: {$query}";
                     return false;
                 }
             }

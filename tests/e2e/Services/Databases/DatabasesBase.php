@@ -321,7 +321,6 @@ trait DatabasesBase
         $this->assertEquals(false, $attribute['body']['twoWay']);
         $this->assertEquals('cascade', $attribute['body']['onUpdate']);
         $this->assertEquals('restrict', $attribute['body']['onDelete']);
-        //$this->assertEquals('libraryId', $attribute['body']['id']); //
 
         $person1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -350,20 +349,24 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("libraryId", "library1")'],
+            'queries' => [
+                'equal("libraryId", "library1")',
+                //'select("libraryId")'
+            ],
         ]);
 
         $this->assertEquals(1, $documents['body']['total']);
         $this->assertEquals('Library 1', $documents['body']['documents'][0]['libraryId']['libraryName']);
 
-//        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//        ], $this->getHeaders()), [
-//            'queries' => ['equal("library.libraryName", "Library 1")'],
-//        ]);
-//
-//        var_dump($documents);
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['equal("library.libraryNameNotFound", "Library 1")'],
+        ]);
+
+        $this->assertEquals(1, $documents['body']['total']); // we skip count for nested
+        $this->assertEquals('Library 1', $documents['body']['documents'][0]['libraryId']['libraryName']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/libraryId', array_merge([
             'content-type' => 'application/json',
@@ -371,7 +374,15 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+        sleep(1);
+
         $this->assertEquals(204, $response['headers']['status-code']);
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/libraryId", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        $this->assertEquals(404, $attribute['headers']['status-code']);
 
         die;
         return [];
