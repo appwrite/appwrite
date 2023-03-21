@@ -475,10 +475,10 @@ class ProjectsConsoleClientTest extends Scope
          $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+         ], $this->getHeaders()), [
             'name' => 'Project Test 2',
             'paused' => false,
-        ]);
+         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
