@@ -170,6 +170,9 @@ class OpenAPI3 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
+                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
+                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
+                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
                 ],
             ];
 

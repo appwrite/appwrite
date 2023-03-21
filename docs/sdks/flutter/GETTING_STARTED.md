@@ -18,7 +18,7 @@ In order to capture the Appwrite OAuth callback url, the following activity need
     <application ...>
         ....
         <!-- Add this inside the <application> tag, along side the existing <activity> tags -->
-        <activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
+        <activity android:exported="true" android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
             <intent-filter android:label="flutter_web_auth_2">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

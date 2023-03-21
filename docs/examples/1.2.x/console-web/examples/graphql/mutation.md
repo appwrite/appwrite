@@ -1,4 +1,4 @@
-import { Client, Graphql } from "appwrite";
+import { Client, Graphql } from "@appwrite.io/console";
 
 const client = new Client();
 
