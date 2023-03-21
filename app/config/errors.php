@@ -549,8 +549,8 @@ return [
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
     ],
-    Exception::DOMAIN_VARIABLE_INCORRECT => [
-        'name' => Exception::DOMAIN_VARIABLE_INCORRECT,
+    Exception::DOMAIN_TARGET_INVALID => [
+        'name' => Exception::DOMAIN_TARGET_INVALID,
         'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
         'code' => 501,
     ],
