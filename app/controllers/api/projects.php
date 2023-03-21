@@ -108,6 +108,7 @@ App::post('/v1/projects')
             'logo' => $logo,
             'url' => $url,
             'version' => APP_VERSION_STABLE,
+            'paused' => false,
             'legalName' => $legalName,
             'legalCountry' => $legalCountry,
             'legalState' => $legalState,
@@ -369,6 +370,7 @@ App::patch('/v1/projects/:projectId')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
+    ->param('paused', null, new Boolean(), 'Pause project', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -380,7 +382,7 @@ App::patch('/v1/projects/:projectId')
     ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, bool $paused, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -390,6 +392,7 @@ App::patch('/v1/projects/:projectId')
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
                 ->setAttribute('name', $name)
+                ->setAttribute('paused', $paused ?? $project->getAttribute('paused', false))
                 ->setAttribute('description', $description)
                 ->setAttribute('logo', $logo)
                 ->setAttribute('url', $url)

@@ -579,6 +579,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('paused'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => false,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('legalName'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

@@ -66,6 +66,12 @@ class Project extends Model
                 'default' => '',
                 'example' => '5f5c451b403cb',
             ])
+            ->addRule('paused', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Project Paused.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('legalName', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Company legal name.',
