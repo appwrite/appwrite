@@ -62,7 +62,7 @@ class Hamster extends Action
 
     private function getStatsPerProject(Group $pools, Cache $cache, Database $dbForConsole)
     {
-        $this->calculateByGroup('projects', $dbForConsole, function (Database $dbForConsole, Document $project) use ($pools, $cache){
+        $this->calculateByGroup('projects', $dbForConsole, function (Database $dbForConsole, Document $project) use ($pools, $cache) {
             /**
              * Skip user projects with id 'console'
              */
