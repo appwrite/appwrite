@@ -116,7 +116,6 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/patch-create-missing-schedules && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/volume-sync && \
