@@ -500,11 +500,8 @@ trait DatabasesBase
         /// $this->assertEquals('restrict', $attribute['body']['onUpdate']);
         $this->assertEquals('cascade', $attribute['body']['onDelete']);
 
-       var_dump($response);
-die;
         return [];
     }
-
 
     /**
      * @depends testCreateAttributes
