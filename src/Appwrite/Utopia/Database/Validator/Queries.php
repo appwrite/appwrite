@@ -57,7 +57,7 @@ class Queries extends Validator
             if (!$query instanceof Query) {
                 try {
                     $query = Query::parse($query);
-                    if (\str_contains($query->getAttribute(), '.')) {
+                    if (\str_contains($query->getAttribute(), '.')) { // todo: double check!
                         return true;
                     }
                 } catch (\Throwable $th) {
@@ -69,6 +69,9 @@ class Queries extends Validator
             $method = $query->getMethod();
             $methodType = '';
             switch ($method) {
+                case Query::TYPE_SELECT:
+                    $methodType = Base::METHOD_TYPE_SELECT;
+                    break;
                 case Query::TYPE_LIMIT:
                     $methodType = Base::METHOD_TYPE_LIMIT;
                     break;

@@ -8,6 +8,7 @@ use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Database\Validator\Query\Cursor;
 use Appwrite\Utopia\Database\Validator\Query\Filter;
 use Appwrite\Utopia\Database\Validator\Query\Order;
+use Appwrite\Utopia\Database\Validator\Query\Select;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -60,6 +61,7 @@ class Base extends Queries
         ]);
 
         $validators = [
+            new Select(),
             new Limit(),
             new Offset(),
             new Cursor(),

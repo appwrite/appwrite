@@ -1382,6 +1382,37 @@ trait DatabasesBase
     }
 
     /**
+     * @depends testListDocuments
+     */
+    public function testGetDocumentWithQueries(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        foreach ($data['documents'] as $document) {
+            $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => ['select("title","releaseYear")'],
+            ]);
+
+            var_dump($response);
+           //Query::select(['string', 'integer']),
+            die;
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($response['body']['$id'], $document['$id']);
+            $this->assertEquals($document['$collectionId'], $response['body']['$collectionId']);
+            $this->assertArrayNotHasKey('$collection', $response['body']);
+            $this->assertEquals($document['$databaseId'], $response['body']['$databaseId']);
+            $this->assertEquals($response['body']['title'], $document['title']);
+            $this->assertEquals($response['body']['releaseYear'], $document['releaseYear']);
+            $this->assertEquals($response['body']['$permissions'], $document['$permissions']);
+            $this->assertEquals($response['body']['birthDay'], $document['birthDay']);
+            $this->assertFalse(array_key_exists('$internalId', $response['body']));
+        }
+    }
+
+    /**
      * @depends testCreateDocument
      */
     public function testListDocumentsAfterPagination(array $data): array

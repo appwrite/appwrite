@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Utopia\Database\Validator\Query\Filter;
+use Appwrite\Utopia\Database\Validator\Query\Select;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
@@ -2900,10 +2902,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('queries', [], new Queries(new Select()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
+
+        var_dump($queries);
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2927,9 +2932,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         if ($documentSecurity && !$valid) {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
         } else {
-            $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+            $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries));
         }
 
         if ($document->isEmpty()) {
