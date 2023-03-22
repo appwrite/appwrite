@@ -5,7 +5,7 @@
  *
  * Source:
  * https://www.andiamo.co.uk/resources/iso-language-codes/
- * 
+ *
  * Country codes:
  * https://docs.oracle.com/cd/E13214_01/wli/docs92/xref/xqisocodes.html
  */
