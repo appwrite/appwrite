@@ -295,12 +295,7 @@ function updateAttribute(
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $original = $attribute->getAttribute('options', []);
-        if (!empty($original['twoWayKey']) && $options['twoWayKey'] === $original['twoWayKey']) {
-            $options['twoWayKey'] = null;
-        }
-
-        $options = array_merge($original, $options);
+        $options = array_merge($attribute->getAttribute('options', []), $options);
         $attribute->setAttribute('options', $options);
         var_dump($options);
 
@@ -308,7 +303,7 @@ function updateAttribute(
             collection: $collectionId,
             key: $key,
             newTwoWayKey: $options['twoWayKey'],
-            onUpdate: $options['onUpdate'],
+            twoWay: $options['twoWay'],
             onDelete: $options['onDelete'],
         );
     } else {
@@ -1540,7 +1535,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
     ->param('twoWayKey', '', new Text(40), 'Two Way Key', true)
-    ->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    //->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->param('onDelete', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1554,7 +1549,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         string $type,
         bool $twoWay,
         string $twoWayKey,
-        string $onUpdate,
+        //string $onUpdate,
         string $onDelete,
         Response $response,
         Database $dbForProject,
@@ -1582,7 +1577,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 'relationType' => $type,
                 'twoWay' => $twoWay,
                 'twoWayKey' => $twoWayKey,
-                'onUpdate' => $onUpdate,
+                //'onUpdate' => $onUpdate,
                 'onDelete' => $onDelete,
                 'id' => $key
             ]
@@ -1629,7 +1624,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
     ->param('twoWayKey', '', new Text(40), 'Two Way Key', true)
-    ->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    //->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->param('onDelete', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1643,7 +1638,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         string $type,
         bool $twoWay,
         string $twoWayKey,
-        string $onUpdate,
+       // string $onUpdate,
         string $onDelete,
         Response $response,
         Database $dbForProject,
@@ -1671,7 +1666,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                     'relationType' => $type,
                     'twoWay' => $twoWay,
                     'twoWayKey' => $twoWayKey,
-                    'onUpdate' => $onUpdate,
+                   // 'onUpdate' => $onUpdate,
                     'onDelete' => $onDelete,
                     'id' => $key
                 ]
@@ -1711,10 +1706,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('twoWay', null, new Boolean(), 'Is Two Way?')
-    ->param('twoWayKey', null, new Text(40), 'Two Way Key')
-    ->param('onUpdate', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option')
-    ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option')
+    ->param('twoWay', null, new Boolean(), 'Is Two Way?', true)
+    ->param('twoWayKey', null, new Text(40), 'Two Way Key', true)
+   // ->param('onUpdate', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -1724,7 +1719,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         string $key,
         bool $twoWay,
         string $twoWayKey,
-        string $onUpdate,
+      //  string $onUpdate,
         string $onDelete,
         Response $response,
         Database $dbForProject,
@@ -1741,7 +1736,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             options : [
                 'twoWay' => $twoWay,
                 'twoWayKey' => $twoWayKey,
-                'onUpdate' => $onUpdate,
+              //  'onUpdate' => $onUpdate,
                 'onDelete' => $onDelete
             ]
         );

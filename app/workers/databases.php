@@ -108,7 +108,7 @@ class DatabaseV1 extends Worker
                         twoWay: $options['twoWay'],
                         id: $options['id'],
                         twoWayKey: $options['twoWayKey'],
-                        onUpdate: $options['onUpdate'],
+                        //onUpdate: $options['onUpdate'],
                         onDelete: $options['onDelete'],
                     )
                 ) {

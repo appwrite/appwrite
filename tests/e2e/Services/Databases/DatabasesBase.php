@@ -285,7 +285,7 @@ trait DatabasesBase
             'key' => 'libraryId',
             'relatedCollectionId' => 'library',
             'type' => Database::RELATION_ONE_TO_ONE,
-            'onUpdate' => 'cascade',
+            'onDelete' => 'cascade',
         ]);
 
         $libraryName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes/string', array_merge([
@@ -321,8 +321,8 @@ trait DatabasesBase
         $this->assertEquals('oneToOne', $attribute['body']['relationType']);
         $this->assertEquals(false, $attribute['body']['twoWay']);
         $this->assertEquals('person', $attribute['body']['twoWayKey']);
-        $this->assertEquals('cascade', $attribute['body']['onUpdate']);
-        $this->assertEquals('restrict', $attribute['body']['onDelete']);
+     //   $this->assertEquals('cascade', $attribute['body']['onUpdate']);
+        $this->assertEquals('cascade', $attribute['body']['onDelete']);
 
         $person1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -345,7 +345,7 @@ trait DatabasesBase
             ]
         ]);
 
-        $this->assertEquals('library1', $person1['body']['libraryId']);
+        $this->assertEquals('Library 1', $person1['body']['libraryId']['libraryName']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -415,7 +415,7 @@ trait DatabasesBase
         $this->assertEquals('oneToMany', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
         $this->assertEquals('personId', $attribute['body']['twoWayKey']);
-        $this->assertEquals('restrict', $attribute['body']['onUpdate']);
+       /// $this->assertEquals('restrict', $attribute['body']['onUpdate']);
         $this->assertEquals('restrict', $attribute['body']['onDelete']);
 
         $person2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
@@ -478,9 +478,27 @@ trait DatabasesBase
         ]), [
             'twoWayKey' => 'personIdNew',
             'twoWay' => false,
-            'onUpdate' => 'cascade',
+           // 'onUpdate' => 'cascade',
             'onDelete' => 'cascade',
         ]);
+
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/libraries", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals('libraries', $attribute['body']['key']);
+        $this->assertEquals('relationship', $attribute['body']['type']);
+        $this->assertEquals(false, $attribute['body']['required']);
+        $this->assertEquals(false, $attribute['body']['array']);
+        $this->assertEquals('oneToMany', $attribute['body']['relationType']);
+        $this->assertEquals(false, $attribute['body']['twoWay']);
+        $this->assertEquals('personIdNew', $attribute['body']['twoWayKey']);
+        /// $this->assertEquals('restrict', $attribute['body']['onUpdate']);
+        $this->assertEquals('cascade', $attribute['body']['onDelete']);
 
        var_dump($response);
 die;

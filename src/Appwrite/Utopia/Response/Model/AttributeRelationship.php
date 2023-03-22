@@ -53,12 +53,12 @@ class AttributeRelationship extends Attribute
                 'default' => null,
                 'example' => 'string',
             ])
-            ->addRule('onUpdate', [
-                'type' => self::TYPE_STRING,
-                'description' => 'How to set related documents after parent document is updated',
-                'default' => null,
-                'example' => 'restrict|cascade|setNull',
-            ])
+//            ->addRule('onUpdate', [
+//                'type' => self::TYPE_STRING,
+//                'description' => 'How to set related documents after parent document is updated',
+//                'default' => null,
+//                'example' => 'restrict|cascade|setNull',
+//            ])
             ->addRule('onDelete', [
                 'type' => self::TYPE_STRING,
                 'description' => 'How to set related documents after parent document is deleted',
