@@ -7,6 +7,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Query;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Pools\Group;
 
 class PatchDeleteScheduleUpdatedAtAttribute extends Action
 {
@@ -19,15 +20,16 @@ class PatchDeleteScheduleUpdatedAtAttribute extends Action
     {
         $this
             ->desc('Ensure function collections do not have scheduleUpdatedAt attribute')
+            ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
-            ->callback(fn (Database $dbForConsole, callable $getProjectDB) => $this->action($dbForConsole, $getProjectDB));
+            ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
     }
 
     /**
      * Iterate over every function on every project to make sure there is a schedule. If not, recreate the schedule.
      */
-    public function action(Database $dbForConsole, callable $getProjectDB): void
+    public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         Authorization::disable();
         Authorization::setDefaultStatus(false);
@@ -62,6 +64,8 @@ class PatchDeleteScheduleUpdatedAtAttribute extends Action
                 } catch (\Throwable $th) {
                     Console::warning("'scheduleUpdatedAt' errored: {$th->getMessage()}");
                 }
+
+                $pools->reclaim();
             }
 
             $projectCursor = $projects[array_key_last($projects)];
