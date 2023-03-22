@@ -1,10 +1,10 @@
 <?php
 
 /**
- * ISO 639-1 standard language codes
+ * ISO 639_1 standard language codes
  *
  * Source:
- * https://www.andiamo.co.uk/resources/iso-language-codes/
+ * https://www.andiamo.co.uk/resources/iso_language_codes/
  *
  * Country codes:
  * https://docs.oracle.com/cd/E13214_01/wli/docs92/xref/xqisocodes.html
@@ -16,67 +16,67 @@ return [
         "name" => "Afrikaans",
     ],
     [
-        "code" => "ar-ae",
+        "code" => "ar_ae",
         "name" => "Arabic (U.A.E.)",
     ],
     [
-        "code" => "ar-bh",
+        "code" => "ar_bh",
         "name" => "Arabic (Bahrain)",
     ],
     [
-        "code" => "ar-dz",
+        "code" => "ar_dz",
         "name" => "Arabic (Algeria)",
     ],
     [
-        "code" => "ar-eg",
+        "code" => "ar_eg",
         "name" => "Arabic (Egypt)",
     ],
     [
-        "code" => "ar-iq",
+        "code" => "ar_iq",
         "name" => "Arabic (Iraq)",
     ],
     [
-        "code" => "ar-jo",
+        "code" => "ar_jo",
         "name" => "Arabic (Jordan)",
     ],
     [
-        "code" => "ar-kw",
+        "code" => "ar_kw",
         "name" => "Arabic (Kuwait)",
     ],
     [
-        "code" => "ar-lb",
+        "code" => "ar_lb",
         "name" => "Arabic (Lebanon)",
     ],
     [
-        "code" => "ar-ly",
+        "code" => "ar_ly",
         "name" => "Arabic (Libya)",
     ],
     [
-        "code" => "ar-ma",
+        "code" => "ar_ma",
         "name" => "Arabic (Morocco)",
     ],
     [
-        "code" => "ar-om",
+        "code" => "ar_om",
         "name" => "Arabic (Oman)",
     ],
     [
-        "code" => "ar-qa",
+        "code" => "ar_qa",
         "name" => "Arabic (Qatar)",
     ],
     [
-        "code" => "ar-sa",
+        "code" => "ar_sa",
         "name" => "Arabic (Saudi Arabia)",
     ],
     [
-        "code" => "ar-sy",
+        "code" => "ar_sy",
         "name" => "Arabic (Syria)",
     ],
     [
-        "code" => "ar-tn",
+        "code" => "ar_tn",
         "name" => "Arabic (Tunisia)",
     ],
     [
-        "code" => "ar-ye",
+        "code" => "ar_ye",
         "name" => "Arabic (Yemen)",
     ],
     [
@@ -108,19 +108,19 @@ return [
         "name" => "German (Standard)",
     ],
     [
-        "code" => "de-at",
+        "code" => "de_at",
         "name" => "German (Austria)",
     ],
     [
-        "code" => "de-ch",
+        "code" => "de_ch",
         "name" => "German (Switzerland)",
     ],
     [
-        "code" => "de-li",
+        "code" => "de_li",
         "name" => "German (Liechtenstein)",
     ],
     [
-        "code" => "de-lu",
+        "code" => "de_lu",
         "name" => "German (Luxembourg)",
     ],
     [
@@ -132,43 +132,43 @@ return [
         "name" => "English",
     ],
     [
-        "code" => "en-au",
+        "code" => "en_au",
         "name" => "English (Australia)",
     ],
     [
-        "code" => "en-bz",
+        "code" => "en_bz",
         "name" => "English (Belize)",
     ],
     [
-        "code" => "en-ca",
+        "code" => "en_ca",
         "name" => "English (Canada)",
     ],
     [
-        "code" => "en-gb",
+        "code" => "en_gb",
         "name" => "English (United Kingdom)",
     ],
     [
-        "code" => "en-ie",
+        "code" => "en_ie",
         "name" => "English (Ireland)",
     ],
     [
-        "code" => "en-jm",
+        "code" => "en_jm",
         "name" => "English (Jamaica)",
     ],
     [
-        "code" => "en-nz",
+        "code" => "en_nz",
         "name" => "English (New Zealand)",
     ],
     [
-        "code" => "en-tt",
+        "code" => "en_tt",
         "name" => "English (Trinidad)",
     ],
     [
-        "code" => "en-us",
+        "code" => "en_us",
         "name" => "English (United States)",
     ],
     [
-        "code" => "en-za",
+        "code" => "en_za",
         "name" => "English (South Africa)",
     ],
     [
@@ -176,75 +176,75 @@ return [
         "name" => "Spanish (Spain)",
     ],
     [
-        "code" => "es-ar",
+        "code" => "es_ar",
         "name" => "Spanish (Argentina)",
     ],
     [
-        "code" => "es-bo",
+        "code" => "es_bo",
         "name" => "Spanish (Bolivia)",
     ],
     [
-        "code" => "es-cl",
+        "code" => "es_cl",
         "name" => "Spanish (Chile)",
     ],
     [
-        "code" => "es-co",
+        "code" => "es_co",
         "name" => "Spanish (Colombia)",
     ],
     [
-        "code" => "es-cr",
+        "code" => "es_cr",
         "name" => "Spanish (Costa Rica)",
     ],
     [
-        "code" => "es-do",
+        "code" => "es_do",
         "name" => "Spanish (Dominican Republic)",
     ],
     [
-        "code" => "es-ec",
+        "code" => "es_ec",
         "name" => "Spanish (Ecuador)",
     ],
     [
-        "code" => "es-gt",
+        "code" => "es_gt",
         "name" => "Spanish (Guatemala)",
     ],
     [
-        "code" => "es-hn",
+        "code" => "es_hn",
         "name" => "Spanish (Honduras)",
     ],
     [
-        "code" => "es-mx",
+        "code" => "es_mx",
         "name" => "Spanish (Mexico)",
     ],
     [
-        "code" => "es-ni",
+        "code" => "es_ni",
         "name" => "Spanish (Nicaragua)",
     ],
     [
-        "code" => "es-pa",
+        "code" => "es_pa",
         "name" => "Spanish (Panama)",
     ],
     [
-        "code" => "es-pe",
+        "code" => "es_pe",
         "name" => "Spanish (Peru)",
     ],
     [
-        "code" => "es-pr",
+        "code" => "es_pr",
         "name" => "Spanish (Puerto Rico)",
     ],
     [
-        "code" => "es-py",
+        "code" => "es_py",
         "name" => "Spanish (Paraguay)",
     ],
     [
-        "code" => "es-sv",
+        "code" => "es_sv",
         "name" => "Spanish (El Salvador)",
     ],
     [
-        "code" => "es-uy",
+        "code" => "es_uy",
         "name" => "Spanish (Uruguay)",
     ],
     [
-        "code" => "es-ve",
+        "code" => "es_ve",
         "name" => "Spanish (Venezuela)",
     ],
     [
@@ -272,19 +272,19 @@ return [
         "name" => "French (Standard)",
     ],
     [
-        "code" => "fr-be",
+        "code" => "fr_be",
         "name" => "French (Belgium)",
     ],
     [
-        "code" => "fr-ca",
+        "code" => "fr_ca",
         "name" => "French (Canada)",
     ],
     [
-        "code" => "fr-ch",
+        "code" => "fr_ch",
         "name" => "French (Switzerland)",
     ],
     [
-        "code" => "fr-lu",
+        "code" => "fr_lu",
         "name" => "French (Luxembourg)",
     ],
     [
@@ -324,7 +324,7 @@ return [
         "name" => "Italian (Standard)",
     ],
     [
-        "code" => "it-ch",
+        "code" => "it_ch",
         "name" => "Italian (Switzerland)",
     ],
     [
@@ -409,7 +409,7 @@ return [
     ],
     [
         "code" => "rm",
-        "name" => "Rhaeto-Romanic",
+        "name" => "Rhaeto_Romanic",
     ],
     [
         "code" => "ro",
