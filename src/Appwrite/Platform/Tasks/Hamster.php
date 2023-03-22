@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
-use finfo;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
