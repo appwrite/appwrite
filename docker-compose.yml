@@ -713,6 +713,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-builds:/storage/builds:rw
       - appwrite-functions:/storage/functions:rw
+      # Host mount nessessary to share files between executor and runtimes.
+      # It's not possible to share mount file between 2 containers without host mount (copying is too slow)
       - /tmp:/tmp:rw
     environment:
       - OPR_EXECUTOR_CONNECTION_STORAGE=$_APP_CONNECTIONS_STORAGE
