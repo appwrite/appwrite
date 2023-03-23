@@ -11,7 +11,7 @@ return [
         'description' => 'Client libraries for integrating with Appwrite to build client-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) or [getting started for Flutter](/docs/getting-started-for-flutter) tutorials to start building your first application.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [ // TODO change key to 'sdks'
+        'sdks' => [
             [
                 'key' => 'web',
                 'name' => 'Web',
@@ -181,11 +181,11 @@ return [
         'name' => 'Console',
         'enabled' => false,
         'beta' => false,
-        'languages' => [
+        'sdks' => [
             [
                 'key' => 'web',
                 'name' => 'Console',
-                'version' => '7.2.0',
+                'version' => '0.0.2-preview-0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'package' => '',
                 'enabled' => true,
@@ -193,10 +193,10 @@ return [
                 'dev' => false,
                 'hidden' => true,
                 'family' => APP_PLATFORM_CONSOLE,
-                'prism' => 'console',
+                'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
-                'gitUrl' => '',
-                'gitBranch' => '',
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
+                'gitBranch' => 'main',
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
             ],
@@ -227,7 +227,7 @@ return [
         'description' => 'Libraries for integrating with Appwrite to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [
+        'sdks' => [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',

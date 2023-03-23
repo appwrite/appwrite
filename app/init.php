@@ -86,6 +86,7 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
@@ -607,6 +608,12 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
+$register->set('passwordsDictionary', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
@@ -1027,6 +1034,11 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
+App::setResource('passwordsDictionary', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary');
+}, ['register']);
+
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
@@ -1049,7 +1061,7 @@ App::setResource('servers', function () {
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);
-    }, $server['languages']);
+    }, $server['sdks']);
 
     return $languages;
 });
@@ -1143,3 +1155,17 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $params,
     );
 }, ['utopia', 'dbForProject']);
+
+App::setResource('requestTimestamp', function ($request) {
+    // Validate x-appwrite-timestamp header
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);
