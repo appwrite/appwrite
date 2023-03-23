@@ -583,6 +583,7 @@ App::delete('/v1/functions/:functionId')
         $response->noContent();
     });
 
+
 App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create Deployment')
