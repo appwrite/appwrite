@@ -1,1 +1,1 @@
-Create a new Collection. Before using this route, you should create a new database resource using either a [server integration](https://appwrite.io/docs/databases#collection) API or directly from your database console.
+Create a new Collection. Before using this route, you should create a new database resource using either a [server integration](/docs/databases#collection) API or directly from your database console.

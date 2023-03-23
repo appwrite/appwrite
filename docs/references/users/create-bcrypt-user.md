@@ -1,1 +1,1 @@
-Create a new user. Password provided must be hashed with the [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) algorithm. Use the [POST /users](https://appwrite.io/docs/server/users?sdk=nodejs-default#usersCreate) endpoint to create users with a plain text password.
+Create a new user. Password provided must be hashed with the [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) algorithm. Use the [POST /users](/docs/server/users?sdk=nodejs-default#usersCreate) endpoint to create users with a plain text password.

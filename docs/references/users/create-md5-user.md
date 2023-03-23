@@ -1,1 +1,1 @@
-Create a new user. Password provided must be hashed with the [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST /users](https://appwrite.io/docs/server/users?sdk=nodejs-default#usersCreate) endpoint to create users with a plain text password.
+Create a new user. Password provided must be hashed with the [MD5](https://en.wikipedia.org/wiki/MD5) algorithm. Use the [POST /users](/docs/server/users?sdk=nodejs-default#usersCreate) endpoint to create users with a plain text password.
