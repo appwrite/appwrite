@@ -1462,7 +1462,7 @@ class RealtimeCustomClientTest extends Scope
         /**
          * Test Team Update Prefs
          */
-        $team = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/prefs', array_merge([
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/' . $teamId . '/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
