@@ -183,10 +183,10 @@ return [
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a bucket is created.'
+            '$description' => 'This event triggers when a team is created.'
         ],
         'delete' => [
-            '$description' => 'This event triggers when a bucket is deleted.',
+            '$description' => 'This event triggers when a team is deleted.',
         ],
         'update' => [
             '$description' => 'This event triggers when a team is updated.',
