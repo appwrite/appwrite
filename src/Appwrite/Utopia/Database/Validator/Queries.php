@@ -57,10 +57,7 @@ class Queries extends Validator
             if (!$query instanceof Query) {
                 try {
                     $query = Query::parse($query);
-                    if (\str_contains($query->getAttribute(), '.')) { // todo: double check!
-                        return true;
-                    }
-                } catch (\Throwable $th) {
+                } catch (\Throwable) {
                     $this->message = "Invalid query: {$query}";
                     return false;
                 }
@@ -93,6 +90,11 @@ class Queries extends Validator
                 case Query::TYPE_GREATER:
                 case Query::TYPE_GREATEREQUAL:
                 case Query::TYPE_SEARCH:
+                case Query::TYPE_IS_NULL:
+                case Query::TYPE_IS_NOT_NULL:
+                case Query::TYPE_BETWEEN:
+                case Query::TYPE_STARTS_WITH:
+                case Query::TYPE_ENDS_WITH:
                     $methodType = Base::METHOD_TYPE_FILTER;
                     break;
                 default:
