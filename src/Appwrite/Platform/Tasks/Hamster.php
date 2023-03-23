@@ -14,8 +14,6 @@ use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
-use Utopia\Pools\Pool;
-use Utopia\Registry\Registry;
 
 class Hamster extends Action
 {
@@ -325,52 +323,56 @@ class Hamster extends Action
     {
 
         $this->calculateByGroup('teams', $dbForConsole, function (Database $dbForConsole, Document $document) {
-            $statsPerOrganization = [];
+            try {
+                $statsPerOrganization = [];
 
-            /** Organization name */
-            $statsPerOrganization['name'] = $document->getAttribute('name');
+                /** Organization name */
+                $statsPerOrganization['name'] = $document->getAttribute('name');
 
-            /** Get Email and of the organization owner */
-            $membership = $dbForConsole->findOne('memberships', [
-                Query::equal('teamInternalId', [$document->getInternalId()]),
-            ]);
-
-            if (!$membership || $membership->isEmpty()) {
-                throw new Exception('Membership not found. Skipping organization : ' . $document->getId());
-            }
-
-            $userInternalId = $membership->getAttribute('userInternalId', null);
-            if ($userInternalId) {
-                $user = $dbForConsole->findOne('users', [
-                    Query::equal('_id', [$userInternalId]),
+                /** Get Email and of the organization owner */
+                $membership = $dbForConsole->findOne('memberships', [
+                    Query::equal('teamInternalId', [$document->getInternalId()]),
                 ]);
 
-                $statsPerOrganization['email'] = $user->getAttribute('email', null);
-            }
+                if (!$membership || $membership->isEmpty()) {
+                    throw new Exception('Membership not found. Skipping organization : ' . $document->getId());
+                }
 
-            /** Organization Creation Date */
-            $statsPerOrganization['created'] = $document->getAttribute('$createdAt');
+                $userInternalId = $membership->getAttribute('userInternalId', null);
+                if ($userInternalId) {
+                    $user = $dbForConsole->findOne('users', [
+                        Query::equal('_id', [$userInternalId]),
+                    ]);
 
-            /** Number of team members */
-            $statsPerOrganization['members'] = $document->getAttribute('total');
+                    $statsPerOrganization['email'] = $user->getAttribute('email', null);
+                }
 
-            /** Number of projects in this organization */
-            $statsPerOrganization['projects'] = $dbForConsole->count('projects', [
-                Query::equal('teamId', [$document->getId()]),
-                Query::limit(APP_LIMIT_COUNT)
-            ]);
+                /** Organization Creation Date */
+                $statsPerOrganization['created'] = $document->getAttribute('$createdAt');
 
-            if (!isset($statsPerOrganization['email'])) {
-                throw new Exception('Email not found. Skipping organization : ' . $document->getId());
-            }
+                /** Number of team members */
+                $statsPerOrganization['members'] = $document->getAttribute('total');
 
-            $event = new Event();
-            $event
-                ->setName('Organization Daily Usage')
-                ->setProps($statsPerOrganization);
-            $res = $this->mixpanel->createEvent($event);
-            if (!$res) {
-                throw new Exception('Failed to create event for organization : ' . $document->getId());
+                /** Number of projects in this organization */
+                $statsPerOrganization['projects'] = $dbForConsole->count('projects', [
+                    Query::equal('teamId', [$document->getId()]),
+                    Query::limit(APP_LIMIT_COUNT)
+                ]);
+
+                if (!isset($statsPerOrganization['email'])) {
+                    throw new Exception('Email not found. Skipping organization : ' . $document->getId());
+                }
+
+                $event = new Event();
+                $event
+                    ->setName('Organization Daily Usage')
+                    ->setProps($statsPerOrganization);
+                $res = $this->mixpanel->createEvent($event);
+                if (!$res) {
+                    throw new Exception('Failed to create event for organization : ' . $document->getId());
+                }
+            } catch (Exception $e) {
+                Console::error($e->getMessage());
             }
         });
     }
@@ -378,36 +380,40 @@ class Hamster extends Action
     protected function getStatsPerUser(Database $dbForConsole)
     {
         $this->calculateByGroup('users', $dbForConsole, function (Database $dbForConsole, Document $document) {
-            $statsPerUser = [];
+            try {
+                $statsPerUser = [];
 
-            /** Organization name */
-            $statsPerUser['name'] = $document->getAttribute('name');
+                /** Organization name */
+                $statsPerUser['name'] = $document->getAttribute('name');
 
-            /** Organization ID (needs to be stored as an email since mixpanel uses the email attribute as a distinctID) */
-            $statsPerUser['email'] = $document->getAttribute('email');
+                /** Organization ID (needs to be stored as an email since mixpanel uses the email attribute as a distinctID) */
+                $statsPerUser['email'] = $document->getAttribute('email');
 
-            /** Organization Creation Date */
-            $statsPerUser['created'] = $document->getAttribute('$createdAt');
+                /** Organization Creation Date */
+                $statsPerUser['created'] = $document->getAttribute('$createdAt');
 
-            /** Number of teams this user is a part of */
-            $statsPerUser['memberships'] = $dbForConsole->count('memberships', [
-                Query::equal('userInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_COUNT)
-            ]);
+                /** Number of teams this user is a part of */
+                $statsPerUser['memberships'] = $dbForConsole->count('memberships', [
+                    Query::equal('userInternalId', [$document->getInternalId()]),
+                    Query::limit(APP_LIMIT_COUNT)
+                ]);
 
-            if (!isset($statsPerUser['email'])) {
-                throw new Exception('User has no email: ' . $document->getId());
-            }
+                if (!isset($statsPerUser['email'])) {
+                    throw new Exception('User has no email: ' . $document->getId());
+                }
 
-            /** Send data to mixpanel */
-            $event = new Event();
-            $event
-                ->setName('User Daily Usage')
-                ->setProps($statsPerUser);
-            $res = $this->mixpanel->createEvent($event);
+                /** Send data to mixpanel */
+                $event = new Event();
+                $event
+                    ->setName('User Daily Usage')
+                    ->setProps($statsPerUser);
+                $res = $this->mixpanel->createEvent($event);
 
-            if (!$res) {
-                throw new Exception('Failed to create user profile for user: ' . $document->getId());
+                if (!$res) {
+                    throw new Exception('Failed to create user profile for user: ' . $document->getId());
+                }
+            } catch (Exception $e) {
+                Console::error($e->getMessage());
             }
         });
     }
