@@ -301,7 +301,10 @@ class Hamster extends Action
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $dbForConsole->find($collection, \array_merge([Query::limit($limit)]));
+            $results = $dbForConsole->find($collection, \array_merge([
+                Query::limit($limit),
+                Query::offset($count)
+            ]));
 
             $sum = count($results);
 
