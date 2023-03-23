@@ -123,12 +123,24 @@ class V18 extends Migration
     {
         switch ($document->getCollection()) {
             case 'projects':
+                /**
+                 * Bump version number.
+                 */
                 $document->setAttribute('version', '1.3.0');
-                $document->setAttribute('passwordHistory', []);
+
+                /**
+                 * Set default passwordHistory
+                 */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
                     'passwordHistory' => 0,
                     'passwordDictionary' => false,
                 ]));
+                break;
+            case 'users':
+                /**
+                 * Default Password history
+                 */
+                $document->setAttribute('passwordHistory', []);
                 break;
         }
 
