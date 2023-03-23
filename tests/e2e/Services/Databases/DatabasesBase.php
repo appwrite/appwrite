@@ -545,7 +545,7 @@ trait DatabasesBase
     /**
      * @depends testRelations
      */
-    public function testSelects(array $data): array
+    public function testSelectsQueries(array $data): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -579,17 +579,14 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-               // 'select(["fullName"])'
+                'select(["fullName"])'
             ],
         ]);
 
-        var_dump($response);
-
         $this->assertEquals(200, $response['headers']['status-code']);
-       // $this->assertArrayNotHasKey('fullName', $doc);
-
-        die;
+        $this->assertArrayNotHasKey('libraries', $response);
     }
+
 
     /**
      * @depends testCreateAttributes
