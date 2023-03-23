@@ -594,6 +594,11 @@ return [
         'description' => 'Video subtitle segment not found',
         'code' => 404,
     ],
+    Exception::DOMAIN_TARGET_INVALID => [
+        'name' => Exception::DOMAIN_TARGET_INVALID,
+        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,
         'description' => 'Param "query" is not optional.',
