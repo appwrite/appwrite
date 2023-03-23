@@ -570,8 +570,8 @@ trait DatabasesBase
         ]);
 
         $document = $response['body']['documents'][0];
-
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('libraries', $document);
      //   $this->assertArrayNotHasKey('fullName', $document); // todo:this should work?
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents/' . $document['$id'], array_merge([
@@ -584,9 +584,9 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayNotHasKey('libraries', $response);
+        $this->assertArrayHasKey('fullName', $response['body']);
+        $this->assertArrayNotHasKey('libraries', $response['body']);
     }
-
 
     /**
      * @depends testCreateAttributes
