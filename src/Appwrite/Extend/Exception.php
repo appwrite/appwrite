@@ -146,6 +146,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';

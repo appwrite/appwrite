@@ -594,7 +594,7 @@ App::get('/.well-known/acme-challenge')
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
 
-        $validator = new Text(100, [
+        $validator = new Text(100, allowList: [
             ...Text::NUMBERS,
             ...Text::ALPHABET_LOWER,
             ...Text::ALPHABET_UPPER,
