@@ -91,7 +91,6 @@ class Filter extends Base
         // Validate method
         $method = $query->getMethod();
         $attribute = $query->getAttribute();
-
         switch ($method) {
             case Query::TYPE_EQUAL:
             case Query::TYPE_NOTEQUAL:
@@ -100,6 +99,11 @@ class Filter extends Base
             case Query::TYPE_GREATER:
             case Query::TYPE_GREATEREQUAL:
             case Query::TYPE_SEARCH:
+            case Query::TYPE_STARTS_WITH:
+            case Query::TYPE_ENDS_WITH:
+            case Query::TYPE_BETWEEN:
+            case Query::TYPE_IS_NULL:
+            case Query::TYPE_IS_NOT_NULL:
                 $values = $query->getValues();
                 return $this->isValidAttributeAndValues($attribute, $values);
 

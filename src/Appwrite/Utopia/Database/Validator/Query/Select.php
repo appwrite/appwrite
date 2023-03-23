@@ -8,10 +8,7 @@ use Utopia\Database\Query;
 
 class Select extends Base
 {
-    /**
-     * @var array
-     */
-    protected $schema = [];
+    protected array $schema = [];
 
     /**
      * Query constructor
@@ -46,7 +43,7 @@ class Select extends Base
             if (\str_contains($attribute, '.')) {
                 $attribute = \explode('.', $attribute)[0];
             }
-            if (!isset($this->schema[$attribute])) {
+            if (!isset($this->schema[$attribute]) && $attribute !== '*') {
                 $this->message = 'Attribute not found in schema: ' . $attribute;
                 return false;
             }

@@ -298,7 +298,6 @@ function updateAttribute(
     if ($type === Database::VAR_RELATIONSHIP) {
         $options = array_merge($attribute->getAttribute('options', []), $options);
         $attribute->setAttribute('options', $options);
-        var_dump($options);
 
         $dbForProject->updateRelationship(
             collection: $collectionId,
