@@ -2800,13 +2800,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('queries', [], new Queries(new Select()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only method allowed is select.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
-
-        var_dump($queries);
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2820,6 +2818,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
+        }
+
+        // Validate queries
+        $queriesValidator = new Queries(new Select($collection->getAttribute('attributes')));
+        $validQueries = $queriesValidator->isValid($queries);
+        if (!$validQueries) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
