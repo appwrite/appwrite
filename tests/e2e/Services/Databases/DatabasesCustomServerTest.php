@@ -2949,7 +2949,7 @@ class DatabasesCustomServerTest extends Scope
             /**
              * Check if Collection exists
              */
-            $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/i_dont_exist/attributes/'. $key .'/unknown_' . $key , array_merge([
+            $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/i_dont_exist/attributes/' . $key . '/unknown_' . $key, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey']
