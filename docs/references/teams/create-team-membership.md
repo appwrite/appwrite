@@ -1,5 +1,5 @@
 Invite a new member to join your team. If initiated from the client SDK, an email with a link to join the team will be sent to the member's email address and an account will be created for them should they not be signed up already. If initiated from server-side SDKs, the new member will automatically be added to the team.
 
-Use the 'url' parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the [Update Team Membership Status](https://appwrite.io/docs/client/teams?sdk=web-default#teamsUpdateMembershipStatus) endpoint to allow the user to accept the invitation to the team. 
+Use the 'url' parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the [Update Team Membership Status](https://appwrite.io/docs/client/teams#teamsUpdateMembershipStatus) endpoint to allow the user to accept the invitation to the team. 
 
 Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL's are the once from domains you have set when adding your platforms in the console interface.
