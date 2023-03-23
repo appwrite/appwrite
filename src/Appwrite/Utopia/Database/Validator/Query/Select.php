@@ -20,7 +20,7 @@ class Select extends Base
     public function __construct(array $attributes = [])
     {
         foreach ($attributes as $attribute) {
-            //$this->schema[$attribute->getAttribute('key')] = $attribute->getArrayCopy();
+            $this->schema[$attribute->getAttribute('key')] = $attribute->getArrayCopy();
         }
     }
 
@@ -38,15 +38,20 @@ class Select extends Base
     {
         /* @var $query Query */
 
-        if ($query->getMethod() === Query::TYPE_SELECT) {
-            foreach ($query->getValues() as $attr) {
-                var_dump($attr);
-                // todo: Do some validations
-                return true;
-            }
+        if ($query->getMethod() !== Query::TYPE_SELECT) {
+            return false;
         }
 
-        return false;
+        foreach ($query->getValues() as $attribute) {
+            if (\str_contains($attribute, '.')) {
+                $attribute = \explode('.', $attribute)[0];
+            }
+            if (!isset($this->schema[$attribute])) {
+                $this->message = 'Attribute not found in schema: ' . $attribute;
+                return false;
+            }
+        }
+        return true;
     }
 
     public function getMethodType(): string

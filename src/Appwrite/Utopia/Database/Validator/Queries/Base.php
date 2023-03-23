@@ -20,6 +20,7 @@ class Base extends Queries
      *
      * @param string $collection
      * @param string[] $allowedAttributes
+     * @throws \Exception
      */
     public function __construct(string $collection, array $allowedAttributes)
     {

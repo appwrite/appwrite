@@ -1,7 +1,5 @@
 <?php
 
-use Appwrite\Utopia\Database\Validator\Query\Filter;
-use Appwrite\Utopia\Database\Validator\Query\Select;
 use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
@@ -47,6 +45,7 @@ use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\Document as DocumentValidator;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
@@ -2821,7 +2820,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         // Validate queries
-        $queriesValidator = new Queries(new Select($collection->getAttribute('attributes')));
+        $queriesValidator = new DocumentValidator($collection->getAttribute('attributes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
