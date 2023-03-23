@@ -2827,6 +2827,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
+        $queries = Query::parseQueries($queries);
+
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
         $valid = $validator->isValid($collection->getRead());
