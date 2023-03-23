@@ -1468,7 +1468,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
     ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
     ->desc('Create DateTime Attribute')
@@ -1536,9 +1535,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->param('relatedCollectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-    ->param('twoWayKey', '', new Text(40), 'Two Way Key', true)
-    //->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
-    ->param('onDelete', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    ->param('twoWayKey', null, new Key(), 'Two Way Key', true)
+    ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
@@ -1550,107 +1548,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         string $relatedCollectionId,
         string $type,
         bool $twoWay,
-        string $twoWayKey,
-        //string $onUpdate,
+        ?string $twoWayKey,
         string $onDelete,
         Response $response,
         Database $dbForProject,
         EventDatabase $database,
         Event $events
 ) {
-
-        if (empty($twoWayKey)) {
-            $twoWayKey = $collectionId;
-        }
-
-        $attribute = createAttribute(
-            $databaseId,
-            $collectionId,
-            new Document([
-            'key' => $key,
-            'type' => Database::VAR_RELATIONSHIP,
-            'size' => 0,
-            'required' => false,
-            'default' => null,
-            'array' => false,
-            'filters' => [],
-            'options' => [
-                'relatedCollection' => $relatedCollectionId,
-                'relationType' => $type,
-                'twoWay' => $twoWay,
-                'twoWayKey' => $twoWayKey,
-                //'onUpdate' => $onUpdate,
-                'onDelete' => $onDelete,
-                'id' => $key
-            ]
-            ]),
-            $response,
-            $dbForProject,
-            $database,
-            $events
-        );
-
-        $options = $attribute->getAttribute('options', []);
-
-        foreach ($options as $key => $option) {
-            $attribute->setAttribute($key, $option);
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
-    });
-
-
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
-    ->alias('/v1/database/collections/:collectionId/attributes/relationship', ['databaseId' => 'default'])
-    ->desc('Create relationship Attribute')
-    ->groups(['api', 'database'])
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
-    ->label('scope', 'collections.write')
-    ->label('audits.event', 'attribute.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.method', 'createRelationshipAttribute')
-    ->label('sdk.description', '/docs/references/databases/create-relationship-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('relatedCollectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
-    ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
-    ->param('twoWayKey', '', new Text(40), 'Two Way Key', true)
-    //->param('onUpdate', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
-    ->param('onDelete', 'restrict', new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('database')
-    ->inject('events')
-    ->action(function (
-        string $databaseId,
-        string $collectionId,
-        string $key,
-        string $relatedCollectionId,
-        string $type,
-        bool $twoWay,
-        string $twoWayKey,
-       // string $onUpdate,
-        string $onDelete,
-        Response $response,
-        Database $dbForProject,
-        EventDatabase $database,
-        Event $events
-    ) {
-
-        if (empty($twoWayKey)) {
-            $twoWayKey = $collectionId;
-        }
+        $twoWayKey ??= $collectionId;
 
         $attribute = createAttribute(
             $databaseId,
@@ -1668,9 +1573,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                     'relationType' => $type,
                     'twoWay' => $twoWay,
                     'twoWayKey' => $twoWayKey,
-                   // 'onUpdate' => $onUpdate,
                     'onDelete' => $onDelete,
-                    'id' => $key
                 ]
             ]),
             $response,
@@ -1680,76 +1583,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         );
 
         $options = $attribute->getAttribute('options', []);
+
         foreach ($options as $key => $option) {
             $attribute->setAttribute($key, $option);
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
-    });
-
-
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
-    ->desc('Update Relationship Attribute')
-    ->groups(['api', 'database', 'schema'])
-    ->label('scope', 'collections.write')
-    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
-    ->label('audits.event', 'attribute.update')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'databases')
-    ->label('sdk.method', 'updateRelationshipAttribute')
-    ->label('sdk.description', '/docs/references/databases/update-relationship-attribute.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
-    ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('twoWay', null, new Boolean(), 'Is Two Way?', true)
-    ->param('twoWayKey', null, new Text(40), 'Two Way Key', true)
-   // ->param('onUpdate', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
-    ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (
-        string $databaseId,
-        string $collectionId,
-        string $key,
-        bool $twoWay,
-        string $twoWayKey,
-      //  string $onUpdate,
-        string $onDelete,
-        Response $response,
-        Database $dbForProject,
-        Event $events
-) {
-        $attribute = updateAttribute(
-            databaseId: $databaseId,
-            collectionId: $collectionId,
-            key: $key,
-            dbForProject: $dbForProject,
-            events: $events,
-            type: Database::VAR_RELATIONSHIP,
-            required: false,
-            options : [
-                'twoWay' => $twoWay,
-                'twoWayKey' => $twoWayKey,
-              //  'onUpdate' => $onUpdate,
-                'onDelete' => $onDelete
-            ]
-        );
-
-        $options = $attribute->getAttribute('options', []);
-        foreach ($options as $key => $option) {
-            $attribute->setAttribute($key, $option);
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
@@ -2255,6 +2095,64 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         $response
             ->setStatusCode(Response::STATUS_CODE_OK)
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
+    ->desc('Update Relationship Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateRelationshipAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-relationship-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('twoWay', null, new Boolean(), 'Is Two Way?', true)
+    ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (
+        string $databaseId,
+        string $collectionId,
+        string $key,
+        ?bool $twoWay,
+        ?string $onDelete,
+        Response $response,
+        Database $dbForProject,
+        Event $events
+    ) {
+        $attribute = updateAttribute(
+            $databaseId,
+            $collectionId,
+            $key,
+            $dbForProject,
+            $events,
+            type: Database::VAR_RELATIONSHIP,
+            required: false,
+            options : [
+                'twoWay' => $twoWay,
+                'onDelete' => $onDelete
+            ]
+        );
+
+        $options = $attribute->getAttribute('options', []);
+
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
