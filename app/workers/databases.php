@@ -106,9 +106,8 @@ class DatabaseV1 extends Worker
                         relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                         type: $options['relationType'],
                         twoWay: $options['twoWay'],
-                        id: $options['id'],
+                        id: $key,
                         twoWayKey: $options['twoWayKey'],
-                        //onUpdate: $options['onUpdate'],
                         onDelete: $options['onDelete'],
                     )
                 ) {
