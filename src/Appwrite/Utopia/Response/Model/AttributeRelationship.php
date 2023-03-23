@@ -11,18 +11,6 @@ class AttributeRelationship extends Attribute
         parent::__construct();
 
         $this
-            ->addRule('key', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute Key.',
-                'default' => '',
-                'example' => 'relationship',
-            ])
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Attribute type.',
-                'default' => '',
-                'example' => 'relationship',
-            ])
             ->addRule('default', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Default value for attribute when not provided. Only null is optional',
@@ -43,25 +31,19 @@ class AttributeRelationship extends Attribute
             ])
             ->addRule('twoWay', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is the relationship going two ways?',
+                'description' => 'Is the relationship two-way?',
                 'default' => null,
                 'example' => 'relationship',
             ])
             ->addRule('twoWayKey', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The key of the 2 way relationship',
+                'description' => 'The key of the two-way relationship',
                 'default' => null,
                 'example' => 'string',
             ])
-//            ->addRule('onUpdate', [
-//                'type' => self::TYPE_STRING,
-//                'description' => 'How to set related documents after parent document is updated',
-//                'default' => null,
-//                'example' => 'restrict|cascade|setNull',
-//            ])
             ->addRule('onDelete', [
                 'type' => self::TYPE_STRING,
-                'description' => 'How to set related documents after parent document is deleted',
+                'description' => 'Action to take on related documents when parent document is deleted',
                 'default' => null,
                 'example' => 'restrict|cascade|setNull',
             ])
