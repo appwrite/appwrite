@@ -1579,7 +1579,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $response->dynamic($attribute, $model);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/string')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
     ->desc('Update String Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1619,7 +1619,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/email')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
     ->desc('Update Email Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1660,7 +1660,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/enum')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
     ->desc('Update Enum Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1703,7 +1703,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/ip')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
     ->desc('Update IP Address Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1744,7 +1744,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/url')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
     ->desc('Update URL Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1785,7 +1785,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/integer')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
     ->desc('Update Integer Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1836,7 +1836,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/float')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
     ->desc('Update Float Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1887,7 +1887,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/boolean')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
     ->desc('Update Boolean Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1927,7 +1927,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/datetime')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
     ->desc('Update DateTime Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
