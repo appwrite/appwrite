@@ -547,8 +547,6 @@ trait DatabasesBase
      */
     public function testSelects(array $data): array
     {
-        $this->assertEquals(200, $response['headers']['status-code']);
-
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
