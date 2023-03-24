@@ -58,6 +58,7 @@
         "utopia-php/logger": "0.3.*",
         "utopia-php/messaging": "0.1.*",
         "utopia-php/orchestration": "0.6.*",
+        "utopia-php/preloader": "0.2.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.13.*",
         "utopia-php/swoole": "0.5.*",
