@@ -93,7 +93,7 @@ Server::setResource('execute', function () {
                 'response' => '',
                 'stderr' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
+                'search' => implode(' ', [$function->getId(), $executionId]),
             ]));
 
             // TODO: @Meldiron Trigger executions.create event here

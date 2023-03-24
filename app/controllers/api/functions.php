@@ -85,6 +85,7 @@ App::post('/v1/functions')
             'deployment' => '',
             'events' => $events,
             'schedule' => $schedule,
+            'scheduleInternalId' => '',
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
@@ -420,12 +421,10 @@ App::put('/v1/functions/:functionId')
         ])));
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -478,7 +477,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'deploymentInternalId' => $deployment->getInternalId(),
-            'deployment' => $deployment->getId()
+            'deployment' => $deployment->getId(),
         ])));
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
@@ -528,12 +527,9 @@ App::delete('/v1/functions/:functionId')
         }
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('active', false)
-        ;
-
+            ->setAttribute('active', false);
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $deletes
@@ -1355,6 +1351,13 @@ App::post('/v1/functions/:functionId/variables')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($variable, Response::MODEL_VARIABLE);
@@ -1479,6 +1482,13 @@ App::put('/v1/functions/:functionId/variables/:variableId')
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
@@ -1525,6 +1535,13 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
+
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->noContent();
     });

@@ -156,6 +156,16 @@ class V17 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'scheduleInternalId' from {$id}: {$th->getMessage()}");
                     }
+
+                    try {
+                        /**
+                         * Delete 'scheduleUpdatedAt' attribute
+                         */
+                        $this->projectDB->deleteAttribute($id, 'scheduleUpdatedAt');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'scheduleUpdatedAt' from {$id}: {$th->getMessage()}");
+                    }
                     break;
 
                 case 'deployments':
