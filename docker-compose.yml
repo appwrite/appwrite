@@ -587,16 +587,24 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      - ./vendor:/usr/src/code/vendor
     depends_on:
       - redis
     environment:
       - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DOMAIN
+      - _APP_DOMAIN_TARGET
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_SMS_PROVIDER
-      - _APP_SMS_FROM
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -808,18 +816,18 @@ services:
   #   ports:
   #   - "8081:8081"
 
-  resque:
-    image: appwrite/resque-web:1.1.0
-    restart: unless-stopped
-    networks:
-      - appwrite
-    ports:
-      - "5678:5678"
-    environment:
-      - RESQUE_WEB_HOST=redis
-      - RESQUE_WEB_PORT=6379
-      - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-      - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
+  # resque:
+  #   image: appwrite/resque-web:1.1.0
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   ports:
+  #     - "5678:5678"
+  #   environment:
+  #     - RESQUE_WEB_HOST=redis
+  #     - RESQUE_WEB_PORT=6379
+  #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
+  #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
   # chronograf:
   #   image: chronograf:1.6

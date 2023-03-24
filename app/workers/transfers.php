@@ -1,11 +1,12 @@
 <?php
 
 use Appwrite\Resque\Worker;
-use MongoDB\Operation\Update;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Transfer\Destination;
 use Utopia\Transfer\Destinations\Appwrite as DestinationsAppwrite;
+use Utopia\Transfer\Progress;
 use Utopia\Transfer\Source;
 use Utopia\Transfer\Sources\Appwrite;
 use Utopia\Transfer\Sources\Firebase;
@@ -24,7 +25,7 @@ class TransfersV1 extends Worker
      *
      * @var Database
      */
-    private Database $dbForConsole;
+    private Database $dbForProject;
 
     public function getName(): string
     {
@@ -37,7 +38,7 @@ class TransfersV1 extends Worker
 
     public function run(): void
     {
-        var_dump("Test");
+        $this->dbForProject = $this->getProjectDB($this->args['project']['$id']);
 
         // Process
         $this->processTransfer();
@@ -51,35 +52,37 @@ class TransfersV1 extends Worker
      */
     function processSource(): Source
     {
-        $source = $this->args['source'];
+        $source = $this->dbForProject->getDocument('sources', $this->args['transfer']['source']);
+
+        $authObject = json_decode($source['data'], true) ?? [];
 
         switch ($source['type']) {
             case 'firebase':
                 return new Firebase(
-                    $source['authObject'] ?? '',
+                    $authObject['serviceAccount'] ?? '',
                     Firebase::AUTH_SERVICEACCOUNT
                 );
                 break;
             case 'supabase':
                 return new Supabase(
-                    $source['host'] ?? '',
-                    $source['databaseName'] ?? '',
-                    $source['username'] ?? '',
-                    $source['password'] ?? '',
-                    $source['port'] ?? 5432,
+                    $authObject['url'] ?? '',
+                    $authObject['database'] ?? '',
+                    $authObject['username'] ?? '',
+                    $authObject['password'] ?? '',
+                    $authObject['port'] ?? 5432,
                 );
                 break;
             case 'nhost':
                 return new NHost(
-                    $source['host'] ?? '',
-                    $source['databaseName'] ?? '',
-                    $source['username'] ?? '',
-                    $source['password'] ?? '',
-                    $source['port'] ?? 5432,
+                    $authObject['url'] ?? '',
+                    $authObject['database'] ?? '',
+                    $authObject['username'] ?? '',
+                    $authObject['password'] ?? '',
+                    $authObject['port'] ?? 5432,
                 );
                 break;
             case 'appwrite':
-                return new Appwrite($source['projectId'], $source['endpoint'], $source['key']);
+                return new Appwrite($authObject['projectId'], $authObject['endpoint'], $authObject['key']);
                 break;
             default:
                 throw new \Exception('Invalid source type');
@@ -87,10 +90,37 @@ class TransfersV1 extends Worker
         }
     }
 
+    /**
+     * Process Destination
+     * 
+     * @return Destination
+     * @throws \Exception
+     */
+    function processDestination(): Destination
+    {
+        $destination = $this->dbForProject->getDocument('destinations', $this->args['transfer']['destination']);
+
+        $authObject = json_decode($destination['data'], true) ?? [];
+        
+
+        switch ($destination['type']) {
+            case 'appwrite':
+                if ($authObject['endpoint'] === 'http://localhost/v1') { // Rewrite into Internal Network.
+                    return new DestinationsAppwrite($authObject['projectId'], 'http://appwrite/v1', $authObject['key']);
+                } else {
+                    return new DestinationsAppwrite($authObject['projectId'], $authObject['endpoint'], $authObject['key']);
+                }
+                break;
+            default:
+                throw new \Exception('Invalid destination type');
+                break;
+        }
+    }
+
     protected function updateAttribute(string $attribute, mixed $value, Document $document): void
     {
         $document->setAttribute($attribute, $value);
-        $this->dbForConsole->updateDocument($document->getCollection(), $document->getId(), $document);
+        $this->dbForProject->updateDocument($document->getCollection(), $document->getId(), $document);
     }
 
     /**
@@ -101,13 +131,14 @@ class TransfersV1 extends Worker
     protected function processTransfer(): void
     {
         $transferDocument = null;
+        $transfer = null;
 
         try {
-            $transferDocument = $this->dbForConsole->getDocument('transfers', $this->args['transferId']);
+            $transferDocument = $this->dbForProject->getDocument('transfers', $this->args['transfer']['$id']);
             $this->updateAttribute('status', 'processing', $transferDocument);
 
             $source = $this->processSource();
-            $destination = new DestinationsAppwrite($this->args['projectId'], $this->args['endpoint'], $this->args['key']);
+            $destination = $this->processDestination();
 
             $transfer = new \Utopia\Transfer\Transfer(
                 $source,
@@ -117,38 +148,64 @@ class TransfersV1 extends Worker
             $this->updateAttribute('stage', 'source-check', $transferDocument);
             if (!$source->check()) {
                 $transferDocument->setAttribute('status', 'failed');
-                $transferDocument->setAttribute('errorData', $transfer->getLogs('error'));
+                $transferDocument->setAttribute('errorData', json_encode($transfer->getLogs('error')));
             }
 
             $this->updateAttribute('stage', 'destination-check', $transferDocument);
             if (!$destination->check()) {
                 $transferDocument->setAttribute('status', 'failed');
                 $transferDocument->setAttribute('stage', 'destination-check');
-                $transferDocument->setAttribute('errorData', $transfer->getLogs('error'));
+                $transferDocument->setAttribute('errorData', json_encode($transfer->getLogs('error')));
             }
 
             /** Start Transfer */
-            $transfer->run($this->args['resoruces'], function (Update $update) use ($transferDocument, $transfer, $source, $destination) {
+            $transfer->run($transferDocument->getAttribute('resources'), function (Progress $progress) use ($transferDocument, $transfer, $source, $destination) {
+                var_dump($progress->getProgress());
                 $transferDocument->setAttribute('stage', 'transfer');
-                $transferDocument->setAttribute('latestUpdate', json_encode($update));
-                $transferDocument->setAttribute('progress', json_encode([
-                    'source' => $source->getCounter(''),
-                    'destination' => $destination->getCounter(''),
+                $transferDocument->setAttribute('latestProgress', json_encode($progress));
+                $transferDocument->setAttribute('totalProgress', json_encode([
+                    'source' => $source->getCounter(),
+                    'destination' => $destination->getCounter(),
                 ]));
-                $this->dbForConsole->updateDocument($transferDocument->getCollection(), $transferDocument->getId(), $transferDocument);
+                $this->dbForProject->updateDocument($transferDocument->getCollection(), $transferDocument->getId(), $transferDocument);
             });
 
             if (!empty($transfer->getLogs('error'))) {
                 $transferDocument->setAttribute('status', 'failed');
-                $transferDocument->setAttribute('errorData', $transfer->getLogs('error'));
-            }
 
-            $transferDocument->setAttribute('status', 'completed');
+                $logs = [];
+
+                foreach ($transfer->getLogs('error') as $log) {
+                    $logs[] = $log->asArray();
+                }
+
+                var_dump($logs);
+
+                $transferDocument->setAttribute('errorData', json_encode($logs));
+            } else {
+                $transferDocument->setAttribute('status', 'completed');
+            }
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
+
+            // Improve Error Handler.
+
             if ($transferDocument) {
                 $transferDocument->setAttribute('status', 'failed');
-                $transferDocument->setAttribute('errorData', $transfer->getLogs('error'));
+
+                foreach ($transfer->getLogs('error') as $log) {
+                    $logs[] = $log->asArray();
+                }
+
+                var_dump($logs);
+
+                $transferDocument->setAttribute('errorData', json_encode($logs));
+            }
+
+            throw $th;
+        } finally {
+            if ($transferDocument) {
+                $this->dbForProject->updateDocument($transferDocument->getCollection(), $transferDocument->getId(), $transferDocument);
             }
         }
     }
@@ -159,6 +216,10 @@ class TransfersV1 extends Worker
      * @return void
      */
     protected function processVerification(): void
+    {
+    }
+
+    public function shutdown(): void
     {
     }
 }

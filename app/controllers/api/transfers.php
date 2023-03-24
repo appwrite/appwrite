@@ -67,11 +67,11 @@ App::post('/v1/transfers')
             'source' => $source,
             'destination' => $destination,
             'resources' => $resources,
-            'progress' => json_encode([
+            'totalProgress' => json_encode([
                 'source' => [],
                 'destination' => [],
             ]),
-            'latestUpdate' => "{}",
+            'latestProgress' => "{}",
             'errorData' => ""
         ]));
 

@@ -59,15 +59,15 @@ class Transfer extends Model
                 'example' => ['users'],
                 'array' => true
             ])
-            ->addRule('progress', [
+            ->addRule('totalProgress', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Transfer progress.',
+                'description' => 'A group of counters that represent the total progress of the transfer.',
                 'default' => [],
                 'example' => '{"source":[], "destination": []}',
             ])
-            ->addRule('latestUpdate', [
+            ->addRule('latestProgress', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Latest update.',
+                'description' => 'The latest progress of the transfer.',
                 'default' => [],
                 'example' => '{"source":[], "destination": []}',
             ])

@@ -10,8 +10,8 @@ class Transfers extends Base
         'source',
         'destination',
         'resources',
-        'progress',
-        'latestUpdate',
+        'totalProgress',
+        'latestProgress',
         'errorData'
     ];
 
