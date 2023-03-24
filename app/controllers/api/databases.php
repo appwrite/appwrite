@@ -302,7 +302,6 @@ function updateAttribute(
         $dbForProject->updateRelationship(
             collection: $collectionId,
             key: $key,
-            newTwoWayKey: $options['twoWayKey'],
             twoWay: $options['twoWay'],
             onDelete: $options['onDelete'],
         );
@@ -1533,7 +1532,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
     ->param('key', null, new Key(), 'Attribute Key.', true)
-    ->param('twoWayKey', null, new Key(), 'Two Way Key', true)
+    ->param('twoWayKey', null, new Key(), 'Two Way Attribute Key.', true)
     ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
