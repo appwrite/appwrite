@@ -1,0 +1,30 @@
+{{- if .Values.appwrite.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-core"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "appwrite.fullname" . }}-core
+  minReplicas: {{ .Values.appwrite.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.appwrite.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.appwrite.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.appwrite.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.appwrite.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.appwrite.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

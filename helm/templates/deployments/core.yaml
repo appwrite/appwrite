@@ -1,0 +1,69 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-core"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+    app.kubernetes.io/component: core
+spec:
+  selector:
+    matchLabels:
+{{ include "appwrite.selectorLabels" $ | indent 6 }}
+      app.kubernetes.io/component: core
+  {{- if not .Values.appwrite.autoscaling.enabled }}
+  replicas: {{ .Values.appwrite.replicaCount }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+{{ include "appwrite.labels" $ | indent 8 }}
+        app.kubernetes.io/component: core
+      annotations:
+        checksum/config-env: {{ include (print $.Template.BasePath "/config/env.yaml") . | sha256sum }}
+        checksum/secrets-env: {{ include (print $.Template.BasePath "/secrets/env.yaml") . | sha256sum }}
+        checksum/secrets-db: {{ include (print $.Template.BasePath "/secrets/db.yaml") . | sha256sum }}
+        checksum/secrets-redis: {{ include (print $.Template.BasePath "/secrets/redis.yaml") . | sha256sum }}
+        checksum/secrets-smtp: {{ include (print $.Template.BasePath "/secrets/smtp.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+      {{- include "redisCheck" $ | nindent 6 }}
+      {{- include "dbCheck" $ | nindent 6 }}
+      {{- include "influxdbCheck" $ | nindent 6 }}
+      containers:
+      - name: appwrite-core
+        image: "{{ .Values.appwrite.image.repository }}:{{ .Values.appwrite.image.tag | default .Chart.AppVersion }}"
+        {{- with .Values.appwrite.image.pullPolicy }}
+        imagePullPolicy: {{ . }}
+        {{- end }}
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+          - name: _APP_WORKER_PER_CORE
+            value: {{ .Values.appwrite.workerPerCore | quote }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "appwrite.fullname" $ }}-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-db-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-redis-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-smtp-env
+        {{- include "probeHttp" $ | nindent 8 }}
+        resources:
+{{ toYaml .Values.appwrite.resources | indent 10 }}
+        volumeMounts:
+        {{- range $k, $v := .Values.appwrite.volumes }}
+        - mountPath: /storage/{{ $k }}
+          name: {{ $k }}
+        {{- end }}
+      volumes:
+        {{- range $k, $v := .Values.appwrite.volumes }}
+        - name: {{ $k }}
+          persistentVolumeClaim:
+            claimName: "{{ include "appwrite.fullname" $ }}-{{ $k }}"
+        {{- end }}

@@ -1,0 +1,325 @@
+
+# nameOverride -- String to partially override the deployment name (will maintain the release name)
+nameOverride: ""
+# -- String to fully override the deployment name
+fullnameOverride: ""
+# -- String to fully override the deployment namespace
+namespaceOverride:
+
+# commonLabels -- Labels to append to all manifests
+commonLabels: {}
+  # foo: bar
+
+appwrite:
+  image:
+    # -- The repository (and image name) where the appwrite docker image is stored
+    repository: appwrite/appwrite
+    # -- Image pull policy, Always when tag is latest, IfNotPresent for any other tag
+    # You probably don't need to change it.
+    pullPolicy: ""
+    # -- Overrides the image tag whose default is the chart appVersion
+    tag: ""
+
+  # -- How many replicas of appwrite should be deployed, it is ignored if autoscaling is enabled
+  replicaCount: 1
+  autoscaling:
+    # -- Whether to enable autoscaling
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 5
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  # -- Server Environment
+  env: development
+  # -- Locale
+  locale: en
+  # -- This is your server private key (as base64 string) that is used to encrypt all sensitive data on your server.
+  # Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files.
+  #`--set-file appwrite.sslKey=key.pem` can be used to import a key file.
+  sslKey: changeme
+  # -- Domain used for ingresses
+  domain: appwrite.local
+  options:
+    # -- Abuse checks and API rate limiting.
+    abuse: true
+    # -- Force SSL
+    forceHttps: false
+  console:
+    whitelist:
+      # -- This option allows you to disable the creation of new users on the Appwrite console.
+      # When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project.
+      root: true
+      # -- This option allows you to limit creation of new users on the Appwrite console.
+      # This option is very useful for small teams or sole developers.
+      emails: []
+      # -- This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses.
+      # This option is very useful for team working with a VPN service or a company IP.
+      ips: []
+  system:
+    email:
+      # -- This is the sender name value that will appear on email messages sent to developers from the Appwrite console.
+      # You can use url encoded strings for spaces and special chars.
+      name: Appwrite
+      # -- This is the sender email address that will appear on email messages sent to developers from the Appwrite console.
+      # You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users' SPAM folders.
+      addr: team@appwrite.io
+    # -- Use this environment variable to set the default Appwrite HTTP response format to support an older version of Appwrite.
+    # This option is useful to overcome breaking changes between versions.
+    # You can also use the X-Appwrite-Response-Format HTTP request header to overwrite the response for a specific request.
+    # This variable accepts any valid Appwrite version. To use the current version format, leave the value of the variable empty.
+    responseFormat: ""
+    # -- This is the email address used to issue SSL certificates for custom domains or the user agent in your webhooks payload.
+    securityAddress: certs@appwrite.io
+  usageStats: 
+    # -- This variable allows you to disable the collection and displaying of usage stats. 
+    # You will need an external InfluxDB instance in the `monitoring` namespace.
+    # When disabled, the Usage and Telegraf containers will be turned off.
+    enabled: true
+    # -- The stats aggregation interval in seconds
+    interval: 30
+
+  # -- Internal Worker per core for the API containers. Can be configured to optimize performance.
+  workersPerCore: 6
+
+  ingress:
+    # -- Core API Ingress
+    enabled: true
+    # -- Core ingress annotation
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    tls:
+      # -- Core ingress TLS enabled
+      enabled: false
+
+  # -- Resources for the main appwrite pods
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+
+  volumes:
+    uploads:
+      # -- Upload volume size
+      size: 1Gi
+    cache:
+      # -- Cache volume size
+      size: 1Gi
+    config:
+      # -- Configuration volume size
+      size: 1Gi
+    certificates:
+      # -- Certificates volume size
+      size: 1Gi
+    functions:
+      # -- Functions volume size
+      size: 1Gi
+
+realtime:
+  # replicaCount -- How many replicas of realtime should be deployed, it is ignored if autoscaling is enabled
+  replicaCount: 1
+  autoscaling:
+    # -- Whether to enable autoscaling
+    enabled: false
+    # minReplicas: 1
+    # maxReplicas: 5
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  # -- Internal Worker per core for the Realtime containers. Can be configured to optimize performance.
+  workersPerCore: 6
+
+  ingress:
+    # -- Real-time API ingress
+    enabled: true
+    # -- Real-time ingress annotation
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    tls:
+      # -- Real-time ingress TLS enabled
+      enabled: false
+
+  # -- Resources for the realtime appwrite pods
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+
+schedule:
+  # -- Number of schedule pods
+  replicaCount: 1
+
+maintenance:
+  # -- Number of maintenance pods
+  replicaCount: 1
+
+influxdb:
+  # -- InfluxDB hostname
+  host: influxdb.monitoring.svc
+  # -- InfluxDB port
+  port: 8086
+
+## Chart dependencies
+##
+
+# -- See https://artifacthub.io/packages/helm/influxdata/telegraf
+telegraf:
+  image: 
+    repo: appwrite/telegraf
+    tag: 1.4.0
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+
+# -- See https://artifacthub.io/packages/helm/bitnami/redis
+redis:
+  architecture: standalone
+  auth:
+    enabled: false
+    sentinel: false
+    password: ""
+    existingSecret: ""
+    existingSecretPasswordKey: ""
+    usePasswordFiles: false
+
+  master:
+    persistence:
+      size: 1Gi
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+
+# -- See https://artifacthub.io/packages/helm/bitnami/mariadb
+mariadb:
+  # initdbScriptsConfigMap: appwrite-db-seed
+
+  auth:
+    # -- MariaDB root password
+    rootPassword: myrootsecret
+    # -- MariaDB appwrite database
+    database: appwrite
+    # -- MariaDB appwrite username
+    username: appwrite
+    # -- MariaDB appwrite password
+    password: changeme
+    # -- Use this if you'd like to use a secret object instead.
+    # The secret has to contain the keys `mariadb-root-password`, `mariadb-replication-password` and `mariadb-password`
+    existingSecret: ""
+
+  volumePermissions:
+    enabled: true
+
+  primary:
+    persistence:
+      # -- MariaDB storage size
+      size: 2Gi
+
+sms:
+  # -- Provider used for delivering SMS for Phone authentication. Use the following format: `sms://[USER]:[SECRET]@[PROVIDER]`.
+  #Available providers are twilio, text-magic, telesign, msg91, and vonage.
+  provider: ""
+  # -- Phone number used for sending out messages. Must start with a leading '+' and maximum of 15 digits without spaces (+123456789).
+  from: ""
+
+smtp:
+  # -- SMTP server host name address. Use an empty string to disable all mail sending from the server. 
+  # The default value for this variable is an empty string
+  host: maildev
+  # -- SMTP server TCP port. Empty by default.
+  port: 1025
+  # -- SMTP secure connection protocol. Empty by default, change to 'tls' if running on a secure connection.
+  secure: false
+  # -- SMTP server user name. Empty by default.
+  user: ""
+  # -- SMTP server user password. Empty by default.
+  pass: ""
+
+storage:
+  # -- Maximum file size allowed for file upload. The default value is 30MB limitation.
+  uploadLimit: 30Mi
+  # -- Select default storage device. The default value is 'local'. 
+  # List of supported adapters are 'local', 's3', 'dospaces', 'backblaze', 'linode' and 'wasabi'.
+  device: local
+  bucket:
+    # -- Bucket API access key ID
+    accessKey: ""
+    # -- Bucket API secret key
+    secret: ""
+    # -- Bucket region
+    region: eu-west-1
+    # -- Bucket name
+    name: ""
+
+clamav:
+  # -- This variable allows you to disable the internal anti-virus (ClamAV) scans.
+  enabled: true
+  # -- Clamav image settings
+  image: 
+    repository: appwrite/clamav
+    tag: "2.0.0"
+    pullPolicy: ""
+
+  persistence:
+    # -- ClamAV storage size
+    size: 1Gi
+
+  freshclam:
+    # -- Resources for the ClamAV auth-update process
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+
+  clamd:
+    # -- Resources for the ClamAV scan process
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 2Gi
+        cpu: 1
+
+functions:
+  # -- The maximum number of seconds allowed as a timeout value when creating a new function.
+  timeout: 900
+  # -- The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. 
+  # Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed.
+  containers: 10
+  # -- The maximum number of CPU core a single cloud function is allowed to use. 
+  # Please note that setting a value higher than available cores will result in a function error, which might result in an error. 
+  # When empty, CPU limit will be disabled.
+  cpus: 1
+  # -- The maximum amount of memory a single cloud function is allowed to use in megabytes. 
+  # When empty, memory limit will be disabled.
+  memory: 256Mb
+  # -- The maximum amount of swap memory a single cloud function is allowed to use in megabytes. 
+  # The default value is empty.
+  # When empty, swap memory limit will be disabled.
+  swap: 256Mb
+  # -- This option allows you to limit the available environments for cloud functions.
+  runtimes:
+    - node-16.0
+    - php-8.0
+    - python-3.9
+    - ruby-3.0
+    - java-16.0
+    - dart-2.14
+    - dotnet-5.0

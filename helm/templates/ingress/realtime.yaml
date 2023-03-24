@@ -1,0 +1,32 @@
+{{- if .Values.realtime.ingress.enabled -}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "appwrite.fullname" $ }}-realtime
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+{{- if .Values.realtime.ingress.annotations }}
+  annotations:
+{{- toYaml .Values.realtime.ingress.annotations | nindent 4 }}
+{{- end }}
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: {{ .Values.appwrite.domain }}
+      http:
+        paths:
+          - path: /v1/realtime
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "appwrite.fullname" $ }}-realtime
+                port:
+                  number: 80
+  {{- if .Values.realtime.ingress.tls.enabled }}
+  tls:
+    - hosts:
+      - {{ .Values.appwrite.domain }}
+      secretName: {{ include "appwrite.fullname" $ }}-tls
+  {{- end -}}
+{{- end -}}

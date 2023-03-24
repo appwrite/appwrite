@@ -1,0 +1,12 @@
+{{ if and .Values.initdbScriptsConfigMap (eq .Values.initdbScriptsConfigMap "appwrite-db-seed") }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appwrite-db-seed
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+data:
+  seed.sql: |-
+{{ .Files.Get "files/seed.sql" | indent 4 }}
+{{ end }}

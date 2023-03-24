@@ -1,0 +1,18 @@
+{{- range $k, $v := .Values.appwrite.volumes }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-{{ $k }}"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: {{ $v.size }}
+  {{- with $v.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}  
+{{- end }}

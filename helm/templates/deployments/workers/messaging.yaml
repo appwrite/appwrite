@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-messaging"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+    app.kubernetes.io/component: messaging
+spec:
+  selector:
+    matchLabels:
+{{ include "appwrite.selectorLabels" $ | indent 6 }}
+      app.kubernetes.io/component: messaging
+  replicas: 1
+  template:
+    metadata:
+      labels:
+{{ include "appwrite.labels" $ | indent 8 }}
+        app.kubernetes.io/component: messaging
+      annotations:
+        checksum/config-env: {{ include (print $.Template.BasePath "/config/env.yaml") . | sha256sum }}
+        checksum/secrets-env: {{ include (print $.Template.BasePath "/secrets/env.yaml") . | sha256sum }}
+        checksum/secrets-db: {{ include (print $.Template.BasePath "/secrets/db.yaml") . | sha256sum }}
+        checksum/secrets-redis: {{ include (print $.Template.BasePath "/secrets/redis.yaml") . | sha256sum }}
+        checksum/secrets-smtp: {{ include (print $.Template.BasePath "/secrets/smtp.yaml") . | sha256sum }}
+    spec:
+      initContainers:
+      {{- include "redisCheck" $ | nindent 6 }}
+      {{- include "dbCheck" $ | nindent 6 }}
+      containers:
+      - name: appwrite-messaging
+        image: "{{ .Values.appwrite.image.repository }}:{{ .Values.appwrite.image.tag | default .Chart.AppVersion }}"
+        command:
+          - "worker-messaging"
+        {{- with .Values.appwrite.image.pullPolicy }}
+        imagePullPolicy: {{ . }}
+        {{- end }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "appwrite.fullname" $ }}-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-db-env
+        - secretRef:
+            name: {{ include "appwrite.fullname" $ }}-redis-env

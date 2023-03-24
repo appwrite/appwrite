@@ -1,0 +1,17 @@
+{{ if .Values.clamav.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-clamav"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+    app.kubernetes.io/component: clamav
+spec:
+  ports:
+    - port: 3310
+      targetPort: 3310
+  selector:
+{{ include "appwrite.selectorLabels" $ | indent 4 }}
+    app.kubernetes.io/component: clamav
+{{ end }}

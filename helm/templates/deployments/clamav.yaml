@@ -1,0 +1,56 @@
+{{ if .Values.clamav.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-clamav"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+    app.kubernetes.io/component: clamav
+spec:
+  selector:
+    matchLabels:
+{{ include "appwrite.selectorLabels" $ | indent 6 }}
+      app.kubernetes.io/component: clamav
+  replicas: 1
+  template:
+    metadata:
+      labels:
+{{ include "appwrite.labels" $ | indent 8 }}
+        app.kubernetes.io/component: clamav
+    spec:
+      containers:
+      - name: freshclam
+        image: "{{ .Values.clamav.image.repository }}:{{ .Values.clamav.image.tag }}"
+        {{- with .Values.clamav.image.pullPolicy }}
+        imagePullPolicy: {{ . }}
+        {{- end }}
+        env:
+        - name: MODE
+          value: "freshclam"
+        resources:
+{{ toYaml .Values.clamav.freshclam.resources | indent 10 }}
+        volumeMounts:
+        - mountPath: /var/lib/clamav
+          name: data
+      - name: clamd
+        image: "{{ .Values.clamav.image.repository }}:{{ .Values.clamav.image.tag }}"
+        {{- with .Values.clamav.image.pullPolicy }}
+        imagePullPolicy: {{ . }}
+        {{- end }}
+        ports:
+        - containerPort: 3310
+          name: clamav
+        env:
+        - name: MODE
+          value: "clamd"
+        resources:
+{{ toYaml .Values.clamav.clamd.resources | indent 10 }}
+        volumeMounts:
+        - mountPath: /var/lib/clamav
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: "{{ include "appwrite.fullname" $ }}-clamav"
+{{ end }}

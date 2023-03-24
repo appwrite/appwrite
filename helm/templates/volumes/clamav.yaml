@@ -1,0 +1,18 @@
+{{ if .Values.clamav.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ include "appwrite.fullname" $ }}-clamav"
+  labels:
+{{ include "appwrite.labels" $ | indent 4 }}
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: {{ .Values.clamav.persistence.size }}
+  {{- with .Values.clamav.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}  
+{{ end }}
