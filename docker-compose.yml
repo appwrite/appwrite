@@ -83,8 +83,6 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis
@@ -345,8 +343,6 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
-      - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
     depends_on:
       - redis
       - mariadb

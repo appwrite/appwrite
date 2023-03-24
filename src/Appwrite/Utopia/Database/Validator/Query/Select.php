@@ -41,6 +41,8 @@ class Select extends Base
 
         foreach ($query->getValues() as $attribute) {
             if (\str_contains($attribute, '.')) {
+                // For relationships, just validate the top level.
+                // Utopia will validate each nested level during the recursive calls.
                 $attribute = \explode('.', $attribute)[0];
             }
             if (!isset($this->schema[$attribute]) && $attribute !== '*') {
