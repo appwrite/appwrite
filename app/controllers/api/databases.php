@@ -2750,12 +2750,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
-        // todo: temporary fix until Utopia will be ready !!!!
-        foreach ($filterQueries as $key => $query) {
-            if (\str_contains($query->getAttribute(), '.')) {
-                unset($filterQueries[$key]);
-            }
-        }
+
         if ($documentSecurity && !$valid) {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);

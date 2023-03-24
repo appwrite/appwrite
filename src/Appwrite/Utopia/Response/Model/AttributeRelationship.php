@@ -11,12 +11,6 @@ class AttributeRelationship extends Attribute
         parent::__construct();
 
         $this
-            ->addRule('default', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Default value for attribute when not provided. Only null is optional',
-                'default' => null,
-                'example' => '',
-            ])
             ->addRule('relatedCollection', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The Id of the related collection',
@@ -25,26 +19,26 @@ class AttributeRelationship extends Attribute
             ])
             ->addRule('relationType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The type of the relationship ',
-                'default' => null,
+                'description' => 'The type of the relationship',
+                'default' => '',
                 'example' => 'oneToOne|oneToMany|manyToOne|manyToMany',
             ])
             ->addRule('twoWay', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is the relationship two-way?',
-                'default' => null,
-                'example' => 'relationship',
+                'default' => false,
+                'example' => false,
             ])
             ->addRule('twoWayKey', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The key of the two-way relationship',
-                'default' => null,
+                'default' => '',
                 'example' => 'string',
             ])
             ->addRule('onDelete', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Action to take on related documents when parent document is deleted',
-                'default' => null,
+                'default' => 'restrict',
                 'example' => 'restrict|cascade|setNull',
             ])
         ;

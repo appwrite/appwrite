@@ -95,26 +95,30 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if ($type === Database::VAR_RELATIONSHIP) {
-                $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
-                if ($relatedCollection->isEmpty()) {
-                    throw new Exception('Missing collection');
-                }
-                if (
-                    !$dbForProject->createRelationship(
-                        collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                        relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                        type: $options['relationType'],
-                        twoWay: $options['twoWay'],
-                        id: $key,
-                        twoWayKey: $options['twoWayKey'],
-                        onDelete: $options['onDelete'],
-                    )
-                ) {
-                    throw new Exception('Failed to create Attribute');
-                }
-            } elseif (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                throw new Exception('Failed to create Attribute');
+            switch ($type) {
+                case Database::VAR_RELATIONSHIP:
+                    $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                    if ($relatedCollection->isEmpty()) {
+                        throw new Exception('Collection not found');
+                    }
+                    if (
+                        !$dbForProject->createRelationship(
+                            collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                            relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                            type: $options['relationType'],
+                            twoWay: $options['twoWay'],
+                            id: $key,
+                            twoWayKey: $options['twoWayKey'],
+                            onDelete: $options['onDelete'],
+                        )
+                    ) {
+                        throw new Exception('Failed to create Attribute');
+                    }
+                    break;
+                default:
+                    if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                        throw new Exception('Failed to create Attribute');
+                    }
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -151,6 +155,7 @@ class DatabaseV1 extends Worker
      * @param Document $collection
      * @param Document $attribute
      * @param string $projectId
+     * @throws Throwable
      */
     protected function deleteAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
     {
@@ -177,12 +182,16 @@ class DatabaseV1 extends Worker
 
         try {
             if ($status !== 'failed') {
-                if ($type === Database::VAR_RELATIONSHIP) {
-                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        throw new Exception('Failed to delete Attribute');
-                    }
-                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                    throw new Exception('Failed to delete Attribute');
+                switch ($type) {
+                    case Database::VAR_RELATIONSHIP:
+                        if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                            throw new Exception('Failed to delete Attribute');
+                        }
+                        break;
+                    default:
+                        if (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                            throw new Exception('Failed to delete Attribute');
+                        }
                 }
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
