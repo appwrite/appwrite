@@ -126,7 +126,7 @@ Server::setResource('execute', function () {
 
         $vars = [];
 
-        // Shared vars
+        // global vars
         $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
             Query::equal('resourceType', ['project']),
             Query::limit(APP_LIMIT_SUBQUERY)
