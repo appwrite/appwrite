@@ -62,12 +62,12 @@ class Base extends Queries
         ]);
 
         $validators = [
-            new Select(),
             new Limit(),
             new Offset(),
             new Cursor(),
             new Filter($attributes),
             new Order($attributes),
+            new Select($attributes),
         ];
 
         parent::__construct(...$validators);
