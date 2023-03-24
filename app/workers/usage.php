@@ -108,8 +108,8 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     break;
 
                 case $document->getCollection() === 'functions':
-                    $deployments = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
-                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
+                    $deployments = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS)));
+                    $deploymentsStorage = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $document->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE)));
                     $builds = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS)));
                     $buildsStorage = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE)));
                     $buildsCompute = $dbForProject->getDocument('stats', md5(INFINITI_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE)));
@@ -154,7 +154,7 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     if (!empty($executions['value'])) {
                         $metrics[] = [
                             'key' => METRIC_EXECUTIONS,
-                            'value' => ($executionsCompute['value'] * -1),
+                            'value' => ($executions['value'] * -1),
                         ];
                     }
 
@@ -186,7 +186,6 @@ $server->job()
         $payload = $message->getPayload() ?? [];
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
-
         foreach ($payload['reduce'] ?? [] as $document) {
             if (empty($document)) {
                 continue;
@@ -201,7 +200,6 @@ $server->job()
         }
 
         $stats[$projectId]['database'] = $project->getAttribute('database');
-
         foreach ($payload['metrics'] ?? [] as $metric) {
             if (!isset($stats[$projectId]['keys'][$metric['key']])) {
                 $stats[$projectId]['keys'][$metric['key']] = $metric['value'];

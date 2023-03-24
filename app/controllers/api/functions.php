@@ -237,8 +237,8 @@ App::get('/v1/functions/:functionId/usage')
         $stats = $usage = [];
         $days = $periods[$range];
         $metrics = [
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
-            str_replace(['{resourceType}', '{resourceInternalId}'], ['function', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS),
+            str_replace(['{resourceType}', '{resourceInternalId}'], ['functions', $function->getInternalId()], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE),
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE),
@@ -1342,6 +1342,13 @@ App::post('/v1/functions/:functionId/variables')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
@@ -1466,6 +1473,13 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
@@ -1512,6 +1526,14 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         }
 
         $dbForProject->deleteDocument('variables', $variable->getId());
+
+        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+
         $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));

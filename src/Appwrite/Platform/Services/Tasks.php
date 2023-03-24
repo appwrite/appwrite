@@ -13,6 +13,7 @@ use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Hamster;
+use Appwrite\Platform\Tasks\PatchDeleteScheduleUpdatedAtAttribute;
 use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
@@ -32,6 +33,7 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(PatchCreateMissingSchedules::getName(), new PatchCreateMissingSchedules())
+            ->addAction(PatchDeleteScheduleUpdatedAtAttribute::getName(), new PatchDeleteScheduleUpdatedAtAttribute())
             ->addAction(Schedule::getName(), new Schedule())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
