@@ -1551,8 +1551,8 @@ App::post('/v1/functions/:functionId/variables')
         // Stop all running runtimes with this variable
         (new Delete())
             ->setType(DELETE_TYPE_RUNTIMES)
-            ->setProject($project)
             ->setFunction($function)
+            ->setProject($project)
             ->trigger();
 
         $response
@@ -1677,8 +1677,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         // Stop all running runtimes with this variable
         (new Delete())
             ->setType(DELETE_TYPE_RUNTIMES)
-            ->setProject($project)
             ->setFunction($function)
+            ->setProject($project)
             ->trigger();
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
@@ -1724,8 +1724,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         // Stop all running runtimes with this variable
         (new Delete())
             ->setType(DELETE_TYPE_RUNTIMES)
-            ->setProject($project)
             ->setFunction($function)
+            ->setProject($project)
             ->trigger();
 
         $response->noContent();

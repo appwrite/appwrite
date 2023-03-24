@@ -40,6 +40,7 @@ class Executor
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'x-opr-addressing-method' => 'anycast-efficient'
         ];
     }
 
@@ -91,7 +92,7 @@ class Executor
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, [], $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -115,7 +116,9 @@ class Executor
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/$runtimeId";
 
-        $response = $this->call(self::METHOD_DELETE, $route, [], [], true, 30);
+        $response = $this->call(self::METHOD_DELETE, $route, [
+            'x-opr-addressing-method' => 'broadcast'
+        ], [], true, 30);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -177,7 +180,7 @@ class Executor
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, [], $params, true, $timeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
