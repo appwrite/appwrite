@@ -34,6 +34,12 @@ class Filter extends Base
 
     protected function isValidAttribute($attribute): bool
     {
+        if (\str_contains($attribute, '.')) {
+            // For relationships, just validate the top level.
+            // Utopia will validate each nested level during the recursive calls.
+            $attribute = \explode('.', $attribute)[0];
+        }
+
         // Search for attribute in schema
         if (!isset($this->schema[$attribute])) {
             $this->message = 'Attribute not found in schema: ' . $attribute;
@@ -47,6 +53,12 @@ class Filter extends Base
     {
         if (!$this->isValidAttribute($attribute)) {
             return false;
+        }
+
+        if (\str_contains($attribute, '.')) {
+            // For relationships, just validate the top level.
+            // Utopia will validate each nested level during the recursive calls.
+            $attribute = \explode('.', $attribute)[0];
         }
 
         $attributeSchema = $this->schema[$attribute];
