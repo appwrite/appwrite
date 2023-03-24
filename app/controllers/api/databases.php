@@ -1529,10 +1529,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('key', '', new Key(), 'Attribute Key.')
     ->param('relatedCollectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY]), 'Relation type')
     ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
+    ->param('key', null, new Key(), 'Attribute Key.', true)
     ->param('twoWayKey', null, new Key(), 'Two Way Key', true)
     ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL]), 'Constraints option', true)
     ->inject('response')
@@ -1542,10 +1542,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->action(function (
         string $databaseId,
         string $collectionId,
-        string $key,
         string $relatedCollectionId,
         string $type,
         bool $twoWay,
+        ?string $key,
         ?string $twoWayKey,
         string $onDelete,
         Response $response,
@@ -1553,6 +1553,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         EventDatabase $database,
         Event $events
 ) {
+        $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
         $attribute = createAttribute(

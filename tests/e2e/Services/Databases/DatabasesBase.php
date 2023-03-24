@@ -292,9 +292,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'library',
             'relatedCollectionId' => 'library',
             'type' => Database::RELATION_ONE_TO_ONE,
+            'key' => 'library',
             'onDelete' => Database::RELATION_MUTATE_CASCADE,
         ]);
 
@@ -430,11 +430,11 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'libraries',
             'relatedCollectionId' => 'library',
             'type' => Database::RELATION_ONE_TO_MANY,
-            'twoWayKey' => 'person',
             'twoWay' => true,
+            'key' => 'libraries',
+            'twoWayKey' => 'person',
         ]);
 
         sleep(1);
@@ -609,11 +609,11 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'artist',
             'relatedCollectionId' => $artists['body']['$id'],
             'type' => Database::RELATION_MANY_TO_ONE,
-            'twoWayKey' => 'albums',
             'twoWay' => true,
+            'key' => 'artist',
+            'twoWayKey' => 'albums',
         ]);
 
         $this->assertEquals(202, $response['headers']['status-code']);
@@ -754,11 +754,11 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'key' => 'players',
             'relatedCollectionId' => $players['body']['$id'],
             'type' => Database::RELATION_MANY_TO_MANY,
-            'twoWayKey' => 'sports',
             'twoWay' => true,
+            'key' => 'players',
+            'twoWayKey' => 'sports',
             'onDelete' => Database::RELATION_MUTATE_SET_NULL,
         ]);
 
