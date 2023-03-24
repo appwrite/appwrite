@@ -234,702 +234,6 @@ trait DatabasesBase
     }
 
     /**
-     * @depends testCreateDatabase
-     */
-    public function testOneToOneRelationship(array $data): array
-    {
-        $databaseId = $data['databaseId'];
-
-        $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => 'person',
-            'name' => 'person',
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
-                Permission::create(Role::user($this->getUser()['$id'])),
-            ],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $person['headers']['status-code']);
-
-        $library = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => 'library',
-            'name' => 'library',
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::create(Role::user($this->getUser()['$id'])),
-            ],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $library['headers']['status-code']);
-
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'fullName',
-            'size' => 255,
-            'required' => false,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => 'library',
-            'type' => Database::RELATION_ONE_TO_ONE,
-            'key' => 'library',
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $libraryName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'libraryName',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        sleep(1); // Wait for worker
-
-        $this->assertEquals(202, $libraryName['headers']['status-code']);
-        $this->assertEquals(202, $relation['headers']['status-code']);
-        $this->assertEquals('library', $relation['body']['key']);
-        $this->assertEquals('relationship', $relation['body']['type']);
-        $this->assertEquals('processing', $relation['body']['status']);
-
-        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/library", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-
-        $this->assertEquals(200, $attribute['headers']['status-code']);
-        $this->assertEquals('available', $attribute['body']['status']);
-        $this->assertEquals('library', $attribute['body']['key']);
-        $this->assertEquals('relationship', $attribute['body']['type']);
-        $this->assertEquals(false, $attribute['body']['required']);
-        $this->assertEquals(false, $attribute['body']['array']);
-        $this->assertEquals('oneToOne', $attribute['body']['relationType']);
-        $this->assertEquals(false, $attribute['body']['twoWay']);
-        $this->assertEquals('person', $attribute['body']['twoWayKey']);
-        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
-
-        $person1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'library' => [
-                    '$id' => 'library1',
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                    ],
-                    'libraryName' => 'Library 1',
-                ],
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
-
-        $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
-
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-           'queries' => [
-               'equal("library", "library1")',
-               'select(["fullName","library.*"])']
-        ]);
-
-        $this->assertEquals(1, $documents['body']['total']);
-        $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
-        $this->assertArrayHasKey('fullName', $documents['body']['documents'][0]);
-
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                Query::equal('library.libraryName', ['Library 1']),
-            ],
-        ]);
-
-        $this->assertEquals(1, $documents['body']['total']);
-        $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/library', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-
-        sleep(1);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-
-        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/library", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-
-        $this->assertEquals(404, $attribute['headers']['status-code']);
-
-        $person1 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $person1['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertArrayNotHasKey('library', $person1['body']);
-
-        return [
-            'databaseId' => $databaseId,
-            'personCollection' => $person['body']['$id'],
-            'libraryCollection' => $library['body']['$id'],
-        ];
-    }
-
-    /**
-     * @depends testOneToOneRelationship
-     */
-    public function testOneToManyRelationship(array $data): array
-    {
-        $databaseId = $data['databaseId'];
-        $personCollection = $data['personCollection'];
-        $libraryCollection = $data['libraryCollection'];
-
-        // One person can own several libraries
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personCollection . '/attributes/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => 'library',
-            'type' => Database::RELATION_ONE_TO_MANY,
-            'twoWay' => true,
-            'key' => 'libraries',
-            'twoWayKey' => 'person',
-        ]);
-
-        sleep(1);
-
-        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-
-        $this->assertEquals(200, $attribute['headers']['status-code']);
-        $this->assertEquals('available', $attribute['body']['status']);
-        $this->assertEquals('libraries', $attribute['body']['key']);
-        $this->assertEquals('relationship', $attribute['body']['type']);
-        $this->assertEquals(false, $attribute['body']['required']);
-        $this->assertEquals(false, $attribute['body']['array']);
-        $this->assertEquals('oneToMany', $attribute['body']['relationType']);
-        $this->assertEquals(true, $attribute['body']['twoWay']);
-        $this->assertEquals('person', $attribute['body']['twoWayKey']);
-        $this->assertEquals('restrict', $attribute['body']['onDelete']);
-
-        $person2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => 'person10',
-            'data' => [
-                'fullName' => 'Stevie Wonder',
-                'libraries' => [
-                    [
-                        '$id' => 'library10',
-                        '$permissions' => [
-                            Permission::read(Role::any()),
-                            Permission::update(Role::any()),
-                            Permission::delete(Role::any()),
-                        ],
-                        'libraryName' => 'Library 10',
-                    ],
-                    [
-                        '$id' => 'library11',
-                        '$permissions' => [
-                            Permission::read(Role::any()),
-                            Permission::update(Role::any()),
-                            Permission::delete(Role::any()),
-                        ],
-                        'libraryName' => 'Library 11',
-                    ]
-                ],
-            ],
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ]
-        ]);
-
-        $this->assertEquals(201, $person2['headers']['status-code']);
-        $this->assertArrayHasKey('libraries', $person2['body']);
-        $this->assertEquals(2, count($person2['body']['libraries']));
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents/' . $person2['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayNotHasKey('$collection', $response['body']);
-        $this->assertArrayHasKey('libraries', $response['body']);
-        $this->assertEquals(2, count($response['body']['libraries']));
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection . '/documents/library11', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('person', $response['body']);
-        $this->assertEquals('person10', $response['body']['person']['$id']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $personCollection . '/attributes/libraries/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'twoWay' => false,
-            'onDelete' => Database::RELATION_MUTATE_CASCADE,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-
-        $this->assertEquals(200, $attribute['headers']['status-code']);
-        $this->assertEquals('available', $attribute['body']['status']);
-        $this->assertEquals('libraries', $attribute['body']['key']);
-        $this->assertEquals('relationship', $attribute['body']['type']);
-        $this->assertEquals(false, $attribute['body']['required']);
-        $this->assertEquals(false, $attribute['body']['array']);
-        $this->assertEquals('oneToMany', $attribute['body']['relationType']);
-        $this->assertEquals(false, $attribute['body']['twoWay']);
-        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
-
-        return ['databaseId' => $databaseId, 'personCollection' => $personCollection];
-    }
-
-    /**
-     * @depends testCreateDatabase
-     */
-    public function testManyToOneRelationship(array $data): array
-    {
-        $databaseId = $data['databaseId'];
-
-        // Create album collection
-        $albums = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Albums',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        // Create album name attribute
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        // Create artist collection
-        $artists = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Artists',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        // Create artist name attribute
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        // Create relationship
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/attributes/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => $artists['body']['$id'],
-            'type' => Database::RELATION_MANY_TO_ONE,
-            'twoWay' => true,
-            'key' => 'artist',
-            'twoWayKey' => 'albums',
-        ]);
-
-        $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertEquals('artist', $response['body']['key']);
-        $this->assertEquals('relationship', $response['body']['type']);
-        $this->assertEquals(false, $response['body']['required']);
-        $this->assertEquals(false, $response['body']['array']);
-        $this->assertEquals('manyToOne', $response['body']['relationType']);
-        $this->assertEquals(true, $response['body']['twoWay']);
-        $this->assertEquals('albums', $response['body']['twoWayKey']);
-        $this->assertEquals('restrict', $response['body']['onDelete']);
-
-        sleep(1); // Wait for worker
-
-        $permissions = [
-            Permission::read(Role::user($this->getUser()['$id'])),
-            Permission::update(Role::user($this->getUser()['$id'])),
-            Permission::delete(Role::user($this->getUser()['$id'])),
-        ];
-
-        // Create album
-        $album = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => 'album1',
-            'permissions' => $permissions,
-            'data' => [
-                'name' => 'Album 1',
-                'artist' => [
-                    '$id' => ID::unique(),
-                    'name' => 'Artist 1',
-                ],
-            ],
-        ]);
-
-        $this->assertEquals(201, $album['headers']['status-code']);
-        $this->assertEquals('album1', $album['body']['$id']);
-        $this->assertEquals('Album 1', $album['body']['name']);
-        $this->assertEquals('Artist 1', $album['body']['artist']['name']);
-        $this->assertEquals($permissions, $album['body']['$permissions']);
-        $this->assertEquals($permissions, $album['body']['artist']['$permissions']);
-
-        $album = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/documents/album1', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $album['headers']['status-code']);
-        $this->assertEquals('album1', $album['body']['$id']);
-        $this->assertEquals('Album 1', $album['body']['name']);
-        $this->assertEquals('Artist 1', $album['body']['artist']['name']);
-        $this->assertEquals($permissions, $album['body']['$permissions']);
-        $this->assertEquals($permissions, $album['body']['artist']['$permissions']);
-
-        $artist = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/documents/' . $album['body']['artist']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $artist['headers']['status-code']);
-        $this->assertEquals('Artist 1', $artist['body']['name']);
-        $this->assertEquals($permissions, $artist['body']['$permissions']);
-        $this->assertEquals(1, count($artist['body']['albums']));
-        $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
-        $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
-        $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
-
-        return [
-            'databaseId' => $databaseId,
-            'albumsCollection' => $albums['body']['$id'],
-            'artistsCollection' => $artists['body']['$id'],
-        ];
-    }
-
-    /**
-     * @depends testCreateDatabase
-     */
-    public function testManyToManyRelationship(array $data): array
-    {
-        $databaseId = $data['databaseId'];
-
-        // Create sports collection
-        $sports = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Sports',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        // Create sport name attribute
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        // Create player collection
-        $players = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Players',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-                Permission::read(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        // Create player name attribute
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $players['body']['$id'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 255,
-            'required' => true,
-        ]);
-
-        // Create relationship
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/attributes/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'relatedCollectionId' => $players['body']['$id'],
-            'type' => Database::RELATION_MANY_TO_MANY,
-            'twoWay' => true,
-            'key' => 'players',
-            'twoWayKey' => 'sports',
-            'onDelete' => Database::RELATION_MUTATE_SET_NULL,
-        ]);
-
-        $this->assertEquals(202, $response['headers']['status-code']);
-        $this->assertEquals('players', $response['body']['key']);
-        $this->assertEquals('relationship', $response['body']['type']);
-        $this->assertEquals(false, $response['body']['required']);
-        $this->assertEquals(false, $response['body']['array']);
-        $this->assertEquals('manyToMany', $response['body']['relationType']);
-        $this->assertEquals(true, $response['body']['twoWay']);
-        $this->assertEquals('sports', $response['body']['twoWayKey']);
-        $this->assertEquals('setNull', $response['body']['onDelete']);
-
-        sleep(1); // Wait for worker
-
-        $permissions = [
-            Permission::read(Role::user($this->getUser()['$id'])),
-            Permission::update(Role::user($this->getUser()['$id'])),
-        ];
-
-        // Create sport
-        $sport = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => 'sport1',
-            'permissions' => $permissions,
-            'data' => [
-                'name' => 'Sport 1',
-                'players' => [
-                    [
-                        '$id' => 'player1',
-                        'name' => 'Player 1',
-                    ],
-                    [
-                        '$id' => 'player2',
-                        'name' => 'Player 2',
-                    ]
-                ],
-            ],
-        ]);
-
-        $this->assertEquals(201, $sport['headers']['status-code']);
-        $this->assertEquals('sport1', $sport['body']['$id']);
-        $this->assertEquals('Sport 1', $sport['body']['name']);
-        $this->assertEquals('Player 1', $sport['body']['players'][0]['name']);
-        $this->assertEquals('Player 2', $sport['body']['players'][1]['name']);
-        $this->assertEquals($permissions, $sport['body']['$permissions']);
-        $this->assertEquals($permissions, $sport['body']['players'][0]['$permissions']);
-        $this->assertEquals($permissions, $sport['body']['players'][1]['$permissions']);
-
-        $sport = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/documents/sport1', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $sport['headers']['status-code']);
-        $this->assertEquals('sport1', $sport['body']['$id']);
-        $this->assertEquals('Sport 1', $sport['body']['name']);
-        $this->assertEquals('Player 1', $sport['body']['players'][0]['name']);
-        $this->assertEquals('Player 2', $sport['body']['players'][1]['name']);
-        $this->assertEquals($permissions, $sport['body']['$permissions']);
-        $this->assertEquals($permissions, $sport['body']['players'][0]['$permissions']);
-        $this->assertEquals($permissions, $sport['body']['players'][1]['$permissions']);
-
-        $player = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $players['body']['$id'] . '/documents/' . $sport['body']['players'][0]['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $player['headers']['status-code']);
-        $this->assertEquals('Player 1', $player['body']['name']);
-        $this->assertEquals($permissions, $player['body']['$permissions']);
-        $this->assertEquals(1, count($player['body']['sports']));
-        $this->assertEquals('sport1', $player['body']['sports'][0]['$id']);
-        $this->assertEquals('Sport 1', $player['body']['sports'][0]['name']);
-        $this->assertEquals($permissions, $player['body']['sports'][0]['$permissions']);
-
-        return [
-            'databaseId' => $databaseId,
-            'sportsCollection' => $sports['body']['$id'],
-            'playersCollection' => $players['body']['$id'],
-        ];
-    }
-
-    /**
-     * @depends testOneToManyRelationship
-     */
-    public function testValidateOperators(array $data): void
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                'isNotNull("$id")',
-                'startsWith("fullName", ["Stevie"])',
-                'endsWith("fullName", ["Wonder"])',
-                'between("$createdAt", ["1975-12-06", "2050-12-06"])',
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, count($response['body']['documents']));
-        $this->assertEquals('person10', $response['body']['documents'][0]['$id']);
-        $this->assertEquals('Stevie Wonder', $response['body']['documents'][0]['fullName']);
-        $this->assertEquals(2, count($response['body']['documents'][0]['libraries']));
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                'isNotNull("$id")',
-                'isNull("fullName")',
-                'select(["fullName"])'
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, count($response['body']['documents']));
-        $this->assertEquals(null, $response['body']['documents'][0]['fullName']);
-        $this->assertArrayNotHasKey("libraries", $response['body']['documents'][0]);
-    }
-
-    /**
-     * @depends testOneToManyRelationship
-     */
-    public function testSelectsQueries(array $data): void
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                'equal("fullName", "Stevie Wonder")',
-                'select(["fullName"])'
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayNotHasKey('libraries', $response['body']['documents'][0]);
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                'select(["libraries.*"])',
-            ],
-        ]);
-
-        $document = $response['body']['documents'][0];
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('libraries', $document);
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents/' . $document['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [
-                'select(["fullName"])'
-            ],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('fullName', $response['body']);
-        $this->assertArrayNotHasKey('libraries', $response['body']);
-    }
-
-    /**
      * @depends testCreateAttributes
      */
     public function testAttributeResponseModels(array $data): array
@@ -3780,5 +3084,701 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(202, $false['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testOneToOneRelationship(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        $person = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'person',
+            'name' => 'person',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $person['headers']['status-code']);
+
+        $library = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'library',
+            'name' => 'library',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $library['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fullName',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        sleep(1); // Wait for worker
+
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => 'library',
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'key' => 'library',
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        sleep(1); // Wait for worker
+
+        $libraryName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'libraryName',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        sleep(1); // Wait for worker
+
+        $this->assertEquals(202, $libraryName['headers']['status-code']);
+        $this->assertEquals(202, $relation['headers']['status-code']);
+        $this->assertEquals('library', $relation['body']['key']);
+        $this->assertEquals('relationship', $relation['body']['type']);
+        $this->assertEquals('processing', $relation['body']['status']);
+
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/library", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals('library', $attribute['body']['key']);
+        $this->assertEquals('relationship', $attribute['body']['type']);
+        $this->assertEquals(false, $attribute['body']['required']);
+        $this->assertEquals(false, $attribute['body']['array']);
+        $this->assertEquals('oneToOne', $attribute['body']['relationType']);
+        $this->assertEquals(false, $attribute['body']['twoWay']);
+        $this->assertEquals('person', $attribute['body']['twoWayKey']);
+        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
+
+        $person1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'library' => [
+                    '$id' => 'library1',
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                    ],
+                    'libraryName' => 'Library 1',
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'equal("library", "library1")',
+                'select(["fullName","library.*"])']
+        ]);
+
+        $this->assertEquals(1, $documents['body']['total']);
+        $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
+        $this->assertArrayHasKey('fullName', $documents['body']['documents'][0]);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'equal("library.libraryName", ["Library 1"])',
+            ],
+        ]);
+
+        $this->assertEquals(1, $documents['body']['total']);
+        $this->assertEquals('Library 1', $documents['body']['documents'][0]['library']['libraryName']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes/library', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        sleep(1);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/library", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(404, $attribute['headers']['status-code']);
+
+        $person1 = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents/' . $person1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertArrayNotHasKey('library', $person1['body']);
+
+        return [
+            'databaseId' => $databaseId,
+            'personCollection' => $person['body']['$id'],
+            'libraryCollection' => $library['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testOneToOneRelationship
+     */
+    public function testOneToManyRelationship(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $personCollection = $data['personCollection'];
+        $libraryCollection = $data['libraryCollection'];
+
+        // One person can own several libraries
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personCollection . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => 'library',
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'twoWay' => true,
+            'key' => 'libraries',
+            'twoWayKey' => 'person',
+        ]);
+
+        sleep(1);
+
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals('libraries', $attribute['body']['key']);
+        $this->assertEquals('relationship', $attribute['body']['type']);
+        $this->assertEquals(false, $attribute['body']['required']);
+        $this->assertEquals(false, $attribute['body']['array']);
+        $this->assertEquals('oneToMany', $attribute['body']['relationType']);
+        $this->assertEquals(true, $attribute['body']['twoWay']);
+        $this->assertEquals('person', $attribute['body']['twoWayKey']);
+        $this->assertEquals('restrict', $attribute['body']['onDelete']);
+
+        $person2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'person10',
+            'data' => [
+                'fullName' => 'Stevie Wonder',
+                'libraries' => [
+                    [
+                        '$id' => 'library10',
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        'libraryName' => 'Library 10',
+                    ],
+                    [
+                        '$id' => 'library11',
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        'libraryName' => 'Library 11',
+                    ]
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $person2['headers']['status-code']);
+        $this->assertArrayHasKey('libraries', $person2['body']);
+        $this->assertEquals(2, count($person2['body']['libraries']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents/' . $person2['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('$collection', $response['body']);
+        $this->assertArrayHasKey('libraries', $response['body']);
+        $this->assertEquals(2, count($response['body']['libraries']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection . '/documents/library11', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('person', $response['body']);
+        $this->assertEquals('person10', $response['body']['person']['$id']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $personCollection . '/attributes/libraries/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'twoWay' => false,
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attribute['headers']['status-code']);
+        $this->assertEquals('available', $attribute['body']['status']);
+        $this->assertEquals('libraries', $attribute['body']['key']);
+        $this->assertEquals('relationship', $attribute['body']['type']);
+        $this->assertEquals(false, $attribute['body']['required']);
+        $this->assertEquals(false, $attribute['body']['array']);
+        $this->assertEquals('oneToMany', $attribute['body']['relationType']);
+        $this->assertEquals(false, $attribute['body']['twoWay']);
+        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
+
+        return ['databaseId' => $databaseId, 'personCollection' => $personCollection];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testManyToOneRelationship(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        // Create album collection
+        $albums = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Albums',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        // Create album name attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        // Create artist collection
+        $artists = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Artists',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        // Create artist name attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        // Create relationship
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $artists['body']['$id'],
+            'type' => Database::RELATION_MANY_TO_ONE,
+            'twoWay' => true,
+            'key' => 'artist',
+            'twoWayKey' => 'albums',
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals('artist', $response['body']['key']);
+        $this->assertEquals('relationship', $response['body']['type']);
+        $this->assertEquals(false, $response['body']['required']);
+        $this->assertEquals(false, $response['body']['array']);
+        $this->assertEquals('manyToOne', $response['body']['relationType']);
+        $this->assertEquals(true, $response['body']['twoWay']);
+        $this->assertEquals('albums', $response['body']['twoWayKey']);
+        $this->assertEquals('restrict', $response['body']['onDelete']);
+
+        sleep(1); // Wait for worker
+
+        $permissions = [
+            Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+            Permission::delete(Role::user($this->getUser()['$id'])),
+        ];
+
+        // Create album
+        $album = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'album1',
+            'permissions' => $permissions,
+            'data' => [
+                'name' => 'Album 1',
+                'artist' => [
+                    '$id' => ID::unique(),
+                    'name' => 'Artist 1',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $album['headers']['status-code']);
+        $this->assertEquals('album1', $album['body']['$id']);
+        $this->assertEquals('Album 1', $album['body']['name']);
+        $this->assertEquals('Artist 1', $album['body']['artist']['name']);
+        $this->assertEquals($permissions, $album['body']['$permissions']);
+        $this->assertEquals($permissions, $album['body']['artist']['$permissions']);
+
+        $album = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/documents/album1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $album['headers']['status-code']);
+        $this->assertEquals('album1', $album['body']['$id']);
+        $this->assertEquals('Album 1', $album['body']['name']);
+        $this->assertEquals('Artist 1', $album['body']['artist']['name']);
+        $this->assertEquals($permissions, $album['body']['$permissions']);
+        $this->assertEquals($permissions, $album['body']['artist']['$permissions']);
+
+        $artist = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/documents/' . $album['body']['artist']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $artist['headers']['status-code']);
+        $this->assertEquals('Artist 1', $artist['body']['name']);
+        $this->assertEquals($permissions, $artist['body']['$permissions']);
+        $this->assertEquals(1, count($artist['body']['albums']));
+        $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
+        $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
+        $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
+
+        return [
+            'databaseId' => $databaseId,
+            'albumsCollection' => $albums['body']['$id'],
+            'artistsCollection' => $artists['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testManyToManyRelationship(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+
+        // Create sports collection
+        $sports = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Sports',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        // Create sport name attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        // Create player collection
+        $players = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Players',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        // Create player name attribute
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $players['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        // Create relationship
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $players['body']['$id'],
+            'type' => Database::RELATION_MANY_TO_MANY,
+            'twoWay' => true,
+            'key' => 'players',
+            'twoWayKey' => 'sports',
+            'onDelete' => Database::RELATION_MUTATE_SET_NULL,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals('players', $response['body']['key']);
+        $this->assertEquals('relationship', $response['body']['type']);
+        $this->assertEquals(false, $response['body']['required']);
+        $this->assertEquals(false, $response['body']['array']);
+        $this->assertEquals('manyToMany', $response['body']['relationType']);
+        $this->assertEquals(true, $response['body']['twoWay']);
+        $this->assertEquals('sports', $response['body']['twoWayKey']);
+        $this->assertEquals('setNull', $response['body']['onDelete']);
+
+        sleep(1); // Wait for worker
+
+        $permissions = [
+            Permission::read(Role::user($this->getUser()['$id'])),
+            Permission::update(Role::user($this->getUser()['$id'])),
+        ];
+
+        // Create sport
+        $sport = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => 'sport1',
+            'permissions' => $permissions,
+            'data' => [
+                'name' => 'Sport 1',
+                'players' => [
+                    [
+                        '$id' => 'player1',
+                        'name' => 'Player 1',
+                    ],
+                    [
+                        '$id' => 'player2',
+                        'name' => 'Player 2',
+                    ]
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $sport['headers']['status-code']);
+        $this->assertEquals('sport1', $sport['body']['$id']);
+        $this->assertEquals('Sport 1', $sport['body']['name']);
+        $this->assertEquals('Player 1', $sport['body']['players'][0]['name']);
+        $this->assertEquals('Player 2', $sport['body']['players'][1]['name']);
+        $this->assertEquals($permissions, $sport['body']['$permissions']);
+        $this->assertEquals($permissions, $sport['body']['players'][0]['$permissions']);
+        $this->assertEquals($permissions, $sport['body']['players'][1]['$permissions']);
+
+        $sport = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $sports['body']['$id'] . '/documents/sport1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $sport['headers']['status-code']);
+        $this->assertEquals('sport1', $sport['body']['$id']);
+        $this->assertEquals('Sport 1', $sport['body']['name']);
+        $this->assertEquals('Player 1', $sport['body']['players'][0]['name']);
+        $this->assertEquals('Player 2', $sport['body']['players'][1]['name']);
+        $this->assertEquals($permissions, $sport['body']['$permissions']);
+        $this->assertEquals($permissions, $sport['body']['players'][0]['$permissions']);
+        $this->assertEquals($permissions, $sport['body']['players'][1]['$permissions']);
+
+        $player = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $players['body']['$id'] . '/documents/' . $sport['body']['players'][0]['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $player['headers']['status-code']);
+        $this->assertEquals('Player 1', $player['body']['name']);
+        $this->assertEquals($permissions, $player['body']['$permissions']);
+        $this->assertEquals(1, count($player['body']['sports']));
+        $this->assertEquals('sport1', $player['body']['sports'][0]['$id']);
+        $this->assertEquals('Sport 1', $player['body']['sports'][0]['name']);
+        $this->assertEquals($permissions, $player['body']['sports'][0]['$permissions']);
+
+        return [
+            'databaseId' => $databaseId,
+            'sportsCollection' => $sports['body']['$id'],
+            'playersCollection' => $players['body']['$id'],
+        ];
+    }
+
+    /**
+     * @depends testOneToManyRelationship
+     */
+    public function testValidateOperators(array $data): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'isNotNull("$id")',
+                'startsWith("fullName", ["Stevie"])',
+                'endsWith("fullName", ["Wonder"])',
+                'between("$createdAt", ["1975-12-06", "2050-12-06"])',
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, count($response['body']['documents']));
+        $this->assertEquals('person10', $response['body']['documents'][0]['$id']);
+        $this->assertEquals('Stevie Wonder', $response['body']['documents'][0]['fullName']);
+        $this->assertEquals(2, count($response['body']['documents'][0]['libraries']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'isNotNull("$id")',
+                'isNull("fullName")',
+                'select(["fullName"])'
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, count($response['body']['documents']));
+        $this->assertEquals(null, $response['body']['documents'][0]['fullName']);
+        $this->assertArrayNotHasKey("libraries", $response['body']['documents'][0]);
+    }
+
+    /**
+     * @depends testOneToManyRelationship
+     */
+    public function testSelectsQueries(array $data): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'equal("fullName", "Stevie Wonder")',
+                'select(["fullName"])'
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('libraries', $response['body']['documents'][0]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'select(["libraries.*"])',
+            ],
+        ]);
+
+        $document = $response['body']['documents'][0];
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('libraries', $document);
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents/' . $document['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                'select(["fullName"])'
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('fullName', $response['body']);
+        $this->assertArrayNotHasKey('libraries', $response['body']);
     }
 }
