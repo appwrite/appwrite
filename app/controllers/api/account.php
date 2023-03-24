@@ -81,8 +81,12 @@ App::post('/v1/account/invite')
 
         $whitelistCodes = (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_CODES', null)) : [];
 
+        if (empty($whitelistCodes)) {
+            throw new Exception(Exception::GENERAL_CODES_DISABLED);
+        }
+
         if (!empty($whitelistCodes) && !\in_array($code, $whitelistCodes)) {
-            throw new Exception(Exception::USER_CODE_INVALID);
+            throw new Exception(Exception::USER_INVALID_CODE);
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -168,7 +172,7 @@ App::post('/v1/account')
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
+            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails) && !\in_array(strtoupper($email), $whitelistEmails)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 

@@ -93,7 +93,7 @@ Server::setResource('execute', function () {
                 'response' => '',
                 'stderr' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
+                'search' => implode(' ', [$function->getId(), $executionId]),
             ]));
 
             // TODO: @Meldiron Trigger executions.create event here
@@ -145,7 +145,7 @@ Server::setResource('execute', function () {
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 

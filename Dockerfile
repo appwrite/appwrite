@@ -111,7 +111,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/patch-create-missing-schedules && \
+    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/install && \
@@ -121,6 +121,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
+    chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \

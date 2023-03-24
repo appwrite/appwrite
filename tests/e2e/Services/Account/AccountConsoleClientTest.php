@@ -39,7 +39,7 @@ class AccountConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
-        $this->assertEquals($response['body']['type'], Exception::USER_CODE_INVALID);
+        $this->assertEquals($response['body']['type'], Exception::USER_INVALID_CODE);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/invite', array_merge([
             'origin' => 'http://localhost',
@@ -53,7 +53,7 @@ class AccountConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
-        $this->assertEquals($response['body']['type'], Exception::USER_CODE_INVALID);
+        $this->assertEquals($response['body']['type'], Exception::USER_INVALID_CODE);
 
         /**
          * Test for SUCCESS

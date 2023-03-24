@@ -104,13 +104,13 @@ class BuildsV1 extends Worker
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
-                'path' => '',
-                'size' => 0,
+                'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
                 'sourceType' => $device,
                 'stdout' => '',
                 'stderr' => '',
+                'endTime' => null,
                 'duration' => 0
             ]));
             $deployment->setAttribute('buildId', $build->getId());
@@ -192,12 +192,14 @@ class BuildsV1 extends Worker
                 ]
             );
 
+            $endTime = new \DateTime();
+            $endTime->setTimestamp($response['endTimeUnix']);
+
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('endTime', DateTime::format($endTime));
             $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
-            $build->setAttribute('path', $response['path']);
-            $build->setAttribute('size', $response['size']);
+            $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
@@ -205,8 +207,6 @@ class BuildsV1 extends Worker
             $deployment->setAttribute('buildTime', $response['duration']);
 
             Console::success("Build id: $buildId created");
-
-            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
 
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
@@ -218,7 +218,7 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $dbForConsole = $this->getConsoleDB();
             $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+            $schedule->setAttribute('resourceUpdatedAt', DateTime::now());
 
             $schedule
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
@@ -229,7 +229,7 @@ class BuildsV1 extends Worker
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
-
+            $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', $interval->format('%s') + 0);
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());

@@ -54,7 +54,7 @@ services:
         TESTING: true
         VERSION: dev
         VITE_CONSOLE_MODE: cloud
-    ports:
+    ports: 
       - 9501:80
     networks:
       - appwrite
@@ -542,6 +542,40 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
+  appwrite-hamster:
+    entrypoint: hamster
+    <<: *x-logging
+    container_name: appwrite-hamster
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_CONNECTIONS_DB_CONSOLE
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_CACHE
+      - _APP_HAMSTER_INTERVAL
+      - _APP_HAMSTER_TIME
+      - _APP_MIXPANEL_TOKEN
+
   appwrite-maintenance:
     entrypoint: maintenance
     <<: *x-logging
@@ -655,7 +689,7 @@ services:
     hostname: exc1
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.2.0
+    image: openruntimes/executor:0.1.6
     networks:
       - appwrite
       - runtimes
