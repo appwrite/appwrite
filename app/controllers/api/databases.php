@@ -221,27 +221,6 @@ function updateAttribute(
 
     switch ($attribute->getAttribute('format')) {
         case APP_DATABASE_ATTRIBUTE_INT_RANGE:
-            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
-                break;
-            }
-
-            if ($min > $max) {
-                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
-            }
-
-            $validator = new Range($min, $max, Database::VAR_INTEGER);
-
-            if (!is_null($default) && !$validator->isValid($default)) {
-                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
-            }
-
-            $options = [
-                'min' => $min,
-                'max' => $max
-            ];
-            $attribute->setAttribute('formatOptions', $options);
-
-            break;
         case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
             if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
                 break;
@@ -251,11 +230,15 @@ function updateAttribute(
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
             }
 
-            if (!is_null($default)) {
-                $default = \floatval($default);
-            }
+            if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
+                $validator = new Range($min, $max, Database::VAR_INTEGER);
+            } else {
+                $validator = new Range($min, $max, Database::VAR_FLOAT);
 
-            $validator = new Range($min, $max, Database::VAR_FLOAT);
+                if (!is_null($default)) {
+                    $default = \floatval($default);
+                }
+            }
 
             if (!is_null($default) && !$validator->isValid($default)) {
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
@@ -273,14 +256,10 @@ function updateAttribute(
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
             }
 
-            //TODO: before merging - this iteration is kinda hard to follow because of the $size variable?
-            $size = 0;
             foreach ($elements as $element) {
-                $length = \strlen($element);
-                if ($length === 0) {
+                if (\strlen($element) === 0) {
                     throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
                 }
-                $size = ($length > $size) ? $length : $size;
             }
 
             if (!is_null($default) && !in_array($default, $elements)) {
@@ -290,6 +269,7 @@ function updateAttribute(
             $options = [
                 'elements' => $elements
             ];
+
             $attribute->setAttribute('formatOptions', $options);
 
             break;
@@ -1707,7 +1687,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $response->dynamic($attribute, $model);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/string')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
     ->desc('Update String Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1747,7 +1727,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/email')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
     ->desc('Update Email Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1788,7 +1768,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/enum')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
     ->desc('Update Enum Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1831,7 +1811,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/ip')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
     ->desc('Update IP Address Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1872,7 +1852,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/url')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
     ->desc('Update URL Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1913,7 +1893,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/integer')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
     ->desc('Update Integer Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1964,7 +1944,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/float')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
     ->desc('Update Float Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2015,7 +1995,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/boolean')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
     ->desc('Update Boolean Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2055,7 +2035,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/datetime')
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
     ->desc('Update DateTime Attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')

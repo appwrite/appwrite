@@ -92,7 +92,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $collections = Config::getParam('collections', []);
 
         try {
-            $redis->flushAll();
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
         } catch (\Exception $e) {
