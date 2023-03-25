@@ -24,7 +24,7 @@
 
 [English](README.md) | 简体中文
 
-[**我们发布了 Appwrite Console 2.0 版本，点击这里了解更多！**](https://medium.com/appwrite-io/announcing-console-2-0-2e0e96891cb0?source=friends_link&sk=7a82b4069778e3adc165dc026e960fe1)
+[**我们发布了支持 GraphQL 的Appwrite 1.2 版本，点击这里了解更多！**](https://appwrite.io/graphql)
 
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
@@ -101,6 +101,29 @@ docker run -it --rm `
 
 如果您从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。有关这方面的更多信息，请查看 [安装文档](https://appwrite.io/docs/installation)。
 
+## 一键配置
+
+除了在本地运行 Appwrite，您还可以使用预配置的设置启动 Appwrite。这样可以让您快速启动并运行 Appwrite，而无需在本地计算机上安装 Docker。
+
+请从以下提供商中选择一个：
+
+<table border="0">
+  <tr>
+    <td align="center" width="100" height="100">
+      <a href="https://marketplace.digitalocean.com/apps/appwrite">
+        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+          <br /><sub><b>DigitalOcean</b></sub></a>
+        </a>
+    </td>
+    <td align="center" width="100" height="100">
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
+        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+          <br /><sub><b>Gitpod</b></sub></a>    
+      </a>
+    </td>
+  </tr>
+</table>
+
 ## 入门
 
 开始使用 Appwrite 只需要在控制台创建一个新项目，选择开发平台，然后抓取我们的开发套件。您可以从以下的教程中找到你喜欢的平台开始使用 Appwrite。
@@ -122,6 +145,7 @@ docker run -it --rm `
 * [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
 * [**语言适配**](https://appwrite.io/docs/client/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
 * [**头像**](https://appwrite.io/docs/client/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。 
+
 如需完整的 API 界面文档，请访问 [https://appwrite.io/docs](https://appwrite.io/docs)。如需更多教程、新闻和公告，请订阅我们的 [博客](https://medium.com/appwrite-io) 和 加入我们的[Discord 社区](https://discord.gg/GSeTUeA)。
 
 ### 开发套件
