@@ -64,42 +64,28 @@ class Queries extends Validator
             }
 
             $method = $query->getMethod();
-            $methodType = '';
-            switch ($method) {
-                case Query::TYPE_SELECT:
-                    $methodType = Base::METHOD_TYPE_SELECT;
-                    break;
-                case Query::TYPE_LIMIT:
-                    $methodType = Base::METHOD_TYPE_LIMIT;
-                    break;
-                case Query::TYPE_OFFSET:
-                    $methodType = Base::METHOD_TYPE_OFFSET;
-                    break;
-                case Query::TYPE_CURSORAFTER:
-                case Query::TYPE_CURSORBEFORE:
-                    $methodType = Base::METHOD_TYPE_CURSOR;
-                    break;
-                case Query::TYPE_ORDERASC:
-                case Query::TYPE_ORDERDESC:
-                    $methodType = Base::METHOD_TYPE_ORDER;
-                    break;
-                case Query::TYPE_EQUAL:
-                case Query::TYPE_NOTEQUAL:
-                case Query::TYPE_LESSER:
-                case Query::TYPE_LESSEREQUAL:
-                case Query::TYPE_GREATER:
-                case Query::TYPE_GREATEREQUAL:
-                case Query::TYPE_SEARCH:
-                case Query::TYPE_IS_NULL:
-                case Query::TYPE_IS_NOT_NULL:
-                case Query::TYPE_BETWEEN:
-                case Query::TYPE_STARTS_WITH:
-                case Query::TYPE_ENDS_WITH:
-                    $methodType = Base::METHOD_TYPE_FILTER;
-                    break;
-                default:
-                    break;
-            }
+            $methodType = match ($method) {
+                Query::TYPE_SELECT => Base::METHOD_TYPE_SELECT,
+                Query::TYPE_LIMIT => Base::METHOD_TYPE_LIMIT,
+                Query::TYPE_OFFSET => Base::METHOD_TYPE_OFFSET,
+                Query::TYPE_CURSORAFTER,
+                Query::TYPE_CURSORBEFORE => Base::METHOD_TYPE_CURSOR,
+                Query::TYPE_ORDERASC,
+                Query::TYPE_ORDERDESC => Base::METHOD_TYPE_ORDER,
+                Query::TYPE_EQUAL,
+                Query::TYPE_NOTEQUAL,
+                Query::TYPE_LESSER,
+                Query::TYPE_LESSEREQUAL,
+                Query::TYPE_GREATER,
+                Query::TYPE_GREATEREQUAL,
+                Query::TYPE_SEARCH,
+                Query::TYPE_IS_NULL,
+                Query::TYPE_IS_NOT_NULL,
+                Query::TYPE_BETWEEN,
+                Query::TYPE_STARTS_WITH,
+                Query::TYPE_ENDS_WITH => Base::METHOD_TYPE_FILTER,
+                default => '',
+            };
 
             $methodIsValid = false;
             foreach ($this->validators as $validator) {

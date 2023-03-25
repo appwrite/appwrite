@@ -182,16 +182,12 @@ class DatabaseV1 extends Worker
 
         try {
             if ($status !== 'failed') {
-                switch ($type) {
-                    case Database::VAR_RELATIONSHIP:
-                        if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                            throw new Exception('Failed to delete Attribute');
-                        }
-                        break;
-                    default:
-                        if (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                            throw new Exception('Failed to delete Attribute');
-                        }
+                if ($type ===  Database::VAR_RELATIONSHIP) {
+                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                        throw new Exception('Failed to delete Attribute');
+                    }
+                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                    throw new Exception('Failed to delete Attribute');
                 }
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
