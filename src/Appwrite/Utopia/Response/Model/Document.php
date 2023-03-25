@@ -74,6 +74,12 @@ class Document extends Any
         $document->removeAttribute('$internalId');
         $document->removeAttribute('$collection'); // $collection is the internal collection ID
 
+        foreach ($document->getAttributes() as $attribute) {
+            if ($attribute instanceof DatabaseDocument) {
+                $this->filter($attribute);
+            }
+        }
+
         return $document;
     }
 }
