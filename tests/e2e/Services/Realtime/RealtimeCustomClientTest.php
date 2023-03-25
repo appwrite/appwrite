@@ -1459,6 +1459,43 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("teams.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
+        /**
+         * Test Team Update Prefs
+         */
+        $team = $this->client->call(Client::METHOD_PUT, '/teams/' . $teamId . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'prefs' => [
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+            ]
+        ]);
+
+        $this->assertEquals($team['headers']['status-code'], 200);
+        $this->assertEquals($team['body']['funcKey1'], 'funcValue1');
+        $this->assertEquals($team['body']['funcKey2'], 'funcValue2');
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('teams', $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}", $response['data']['channels']);
+        $this->assertContains("teams.{$teamId}.update", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}.update.prefs", $response['data']['events']);
+        $this->assertContains("teams.{$teamId}", $response['data']['events']);
+        $this->assertContains("teams.*.update.prefs", $response['data']['events']);
+        $this->assertContains("teams.*.update", $response['data']['events']);
+        $this->assertContains("teams.*", $response['data']['events']);
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertEquals($response['data']['payload']['funcKey1'], 'funcValue1');
+        $this->assertEquals($response['data']['payload']['funcKey2'], 'funcValue2');
+
         $client->close();
 
         return ['teamId' => $teamId];

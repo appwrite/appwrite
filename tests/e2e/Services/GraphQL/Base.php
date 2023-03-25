@@ -110,9 +110,12 @@ trait Base
 
     // Teams
     public static string $GET_TEAM = 'get_team';
+    public static string $GET_TEAM_PREFERENCES = 'get_team_preferences';
     public static string $GET_TEAMS = 'list_teams';
     public static string $CREATE_TEAM = 'create_team';
-    public static string $UPDATE_TEAM = 'update_team';
+    public static string $UPDATE_TEAM_NAME = 'update_team_name';
+    public static string $UPDATE_TEAM_PREFERENCES = 'update_team_preferences';
+
     public static string $DELETE_TEAM = 'delete_team';
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
     public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
@@ -1206,10 +1209,16 @@ trait Base
                 }';
             case self::$GET_TEAM:
                 return 'query getTeam($teamId: String!){
-                    teamsGet(teamId: $teamId) {
-                        _id
-                        name
-                        total
+                        teamsGet(teamId: $teamId) {
+                            _id
+                            name
+                            total
+                        }
+                    }';
+            case self::$GET_TEAM_PREFERENCES:
+                return 'query getTeamPreferences($teamId: String!) {
+                    teamsGetPrefs(teamId: $teamId) {
+                        data
                     }
                 }';
             case self::$GET_TEAMS:
@@ -1230,12 +1239,18 @@ trait Base
                         total
                     }
                 }';
-            case self::$UPDATE_TEAM:
-                return 'mutation updateTeam($teamId: String!, $name: String!){
-                    teamsUpdate(teamId: $teamId, name : $name) {
-                        _id
-                        name
-                        total
+            case self::$UPDATE_TEAM_NAME:
+                return 'mutation updateTeamName($teamId: String!, $name: String!){
+                        teamsUpdateName(teamId: $teamId, name : $name) {
+                            _id
+                            name
+                            total
+                        }
+                    }';
+            case self::$UPDATE_TEAM_PREFERENCES:
+                return 'mutation updateTeamPrefs($teamId: String!, $prefs: Assoc!){
+                    teamsUpdatePrefs(teamId: $teamId, prefs: $prefs) {
+                        data
                     }
                 }';
             case self::$DELETE_TEAM:
