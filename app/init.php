@@ -285,12 +285,23 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('attributes', [
-                Query::equal('collectionInternalId', [$document->getInternalId()]),
-                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getLimitForAttributes()),
-            ]);
+        $attributes = $database->find('attributes', [
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
+            Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+            Query::limit($database->getLimitForAttributes()),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $options = $attribute->getAttribute('options');
+                foreach ($options as $key => $value) {
+                    $attribute->setAttribute($key, $value);
+                }
+                $attribute->removeAttribute('options');
+            }
+        }
+
+        return $attributes;
     }
 );
 

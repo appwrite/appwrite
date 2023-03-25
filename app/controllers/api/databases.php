@@ -1596,6 +1596,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
