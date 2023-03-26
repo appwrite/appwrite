@@ -1605,13 +1605,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $attributes = $collection->getAttribute('attributes');
 
-        foreach ($attributes as &$attribute) {
-            $options = $attribute->getAttribute('options', []);
-            foreach ($options as $key => $option) {
-                $attribute->setAttribute($key, $option);
-            }
-        }
-
         $response->dynamic(new Document([
             'total' => \count($attributes),
             'attributes' => $attributes
