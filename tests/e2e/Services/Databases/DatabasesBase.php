@@ -3277,6 +3277,21 @@ trait DatabasesBase
         $this->assertEquals('relationship', $relation['body']['type']);
         $this->assertEquals('processing', $relation['body']['status']);
 
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(2, $attributes['body']['total']);
+        $attributes = $attributes['body']['attributes'];
+        $this->assertEquals('library', $attributes[1]['relatedCollection']);
+        $this->assertEquals('oneToOne', $attributes[1]['relationType']);
+        $this->assertEquals(false, $attributes[1]['twoWay']);
+        $this->assertEquals('person', $attributes[1]['twoWayKey']);
+        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attributes[1]['onDelete']);
+
         $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/library", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3574,7 +3589,6 @@ trait DatabasesBase
             'key' => 'artist',
             'twoWayKey' => 'albums',
         ]);
-
         $this->assertEquals(202, $response['headers']['status-code']);
         $this->assertEquals('artist', $response['body']['key']);
         $this->assertEquals('relationship', $response['body']['type']);
@@ -3640,6 +3654,27 @@ trait DatabasesBase
         $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
         $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
         $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
+
+        // Update disable 2 way
+        $relation = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/attributes/artist/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'twoWay' => false,
+        ]);
+
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $artist = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/documents/' . $album['body']['artist']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $artist['headers']['status-code']);
+        $this->assertEquals('Artist 1', $artist['body']['name']);
+        $this->assertEquals($permissions, $artist['body']['$permissions']);
+        $this->assertArrayNotHasKey("albums", $artist['body']);
 
         return [
             'databaseId' => $databaseId,
