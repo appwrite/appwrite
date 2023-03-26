@@ -3171,6 +3171,21 @@ trait DatabasesBase
         $this->assertEquals('relationship', $relation['body']['type']);
         $this->assertEquals('processing', $relation['body']['status']);
 
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(2, $attributes['body']['total']);
+        $attributes = $attributes['body']['attributes'];
+        $this->assertEquals('library', $attributes[1]['relatedCollection']);
+        $this->assertEquals('oneToOne', $attributes[1]['relationType']);
+        $this->assertEquals(false, $attributes[1]['twoWay']);
+        $this->assertEquals('person', $attributes[1]['twoWayKey']);
+        $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attributes[1]['onDelete']);
+
         $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$person['body']['$id']}/attributes/library", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
