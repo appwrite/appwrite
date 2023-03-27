@@ -4,6 +4,7 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Document as DatabaseDocument;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -2636,13 +2637,24 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         try {
             $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
-            $document->setAttribute('$collectionId', $collectionId);
-            $document->setAttribute('$databaseId', $databaseId);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         } catch (DuplicateException $exception) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         }
+
+        $document->setAttribute('$collectionId', $collectionId);
+
+        // Add $databaseId to all documents
+        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
+            $document->setAttribute('$databaseId', $databaseId);
+            foreach ($document->getAttributes() as $attribute) {
+                if ($attribute instanceof Document) {
+                    $resetIds($attribute);
+                }
+            }
+        };
+        $resetIds($document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -2714,7 +2726,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $documentId = $cursor->getValue();
 
             if ($documentSecurity && !$valid) {
@@ -2747,14 +2758,20 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
-        /**
-         * Reset $collection attribute to remove prefix.
-         */
-        $documents = array_map(function (Document $document) use ($collectionId, $databaseId) {
-            $document->setAttribute('$collectionId', $collectionId);
+        // Add $databaseId for all documents
+        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
             $document->setAttribute('$databaseId', $databaseId);
-            return $document;
-        }, $documents);
+            foreach ($document->getAttributes() as $attribute) {
+                if ($attribute instanceof Document) {
+                    $resetIds($attribute);
+                }
+            }
+        };
+
+        foreach ($documents as $document) {
+            $document->setAttribute('$collectionId', $collectionId);
+            $resetIds($document);
+        }
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -2827,11 +2844,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        /**
-         * Reset $collection attribute to remove prefix.
-         */
         $document->setAttribute('$collectionId', $collectionId);
-        $document->setAttribute('$databaseId', $databaseId);
+
+        // Add $databaseId to all documents
+        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
+            $document->setAttribute('$databaseId', $databaseId);
+            foreach ($document->getAttributes() as $attribute) {
+                if ($attribute instanceof Document) {
+                    $resetIds($attribute);
+                }
+            }
+        };
+        $resetIds($document);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -3071,12 +3095,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     );
                 });
             }
-
-            /**
-             * Reset $collection attribute to remove prefix.
-             */
-            $document->setAttribute('$collectionId', $collectionId);
-            $document->setAttribute('$databaseId', $databaseId);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (DuplicateException) {
@@ -3084,6 +3102,19 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         }
+
+        $document->setAttribute('$collectionId', $collectionId);
+
+        // Add $databaseId to all documents
+        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
+            $document->setAttribute('$databaseId', $databaseId);
+            foreach ($document->getAttributes() as $attribute) {
+                if ($attribute instanceof Document) {
+                    $resetIds($attribute);
+                }
+            }
+        };
+        $resetIds($document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -3176,11 +3207,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $dbForProject->deleteCachedDocument($privateCollectionId, $documentId);
 
-        /**
-         * Reset $collection attribute to remove prefix.
-         */
         $document->setAttribute('$collectionId', $collectionId);
-        $document->setAttribute('$databaseId', $databaseId);
+
+        // Add $databaseId to all documents
+        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
+            $document->setAttribute('$databaseId', $databaseId);
+            foreach ($document->getAttributes() as $attribute) {
+                if ($attribute instanceof Document) {
+                    $resetIds($attribute);
+                }
+            }
+        };
+        $resetIds($document);
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)

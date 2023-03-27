@@ -833,8 +833,6 @@ trait DatabasesBase
         $this->assertEquals($datetimeResponse['body']['array'], $attributes[8]['array']);
         $this->assertEquals($datetimeResponse['body']['default'], $attributes[8]['default']);
 
-        \var_dump($attributes[9]);
-
         $this->assertEquals($relationshipResponse['body']['key'], $attributes[9]['key']);
         $this->assertEquals($relationshipResponse['body']['type'], $attributes[9]['type']);
         $this->assertEquals($relationshipResponse['body']['status'], $attributes[9]['status']);
@@ -3316,6 +3314,18 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
+
+        // Ensure IDs were set and internal IDs removed
+        $this->assertEquals($databaseId, $person1['body']['$databaseId']);
+        $this->assertEquals($databaseId, $person1['body']['library']['$databaseId']);
+
+        $this->assertEquals($person['body']['$id'], $person1['body']['$collectionId']);
+        //$this->assertEquals($library['body']['$id'], $person1['body']['library']['$collectionId']);
+
+        $this->assertArrayNotHasKey('$collection', $person1['body']);
+        $this->assertArrayNotHasKey('$collection', $person1['body']['library']);
+        $this->assertArrayNotHasKey('$internalId', $person1['body']);
+        $this->assertArrayNotHasKey('$internalId', $person1['body']['library']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
