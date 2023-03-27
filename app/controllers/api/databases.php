@@ -2643,18 +2643,36 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         }
 
-        $document->setAttribute('$collectionId', $collectionId);
+        // Add $collectionId and $databaseId for all documents
+        $setIds = function (Document $collection, Document $document) use (&$setIds, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
 
-        // Add $databaseId to all documents
-        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
-            $document->setAttribute('$databaseId', $databaseId);
-            foreach ($document->getAttributes() as $attribute) {
-                if ($attribute instanceof Document) {
-                    $resetIds($attribute);
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($document->getAttributes() as $key => $attribute) {
+                if (!$attribute instanceof Document) {
+                    continue;
+                }
+                foreach ($relationships as $relationship) {
+                    if ($key === $relationship->getAttribute('key')) {
+                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                        $relatedCollection = Authorization::skip(
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                        );
+
+                        $setIds($relatedCollection, $attribute);
+
+                        continue 2;
+                    }
                 }
             }
         };
-        $resetIds($document);
+
+        $setIds($collection, $document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -2758,19 +2776,38 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
-        // Add $databaseId for all documents
-        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
-            $document->setAttribute('$databaseId', $databaseId);
-            foreach ($document->getAttributes() as $attribute) {
-                if ($attribute instanceof Document) {
-                    $resetIds($attribute);
+        // Add $collectionId and $databaseId for all documents
+        $setIds = function (Document $collection, Document $document) use (&$setIds, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($document->getAttributes() as $key => $attribute) {
+                if (!$attribute instanceof Document) {
+                    continue;
+                }
+                foreach ($relationships as $relationship) {
+                    if ($key === $relationship->getAttribute('key')) {
+                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                        $relatedCollection = Authorization::skip(
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                        );
+
+                        $setIds($relatedCollection, $attribute);
+
+                        continue 2;
+                    }
                 }
             }
         };
 
+    // The linter is forcing this indentation
     foreach ($documents as $document) {
-        $document->setAttribute('$collectionId', $collectionId);
-        $resetIds($document);
+        $setIds($collection, $document);
     }
 
         $response->dynamic(new Document([
@@ -2844,18 +2881,36 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $document->setAttribute('$collectionId', $collectionId);
+        // Add $collectionId and $databaseId for all documents
+        $setIds = function (Document $collection, Document $document) use (&$setIds, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
 
-        // Add $databaseId to all documents
-        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
-            $document->setAttribute('$databaseId', $databaseId);
-            foreach ($document->getAttributes() as $attribute) {
-                if ($attribute instanceof Document) {
-                    $resetIds($attribute);
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($document->getAttributes() as $key => $attribute) {
+                if (!$attribute instanceof Document) {
+                    continue;
+                }
+                foreach ($relationships as $relationship) {
+                    if ($key === $relationship->getAttribute('key')) {
+                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                        $relatedCollection = Authorization::skip(
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                        );
+
+                        $setIds($relatedCollection, $attribute);
+
+                        continue 2;
+                    }
                 }
             }
         };
-        $resetIds($document);
+
+        $setIds($collection, $document);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -3103,18 +3158,31 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         }
 
-        $document->setAttribute('$collectionId', $collectionId);
+        // Add $collectionId and $databaseId for all documents
+        $setIds = function (Document $collection, Document $document) use (&$setIds, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
 
-        // Add $databaseId to all documents
-        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
-            $document->setAttribute('$databaseId', $databaseId);
-            foreach ($document->getAttributes() as $attribute) {
-                if ($attribute instanceof Document) {
-                    $resetIds($attribute);
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($document->getAttributes() as $key => $attribute) {
+                foreach ($relationships as $relationship) {
+                    if ($key === $relationship->getAttribute('key')) {
+                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                        $relatedCollection = Authorization::skip(
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                        );
+
+                        $setIds($relatedCollection, $attribute);
+                    }
                 }
             }
         };
-        $resetIds($document);
+
+        $setIds($collection, $document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -3207,18 +3275,36 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $dbForProject->deleteCachedDocument($privateCollectionId, $documentId);
 
-        $document->setAttribute('$collectionId', $collectionId);
+        // Add $collectionId and $databaseId for all documents
+        $setIds = function (Document $collection, Document $document) use (&$setIds, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
 
-        // Add $databaseId to all documents
-        $resetIds = function (Document $document) use (&$resetIds, $databaseId) {
-            $document->setAttribute('$databaseId', $databaseId);
-            foreach ($document->getAttributes() as $attribute) {
-                if ($attribute instanceof Document) {
-                    $resetIds($attribute);
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($document->getAttributes() as $key => $attribute) {
+                if (!$attribute instanceof Document) {
+                    continue;
+                }
+                foreach ($relationships as $relationship) {
+                    if ($key === $relationship->getAttribute('key')) {
+                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                        $relatedCollection = Authorization::skip(
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                        );
+
+                        $setIds($relatedCollection, $attribute);
+
+                        continue 2;
+                    }
                 }
             }
         };
-        $resetIds($document);
+
+        $setIds($collection, $document);
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)

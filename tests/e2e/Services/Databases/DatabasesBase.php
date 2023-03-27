@@ -10,7 +10,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Query;
+
 
 trait DatabasesBase
 {
@@ -3320,7 +3320,7 @@ trait DatabasesBase
         $this->assertEquals($databaseId, $person1['body']['library']['$databaseId']);
 
         $this->assertEquals($person['body']['$id'], $person1['body']['$collectionId']);
-        //$this->assertEquals($library['body']['$id'], $person1['body']['library']['$collectionId']);
+        $this->assertEquals($library['body']['$id'], $person1['body']['library']['$collectionId']);
 
         $this->assertArrayNotHasKey('$collection', $person1['body']);
         $this->assertArrayNotHasKey('$collection', $person1['body']['library']);
