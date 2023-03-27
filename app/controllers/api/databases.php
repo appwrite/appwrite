@@ -3169,6 +3169,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             );
 
             foreach ($document->getAttributes() as $key => $attribute) {
+                if (!$attribute instanceof Document) {
+                    continue;
+                }
                 foreach ($relationships as $relationship) {
                     if ($key === $relationship->getAttribute('key')) {
                         $relatedCollectionId = $relationship->getAttribute('relatedCollection');
@@ -3177,6 +3180,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         );
 
                         $setIds($relatedCollection, $attribute);
+
+                        continue 2;
                     }
                 }
             }
