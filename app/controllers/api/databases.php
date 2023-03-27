@@ -2768,10 +2768,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         };
 
-        foreach ($documents as $document) {
-            $document->setAttribute('$collectionId', $collectionId);
-            $resetIds($document);
-        }
+    foreach ($documents as $document) {
+        $document->setAttribute('$collectionId', $collectionId);
+        $resetIds($document);
+    }
 
         $response->dynamic(new Document([
             'total' => $total,
