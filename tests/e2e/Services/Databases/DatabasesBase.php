@@ -11,7 +11,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
-
 trait DatabasesBase
 {
     public function testCreateDatabase(): array
