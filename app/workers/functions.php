@@ -14,6 +14,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
@@ -124,6 +125,8 @@ Server::setResource('execute', function () {
             }
         }
 
+        $durationStart = \microtime(true);
+
         $vars = [];
 
         // global vars
@@ -164,6 +167,7 @@ Server::setResource('execute', function () {
 
         /** Execute function */
         try {
+            $command = 'npm start';
             $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executionResponse = $client->createExecution(
                 projectId: $project->getId(),
@@ -178,6 +182,10 @@ Server::setResource('execute', function () {
                 path: $path,
                 method: $method,
                 headers: $headers,
+                startCommands: [
+                    'sh', '-c',
+                    'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && helpers/start.sh "' . $command . '"'
+                ]
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
@@ -190,9 +198,10 @@ Server::setResource('execute', function () {
                 ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
-            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $durationEnd = \microtime(true);
+
             $execution
-                ->setAttribute('duration', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());

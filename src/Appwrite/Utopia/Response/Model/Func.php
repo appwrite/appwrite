@@ -95,9 +95,21 @@ class Func extends Model
             ])
             ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The entrypoint file to use to execute the deployment code.',
+                'description' => 'The entrypoint file used to execute the deployment.',
                 'default' => '',
                 'example' => 'index.js',
+            ])
+            ->addRule('buildCommand', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The build command used to build the deployment.',
+                'default' => '',
+                'example' => 'npm run build',
+            ])
+            ->addRule('installCommand', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The install command used to build the deployment.',
+                'default' => '',
+                'example' => 'npm install',
             ])
         ;
     }

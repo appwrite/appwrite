@@ -91,6 +91,7 @@ class BuildsV1 extends Worker
 
         $buildId = $deployment->getAttribute('buildId', '');
         $startTime = DateTime::now();
+        $durationStart = \microtime(true);
         if (empty($buildId)) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -172,6 +173,19 @@ class BuildsV1 extends Worker
         }, []);
 
         try {
+            $command = '';
+
+            if(!empty($deployment->getAttribute('installCommand', ''))) {
+                $command .= $deployment->getAttribute('installCommand', '');
+            }
+
+            if(!empty($deployment->getAttribute('buildCommand', ''))) {
+                $separator = empty($command) ? '' : ' && ';
+                $command .= $separator . $deployment->getAttribute('buildCommand', '');
+            }
+
+            $command = \str_replace('"', '\\"', $command);
+
             $response = $this->executor->createRuntime(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -180,13 +194,11 @@ class BuildsV1 extends Worker
                 image: $runtime['image'],
                 remove: true,
                 entrypoint: $deployment->getAttribute('entrypoint'),
-                workdir: '/usr/code',
                 destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                 variables: $vars,
                 commands: [
                     'sh', '-c',
-                    'tar -zxf /tmp/code.tar.gz -C /usr/code && \
-                    cd /usr/local/src/ && ./build.sh'
+                    'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
                 ]
             );
 
@@ -229,9 +241,9 @@ class BuildsV1 extends Worker
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
-            $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
+            $durationEnd = \microtime(true);
             $build->setAttribute('endTime', $endTime);
-            $build->setAttribute('duration', $interval->format('%s') + 0);
+            $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());

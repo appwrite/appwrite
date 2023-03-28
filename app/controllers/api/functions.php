@@ -70,14 +70,16 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
-    ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', true)
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.', true)
+    ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
+    ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, ?string $entrypoint, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -94,12 +96,14 @@ App::post('/v1/functions')
             'scheduleUpdatedAt' => DateTime::now(),
             'timeout' => $timeout,
             'entrypoint' => $entrypoint,
+            'buildCommand' => $buildCommand,
+            'installCommand' => $installCommand,
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v3'
         ]));
 
         $schedule = Authorization::skip(
-            fn() => $dbForConsole->createDocument('schedules', new Document([
+            fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
@@ -117,7 +121,7 @@ App::post('/v1/functions')
             $domain = "{$routeSubdomain}.{$functionsDomain}";
 
             $rule = Authorization::skip(
-                fn() => $dbForConsole->createDocument('rules', new Document([
+                fn () => $dbForConsole->createDocument('rules', new Document([
                     '$id' => $ruleId,
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getInternalId(),
@@ -127,7 +131,7 @@ App::post('/v1/functions')
                     'resourceInternalId' => $function->getInternalId(),
                     'status' => 'verified',
                     'certificateId' => '',
-                    'search' => implode(' ', [ $domain, $ruleId, $function->getId(), 'function' ]),
+                    'search' => implode(' ', [$domain, $ruleId, $function->getId(), 'function']),
                 ]))
             );
 
@@ -516,14 +520,16 @@ App::put('/v1/functions/:functionId')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
-    ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', true)
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.', true)
+    ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
+    ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, ?string $entrypoint, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -543,6 +549,8 @@ App::put('/v1/functions/:functionId')
             'enabled' => $enabled,
             'logging' => $logging,
             'entrypoint' => $entrypoint,
+            'buildCommand' => $buildCommand,
+            'installCommand' => $installCommand,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -670,8 +678,7 @@ App::delete('/v1/functions/:functionId')
 
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('active', false)
-        ;
+            ->setAttribute('active', false);
 
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
@@ -704,6 +711,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', false)
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
+    ->param('buildCommand', null, new Text('1028'), 'Build Command.', false)
+    ->param('installCommand', null, new Text('1028'), 'Install Command.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -712,19 +721,26 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, ?string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
-
+    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, string $buildCommand, string $installCommand, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        if ($entrypoint === null || empty($entrypoint)) {
-            $entrypoint = $function->getAttribute('entrypoint', null);
+        if ($entrypoint === 'fromFunction()') {
+            $entrypoint = $function->getAttribute('entrypoint', '');
         }
 
-        if ($entrypoint === null || empty($entrypoint)) {
+        if ($buildCommand === 'fromFunction()') {
+            $buildCommand = $function->getAttribute('buildCommand', '');
+        }
+
+        if ($installCommand === 'fromFunction()') {
+            $installCommand = $function->getAttribute('installCommand', '');
+        }
+
+        if (empty($entrypoint)) {
             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
         }
 
@@ -830,6 +846,8 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
+                    'buildCommand' => $buildCommand,
+                    'installCommand' => $installCommand,
                     'path' => $path,
                     'size' => $fileSize,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
@@ -1148,7 +1166,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('body', '', new Text(8192), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
-    ->param('method', 'GET', new Whitelist([ 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS' ], true), 'HTTP method of execution. Default value is GET.', true)
+    ->param('method', 'GET', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
     ->param('headers', [], new Assoc(), 'HTP headers of execution. Defaults to empty.', true)
     ->inject('response')
     ->inject('project')
@@ -1281,6 +1299,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->dynamic($execution, Response::MODEL_EXECUTION);
         }
 
+        $durationStart = \microtime(true);
+
         $vars = [];
 
         // Shared vars
@@ -1315,6 +1335,7 @@ App::post('/v1/functions/:functionId/executions')
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
+            $command = 'npm start';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -1328,6 +1349,10 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
+                startCommands: [
+                    'sh', '-c',
+                    'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && helpers/start.sh "' . $command . '"'
+                ]
             );
 
             /** Update execution status */
@@ -1338,9 +1363,10 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
-            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $durationEnd = \microtime(true);
+
             $execution
-                ->setAttribute('duration', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
@@ -1353,10 +1379,10 @@ App::post('/v1/functions/:functionId/executions')
 
         // TODO revise this later using route label
         $usage
-        ->setParam('functionId', $function->getId())
-        ->setParam('executions.{scope}.compute', 1)
-        ->setParam('executionStatus', $execution->getAttribute('status', ''))
-        ->setParam('executionTime', $execution->getAttribute('duration')); // ms
+            ->setParam('functionId', $function->getId())
+            ->setParam('executions.{scope}.compute', 1)
+            ->setParam('executionStatus', $execution->getAttribute('status', ''))
+            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1663,8 +1689,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
-            ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']))
-        ;
+            ->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']));
 
         try {
             $dbForProject->updateDocument('variables', $variable->getId(), $variable);

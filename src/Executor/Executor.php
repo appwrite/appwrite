@@ -55,7 +55,6 @@ class Executor
      * @param string $image
      * @param bool $remove
      * @param string $entrypoint
-     * @param string $workdir
      * @param string $destination
      * @param array $variables
      * @param array $commands
@@ -68,10 +67,10 @@ class Executor
         string $version,
         bool $remove = false,
         string $entrypoint = '',
-        string $workdir = '',
         string $destination = '',
         array $variables = [],
-        array $commands = []
+        array $commands = null,
+        array $startCommands = null,
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
@@ -81,10 +80,10 @@ class Executor
             'destination' => $destination,
             'image' => $image,
             'entrypoint' => $entrypoint,
-            'workdir' => $workdir,
             'variables' => $variables,
             'remove' => $remove,
             'commands' => $commands,
+            'startCommands' => $startCommands,
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
@@ -140,6 +139,7 @@ class Executor
      * @param string $image
      * @param string $source
      * @param string $entrypoint
+     * @param array $commands
      *
      * @return array
      */
@@ -156,6 +156,8 @@ class Executor
         string $path,
         string $method,
         array $headers,
+        array $commands = null,
+        array $startCommands = null
     ) {
         $headers['host'] = App::getEnv('_APP_DOMAIN', '');
 
@@ -176,6 +178,8 @@ class Executor
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
+            'commands' => $commands,
+            'startCommands' => $startCommands
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
