@@ -89,10 +89,6 @@ class BuildsV1 extends Worker
             
             $isVcsEnabled = true;
             if($isVcsEnabled){
-                // convert output to .tar.gz
-                // upload it to some storage
-                // pass the path to source attribute in the below method
-
                 $gitCloneCommand = $deployment->getAttribute('path');
                 $stdout = '';
                 $stderr = '';
@@ -101,7 +97,6 @@ class BuildsV1 extends Worker
                 Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId .'/code.tar.gz -C /tmp/builds/' . $buildId .'/code .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
-                var_dump($project->getId());
 
                 $fileName = 'code.tar.gz';
                 $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
@@ -109,24 +104,13 @@ class BuildsV1 extends Worker
                 $deploymentId = $deployment->getId();
                 $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
 
-                // if (!\file_exists(\dirname($path))) {
-                //     if (!@\mkdir(\dirname($path), 0755, true)) {
-                //         throw new Exception("Failed to create temporary directory", 500);
-                //     }
-                // }
-
-                var_dump("path");
-                var_dump($path);
-
                 $result = $deviceFunctions->move($fileTmpName, $path);
-                var_dump($result);
 
                 if(!$result){
                     throw new \Exception("Unable to move file");
                 }
 
-                var_dump("hello");
-                var_dump($path);
+                Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
             }
 
             if($isVcsEnabled){
@@ -212,6 +196,7 @@ class BuildsV1 extends Worker
         );
 
         $source = $deployment->getAttribute('path');
+
         if($isVcsEnabled)
             $source = $path;
 

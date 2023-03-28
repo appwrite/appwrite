@@ -44,6 +44,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -69,12 +70,14 @@ App::post('/v1/functions')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
+    ->param('installationId', '', new Text(128), 'Installation ID of the GitHub App', true)
+    ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, string $installationId, string $repositoryId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
 
         $cron = !empty($schedule) ? new CronExpression($schedule) : null;
         $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
@@ -84,6 +87,8 @@ App::post('/v1/functions')
             '$id' => $functionId,
             'execute' => $execute,
             'enabled' => $enabled,
+            'installationId' => $installationId,
+            'repositoryId' => $repositoryId,
             'name' => $name,
             'runtime' => $runtime,
             'deployment' => '',
@@ -445,12 +450,15 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
+    ->param('installationId', '', new Text(128), 'Installation ID of the GitHub App', true)
+    ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, string $installationId, string $repositoryId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $eventsInstance) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -463,6 +471,12 @@ App::put('/v1/functions/:functionId')
 
         $enabled ??= $function->getAttribute('enabled', true);
 
+        $needToDeploy = false;
+        //if repo id was previously empty and non empty now, we need to create a new deployment for this function
+        $prevRepositoryId = $function->getAttribute('repositoryId');
+        if ($prevRepositoryId == "" && $repositoryId != "")
+            $needToDeploy = true;
+
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -472,6 +486,8 @@ App::put('/v1/functions/:functionId')
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
+            'installationId' => $installationId,
+            'repositoryId' => $repositoryId,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -487,6 +503,51 @@ App::put('/v1/functions/:functionId')
         }
 
         $eventsInstance->setParam('functionId', $function->getId());
+
+        // activate the deployment for first run of a VCS repo
+        if($needToDeploy){
+            $deploymentId = ID::unique();
+            $entrypoint = 'index.js';
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
+            $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
+
+            $vcs = $dbForConsole->findOne('vcs', [
+                Query::equal('projectInternalId', [$project->getInternalId()])
+              ]);
+            $installationId = $vcs->getAttribute('installationId');
+
+            var_dump($installationId);
+
+            //TODO: Update GitHub Username in constructor
+            $github = new GitHub($installationId, $privateKey, $githubAppId, 'vermakhushboo');
+            $code = $github->generateGitCloneCommand($repositoryId);
+
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
+                'entrypoint' => $entrypoint,
+                'path' => $code,
+                'search' => implode(' ', [$deploymentId, $entrypoint]),
+                'activate' => true,
+                ]));
+
+                $buildEvent = new Build();
+                $buildEvent
+                    ->setType(BUILD_TYPE_DEPLOYMENT)
+                    ->setResource($function)
+                    ->setDeployment($deployment)
+                    ->setProject($project)
+                    ->trigger();
+
+                //TODO: Add event?
+        }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
@@ -779,38 +840,31 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
+    //TODO: Move the logic to this endpoint to webhook endpoint
     App::post('/v1/functions/:functionId/vcs/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create Deployment using VCS')
     ->label('scope', 'functions.write')
-    ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createDeploymentUsingVcs')
     ->label('sdk.description', '')
     ->label('sdk.packaging', true)
-    ->label('sdk.request.type', 'multipart/form-data')
     ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
+    ->label('abuse-key', 'ip:{ip}')
+    ->label('docs', false)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('path', '', new Text(256), 'Git Clone Command', false)
+    ->param('code', '', new Text(256), 'Git Clone Command', false)
     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('project')
-    ->inject('deviceFunctions')
-    ->inject('deviceLocal')
-    ->action(function (string $functionId, string $entrypoint, string $path, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
-
-        // create a new function
-        // map function id and repo id
-        // create a new deployment
-        // trigger a build
-        // call OPR
+    ->action(function (string $functionId, string $entrypoint, string $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -849,7 +903,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
-                    'path' => $path,
+                    'path' => $code,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
 
@@ -865,7 +919,6 @@ App::post('/v1/functions/:functionId/deployments')
                 ->setResource($function)
                 ->setDeployment($deployment)
                 ->setProject($project)
-                
                 ->trigger();
 
         $events

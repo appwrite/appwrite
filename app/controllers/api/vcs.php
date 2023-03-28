@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\ID;
+use Appwrite\Extend\Exception;
 
 
 App::get('/v1/vcs/github/install')
@@ -27,6 +28,7 @@ App::get('/v1/vcs/github/install')
     ->inject('project')
     ->action(function (Response $response, Document $project) {
         $projectId = $project->getId();
+        //TODO: Update the name of the GitHub App
         $response->redirect("https://github.com/apps/demoappkh/installations/new?state=$projectId");
     });
 
@@ -40,6 +42,21 @@ App::get('/v1/vcs/github/setup')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $setup_action, string $state, Response $response, Database $dbForConsole) {
+        //TODO: Fix the flow for updating GitHub installation
+
+        var_dump("hello1");
+        $project = $dbForConsole->getDocument('projects', $state);
+
+        var_dump($project);
+
+        var_dump($state);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+        
+        $projectInternalId = $project->getInternalId();
+
         $github = new Document([
             '$id' => ID::unique(),
             '$permissions' => [
@@ -49,14 +66,17 @@ App::get('/v1/vcs/github/setup')
             ],
             'installationId' => $installationId,
             'projectId' => $state,
+            'projectInternalId' => $projectInternalId,
             'provider' => "GitHub",
             'accessToken' => null
         ]);
 
         $github = $dbForConsole->createDocument('vcs', $github);
 
+        var_dump("hello");
+
         $response
-            ->redirect("/listRepos.html?installationId=$installationId");
+            ->redirect("http://localhost:3000/console/project-$state/settings");
     });
 
 App::get('v1/vcs/github/installations/:installationId/repositories')
@@ -74,8 +94,20 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
     ->action(function (string $installationId, Response $response) {
         $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
-
+        //TODO: Update GitHub Username
         $github = new GitHub($installationId, $privateKey, $githubAppId, 'vermakhushboo');
         $repos = $github->listRepositoriesForGitHubApp();
         $response->json($repos);
+    });
+
+App::post('/v1/vcs/github/incoming')
+    ->desc('Captures GitHub Webhook Events')
+    ->groups(['api', 'vcs'])
+    ->label('scope', 'public')
+    ->action(function() {
+        //switch case on different types of incoming requests
+        // parse the payload
+        // in case of push events, map repo id to function id and check if branch is main
+        // if branch is main, trigger a new deployment
+
     });

@@ -49,6 +49,18 @@ class Func extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('installationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS Installation ID',
+                'default' => false,
+                'example' => '35493995',
+            ])
+            ->addRule('repositoryId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS Repository ID',
+                'default' => false,
+                'example' => '35493993',
+            ])
             ->addRule('runtime', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function execution runtime.',

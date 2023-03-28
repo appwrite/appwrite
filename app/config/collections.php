@@ -513,6 +513,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('projectInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('provider'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -534,7 +545,9 @@ $collections = [
                 'array' => false,
                 'filters' => ['encrypt']
             ]
-        ]
+        ],
+        'indexes' => [
+        ],
     ],
 
     'projects' => [
@@ -2153,6 +2166,26 @@ $collections = [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('installationId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 2048,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$id' => ID::custom('repositoryId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 2048,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('runtime'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2283,6 +2316,20 @@ $collections = [
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['enabled'],
                 'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_installationId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['installationId'],
+                'lengths' => [768],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_repositoryId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['repositoryId'],
+                'lengths' => [768],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
