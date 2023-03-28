@@ -2653,21 +2653,23 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
-            foreach ($document->getAttributes() as $key => $attribute) {
-                if (!$attribute instanceof Document) {
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
                     continue;
                 }
-                foreach ($relationships as $relationship) {
-                    if ($key === $relationship->getAttribute('key')) {
-                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                        $relatedCollection = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                        );
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
-                        $setIds($relatedCollection, $attribute);
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
 
-                        continue 2;
-                    }
+                foreach ($related as $document) {
+                    $setIds($relatedCollection, $document);
                 }
             }
         };
@@ -2786,21 +2788,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
-            foreach ($document->getAttributes() as $key => $attribute) {
-                if (!$attribute instanceof Document) {
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
                     continue;
                 }
-                foreach ($relationships as $relationship) {
-                    if ($key === $relationship->getAttribute('key')) {
-                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                        $relatedCollection = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                        );
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
-                        $setIds($relatedCollection, $attribute);
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
 
-                        continue 2;
-                    }
+                foreach ($related as $document) {
+                    $setIds($relatedCollection, $document);
                 }
             }
         };
@@ -2891,21 +2895,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
-            foreach ($document->getAttributes() as $key => $attribute) {
-                if (!$attribute instanceof Document) {
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
                     continue;
                 }
-                foreach ($relationships as $relationship) {
-                    if ($key === $relationship->getAttribute('key')) {
-                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                        $relatedCollection = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                        );
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
-                        $setIds($relatedCollection, $attribute);
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
 
-                        continue 2;
-                    }
+                foreach ($related as $document) {
+                    $setIds($relatedCollection, $document);
                 }
             }
         };
@@ -3070,15 +3076,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_UPDATE);
-        $valid = $validator->isValid($collection->getUpdate());
-        if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         // Read permission should not be required for update
-        /** @var Document */
+        /** @var Document $document */
         $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
@@ -3128,25 +3127,21 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             if ($documentSecurity && !$valid) {
                 $document = $dbForProject->withRequestTimestamp(
                     $requestTimestamp,
-                    function () use ($dbForProject, $privateCollectionId, $document, $data) {
-                        return $dbForProject->updateDocument(
-                            $privateCollectionId,
-                            $document->getId(),
-                            new Document($data)
-                        );
-                    }
+                    fn () => $dbForProject->updateDocument(
+                        $privateCollectionId,
+                        $document->getId(),
+                        new Document($data)
+                    )
                 );
             } else {
                 $document = Authorization::skip(function () use ($dbForProject, $requestTimestamp, $privateCollectionId, $document, $data) {
                     return $dbForProject->withRequestTimestamp(
                         $requestTimestamp,
-                        function () use ($dbForProject, $privateCollectionId, $document, $data) {
-                            return $dbForProject->updateDocument(
-                                $privateCollectionId,
-                                $document->getId(),
-                                new Document($data)
-                            );
-                        }
+                        fn () => $dbForProject->updateDocument(
+                            $privateCollectionId,
+                            $document->getId(),
+                            new Document($data)
+                        )
                     );
                 });
             }
@@ -3168,21 +3163,23 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
-            foreach ($document->getAttributes() as $key => $attribute) {
-                if (!$attribute instanceof Document) {
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
                     continue;
                 }
-                foreach ($relationships as $relationship) {
-                    if ($key === $relationship->getAttribute('key')) {
-                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                        $relatedCollection = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                        );
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
-                        $setIds($relatedCollection, $attribute);
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
 
-                        continue 2;
-                    }
+                foreach ($related as $document) {
+                    $setIds($relatedCollection, $document);
                 }
             }
         };
@@ -3290,21 +3287,23 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
-            foreach ($document->getAttributes() as $key => $attribute) {
-                if (!$attribute instanceof Document) {
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
                     continue;
                 }
-                foreach ($relationships as $relationship) {
-                    if ($key === $relationship->getAttribute('key')) {
-                        $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                        $relatedCollection = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                        );
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
-                        $setIds($relatedCollection, $attribute);
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
 
-                        continue 2;
-                    }
+                foreach ($related as $document) {
+                    $setIds($relatedCollection, $document);
                 }
             }
         };
