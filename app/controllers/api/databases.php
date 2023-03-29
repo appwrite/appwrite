@@ -2875,6 +2875,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
     }
 
+        $documents = \array_values($documents);
+
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
