@@ -2667,17 +2667,17 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
-                    if ($document instanceof Document) {
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
                         $current = Authorization::skip(
-                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $document->getId())
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
                         );
 
                         $type = $current->isEmpty()
                             ? Database::PERMISSION_CREATE
                             : Database::PERMISSION_UPDATE;
 
-                        $checkPermissions($relatedCollection, $document, $type);
+                        $checkPermissions($relatedCollection, $relation, $type);
                     }
                 }
             }
@@ -2718,8 +2718,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
-                    $processDocument($relatedCollection, $document);
+                foreach ($related as $relation) {
+                    $processDocument($relatedCollection, $relation);
                 }
             }
         };
@@ -2973,8 +2973,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
-                    $processDocument($relatedCollection, $document);
+                foreach ($related as $relation) {
+                    $processDocument($relatedCollection, $relation);
                 }
             }
         };
@@ -3222,13 +3222,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
-                    if ($document instanceof Document) {
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
                         $oldDocument = Authorization::skip(fn() => $dbForProject->getDocument(
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
-                            $document->getId()
+                            $relation->getId()
                         ));
-                        $checkPermissions($relatedCollection, $document, $oldDocument);
+                        $checkPermissions($relatedCollection, $relation, $oldDocument);
                     }
                 }
             }
@@ -3278,8 +3278,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
-                    $processDocument($relatedCollection, $document);
+                foreach ($related as $relation) {
+                    $processDocument($relatedCollection, $relation);
                 }
             }
         };
