@@ -1626,8 +1626,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
-        Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-        Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_BOOLEAN,
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1635,6 +1633,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_ENUM,
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
+        Response::MODEL_ATTRIBUTE_DATETIME,
+        Response::MODEL_ATTRIBUTE_RELATIONSHIP,
         Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1671,11 +1671,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         }
 
         $model = match ($type) {
-            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
+            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
@@ -2197,11 +2197,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
-            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
+            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
