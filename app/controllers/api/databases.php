@@ -1492,7 +1492,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
     ->alias('/v1/database/collections/:collectionId/attributes/relationship', ['databaseId' => 'default'])
-    ->desc('Create relationship Attribute')
+    ->desc('Create Relationship Attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
