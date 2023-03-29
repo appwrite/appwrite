@@ -3430,7 +3430,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($libraryAttributesResponse['body']['attributes']);
-        $this->assertEquals(2, $libraryAttributesResponse['body']['total']);
+        $this->assertEquals(2, $libraryAttributesResponse['body']['total']); // currently = 1
 
         $libraryCollectionResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection, array_merge([
             'content-type' => 'application/json',
@@ -3439,7 +3439,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($libraryCollectionResponse['body']['attributes']);
-        $this->assertCount(2, $libraryCollectionResponse['body']['attributes']);
+        $this->assertCount(2, $libraryCollectionResponse['body']['attributes']); // currently = 1
 
         $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
             'content-type' => 'application/json',
