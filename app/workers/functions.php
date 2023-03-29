@@ -182,9 +182,9 @@ Server::setResource('execute', function () {
                 path: $path,
                 method: $method,
                 headers: $headers,
-                startCommands: [
+                commands: [
                     'sh', '-c',
-                    'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && helpers/start.sh "' . $command . '"'
+                    'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
                 ]
             );
 
