@@ -3423,6 +3423,24 @@ trait DatabasesBase
 
         sleep(1);
 
+        $libraryAttributesResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertIsArray($libraryAttributesResponse['body']['attributes']);
+        $this->assertEquals(2, $libraryAttributesResponse['body']['total']);
+
+        $libraryCollectionResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertIsArray($libraryCollectionResponse['body']['attributes']);
+        $this->assertCount(2, $libraryCollectionResponse['body']['attributes']);
+
         $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
