@@ -2812,9 +2812,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($collection->getRead());
-
-        if (!$valid) {
+        if (!$validator->isValid($collection->getRead())) {
             $total = $documentSecurity
                 ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
                 : 0;
@@ -3395,12 +3393,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
+                foreach ($related as $relation) {
                     if (
-                        $document instanceof Document
+                        $relation instanceof Document
                         && $relationship->getAttribute('onDelete') === Database::RELATION_MUTATE_CASCADE
                     ) {
-                        $checkPermissions($relatedCollection, $document);
+                        $checkPermissions($relatedCollection, $relation);
                     }
                 }
             }
@@ -3444,8 +3442,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $document) {
-                    $processDocument($relatedCollection, $document);
+                foreach ($related as $relation) {
+                    $processDocument($relatedCollection, $relation);
                 }
             }
         };
