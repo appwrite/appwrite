@@ -159,13 +159,14 @@ class DatabaseV1 extends Worker
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
+            // todo: needs to clean cache for related colllection?
+
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
 
             if (Database::VAR_RELATIONSHIP === $type) {
                 $dbForProject->updateDocument('attributes', $related->getId(), $related->setAttribute('status', 'failed'));
-                // todo: needs to clean cache for related colllection?
             }
         } finally {
             $target = Realtime::fromPayload(
