@@ -139,6 +139,46 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
+    if ($type === Database::VAR_RELATIONSHIP) {
+        if ($options['twoWay']) {
+            $twoWayKey = $options['twoWayKey'];
+            $options['relatedCollection'] = $collection->getId();
+            $options['twoWayKey'] = $key;
+
+            try {
+                $twoWayAttribute = new Document([
+                    '$id' => ID::custom($db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $twoWayKey),
+                    'key' => $twoWayKey,
+                    'databaseInternalId' => $db->getInternalId(),
+                    'databaseId' => $db->getId(),
+                    'collectionInternalId' => $relatedCollection->getInternalId(),
+                    'collectionId' => $relatedCollection->getId(),
+                    'type' => $type,
+                    'status' => 'available', // processing, available, failed, deleting, stuck
+                    'size' => $size,
+                    'required' => $required,
+                    'signed' => $signed,
+                    'default' => $default,
+                    'array' => $array,
+                    'format' => $format,
+                    'formatOptions' => $formatOptions,
+                    'filters' => $filters,
+                    'options' => $options,
+                ]);
+
+                $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
+                $twoWayAttribute = $dbForProject->createDocument('attributes', $twoWayAttribute);
+            } catch (DuplicateException) {
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+            } catch (LimitException) {
+                throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+            }
+
+            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        }
+    }
+
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
