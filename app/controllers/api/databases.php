@@ -2808,9 +2808,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 unset($filterQueries[$key]);
             }
         }
-
         $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
-        $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($collection->getRead());
+
+        if (!$valid) {
+            $total = $documentSecurity
+                ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
+                : 0;
+        } else {
+            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
@@ -2871,7 +2881,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     foreach ($documents as $index => $document) {
         if (!$processDocument($collection, $document)) {
             unset($documents[$index]);
-            $total--;
         }
     }
 
