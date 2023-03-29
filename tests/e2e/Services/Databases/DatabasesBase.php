@@ -3392,6 +3392,17 @@ trait DatabasesBase
 
         $this->assertArrayNotHasKey('library', $person1['body']);
 
+        $libraryAttributesResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+        var_dump($libraryAttributesResponse);
+
+        $this->assertIsArray($libraryAttributesResponse['body']['attributes']);
+        $this->assertEquals(2, $libraryAttributesResponse['body']['total']);
+        $this->assertEquals('person_attr', $libraryAttributesResponse['body']['attributes'][0]['key']);
+        die;
         return [
             'databaseId' => $databaseId,
             'personCollection' => $person['body']['$id'],
@@ -3418,10 +3429,31 @@ trait DatabasesBase
             'type' => Database::RELATION_ONE_TO_MANY,
             'twoWay' => true,
             'key' => 'libraries',
-            'twoWayKey' => 'person',
+            'twoWayKey' => 'person_attr', // Person is in use
         ]);
 
         sleep(1);
+
+        $libraryAttributesResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+var_dump($libraryAttributesResponse);
+die;
+
+        $this->assertIsArray($libraryAttributesResponse['body']['attributes']);
+        $this->assertEquals(2, $libraryAttributesResponse['body']['total']); // currently = 1
+        $this->assertEquals('person_attr', $libraryAttributesResponse['body']['attributes'][0]['key']);
+
+        $libraryCollectionResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $libraryCollection, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertIsArray($libraryCollectionResponse['body']['attributes']);
+        $this->assertCount(2, $libraryCollectionResponse['body']['attributes']);
 
         $attribute = $this->client->call(Client::METHOD_GET, "/databases/{$databaseId}/collections/{$personCollection}/attributes/libraries", array_merge([
             'content-type' => 'application/json',
@@ -3437,7 +3469,7 @@ trait DatabasesBase
         $this->assertEquals(false, $attribute['body']['array']);
         $this->assertEquals('oneToMany', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
-        $this->assertEquals('person', $attribute['body']['twoWayKey']);
+        $this->assertEquals('person_attr', $attribute['body']['twoWayKey']);
         $this->assertEquals('restrict', $attribute['body']['onDelete']);
 
         $person2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $personCollection . '/documents', array_merge([
@@ -3495,8 +3527,8 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertArrayHasKey('person', $response['body']);
-        $this->assertEquals('person10', $response['body']['person']['$id']);
+        $this->assertArrayHasKey('person_attr', $response['body']);
+        $this->assertEquals('person10', $response['body']['person_attr']['$id']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $personCollection . '/attributes/libraries/relationship', array_merge([
             'content-type' => 'application/json',
