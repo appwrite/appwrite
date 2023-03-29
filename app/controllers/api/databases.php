@@ -2658,6 +2658,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 if (empty($related)) {
                     continue;
                 }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
@@ -3210,6 +3213,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 if (empty($related)) {
                     continue;
                 }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
                 $relatedCollection = Authorization::skip(
@@ -3368,6 +3374,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
                 if (empty($related)) {
                     continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
