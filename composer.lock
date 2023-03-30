@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db3f68f41b0387401b964f65bad3053c",
+    "content-hash": "e0dde4ed86408c36cdc244b7c649c2a6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1000,16 +1000,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.0.0",
+            "version": "6.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "7fc2af3af62bd69e6e3404d561e371a83c112be9"
+                "reference": "ce5ef5e6776c16af306d38e20674973f072e05ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/7fc2af3af62bd69e6e3404d561e371a83c112be9",
-                "reference": "7fc2af3af62bd69e6e3404d561e371a83c112be9",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/ce5ef5e6776c16af306d38e20674973f072e05ed",
+                "reference": "ce5ef5e6776c16af306d38e20674973f072e05ed",
                 "shasum": ""
             },
             "require": {
@@ -1065,7 +1065,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2022-04-11T09:58:17+00:00"
+            "time": "2023-01-16T08:18:02+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -2116,12 +2116,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "faf43ac4d654328588a8f4150ad2e889cbebc2c7"
+                "reference": "a51b3db474d72439ea479915caee2d74f981ef87"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/faf43ac4d654328588a8f4150ad2e889cbebc2c7",
-                "reference": "faf43ac4d654328588a8f4150ad2e889cbebc2c7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a51b3db474d72439ea479915caee2d74f981ef87",
+                "reference": "a51b3db474d72439ea479915caee2d74f981ef87",
                 "shasum": ""
             },
             "require": {
@@ -2166,7 +2166,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-relationships"
             },
-            "time": "2023-03-27T02:33:24+00:00"
+            "time": "2023-03-29T07:46:47+00:00"
         },
         {
             "name": "utopia-php/domains",
