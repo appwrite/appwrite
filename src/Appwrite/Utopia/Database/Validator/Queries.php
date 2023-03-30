@@ -11,12 +11,12 @@ class Queries extends Validator
     /**
      * @var string
      */
-    protected $message = 'Invalid queries';
+    protected string $message = 'Invalid queries';
 
     /**
-     * @var Base[]
+     * @var array<Base>
      */
-    protected $validators;
+    protected array $validators;
 
     /**
      * Queries constructor

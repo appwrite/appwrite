@@ -1577,6 +1577,18 @@ trait DatabasesBase
         ]);
         $this->assertEquals(200, $documents['headers']['status-code']);
 
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['greaterThan("birthDay", "1960-01-01 10:10:10+02:30")'],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals('1975-06-12T12:12:55.000+00:00', $documents['body']['documents'][0]['birthDay']);
+        $this->assertEquals('1975-06-12T18:12:55.000+00:00', $documents['body']['documents'][1]['birthDay']);
+        $this->assertCount(2, $documents['body']['documents']);
+
         /**
          * Test for Failure
          */
@@ -1610,18 +1622,14 @@ trait DatabasesBase
 
         $this->assertEquals(400, $documents['headers']['status-code']);
 
-
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['greaterThan("birthDay", "1960-01-01 10:10:10+02:30")'],
+            'queries' => ['search("actors", "Tom")'],
         ]);
-
-        $this->assertEquals($documents['headers']['status-code'], 200);
-        $this->assertEquals('1975-06-12T12:12:55.000+00:00', $documents['body']['documents'][0]['birthDay']);
-        $this->assertEquals('1975-06-12T18:12:55.000+00:00', $documents['body']['documents'][1]['birthDay']);
-        $this->assertCount(2, $documents['body']['documents']);
+        $this->assertEquals(400, $documents['headers']['status-code']);
+        $this->assertEquals('Searching by attribute "actors" requires a fulltext index.', $documents['body']['message']);
 
         return [];
     }

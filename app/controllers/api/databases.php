@@ -2817,7 +2817,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Validate queries
-        $queriesValidator = new Documents($collection->getAttribute('attributes'));
+        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
@@ -2848,6 +2848,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 unset($filterQueries[$key]);
             }
         }
+
         $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
