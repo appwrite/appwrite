@@ -75,6 +75,7 @@ class Filter extends Base
             $condition = match ($attributeType) {
                 Database::VAR_RELATIONSHIP => true,
                 Database::VAR_DATETIME => gettype($value) === Database::VAR_STRING,
+                Database::VAR_FLOAT => (gettype($value) === Database::VAR_FLOAT || gettype($value) === Database::VAR_INTEGER),
                 default => gettype($value) === $attributeType
             };
 
