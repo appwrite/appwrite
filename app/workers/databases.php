@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
@@ -187,7 +188,9 @@ class DatabaseV1 extends Worker
         $status = $attribute->getAttribute('status', '');
         $type = $attribute->getAttribute('type', '');
         $project = $dbForConsole->getDocument('projects', $projectId);
-
+        $options = $attribute->getAttribute('options', []);
+        $relatedAttribute = new Document();
+        $relatedCollection = new Document();
         // possible states at this point:
         // - available: should not land in queue; controller flips these to 'deleting'
         // - processing: hasn't finished creating
@@ -198,14 +201,26 @@ class DatabaseV1 extends Worker
         try {
             if ($status !== 'failed') {
                 if ($type ===  Database::VAR_RELATIONSHIP) {
+                    if ($options['twoWay']) {
+                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                        if ($relatedCollection->isEmpty()) {
+                            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+                        }
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                    }
+
                     if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                        throw new Exception('Failed to delete Attribute');
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                        throw new Exception('Failed to delete Relationship');
                     }
                 } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
                     throw new Exception('Failed to delete Attribute');
                 }
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
+            if (!$relatedAttribute->isEmpty()) {
+                $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+            }
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'stuck'));
@@ -285,6 +300,11 @@ class DatabaseV1 extends Worker
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+
+        if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
+            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        }
     }
 
     /**

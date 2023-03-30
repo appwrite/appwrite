@@ -2227,6 +2227,30 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
 
+        if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            $options = $attribute->getAttribute('options');
+            if ($options['twoWay']) {
+                $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+
+                if ($relatedCollection->isEmpty()) {
+                    throw new Exception(Exception::COLLECTION_NOT_FOUND);
+                }
+
+                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+
+                if ($relatedAttribute->isEmpty()) {
+                    throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+                }
+
+                if ($relatedAttribute->getAttribute('status') === 'available') {
+                    $relatedAttribute = $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                }
+
+                $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+                $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            }
+        }
+
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
             ->setCollection($collection)
