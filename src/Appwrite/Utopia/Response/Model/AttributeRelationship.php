@@ -41,6 +41,12 @@ class AttributeRelationship extends Attribute
                 'default' => 'restrict',
                 'example' => 'restrict|cascade|setNull',
             ])
+            ->addRule('side', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Whether this is the parent or child side of the relationship',
+                'default' => '',
+                'example' => 'parent|child',
+            ])
         ;
     }
 

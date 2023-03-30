@@ -101,6 +101,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
+        $options['side'] = Database::RELATION_SIDE_PARENT;
         $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
         if ($relatedCollection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -143,6 +144,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $twoWayKey = $options['twoWayKey'];
         $options['relatedCollection'] = $collection->getId();
         $options['twoWayKey'] = $key;
+        $options['side'] = Database::RELATION_SIDE_CHILD;
 
         try {
             $twoWayAttribute = new Document([
