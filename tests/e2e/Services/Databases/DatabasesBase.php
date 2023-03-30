@@ -3356,7 +3356,8 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 'equal("library", "library1")',
-                'select(["fullName","library.*"])']
+                'select(["fullName","library.*"])'
+            ]
         ]);
 
         $this->assertEquals(1, $documents['body']['total']);
@@ -3400,17 +3401,6 @@ trait DatabasesBase
 
         $this->assertArrayNotHasKey('library', $person1['body']);
 
-        $libraryAttributesResponse = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $library['body']['$id'] . '/attributes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-        var_dump($libraryAttributesResponse);
-
-        $this->assertIsArray($libraryAttributesResponse['body']['attributes']);
-        $this->assertEquals(2, $libraryAttributesResponse['body']['total']);
-        $this->assertEquals('person_attr', $libraryAttributesResponse['body']['attributes'][0]['key']);
-        die;
         return [
             'databaseId' => $databaseId,
             'personCollection' => $person['body']['$id'],
