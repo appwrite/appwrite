@@ -119,6 +119,7 @@ class DatabaseV1 extends Worker
                     if ($options['twoWay']) {
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
                         $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
                     }
                     break;
                 default:
