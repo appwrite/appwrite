@@ -153,7 +153,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
                 'collectionInternalId' => $relatedCollection->getInternalId(),
                 'collectionId' => $relatedCollection->getId(),
                 'type' => $type,
-                'status' => 'available', // processing, available, failed, deleting, stuck
+                'status' => 'processing', // processing, available, failed, deleting, stuck
                 'size' => $size,
                 'required' => $required,
                 'signed' => $signed,

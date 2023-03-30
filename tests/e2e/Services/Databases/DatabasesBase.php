@@ -3439,8 +3439,6 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
-var_dump($libraryAttributesResponse);
-die;
 
         $this->assertIsArray($libraryAttributesResponse['body']['attributes']);
         $this->assertEquals(2, $libraryAttributesResponse['body']['total']); // currently = 1

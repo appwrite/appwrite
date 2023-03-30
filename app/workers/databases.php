@@ -94,7 +94,6 @@ class DatabaseV1 extends Worker
         $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
-        $related = null;
         try {
             switch ($type) {
                 case Database::VAR_RELATIONSHIP:
@@ -102,6 +101,7 @@ class DatabaseV1 extends Worker
                     if ($relatedCollection->isEmpty()) {
                         throw new Exception('Collection not found');
                     }
+
                     if (
                         !$dbForProject->createRelationship(
                             collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
@@ -116,41 +116,10 @@ class DatabaseV1 extends Worker
                         throw new Exception('Failed to create Attribute');
                     }
 
-                    $metadata = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
-
-                    $related = \array_filter($metadata->getAttribute('attributes', []), function ($a) use ($options) {
-                        return $a['$id'] === $options['twoWayKey'];
-                    });
-
-                    /**
-                     * @var Document $related
-                     */
-                    $related = end($related);
-                    $options = $related->getAttribute('options', []);
-                    $options['relatedCollection'] = $collection->getId();
-
-                    $related = new Document([
-                        '$id' => ID::custom($database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $related->getId()),
-                        'key' => $related->getId(),
-                        'databaseInternalId' => $database->getInternalId(),
-                        'databaseId' => $database->getId(),
-                        'collectionInternalId' => $relatedCollection->getInternalId(),
-                        'collectionId' => $relatedCollection->getId(),
-                        'status' => 'available',
-                        'type' => Database::VAR_RELATIONSHIP,
-                        'size' => 0,
-                        'required' => false,
-                        'default' => null,
-                        'array' => false,
-                        'filters' => [],
-                        'signed' => false,
-                        'format' => '',
-                        'formatOptions' => [],
-                        'options' => $options,
-                    ]);
-
-                    $related = $dbForProject->createDocument('attributes', $related);
-
+                    if ($options['twoWay']) {
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                    }
                     break;
                 default:
                     if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
@@ -159,14 +128,13 @@ class DatabaseV1 extends Worker
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
-            // todo: needs to clean cache for related colllection?
-
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'failed'));
 
-            if (Database::VAR_RELATIONSHIP === $type) {
-                $dbForProject->updateDocument('attributes', $related->getId(), $related->setAttribute('status', 'failed'));
+            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+                $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'failed'));
             }
         } finally {
             $target = Realtime::fromPayload(
