@@ -55,6 +55,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\Structure;
+use Utopia\Domains\Registrar;
+use Utopia\Domains\Registrar\OpenSRS;
 use Utopia\Locale\Locale;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -739,6 +741,21 @@ App::setResource('loggerBreadcrumbs', function () {
 App::setResource('register', fn() => $register);
 
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+
+App::setResource('registrar', function(){
+  $opensrs = new OpenSRS(
+    'apikey', 
+    'apisecret', 
+    'username', 
+    'password', 
+    [
+      'ns1.nameserver.com',
+      'ns2.nameserver.com',
+    ]
+  );
+    
+  return new Registrar($opensrs);
+});
 
 // Queues
 App::setResource('events', fn() => new Event('', ''));

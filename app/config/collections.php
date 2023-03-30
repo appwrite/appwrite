@@ -945,6 +945,18 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+              '$id' => ID::custom('registered'), 
+              'type' => Database::VAR_BOOLEAN,
+              'format' => '',
+              'size' => 0,
+              'signed' => true,
+              'required' => false,
+              'default' => null,
+              'array' => false,
+              'filters' => [],
+          ],
+
         ],
         'indexes' => [
             [

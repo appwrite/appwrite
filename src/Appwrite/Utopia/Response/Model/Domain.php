@@ -63,6 +63,12 @@ class Domain extends Model
                 'default' => '',
                 'example' => '6ejea5c13377e',
             ])
+            ->addRule('registered', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Registered with Appwrite',
+                'default' => false,
+                'example' => true,
+            ])
         ;
     }
 
