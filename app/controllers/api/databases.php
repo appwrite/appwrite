@@ -2739,9 +2739,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                             fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
                         );
 
-                        $type = $current->isEmpty()
-                            ? Database::PERMISSION_CREATE
-                            : Database::PERMISSION_UPDATE;
+                        if ($current->isEmpty()) {
+                            $type = Database::PERMISSION_CREATE;
+
+                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
+                                $relation['$id'] = ID::unique();
+                            }
+                        } else {
+                            $type = Database::PERMISSION_UPDATE;
+                        }
 
                         $checkPermissions($relatedCollection, $relation, $type);
                     }
@@ -3304,7 +3310,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
-                        $checkPermissions($relatedCollection, $relation, $oldDocument);
+
+                        if ($oldDocument->isEmpty()) {
+                            $type = Database::PERMISSION_CREATE;
+
+                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
+                                $relation['$id'] = ID::unique();
+                            }
+                        } else {
+                            $type = Database::PERMISSION_UPDATE;
+                        }
+
+                        $checkPermissions($relatedCollection, $relation, $oldDocument, $type);
                     }
                 }
             }

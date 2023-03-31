@@ -217,7 +217,9 @@ class DatabaseV1 extends Worker
                     throw new Exception('Failed to delete Attribute');
                 }
             }
+
             $dbForProject->deleteDocument('attributes', $attribute->getId());
+
             if (!$relatedAttribute->isEmpty()) {
                 $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
             }
