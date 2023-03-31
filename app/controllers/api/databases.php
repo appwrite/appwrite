@@ -2137,7 +2137,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('twoWay', null, new Boolean(), 'Is Two Way?', true)
     ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -2146,7 +2145,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         string $databaseId,
         string $collectionId,
         string $key,
-        ?bool $twoWay,
         ?string $onDelete,
         Response $response,
         Database $dbForProject,
@@ -2161,7 +2159,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             type: Database::VAR_RELATIONSHIP,
             required: false,
             options : [
-                'twoWay' => $twoWay,
                 'onDelete' => $onDelete
             ]
         );
