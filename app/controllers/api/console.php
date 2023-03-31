@@ -7,7 +7,7 @@ use Utopia\Database\Document;
 
 App::init()
     ->groups(['console'])
-    ->inject('console')
+    ->inject('project')
     ->action(function (Document $project) {
         if ($project->getId() !== 'console') {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
