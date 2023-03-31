@@ -266,8 +266,8 @@ class DatabaseV1 extends Worker
                 // array_values wraps array_diff to reindex array keys
                 // when found attribute is removed from array
                 $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
-                $lengths = \array_values(\array_diff($lengths, [$lengths[$found]]));
-                $orders = \array_values(\array_diff($orders, [$orders[$found]]));
+                $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
+                $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
 
                 if (empty($attributes)) {
                     $dbForProject->deleteDocument('indexes', $index->getId());
