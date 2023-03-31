@@ -186,4 +186,17 @@ return [
         'optional' => true,
         'icon' => '/images/services/graphql.png',
     ],
+    'console' => [
+        'key' => 'console',
+        'name' => 'Conosle',
+        'subtitle' => 'The Console service allows you to interact with Console relevant informations.',
+        'description' => '',
+        'controller' => 'api/console.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+    ],
 ];
