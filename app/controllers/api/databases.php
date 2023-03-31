@@ -348,7 +348,8 @@ function updateAttribute(
     }
 
     $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
-    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+    //TODO: this purges the cache of all collections
+    $dbForProject->deleteCachedCollection('database_' . $db->getInternalId());
 
     $events
         ->setContext('collection', $collection)
@@ -668,7 +669,7 @@ App::delete('/v1/databases/:databaseId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
+        $dbForProject->deleteCachedCollection('databases_' . $database->getInternalId());
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
