@@ -1046,6 +1046,21 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
+        $relationships = \array_filter(
+            $collection->getAttribute('attributes'),
+            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            if (!$relationship['twoWay']) {
+                continue;
+            }
+            $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $relationship['relatedCollection']);
+            $dbForProject->deleteDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
+            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        }
+
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         $deletes
