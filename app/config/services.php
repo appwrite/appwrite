@@ -188,8 +188,8 @@ return [
     ],
     'console' => [
         'key' => 'console',
-        'name' => 'Conosle',
-        'subtitle' => 'The Console service allows you to interact with Console relevant informations.',
+        'name' => 'Console',
+        'subtitle' => 'The Console service allows you to interact with console relevant informations.',
         'description' => '',
         'controller' => 'api/console.php',
         'sdk' => true,
