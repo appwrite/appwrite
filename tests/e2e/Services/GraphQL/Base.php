@@ -547,8 +547,8 @@ trait Base
                         }
                     }';
             case self::$UPDATE_RELATIONSHIP_ATTRIBUTE:
-                return 'mutation updateRelationshipAttribute($databaseId: String!, $collectionId: String!, $key: String!, $twoWay: Boolean, $onDelete: String){
-                        databasesUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, twoWay: $twoWay, onDelete: $onDelete) {
+                return 'mutation updateRelationshipAttribute($databaseId: String!, $collectionId: String!, $key: String!, $onDelete: String){
+                        databasesUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, onDelete: $onDelete) {
                             relatedCollection
                             relationType
                             twoWay

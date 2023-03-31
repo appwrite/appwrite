@@ -147,7 +147,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateStringAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_STRING_ATTRIBUTE);
@@ -215,7 +215,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateIntegerAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_INTEGER_ATTRIBUTE);
@@ -285,7 +285,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateBooleanAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_BOOLEAN_ATTRIBUTE);
@@ -354,7 +354,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateFloatAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_FLOAT_ATTRIBUTE);
@@ -424,7 +424,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateEmailAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_EMAIL_ATTRIBUTE);
@@ -496,7 +496,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateEnumAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_ENUM_ATTRIBUTE);
@@ -569,7 +569,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateDatetimeAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_DATETIME_ATTRIBUTE);
@@ -635,7 +635,7 @@ class DatabaseServerTest extends Scope
      */
     public function testUpdateRelationshipAttribute(array $data): array
     {
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_RELATIONSHIP_ATTRIBUTE);
@@ -645,7 +645,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection2']['_id'],
                 'key' => 'actors',
-                'twoWay' => false,
+                'onDelete' => Database::RELATION_MUTATE_CASCADE,
             ]
         ];
 
@@ -1039,6 +1039,8 @@ class DatabaseServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
+
+        \var_dump($attributes['body']);
 
         $this->assertArrayNotHasKey('errors', $attributes['body']);
         $this->assertIsArray($attributes['body']['data']);

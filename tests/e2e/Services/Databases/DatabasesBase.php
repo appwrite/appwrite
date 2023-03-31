@@ -3543,7 +3543,6 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'twoWay' => false,
             'onDelete' => Database::RELATION_MUTATE_CASCADE,
         ]);
 
@@ -3562,7 +3561,7 @@ trait DatabasesBase
         $this->assertEquals(false, $attribute['body']['required']);
         $this->assertEquals(false, $attribute['body']['array']);
         $this->assertEquals('oneToMany', $attribute['body']['relationType']);
-        $this->assertEquals(false, $attribute['body']['twoWay']);
+        $this->assertEquals(true, $attribute['body']['twoWay']);
         $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
 
         return ['databaseId' => $databaseId, 'personCollection' => $personCollection];
@@ -3704,27 +3703,6 @@ trait DatabasesBase
         $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
         $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
         $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
-
-        // Update disable 2 way
-        $relation = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $albums['body']['$id'] . '/attributes/artist/relationship', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'twoWay' => false,
-        ]);
-
-
-        $this->assertEquals(202, $response['headers']['status-code']);
-        $artist = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $artists['body']['$id'] . '/documents/' . $album['body']['artist']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $artist['headers']['status-code']);
-        $this->assertEquals('Artist 1', $artist['body']['name']);
-        $this->assertEquals($permissions, $artist['body']['$permissions']);
-        $this->assertArrayNotHasKey("albums", $artist['body']);
 
         return [
             'databaseId' => $databaseId,
