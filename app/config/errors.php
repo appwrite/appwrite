@@ -455,6 +455,11 @@ return [
         'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
         'code' => 400,
     ],
+    Exception::ATTRIBUTE_TYPE_INVALID => [
+        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
+        'description' => 'The attribute type is invalid.',
+        'code' => 400,
+    ],
 
     /** Indexes */
     Exception::INDEX_NOT_FOUND => [

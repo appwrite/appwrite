@@ -2391,6 +2391,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
 
+            if ($attributeType === Database::VAR_RELATIONSHIP) {
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship attribute: ' . $oldAttributes[$attributeIndex]['key']);
+            }
+
             // ensure attribute is available
             if ($attributeStatus !== 'available') {
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
