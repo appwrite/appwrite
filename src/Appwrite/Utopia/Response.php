@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia;
 
 use Exception;
-use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -238,113 +237,115 @@ class Response extends SwooleResponse
      */
     public function __construct(SwooleHTTPResponse $response)
     {
-        $this
-            // General
-            ->setModel(new None())
-            ->setModel(new Any())
-            ->setModel(new Error())
-            ->setModel(new ErrorDev())
-            // Lists
-            ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
-            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
-            ->setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
-            ->setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
-            ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
-            ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
-            ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
-            ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
-            ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
-            ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
-            ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
-            ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
-            ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
-            ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
-            ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
-            ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
-            ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
-            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
-            ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
-            ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
-            ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
-            ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
-            ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
-            ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
-            ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
-            ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
-            ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
-            // Entities
-            ->setModel(new Database())
-            ->setModel(new Collection())
-            ->setModel(new Attribute())
-            ->setModel(new AttributeList())
-            ->setModel(new AttributeString())
-            ->setModel(new AttributeInteger())
-            ->setModel(new AttributeFloat())
-            ->setModel(new AttributeBoolean())
-            ->setModel(new AttributeEmail())
-            ->setModel(new AttributeEnum())
-            ->setModel(new AttributeIP())
-            ->setModel(new AttributeURL())
-            ->setModel(new AttributeDatetime())
-            ->setModel(new Index())
-            ->setModel(new ModelDocument())
-            ->setModel(new Log())
-            ->setModel(new User())
-            ->setModel(new AlgoMd5())
-            ->setModel(new AlgoSha())
-            ->setModel(new AlgoPhpass())
-            ->setModel(new AlgoBcrypt())
-            ->setModel(new AlgoScrypt())
-            ->setModel(new AlgoScryptModified())
-            ->setModel(new AlgoArgon2())
-            ->setModel(new Account())
-            ->setModel(new Preferences())
-            ->setModel(new Session())
-            ->setModel(new Token())
-            ->setModel(new JWT())
-            ->setModel(new Locale())
-            ->setModel(new File())
-            ->setModel(new Bucket())
-            ->setModel(new Team())
-            ->setModel(new Membership())
-            ->setModel(new Func())
-            ->setModel(new Runtime())
-            ->setModel(new Deployment())
-            ->setModel(new Execution())
-            ->setModel(new Build())
-            ->setModel(new Project())
-            ->setModel(new Webhook())
-            ->setModel(new Key())
-            ->setModel(new Domain())
-            ->setModel(new Provider())
-            ->setModel(new Platform())
-            ->setModel(new Variable())
-            ->setModel(new Country())
-            ->setModel(new Continent())
-            ->setModel(new Language())
-            ->setModel(new Currency())
-            ->setModel(new Phone())
-            ->setModel(new HealthAntivirus())
-            ->setModel(new HealthQueue())
-            ->setModel(new HealthStatus())
-            ->setModel(new HealthTime())
-            ->setModel(new HealthVersion())
-            ->setModel(new Metric())
-            ->setModel(new UsageDatabases())
-            ->setModel(new UsageDatabase())
-            ->setModel(new UsageCollection())
-            ->setModel(new UsageUsers())
-            ->setModel(new UsageStorage())
-            ->setModel(new UsageBuckets())
-            ->setModel(new UsageFunctions())
-            ->setModel(new UsageFunction())
-            ->setModel(new UsageProject())
-            // Verification
-            // Recovery
-            // Tests (keep last)
-            ->setModel(new Mock());
+        if (empty(self::$models)) {
+            self
+                // General
+                ::setModel(new None())
+                ::setModel(new Any())
+                ::setModel(new Error())
+                ::setModel(new ErrorDev())
+                // Lists
+                ::setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
+                ::setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
+                ::setModel(new BaseList('Databases List', self::MODEL_DATABASE_LIST, 'databases', self::MODEL_DATABASE))
+                ::setModel(new BaseList('Indexes List', self::MODEL_INDEX_LIST, 'indexes', self::MODEL_INDEX))
+                ::setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
+                ::setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
+                ::setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
+                ::setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
+                ::setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
+                ::setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
+                ::setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
+                ::setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+                ::setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
+                ::setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
+                ::setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+                ::setModel(new BaseList('Builds List', self::MODEL_BUILD_LIST, 'builds', self::MODEL_BUILD)) // Not used anywhere yet
+                ::setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
+                ::setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
+                ::setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
+                ::setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
+                ::setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
+                ::setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
+                ::setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
+                ::setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
+                ::setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
+                ::setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
+                ::setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
+                ::setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
+                ::setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+                // Entities
+                ::setModel(new Database())
+                ::setModel(new Collection())
+                ::setModel(new Attribute())
+                ::setModel(new AttributeList())
+                ::setModel(new AttributeString())
+                ::setModel(new AttributeInteger())
+                ::setModel(new AttributeFloat())
+                ::setModel(new AttributeBoolean())
+                ::setModel(new AttributeEmail())
+                ::setModel(new AttributeEnum())
+                ::setModel(new AttributeIP())
+                ::setModel(new AttributeURL())
+                ::setModel(new AttributeDatetime())
+                ::setModel(new Index())
+                ::setModel(new ModelDocument())
+                ::setModel(new Log())
+                ::setModel(new User())
+                ::setModel(new AlgoMd5())
+                ::setModel(new AlgoSha())
+                ::setModel(new AlgoPhpass())
+                ::setModel(new AlgoBcrypt())
+                ::setModel(new AlgoScrypt())
+                ::setModel(new AlgoScryptModified())
+                ::setModel(new AlgoArgon2())
+                ::setModel(new Account())
+                ::setModel(new Preferences())
+                ::setModel(new Session())
+                ::setModel(new Token())
+                ::setModel(new JWT())
+                ::setModel(new Locale())
+                ::setModel(new File())
+                ::setModel(new Bucket())
+                ::setModel(new Team())
+                ::setModel(new Membership())
+                ::setModel(new Func())
+                ::setModel(new Runtime())
+                ::setModel(new Deployment())
+                ::setModel(new Execution())
+                ::setModel(new Build())
+                ::setModel(new Project())
+                ::setModel(new Webhook())
+                ::setModel(new Key())
+                ::setModel(new Domain())
+                ::setModel(new Provider())
+                ::setModel(new Platform())
+                ::setModel(new Variable())
+                ::setModel(new Country())
+                ::setModel(new Continent())
+                ::setModel(new Language())
+                ::setModel(new Currency())
+                ::setModel(new Phone())
+                ::setModel(new HealthAntivirus())
+                ::setModel(new HealthQueue())
+                ::setModel(new HealthStatus())
+                ::setModel(new HealthTime())
+                ::setModel(new HealthVersion())
+                ::setModel(new Metric())
+                ::setModel(new UsageDatabases())
+                ::setModel(new UsageDatabase())
+                ::setModel(new UsageCollection())
+                ::setModel(new UsageUsers())
+                ::setModel(new UsageStorage())
+                ::setModel(new UsageBuckets())
+                ::setModel(new UsageFunctions())
+                ::setModel(new UsageFunction())
+                ::setModel(new UsageProject())
+                // Verification
+                // Recovery
+                // Tests (keep last)
+                ::setModel(new Mock());
+        }
 
         parent::__construct($response);
     }
@@ -358,18 +359,16 @@ class Response extends SwooleResponse
     /**
      * List of defined output objects
      */
-    protected $models = [];
+    protected static array $models = [];
 
     /**
      * Set Model Object
-     *
-     * @return self
      */
-    public function setModel(Model $instance)
+    public static function setModel(Model $instance): static
     {
-        $this->models[$instance->getType()] = $instance;
+        self::$models[$instance->getType()] = $instance;
 
-        return $this;
+        return static ;
     }
 
     /**
@@ -379,23 +378,19 @@ class Response extends SwooleResponse
      * @return Model
      * @throws Exception
      */
-    public function getModel(string $key): Model
+    public static function getModel(string $key): Model
     {
-        if (!isset($this->models[$key])) {
-            throw new Exception('Undefined model: ' . $key);
-        }
-
-        return $this->models[$key];
+        return self::$models[$key] ?? throw new Exception('Undefined model: ' . $key);
     }
 
     /**
      * Get Models List
      *
-     * @return Model[]
+     * @return array<string,Model>
      */
-    public function getModels(): array
+    public static function getModels(): array
     {
-        return $this->models;
+        return self::$models;
     }
 
     /**
@@ -451,9 +446,9 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = $document;
-        $model      = $this->getModel($model);
-        $output     = [];
+        $data = $document;
+        $model = $this->getModel($model);
+        $output = [];
 
         $document = $model->filter($document);
 
@@ -464,23 +459,19 @@ class Response extends SwooleResponse
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
-                if (\array_key_exists('default', $rule)) {
-                    $document->setAttribute($key, $rule['default']);
-                } else {
-                    throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
-                }
+            if (!$document->isSet($key) && $rule->isRequired()) { // do not set attribute in response if not required
+                $document->setAttribute($key, $rule->getDefault());
             }
 
-            if ($rule['array']) {
+            if ($rule->isArray()) {
                 if (!is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
                 foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
-                        if (\is_array($rule['type'])) {
-                            foreach ($rule['type'] as $type) {
+                        if (\is_array($rule->getType())) {
+                            foreach ($rule->getType() as $type) {
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
                                     $condition = $item->getAttribute($attribute) === $val;
@@ -494,7 +485,7 @@ class Response extends SwooleResponse
                                 }
                             }
                         } else {
-                            $ruleType = $rule['type'];
+                            $ruleType = $rule->getType();
                         }
 
                         if (!array_key_exists($ruleType, $this->models)) {
@@ -597,6 +588,6 @@ class Response extends SwooleResponse
      */
     public static function hasFilter(): bool
     {
-        return self::$filter != null;
+        return self::$filter !== null;
     }
 }

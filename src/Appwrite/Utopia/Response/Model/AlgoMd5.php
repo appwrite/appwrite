@@ -3,40 +3,19 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Attribute\Name;
+use Appwrite\Utopia\Response\Attribute\Type;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Rule;
 
+#[Name('AlgoMD5')]
+#[Type(Response::MODEL_ALGO_MD5)]
 class AlgoMd5 extends Model
 {
-    public function __construct()
-    {
-        // No options, because this can only be imported, and verifying doesnt require any configuration
-
-        $this
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Algo type.',
-                'default' => 'md5',
-                'example' => 'md5',
-            ]);
-    }
-
-    /**
-     * Get Name
-     *
-     * @return string
-     */
-    public function getName(): string
-    {
-        return 'AlgoMD5';
-    }
-
-    /**
-     * Get Type
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return Response::MODEL_ALGO_MD5;
-    }
+    #[Rule(
+        description: 'Algo type.',
+        default: 'md5',
+        example: 'md5'
+    )]
+    public string $type;
 }

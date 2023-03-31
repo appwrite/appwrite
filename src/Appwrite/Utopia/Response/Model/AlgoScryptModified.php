@@ -3,57 +3,40 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Attribute\Name;
+use Appwrite\Utopia\Response\Attribute\Type;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Rule;
 
+#[Name('AlgoScryptModified')]
+#[Type(Response::MODEL_ALGO_SCRYPT_MODIFIED)]
 class AlgoScryptModified extends Model
 {
-    public function __construct()
-    {
-        $this
-            ->addRule('type', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Algo type.',
-                'default' => 'scryptMod',
-                'example' => 'scryptMod',
-            ])
-            ->addRule('salt', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Salt used to compute hash.',
-                'default' => '',
-                'example' => 'UxLMreBr6tYyjQ==',
-            ])
-            ->addRule('saltSeparator', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Separator used to compute hash.',
-                'default' => '',
-                'example' => 'Bw==',
-            ])
-            ->addRule('signerKey', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Key used to compute hash.',
-                'default' => '',
-                'example' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
-            ])
-        ;
-    }
+    #[Rule(
+        description: 'Algo type.',
+        default: 'scryptMod',
+        example: 'scryptMod'
+    )]
+    public string $type;
 
-    /**
-     * Get Name
-     *
-     * @return string
-     */
-    public function getName(): string
-    {
-        return 'AlgoScryptModified';
-    }
+    #[Rule(
+        description: 'Salt used to compute hash.',
+        default: '',
+        example: 'UxLMreBr6tYyjQ=='
+    )]
+    public string $salt;
 
-    /**
-     * Get Type
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return Response::MODEL_ALGO_SCRYPT_MODIFIED;
-    }
+    #[Rule(
+        description: 'Separator used to compute hash.',
+        default: '',
+        example: 'Bw=='
+    )]
+    public string $saltSeparator;
+
+    #[Rule(
+        description: 'Key used to compute hash.',
+        default: '',
+        example: 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ=='
+    )]
+    public string $signerKey;
 }

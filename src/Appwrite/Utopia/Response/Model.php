@@ -2,6 +2,11 @@
 
 namespace Appwrite\Utopia\Response;
 
+use Appwrite\Utopia\Response\Attribute\Name;
+use Appwrite\Utopia\Response\Attribute\Type;
+use ReflectionAttribute;
+use ReflectionClass;
+use ReflectionProperty;
 use Utopia\Database\Document;
 
 abstract class Model
@@ -15,91 +20,87 @@ abstract class Model
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
 
     /**
-     * @var bool
-     */
-    protected bool $none = false;
-
-    /**
-     * @var bool
-     */
-    protected bool $any = false;
-
-    /**
-     * @var bool
-     */
-    protected bool $public = true;
-
-    /**
-     * @var array
+     * @var array<string,Rule>
      */
     protected array $rules = [];
-
-    /**
-     * @var array
-     */
+    protected string $name;
+    protected string $type;
+    protected bool $none = false;
+    protected bool $any = false;
+    protected bool $public = true;
     public array $conditions = [];
 
+    public function __construct()
+    {
+        $reflection = new \ReflectionClass($this);
 
-    /**
-     * Filter Document Structure
-     *
-     * @return Document
-     */
+        $this->name = $this->getAttribute($reflection, Name::class);
+        $this->type = $this->getAttribute($reflection, Type::class);
+
+        $options = $this->getAttribute($reflection, Options::class);
+        if ($options !== null) {
+            $options = $options->newInstance();
+            $this->none = $options->none;
+            $this->any = $options->any;
+            $this->public = $options->public;
+        }
+
+        foreach ($reflection->getProperties() as $property) {
+            $attribute = $this->getAttribute($property, Type::class);
+            if ($attribute === null) {
+                continue;
+            }
+
+            /** @var Rule $rule */
+            $rule = $attribute->newInstance();
+            $name = $property->getName();
+            $type = match ($property->getType()) {
+                'string' => self::TYPE_STRING,
+                'int' => self::TYPE_INTEGER,
+                'float' => self::TYPE_FLOAT,
+                'bool' => self::TYPE_BOOLEAN,
+                'array' => self::TYPE_JSON,
+                'object' => self::TYPE_JSON,
+                'DateTime' => self::TYPE_DATETIME,
+                default => throw new \Exception('Unknown type: ' . $property->getType()),
+            };
+
+            $rule
+                ->setName($name)
+                ->setType($type);
+
+            $this->rules[$name] = $rule;
+        }
+    }
+
     public function filter(Document $document): Document
     {
         return $document;
     }
 
     /**
-     * Get Name
-     *
-     * @return string
-     */
-    abstract public function getName(): string;
-
-    /**
-     * Get Collection
-     *
-     * @return string
-     */
-    abstract public function getType(): string;
-
-    /**
-     * Get Rules
-     *
-     * @return array
+     * @return array<string,Rule>
      */
     public function getRules(): array
     {
         return $this->rules;
     }
 
-    /**
-     * Add a New Rule
-     * If rule is an array of documents with varying models
-     *
-     * @param string $key
-     * @param array $options
-     */
-    protected function addRule(string $key, array $options): self
+    public function getType(): string
     {
-        $this->rules[$key] = array_merge([
-            'required' => true,
-            'array' => false,
-            'description' => '',
-            'example' => ''
-        ], $options);
-
-        return $this;
+        return $this->type;
     }
 
-    /**
-     * Delete an existing Rule
-     * If rule exists, it will be removed
-     *
-     * @param string $key
-     * @param array $options
-     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getRequired()
+    {
+        return \array_filter($this->rules, fn (Rule $rule) => $rule->isRequired());
+    }
+
     protected function removeRule(string $key): self
     {
         if (isset($this->rules[$key])) {
@@ -109,52 +110,23 @@ abstract class Model
         return $this;
     }
 
-    public function getRequired()
-    {
-        $list = [];
-
-        foreach ($this->rules as $key => $rule) {
-            if ($rule['required'] ?? false) {
-                $list[] = $key;
-            }
-        }
-
-        return $list;
-    }
-
-    /**
-     * Is None
-     *
-     * Use to check if response is empty
-     *
-     * @return bool
-     */
     public function isNone(): bool
     {
         return $this->none;
     }
 
-    /**
-     * Is Any
-     *
-     * Use to check if response is a wildcard
-     *
-     * @return bool
-     */
     public function isAny(): bool
     {
         return $this->any;
     }
 
-    /**
-     * Is Public
-     *
-     * Should this model be publicly available in docs and spec files?
-     *
-     * @return bool
-     */
     public function isPublic(): bool
     {
         return $this->public;
+    }
+
+    private function getAttribute(ReflectionClass | ReflectionProperty $reflection, string $class): ?ReflectionAttribute
+    {
+        return $reflection->getAttributes($class)[0] ?? null;
     }
 }

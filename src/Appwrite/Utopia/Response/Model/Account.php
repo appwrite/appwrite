@@ -3,7 +3,11 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Attribute\Name;
+use Appwrite\Utopia\Response\Attribute\Type;
 
+#[Name('Account')]
+#[Type(Response::MODEL_ACCOUNT)]
 class Account extends User
 {
     public function __construct()
@@ -14,25 +18,5 @@ class Account extends User
             ->removeRule('password')
             ->removeRule('hash')
             ->removeRule('hashOptions');
-    }
-
-    /**
-     * Get Name
-     *
-     * @return string
-     */
-    public function getName(): string
-    {
-        return 'Account';
-    }
-
-    /**
-     * Get Type
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return Response::MODEL_ACCOUNT;
     }
 }
