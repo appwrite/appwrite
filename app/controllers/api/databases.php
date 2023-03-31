@@ -228,7 +228,7 @@ function updateAttribute(
         throw new Exception(Exception::COLLECTION_NOT_FOUND);
     }
 
-    $attribute = $dbForProject->getDocument('attributes', ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key));
+    $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
     if ($attribute->isEmpty()) {
         throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
@@ -319,15 +319,24 @@ function updateAttribute(
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $options = array_merge($attribute->getAttribute('options', []), $options);
+        $options = \array_merge($attribute->getAttribute('options', []), $options);
         $attribute->setAttribute('options', $options);
 
         $dbForProject->updateRelationship(
             collection: $collectionId,
             key: $key,
-            twoWay: $options['twoWay'],
             onDelete: $options['onDelete'],
         );
+
+        if ($options['twoWay']) {
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+            $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
+            $relatedAttribute->setAttribute('options', $relatedOptions);
+
+            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey'], $relatedAttribute);
+            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+        }
     } else {
         $dbForProject->updateAttribute(
             collection: $collectionId,
