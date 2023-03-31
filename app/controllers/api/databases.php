@@ -2933,8 +2933,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                     $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
-                    if (!$processDocument($relatedCollection, $doc)) {
-                        unset($relations[$index]);
+                    if ($doc instanceof Document) {
+                        if (!$processDocument($relatedCollection, $doc)) {
+                            unset($relations[$index]);
+                        }
                     }
                 }
 

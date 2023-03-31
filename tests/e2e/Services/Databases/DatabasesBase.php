@@ -3357,7 +3357,7 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 'equal("library", "library1")',
-                //'select(["fullName","library.*"])' // todo: why does this make it fail on $processDocument (after changing to 2 way)?
+                'select(["fullName","library.*"])'
             ]
         ]);
 
