@@ -1107,9 +1107,9 @@ return [
         "nativeName" => "中文"
     ],
     [
-        "code" => "zh",
-        "code2" => "zho",
-        "name" => "Chinese",
-        "nativeName" => "中文"
-    ],
+        "code" => "zu",
+        "code2" => "zul",
+        "name" => "Zulu",
+        "nativeName" => "isiZulu"
+    ]
 ];
