@@ -336,7 +336,6 @@ class Realtime extends Adapter
                         $channels[] = 'renditions.' . $payload->getId();
                         $channels[] = 'videos.' . $payload->getAttribute('videoId');
                         $roles = $payload->getRead();
-
                 }
 
                 break;

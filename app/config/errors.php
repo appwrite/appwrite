@@ -584,6 +584,11 @@ return [
         'description' => 'Video not found.',
         'code' => 404,
     ],
+    Exception::VIDEO_TIMELINE_NOT_FOUND => [
+        'name' => Exception::VIDEO_TIMELINE_NOT_FOUND,
+        'description' => 'Video timeline not found.',
+        'code' => 404,
+    ],
     Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [
         'name' => Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND,
         'description' => 'Video rendition segment not found',

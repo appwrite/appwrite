@@ -7,11 +7,10 @@ use Utopia\Database\Document;
 
 class Transcoding extends Event
 {
-    protected Document $video;
-
-    protected Document $profile;
-
-    protected string $output;
+    protected ?Document $video = null;
+    protected ?Document $profile = null;
+    protected string $output = '';
+    protected string $action = '';
 
     public function __construct()
     {
@@ -41,6 +40,28 @@ class Transcoding extends Event
         return $this->output;
     }
 
+    /**
+     * Sets action.
+     *
+     * @param string $action
+     * @return self
+     */
+    public function setAction(string $action): self
+    {
+        $this->action = $action;
+
+        return $this;
+    }
+
+    /**
+     * Returns action.
+     *
+     * @return string
+     */
+    public function getAction(): string
+    {
+        return $this->action;
+    }
 
     /**
      * Sets video.
@@ -96,12 +117,25 @@ class Transcoding extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
-            'output' => $this->output,
+        $keys = [
             'project' => $this->project,
-            'user' => $this->user,
-            'video' => $this->video,
-            'profile' => $this->profile,
-        ]);
+             'user' => $this->user,
+             'video' => $this->video,
+             'action' => $this->action,
+        ];
+
+        if (!empty($this->getOutput())) {
+            $keys = array_merge($keys, [
+                    'output' => $this->getOutput(),
+                ]);
+        }
+
+        if (!empty($this->getProfile())) {
+            $keys = array_merge($keys, [
+                'profile' => $this->getProfile(),
+            ]);
+        }
+
+        return Resque::enqueue($this->queue, $this->class, $keys);
     }
 }

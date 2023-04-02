@@ -183,6 +183,7 @@ class Exception extends \Exception
     /** Video */
     public const VIDEO_PROFILE_NOT_FOUND            = 'video_profile_not_found';
     public const VIDEO_NOT_VALID                    = 'video_not_valid';
+    public const VIDEO_TIMELINE_NOT_FOUND           = 'video_timeline_not_found';
     public const VIDEO_RENDITION_NOT_FOUND          = 'video_rendition_not_found';
     public const VIDEO_SUBTITLE_NOT_FOUND           = 'video_subtitle_not_found';
     public const VIDEO_NOT_FOUND                    = 'video_not_found';
