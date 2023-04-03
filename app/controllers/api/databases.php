@@ -2768,7 +2768,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         if ($current->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 
-                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
+                            if (!isset($relation['$id']) || $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
@@ -3342,7 +3342,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         if ($oldDocument->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 
-                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
+                            if (!isset($relation['$id']) || $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
