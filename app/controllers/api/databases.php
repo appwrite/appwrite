@@ -348,7 +348,7 @@ function updateAttribute(
     }
 
     $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
-    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collection->getId());
 
     $events
         ->setContext('collection', $collection)
