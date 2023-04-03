@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5786ffa54eafbe063c8d314308fcc16d",
+    "content-hash": "9307225af3d2a6e6c2c281930cbede14",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2116,12 +2116,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "629652a63fb9c6c742fb776c69c86c6b1c895679"
+                "reference": "f9e242aeb7f58cc1faf920038f97b20f8703935b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/629652a63fb9c6c742fb776c69c86c6b1c895679",
-                "reference": "629652a63fb9c6c742fb776c69c86c6b1c895679",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f9e242aeb7f58cc1faf920038f97b20f8703935b",
+                "reference": "f9e242aeb7f58cc1faf920038f97b20f8703935b",
                 "shasum": ""
             },
             "require": {
@@ -2166,7 +2166,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-relationships"
             },
-            "time": "2023-03-31T02:36:36+00:00"
+            "time": "2023-04-03T09:08:59+00:00"
         },
         {
             "name": "utopia-php/domains",
