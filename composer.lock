@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1614e987617e0a710448662d1d9cc7ef",
+    "content-hash": "70121ad826cd1782e80ebe8f91defa13",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2212,26 +2212,30 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.13.2",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b"
+                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ad1c00f24ca56e73888acc2af3deee4919b1194b",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/eda6651ac16884dc2a79ecb984ea591ba1ed498c",
+                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c",
                 "shasum": ""
             },
             "require": {
+                "ext-brotli": "*",
                 "ext-fileinfo": "*",
+                "ext-lz4": "*",
+                "ext-snappy": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -2245,12 +2249,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple Storage library to manage application storage",
             "keywords": [
                 "framework",
@@ -2261,9 +2259,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.13.2"
+                "source": "https://github.com/utopia-php/storage/tree/0.14.0"
             },
-            "time": "2022-12-20T11:11:35+00:00"
+            "time": "2023-03-15T00:16:34+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3183,16 +3181,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.7.0",
+            "version": "1.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "1534aea9bde19a5c85c5d1e1f834ab63f4c5dcf5"
+                "reference": "dfc078e8af9c99210337325ff5aa152872c98714"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/1534aea9bde19a5c85c5d1e1f834ab63f4c5dcf5",
-                "reference": "1534aea9bde19a5c85c5d1e1f834ab63f4c5dcf5",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/dfc078e8af9c99210337325ff5aa152872c98714",
+                "reference": "dfc078e8af9c99210337325ff5aa152872c98714",
                 "shasum": ""
             },
             "require": {
@@ -3235,9 +3233,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.1"
             },
-            "time": "2023-03-12T10:13:29+00:00"
+            "time": "2023-03-27T19:02:04+00:00"
         },
         {
             "name": "phpspec/prophecy",
