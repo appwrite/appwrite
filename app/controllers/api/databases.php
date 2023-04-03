@@ -2772,6 +2772,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
+                            $relation->removeAttribute('$collectionId');
+                            $relation->removeAttribute('$databaseId');
+                            $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
 
@@ -3350,6 +3353,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
+                            $relation->removeAttribute('$collectionId');
+                            $relation->removeAttribute('$databaseId');
+                            $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
                         }
 
