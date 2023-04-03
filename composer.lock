@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f8ec9ffac67a27b14c6a213d14c8706a",
+    "content-hash": "5786ffa54eafbe063c8d314308fcc16d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1808,16 +1808,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.22.1",
+            "version": "0.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "9360a026d18809e35523b254ab57e51055008203"
+                "reference": "4319461f4dde080b9dffaceea048f9e4f8949a52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/9360a026d18809e35523b254ab57e51055008203",
-                "reference": "9360a026d18809e35523b254ab57e51055008203",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/4319461f4dde080b9dffaceea048f9e4f8949a52",
+                "reference": "4319461f4dde080b9dffaceea048f9e4f8949a52",
                 "shasum": ""
             },
             "require": {
@@ -1851,9 +1851,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.22.1"
+                "source": "https://github.com/utopia-php/abuse/tree/0.23.0"
             },
-            "time": "2023-03-23T07:30:49+00:00"
+            "time": "2023-03-31T07:54:08+00:00"
         },
         {
             "name": "utopia-php/analytics",
