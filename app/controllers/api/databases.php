@@ -668,7 +668,8 @@ App::delete('/v1/databases/:databaseId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
+        $dbForProject->deleteCachedDocument('databases', $database->getId());
+        $dbForProject->deleteCachedCollection('databases_' . $database->getInternalId());
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
