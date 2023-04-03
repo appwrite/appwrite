@@ -2817,7 +2817,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 );
 
                 foreach ($related as $relation) {
-                    $processDocument($relatedCollection, $relation);
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
                 }
             }
         };
@@ -3084,7 +3086,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
                 );
 
                 foreach ($related as $relation) {
-                    $processDocument($relatedCollection, $relation);
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
                 }
             }
         };
@@ -3400,7 +3404,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($related as $relation) {
-                    $processDocument($relatedCollection, $relation);
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
                 }
             }
         };
@@ -3555,7 +3561,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 );
 
                 foreach ($related as $relation) {
-                    $processDocument($relatedCollection, $relation);
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
                 }
             }
         };
