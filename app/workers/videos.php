@@ -25,10 +25,10 @@ use Utopia\Storage\Device\Local;
 
 require_once __DIR__ . '/../init.php';
 
-Console::title('Transcoding V1 Worker');
-Console::success(APP_NAME . ' transcoding worker v1 has started');
+Console::title('Video V1 Worker');
+Console::success(APP_NAME . ' video worker v1 has started');
 
-class TranscodingV1 extends Worker
+class VideosV1 extends Worker
 {
     /**
      * Rendition Status
@@ -73,7 +73,7 @@ class TranscodingV1 extends Worker
 
     public function getName(): string
     {
-        return "Transcoding v1";
+        return "Video v1";
     }
 
     public function init(): void
@@ -255,7 +255,9 @@ class TranscodingV1 extends Worker
                     ];
                 $result = shell_exec(implode(" ", $cmd));
 
-                /** Vtt creation**/
+                /**
+                 * Vtt creation*
+                 */
                 if ($result !== false) {
                     $size = explode('x', $timeline['size']);
                     $counter = 0;
@@ -270,7 +272,7 @@ class TranscodingV1 extends Worker
                             'path'      =>  $path,
                         ]));
 
-                        $url = 'http://127.0.0.1/v1/videos/' . $this->video->getId() . '/preview/' . $sprite->getId();
+                        $url = TMP_HOST . 'v1/videos/' . $this->video->getId() . '/preview/' . $sprite->getId() . '/';
                         for ($col = 0; $col < $size[0]; $col++) {
                             for ($row = 0; $row < $size[1]; $row++) {
                                 $data .= "\n" . gmdate("H:i:s", $counter * $interval) . " --> " . gmdate("H:i:s", ($counter + 1) * $interval) . "\n" . $url . "#xywh=" . ($row * $timeline['width']) . "," . ($col * $timeline['height']) . "," . $timeline['width'] . "," . $timeline['height'];

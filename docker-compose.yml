@@ -228,10 +228,10 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-worker-transcoding:
-    entrypoint: worker-transcoding
+  appwrite-worker-videos:
+    entrypoint: worker-videos
     <<: *x-logging
-    container_name: appwrite-worker-transcoding
+    container_name: appwrite-worker-videos
     build:
       context: .
     networks:

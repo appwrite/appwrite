@@ -253,6 +253,7 @@ class VideosCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(92810, $response['body']['duration']);
+
         /**
          * timeline vtt
          */
@@ -263,7 +264,33 @@ class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals(2956, strlen($response['body']));
+        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
+        $this->assertEquals(25, count($match[0]));
+
+        /**
+         * timeline preview image
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1' . $match[0][0], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
+
+        sleep(3);
+
+        /**
+         * timeline preview image (response from cache)
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1' . $match[0][0], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertEquals('hit', $response['headers']['x-appwrite-cache']);
+
 
         $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId, [
             'content-type' => 'application/json',
@@ -333,7 +360,7 @@ class VideosCustomServerTest extends Scope
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
             'name' => 'English',
-            'code' => 'Eng',
+            'code' => 'eng',
             'default' => true,
         ]);
 
@@ -495,7 +522,7 @@ class VideosCustomServerTest extends Scope
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
             'name' => 'English',
-            'code' => 'Eng',
+            'code' => 'eng',
             'default' => true,
         ]);
 

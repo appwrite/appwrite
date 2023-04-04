@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Event\Delete;
-use Appwrite\Event\Transcoding;
+use Appwrite\Event\Video;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
@@ -109,13 +109,13 @@ App::post('/v1/videos')
             ]));
         });
 
-        (new Transcoding())
+        (new Video())
             ->setAction('preview')
             ->setProject($project)
             ->setVideo($video)
             ->trigger();
 
-        (new Transcoding())
+        (new Video())
             ->setAction('timeline')
             ->setProject($project)
             ->setVideo($video)
@@ -360,7 +360,7 @@ App::post('/v1/videos/:videoId/preview')
             throw new Exception(Exception::VIDEO_SECOND_OUT_OF_RANGE);
         }
 
-        (new Transcoding())
+        (new Video())
             ->setAction('preview')
             ->setProject($project)
             ->setVideo($video)
@@ -651,8 +651,7 @@ App::post('/v1/videos/:videoId/rendition')
             throw new Exception(Exception::VIDEO_PROFILE_NOT_FOUND);
         }
 
-        $transcoder = new Transcoding();
-        $transcoder
+        (new Video())
             ->setAction('encode')
             ->setProject($project)
             ->setVideo($video)
@@ -843,7 +842,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 
-        $baseUrl = 'http://127.0.0.1/v1/videos/' . $videoId . '/outputs/' . $output;
+        $baseUrl = TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output;
         $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
             Query::equal('videoId', [$video->getId()]),
         ]));
@@ -1019,7 +1018,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
         foreach ($segments as $segment) {
             $_segments[] = [
                 'duration' => $segment->getAttribute('duration'),
-                'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/outputs/' . $output . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
+                'url' => TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
             ];
         }
 
@@ -1115,7 +1114,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
             foreach ($segments as $segment) {
                 $_segments[] = [
                     'duration' => $segment->getAttribute('duration'),
-                    'url' => 'http://127.0.0.1/v1/videos/' . $videoId . '/outputs/' . $output . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
+                    'url' => TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
                 ];
             }
 

@@ -5,7 +5,7 @@ namespace Appwrite\Event;
 use Resque;
 use Utopia\Database\Document;
 
-class Transcoding extends Event
+class Video extends Event
 {
     protected ?Document $video = null;
     protected ?Document $profile = null;
@@ -15,7 +15,7 @@ class Transcoding extends Event
 
     public function __construct()
     {
-        parent::__construct(Event::TRANSCODING_QUEUE_NAME, Event::TRANSCODING_CLASS_NAME);
+        parent::__construct(Event::VIDEO_QUEUE_NAME, Event::VIDEO_CLASS_NAME);
     }
 
     /**
