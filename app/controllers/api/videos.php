@@ -354,7 +354,8 @@ App::post('/v1/videos/:videoId/preview')
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
-
+        var_dump($second);
+        var_dump($video['duration']);
         $range = new Range(1, ($video['duration'] / 1000), Validator::TYPE_INTEGER);
         if (!$range->isValid($second)) {
             throw new Exception(Exception::VIDEO_SECOND_OUT_OF_RANGE);

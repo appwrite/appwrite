@@ -1,10 +1,12 @@
 <?php
 
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
+use Appwrite\Utopia\Response\Model\Execution;
 use Streaming\FFMpeg;
 use FFMpeg\FFProbe;
 use Streaming\Format\StreamFormat;
@@ -17,6 +19,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
@@ -44,31 +47,18 @@ class VideosV1 extends Worker
 
     private string $basePath = '/tmp/';
     //private string $basePath = '/usr/src/code/tests/tmp/';
-
     private string $inDir;
-
     private string $outDir;
-
     private string $outPath;
-
     private string $renditionName;
-
     private Database $database;
-
     private Document $video;
-
     private string $action;
-
     private Document $profile;
-
     private Document $project;
-
     private Document $file;
-
     private Document $bucket;
-
     private FFProbe $ffprobe;
-
     private FFMpeg $ffmpeg;
 
     public function getName(): string
@@ -185,13 +175,15 @@ class VideosV1 extends Worker
             $name = 'preview.jpg';
             $media
                 ->filters()
-                ->resize(new \FFMpeg\Coordinate\Dimension(640, 480))
+                ->resize(new \FFMpeg\Coordinate\Dimension($this->video->getAttribute('width'), $this->video->getAttribute('height')))
                 ->synchronize();
             $media
                 ->frame(\FFMpeg\Coordinate\TimeCode::fromSeconds($this->args['second']))
                 ->save($this->outDir . $name);
 
-            /** Upload preview**/
+            /**
+             * Upload preview
+             */
             console::info('Uploading ' . $name);
 
             $this->getVideoDevice($this->project->getId())->write(
@@ -199,14 +191,24 @@ class VideosV1 extends Worker
                 (new Local('/'))->read($this->outDir . $name)
             );
 
-            $preview = $this->database->createDocument('videos_previews', new Document([
-                'videoId'   =>  $this->video->getId(),
-                'type'      =>  'preview',
-                'name'      =>  $name,
-                'path'      =>  $path,
-            ]));
+            try {
+                $preview = $this->database->createDocument('videos_previews', new Document([
+                    'videoId' => $this->video->getId(),
+                    'type' => 'preview',
+                    'name' => $name,
+                    'path' => $path,
+                ]));
+            } catch (Duplicate $th) {
+                ;
+            }
 
             $this->video->setAttribute('previewId', $preview->getId());
+
+            (new Delete())
+                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResource('preview/' . $preview->getId())
+                ->trigger();
+
 
             $this->database->updateDocument(
                 'videos',
@@ -220,6 +222,17 @@ class VideosV1 extends Worker
         }
 
         if ($this->action === 'timeline') {
+            /*
+             * Title:             PlayerJS Thumbnails & WebVTT Creator
+             * URI:               https://playerjs.com/docs/q=thumbnailsphpwebvtt
+             * Version:           1.0
+             * Author:            Playerjs.com
+             * Author URI:        https://playerjs.com
+             * License:           GPL-2.0+
+             * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+             * Text Domain:       playerjs
+            */
+
                 $interval = 2;
                 $ranges = [
                     ['from' => 120, 'to' => 600, 'interval' => 5],
@@ -282,14 +295,19 @@ class VideosV1 extends Worker
                     }
 
                     if ($counter > 0) {
-                        /** Upload vtt**/
+                        /**
+                         * Upload vtt
+                         */
                         $this->getVideoDevice($this->project->getId())->write(
                             $this->getVideoDevice($this->project->getId())->getPath($this->video->getId() . '/timeline/timeline.vtt'),
                             $data
                         );
+
                         console::info('Uploading timeline vtt');
 
-                        /** Upload sprites**/
+                        /**
+                         * Upload sprites*
+                         */
                         $dir = new DirectoryIterator($this->outDir);
                         foreach ($dir as $fileinfo) {
                             if (!$fileinfo->isDot()) {

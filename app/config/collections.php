@@ -3804,8 +3804,8 @@ $collections = [
         'indexes' => [
             [
                 '$id' => '_key_video_type',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['videoId', 'type'],
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['videoId', 'type', 'name'],
                 'lengths' => [],
                 'orders' => [],
             ],
