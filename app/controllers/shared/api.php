@@ -217,7 +217,6 @@ App::init()
 
                 if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
-
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
@@ -244,14 +243,13 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                 }
-
+                var_dump('hit');
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($data['contentType'])
                     ->send(base64_decode($data['payload']))
                 ;
-
                 $route->setIsActive(false);
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
@@ -501,6 +499,7 @@ App::shutdown()
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
+
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,

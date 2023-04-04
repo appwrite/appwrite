@@ -85,7 +85,6 @@ class VideosCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 401);
 
-
         /**
          * Create subtitles
          */
@@ -97,7 +96,7 @@ class VideosCustomClientTest extends Scope
             'bucketId' => $this->getBucket()['$id'],
             'fileId' => $this->getSubtitle()['$id'],
             'name' => 'English',
-            'code' => 'Eng',
+            'code' => 'eng',
             'default' => true,
         ]);
 
@@ -117,7 +116,6 @@ class VideosCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
             'content-type' => 'application/json',
@@ -253,8 +251,8 @@ class VideosCustomClientTest extends Scope
         $subsCount = 0;
         $isVideo = false;
         $isAudio = false;
-        $subs[] = ['id' => '2', 'lang' => 'Eng',];
-        $subs[] = ['id' => '3', 'lang' => 'It',];
+        $subs[] = ['id' => '2', 'lang' => 'eng',];
+        $subs[] = ['id' => '3', 'lang' => 'it',];
         foreach ($xml->Period->AdaptationSet as $adaptation) {
             if ((string)$adaptation['contentType'] === 'video') {
                 $isVideo = true;

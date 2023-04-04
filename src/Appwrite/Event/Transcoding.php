@@ -9,6 +9,7 @@ class Transcoding extends Event
 {
     protected ?Document $video = null;
     protected ?Document $profile = null;
+    protected int $second = 5;
     protected string $output = '';
     protected string $action = '';
 
@@ -110,6 +111,30 @@ class Transcoding extends Event
     }
 
     /**
+     * Sets second from duration.
+     *
+     * @param int $second
+     * @return self
+     */
+    public function setSecond(int $second): self
+    {
+        $this->second = $second;
+
+        return $this;
+    }
+
+    /**
+     * Returns second from duration.
+     *
+     * @return int
+     */
+    public function getSecond(): int
+    {
+        return $this->second;
+    }
+
+
+    /**
      * Executes the function event and sends it to the functions worker.
      *
      * @return string|bool
@@ -118,10 +143,11 @@ class Transcoding extends Event
     public function trigger(): string|bool
     {
         $keys = [
+            'action' => $this->action,
             'project' => $this->project,
-             'user' => $this->user,
-             'video' => $this->video,
-             'action' => $this->action,
+            'user' => $this->user,
+            'video' => $this->video,
+            'second' => $this->getSecond(),
         ];
 
         if (!empty($this->getOutput())) {

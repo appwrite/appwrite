@@ -28,6 +28,12 @@ class Video extends Model
                 'default' => '',
                 'example' => 'd5fg5ehg1c168g7c',
             ])
+            ->addRule('previewId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'File preview image ID.',
+                'default' => '',
+                'example' => 'd5fg5ehg56c168g5b',
+            ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'File size.',

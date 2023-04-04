@@ -19,8 +19,10 @@ use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Device;
+use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
+use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -195,6 +197,7 @@ App::put('/v1/videos/:videoId')
             'bucketId'  => $bucketId,
             'fileId'    => $file->getId(),
             'size'      => $file->getAttribute('sizeOriginal'),
+            'previewId' =>  null,
             'duration' =>  null,
             'width' =>  null,
             'height' =>  null,
@@ -286,8 +289,8 @@ App::get('/v1/videos')
         ]), Response::MODEL_VIDEO_LIST);
     });
 
-App::get('/v1/videos/timeline/:videoId')
-    ->desc('Get video timeline ')
+App::get('/v1/videos/:videoId/timeline')
+    ->desc('Get video timeline')
     ->groups(['api', 'videos'])
     ->label('scope', 'videos.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -295,8 +298,8 @@ App::get('/v1/videos/timeline/:videoId')
     ->label('sdk.method', 'getTimeline')
     ->label('sdk.description', '/docs/references/videos/get-video-timeline.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VIDEO)
+    ->label('sdk.response.type', '*/*')
+    ->label('sdk.methodType', 'location')
     ->param('videoId', '', new UID(), 'Video  unique ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -312,7 +315,9 @@ App::get('/v1/videos/timeline/:videoId')
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
-        if (!$video->getAttribute('timeline')) {
+        $timeline = Authorization::skip(fn () => $dbForProject->find('videos_previews', [Query::equal('type', ['sprite'])]));
+
+        if (empty($timeline)) {
             throw new Exception(Exception::VIDEO_TIMELINE_NOT_FOUND);
         }
 
@@ -321,13 +326,58 @@ App::get('/v1/videos/timeline/:videoId')
             ->send($data);
     });
 
-App::get('/v1/videos/:videoId/preview')
+App::post('/v1/videos/:videoId/preview')
+    ->desc('Create Video preview from a given point in duration (second)')
+    ->groups(['api', 'videos'])
+    ->label('scope', 'videos.write')
+    ->label('audits.event', 'video.create')
+    ->label('audits.resource', 'video/{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'videos')
+    ->label('sdk.method', 'createPreview')
+    ->label('sdk.description', '/docs/references/videos/create.md') // TODO: Create markdown
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VIDEO)
+    ->param('videoId', '', new UID(), 'Video  unique ID.')
+    ->param('second', 5, new Numeric(), 'Second from video duration.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('mode')
+    ->action(action: function (string $videoId, int $second, Request $request, Response $response, Document $project, Database $dbForProject, string $mode) {
+
+        $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+        if ($video->isEmpty()) {
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
+
+        $range = new Range(1, ($video['duration'] / 1000), Validator::TYPE_INTEGER);
+        if (!$range->isValid($second)) {
+            throw new Exception(Exception::VIDEO_SECOND_OUT_OF_RANGE);
+        }
+
+        (new Transcoding())
+            ->setAction('preview')
+            ->setProject($project)
+            ->setVideo($video)
+            ->setSecond($second)
+            ->trigger();
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($video, Response::MODEL_VIDEO);
+    });
+
+App::get('/v1/videos/:videoId/preview/:previewId')
     ->desc('Get video file preview')
     ->groups(['api', 'videos'])
     ->label('scope', 'videos.read')
     ->label('cache', true)
-    ->label('cache.resourceType', 'bucket/{request.bucketId}')
-    ->label('cache.resource', 'video/{request.videoId}')
+    ->label('cache.resourceType', 'video/{request.videoId}')
+    ->label('cache.resource', 'preview/{request.previewId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'getVideoImagePreview')
@@ -335,144 +385,50 @@ App::get('/v1/videos/:videoId/preview')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE)
     ->label('sdk.methodType', 'location')
-    ->param('videoId', '', new UID(), 'Video  unique ID.')    ->param('fileId', '', new UID(), 'File ID')
+    ->param('videoId', '', new UID(), 'Video  unique ID.')
+    ->param('previewId', '', new UID(), 'Preview  unique ID.')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-    ->param('gravity', Image::GRAVITY_CENTER, new WhiteList(Image::getGravityTypes()), 'Image crop gravity. Can be one of ' . implode(",", Image::getGravityTypes()), true)
-    ->param('quality', 100, new Range(0, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
-    ->param('borderWidth', 0, new Range(0, 100), 'Preview image border in pixels. Pass an integer between 0 to 100. Defaults to 0.', true)
-    ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('borderRadius', 0, new Range(0, 4000), 'Preview image border radius in pixels. Pass an integer between 0 to 4000.', true)
-    ->param('opacity', 1, new Range(0, 1, Range::TYPE_FLOAT), 'Preview image opacity. Only works with images having an alpha channel (like png). Pass a number between 0 to 1.', true)
-    ->param('rotation', 0, new Range(-360, 360), 'Preview image rotation in degrees. Pass an integer between -360 and 360.', true)
-    ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('deviceFiles')
-    ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->inject('deviceVideos')
+    ->action(function (string $videoId, string $previewId, int $width, int $height, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceVideos) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($video->isEmpty()) {
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
 
-        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
+
+        $preview = Authorization::skip(fn() => $dbForProject->getDocument('videos_previews', $previewId));
+
+        if ($preview->isEmpty()) {
+            throw new Exception(Exception::VIDEO_PREVIEW_NOT_FOUND);
         }
 
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
-            $output = 'jpg';
-        }
-
-        $inputs = Config::getParam('storage-inputs');
+        $output  = 'jpg';
+        $contentType = $mime = 'image/jpeg';
         $outputs = Config::getParam('storage-outputs');
-        $fileLogos = Config::getParam('storage-logos');
-
-        if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        }
-
-        if ($file->isEmpty()) {
-            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-        }
-
-        $path = $file->getAttribute('path');
-        $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm', 'none');
-        $cipher = $file->getAttribute('openSSLCipher');
-        $mime = $file->getAttribute('mimeType');
-        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
-            if (!\in_array($mime, $inputs)) {
-                $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
-            } else {
-                // it was an image but the file size exceeded the limit
-                $path = $fileLogos['default_image'];
-            }
-
-            $algorithm = 'none';
-            $cipher = null;
-            $background = (empty($background)) ? 'eceff1' : $background;
-            $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-            $deviceFiles = $deviceLocal;
-        }
-
-        if (!$deviceFiles->exists($path)) {
-            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-        }
+        $path    = $preview->getAttribute('path') . $preview->getAttribute('name');
+        $type    = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
 
         if (empty($output)) {
-            // when file extension is not provided and the mime type is not one of our supported outputs
-            // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
 
-
-        $source = $deviceFiles->read($path);
-
-        if (!empty($cipher)) { // Decrypt
-            $source = OpenSSL::decrypt(
-                $source,
-                $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
-                0,
-                \hex2bin($file->getAttribute('openSSLIV')),
-                \hex2bin($file->getAttribute('openSSLTag'))
-            );
-        }
-
-        switch ($algorithm) {
-            case 'zstd':
-                $compressor = new Zstd();
-                $source = $compressor->decompress($source);
-                break;
-            case 'gzip':
-                $compressor = new GZIP();
-                $source = $compressor->decompress($source);
-                break;
-        }
-
-        $image = new Image($source);
-
-        $image->crop((int) $width, (int) $height, $gravity);
-
-        if (!empty($opacity) || $opacity === 0) {
-            $image->setOpacity($opacity);
-        }
-
-        if (!empty($background)) {
-            $image->setBackground('#' . $background);
-        }
-
-        if (!empty($borderWidth)) {
-            $image->setBorder($borderWidth, '#' . $borderColor);
-        }
-
-        if (!empty($borderRadius)) {
-            $image->setBorderRadius($borderRadius);
-        }
-
-        if (!empty($rotation)) {
-            $image->setRotation(($rotation + 360) % 360);
-        }
-
-        $data = $image->output($output, $quality);
-
-        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
+        $source = $deviceVideos->read($path);
+        $image  = new Image($source);
+        $image->crop((int)$width, (int)$height, Image::GRAVITY_CENTER);
+        $data = $image->output($output, 100);
 
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')

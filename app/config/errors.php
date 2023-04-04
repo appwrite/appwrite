@@ -579,9 +579,19 @@ return [
         'description' => 'Video subtitle not valid.',
         'code' => 400,
     ],
+    Exception::VIDEO_SECOND_OUT_OF_RANGE => [
+        'name' => Exception::VIDEO_SECOND_OUT_OF_RANGE,
+        'description' => 'Video second out of duration range.',
+        'code' => 400,
+    ],
     Exception::VIDEO_NOT_FOUND => [
         'name' => Exception::VIDEO_NOT_FOUND,
         'description' => 'Video not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_PREVIEW_NOT_FOUND => [
+        'name' => Exception::VIDEO_PREVIEW_NOT_FOUND,
+        'description' => 'Video preview not found.',
         'code' => 404,
     ],
     Exception::VIDEO_TIMELINE_NOT_FOUND => [
