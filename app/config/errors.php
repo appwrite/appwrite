@@ -28,11 +28,6 @@ return [
         'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
         'code' => 403,
     ],
-    Exception::GENERAL_PROJECT_PAUSED => [
-        'name' => Exception::GENERAL_PROJECT_PAUSED,
-        'description' => 'The requested project is paused. You can resume the project from the Appwrite console.',
-        'code' => 503,
-    ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
