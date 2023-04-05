@@ -3877,9 +3877,9 @@ trait DatabasesBase
         ], $this->getHeaders()), [
             'queries' => [
                 'isNotNull("$id")',
-                'startsWith("fullName", ["Stevie"])',
-                'endsWith("fullName", ["Wonder"])',
-                'between("$createdAt", ["1975-12-06", "2050-12-06"])',
+                'startsWith("fullName", "Stevie")',
+                'endsWith("fullName", "Wonder")',
+                'between("$createdAt", "1975-12-06", "2050-12-06")',
             ],
         ]);
 
