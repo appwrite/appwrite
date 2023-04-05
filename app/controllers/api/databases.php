@@ -30,6 +30,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
@@ -2273,7 +2274,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
                 }
 
                 if ($relatedAttribute->getAttribute('status') === 'available') {
-                    $relatedAttribute = $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
                 }
 
                 $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
@@ -3538,11 +3539,16 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $checkPermissions($collection, $document);
 
-        Authorization::skip(fn () => $dbForProject->withRequestTimestamp($requestTimestamp, fn() =>
-            $dbForProject->deleteDocument(
-                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $documentId
-            )));
+        Authorization::skip(fn () => $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
+            try {
+                $dbForProject->deleteDocument(
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $documentId
+                );
+            } catch (RestrictedException) {
+                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+            }
+        }));
 
         $dbForProject->deleteCachedDocument(
             'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),

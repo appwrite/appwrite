@@ -413,6 +413,11 @@ return [
         'description' => 'Remote document is newer than local.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_DELETE_RESTRICTED => [
+        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
+        'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
+    ],
 
     /** Attributes */
     Exception::ATTRIBUTE_NOT_FOUND => [
