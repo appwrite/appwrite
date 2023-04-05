@@ -332,7 +332,7 @@ function updateAttribute(
 
         $dbForProject->updateRelationship(
             collection: $collectionId,
-            key: $key,
+            id: $key,
             onDelete: $options['onDelete'],
         );
 
