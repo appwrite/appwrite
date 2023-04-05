@@ -460,10 +460,10 @@ App::patch('/v1/projects/:projectId/service/all')
         $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
 
         $services = [];
-        foreach($allServices as $service) {
+        foreach ($allServices as $service) {
             $services[$service] = $status;
         }
-        
+
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
