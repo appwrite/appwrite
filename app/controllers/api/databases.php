@@ -135,6 +135,10 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
         throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+    } catch (\Exception $e) {
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        throw $e;
     }
 
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
@@ -175,6 +179,10 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+        } catch (\Exception $e) {
+            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+            $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+            throw $e;
         }
 
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
