@@ -104,7 +104,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         $options['side'] = Database::RELATION_SIDE_PARENT;
         $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
         if ($relatedCollection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            throw new Exception(Exception::COLLECTION_NOT_FOUND, 'The related collection was not found.');
         }
     }
 
