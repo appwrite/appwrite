@@ -181,8 +181,8 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             $dbForProject->deleteDocument('attributes', $attribute->getId());
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
         } catch (\Exception $e) {
-            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
-            $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
             throw $e;
         }
 
