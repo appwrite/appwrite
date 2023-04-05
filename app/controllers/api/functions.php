@@ -474,8 +474,9 @@ App::put('/v1/functions/:functionId')
         $needToDeploy = false;
         //if repo id was previously empty and non empty now, we need to create a new deployment for this function
         $prevRepositoryId = $function->getAttribute('repositoryId');
-        if ($prevRepositoryId == "" && $repositoryId != "")
+        if ($prevRepositoryId == "" && $repositoryId != "") {
             $needToDeploy = true;
+        }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
@@ -505,23 +506,43 @@ App::put('/v1/functions/:functionId')
         $eventsInstance->setParam('functionId', $function->getId());
 
         // activate the deployment for first run of a VCS repo
-        if($needToDeploy){
+        if ($needToDeploy) {
             $deploymentId = ID::unique();
-            $entrypoint = 'index.js';
+            $entrypoint = 'index.js'; //TODO: Read from function settings
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
             $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
+            $projectInternalId = $project->getInternalId();
 
             $vcs = $dbForConsole->findOne('vcs', [
-                Query::equal('projectInternalId', [$project->getInternalId()])
+                Query::equal('projectInternalId', [$projectInternalId])
               ]);
             $installationId = $vcs->getAttribute('installationId');
 
             var_dump($installationId);
 
             //TODO: Update GitHub Username in constructor
-            $github = new GitHub($installationId, $privateKey, $githubAppId, 'vermakhushboo');
+            $github = new GitHub();
+            $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
             $code = $github->generateGitCloneCommand($repositoryId);
+
+            //Add document in VCS map collection
+            $vcs_mapping = new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'projectId' => $project->getId(),
+                'projectInternalId' => $projectInternalId,
+                'repositoryId' => $repositoryId,
+                'provider' => "GitHub",
+                'resourceId' => $functionId,
+                'resourceType' => "function"
+            ]);
+
+            $vcs_mapping = $dbForConsole->createDocument('vcs_map', $vcs_mapping);
 
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
@@ -892,25 +913,25 @@ App::post('/v1/functions/:functionId/deployments')
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-            if ($deployment->isEmpty()) {
-                $deployment = $dbForProject->createDocument('deployments', new Document([
-                    '$id' => $deploymentId,
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::any()),
-                        Permission::delete(Role::any()),
-                    ],
-                    'resourceId' => $function->getId(),
-                    'resourceType' => 'functions',
-                    'entrypoint' => $entrypoint,
-                    'path' => $code,
-                    'search' => implode(' ', [$deploymentId, $entrypoint]),
-                    'activate' => $activate,
+        if ($deployment->isEmpty()) {
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
+                'entrypoint' => $entrypoint,
+                'path' => $code,
+                'search' => implode(' ', [$deploymentId, $entrypoint]),
+                'activate' => $activate,
 
-                ]));
-            } else {
-                // $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', null)->setAttribute('metadata', null));
-            }
+            ]));
+        } else {
+            // $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', null)->setAttribute('metadata', null));
+        }
 
             // Start the build
             $buildEvent = new Build();
@@ -930,7 +951,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::get('/v1/functions/:functionId/deployments')
+    App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List Deployments')
     ->label('scope', 'functions.read')
@@ -998,7 +1019,7 @@ App::get('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
-App::get('/v1/functions/:functionId/deployments/:deploymentId')
+    App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Get Deployment')
     ->label('scope', 'functions.read')
@@ -1039,7 +1060,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::delete('/v1/functions/:functionId/deployments/:deploymentId')
+    App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
@@ -1098,7 +1119,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Create Build')
     ->label('scope', 'functions.write')
@@ -1159,7 +1180,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 
 
-App::post('/v1/functions/:functionId/executions')
+    App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
@@ -1362,7 +1383,7 @@ App::post('/v1/functions/:functionId/executions')
             ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::get('/v1/functions/:functionId/executions')
+    App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List Executions')
     ->label('scope', 'execution.read')
@@ -1435,7 +1456,7 @@ App::get('/v1/functions/:functionId/executions')
         ]), Response::MODEL_EXECUTION_LIST);
     });
 
-App::get('/v1/functions/:functionId/executions/:executionId')
+    App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get Execution')
     ->label('scope', 'execution.read')
@@ -1484,7 +1505,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
 // Variables
 
-App::post('/v1/functions/:functionId/variables')
+    App::post('/v1/functions/:functionId/variables')
     ->desc('Create Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1538,7 +1559,7 @@ App::post('/v1/functions/:functionId/variables')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::get('/v1/functions/:functionId/variables')
+    App::get('/v1/functions/:functionId/variables')
     ->desc('List Variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1565,7 +1586,7 @@ App::get('/v1/functions/:functionId/variables')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-App::get('/v1/functions/:functionId/variables/:variableId')
+    App::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1599,7 +1620,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::put('/v1/functions/:functionId/variables/:variableId')
+    App::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1652,7 +1673,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::delete('/v1/functions/:functionId/variables/:variableId')
+    App::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')

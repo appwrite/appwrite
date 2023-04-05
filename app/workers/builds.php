@@ -86,15 +86,15 @@ class BuildsV1 extends Worker
         $startTime = DateTime::now();
         if (empty($buildId)) {
             $buildId = ID::unique();
-            
+
             $isVcsEnabled = true;
-            if($isVcsEnabled){
+            if ($isVcsEnabled) {
                 $gitCloneCommand = $deployment->getAttribute('path');
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
                 Console::execute($gitCloneCommand . ' /tmp/builds/' . $buildId . '/code', '', $stdout, $stderr);
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId .'/code.tar.gz -C /tmp/builds/' . $buildId .'/code .', '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
@@ -106,14 +106,14 @@ class BuildsV1 extends Worker
 
                 $result = $deviceFunctions->move($fileTmpName, $path);
 
-                if(!$result){
+                if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
 
                 Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
             }
 
-            if($isVcsEnabled){
+            if ($isVcsEnabled) {
                 $build = $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$permissions' => [],
@@ -129,7 +129,7 @@ class BuildsV1 extends Worker
                     'endTime' => null,
                     'duration' => 0
                 ]));
-            }else{
+            } else {
                 $build = $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$permissions' => [],
@@ -197,8 +197,9 @@ class BuildsV1 extends Worker
 
         $source = $deployment->getAttribute('path');
 
-        if($isVcsEnabled)
+        if ($isVcsEnabled) {
             $source = $path;
+        }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');

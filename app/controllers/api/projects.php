@@ -38,7 +38,7 @@ use Utopia\Validator\WhiteList;
 
 App::init()
     ->groups(['projects'])
-    ->inject('project')    
+    ->inject('project')
     ->action(function (Document $project) {
         if ($project->getId() !== 'console') {
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);

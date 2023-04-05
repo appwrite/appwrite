@@ -198,5 +198,18 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '',
+    ],
+    'vcs_map' => [
+        'key' => 'vcs_map',
+        'name' => 'vcs_map',
+        'subtitle' => 'The vcs map stores a mapping of repository IDs linked to functions and sites in Appwrite',
+        'description' => '',
+        'controller' => 'api/vcs_map.php',
+        'sdk' => false,
+        'docs' => false,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => true,
+        'icon' => '',
     ]
 ];

@@ -550,6 +550,82 @@ $collections = [
         ],
     ],
 
+    'vcs_map' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('vcs_map'),
+        'name' => 'vcs_map',
+        'attributes' => [
+            [
+                '$id' => ID::custom('projectId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ],
+            [
+                '$id' => ID::custom('projectInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('repositoryId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ],
+            [
+                '$id' => ID::custom('provider'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('resourceType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ]
+        ],
+        'indexes' => [
+        ],
+    ],
+
     'projects' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('projects'),
