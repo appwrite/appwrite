@@ -89,8 +89,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $collections = Config::getParam('collections', []);
 
         try {
-            $cache = $app->getResource('cache'); /** @var Utopia\Cache\Cache $cache */
-            $cache->flush();
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
         } catch (\Exception $e) {
