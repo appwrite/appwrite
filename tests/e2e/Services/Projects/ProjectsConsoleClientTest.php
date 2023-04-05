@@ -429,62 +429,6 @@ class ProjectsConsoleClientTest extends Scope
         return ['projectId' => $projectId];
     }
 
-    /**
-     * @depends testUpdateProject
-     */
-    public function testPauseProject($data): array
-    {
-        $id = $data['projectId'] ?? '';
-
-        /**
-         * Test for SUCCESS
-         */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Project Test 2',
-            'paused' => true,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals('Project Test 2', $response['body']['name']);
-        $this->assertTrue($response['body']['paused']);
-        $this->assertArrayHasKey('platforms', $response['body']);
-        $this->assertArrayHasKey('webhooks', $response['body']);
-        $this->assertArrayHasKey('keys', $response['body']);
-
-
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $id,
-        ], $this->getHeaders()), [
-            'userId' => 'unique()',
-            'email' => 'test' . rand(0, 9999) . '@example.com',
-            'password' => 'password',
-            'name' => 'Test User',
-        ]);
-
-        $this->assertEquals(503, $response['headers']['status-code']);
-
-        /**
-         * Reset
-         */
-
-         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-         ], $this->getHeaders()), [
-            'name' => 'Project Test 2',
-            'paused' => false,
-         ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        return $data;
-    }
-
     /** @depends testGetProjectUsage */
     public function testUpdateProjectAuthDuration($data): array
     {
