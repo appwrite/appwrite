@@ -744,13 +744,13 @@ App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')))
 
 App::setResource('registrar', function(){
   $opensrs = new OpenSRS(
-    'apikey', 
-    'apisecret', 
-    'username', 
-    'password', 
+    App::getEnv('OPENSRS_KEY'), 
+    App::getEnv('OPENSRS_USERNAME'), 
+    'appwrite', 
+    '0p3n5R5@Appwrite', 
     [
-      'ns1.nameserver.com',
-      'ns2.nameserver.com',
+      'ns1.appwrite.io',
+      'ns2.appwrite.io',
     ]
   );
     

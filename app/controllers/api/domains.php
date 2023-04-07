@@ -42,14 +42,10 @@ App::post('/v1/domains/suggest')
   ->inject('registrar')
   ->action(function (string $domain, $response, $registrar) {
     
-    $suggestions = $registrar->suggest($domain);
-    $domains = [];
+    $domain = new Domain($domain);
+    $suggestions = $registrar->suggest([$domain->getName()], [$domain->getTLD()]);
 
-    foreach($suggestions as $k=>$_v) {
-      $domains[] = new Domain($k);
-    }
-
-    $response->dynamic(["domains" => $domains], Response::MODEL_DOMAIN_LIST);
+    $response->dynamic(new Document(["domains" => $suggestions]), Response::MODEL_DOMAIN_LIST);
   });
 
 App::post('/v1/domains/available')
@@ -68,11 +64,11 @@ App::post('/v1/domains/available')
   ->action(function (string $domain, $response, $registrar) {
     
     $domain = [
-      "domain" => new Domain($domain),
+      "domain" => $domain,
       "available" => $registrar->available($domain)
     ];
 
-    $response->dynamic(["domain" => $domain], Response::MODEL_DOMAIN);
+    $response->dynamic(new Document(["domain" => $domain]), Response::MODEL_DOMAIN);
   });
 
 App::post('/v1/domains')
@@ -99,7 +95,7 @@ App::post('/v1/domains')
     ) {
 
     if($registrar->available($domain)) {
-      throw new Exception();
+      throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
     }
 
     $project = $dbForConsole->getDocument('projects', $projectId);
@@ -392,7 +388,7 @@ App::post('/v1/domains/transfer/in')
 App::post('/v1/domains/transfer/out')
   ->desc("Start transfer process for domain and generate code for transfer to 3rd party registrar")
   ->groups(['api', 'domains'])
-  ->label('scope', 'domains.write')
+  ->label('scope', 'projects.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'transferOut')
   ->label('sdk.method', 'create')
@@ -408,7 +404,7 @@ App::post('/v1/domains/transfer/out')
 App::get('/v1/domains')
   ->desc("List domains")
   ->groups(['api', 'domains'])
-  ->label('scope', 'domains.read')
+  ->label('scope', 'projects.read')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'domains')
   ->label('sdk.method', 'list')
@@ -440,7 +436,7 @@ App::get('/v1/domains')
 App::get('/v1/domains/:domainId')
   ->desc("Get domain")
   ->groups(['api', 'domains'])
-  ->label('scope', 'domains.read')
+  ->label('scope', 'projects.read')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'domains')
   ->label('sdk.method', 'list')
@@ -474,7 +470,7 @@ App::get('/v1/domains/:domainId')
 App::patch('/v1/domains/:domainId/nameservers')
   ->desc("Check namserver records and update them if needed")
   ->groups(['api', 'domains'])
-  ->label('scope', 'domains.write')
+  ->label('scope', 'projects.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'domains')
   ->label('sdk.method', 'updateNameservers')
@@ -491,7 +487,7 @@ App::patch('/v1/domains/:domainId/nameservers')
 App::patch('/v1/domains/:domainId/project')
   ->desc("Move domain to a different project")
   ->groups(['api', 'domains'])
-  ->label('scope', 'domains.write')
+  ->label('scope', 'projects.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'domains')
   ->label('sdk.method', 'updateProject')
