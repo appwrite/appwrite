@@ -1,4 +1,4 @@
-Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](/docs/server/storage#storageCreateFile) API or directly from your Appwrite console.
+Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](/docs/server/storage#storageCreateBucket) API or directly from your Appwrite console.
 
 Larger files should be uploaded using multiple requests with the [content-range](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range) header to send a partial request with a maximum supported chunk of `5MB`. The `content-range` header values should always be in bytes.
 
