@@ -6,7 +6,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Resque\Worker;
-use Appwrite\Utopia\Response\Model\Execution;
 use Streaming\FFMpeg;
 use FFMpeg\FFProbe;
 use Streaming\Format\StreamFormat;
@@ -19,7 +18,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
@@ -191,32 +189,41 @@ class VideosV1 extends Worker
                 (new Local('/'))->read($this->outDir . $name)
             );
 
-            try {
+            $preview = $this->database->findOne('videos_previews', [
+                Query::equal('videoId', [$this->video->getId()]),
+                Query::equal('type', [$this->action]),
+                Query::equal('name', [$name]),
+            ]);
+
+            if (empty($preview)) {
                 $preview = $this->database->createDocument('videos_previews', new Document([
                     'videoId' => $this->video->getId(),
-                    'type' => 'preview',
+                    'type' => $this->action,
                     'name' => $name,
                     'path' => $path,
+                    'second' => $this->args['second'],
                 ]));
-            } catch (Duplicate $th) {
-                ;
+
+                $this->video->setAttribute('previewId', $preview->getId());
+                $this->database->updateDocument(
+                    'videos',
+                    $this->video->getId(),
+                    new document(
+                        array_filter((array)$this->video, fn ($value) => !is_null($value))
+                    ),
+                );
+            } else {
+                $this->database->updateDocument(
+                    'videos_previews',
+                    $preview->getId(),
+                    $preview->setAttribute('second', $this->args['second'])
+                );
+
+                (new Delete())
+                    ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                    ->setResource('preview/' . $preview->getId())
+                    ->trigger();
             }
-
-            $this->video->setAttribute('previewId', $preview->getId());
-
-            (new Delete())
-                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-                ->setResource('preview/' . $preview->getId())
-                ->trigger();
-
-
-            $this->database->updateDocument(
-                'videos',
-                $this->video->getId(),
-                new document(
-                    array_filter((array)$this->video, fn ($value) => !is_null($value))
-                ),
-            );
 
             return;
         }
@@ -367,9 +374,11 @@ class VideosV1 extends Worker
                'audioBitRate' =>  $this->profile->getAttribute('audioBitRate'),
                'output'    => $this->args['output'],
             ]));
+
         $this->send($query);
+
         $renditionRootPath = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/';
-        $renditionPath = $renditionRootPath . $this->renditionName . '-' . $query->getId() .  '/';
+        $renditionPath     = $renditionRootPath . $this->renditionName . '-' . $query->getId() .  '/';
 
         try {
             $representation = (new Representation())
@@ -451,8 +460,8 @@ class VideosV1 extends Worker
                     foreach ($m3u8['segments'] ?? [] as $segment) {
                             $this->database->createDocument('videos_subtitles_segments', new Document([
                                 'subtitleId'  =>  $subtitle->getId(),
-                                'fileName'  => $segment['fileName'],
-                                'path'  => $renditionRootPath ,
+                                'fileName'    => $segment['fileName'],
+                                'path'        => $renditionRootPath . 'subtitles/',
                                 'duration' => $segment['duration'],
                             ]));
                     }
@@ -462,7 +471,7 @@ class VideosV1 extends Worker
                 }
 
                 $subtitle->setAttribute('status', self::STATUS_READY);
-                $subtitle->setAttribute('path', $renditionRootPath);
+                $subtitle->setAttribute('path', $renditionRootPath . 'subtitles/');
                 $this->database->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle);
             }
 
@@ -477,7 +486,7 @@ class VideosV1 extends Worker
                     $data = (new Local('/'))->read($this->outDir . $fileinfo->getFilename());
                     $to = $renditionPath;
                     if (str_contains($fileinfo->getFilename(), "_subtitles_") || str_contains($fileinfo->getFilename(), ".vtt")) {
-                        $to = $renditionRootPath;
+                        $to = $renditionRootPath . 'subtitles/';
                     }
 
                     $this->getVideoDevice($this->project->getId())->write($to .  $fileinfo->getFilename(), $data);

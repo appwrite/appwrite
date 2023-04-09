@@ -722,19 +722,8 @@ class DeletesV1 extends Worker
     protected function deleteBucket(Document $document, string $projectId)
     {
         $dbForProject = $this->getProjectDB($projectId);
-
         $dbForProject->deleteCollection('bucket_' . $document->getInternalId());
-        $dbForProject->deleteCollection('videos_' . $document->getInternalId());
-        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_renditions');
-        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_renditions_segments');
-        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_subtitles');
-        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_subtitles_segments');
-        $dbForProject->deleteCollection('videos_' . $document->getInternalId() . '_profiles');
-
         $device = $this->getFilesDevice($projectId);
-        $device->deletePath($document->getId());
-
-        $device = $this->getVideoDevice($projectId);
         $device->deletePath($document->getId());
     }
 
@@ -747,6 +736,14 @@ class DeletesV1 extends Worker
 
         $videoId = $document->getId();
         $dbForProject = $this->getProjectDB($projectId);
+
+        $previews = $dbForProject->find('videos_previews', [
+            new Query('videoId', Query::TYPE_EQUAL, [$videoId])
+        ]);
+        foreach ($previews as $preview) {
+            $dbForProject->deleteDocument('videos_previews', $preview->getId());
+        }
+
         $renditions = $dbForProject->find('videos_renditions', [
             new Query('videoId', Query::TYPE_EQUAL, [$videoId])
         ]);

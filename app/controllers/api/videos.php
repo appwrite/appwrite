@@ -335,7 +335,7 @@ App::post('/v1/videos/:videoId/preview')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'videos')
     ->label('sdk.method', 'createPreview')
-    ->label('sdk.description', '/docs/references/videos/create.md') // TODO: Create markdown
+    ->label('sdk.description', '/docs/references/videos/create-preview.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VIDEO)
@@ -354,8 +354,7 @@ App::post('/v1/videos/:videoId/preview')
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
-        var_dump($second);
-        var_dump($video['duration']);
+
         $range = new Range(1, ($video['duration'] / 1000), Validator::TYPE_INTEGER);
         if (!$range->isValid($second)) {
             throw new Exception(Exception::VIDEO_SECOND_OUT_OF_RANGE);
