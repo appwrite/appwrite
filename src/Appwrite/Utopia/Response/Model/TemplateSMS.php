@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class SmsTemplate extends Template
+class TemplateSMS extends Template
 {
     public function __construct()
     {

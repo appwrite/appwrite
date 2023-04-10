@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class EmailTemplate extends Template
+class TemplateEmail extends Template
 {
     public function __construct()
     {
