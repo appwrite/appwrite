@@ -173,7 +173,7 @@ class VideosV1 extends Worker
             $name = 'preview.jpg';
             $media
                 ->filters()
-                ->resize(new \FFMpeg\Coordinate\Dimension($this->video->getAttribute('width'), $this->video->getAttribute('height')))
+                ->resize(new \FFMpeg\Coordinate\Dimension(500, 500))
                 ->synchronize();
             $media
                 ->frame(\FFMpeg\Coordinate\TimeCode::fromSeconds($this->args['second']))
@@ -218,7 +218,9 @@ class VideosV1 extends Worker
                     $preview->getId(),
                     $preview->setAttribute('second', $this->args['second'])
                 );
-
+                /**
+                 * Clean preview cache
+                 */
                 (new Delete())
                     ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
                     ->setResource('preview/' . $preview->getId())
@@ -432,6 +434,7 @@ class VideosV1 extends Worker
                 }
             } else {
                 $mpd = $this->getSegments($this->outPath . '.mpd');
+
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
                             $this->database->createDocument('videos_renditions_segments', new Document([

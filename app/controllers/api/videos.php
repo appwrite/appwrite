@@ -16,12 +16,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Appwrite\Extend\Exception;
 use Utopia\Image\Image;
-use Utopia\Storage\Compression\Algorithms\GZIP;
-use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Device;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -389,20 +386,20 @@ App::get('/v1/videos/:videoId/preview/:previewId')
     ->param('previewId', '', new UID(), 'Preview  unique ID.')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
+    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('deviceVideos')
-    ->action(function (string $videoId, string $previewId, int $width, int $height, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceVideos) {
+    ->action(function (string $videoId, string $previewId, int $width, int $height, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceVideos) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
-
         if ($video->isEmpty()) {
             throw new Exception(Exception::VIDEO_NOT_FOUND);
         }
@@ -415,10 +412,13 @@ App::get('/v1/videos/:videoId/preview/:previewId')
             throw new Exception(Exception::VIDEO_PREVIEW_NOT_FOUND);
         }
 
-        $output  = 'jpg';
-        $contentType = $mime = 'image/jpeg';
+        if ((!str_contains($request->getAccept(), 'image/webp')) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
+            $output = 'jpg';
+        }
+
         $outputs = Config::getParam('storage-outputs');
         $path    = $preview->getAttribute('path') . $preview->getAttribute('name');
+        $mime    = $deviceVideos->getFileMimeType($path);
         $type    = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
 
         if (empty($output)) {
@@ -428,8 +428,9 @@ App::get('/v1/videos/:videoId/preview/:previewId')
         $source = $deviceVideos->read($path);
         $image  = new Image($source);
         $image->crop((int)$width, (int)$height, Image::GRAVITY_CENTER);
-        $data = $image->output($output, 100);
 
+        $data = $image->output($output, 100);
+        $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType($contentType)

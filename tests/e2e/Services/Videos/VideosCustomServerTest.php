@@ -330,6 +330,32 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals('image/jpeg', $response['headers']['content-type']);
         $this->assertEquals('hit', $response['headers']['x-appwrite-cache']);
 
+        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'second' => 15,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        sleep(4);
+
+        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'output' => 'png',
+        ]);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
+
         return $videoId;
     }
 
@@ -456,7 +482,7 @@ class VideosCustomServerTest extends Scope
         $this->assertEquals(3, $response['body']['total']);
         $this->assertNotEmpty($response['body']['subtitles']);
         $this->assertNotEmpty($response['body']['subtitles'][1]['$id']);
-        $this->assertEquals('Pol', $response['body']['subtitles'][1]['code']);
+        $this->assertEquals('pol', $response['body']['subtitles'][1]['code']);
         $this->assertEquals('Polish', $response['body']['subtitles'][1]['name']);
 
         return $response['body']['subtitles'];
@@ -706,11 +732,9 @@ class VideosCustomServerTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-
-        $this->assertEquals(3, count($match[0]));
-        $subtitleUri = $match[0][0];
-        $renditionUri = $match[0][2];
-
+        $this->assertEquals(4, count($match[0]));
+        $renditionUri = $match[0][0];
+        $subtitleUri = $match[0][1];
 
         $response = $this->client->call(Client::METHOD_GET, $renditionUri, [
             'content-type' => 'application/json',
@@ -769,15 +793,15 @@ class VideosCustomServerTest extends Scope
             if ((string)$adaptation['contentType'] === 'video') {
                 $isVideo = true;
                 $this->assertEquals("50/1", $adaptation['frameRate']);
-                $this->assertEquals("960", $adaptation['maxWidth']);
+                $this->assertEquals("300", $adaptation['maxWidth']);
                 $this->assertEquals("30:17", $adaptation['par']);
                 $this->assertEquals("und", $adaptation['lang']);
                 foreach ($adaptation->Representation as $representation) {
                     $this->assertEquals("video/mp4", $representation['mimeType']);
-                    $this->assertEquals("avc1.64001f", $representation['codecs']);
-                    $this->assertEquals("960", $representation['width']);
-                    $this->assertEquals("544", $representation['height']);
-                    $this->assertEquals("1:1", $representation['sar']);
+                    $this->assertEquals("avc1.640015", $representation['codecs']);
+                    $this->assertEquals("300", $representation['width']);
+                    $this->assertEquals("200", $representation['height']);
+                    $this->assertEquals("20:17", $representation['sar']);
                     $this->assertEquals(10, $representation->SegmentList->SegmentURL->count());
                     $videoSegmentBaseUrl = (string)$representation->BaseURL;
                     $videoSegmentInitialization = (string)$representation->SegmentList->Initialization['sourceURL'];
@@ -946,7 +970,6 @@ class VideosCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
-        var_dump($response['body']);
         $this->assertEquals(2, count($match[0]));
 
         $renditionUri = $match[0][0];

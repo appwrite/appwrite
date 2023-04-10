@@ -85,6 +85,145 @@ class VideosCustomClientTest extends Scope
 
         $this->assertEquals($file['headers']['status-code'], 401);
 
+
+        /**
+         * Create preview
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'second' => 'one',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'second' => 99999999,
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        sleep(5);
+
+        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'second' => 10,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(92810, $response['body']['duration']);
+        /**
+         * timeline vtt
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/timeline', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
+        $this->assertEquals(25, count($match[0]));
+
+        /**
+         * timeline preview image
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1' . $match[0][0], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
+
+        sleep(3);
+
+        /**
+         * timeline preview image (response from cache)
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1' . $match[0][0], [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+         ]);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertEquals('hit', $response['headers']['x-appwrite-cache']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+
+        $previewId = $response['body']['previewId'];
+
+        /**
+         * preview image
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
+
+
+        sleep(4);
+
+        /**
+         * response from cache
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('image/jpeg', $response['headers']['content-type']);
+        $this->assertEquals('hit', $response['headers']['x-appwrite-cache']);
+
+
+        $response = $this->client->call(Client::METHOD_POST, '/v1/videos/' . $videoId . '/preview', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'second' => 15,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        sleep(4);
+
+        $response = $this->client->call(Client::METHOD_GET, '/v1/videos/' . $videoId . '/preview/' . $previewId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'output' => 'png',
+        ]);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertEquals('miss', $response['headers']['x-appwrite-cache']);
+
         /**
          * Create subtitles
          */
@@ -103,19 +242,6 @@ class VideosCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'bucketId' => $this->getBucket()['$id'],
-            'fileId' => $this->getSubtitle()['$id'],
-            'name' => 'Italian',
-            'code' => 'It',
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
 
 
         $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/subtitles', [
@@ -179,7 +305,7 @@ class VideosCustomClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
-               'output' => $this->outputs[$index % 2],
+                'output' => $this->outputs[$index % 2],
                 'profileId' => $profile['$id'],
             ]);
 
@@ -197,17 +323,11 @@ class VideosCustomClientTest extends Scope
         $this->assertEquals(4, count($match[0]));
         $renditionUri = $match[0][0];
         $subtitleUri  = $match[0][1];
-        $response = $this->client->call(
-            Client::METHOD_GET,
-            $renditionUri,
-            array_merge(
-                [
+
+        $response = $this->client->call(Client::METHOD_GET, $renditionUri, array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                ],
-                $this->getHeaders()
-            )
-        );
+                ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         preg_match_all('#\b/videos[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $response['body'], $match);
@@ -242,6 +362,8 @@ class VideosCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
+
         $this->assertEquals(200, $response['headers']['status-code']);
 
         $xml = simplexml_load_string($response['body']);
@@ -252,8 +374,8 @@ class VideosCustomClientTest extends Scope
         $subsCount = 0;
         $isVideo = false;
         $isAudio = false;
-        $subs[] = ['id' => '2', 'lang' => 'Eng',];
-        $subs[] = ['id' => '3', 'lang' => 'It',];
+        $subs[] = ['id' => '2', 'lang' => 'English',];
+        $subs[] = ['id' => '3', 'lang' => 'Italian',];
         foreach ($xml->Period->AdaptationSet as $adaptation) {
             if ((string)$adaptation['contentType'] === 'video') {
                 $isVideo = true;
