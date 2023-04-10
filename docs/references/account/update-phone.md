@@ -1,1 +1,2 @@
 Update the currently logged in user's phone number. After updating the phone number, the phone verification status will be reset. A confirmation SMS is not sent automatically, however you can use the [POST /account/verification/phone](/docs/client/account#accountCreatePhoneVerification) endpoint to send a confirmation SMS.
+Learn more about [update phone](/docs/client/account?#accountUpdatePhone).

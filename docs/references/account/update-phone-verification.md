@@ -1,1 +1,2 @@
 Use this endpoint to complete the user phone verification process. Use the **userId** and **secret** that were sent to your user's phone number to verify the user email ownership. If confirmed this route will return a 200 status code.
+Learn more about [update phone verification](/docs/client/account?#accountUpdatePhoneVerification).

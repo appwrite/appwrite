@@ -1,1 +1,2 @@
 Block the currently logged in user account. Behind the scene, the user record is not deleted but permanently blocked from any access. To completely delete a user, use the Users API instead.
+Learn more about [update status](/docs/client/account#accountUpdateStatus).
