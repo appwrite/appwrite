@@ -41,6 +41,7 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
+        "ext-fileinfo": "*",
         "appwrite/php-clamav": "1.1.*",
         "appwrite/php-runtimes": "0.11.*",
         "utopia-php/abuse": "0.18.*",
@@ -74,7 +75,7 @@
         "captioning/captioning": "2.*",
         "ext-simplexml": "*",
         "webonyx/graphql-php": "14.11.*",
-        "mhor/php-mediainfo": "5.4.3"
+        "mhor/php-mediainfo": "5.4.3",
     },
     "repositories": [
         {
@@ -88,7 +89,6 @@
     ],
     "require-dev": {
         "appwrite/sdk-generator": "dev-shimon-video-test",
-        "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
         "swoole/ide-helper": "4.8.9",

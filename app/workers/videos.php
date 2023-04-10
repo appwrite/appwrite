@@ -186,7 +186,8 @@ class VideosV1 extends Worker
 
             $this->getVideoDevice($this->project->getId())->write(
                 $path .  $name,
-                (new Local('/'))->read($this->outDir . $name)
+                (new Local('/'))->read($this->outDir . $name),
+                mime_content_type($this->outDir . $name)
             );
 
             $preview = $this->database->findOne('videos_previews', [
@@ -309,7 +310,8 @@ class VideosV1 extends Worker
                          */
                         $this->getVideoDevice($this->project->getId())->write(
                             $this->getVideoDevice($this->project->getId())->getPath($this->video->getId() . '/timeline/timeline.vtt'),
-                            $data
+                            $data,
+                            'text/vtt'
                         );
 
                         console::info('Uploading timeline vtt');
@@ -323,7 +325,8 @@ class VideosV1 extends Worker
                                 console::info('Uploading ' . $fileinfo->getFilename());
                                 $this->getVideoDevice($this->project->getId())->write(
                                     $path . $fileinfo->getFilename(),
-                                    (new Local('/'))->read($this->outDir . $fileinfo->getFilename())
+                                    (new Local('/'))->read($this->outDir . $fileinfo->getFilename()),
+                                    mime_content_type($this->outDir . $fileinfo->getFilename())
                                 );
                             }
                         }
@@ -336,7 +339,7 @@ class VideosV1 extends Worker
         $subs = [];
         $subtitles =  $this->database->find('videos_subtitles', [
             Query::equal('videoId', [$this->video->getId()]),
-            Query::equal('status', '')
+            Query::equal('status', [''])
         ]);
 
         foreach ($subtitles as $subtitle) {
@@ -484,15 +487,19 @@ class VideosV1 extends Worker
             $dir = new DirectoryIterator($this->outDir);
             foreach ($dir as $fileinfo) {
                 if (!$fileinfo->isDot()) {
-                    console::info('Uploading ' . $fileinfo->getFilename());
-
                     $data = (new Local('/'))->read($this->outDir . $fileinfo->getFilename());
                     $to = $renditionPath;
                     if (str_contains($fileinfo->getFilename(), "_subtitles_") || str_contains($fileinfo->getFilename(), ".vtt")) {
                         $to = $renditionRootPath . 'subtitles/';
                     }
 
-                    $this->getVideoDevice($this->project->getId())->write($to .  $fileinfo->getFilename(), $data);
+                    console::info('Uploading ' . $fileinfo->getFilename());
+
+                    $this->getVideoDevice($this->project->getId())->write(
+                        $to .  $fileinfo->getFilename(),
+                        $data,
+                        mime_content_type($this->outDir . $fileinfo->getFilename())
+                    );
 
                     if ($fileinfo->key()  === 0) {
                         $query->setAttribute('progress', '100');
@@ -500,7 +507,6 @@ class VideosV1 extends Worker
                         $query->setAttribute('path', $renditionPath);
                         $this->database->updateDocument('videos_renditions', $query->getId(), $query);
                         $this->send($query, 'update');
-                        console::info('Uploading to ' . $to);
                     }
                 }
             }
