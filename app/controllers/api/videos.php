@@ -846,6 +846,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
         $baseUrl = TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output;
         $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
             Query::equal('videoId', [$video->getId()]),
+            Query::equal('status', ['ready']),
         ]));
 
         $_renditions = $_subtitles  = [];

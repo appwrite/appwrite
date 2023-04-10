@@ -173,7 +173,7 @@ class VideosV1 extends Worker
             $name = 'preview.jpg';
             $media
                 ->filters()
-                ->resize(new \FFMpeg\Coordinate\Dimension(500, 500))
+                ->resize(new \FFMpeg\Coordinate\Dimension($this->video->getAttribute('width'), $this->video->getAttribute('height')))
                 ->synchronize();
             $media
                 ->frame(\FFMpeg\Coordinate\TimeCode::fromSeconds($this->args['second']))
@@ -336,7 +336,7 @@ class VideosV1 extends Worker
         $subs = [];
         $subtitles =  $this->database->find('videos_subtitles', [
             Query::equal('videoId', [$this->video->getId()]),
-            Query::equal('status', ['']),
+            Query::equal('status', '')
         ]);
 
         foreach ($subtitles as $subtitle) {
