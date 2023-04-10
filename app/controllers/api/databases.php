@@ -2910,7 +2910,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);
         $validator = new Authorization(Database::PERMISSION_READ);
-        if (!$validator->isValid($collection->getRead())) {
+        $valid = $validator->isValid($collection->getRead());
+        if (!$valid) {
             $total = $documentSecurity
                 ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
                 : 0;
@@ -2979,6 +2980,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     foreach ($documents as $index => $document) {
         if (!$processDocument($collection, $document)) {
             unset($documents[$index]);
+
+            if ($valid) {
+                $total--;
+            }
         }
     }
 
