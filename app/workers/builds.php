@@ -87,9 +87,9 @@ class BuildsV1 extends Worker
         if (empty($buildId)) {
             $buildId = ID::unique();
 
-            $isVcsEnabled = true;
+            $isVcsEnabled = true; //TODO: Update the value dynamically
             if ($isVcsEnabled) {
-                $gitCloneCommand = $deployment->getAttribute('path');
+                $gitCloneCommand = $deployment->getAttribute('path'); //TODO: If clone doesn't work for org, check $user in clone command
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);

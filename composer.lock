@@ -3160,7 +3160,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "8be42d2243f375d7f35612ba74e5353522cb3ab2"
+                "reference": "73e743b1a82255f61f09304ba9a7e6a28cbfaf67"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
@@ -3204,7 +3204,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-04-05T11:35:50+00:00"
+            "time": "2023-04-06T12:10:08+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -4226,16 +4226,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.17.1",
+            "version": "1.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "d3753fcb3abc6f78f5de6f72153d4b9c99c72dee"
+                "reference": "882eabc9b6a12e25c27091a261397f9c8792e722"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/d3753fcb3abc6f78f5de6f72153d4b9c99c72dee",
-                "reference": "d3753fcb3abc6f78f5de6f72153d4b9c99c72dee",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/882eabc9b6a12e25c27091a261397f9c8792e722",
+                "reference": "882eabc9b6a12e25c27091a261397f9c8792e722",
                 "shasum": ""
             },
             "require": {
@@ -4265,9 +4265,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.17.1"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.18.0"
             },
-            "time": "2023-04-04T11:11:22+00:00"
+            "time": "2023-04-06T07:26:43+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

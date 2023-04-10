@@ -125,15 +125,15 @@ App::post('/v1/vcs/github/incoming')
             // parse the webhook payload
             $event = $request->getHeader('x-github-event', '');
             $payload = $request->getRawPayload();
-
             $github = new GitHub();
 
-            if ($event == "push") { //TODO: Change events to constants
+            if ($event == "push" || $event == "pull_request") { //TODO: Change events to constants
+                // TODO: In case of PR, only create a new deployment when the action is opened and not closed
                 $parsedPayload = $github->parseWebhookEventPayload($event, $payload);
                 $parsedPayload = json_decode($parsedPayload, true);
-
-                if ($parsedPayload["branch"] == "main") {
-                    // in case of push events on main branch, map repo id to function id and trigger a deployment
+                $branchName = $parsedPayload["branch"];
+                if (($event == "push" && $branchName == "main") || $event == "pull_request") {
+                    // in case of push events on main branch or new PR, map repo id to function id and trigger a deployment
                     $repositoryId = $parsedPayload["repositoryId"];
                     $installationId = $parsedPayload["installationId"];
 
@@ -164,7 +164,12 @@ App::post('/v1/vcs/github/incoming')
                             $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
                             $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
                             $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
-                            $code = $github->generateGitCloneCommand($repositoryId, $parsedPayload["branch"]);
+                            $code = $github->generateGitCloneCommand($repositoryId, $branchName);
+                            $activate = false;
+
+                            if ($branchName == "main") {
+                                $activate = true; // activate deployments only if there are on the main branch
+                            }
 
                             $deployment = $dbForProject->createDocument('deployments', new Document([
                                 '$id' => $deploymentId,
@@ -178,7 +183,7 @@ App::post('/v1/vcs/github/incoming')
                                 'entrypoint' => $entrypoint,
                                 'path' => $code,
                                 'search' => implode(' ', [$deploymentId, $entrypoint]),
-                                'activate' => true,
+                                'activate' => $activate,
                             ]));
 
                             $buildEvent = new Build();
@@ -193,7 +198,6 @@ App::post('/v1/vcs/github/incoming')
                         }
                     }
                 }
-            } elseif ($event == "pull_request") {
             }
             $response->json($parsedPayload);
         }

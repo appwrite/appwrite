@@ -524,7 +524,8 @@ App::put('/v1/functions/:functionId')
             //TODO: Update GitHub Username in constructor
             $github = new GitHub();
             $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
-            $code = $github->generateGitCloneCommand($repositoryId);
+            $branchName = "main";
+            $code = $github->generateGitCloneCommand($repositoryId, $branchName);
 
             //Add document in VCS map collection
             $vcs_mapping = new Document([
@@ -861,97 +862,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-    //TODO: Move the logic to this endpoint to webhook endpoint
-    App::post('/v1/functions/:functionId/vcs/deployments')
-    ->groups(['api', 'functions'])
-    ->desc('Create Deployment using VCS')
-    ->label('scope', 'functions.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createDeploymentUsingVcs')
-    ->label('sdk.description', '')
-    ->label('sdk.packaging', true)
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
-    ->label('abuse-key', 'ip:{ip}')
-    ->label('docs', false)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('code', '', new Text(256), 'Git Clone Command', false)
-    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('events')
-    ->inject('project')
-    ->action(function (string $functionId, string $entrypoint, string $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project) {
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        $deploymentId = ID::unique();
-
-        $activate = (bool) filter_var($activate, FILTER_VALIDATE_BOOLEAN);
-
-            // if ($activate) {
-            //     // Remove deploy for all other deployments.
-            //     $activeDeployments = $dbForProject->find('deployments', [
-            //         Query::equal('activate', [true]),
-            //         Query::equal('resourceId', [$functionId]),
-            //         Query::equal('resourceType', ['functions'])
-            //     ]);
-
-            //     foreach ($activeDeployments as $activeDeployment) {
-            //         $activeDeployment->setAttribute('activate', false);
-            //         $dbForProject->updateDocument('deployments', $activeDeployment->getId(), $activeDeployment);
-            //     }
-            // }
-
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-        if ($deployment->isEmpty()) {
-            $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$id' => $deploymentId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'resourceId' => $function->getId(),
-                'resourceType' => 'functions',
-                'entrypoint' => $entrypoint,
-                'path' => $code,
-                'search' => implode(' ', [$deploymentId, $entrypoint]),
-                'activate' => $activate,
-
-            ]));
-        } else {
-            // $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', null)->setAttribute('metadata', null));
-        }
-
-            // Start the build
-            $buildEvent = new Build();
-            $buildEvent
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
-
-        $events
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
-    });
-
-    App::get('/v1/functions/:functionId/deployments')
+App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List Deployments')
     ->label('scope', 'functions.read')
@@ -1019,7 +930,7 @@ App::post('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
-    App::get('/v1/functions/:functionId/deployments/:deploymentId')
+App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Get Deployment')
     ->label('scope', 'functions.read')
@@ -1060,7 +971,7 @@ App::post('/v1/functions/:functionId/deployments')
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-    App::delete('/v1/functions/:functionId/deployments/:deploymentId')
+App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
@@ -1119,7 +1030,7 @@ App::post('/v1/functions/:functionId/deployments')
         $response->noContent();
     });
 
-    App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Create Build')
     ->label('scope', 'functions.write')
@@ -1180,7 +1091,7 @@ App::post('/v1/functions/:functionId/deployments')
 
 
 
-    App::post('/v1/functions/:functionId/executions')
+App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
@@ -1383,7 +1294,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-    App::get('/v1/functions/:functionId/executions')
+App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List Executions')
     ->label('scope', 'execution.read')
@@ -1456,7 +1367,7 @@ App::post('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_EXECUTION_LIST);
     });
 
-    App::get('/v1/functions/:functionId/executions/:executionId')
+App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get Execution')
     ->label('scope', 'execution.read')
@@ -1505,7 +1416,7 @@ App::post('/v1/functions/:functionId/deployments')
 
 // Variables
 
-    App::post('/v1/functions/:functionId/variables')
+App::post('/v1/functions/:functionId/variables')
     ->desc('Create Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1559,7 +1470,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-    App::get('/v1/functions/:functionId/variables')
+App::get('/v1/functions/:functionId/variables')
     ->desc('List Variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1586,7 +1497,7 @@ App::post('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-    App::get('/v1/functions/:functionId/variables/:variableId')
+App::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1620,7 +1531,7 @@ App::post('/v1/functions/:functionId/deployments')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-    App::put('/v1/functions/:functionId/variables/:variableId')
+App::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1673,7 +1584,7 @@ App::post('/v1/functions/:functionId/deployments')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-    App::delete('/v1/functions/:functionId/variables/:variableId')
+App::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
