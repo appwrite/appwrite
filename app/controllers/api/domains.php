@@ -94,7 +94,7 @@ App::post('/v1/domains')
       Registrar $registrar
     ) {
 
-    if($registrar->available($domain)) {
+    if(!$registrar->available($domain)) {
       throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
     }
 
@@ -310,11 +310,6 @@ App::post('/v1/domains/transfer/in')
     Registrar $registrar
   ) {
 
-    if(!$registrar->available($domain)) {
-      throw new Exception();
-    }
-
-    
     $contact = new Contact(
       $firstname,
       $lastname,
@@ -504,7 +499,7 @@ App::patch('/v1/domains/:domainId/project')
 App::delete('/v1/domains/:domainId')
   ->desc("Remove a domain")
   ->groups(['api', 'domains'])
-  ->label('scope', 'domains.read')
+  ->label('scope', 'projects.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'domains')
   ->label('sdk.method', 'list')
