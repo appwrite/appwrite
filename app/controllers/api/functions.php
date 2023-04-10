@@ -510,8 +510,8 @@ App::put('/v1/functions/:functionId')
             $deploymentId = ID::unique();
             $entrypoint = 'index.js'; //TODO: Read from function settings
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
+            $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
             $projectInternalId = $project->getInternalId();
 
             $vcs = $dbForConsole->findOne('vcs', [

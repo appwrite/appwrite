@@ -18,14 +18,14 @@ use Utopia\Database\Query;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Validator\Authorization;
 
-App::get('/v1/vcs/github/install')
+App::get('/v1/vcs/github/installations')
     ->desc('Install GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'vcs')
-    ->label('sdk.method', 'install')
+    ->label('sdk.method', 'createInstallation')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
@@ -98,8 +98,8 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
     ->param('installationId', '', new Text(256), 'GitHub App Installation ID')
     ->inject('response')
     ->action(function (string $installationId, Response $response) {
-        $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
+        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
         //TODO: Update GitHub Username
         $github = new GitHub();
         $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
@@ -119,6 +119,7 @@ App::post('/v1/vcs/github/incoming')
     ->action(
         function (Request $request, Response $response, Database $dbForConsole, mixed $cache, mixed $db) {
             //switch case on different types of incoming requests
+            //TODO: Handle method logic for installation and uninstallation
 
             $cache = new Cache(new Redis($cache));
 
@@ -161,8 +162,8 @@ App::post('/v1/vcs/github/incoming')
                             $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
                             $deploymentId = ID::unique();
                             $entrypoint = 'index.js'; //TODO: Read from function settings
-                            $privateKey = App::getEnv('_APP_GITHUB_PRIVATE_KEY');
-                            $githubAppId = App::getEnv('_APP_GITHUB_APP_ID');
+                            $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+                            $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
                             $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
                             $code = $github->generateGitCloneCommand($repositoryId, $branchName);
                             $activate = false;
