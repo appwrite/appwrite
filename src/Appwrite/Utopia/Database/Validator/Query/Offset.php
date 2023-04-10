@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Validator\Range;
 
@@ -15,7 +14,7 @@ class Offset extends Base
      *
      * @param int $maxOffset
      */
-    public function __construct(int $maxOffset = 5000)
+    public function __construct(int $maxOffset = PHP_INT_MAX)
     {
         $this->maxOffset = $maxOffset;
     }

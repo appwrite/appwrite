@@ -11,6 +11,7 @@ use GraphQL\Type\Definition\UnionType;
 use Utopia\App;
 use Utopia\Route;
 use Utopia\Validator;
+use Utopia\Validator\Nullable;
 
 class Mapper
 {
@@ -109,9 +110,6 @@ class Mapper
                     'type' => $parameterType,
                     'description' => $parameter['description'],
                 ];
-                if ($parameter['optional']) {
-                    $params[$name]['defaultValue'] = $parameter['default'];
-                }
             }
 
             $field = [
@@ -224,6 +222,12 @@ class Mapper
             ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
 
+        $isNullable = $validator instanceof Nullable;
+
+        if ($isNullable) {
+            $validator = $validator->getValidator();
+        }
+
         switch ((!empty($validator)) ? $validator::class : '') {
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Task\Validator\Cron':
@@ -294,7 +298,7 @@ class Mapper
                 break;
         }
 
-        if ($required) {
+        if ($required && !$isNullable) {
             $type = Type::nonNull($type);
         }
 

@@ -1,10 +1,12 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -20,7 +22,6 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -35,10 +36,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Text;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -76,6 +76,7 @@ App::post('/v1/teams')
             ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+            'prefs' => new \stdClass(),
             'search' => implode(' ', [$teamId, $name]),
         ])));
 
@@ -199,28 +200,22 @@ App::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::put('/v1/teams/:teamId')
-    ->desc('Update Team')
+App::get('/v1/teams/:teamId/prefs')
+    ->desc('Get Team Preferences')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.[teamId].update')
-    ->label('scope', 'teams.write')
-    ->label('audits.event', 'team.update')
-    ->label('audits.resource', 'team/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/teams/update-team.md')
+    ->label('sdk.method', 'getPrefs')
+    ->label('sdk.description', '/docs/references/teams/get-team-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->label('sdk.offline.model', '/teams')
-    ->label('sdk.offline.key', '{teamId}')
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -228,13 +223,88 @@ App::put('/v1/teams/:teamId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team
+        $prefs = $team->getAttribute('prefs', new \stdClass());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
+App::put('/v1/teams/:teamId')
+    ->desc('Update Name')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.[teamId].update')
+    ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.update')
+    ->label('audits.resource', 'team/{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateName')
+    ->label('sdk.description', '/docs/references/teams/update-team-name.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->label('sdk.offline.model', '/teams')
+    ->label('sdk.offline.key', '{teamId}')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events) {
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $team
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$teamId, $name])));
+            ->setAttribute('search', implode(' ', [$teamId, $name]));
+
+        $team = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $team) {
+            return $dbForProject->updateDocument('teams', $team->getId(), $team);
+        });
 
         $events->setParam('teamId', $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
+    });
+
+App::put('/v1/teams/:teamId/prefs')
+    ->desc('Update Preferences')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.[teamId].update.prefs')
+    ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.update')
+    ->label('audits.resource', 'team/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updatePrefs')
+    ->label('sdk.description', '/docs/references/teams/update-team-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
+
+        $events->setParam('teamId', $team->getId());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -309,7 +379,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
     ->label('abuse-limit', 10)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('email', '', new Email(), 'Email of the new team member.')
+    ->param('email', '', new Email(), 'Email of the new team member.', true)
+    ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
+    ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
@@ -319,9 +391,13 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('mails')
+    ->inject('messaging')
     ->inject('events')
-    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, Event $events) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
 
+        if (empty($userId) && empty($email) && empty($phone)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
+        }
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
@@ -336,8 +412,31 @@ App::post('/v1/teams/:teamId/memberships')
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
-
-        $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
+        if (!empty($userId)) {
+            $invitee = $dbForProject->getDocument('users', $userId);
+            if ($invitee->isEmpty()) {
+                throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
+            }
+            if (!empty($email) && $invitee->getAttribute('email', '') != $email) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
+            }
+            if (!empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
+            }
+            $email = $invitee->getAttribute('email', '');
+            $phone = $invitee->getAttribute('phone', '');
+            $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
+        } elseif (!empty($email)) {
+            $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
+            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
+            }
+        } elseif (!empty($phone)) {
+            $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
+            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') != $email) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
+            }
+        }
 
         if (empty($invitee)) { // Create new user if no user with same email found
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -360,7 +459,8 @@ App::post('/v1/teams/:teamId/memberships')
                         Permission::update(Role::user($userId)),
                         Permission::delete(Role::user($userId)),
                     ],
-                    'email' => $email,
+                    'email' => empty($email) ? null : $email,
+                    'phone' => empty($phone) ? null : $phone,
                     'emailVerification' => false,
                     'status' => true,
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
@@ -432,46 +532,50 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-        }
 
-        $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
-        $url = Template::unParseURL($url);
+            $url = Template::parseURL($url);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['membershipId' => $membership->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
+            $url = Template::unParseURL($url);
+            if (!empty($email)) {
+                $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-        if (!$isPrivilegedUser && !$isAppUser) { // No need of confirmation when in admin or app mode
-            $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
+                $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
+                $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+                $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+                $body->setParam('{{owner}}', $user->getAttribute('name'));
+                $body->setParam('{{team}}', $team->getAttribute('name'));
 
-            $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-            $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
-            $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
-            $body->setParam('{{owner}}', $user->getAttribute('name'));
-            $body->setParam('{{team}}', $team->getAttribute('name'));
+                $body
+                    ->setParam('{{subject}}', $subject)
+                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                    ->setParam('{{name}}', $user->getAttribute('name'))
+                    ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
+                    ->setParam('{{redirect}}', $url)
+                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
+                    ->setParam('{{project}}', $projectName)
+                    ->setParam('{{direction}}', $locale->getText('settings.direction'))
+                    ->setParam('{{bg-body}}', '#f7f7f7')
+                    ->setParam('{{bg-content}}', '#ffffff')
+                    ->setParam('{{text-content}}', '#000000');
 
-            $body
-                ->setParam('{{subject}}', $subject)
-                ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
-                ->setParam('{{name}}', $user->getAttribute('name'))
-                ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
-                ->setParam('{{redirect}}', $url)
-                ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
-                ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
-                ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
-                ->setParam('{{project}}', $projectName)
-                ->setParam('{{direction}}', $locale->getText('settings.direction'))
-                ->setParam('{{bg-body}}', '#f7f7f7')
-                ->setParam('{{bg-content}}', '#ffffff')
-                ->setParam('{{text-content}}', '#000000');
+                $body = $body->render();
 
-            $body = $body->render();
-
-            $mails
-                ->setSubject($subject)
-                ->setBody($body)
-                ->setFrom($from)
-                ->setRecipient($invitee->getAttribute('email'))
-                ->setName($invitee->getAttribute('name'))
-                ->trigger()
-            ;
+                $mails
+                    ->setSubject($subject)
+                    ->setBody($body)
+                    ->setFrom($from)
+                    ->setRecipient($invitee->getAttribute('email'))
+                    ->setName($invitee->getAttribute('name'))
+                    ->trigger()
+                ;
+            } elseif (!empty($phone)) {
+                $messaging
+                    ->setRecipient($phone)
+                    ->setMessage($url)
+                    ->trigger();
+            }
         }
 
         $events
