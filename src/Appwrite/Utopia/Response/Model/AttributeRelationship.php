@@ -13,13 +13,13 @@ class AttributeRelationship extends Attribute
         $this
             ->addRule('relatedCollection', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The Id of the related collection',
+                'description' => 'The ID of the related collection.',
                 'default' => null,
                 'example' => 'collection',
             ])
             ->addRule('relationType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The type of the relationship',
+                'description' => 'The type of the relationship.',
                 'default' => '',
                 'example' => 'oneToOne|oneToMany|manyToOne|manyToMany',
             ])
@@ -31,13 +31,13 @@ class AttributeRelationship extends Attribute
             ])
             ->addRule('twoWayKey', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The key of the two-way relationship',
+                'description' => 'The key of the two-way relationship.',
                 'default' => '',
                 'example' => 'string',
             ])
             ->addRule('onDelete', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Action to take on related documents when parent document is deleted',
+                'description' => 'How deleting the parent document will propagate to child documents.',
                 'default' => 'restrict',
                 'example' => 'restrict|cascade|setNull',
             ])
