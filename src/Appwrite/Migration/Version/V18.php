@@ -58,7 +58,7 @@ class V18 extends Migration
                     if ($attribute['type'] !== Database::VAR_FLOAT) {
                         continue;
                     }
-                    $this->changeAttributeInternalType($collectionTable, $attribute['$id'], 'DOUBLE');
+                    $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
                 }
             }
         }
@@ -93,6 +93,17 @@ class V18 extends Migration
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'passwordHistory' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'teams':
+                    try {
+                        /**
+                         * Create 'prefs' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'prefs');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'prefs' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 default:
@@ -131,6 +142,12 @@ class V18 extends Migration
                  * Default Password history
                  */
                 $document->setAttribute('passwordHistory', []);
+                break;
+            case 'teams':
+                /**
+                 * Default prefs
+                 */
+                $document->setAttribute('prefs', new \stdClass());
                 break;
         }
 
