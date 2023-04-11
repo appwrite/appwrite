@@ -100,7 +100,7 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 501;
+const APP_CACHE_BUSTER = 502;
 const APP_VERSION_STABLE = '1.3.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -1168,7 +1168,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 }, ['utopia', 'dbForProject']);
 
 App::setResource('requestTimestamp', function ($request) {
-    // Validate x-appwrite-timestamp header
+    //TODO: Move this to the Request class itself
     $timestampHeader = $request->getHeader('x-appwrite-timestamp');
     $requestTimestamp = null;
     if (!empty($timestampHeader)) {
