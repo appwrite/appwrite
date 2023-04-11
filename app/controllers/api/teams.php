@@ -36,8 +36,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Text;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -75,6 +76,7 @@ App::post('/v1/teams')
             ],
             'name' => $name,
             'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+            'prefs' => new \stdClass(),
             'search' => implode(' ', [$teamId, $name]),
         ])));
 
@@ -133,7 +135,7 @@ App::get('/v1/teams')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM_LIST)
     ->label('sdk.offline.model', '/teams')
-    ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -198,8 +200,36 @@ App::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
+App::get('/v1/teams/:teamId/prefs')
+    ->desc('Get Team Preferences')
+    ->groups(['api', 'teams'])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'getPrefs')
+    ->label('sdk.description', '/docs/references/teams/get-team-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $teamId, Response $response, Database $dbForProject) {
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $prefs = $team->getAttribute('prefs', new \stdClass());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
 App::put('/v1/teams/:teamId')
-    ->desc('Update Team')
+    ->desc('Update Name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
@@ -207,8 +237,8 @@ App::put('/v1/teams/:teamId')
     ->label('audits.resource', 'team/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/teams/update-team.md')
+    ->label('sdk.method', 'updateName')
+    ->label('sdk.description', '/docs/references/teams/update-team-name.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM)
@@ -239,6 +269,42 @@ App::put('/v1/teams/:teamId')
         $events->setParam('teamId', $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
+    });
+
+App::put('/v1/teams/:teamId/prefs')
+    ->desc('Update Preferences')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.[teamId].update.prefs')
+    ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.update')
+    ->label('audits.resource', 'team/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updatePrefs')
+    ->label('sdk.description', '/docs/references/teams/update-team-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
+
+        $events->setParam('teamId', $team->getId());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -541,7 +607,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
     ->label('sdk.offline.model', '/teams/{teamId}/memberships')
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -936,7 +1002,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')

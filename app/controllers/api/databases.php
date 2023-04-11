@@ -4,9 +4,10 @@ use Utopia\App;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
+use Utopia\Database\Document as DatabaseDocument;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -29,6 +30,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
@@ -45,9 +47,11 @@ use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\Document as DocumentValidator;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
+use Utopia\Validator\Nullable;
 
 /**
  * Create attribute of varying type
@@ -68,6 +72,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $formatOptions = $attribute->getAttribute('formatOptions', []);
     $filters = $attribute->getAttribute('filters', []); // filters are hidden from the endpoint
     $default = $attribute->getAttribute('default');
+    $options = $attribute->getAttribute('options', []);
 
     $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -96,6 +101,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
     }
 
+    if ($type === Database::VAR_RELATIONSHIP) {
+        $options['side'] = Database::RELATION_SIDE_PARENT;
+        $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection'] ?? '');
+        if ($relatedCollection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND, 'The related collection was not found.');
+        }
+    }
+
     try {
         $attribute = new Document([
             '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
@@ -114,18 +127,68 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'format' => $format,
             'formatOptions' => $formatOptions,
             'filters' => $filters,
+            'options' => $options,
         ]);
 
         $dbForProject->checkAttribute($collection, $attribute);
         $attribute = $dbForProject->createDocument('attributes', $attribute);
-    } catch (DuplicateException $exception) {
+    } catch (DuplicateException) {
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
-    } catch (LimitException $exception) {
+    } catch (LimitException) {
         throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+    } catch (\Exception $e) {
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+        throw $e;
     }
 
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
     $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+
+    if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+        $twoWayKey = $options['twoWayKey'];
+        $options['relatedCollection'] = $collection->getId();
+        $options['twoWayKey'] = $key;
+        $options['side'] = Database::RELATION_SIDE_CHILD;
+
+        try {
+            $twoWayAttribute = new Document([
+                '$id' => ID::custom($db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $twoWayKey),
+                'key' => $twoWayKey,
+                'databaseInternalId' => $db->getInternalId(),
+                'databaseId' => $db->getId(),
+                'collectionInternalId' => $relatedCollection->getInternalId(),
+                'collectionId' => $relatedCollection->getId(),
+                'type' => $type,
+                'status' => 'processing', // processing, available, failed, deleting, stuck
+                'size' => $size,
+                'required' => $required,
+                'signed' => $signed,
+                'default' => $default,
+                'array' => $array,
+                'format' => $format,
+                'formatOptions' => $formatOptions,
+                'filters' => $filters,
+                'options' => $options,
+            ]);
+
+            $dbForProject->checkAttribute($relatedCollection, $twoWayAttribute);
+            $dbForProject->createDocument('attributes', $twoWayAttribute);
+        } catch (DuplicateException) {
+            $dbForProject->deleteDocument('attributes', $attribute->getId());
+            throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+        } catch (LimitException) {
+            $dbForProject->deleteDocument('attributes', $attribute->getId());
+            throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
+        } catch (\Exception $e) {
+            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            throw $e;
+        }
+
+        $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+        $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+    }
 
     $database
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
@@ -143,6 +206,165 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
+
+    return $attribute;
+}
+
+function updateAttribute(
+    string $databaseId,
+    string $collectionId,
+    string $key,
+    Database $dbForProject,
+    Event $events,
+    string $type,
+    string $filter = null,
+    string|bool|int|float $default = null,
+    bool $required = null,
+    int|float $min = null,
+    int|float $max = null,
+    array $elements = null,
+    array $options = []
+): Document {
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+    if ($db->isEmpty()) {
+        throw new Exception(Exception::DATABASE_NOT_FOUND);
+    }
+
+    $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
+
+    if ($collection->isEmpty()) {
+        throw new Exception(Exception::COLLECTION_NOT_FOUND);
+    }
+
+    $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
+
+    if ($attribute->isEmpty()) {
+        throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+    }
+
+    if ($attribute->getAttribute('status') !== 'available') {
+        throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE);
+    }
+
+    if ($attribute->getAttribute(('type') !== $type)) {
+        throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+    }
+
+    if ($attribute->getAttribute('type') === Database::VAR_STRING && $attribute->getAttribute(('filter') !== $filter)) {
+        throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID);
+    }
+
+    if ($required && isset($default)) {
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for required attribute');
+    }
+
+    if ($attribute->getAttribute('array', false) && isset($default)) {
+        throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
+    }
+
+    $collectionId =  'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
+
+    $attribute
+        ->setAttribute('default', $default)
+        ->setAttribute('required', $required);
+
+    $formatOptions = $attribute->getAttribute('formatOptions');
+
+    switch ($attribute->getAttribute('format')) {
+        case APP_DATABASE_ATTRIBUTE_INT_RANGE:
+        case APP_DATABASE_ATTRIBUTE_FLOAT_RANGE:
+            if ($min === $formatOptions['min'] && $max === $formatOptions['max']) {
+                break;
+            }
+
+            if ($min > $max) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Minimum value must be lesser than maximum value');
+            }
+
+            if ($attribute->getAttribute('format') === APP_DATABASE_ATTRIBUTE_INT_RANGE) {
+                $validator = new Range($min, $max, Database::VAR_INTEGER);
+            } else {
+                $validator = new Range($min, $max, Database::VAR_FLOAT);
+
+                if (!is_null($default)) {
+                    $default = \floatval($default);
+                }
+            }
+
+            if (!is_null($default) && !$validator->isValid($default)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+            }
+
+            $options = [
+                'min' => $min,
+                'max' => $max
+            ];
+            $attribute->setAttribute('formatOptions', $options);
+
+            break;
+        case APP_DATABASE_ATTRIBUTE_ENUM:
+            if (empty($elements)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
+            }
+
+            foreach ($elements as $element) {
+                if (\strlen($element) === 0) {
+                    throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
+                }
+            }
+
+            if (!is_null($default) && !in_array($default, $elements)) {
+                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
+            }
+
+            $options = [
+                'elements' => $elements
+            ];
+
+            $attribute->setAttribute('formatOptions', $options);
+
+            break;
+    }
+
+    if ($type === Database::VAR_RELATIONSHIP) {
+        $options = \array_merge($attribute->getAttribute('options', []), $options);
+        $attribute->setAttribute('options', $options);
+
+        $dbForProject->updateRelationship(
+            collection: $collectionId,
+            id: $key,
+            onDelete: $options['onDelete'],
+        );
+
+        if ($options['twoWay']) {
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+            $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
+            $relatedAttribute->setAttribute('options', $relatedOptions);
+
+            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey'], $relatedAttribute);
+            $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
+        }
+    } else {
+        $dbForProject->updateAttribute(
+            collection: $collectionId,
+            id: $key,
+            required: $required,
+            default: $default,
+            formatOptions: $options ?? null
+        );
+    }
+
+    $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+    $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collection->getId());
+
+    $events
+        ->setContext('collection', $collection)
+        ->setContext('database', $db)
+        ->setParam('databaseId', $databaseId)
+        ->setParam('collectionId', $collection->getId())
+        ->setParam('attributeId', $attribute->getId());
 
     return $attribute;
 }
@@ -234,7 +456,7 @@ App::get('/v1/databases')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DATABASE_LIST)
-    ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Databases(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Databases::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -307,7 +529,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -455,7 +677,8 @@ App::delete('/v1/databases/:databaseId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove collection from DB');
         }
 
-        $dbForProject->deleteCachedCollection('databases' . $database->getInternalId());
+        $dbForProject->deleteCachedDocument('databases', $database->getId());
+        $dbForProject->deleteCachedCollection('databases_' . $database->getInternalId());
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -553,7 +776,7 @@ App::get('/v1/databases/:databaseId/collections')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_COLLECTION_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('queries', [], new Collections(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Collections::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Collections(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Collections::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -645,7 +868,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -964,7 +1187,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE, min: 0), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -1284,7 +1507,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
     ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
     ->desc('Create DateTime Attribute')
@@ -1329,6 +1551,87 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
+App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
+    ->alias('/v1/database/collections/:collectionId/attributes/relationship', ['databaseId' => 'default'])
+    ->desc('Create Relationship Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
+    ->label('scope', 'collections.write')
+    ->label('audits.event', 'attribute.create')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.method', 'createRelationshipAttribute')
+    ->label('sdk.description', '/docs/references/databases/create-relationship-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('relatedCollectionId', '', new UID(), 'Related Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('type', '', new WhiteList([Database::RELATION_ONE_TO_ONE, Database::RELATION_MANY_TO_ONE, Database::RELATION_MANY_TO_MANY, Database::RELATION_ONE_TO_MANY], true), 'Relation type')
+    ->param('twoWay', false, new Boolean(), 'Is Two Way?', true)
+    ->param('key', null, new Key(), 'Attribute Key.', true)
+    ->param('twoWayKey', null, new Key(), 'Two Way Attribute Key.', true)
+    ->param('onDelete', Database::RELATION_MUTATE_RESTRICT, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('database')
+    ->inject('events')
+    ->action(function (
+        string $databaseId,
+        string $collectionId,
+        string $relatedCollectionId,
+        string $type,
+        bool $twoWay,
+        ?string $key,
+        ?string $twoWayKey,
+        string $onDelete,
+        Response $response,
+        Database $dbForProject,
+        EventDatabase $database,
+        Event $events
+) {
+        $key ??= $relatedCollectionId;
+        $twoWayKey ??= $collectionId;
+
+        $attribute = createAttribute(
+            $databaseId,
+            $collectionId,
+            new Document([
+                'key' => $key,
+                'type' => Database::VAR_RELATIONSHIP,
+                'size' => 0,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+                'options' => [
+                    'relatedCollection' => $relatedCollectionId,
+                    'relationType' => $type,
+                    'twoWay' => $twoWay,
+                    'twoWayKey' => $twoWayKey,
+                    'onDelete' => $onDelete,
+                ]
+            ]),
+            $response,
+            $dbForProject,
+            $database,
+            $events
+        );
+
+        $options = $attribute->getAttribute('options', []);
+
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
+    });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->alias('/v1/database/collections/:collectionId/attributes', ['databaseId' => 'default'])
@@ -1355,6 +1658,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -1383,7 +1687,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', [
-        Response::MODEL_ATTRIBUTE_DATETIME,
         Response::MODEL_ATTRIBUTE_BOOLEAN,
         Response::MODEL_ATTRIBUTE_INTEGER,
         Response::MODEL_ATTRIBUTE_FLOAT,
@@ -1392,6 +1695,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         Response::MODEL_ATTRIBUTE_URL,
         Response::MODEL_ATTRIBUTE_IP,
         Response::MODEL_ATTRIBUTE_DATETIME,
+        Response::MODEL_ATTRIBUTE_RELATIONSHIP,
         Response::MODEL_ATTRIBUTE_STRING])// needs to be last, since its condition would dominate any other string attribute
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
@@ -1421,12 +1725,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
         $format = $attribute->getAttribute('format');
+        $options = $attribute->getAttribute('options', []);
+
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
 
         $model = match ($type) {
-            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
+            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
@@ -1438,6 +1748,449 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         };
 
         $response->dynamic($attribute, $model);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
+    ->desc('Update String Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateStringAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-string-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_STRING)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
+    ->desc('Update Email Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateEmailAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-email-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_EMAIL)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_EMAIL,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
+    ->desc('Update Enum Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateEnumAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-enum-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_ENUM)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('elements', null, new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_ENUM,
+            default: $default,
+            required: $required,
+            elements: $elements
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
+    ->desc('Update IP Address Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateIpAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-ip-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_IP)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_IP,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
+    ->desc('Update URL Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateUrlAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-url-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_URL)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_STRING,
+            filter: APP_DATABASE_ATTRIBUTE_URL,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
+    ->desc('Update Integer Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateIntegerAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-integer-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_INTEGER)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new Integer(), 'Minimum value to enforce on new documents')
+    ->param('max', null, new Integer(), 'Maximum value to enforce on new documents')
+    ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_INTEGER,
+            default: $default,
+            required: $required,
+            min: $min,
+            max: $max
+        );
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \intval($formatOptions['min']));
+            $attribute->setAttribute('max', \intval($formatOptions['max']));
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
+    ->desc('Update Float Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateFloatAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-float-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_FLOAT)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents')
+    ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents')
+    ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_FLOAT,
+            default: $default,
+            required: $required,
+            min: $min,
+            max: $max
+        );
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+
+        if (!empty($formatOptions)) {
+            $attribute->setAttribute('min', \floatval($formatOptions['min']));
+            $attribute->setAttribute('max', \floatval($formatOptions['max']));
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
+    ->desc('Update Boolean Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateBooleanAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-boolean-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_BOOLEAN)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_BOOLEAN,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
+    ->desc('Update DateTime Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateDatetimeAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-datetime-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_DATETIME)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('required', null, new Boolean(), 'Is attribute required?')
+    ->param('default', null, new Nullable(new DatetimeValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+        $attribute = updateAttribute(
+            databaseId: $databaseId,
+            collectionId: $collectionId,
+            key: $key,
+            dbForProject: $dbForProject,
+            events: $events,
+            type: Database::VAR_DATETIME,
+            default: $default,
+            required: $required
+        );
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
+    ->desc('Update Relationship Attribute')
+    ->groups(['api', 'database', 'schema'])
+    ->label('scope', 'collections.write')
+    ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
+    ->label('audits.event', 'attribute.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('usage.metric', 'collections.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}'])
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'updateRelationshipAttribute')
+    ->label('sdk.description', '/docs/references/databases/update-relationship-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_RELATIONSHIP)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (
+        string $databaseId,
+        string $collectionId,
+        string $key,
+        ?string $onDelete,
+        Response $response,
+        Database $dbForProject,
+        Event $events
+    ) {
+        $attribute = updateAttribute(
+            $databaseId,
+            $collectionId,
+            $key,
+            $dbForProject,
+            $events,
+            type: Database::VAR_RELATIONSHIP,
+            required: false,
+            options : [
+                'onDelete' => $onDelete
+            ]
+        );
+
+        $options = $attribute->getAttribute('options', []);
+
+        foreach ($options as $key => $option) {
+            $attribute->setAttribute($key, $option);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
@@ -1483,12 +2236,36 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         }
 
         // Only update status if removing available attribute
-        if ($attribute->getAttribute('status' === 'available')) {
+        if ($attribute->getAttribute('status') === 'available') {
             $attribute = $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'deleting'));
         }
 
         $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
+
+        if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            $options = $attribute->getAttribute('options');
+            if ($options['twoWay']) {
+                $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+
+                if ($relatedCollection->isEmpty()) {
+                    throw new Exception(Exception::COLLECTION_NOT_FOUND);
+                }
+
+                $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+
+                if ($relatedAttribute->isEmpty()) {
+                    throw new Exception(Exception::ATTRIBUTE_NOT_FOUND);
+                }
+
+                if ($relatedAttribute->getAttribute('status') === 'available') {
+                    $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'deleting'));
+                }
+
+                $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
+                $dbForProject->deleteCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            }
+        }
 
         $database
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
@@ -1502,10 +2279,11 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $format = $attribute->getAttribute('format');
 
         $model = match ($type) {
-            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
             Database::VAR_BOOLEAN => Response::MODEL_ATTRIBUTE_BOOLEAN,
             Database::VAR_INTEGER => Response::MODEL_ATTRIBUTE_INTEGER,
             Database::VAR_FLOAT => Response::MODEL_ATTRIBUTE_FLOAT,
+            Database::VAR_DATETIME => Response::MODEL_ATTRIBUTE_DATETIME,
+            Database::VAR_RELATIONSHIP => Response::MODEL_ATTRIBUTE_RELATIONSHIP,
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => Response::MODEL_ATTRIBUTE_EMAIL,
                 APP_DATABASE_ATTRIBUTE_ENUM => Response::MODEL_ATTRIBUTE_ENUM,
@@ -1628,6 +2406,10 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
+
+            if ($attributeType === Database::VAR_RELATIONSHIP) {
+                throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship attribute: ' . $oldAttributes[$attributeIndex]['key']);
+            }
 
             // ensure attribute is available
             if ($attributeStatus !== 'available') {
@@ -1890,11 +2672,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $validator = new Authorization(Database::PERMISSION_CREATE);
-        if (!$validator->isValid($collection->getCreate())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         $allowedPermissions = [
             Database::PERMISSION_READ,
             Database::PERMISSION_UPDATE,
@@ -1938,16 +2715,113 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$collection'] = $collection->getId(); // Adding this param to make API easier for developers
         $data['$id'] = $documentId == 'unique()' ? ID::unique() : $documentId;
         $data['$permissions'] = $permissions;
+        $document = new Document($data);
 
-        try {
-            $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), new Document($data));
-            $document->setAttribute('$collectionId', $collectionId);
-            $document->setAttribute('$databaseId', $databaseId);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-        } catch (DuplicateException $exception) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        }
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+            $documentSecurity = $collection->getAttribute('documentSecurity', false);
+            $validator = new Authorization($permission);
+
+            $valid = $validator->isValid($collection->getPermissionsByType($permission));
+            if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            if ($permission === Database::PERMISSION_UPDATE) {
+                $valid = $valid || $validator->isValid($document->getUpdate());
+                if ($documentSecurity && !$valid) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+            }
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $current = Authorization::skip(
+                            fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
+                        );
+
+                        if ($current->isEmpty()) {
+                            $type = Database::PERMISSION_CREATE;
+
+                            if (!isset($relation['$id']) || $relation['$id'] === 'unique()') {
+                                $relation['$id'] = ID::unique();
+                            }
+                        } else {
+                            $relation->removeAttribute('$collectionId');
+                            $relation->removeAttribute('$databaseId');
+                            $relation->setAttribute('$collection', $relatedCollection->getId());
+                            $type = Database::PERMISSION_UPDATE;
+                        }
+
+                        $checkPermissions($relatedCollection, $relation, $type);
+                    }
+                }
+            }
+        };
+
+        $checkPermissions($collection, $document, Database::PERMISSION_CREATE);
+
+    try {
+        $document = $dbForProject->createDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $document);
+    } catch (StructureException $exception) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+    } catch (DuplicateException $exception) {
+        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+    }
+
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -1979,7 +2853,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
@@ -1999,15 +2873,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($collection->getRead());
-        if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         // Validate queries
-        $queriesValidator = new Documents($collection->getAttribute('attributes'));
+        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
@@ -2019,14 +2886,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $documentId = $cursor->getValue();
 
-            if ($documentSecurity && !$valid) {
-                $cursorDocument = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-            } else {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-            }
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$documentId}' for the 'cursor' value not found.");
@@ -2037,22 +2899,88 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        if ($documentSecurity && !$valid) {
-            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
+
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($collection->getRead());
+        if (!$valid) {
+            $total = $documentSecurity
+                ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
+                : 0;
         } else {
-            $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
-            $total = Authorization::skip(fn () => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
         }
 
-        /**
-         * Reset $collection attribute to remove prefix.
-         */
-        $documents = array_map(function (Document $document) use ($collectionId, $databaseId) {
-            $document->setAttribute('$collectionId', $collectionId);
-            $document->setAttribute('$databaseId', $databaseId);
-            return $document;
-        }, $documents);
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+            $documentSecurity = $collection->getAttribute('documentSecurity', false);
+            $validator = new Authorization(Database::PERMISSION_READ);
+
+            $valid = $validator->isValid($collection->getRead());
+            if (!$documentSecurity && !$valid) {
+                return false;
+            }
+
+            $valid = $valid || $validator->isValid($document->getRead());
+            if ($documentSecurity && !$valid) {
+                return false;
+            }
+
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $relations = [$related];
+                } else {
+                    $relations = $related;
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(fn() =>
+                    $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+
+                foreach ($relations as $index => $doc) {
+                    if ($doc instanceof Document) {
+                        if (!$processDocument($relatedCollection, $doc)) {
+                            unset($relations[$index]);
+                        }
+                    }
+                }
+
+                if (\is_array($related)) {
+                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                } elseif (empty($relations)) {
+                    $document->setAttribute($relationship->getAttribute('key'), null);
+                }
+            }
+
+            return true;
+        };
+
+    // The linter is forcing this indentation
+    foreach ($documents as $index => $document) {
+        if (!$processDocument($collection, $document)) {
+            unset($documents[$index]);
+
+            if ($valid) {
+                $total--;
+            }
+        }
+    }
+
+        $documents = \array_values($documents);
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -2079,10 +3007,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only method allowed is select.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2098,28 +3027,68 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($collection->getRead());
-        if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        // Validate queries
+        $queriesValidator = new DocumentValidator($collection->getAttribute('attributes'));
+        $validQueries = $queriesValidator->isValid($queries);
+        if (!$validQueries) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
-        if ($documentSecurity && !$valid) {
-            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId);
-        } else {
-            $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
-        }
+        $queries = Query::parseQueries($queries);
+
+        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        /**
-         * Reset $collection attribute to remove prefix.
-         */
-        $document->setAttribute('$collectionId', $collectionId);
-        $document->setAttribute('$databaseId', $databaseId);
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $documentSecurity = $collection->getAttribute('documentSecurity', false);
+            $validator = new Authorization(Database::PERMISSION_READ);
+
+            $valid = $validator->isValid($collection->getRead());
+            if (!$documentSecurity && !$valid) {
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            }
+
+            $valid = $valid || $validator->isValid($document->getRead());
+            if ($documentSecurity && !$valid) {
+                throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            }
+
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -2141,7 +3110,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -2279,15 +3248,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_UPDATE);
-        $valid = $validator->isValid($collection->getUpdate());
-        if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         // Read permission should not be required for update
-        /** @var Document */
+        /** @var Document $document */
         $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
@@ -2331,47 +3293,123 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
+        $newDocument = new Document($data);
 
-        try {
-            $privateCollectionId = 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId();
-            if ($documentSecurity && !$valid) {
-                $document = $dbForProject->withRequestTimestamp(
-                    $requestTimestamp,
-                    function () use ($dbForProject, $privateCollectionId, $document, $data) {
-                        return $dbForProject->updateDocument(
-                            $privateCollectionId,
-                            $document->getId(),
-                            new Document($data)
-                        );
-                    }
-                );
-            } else {
-                $document = Authorization::skip(function () use ($dbForProject, $requestTimestamp, $privateCollectionId, $document, $data) {
-                    return $dbForProject->withRequestTimestamp(
-                        $requestTimestamp,
-                        function () use ($dbForProject, $privateCollectionId, $document, $data) {
-                            return $dbForProject->updateDocument(
-                                $privateCollectionId,
-                                $document->getId(),
-                                new Document($data)
-                            );
-                        }
-                    );
-                });
+        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+            $documentSecurity = $collection->getAttribute('documentSecurity', false);
+            $validator = new Authorization($permission);
+
+            $valid = $validator->isValid($collection->getPermissionsByType($permission));
+            if (!$documentSecurity && !$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            /**
-             * Reset $collection attribute to remove prefix.
-             */
-            $document->setAttribute('$collectionId', $collectionId);
-            $document->setAttribute('$databaseId', $databaseId);
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-        }
+            if ($permission === Database::PERMISSION_UPDATE) {
+                $valid = $valid || $validator->isValid($old->getPermissionsByType($permission));
+                if ($documentSecurity && !$valid) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+            }
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $oldDocument = Authorization::skip(fn() => $dbForProject->getDocument(
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                            $relation->getId()
+                        ));
+
+                        if ($oldDocument->isEmpty()) {
+                            $type = Database::PERMISSION_CREATE;
+
+                            if (!isset($relation['$id']) || $relation['$id'] === 'unique()') {
+                                $relation['$id'] = ID::unique();
+                            }
+                        } else {
+                            $relation->removeAttribute('$collectionId');
+                            $relation->removeAttribute('$databaseId');
+                            $relation->setAttribute('$collection', $relatedCollection->getId());
+                            $type = Database::PERMISSION_UPDATE;
+                        }
+
+                        $checkPermissions($relatedCollection, $relation, $oldDocument, $type);
+                    }
+                }
+            }
+        };
+
+        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+
+    try {
+        $document = Authorization::skip(fn() => $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn () => $dbForProject->updateDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $document->getId(),
+                $newDocument
+            )
+        ));
+    } catch (AuthorizationException) {
+        throw new Exception(Exception::USER_UNAUTHORIZED);
+    } catch (DuplicateException) {
+        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+    } catch (StructureException $exception) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+    }
+
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -2430,13 +3468,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             }
         }
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_DELETE);
-        $valid = $validator->isValid($collection->getDelete());
-        if (!$documentSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         // Read permission should not be required for delete
         $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
@@ -2444,31 +3475,103 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $privateCollectionId = 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId();
+        $checkPermissions = function (Document $collection, Document $document) use (&$checkPermissions, $dbForProject, $database) {
+            $documentSecurity = $collection->getAttribute('documentSecurity', false);
+            $validator = new Authorization(Database::PERMISSION_DELETE);
 
-        if ($documentSecurity && !$valid) {
-            try {
-                $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $privateCollectionId, $documentId) {
-                    return $dbForProject->deleteDocument($privateCollectionId, $documentId);
-                });
-            } catch (AuthorizationException) {
+            $valid = $validator->isValid($collection->getDelete());
+            if (!$documentSecurity && !$valid) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
-        } else {
-            Authorization::skip(function () use ($dbForProject, $requestTimestamp, $privateCollectionId, $documentId) {
-                return $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $privateCollectionId, $documentId) {
-                    return $dbForProject->deleteDocument($privateCollectionId, $documentId);
-                });
-            });
-        }
 
-        $dbForProject->deleteCachedDocument($privateCollectionId, $documentId);
+            $valid = $valid || $validator->isValid($document->getDelete());
+            if ($documentSecurity && !$valid) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
 
-        /**
-         * Reset $collection attribute to remove prefix.
-         */
-        $document->setAttribute('$collectionId', $collectionId);
-        $document->setAttribute('$databaseId', $databaseId);
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if (
+                        $relation instanceof Document
+                        && $relationship->getAttribute('onDelete') === Database::RELATION_MUTATE_CASCADE
+                    ) {
+                        $checkPermissions($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $checkPermissions($collection, $document);
+
+        Authorization::skip(fn () => $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
+            try {
+                $dbForProject->deleteDocument(
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $documentId
+                );
+            } catch (RestrictedException) {
+                throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+            }
+        }));
+
+        $dbForProject->deleteCachedDocument(
+            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+            $documentId
+        );
+
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)

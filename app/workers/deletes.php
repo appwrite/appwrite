@@ -203,6 +203,21 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($projectId);
 
+        $relationships = \array_filter(
+            $document->getAttribute('attributes'),
+            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            if (!$relationship['twoWay']) {
+                continue;
+            }
+            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
+            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
+            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+        }
+
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [

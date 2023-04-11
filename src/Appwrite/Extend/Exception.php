@@ -136,6 +136,7 @@ class Exception extends \Exception
     public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
     public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
     public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
+    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
     /** Attribute */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
@@ -146,6 +147,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
@@ -179,6 +181,7 @@ class Exception extends \Exception
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
+    public const DOMAIN_TARGET_INVALID             = 'domain_target_invalid';
 
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
