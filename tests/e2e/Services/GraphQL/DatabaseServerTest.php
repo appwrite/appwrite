@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -75,9 +76,36 @@ class DatabaseServerTest extends Scope
         $collection = $collection['body']['data']['databasesCreateCollection'];
         $this->assertEquals('Actors', $collection['name']);
 
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'collectionId' => 'movies',
+                'name' => 'Movies',
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+            ]
+        ];
+
+        $collection2 = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertIsArray($collection2['body']['data']);
+        $this->assertArrayNotHasKey('errors', $collection2['body']);
+        $collection2 = $collection2['body']['data']['databasesCreateCollection'];
+        $this->assertEquals('Movies', $collection2['name']);
+
         return [
             'database' => $database,
             'collection' => $collection,
+            'collection2' => $collection2,
         ];
     }
 
@@ -119,7 +147,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateStringAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_STRING_ATTRIBUTE);
@@ -187,7 +215,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateIntegerAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_INTEGER_ATTRIBUTE);
@@ -257,7 +285,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateBooleanAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_BOOLEAN_ATTRIBUTE);
@@ -326,7 +354,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateFloatAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_FLOAT_ATTRIBUTE);
@@ -396,7 +424,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateEmailAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_EMAIL_ATTRIBUTE);
@@ -468,7 +496,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateEnumAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_ENUM_ATTRIBUTE);
@@ -541,7 +569,7 @@ class DatabaseServerTest extends Scope
     public function testUpdateDatetimeAttribute($data): array
     {
         // Wait for attributes to be available
-        sleep(3);
+        sleep(1);
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$UPDATE_DATETIME_ATTRIBUTE);
@@ -566,6 +594,69 @@ class DatabaseServerTest extends Scope
         $this->assertFalse($attribute['body']['data']['databasesUpdateDatetimeAttribute']['required']);
         $this->assertEquals('2000-01-01T00:00:00Z', $attribute['body']['data']['databasesUpdateDatetimeAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateCollection
+     */
+    public function testCreateRelationshipAttribute(array $data): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_RELATIONSHIP_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection2']['_id'],          // Movies
+                'relatedCollectionId' => $data['collection']['_id'],    // Actors
+                'type' => Database::RELATION_ONE_TO_MANY,
+                'twoWay' => true,
+                'key' => 'actors',
+                'twoWayKey' => 'movie'
+            ]
+        ];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
+        $this->assertIsArray($attribute['body']['data']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateRelationshipAttribute']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateRelationshipAttribute
+     */
+    public function testUpdateRelationshipAttribute(array $data): array
+    {
+        sleep(1);
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_RELATIONSHIP_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection2']['_id'],
+                'key' => 'actors',
+                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+            ]
+        ];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
+        $this->assertIsArray($attribute['body']['data']);
+        $this->assertIsArray($attribute['body']['data']['databasesUpdateRelationshipAttribute']);
 
         return $data;
     }

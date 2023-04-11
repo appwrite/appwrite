@@ -1165,7 +1165,7 @@ class DatabasesCustomServerTest extends Scope
             $this->assertEquals(202, $attribute['headers']['status-code']);
         }
 
-        sleep(20);
+        sleep(10);
 
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
@@ -1426,6 +1426,17 @@ class DatabasesCustomServerTest extends Scope
         $this->assertFalse($new['body']['required']);
         $this->assertEquals('lorem', $new['body']['default']);
 
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals('lorem', $attribute['default']);
+
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string/' . $key, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1556,6 +1567,17 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertFalse($new['body']['required']);
         $this->assertEquals('torsten@appwrite.io', $new['body']['default']);
+
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals('torsten@appwrite.io', $attribute['default']);
 
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/email/' . $key, array_merge([
@@ -1689,6 +1711,17 @@ class DatabasesCustomServerTest extends Scope
         $this->assertFalse($new['body']['required']);
         $this->assertEquals('127.0.0.1', $new['body']['default']);
 
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals('127.0.0.1', $attribute['default']);
+
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/ip/' . $key, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1819,6 +1852,17 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertFalse($new['body']['required']);
         $this->assertEquals('http://appwrite.io', $new['body']['default']);
+
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals('http://appwrite.io', $attribute['default']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/url/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -1954,6 +1998,19 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(123, $new['body']['default']);
         $this->assertEquals(0, $new['body']['min']);
         $this->assertEquals(1000, $new['body']['max']);
+
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals(123, $attribute['default']);
+        $this->assertEquals(0, $attribute['min']);
+        $this->assertEquals(1000, $attribute['max']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/integer/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2205,6 +2262,19 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(0, $new['body']['min']);
         $this->assertEquals(1000, $new['body']['max']);
 
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals(123.456, $attribute['default']);
+        $this->assertEquals(0, $attribute['min']);
+        $this->assertEquals(1000, $attribute['max']);
+
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/float/' . $key, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2451,6 +2521,17 @@ class DatabasesCustomServerTest extends Scope
         $this->assertFalse($new['body']['required']);
         $this->assertEquals(true, $new['body']['default']);
 
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals(true, $attribute['default']);
+
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/boolean/' . $key, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2581,6 +2662,17 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertFalse($new['body']['required']);
         $this->assertEquals('1975-06-12 14:12:55+02:00', $new['body']['default']);
+
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals('1975-06-12 14:12:55+02:00', $attribute['default']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/datetime/' . $key, array_merge([
             'content-type' => 'application/json',
@@ -2717,6 +2809,21 @@ class DatabasesCustomServerTest extends Scope
         $this->assertContains('lorem', $new['body']['elements']);
         $this->assertContains('ipsum', $new['body']['elements']);
         $this->assertContains('dolor', $new['body']['elements']);
+
+        $new = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
+        $this->assertNotNull($attribute);
+        $this->assertFalse($attribute['required']);
+        $this->assertEquals('lorem', $attribute['default']);
+        $this->assertCount(3, $attribute['elements']);
+        $this->assertContains('lorem', $attribute['elements']);
+        $this->assertContains('ipsum', $attribute['elements']);
+        $this->assertContains('dolor', $attribute['elements']);
 
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/enum/' . $key, array_merge([
             'content-type' => 'application/json',

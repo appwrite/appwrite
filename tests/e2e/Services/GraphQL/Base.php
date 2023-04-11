@@ -26,6 +26,8 @@ trait Base
     public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public static string $CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+
+    public static string $CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
     public static string $UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
     public static string $UPDATE_INTEGER_ATTRIBUTE = 'update_integer_attribute';
     public static string $UPDATE_FLOAT_ATTRIBUTE = 'update_float_attribute';
@@ -35,6 +37,8 @@ trait Base
     public static string $UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
     public static string $UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
     public static string $UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
+
+    public static string $UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
     public static string $GET_ATTRIBUTES = 'get_attributes';
     public static string $GET_ATTRIBUTE = 'get_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
@@ -463,6 +467,17 @@ trait Base
                         array
                     }
                 }';
+            case self::$CREATE_RELATIONSHIP_ATTRIBUTE:
+                return 'mutation createRelationshipAttribute($databaseId: String!, $collectionId: String!, $relatedCollectionId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
+                    databasesCreateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, relatedCollectionId: $relatedCollectionId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
+                        relatedCollection
+                        relationType
+                        twoWay
+                        key
+                        twoWayKey
+                        onDelete
+                    }
+                }';
             case self::$UPDATE_STRING_ATTRIBUTE:
                 return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
                         databasesUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
@@ -529,6 +544,17 @@ trait Base
                         databasesUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
                             required
                             default
+                        }
+                    }';
+            case self::$UPDATE_RELATIONSHIP_ATTRIBUTE:
+                return 'mutation updateRelationshipAttribute($databaseId: String!, $collectionId: String!, $key: String!, $onDelete: String){
+                        databasesUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, onDelete: $onDelete) {
+                            relatedCollection
+                            relationType
+                            twoWay
+                            key
+                            twoWayKey
+                            onDelete
                         }
                     }';
             case self::$CREATE_INDEX:

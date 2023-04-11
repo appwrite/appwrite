@@ -413,6 +413,11 @@ return [
         'description' => 'Remote document is newer than local.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_DELETE_RESTRICTED => [
+        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
+        'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
+    ],
 
     /** Attributes */
     Exception::ATTRIBUTE_NOT_FOUND => [
@@ -422,12 +427,12 @@ return [
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the <span class="tag">available</span> state.',
+        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_NOT_AVAILABLE => [
         'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not yet <span class="tag">available</span>. Please try again later.',
+        'description' => 'The requested attribute is not yet available. Please try again later.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
@@ -437,7 +442,7 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
+        'description' => 'Default values cannot be set for array or required attributes.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
@@ -453,6 +458,11 @@ return [
     Exception::ATTRIBUTE_VALUE_INVALID => [
         'name' => Exception::ATTRIBUTE_VALUE_INVALID,
         'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_TYPE_INVALID => [
+        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
+        'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
 
