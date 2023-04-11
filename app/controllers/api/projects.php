@@ -184,7 +184,7 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -1402,7 +1402,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
         }
 
         $domain = new Domain($domain);
