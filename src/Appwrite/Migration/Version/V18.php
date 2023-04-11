@@ -41,10 +41,9 @@ class V18 extends Migration
         $this->migrateCollections();
 
         Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'migrateDocument']);
-
-        Console::info('Migrating Cache');
-        $this->forEachDocument([$this, 'migrateCache']);
+        $this->forEachDocument(function (Document $document) {
+            $this->migrateDocument($document);
+        });
     }
 
     /**
@@ -59,15 +58,16 @@ class V18 extends Migration
             $databaseTable = "database_{$database->getInternalId()}";
 
             Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
+
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
 
-                $floats = \array_filter($collection->getAttributes(), function ($attribute) {
-                    return $attribute->getAttribute('type') === Database::VAR_FLOAT;
+                $floats = \array_filter($collection['attributes'] ?? [], function ($attribute) {
+                    return $attribute['type'] === Database::VAR_FLOAT;
                 });
 
                 foreach ($floats as $attribute) {
-                    $this->changeAttributeInternalType($collectionTable, $attribute->getId(), 'DOUBLE');
+                    $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
                 }
             }
         }
@@ -85,12 +85,12 @@ class V18 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $floats = \array_filter($collection, function ($attribute) {
+            $floats = \array_filter($collection['attributes'] ?? [], function ($attribute) {
                 return $attribute['type'] === Database::VAR_FLOAT;
             });
 
             foreach ($floats as $attribute) {
-                $this->changeAttributeInternalType($id, $attribute->getId(), 'DOUBLE');
+                $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
             }
 
             switch ($id) {
@@ -145,16 +145,5 @@ class V18 extends Migration
         }
 
         return $document;
-    }
-
-    private function migrateCache(Document $document)
-    {
-        $key = "cache-_{$this->project->getInternalId()}:{$document->getCollection()}:{$document->getId()}";
-        $value = $this->redis->get($key);
-
-        if ($value) {
-            $this->redis->del($key);
-            $this->redis->set($key . ':*', $value);
-        }
     }
 }

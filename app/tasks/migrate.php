@@ -88,8 +88,8 @@ $cli
                         ->setPDO($register->get('db'))
                         ->execute();
                 } catch (\Throwable $th) {
-                    throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    throw $th;
                 }
 
                 clearProjectsCache($redis, $project);
