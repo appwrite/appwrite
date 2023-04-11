@@ -54,12 +54,11 @@ class V18 extends Migration
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
 
-                $floats = \array_filter($collection['attributes'] ?? [], function ($attribute) {
-                    return $attribute['type'] === Database::VAR_FLOAT;
-                });
-
-                foreach ($floats as $attribute) {
-                    $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
+                foreach ($collection['attributes'] ?? [] as $attribute) {
+                    if ($attribute['type'] !== Database::VAR_FLOAT) {
+                        continue;
+                    }
+                    $this->changeAttributeInternalType($collectionTable, $attribute['$id'], 'DOUBLE');
                 }
             }
         }
@@ -77,11 +76,10 @@ class V18 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $floats = \array_filter($collection['attributes'] ?? [], function ($attribute) {
-                return $attribute['type'] === Database::VAR_FLOAT;
-            });
-
-            foreach ($floats as $attribute) {
+            foreach ($collection['attributes'] ?? [] as $attribute) {
+                if ($attribute['type'] !== Database::VAR_FLOAT) {
+                    continue;
+                }
                 $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
             }
 
