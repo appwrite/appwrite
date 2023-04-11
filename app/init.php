@@ -1168,7 +1168,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 }, ['utopia', 'dbForProject']);
 
 App::setResource('requestTimestamp', function ($request) {
-    // Validate x-appwrite-timestamp header
+    //TODO: Move this to the Request class itself
     $timestampHeader = $request->getHeader('x-appwrite-timestamp');
     $requestTimestamp = null;
     if (!empty($timestampHeader)) {
