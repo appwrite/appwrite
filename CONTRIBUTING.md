@@ -346,8 +346,7 @@ If you are in PHP Storm you don't need any plugin. Below are the settings requir
 
 1. Create an init file. 
 2. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php**.
-3. Change the IP address to your development machine's IP. Without the proper IP address, the debugger won't connect. 
-4. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+3. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 
