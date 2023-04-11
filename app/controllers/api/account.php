@@ -674,7 +674,7 @@ App::post('/v1/account/sessions/magic-url')
                 }
             }
 
-            $userId = $userId == 'unique()' ? ID::unique() : $userId;
+            $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
