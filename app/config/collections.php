@@ -346,6 +346,16 @@ $collections = [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('options'),
+                'type' => Database::VAR_STRING,
+                'size' => 16384,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
         ],
         'indexes' => [
             [

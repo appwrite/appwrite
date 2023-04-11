@@ -408,6 +408,8 @@ class Mapper
                 return static::model('AttributeBoolean');
             case 'datetime':
                 return static::model('AttributeDatetime');
+            case 'relationship':
+                return static::model('AttributeRelationship');
         }
 
         throw new Exception('Unknown attribute implementation');
