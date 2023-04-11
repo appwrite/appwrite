@@ -12,6 +12,8 @@
 ## Bugs
 - Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
 - Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+- Fix deleting collections from a project [#4983](https://github.com/appwrite/appwrite/pull/4983)
+- Fix cleaning up project databases [#4984](https://github.com/appwrite/appwrite/pull/4984)
 - Fix creating documents with attributes with special characters [#246](https://github.com/utopia-php/database/pull/246)
 - Fix deleting attribute not deleting metadata index [#246](https://github.com/utopia-php/database/pull/246)
 - Fix create attribute event payload [#246](https://github.com/utopia-php/database/pull/246)
