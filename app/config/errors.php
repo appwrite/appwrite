@@ -408,6 +408,11 @@ return [
         'description' => 'Document with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UPDATE_CONFLICT => [
+        'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
+        'description' => 'Remote document is newer than local.',
+        'code' => 409,
+    ],
 
     /** Attributes */
     Exception::ATTRIBUTE_NOT_FOUND => [

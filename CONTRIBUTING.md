@@ -436,6 +436,14 @@ composer lint
 composer lint <your file path>
 ```
 
+## Clearing the Cache
+
+If you need to clear the cache, you can do so by running the following command:
+
+```bash
+docker compose exec redis redis-cli FLUSHALL
+```
+
 ## Tutorials
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
