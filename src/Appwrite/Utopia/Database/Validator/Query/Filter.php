@@ -18,6 +18,8 @@ class Filter extends Base
      */
     protected $schema = [];
 
+    private int $maxValuesCount;
+
     /**
      * Query constructor
      *
@@ -38,6 +40,12 @@ class Filter extends Base
             // For relationships, just validate the top level.
             // Utopia will validate each nested level during the recursive calls.
             $attribute = \explode('.', $attribute)[0];
+
+            // TODO: Remove this when nested queries are supported
+            if (isset($this->schema[$attribute])) {
+                $this->message = 'Cannot query nested attribute on: ' . $attribute;
+                return false;
+            }
         }
 
         // Search for attribute in schema

@@ -2899,13 +2899,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        // TODO: Remove this when we have a better way to handle nested attribute queries
-        foreach ($filterQueries as $key => $query) {
-            if (\str_contains($query->getAttribute(), '.')) {
-                unset($filterQueries[$key]);
-            }
-        }
-
         $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
 
         $documentSecurity = $collection->getAttribute('documentSecurity', false);

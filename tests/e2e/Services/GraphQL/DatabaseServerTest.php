@@ -1040,8 +1040,6 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        \var_dump($attributes['body']);
-
         $this->assertArrayNotHasKey('errors', $attributes['body']);
         $this->assertIsArray($attributes['body']['data']);
         $this->assertIsArray($attributes['body']['data']['databasesListAttributes']);
