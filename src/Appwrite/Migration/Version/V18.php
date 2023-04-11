@@ -149,7 +149,7 @@ class V18 extends Migration
 
     private function migrateCache(Document $document)
     {
-        $key = "cache-_{$this->project->getInternalId()}:_{$document->getCollection()}:{$document->getId()}";
+        $key = "cache-_{$this->project->getInternalId()}:{$document->getCollection()}:{$document->getId()}";
         $value = $this->redis->get($key);
 
         if ($value) {
