@@ -12,6 +12,7 @@ abstract class Base extends Validator
     public const METHOD_TYPE_CURSOR = 'cursor';
     public const METHOD_TYPE_ORDER = 'order';
     public const METHOD_TYPE_FILTER = 'filter';
+    public const METHOD_TYPE_SELECT = 'select';
 
     /**
      * @var string
