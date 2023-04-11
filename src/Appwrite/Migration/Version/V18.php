@@ -2,23 +2,15 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
-use Appwrite\Query;
-use PDO;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class V18 extends Migration
 {
-    private \Redis $redis;
-
     public function execute(): void
     {
-        global $register;
-
-        $this->redis = $register->get('cache');
 
         /**
          * Disable SubQueries for Performance.
