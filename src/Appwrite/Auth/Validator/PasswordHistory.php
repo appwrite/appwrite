@@ -12,6 +12,8 @@ use Appwrite\Auth\Auth;
 class PasswordHistory extends Password
 {
     protected array $history;
+    protected string $algo;
+    protected array $algoOptions;
 
     public function __construct(array $history, string $algo, array $algoOptions = [])
     {
