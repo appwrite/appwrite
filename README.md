@@ -26,7 +26,7 @@
 
 English | [简体中文](README-CN.md)
 
-<!-- [**Announcing Appwrite 1.3 with Database Relations! Learn what's new!**](https://appwrite.io/graphql) -->
+<!-- [**Announcing Appwrite 1.3 with Database Relationships! Learn what's new!**](https://appwrite.io/graphql) -->
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
