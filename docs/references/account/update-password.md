@@ -1,2 +1,1 @@
 Update currently logged in user password. For validation, user is required to pass in the new password, and the old password. For users created with OAuth, Team Invites and Magic URL, oldPassword is optional.
-Learn more about [update password](/docs/client/account#accountUpdatePassword).

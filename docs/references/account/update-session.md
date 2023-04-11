@@ -1,2 +1,1 @@
 Access tokens have limited lifespan and expire to mitigate security risks. If session was created using an OAuth provider, this route can be used to "refresh" the access token.
-Learn more about [update session](/docs/client/account#accountUpdateSession).
