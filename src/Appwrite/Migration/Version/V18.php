@@ -106,6 +106,17 @@ class V18 extends Migration
                         Console::warning("'prefs' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'attributes':
+                    try {
+                        /**
+                         * Create 'options' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'options');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'options' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 default:
                     break;
             }
@@ -148,6 +159,12 @@ class V18 extends Migration
                  * Default prefs
                  */
                 $document->setAttribute('prefs', new \stdClass());
+                break;
+            case 'attributes':
+                /**
+                 * Default options
+                 */
+                $document->setAttribute('options', new \stdClass());
                 break;
         }
 
