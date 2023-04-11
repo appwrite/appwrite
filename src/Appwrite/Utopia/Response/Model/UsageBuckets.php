@@ -21,44 +21,43 @@ class UsageBuckets extends Model
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total storage of files in this bucket.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesCreate', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for files created.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesRead', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for files read.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesUpdate', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for files updated.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesDelete', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for files deleted.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

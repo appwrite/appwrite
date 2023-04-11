@@ -8,7 +8,9 @@ use Utopia\Database\Document;
 class Build extends Event
 {
     protected string $type = '';
+
     protected ?Document $resource = null;
+
     protected ?Document $deployment = null;
 
     public function __construct()
@@ -19,7 +21,7 @@ class Build extends Event
     /**
      * Sets resource document for the build event.
      *
-     * @param Document $resource
+     * @param  Document  $resource
      * @return self
      */
     public function setResource(Document $resource): self
@@ -42,7 +44,7 @@ class Build extends Event
     /**
      * Sets deployment for the build event.
      *
-     * @param Document $deployment
+     * @param  Document  $deployment
      * @return self
      */
     public function setDeployment(Document $deployment): self
@@ -65,7 +67,7 @@ class Build extends Event
     /**
      * Sets type for the build event.
      *
-     * @param string $type Can be `BUILD_TYPE_DEPLOYMENT` or `BUILD_TYPE_RETRY`.
+     * @param  string  $type Can be `BUILD_TYPE_DEPLOYMENT` or `BUILD_TYPE_RETRY`.
      * @return self
      */
     public function setType(string $type): self
@@ -89,6 +91,7 @@ class Build extends Event
      * Executes the function event and sends it to the functions worker.
      *
      * @return string|bool
+     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -97,7 +100,7 @@ class Build extends Event
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,
-            'type' => $this->type
+            'type' => $this->type,
         ]);
     }
 }

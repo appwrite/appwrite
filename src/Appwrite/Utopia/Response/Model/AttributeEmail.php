@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeEmail extends Attribute
 {
@@ -36,13 +35,12 @@ class AttributeEmail extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'default@example.com',
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [
         'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_EMAIL
+        'format' => \APP_DATABASE_ATTRIBUTE_EMAIL,
     ];
 
     /**

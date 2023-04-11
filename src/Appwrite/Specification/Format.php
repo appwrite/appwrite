@@ -2,9 +2,9 @@
 
 namespace Appwrite\Specification;
 
+use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Route;
-use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
@@ -21,8 +21,11 @@ abstract class Format
     protected array $models;
 
     protected array $services;
+
     protected array $keys;
+
     protected int $authCount;
+
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -71,9 +74,8 @@ abstract class Format
      *
      * Set param value
      *
-     * @param string $key
-     * @param string $value
-     *
+     * @param  string  $key
+     * @param  string  $value
      * @return self
      */
     public function setParam(string $key, string $value): self
@@ -88,9 +90,8 @@ abstract class Format
      *
      * Get param value
      *
-     * @param string $key
-     * @param string $default
-     *
+     * @param  string  $key
+     * @param  string  $default
      * @return string
      */
     public function getParam(string $key, string $default = ''): string

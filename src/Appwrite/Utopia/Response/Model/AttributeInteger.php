@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeInteger extends Attribute
 {
@@ -44,8 +43,7 @@ class AttributeInteger extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 10,
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [
@@ -54,6 +52,7 @@ class AttributeInteger extends Attribute
 
     /**
      * Get Name *
+     *
      * @return string
      */
     public function getName(): string

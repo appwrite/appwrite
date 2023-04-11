@@ -77,6 +77,7 @@ class PDO extends PDONative
             $result = $this->pdo->rollBack();
         } catch (\Throwable $th) {
             $this->pdo = $this->reconnect();
+
             return false;
         }
 
@@ -99,7 +100,7 @@ class PDO extends PDONative
     {
         $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
 
-        echo '[PDO] MySQL connection restarted' . PHP_EOL;
+        echo '[PDO] MySQL connection restarted'.PHP_EOL;
 
         // Connection settings
         $this->pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays

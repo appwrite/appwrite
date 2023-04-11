@@ -16,23 +16,25 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Functions V1 Worker');
-Console::success(APP_NAME . ' functions worker v1 has started');
+Console::success(APP_NAME.' functions worker v1 has started');
 
 class FunctionsV1 extends Worker
 {
     private ?Executor $executor = null;
+
     public array $args = [];
+
     public array $allowed = [];
 
     public function getName(): string
     {
-        return "functions";
+        return 'functions';
     }
 
     public function init(): void
@@ -57,13 +59,12 @@ class FunctionsV1 extends Worker
         /**
          * Handle Event execution.
          */
-        if (!empty($events)) {
+        if (! empty($events)) {
             $limit = 30;
             $sum = 30;
             $offset = 0;
             $functions = [];
             /** @var Document[] $functions */
-
             while ($sum >= $limit) {
                 $functions = $database->find('functions', [
                     Query::limit($limit),
@@ -73,14 +74,14 @@ class FunctionsV1 extends Worker
                 $sum = \count($functions);
                 $offset = $offset + $limit;
 
-                Console::log('Fetched ' . $sum . ' functions...');
+                Console::log('Fetched '.$sum.' functions...');
 
                 foreach ($functions as $function) {
-                    if (!array_intersect($events, $function->getAttribute('events', []))) {
+                    if (! array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
 
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+                    Console::success('Iterating function: '.$function->getAttribute('name'));
 
                     $this->execute(
                         project: $project,
@@ -93,7 +94,7 @@ class FunctionsV1 extends Worker
                         user: $user
                     );
 
-                    Console::success('Triggered function: ' . $events[0]);
+                    Console::success('Triggered function: '.$events[0]);
                 }
             }
 
@@ -147,7 +148,7 @@ class FunctionsV1 extends Worker
                 $function = $database->getDocument('functions', $function->getId());
 
                 if (empty($function->getId())) {
-                    throw new Exception('Function not found (' . $function->getId() . ')');
+                    throw new Exception('Function not found ('.$function->getId().')');
                 }
 
                 if ($functionOriginal->getAttribute('schedule') !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
@@ -178,7 +179,6 @@ class FunctionsV1 extends Worker
                     ->setUser($user)
                     ->setProject($project)
                     ->schedule(new \DateTime($next));
-                ;
 
                 $this->execute(
                     project: $project,
@@ -203,7 +203,6 @@ class FunctionsV1 extends Worker
         ?Document $user = null,
         string $jwt = null
     ) {
-
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
@@ -232,8 +231,8 @@ class FunctionsV1 extends Worker
         /** Check if  runtime is supported */
         $runtimes = Config::getParam('runtimes', []);
 
-        if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported', 400);
+        if (! \array_key_exists($function->getAttribute('runtime'), $runtimes)) {
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported', 400);
         }
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
@@ -265,6 +264,7 @@ class FunctionsV1 extends Worker
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+
             return $carry;
         }, []);
 
@@ -309,7 +309,7 @@ class FunctionsV1 extends Worker
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('duration', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', (float) $interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -339,7 +339,7 @@ class FunctionsV1 extends Worker
         /** Trigger realtime event */
         $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
             'functionId' => $function->getId(),
-            'executionId' => $execution->getId()
+            'executionId' => $execution->getId(),
         ]);
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern

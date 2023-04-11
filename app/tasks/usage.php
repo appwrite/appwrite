@@ -11,9 +11,8 @@ use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
-use Utopia\Validator\WhiteList;
+use Utopia\Registry\Registry;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
@@ -34,14 +33,14 @@ function getDatabase(Registry &$register, string $namespace): UtopiaDatabase
             $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 
-            if (!$database->exists($database->getDefaultDatabase(), 'projects')) {
+            if (! $database->exists($database->getDefaultDatabase(), 'projects')) {
                 throw new Exception('Projects collection not ready');
             }
             break; // leave loop if successful
         } catch (\Exception $e) {
             Console::warning("Database not ready. Retrying connection ({$attempts})...");
             if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                throw new \Exception('Failed to connect to database: '.$e->getMessage());
             }
             sleep(DATABASE_RECONNECT_SLEEP);
         }
@@ -73,6 +72,7 @@ function getInfluxDB(Registry &$register): InfluxDatabase
             sleep($sleep);
         }
     } while ($attempts < $max);
+
     return $database;
 }
 
@@ -83,7 +83,7 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
-        $log->setNamespace("usage");
+        $log->setNamespace('usage');
         $log->setServer(\gethostname());
         $log->setVersion($version);
         $log->setType(Log::TYPE_ERROR);
@@ -103,7 +103,7 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
         $responseCode = $logger->addLog($log);
-        Console::info('Usage stats log pushed with status code: ' . $responseCode);
+        Console::info('Usage stats log pushed with status code: '.$responseCode);
     }
 
     Console::warning("Failed: {$error->getMessage()}");
@@ -115,7 +115,7 @@ $cli
     ->desc('Schedules syncing data from influxdb to Appwrite console db')
     ->action(function () use ($register, $logError) {
         Console::title('Usage Aggregation V1');
-        Console::success(APP_NAME . ' usage aggregation process v1 has started');
+        Console::success(APP_NAME.' usage aggregation process v1 has started');
 
         $database = getDatabase($register, '_console');
         $influxDB = getInfluxDB($register);

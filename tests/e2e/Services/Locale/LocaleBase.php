@@ -100,7 +100,6 @@ trait LocaleBase
         $this->assertEquals($response['body']['countries'][0]['name'], 'Alemania');
         $this->assertEquals($response['body']['countries'][0]['code'], 'DE');
 
-
         /**
          * Test for FAILURE
          */
@@ -161,7 +160,6 @@ trait LocaleBase
         $this->assertIsArray($response['body']['continents']);
         $this->assertEquals($response['body']['continents'][0]['code'], 'NA');
         $this->assertEquals($response['body']['continents'][0]['name'], 'América del Norte');
-
 
         /**
          * Test for FAILURE
@@ -227,9 +225,9 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $languages           = require('app/config/locale/codes.php');
-        $defaultCountries    = require('app/config/locale/countries.php');
-        $defaultContinents   = require('app/config/locale/continents.php');
+        $languages = require 'app/config/locale/codes.php';
+        $defaultCountries = require 'app/config/locale/countries.php';
+        $defaultContinents = require 'app/config/locale/continents.php';
 
         foreach ($languages as $lang) {
             $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
@@ -238,12 +236,12 @@ trait LocaleBase
                 'x-appwrite-locale' => $lang,
             ]);
 
-            if (!\is_array($response['body']['countries'])) {
-                throw new Exception('Failed to iterate locale: ' . $lang);
+            if (! \is_array($response['body']['countries'])) {
+                throw new Exception('Failed to iterate locale: '.$lang);
             }
 
             foreach ($response['body']['countries'] as $i => $code) {
-                $this->assertContains($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang);
+                $this->assertContains($code['code'], $defaultCountries, $code['code'].' country should be removed from '.$lang);
             }
 
             // foreach (array_keys($defaultCountries) as $i => $code) {
@@ -260,7 +258,7 @@ trait LocaleBase
             ]);
 
             foreach ($response['body']['continents'] as $i => $code) {
-                $this->assertContains($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang);
+                $this->assertContains($code['code'], $defaultContinents, $code['code'].' continent should be removed from '.$lang);
             }
 
             // foreach (array_keys($defaultContinents) as $i => $code) {

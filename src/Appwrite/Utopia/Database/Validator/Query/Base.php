@@ -2,15 +2,19 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Utopia\Validator;
 use Utopia\Database\Query;
+use Utopia\Validator;
 
 abstract class Base extends Validator
 {
     public const METHOD_TYPE_LIMIT = 'limit';
+
     public const METHOD_TYPE_OFFSET = 'offset';
+
     public const METHOD_TYPE_CURSOR = 'cursor';
+
     public const METHOD_TYPE_ORDER = 'order';
+
     public const METHOD_TYPE_FILTER = 'filter';
 
     /**

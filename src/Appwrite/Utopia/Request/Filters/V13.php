@@ -11,13 +11,13 @@ class V13 extends Filter
     {
         switch ($model) {
             // Replaced Types
-            case "database.createIntegerAttribute":
-            case "database.createFloatAttribute":
-                $content = $this->convertStringToNum($content, "min");
-                $content = $this->convertStringToNum($content, "max");
-                $content = $this->convertStringToNum($content, "default");
+            case 'database.createIntegerAttribute':
+            case 'database.createFloatAttribute':
+                $content = $this->convertStringToNum($content, 'min');
+                $content = $this->convertStringToNum($content, 'max');
+                $content = $this->convertStringToNum($content, 'default');
                 break;
-            case "functions.createExecution":
+            case 'functions.createExecution':
                 $content = $this->convertExecution($content);
         }
 
@@ -26,13 +26,15 @@ class V13 extends Filter
 
     private function convertStringToNum($content, $value)
     {
-        $content[$value] = is_null($content[$value]) ? null : (int)$content[$value];
+        $content[$value] = is_null($content[$value]) ? null : (int) $content[$value];
+
         return $content;
     }
 
     private function convertExecution($content)
     {
         $content['async'] = true;
+
         return $content;
     }
 }

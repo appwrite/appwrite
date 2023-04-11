@@ -49,20 +49,19 @@ class Twitch extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return $this->endpoint . 'authorize?' .
+        return $this->endpoint.'authorize?'.
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'scope' => \implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'force_verify' => true,
-                'state' => \json_encode($this->state)
+                'state' => \json_encode($this->state),
             ]);
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -70,12 +69,12 @@ class Twitch extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . 'token?' . \http_build_query([
-                    "client_id" => $this->appID,
-                    "client_secret" => $this->appSecret,
-                    "code" => $code,
-                    "grant_type" => "authorization_code",
-                    "redirect_uri" => $this->callback
+                $this->endpoint.'token?'.\http_build_query([
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'code' => $code,
+                    'grant_type' => 'authorization_code',
+                    'redirect_uri' => $this->callback,
                 ])
             ), true);
         }
@@ -84,19 +83,18 @@ class Twitch extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token?' . \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "refresh_token" => $refreshToken,
-                "grant_type" => "refresh_token",
+            $this->endpoint.'token?'.\http_build_query([
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
             ])
         ), true);
 
@@ -108,8 +106,7 @@ class Twitch extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -120,8 +117,7 @@ class Twitch extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -138,20 +134,18 @@ class Twitch extends OAuth2
      *
      * @link https://dev.twitch.tv/docs/api/reference#get-users
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
         $email = $this->getUserEmail($accessToken);
 
-        return !empty($email);
+        return ! empty($email);
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -162,8 +156,7 @@ class Twitch extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken)
@@ -173,8 +166,8 @@ class Twitch extends OAuth2
                 'GET',
                 $this->resourceEndpoint,
                 [
-                    'Authorization: Bearer ' . \urlencode($accessToken),
-                    'Client-Id: ' . \urlencode($this->appID)
+                    'Authorization: Bearer '.\urlencode($accessToken),
+                    'Client-Id: '.\urlencode($this->appID),
                 ]
             ), true);
 

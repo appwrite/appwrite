@@ -24,10 +24,10 @@ class IndexedQueries extends Queries
      *
      * This Queries Validator filters indexes for only available indexes
      *
-     * @param Document[] $attributes
-     * @param Document[] $indexes
-     * @param Base ...$validators
-     * @param bool $strict
+     * @param  Document[]  $attributes
+     * @param  Document[]  $indexes
+     * @param  Base  ...$validators
+     * @param  bool  $strict
      */
     public function __construct($attributes = [], $indexes = [], Base ...$validators)
     {
@@ -35,17 +35,17 @@ class IndexedQueries extends Queries
 
         $this->indexes[] = new Document([
             'type' => Database::INDEX_UNIQUE,
-            'attributes' => ['$id']
+            'attributes' => ['$id'],
         ]);
 
         $this->indexes[] = new Document([
             'type' => Database::INDEX_KEY,
-            'attributes' => ['$createdAt']
+            'attributes' => ['$createdAt'],
         ]);
 
         $this->indexes[] = new Document([
             'type' => Database::INDEX_KEY,
-            'attributes' => ['$updatedAt']
+            'attributes' => ['$updatedAt'],
         ]);
 
         foreach ($indexes ?? [] as $index) {
@@ -58,9 +58,8 @@ class IndexedQueries extends Queries
     /**
      * Check if indexed array $indexes matches $queries
      *
-     * @param array $indexes
-     * @param array $queries
-     *
+     * @param  array  $indexes
+     * @param  array  $queries
      * @return bool
      */
     protected function arrayMatch(array $indexes, array $queries): bool
@@ -92,18 +91,18 @@ class IndexedQueries extends Queries
      *
      * Otherwise, returns true.
      *
-     * @param mixed $value
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($value): bool
     {
-        if (!parent::isValid($value)) {
+        if (! parent::isValid($value)) {
             return false;
         }
 
         $queries = [];
         foreach ($value as $query) {
-            if (!$query instanceof Query) {
+            if (! $query instanceof Query) {
                 $query = Query::parse($query);
             }
 
@@ -111,8 +110,8 @@ class IndexedQueries extends Queries
         }
 
         $grouped = Query::groupByType($queries);
-        /** @var Query[] */ $filters = $grouped['filters'];
-        /** @var string[] */ $orderAttributes = $grouped['orderAttributes'];
+/** @var Query[] */ $filters = $grouped['filters'];
+/** @var string[] */ $orderAttributes = $grouped['orderAttributes'];
 
         // Check filter queries for exact index match
         if (count($filters) > 0) {
@@ -129,22 +128,25 @@ class IndexedQueries extends Queries
                 }
             }
 
-            if (!$found) {
-                $this->message = 'Index not found: ' . implode(",", array_keys($filtersByAttribute));
+            if (! $found) {
+                $this->message = 'Index not found: '.implode(',', array_keys($filtersByAttribute));
+
                 return false;
             }
 
             // search method requires fulltext index
             if (in_array(Query::TYPE_SEARCH, array_values($filtersByAttribute)) && $found['type'] !== Database::INDEX_FULLTEXT) {
-                $this->message = 'Search method requires fulltext index: ' . implode(",", array_keys($filtersByAttribute));
+                $this->message = 'Search method requires fulltext index: '.implode(',', array_keys($filtersByAttribute));
+
                 return false;
             }
         }
 
         // Check order attributes for exact index match
         $validator = new OrderAttributes($this->attributes, $this->indexes, true);
-        if (count($orderAttributes) > 0 && !$validator->isValid($orderAttributes)) {
+        if (count($orderAttributes) > 0 && ! $validator->isValid($orderAttributes)) {
             $this->message = $validator->getDescription();
+
             return false;
         }
 

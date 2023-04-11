@@ -6,16 +6,16 @@ use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Audits V1 Worker');
-Console::success(APP_NAME . ' audits worker v1 has started');
+Console::success(APP_NAME.' audits worker v1 has started');
 
 class AuditsV1 extends Worker
 {
     public function getName(): string
     {
-        return "audits";
+        return 'audits';
     }
 
     public function init(): void

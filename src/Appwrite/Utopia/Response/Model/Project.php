@@ -154,8 +154,7 @@ class Project extends Model
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
-            ])
-        ;
+            ]);
 
         $services = Config::getParam('services', []);
         $auth = Config::getParam('auth', []);
@@ -165,17 +164,16 @@ class Project extends Model
             $key = $method['key'] ?? '';
 
             $this
-                ->addRule('auth' . ucfirst($key), [
+                ->addRule('auth'.ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' auth method status',
+                    'description' => $name.' auth method status',
                     'example' => true,
                     'default' => true,
-                ])
-            ;
+                ]);
         }
 
         foreach ($services as $service) {
-            if (!$service['optional']) {
+            if (! $service['optional']) {
                 continue;
             }
 
@@ -183,13 +181,12 @@ class Project extends Model
             $key = $service['key'] ?? '';
 
             $this
-                ->addRule('serviceStatusFor' . ucfirst($key), [
+                ->addRule('serviceStatusFor'.ucfirst($key), [
                     'type' => self::TYPE_BOOLEAN,
-                    'description' => $name . ' service status',
+                    'description' => $name.' service status',
                     'example' => true,
                     'default' => true,
-                ])
-            ;
+                ]);
         }
     }
 
@@ -225,12 +222,12 @@ class Project extends Model
         $services = Config::getParam('services', []);
 
         foreach ($services as $service) {
-            if (!$service['optional']) {
+            if (! $service['optional']) {
                 continue;
             }
             $key = $service['key'] ?? '';
             $value = $values[$key] ?? true;
-            $document->setAttribute('serviceStatusFor' . ucfirst($key), $value);
+            $document->setAttribute('serviceStatusFor'.ucfirst($key), $value);
         }
 
         // Auth
@@ -244,7 +241,7 @@ class Project extends Model
         foreach ($auth as $index => $method) {
             $key = $method['key'];
             $value = $authValues[$key] ?? true;
-            $document->setAttribute('auth' . ucfirst($key), $value);
+            $document->setAttribute('auth'.ucfirst($key), $value);
         }
 
         // Providers
@@ -253,20 +250,20 @@ class Project extends Model
         $projectProviders = [];
 
         foreach ($providers as $key => $provider) {
-            if (!$provider['enabled']) {
+            if (! $provider['enabled']) {
                 // Disabled by Appwrite configuration, exclude from response
                 continue;
             }
 
             $projectProviders[] = new Document([
                 'name' => ucfirst($key),
-                'appId' => $providerValues[$key . 'Appid'] ?? '',
-                'secret' => $providerValues[$key . 'Secret'] ?? '',
-                'enabled' => $providerValues[$key . 'Enabled'] ?? false,
+                'appId' => $providerValues[$key.'Appid'] ?? '',
+                'secret' => $providerValues[$key.'Secret'] ?? '',
+                'enabled' => $providerValues[$key.'Enabled'] ?? false,
             ]);
         }
 
-        $document->setAttribute("providers", $projectProviders);
+        $document->setAttribute('providers', $projectProviders);
 
         return $document;
     }

@@ -4,10 +4,10 @@ namespace Tests\Unit\Utopia\Database\Validator\Query;
 
 use Appwrite\Utopia\Database\Validator\Query\Base;
 use Appwrite\Utopia\Database\Validator\Query\Filter;
+use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use PHPUnit\Framework\TestCase;
 
 class FilterTest extends TestCase
 {

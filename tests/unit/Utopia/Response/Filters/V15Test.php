@@ -2,12 +2,11 @@
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
-use Appwrite\Utopia\Response\Filters\V15;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filters\V15;
+use PHPUnit\Framework\TestCase;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use PHPUnit\Framework\TestCase;
-use stdClass;
 
 class V15Test extends TestCase
 {
@@ -197,7 +196,7 @@ class V15Test extends TestCase
                     'maximumFileSize' => 100,
                     'allowedFileExtensions' => [
                         'jpg',
-                        'png'
+                        'png',
                     ],
                     'encryption' => false,
                     'antivirus' => false,
@@ -214,7 +213,7 @@ class V15Test extends TestCase
                     'maximumFileSize' => 100,
                     'allowedFileExtensions' => [
                         'jpg',
-                        'png'
+                        'png',
                     ],
                     'encryption' => false,
                     'antivirus' => false,
@@ -276,8 +275,8 @@ class V15Test extends TestCase
                 [
                     'startTime' => 1592981250,
                     'endTime' => 1592981250,
-                ]
-            ]
+                ],
+            ],
         ];
     }
 
@@ -347,14 +346,14 @@ class V15Test extends TestCase
                         'status' => 'available',
                         'required' => true,
                         'array' => false,
-                        'default' => false
+                        'default' => false,
                     ],
                     'indexes' => [
                         'key' => 'index1',
                         'type' => 'primary',
                         'status' => 'available',
                         'attributes' => [],
-                        'orders' => []
+                        'orders' => [],
                     ],
                 ],
                 [
@@ -362,10 +361,10 @@ class V15Test extends TestCase
                     '$createdAt' => 1592981250,
                     '$updatedAt' => 1592981250,
                     '$read' => [
-                        'role:all'
+                        'role:all',
                     ],
                     '$write' => [
-                        'user:608f9da25e7e1'
+                        'user:608f9da25e7e1',
                     ],
                     'databaseId' => '5e5ea5c16897e',
                     'name' => 'My Collection',
@@ -377,14 +376,14 @@ class V15Test extends TestCase
                         'status' => 'available',
                         'required' => true,
                         'array' => false,
-                        'default' => false
+                        'default' => false,
                     ],
                     'indexes' => [
                         'key' => 'index1',
                         'type' => 'primary',
                         'status' => 'available',
                         'attributes' => [],
-                        'orders' => []
+                        'orders' => [],
                     ],
                 ],
             ],
@@ -512,7 +511,7 @@ class V15Test extends TestCase
                     '$databaseId' => '5e5ea5c15117e',
                     '$createdAt' => '2020-06-24T06:47:30.000Z',
                     '$updatedAt' => '2020-06-24T06:47:30.000Z',
-                    '$permissions' => [Permission::read(Role::any())]
+                    '$permissions' => [Permission::read(Role::any())],
                 ],
                 [
                     '$id' => '5e5ea5c16897e',
@@ -606,7 +605,7 @@ class V15Test extends TestCase
                     '$createdAt' => '2020-06-24T06:47:30.000Z',
                     '$updatedAt' => '2020-06-24T06:47:30.000Z',
                     '$permissions' => [
-                        "any"
+                        'any',
                     ],
                     'functionId' => '5e5ea6g16897e',
                     'trigger' => 'http',
@@ -615,14 +614,14 @@ class V15Test extends TestCase
                     'response' => '',
                     'stdout' => '',
                     'stderr' => '',
-                    'duration' => 0.4
+                    'duration' => 0.4,
                 ],
                 [
                     '$id' => '5e5ea5c16897e',
                     '$createdAt' => 1592981250,
                     '$updatedAt' => 1592981250,
                     '$read' => [
-                        "role:all"
+                        'role:all',
                     ],
                     'functionId' => '5e5ea6g16897e',
                     'trigger' => 'http',
@@ -630,7 +629,7 @@ class V15Test extends TestCase
                     'statusCode' => 0,
                     'response' => '',
                     'stderr' => '',
-                    'time' => 0.4
+                    'time' => 0.4,
                 ],
             ],
         ];
@@ -731,37 +730,37 @@ class V15Test extends TestCase
                             'key' => 'key',
                             'value' => 'value',
                             'functionId' => '5e5ea5c16897e',
-                        ]
+                        ],
                     ],
                     'events' => [
-                        'account.create'
+                        'account.create',
                     ],
                     'schedule' => '5 4 * * *',
                     'scheduleNext' => '2020-06-24T06:48:12.000Z',
                     'schedulePrevious' => '2020-06-24T06:47:17.000Z',
-                    'timeout' => 1592981237
+                    'timeout' => 1592981237,
                 ],
                 [
                     '$id' => '5e5ea5c16897e',
                     '$createdAt' => 1592981250,
                     '$updatedAt' => 1592981250,
                     'execute' => [
-                        'role:member'
+                        'role:member',
                     ],
                     'name' => 'My Function',
                     'status' => 'enabled',
                     'runtime' => 'python-3.8',
                     'deployment' => '5e5ea5c16897e',
                     'vars' => [
-                        'key' => 'value'
+                        'key' => 'value',
                     ],
                     'events' => [
-                        'account.create'
+                        'account.create',
                     ],
                     'schedule' => '5 4 * * *',
                     'scheduleNext' => 1592981292,
                     'schedulePrevious' => 1592981237,
-                    'timeout' => 1592981237
+                    'timeout' => 1592981237,
                 ],
             ],
             'enabled false' => [
@@ -878,7 +877,7 @@ class V15Test extends TestCase
                     'deviceBrand' => 'Google',
                     'deviceModel' => 'Nexus 5',
                     'countryCode' => 'US',
-                    'countryName' => 'United States'
+                    'countryName' => 'United States',
                 ],
                 [
                     'event' => 'account.sessions.create',
@@ -901,8 +900,8 @@ class V15Test extends TestCase
                     'deviceBrand' => 'Google',
                     'deviceModel' => 'Nexus 5',
                     'countryCode' => 'US',
-                    'countryName' => 'United States'
-                ]
+                    'countryName' => 'United States',
+                ],
             ],
         ];
     }

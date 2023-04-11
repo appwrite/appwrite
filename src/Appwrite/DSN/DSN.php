@@ -44,13 +44,13 @@ class DSN
      *
      * Construct a new DSN object
      *
-     * @param string $dsn
+     * @param  string  $dsn
      */
     public function __construct(string $dsn)
     {
         $parts = parse_url($dsn);
 
-        if (!$parts) {
+        if (! $parts) {
             throw new \InvalidArgumentException("Unable to parse DSN: $dsn");
         }
 

@@ -4,16 +4,16 @@ use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Mails V1 Worker');
-Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
+Console::success(APP_NAME.' mails worker v1 has started'."\n");
 
 class MailsV1 extends Worker
 {
     public function getName(): string
     {
-        return "mails";
+        return 'mails';
     }
 
     public function init(): void
@@ -26,9 +26,9 @@ class MailsV1 extends Worker
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             Console::info('Skipped mail processing. No SMTP server hostname has been set.');
+
             return;
         }
-
 
         $recipient = $this->args['recipient'];
         $subject = $this->args['subject'];
@@ -56,7 +56,7 @@ class MailsV1 extends Worker
         $mail->clearBCCs();
         $mail->clearCCs();
 
-        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
+        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')) : $from));
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
@@ -65,7 +65,7 @@ class MailsV1 extends Worker
         try {
             $mail->send();
         } catch (\Exception $error) {
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+            throw new Exception('Error sending mail: '.$error->getMessage(), 500);
         }
     }
 

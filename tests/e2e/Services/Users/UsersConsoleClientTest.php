@@ -2,9 +2,9 @@
 
 namespace Tests\E2E\Services\Users;
 
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 
 class UsersConsoleClientTest extends Scope
@@ -17,23 +17,22 @@ class UsersConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(Client::METHOD_GET, '/users/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'range' => '32h',
-            'provider' => 'email'
+            'provider' => 'email',
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
 
         $response = $this->client->call(Client::METHOD_GET, '/users/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'range' => '24h',
-            'provider' => 'some-random-provider'
+            'provider' => 'some-random-provider',
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -43,10 +42,10 @@ class UsersConsoleClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/users/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'range' => '24h',
-            'provider' => 'email'
+            'provider' => 'email',
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -63,9 +62,9 @@ class UsersConsoleClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/users/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'range' => '24h'
+            'range' => '24h',
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);

@@ -12,7 +12,7 @@ class Single extends Model
             ->addRule('string', [
                 'type' => self::TYPE_STRING,
                 'example' => '5e5ea5c16897e',
-                'required' => true
+                'required' => true,
             ])
             ->addRule('integer', [
                 'type' => self::TYPE_INTEGER,
@@ -27,7 +27,7 @@ class Single extends Model
             ->addRule('required', [
                 'type' => self::TYPE_STRING,
                 'default' => 'default',
-                'required' => true
+                'required' => true,
             ]);
     }
 

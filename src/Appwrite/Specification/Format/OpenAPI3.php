@@ -19,30 +19,32 @@ class OpenAPI3 extends Format
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
-            if (!in_array($model->getType(), $usedModels)) {
+            if (! in_array($model->getType(), $usedModels)) {
                 continue;
             }
 
             if (\is_array($rule['type'])) {
                 foreach ($rule['type'] as $ruleType) {
-                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+                    if (! in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
                         $usedModels[] = $ruleType;
 
                         foreach ($this->models as $m) {
                             if ($m->getType() === $ruleType) {
                                 $this->getNestedModels($m, $usedModels);
+
                                 continue;
                             }
                         }
                     }
                 }
             } else {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
+                if (! in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float', 'double'])) {
                     $usedModels[] = $rule['type'];
 
                     foreach ($this->models as $m) {
                         if ($m->getType() === $rule['type']) {
                             $this->getNestedModels($m, $usedModels);
+
                             continue;
                         }
                     }
@@ -124,7 +126,7 @@ class OpenAPI3 extends Format
             }
 
             $id = $route->getLabel('sdk.method', \uniqid());
-            $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
+            $desc = (! empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
             $routeSecurity = $route->getLabel('sdk.auth', []);
@@ -153,7 +155,7 @@ class OpenAPI3 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($id),
+                'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
@@ -162,8 +164,8 @@ class OpenAPI3 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.Template::fromCamelCaseToDash($id).'.md',
+                    'edit' => 'https://github.com/appwrite/appwrite/edit/master'.$route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
@@ -187,8 +189,8 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if (!(\is_array($model)) && $model->isNone()) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+            if (! (\is_array($model)) && $model->isNone()) {
+                $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')] = [
                     'description' => in_array($produces, [
                         'image/*',
                         'image/jpeg',
@@ -202,19 +204,19 @@ class OpenAPI3 extends Format
                 ];
             } else {
                 if (\is_array($model)) {
-                    $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+                    $modelDescription = \implode(', or ', \array_map(fn ($m) => $m->getName(), $model));
 
                     // model has multiple possible responses, we will use oneOf
                     foreach ($model as $m) {
                         $usedModels[] = $m->getType();
                     }
 
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                    $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')] = [
                         'description' => $modelDescription,
                         'content' => [
                             $produces => [
                                 'schema' => [
-                                    'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/' . $m->getType()], $model)
+                                    'oneOf' => \array_map(fn ($m) => ['$ref' => '#/components/schemas/'.$m->getType()], $model),
                                 ],
                             ],
                         ],
@@ -222,12 +224,12 @@ class OpenAPI3 extends Format
                 } else {
                     // Response definition using one type
                     $usedModels[] = $model->getType();
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                    $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')] = [
                         'description' => $model->getName(),
                         'content' => [
                             $produces => [
                                 'schema' => [
-                                    '$ref' => '#/components/schemas/' . $model->getType(),
+                                    '$ref' => '#/components/schemas/'.$model->getType(),
                                 ],
                             ],
                         ],
@@ -236,11 +238,11 @@ class OpenAPI3 extends Format
             }
 
             if ($route->getLabel('sdk.response.code', 500) === 204) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+                $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
+                unset($temp['responses'][(string) $route->getLabel('sdk.response.code', '500')]['schema']);
             }
 
-            if ((!empty($scope))) { //  && 'public' != $scope
+            if ((! empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
 
                 foreach ($route->getLabel('sdk.auth', []) as $security) {
@@ -255,8 +257,8 @@ class OpenAPI3 extends Format
 
             $body = [
                 'content' => [
-                    $consumes[0]  => [
-                        'schema'  => [
+                    $consumes[0] => [
+                        'schema' => [
                             'type' => 'object',
                             'properties' => [],
                         ],
@@ -275,7 +277,7 @@ class OpenAPI3 extends Format
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => ! $param['optional'],
                 ];
 
                 foreach ($this->services as $service) {
@@ -284,10 +286,10 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                switch ((!empty($validator)) ? \get_class($validator) : '') {
+                switch ((! empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Validator\Boolean':
                         $node['schema']['type'] = $validator->getType();
@@ -295,14 +297,14 @@ class OpenAPI3 extends Format
                         break;
                     case 'Utopia\Database\Validator\UID':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
                         if ($route->getLabel('sdk.methodType', '') === 'upload') {
                             $node['schema']['x-upload-id'] = true;
                         }
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['schema']['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['schema']['type'] = $validator->getType();
@@ -357,14 +359,14 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['schema']['x-example'] = '["'.Permission::read(Role::any()).'"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['schema']['x-example'] = '["'.Role::any()->toString().'"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['schema']['type'] = $validator->getType();
@@ -413,25 +415,25 @@ class OpenAPI3 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($param['optional'] && ! \is_null($param['default'])) { // Param has default value
                     $node['schema']['default'] = $param['default'];
                 }
 
-                if (false !== \strpos($url, ':' . $name)) { // Param is in URL path
+                if (false !== \strpos($url, ':'.$name)) { // Param is in URL path
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
                 } elseif ($route->getMethod() == 'GET') { // Param is in query
                     $node['in'] = 'query';
                     $temp['parameters'][] = $node;
                 } else { // Param is in payload
-                    if (!$param['optional']) {
+                    if (! $param['optional']) {
                         $bodyRequired[] = $name;
                     }
 
                     $body['content'][$consumes[0]]['schema']['properties'][$name] = [
                         'type' => $node['schema']['type'],
                         'description' => $node['description'],
-                        'x-example' => $node['schema']['x-example'] ?? null
+                        'x-example' => $node['schema']['x-example'] ?? null,
                     ];
 
                     if ($node['schema']['x-upload-id'] ?? false) {
@@ -451,14 +453,14 @@ class OpenAPI3 extends Format
                     }
                 }
 
-                $url = \str_replace(':' . $name, '{' . $name . '}', $url);
+                $url = \str_replace(':'.$name, '{'.$name.'}', $url);
             }
 
-            if (!empty($bodyRequired)) {
+            if (! empty($bodyRequired)) {
                 $body['content'][$consumes[0]]['schema']['required'] = $bodyRequired;
             }
 
-            if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+            if (! empty($body['content'][$consumes[0]]['schema']['properties'])) {
                 $temp['requestBody'] = $body;
             }
 
@@ -470,7 +472,7 @@ class OpenAPI3 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+            if (! in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
                 continue;
             }
 
@@ -482,7 +484,7 @@ class OpenAPI3 extends Format
                 'type' => 'object',
             ];
 
-            if (!empty($rules)) {
+            if (! empty($rules)) {
                 $output['components']['schemas'][$model->getType()]['properties'] = [];
             }
 
@@ -490,7 +492,7 @@ class OpenAPI3 extends Format
                 $output['components']['schemas'][$model->getType()]['additionalProperties'] = true;
             }
 
-            if (!empty($required)) {
+            if (! empty($required)) {
                 $output['components']['schemas'][$model->getType()]['required'] = $required;
             }
 
@@ -537,19 +539,19 @@ class OpenAPI3 extends Format
                             if ($rule['array']) {
                                 $items = [
                                     'anyOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type'])
+                                        return ['$ref' => '#/components/schemas/'.$type];
+                                    }, $rule['type']),
                                 ];
                             } else {
                                 $items = [
                                     'oneOf' => \array_map(function ($type) {
-                                        return ['$ref' => '#/components/schemas/' . $type];
-                                    }, $rule['type'])
+                                        return ['$ref' => '#/components/schemas/'.$type];
+                                    }, $rule['type']),
                                 ];
                             }
                         } else {
                             $items = [
-                                '$ref' => '#/components/schemas/' . $rule['type'],
+                                '$ref' => '#/components/schemas/'.$rule['type'],
                             ];
                         }
                         break;
@@ -582,7 +584,7 @@ class OpenAPI3 extends Format
                 if ($items) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
-                if (!in_array($name, $required)) {
+                if (! in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }

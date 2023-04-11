@@ -109,8 +109,7 @@ class User extends Model
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
-            ])
-        ;
+            ]);
     }
 
     /**
@@ -128,6 +127,7 @@ class User extends Model
         if (is_array($prefs) && empty($prefs)) {
             $document->setAttribute('prefs', new \stdClass());
         }
+
         return $document;
     }
 

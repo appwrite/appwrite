@@ -1,7 +1,7 @@
 <?php
 
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;
@@ -40,8 +40,8 @@ App::get('/v1/locale')
 
         if ($record) {
             $output['countryCode'] = $record['country']['iso_code'];
-            $output['country'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
-            $output['continent'] = $locale->getText('continents.' . strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
+            $output['country'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            $output['continent'] = $locale->getText('continents.'.strtolower($record['continent']['code']), $locale->getText('locale.country.unknown'));
             $output['continentCode'] = $record['continent']['code'];
             $output['eu'] = (\in_array($record['country']['iso_code'], $eu)) ? true : false;
 
@@ -62,9 +62,9 @@ App::get('/v1/locale')
         }
 
         $response
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-        ;
+            ->addHeader('Cache-Control', 'public, max-age='.$time)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
+;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 
@@ -89,7 +89,7 @@ App::get('/v1/locale/countries')
 
         foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('countries.' . strtolower($value)),
+                'name' => $locale->getText('countries.'.strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -121,9 +121,9 @@ App::get('/v1/locale/countries/eu')
         $output = [];
 
         foreach ($eu as $code) {
-            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
+            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'name' => $locale->getText('countries.' . strtolower($code)),
+                    'name' => $locale->getText('countries.'.strtolower($code)),
                     'code' => $code,
                 ]);
             }
@@ -158,11 +158,11 @@ App::get('/v1/locale/countries/phones')
         \asort($list);
 
         foreach ($list as $code => $name) {
-            if ($locale->getText('countries.' . strtolower($code), false) !== false) {
+            if ($locale->getText('countries.'.strtolower($code), false) !== false) {
                 $output[] = new Document([
-                    'code' => '+' . $list[$code],
+                    'code' => '+'.$list[$code],
                     'countryCode' => $code,
-                    'countryName' => $locale->getText('countries.' . strtolower($code)),
+                    'countryName' => $locale->getText('countries.'.strtolower($code)),
                 ]);
             }
         }
@@ -190,7 +190,7 @@ App::get('/v1/locale/continents')
 
         foreach ($list as $value) {
             $output[] = new Document([
-                'name' => $locale->getText('continents.' . strtolower($value)),
+                'name' => $locale->getText('continents.'.strtolower($value)),
                 'code' => $value,
             ]);
         }
@@ -223,7 +223,6 @@ App::get('/v1/locale/currencies')
 
         $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     });
-
 
 App::get('/v1/locale/languages')
     ->desc('List Languages')

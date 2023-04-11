@@ -2,15 +2,15 @@
 
 namespace Appwrite\Migration;
 
+use Exception;
 use Swoole\Runtime;
-use Utopia\Database\Document;
-use Utopia\Database\Database;
-use Utopia\Database\Query;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Exception;
-use Utopia\App;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -65,33 +65,32 @@ abstract class Migration
         $this->collections = array_merge([
             '_metadata' => [
                 '$id' => ID::custom('_metadata'),
-                '$collection' => Database::METADATA
+                '$collection' => Database::METADATA,
             ],
             'audit' => [
                 '$id' => ID::custom('audit'),
-                '$collection' => Database::METADATA
+                '$collection' => Database::METADATA,
             ],
             'abuse' => [
                 '$id' => ID::custom('abuse'),
-                '$collection' => Database::METADATA
-            ]
+                '$collection' => Database::METADATA,
+            ],
         ], Config::getParam('collections', []));
     }
 
     /**
      * Set project for migration.
      *
-     * @param Document $project
-     * @param Database $projectDB
-     * @param Database $oldConsoleDB
-     *
+     * @param  Document  $project
+     * @param  Database  $projectDB
+     * @param  Database  $oldConsoleDB
      * @return self
      */
     public function setProject(Document $project, Database $projectDB, Database $consoleDB): self
     {
         $this->project = $project;
         $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('_' . $this->project->getId());
+        $this->projectDB->setNamespace('_'.$this->project->getId());
 
         $this->consoleDB = $consoleDB;
 
@@ -101,7 +100,7 @@ abstract class Migration
     /**
      * Iterates through every document.
      *
-     * @param callable $callback
+     * @param  callable  $callback
      */
     public function forEachDocument(callable $callback): void
     {
@@ -110,7 +109,7 @@ abstract class Migration
                 continue;
             }
 
-            Console::log('Migrating Collection ' . $collection['$id'] . ':');
+            Console::log('Migrating Collection '.$collection['$id'].':');
 
             \Co\run(function (array $collection, callable $callback) {
                 foreach ($this->documentsIterator($collection['$id']) as $document) {
@@ -122,14 +121,15 @@ abstract class Migration
                         $old = $document->getArrayCopy();
                         $new = call_user_func($callback, $document);
 
-                        if (is_null($new) || !self::hasDifference($new->getArrayCopy(), $old)) {
+                        if (is_null($new) || ! self::hasDifference($new->getArrayCopy(), $old)) {
                             return;
                         }
 
                         try {
                             $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
                         } catch (\Throwable $th) {
-                            Console::error('Failed to update document: ' . $th->getMessage());
+                            Console::error('Failed to update document: '.$th->getMessage());
+
                             return;
                         }
                     }, $document, $callback);
@@ -141,8 +141,9 @@ abstract class Migration
     /**
      * Provides an iterator for all documents on a collection.
      *
-     * @param string $collectionId
+     * @param  string  $collectionId
      * @return iterable<Document>
+     *
      * @throws \Exception
      */
     public function documentsIterator(string $collectionId): iterable
@@ -160,7 +161,7 @@ abstract class Migration
             $count = count($documents);
             $sum += $count;
 
-            Console::log($sum . ' / ' . $collectionCount);
+            Console::log($sum.' / '.$collectionCount);
             foreach ($documents as $document) {
                 yield $document;
             }
@@ -170,28 +171,28 @@ abstract class Migration
             } else {
                 $nextDocument = end($documents);
             }
-        } while (!is_null($nextDocument));
+        } while (! is_null($nextDocument));
     }
 
     /**
      * Checks 2 arrays for differences.
      *
-     * @param array $array1
-     * @param array $array2
+     * @param  array  $array1
+     * @param  array  $array2
      * @return bool
      */
     public static function hasDifference(array $array1, array $array2): bool
     {
         foreach ($array1 as $key => $value) {
             if (is_array($value)) {
-                if (!isset($array2[$key]) || !is_array($array2[$key])) {
+                if (! isset($array2[$key]) || ! is_array($array2[$key])) {
                     return true;
                 } else {
                     if (self::hasDifference($value, $array2[$key])) {
                         return true;
                     }
                 }
-            } elseif (!array_key_exists($key, $array2) || $array2[$key] !== $value) {
+            } elseif (! array_key_exists($key, $array2) || $array2[$key] !== $value) {
                 return true;
             }
         }
@@ -202,16 +203,17 @@ abstract class Migration
     /**
      * Creates colletion from the config collection.
      *
-     * @param string $id
-     * @param string|null $name
+     * @param  string  $id
+     * @param  string|null  $name
      * @return void
+     *
      * @throws \Throwable
      */
     protected function createCollection(string $id, string $name = null): void
     {
         $name ??= $id;
 
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+        if (! $this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
             $attributes = [];
             $indexes = [];
             $collection = $this->collections[$id];
@@ -249,10 +251,11 @@ abstract class Migration
     /**
      * Creates attribute from collections.php
      *
-     * @param \Utopia\Database\Database $database
-     * @param string $collectionId
-     * @param string $attributeId
+     * @param  \Utopia\Database\Database  $database
+     * @param  string  $collectionId
+     * @param  string  $attributeId
      * @return void
+     *
      * @throws \Exception
      * @throws \Utopia\Database\Exception\Duplicate
      * @throws \Utopia\Database\Exception\Limit
@@ -294,11 +297,12 @@ abstract class Migration
     /**
      * Creates index from collections.php
      *
-     * @param \Utopia\Database\Database $database
-     * @param string $collectionId
-     * @param string $indexId
-     * @param string|null $from
+     * @param  \Utopia\Database\Database  $database
+     * @param  string  $collectionId
+     * @param  string  $indexId
+     * @param  string|null  $from
      * @return void
+     *
      * @throws \Exception
      * @throws \Utopia\Database\Exception\Duplicate
      * @throws \Utopia\Database\Exception\Limit

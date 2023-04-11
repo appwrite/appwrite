@@ -10,9 +10,9 @@ class OrderAttributes extends ValidatorOrderAttributes
     /**
      * Expression constructor
      *
-     * @param Document[] $attributes
-     * @param Document[] $indexes
-     * @param bool $strict
+     * @param  Document[]  $attributes
+     * @param  Document[]  $indexes
+     * @param  bool  $strict
      */
     public function __construct($attributes, $indexes, $strict)
     {

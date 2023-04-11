@@ -9,44 +9,60 @@ use Utopia\Database\Document;
 class Event
 {
     public const DATABASE_QUEUE_NAME = 'v1-database';
+
     public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
+
     public const DELETE_CLASS_NAME = 'DeletesV1';
 
     public const AUDITS_QUEUE_NAME = 'v1-audits';
+
     public const AUDITS_CLASS_NAME = 'AuditsV1';
 
     public const MAILS_QUEUE_NAME = 'v1-mails';
+
     public const MAILS_CLASS_NAME = 'MailsV1';
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
+
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
+
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
     public const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
+
     public const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
 
     public const BUILDS_QUEUE_NAME = 'v1-builds';
+
     public const BUILDS_CLASS_NAME = 'BuildsV1';
 
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
+
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
     protected string $queue = '';
+
     protected string $class = '';
+
     protected string $event = '';
+
     protected array $params = [];
+
     protected array $payload = [];
+
     protected array $context = [];
+
     protected ?Document $project = null;
+
     protected ?Document $user = null;
 
     /**
-     * @param string $queue
-     * @param string $class
+     * @param  string  $queue
+     * @param  string  $class
      * @return void
      */
     public function __construct(string $queue, string $class)
@@ -58,7 +74,7 @@ class Event
     /**
      * Set queue used for this event.
      *
-     * @param string $queue
+     * @param  string  $queue
      * @return Event
      */
     public function setQueue(string $queue): self
@@ -80,7 +96,8 @@ class Event
 
     /**
      * Set event name used for this event.
-     * @param string $event
+     *
+     * @param  string  $event
      * @return Event
      */
     public function setEvent(string $event): self
@@ -103,7 +120,7 @@ class Event
     /**
      * Set project for this event.
      *
-     * @param Document $project
+     * @param  Document  $project
      * @return self
      */
     public function setProject(Document $project): self
@@ -126,7 +143,7 @@ class Event
     /**
      * Set user for this event.
      *
-     * @param Document $user
+     * @param  Document  $user
      * @return self
      */
     public function setUser(Document $user): self
@@ -149,7 +166,7 @@ class Event
     /**
      * Set payload for this event.
      *
-     * @param array $payload
+     * @param  array  $payload
      * @return self
      */
     public function setPayload(array $payload): self
@@ -172,8 +189,8 @@ class Event
     /**
      * Set context for this event.
      *
-     * @param string $key
-     * @param Document $context
+     * @param  string  $key
+     * @param  Document  $context
      * @return self
      */
     public function setContext(string $key, Document $context): self
@@ -186,8 +203,7 @@ class Event
     /**
      * Get context for this event.
      *
-     * @param string $key
-     *
+     * @param  string  $key
      * @return null|Document
      */
     public function getContext(string $key): ?Document
@@ -197,7 +213,8 @@ class Event
 
     /**
      * Set class used for this event.
-     * @param string $class
+     *
+     * @param  string  $class
      * @return self
      */
     public function setClass(string $class): self
@@ -220,8 +237,8 @@ class Event
     /**
      * Set param of event.
      *
-     * @param string $key
-     * @param mixed $value
+     * @param  string  $key
+     * @param  mixed  $value
      * @return self
      */
     public function setParam(string $key, mixed $value): self
@@ -234,7 +251,7 @@ class Event
     /**
      * Get param of event.
      *
-     * @param string $key
+     * @param  string  $key
      * @return mixed
      */
     public function getParam(string $key): mixed
@@ -256,6 +273,7 @@ class Event
      * Execute Event.
      *
      * @return string|bool
+     *
      * @throws InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -265,7 +283,7 @@ class Event
             'user' => $this->user,
             'payload' => $this->payload,
             'context' => $this->context,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
         ]);
     }
 
@@ -284,7 +302,7 @@ class Event
     /**
      * Parses event pattern and returns the parts in their respective section.
      *
-     * @param string $pattern
+     * @param  string  $pattern
      * @return array
      */
     public static function parseEventPattern(string $pattern): array
@@ -313,13 +331,13 @@ class Event
             }
         }
 
-        if ($hasSubResource && !$hasSubSubResource) {
+        if ($hasSubResource && ! $hasSubSubResource) {
             if ($count === 6) {
                 $attribute = $parts[5];
             }
         }
 
-        if (!$hasSubResource) {
+        if (! $hasSubResource) {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
@@ -331,13 +349,11 @@ class Event
         $subSubResource ??= false;
         $attribute ??= false;
         $action = match (true) {
-            !$hasSubResource && $count > 2 => $parts[2],
+            ! $hasSubResource && $count > 2 => $parts[2],
             $hasSubSubResource => $parts[6] ?? false,
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
-
-
 
         return [
             'type' => $type,
@@ -354,9 +370,10 @@ class Event
     /**
      * Generates all possible events from a pattern.
      *
-     * @param string $pattern
-     * @param array $params
+     * @param  string  $pattern
+     * @param  array  $params
      * @return array
+     *
      * @throws \InvalidArgumentException
      */
     public static function generateEvents(string $pattern, array $params = []): array
@@ -377,15 +394,15 @@ class Event
         $action = $parsed['action'];
         $attribute = $parsed['attribute'];
 
-        if ($resource && !\in_array(\trim($resource, "\[\]"), $paramKeys)) {
+        if ($resource && ! \in_array(\trim($resource, "\[\]"), $paramKeys)) {
             throw new InvalidArgumentException("{$resource} is missing from the params.");
         }
 
-        if ($subResource && !\in_array(\trim($subResource, "\[\]"), $paramKeys)) {
+        if ($subResource && ! \in_array(\trim($subResource, "\[\]"), $paramKeys)) {
             throw new InvalidArgumentException("{$subResource} is missing from the params.");
         }
 
-        if ($subSubResource && !\in_array(\trim($subSubResource, "\[\]"), $paramKeys)) {
+        if ($subSubResource && ! \in_array(\trim($subSubResource, "\[\]"), $paramKeys)) {
             throw new InvalidArgumentException("{$subSubResource} is missing from the params.");
         }
 
@@ -439,9 +456,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -449,7 +466,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }

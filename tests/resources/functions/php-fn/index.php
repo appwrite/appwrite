@@ -1,7 +1,7 @@
 <?php
 
 return function ($request, $response) {
-    \var_dump("Amazing Function Log"); // We test logs (stdout) visibility with this
+    \var_dump('Amazing Function Log'); // We test logs (stdout) visibility with this
 
     $response->json([
         'APPWRITE_FUNCTION_ID' => $request['variables']['APPWRITE_FUNCTION_ID'],

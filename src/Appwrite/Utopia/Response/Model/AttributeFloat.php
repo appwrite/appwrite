@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeFloat extends Attribute
 {
@@ -44,8 +43,7 @@ class AttributeFloat extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 2.5,
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [

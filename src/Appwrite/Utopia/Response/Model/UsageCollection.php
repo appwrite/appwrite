@@ -21,37 +21,36 @@ class UsageCollection extends Model
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('documentsCreate', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents created.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('documentsRead', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents read.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('documentsUpdate', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents updated.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('documentsDelete', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for documents deleted.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

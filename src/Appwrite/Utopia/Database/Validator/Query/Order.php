@@ -2,9 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
-use Utopia\Validator;
 
 class Order extends Base
 {
@@ -15,7 +13,6 @@ class Order extends Base
 
     /**
      * Query constructor
-     *
      */
     public function __construct(array $attributes = [])
     {
@@ -27,8 +24,9 @@ class Order extends Base
     protected function isValidAttribute($attribute): bool
     {
         // Search for attribute in schema
-        if (!isset($this->schema[$attribute])) {
-            $this->message = 'Attribute not found in schema: ' . $attribute;
+        if (! isset($this->schema[$attribute])) {
+            $this->message = 'Attribute not found in schema: '.$attribute;
+
             return false;
         }
 
@@ -42,8 +40,7 @@ class Order extends Base
      *
      * Otherwise, returns false
      *
-     * @param Query $value
-     *
+     * @param  Query  $value
      * @return bool
      */
     public function isValid($query): bool
@@ -55,6 +52,7 @@ class Order extends Base
             if ($attribute === '') {
                 return true;
             }
+
             return $this->isValidAttribute($attribute);
         }
 

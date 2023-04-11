@@ -24,8 +24,8 @@ class Apple extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        "name",
-        "email"
+        'name',
+        'email',
     ];
 
     /**
@@ -46,19 +46,18 @@ class Apple extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://appleid.apple.com/auth/authorize?' . \http_build_query([
+        return 'https://appleid.apple.com/auth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
             'response_type' => 'code',
             'response_mode' => 'form_post',
-            'scope' => \implode(' ', $this->getScopes())
+            'scope' => \implode(' ', $this->getScopes()),
         ]);
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -86,8 +85,7 @@ class Apple extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -116,8 +114,7 @@ class Apple extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -126,8 +123,7 @@ class Apple extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -140,8 +136,7 @@ class Apple extends OAuth2
      *
      * @link https://developer.apple.com/forums/thread/121411
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -154,15 +149,14 @@ class Apple extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
     {
         if (
             isset($this->claims['email']) &&
-            !empty($this->claims['email']) &&
+            ! empty($this->claims['email']) &&
             isset($this->claims['email_verified']) &&
             $this->claims['email_verified'] === 'true'
         ) {
@@ -183,7 +177,7 @@ class Apple extends OAuth2
         $keyfile = (isset($secret['p8'])) ? $secret['p8'] : ''; // Your p8 Key file
         $keyID = (isset($secret['keyID'])) ? $secret['keyID'] : ''; // Your Key ID
         $teamID = (isset($secret['teamID'])) ? $secret['teamID'] : ''; // Your Team ID (see Developer Portal)
-        $bundleID =  $this->appID; // Your Bundle ID
+        $bundleID = $this->appID; // Your Bundle ID
 
         $headers = [
             'alg' => 'ES256',
@@ -200,22 +194,21 @@ class Apple extends OAuth2
 
         $pkey = \openssl_pkey_get_private($keyfile);
 
-        $payload = $this->encode(\json_encode($headers)) . '.' . $this->encode(\json_encode($claims));
+        $payload = $this->encode(\json_encode($headers)).'.'.$this->encode(\json_encode($claims));
 
         $signature = '';
 
         $success = \openssl_sign($payload, $signature, $pkey, OPENSSL_ALGO_SHA256);
 
-        if (!$success) {
+        if (! $success) {
             return '';
         }
 
-        return $payload . '.' . $this->encode($this->fromDER($signature, 64));
+        return $payload.'.'.$this->encode($this->fromDER($signature, 64));
     }
 
     /**
-     * @param string $data
-     *
+     * @param  string  $data
      * @return string
      */
     protected function encode($data): string
@@ -224,7 +217,7 @@ class Apple extends OAuth2
     }
 
     /**
-     * @param string $data
+     * @param  string  $data
      */
     protected function retrievePositiveInteger(string $data): string
     {
@@ -236,8 +229,8 @@ class Apple extends OAuth2
     }
 
     /**
-     * @param string $der
-     * @param int $partLength
+     * @param  string  $der
+     * @param  int  $partLength
      */
     protected function fromDER(string $der, int $partLength): string
     {
@@ -270,6 +263,6 @@ class Apple extends OAuth2
         $S = $this->retrievePositiveInteger(\mb_substr($hex, 4, $Sl * 2, '8bit'));
         $S = \str_pad($S, $partLength, '0', STR_PAD_LEFT);
 
-        return \pack('H*', $R . $S);
+        return \pack('H*', $R.$S);
     }
 }

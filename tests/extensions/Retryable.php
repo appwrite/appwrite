@@ -14,6 +14,7 @@ trait Retryable
      * accounting for any retries configured by the {@see Retry} annotation.
      *
      * @return void
+     *
      * @throws \ReflectionException
      * @throws \Throwable
      */
@@ -21,14 +22,15 @@ trait Retryable
     {
         $retries = $this->getNumberOfRetries();
         $ex = null;
-        for ($i = 0; $i <= $retries; ++$i) {
+        for ($i = 0; $i <= $retries; $i++) {
             try {
                 parent::runBare();
+
                 return;
-            } catch (\Throwable | \Exception $ex) {
+            } catch (\Throwable|\Exception $ex) {
                 // Swallow the exception until we have exhausted our retries.
                 if ($i !== $retries) {
-                    echo 'Flaky test failed, retrying...' . PHP_EOL;
+                    echo 'Flaky test failed, retrying...'.PHP_EOL;
                 }
             }
         }
@@ -39,6 +41,7 @@ trait Retryable
 
     /**
      * @return int
+     *
      * @throws \ReflectionException
      */
     private function getNumberOfRetries(): int
@@ -53,11 +56,12 @@ trait Retryable
         $attribute = $attributes[0] ?? null;
         $args = $attribute?->getArguments();
         $retries = $args['count'] ?? 0;
+
         return \max(0, $retries);
     }
 
     /**
-     * @param \ReflectionClass $reflection
+     * @param  \ReflectionClass  $reflection
      * @return \ReflectionClass
      */
     private function getTestCaseRoot(\ReflectionClass $reflection): \ReflectionClass
@@ -65,6 +69,7 @@ trait Retryable
         if ($reflection->getName() === TestCase::class) {
             return $reflection;
         }
+
         return $this->getTestCaseRoot($reflection->getParentClass());
     }
 }

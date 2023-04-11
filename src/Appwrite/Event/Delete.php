@@ -8,11 +8,14 @@ use Utopia\Database\Document;
 class Delete extends Event
 {
     protected string $type = '';
-    protected ?Document $document = null;
-    protected ?string $resource = null;
-    protected ?string $datetime = null;
-    protected ?string $hourlyUsageRetentionDatetime = null;
 
+    protected ?Document $document = null;
+
+    protected ?string $resource = null;
+
+    protected ?string $datetime = null;
+
+    protected ?string $hourlyUsageRetentionDatetime = null;
 
     public function __construct()
     {
@@ -22,7 +25,7 @@ class Delete extends Event
     /**
      * Sets the type for the delete event (use the constants starting with DELETE_TYPE_*).
      *
-     * @param string $type
+     * @param  string  $type
      * @return self
      */
     public function setType(string $type): self
@@ -45,31 +48,33 @@ class Delete extends Event
     /**
      * set Datetime.
      *
-     * @param string $datetime
+     * @param  string  $datetime
      * @return self
      */
     public function setDatetime(string $datetime): self
     {
         $this->datetime = $datetime;
+
         return $this;
     }
 
     /**
      * Sets datetime for 1h interval.
      *
-     * @param string $datetime
+     * @param  string  $datetime
      * @return self
      */
     public function setUsageRetentionHourlyDateTime(string $datetime): self
     {
         $this->hourlyUsageRetentionDatetime = $datetime;
+
         return $this;
     }
 
     /**
      * Sets the document for the delete event.
      *
-     * @param Document $document
+     * @param  Document  $document
      * @return self
      */
     public function setDocument(Document $document): self
@@ -92,7 +97,7 @@ class Delete extends Event
     /**
      * Sets the resource for the delete event.
      *
-     * @param string $resource
+     * @param  string  $resource
      * @return self
      */
     public function setResource(string $resource): self
@@ -112,11 +117,11 @@ class Delete extends Event
         return $this->document;
     }
 
-
     /**
      * Executes this event and sends it to the deletes worker.
      *
      * @return string|bool
+     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool

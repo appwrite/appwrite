@@ -42,11 +42,11 @@ App::get('/v1/graphql')
             'query' => $query,
         ];
 
-        if (!empty($operationName)) {
+        if (! empty($operationName)) {
             $query['operationName'] = $operationName;
         }
 
-        if (!empty($variables)) {
+        if (! empty($variables)) {
             $query['variables'] = \json_decode($variables, true);
         }
 
@@ -150,10 +150,11 @@ App::post('/v1/graphql')
 /**
  * Execute a GraphQL request
  *
- * @param GQLSchema $schema
- * @param Adapter $promiseAdapter
- * @param array $query
+ * @param  GQLSchema  $schema
+ * @param  Adapter  $promiseAdapter
+ * @param  array  $query
  * @return array
+ *
  * @throws Exception
  */
 function execute(
@@ -165,7 +166,7 @@ function execute(
     $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
     $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
-    if (!empty($query) && !isset($query[0])) {
+    if (! empty($query) && ! isset($query[0])) {
         $query = [$query];
     }
     if (empty($query)) {
@@ -224,7 +225,7 @@ function execute(
 /**
  * Parse an "application/graphql" type request
  *
- * @param Request $request
+ * @param  Request  $request
  * @return array
  */
 function parseGraphql(Request $request): array
@@ -235,8 +236,8 @@ function parseGraphql(Request $request): array
 /**
  * Parse an "multipart/form-data" type request
  *
- * @param array $query
- * @param Request $request
+ * @param  array  $query
+ * @param  Request  $request
  * @return array
  */
 function parseMultipart(array $query, Request $request): array
@@ -248,7 +249,7 @@ function parseMultipart(array $query, Request $request): array
         foreach ($locations as $location) {
             $items = &$operations;
             foreach (\explode('.', $location) as $key) {
-                if (!isset($items[$key]) || !\is_array($items[$key])) {
+                if (! isset($items[$key]) || ! \is_array($items[$key])) {
                     $items[$key] = [];
                 }
                 $items = &$items[$key];
@@ -276,7 +277,7 @@ function parseMultipart(array $query, Request $request): array
 function processResult($result, $debugFlags): array
 {
     // Only one query, return the result
-    if (!isset($result[1])) {
+    if (! isset($result[1])) {
         return $result[0]->toArray($debugFlags);
     }
 

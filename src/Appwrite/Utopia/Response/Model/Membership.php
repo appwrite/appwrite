@@ -82,8 +82,7 @@ class Membership extends Model
                 'default' => [],
                 'example' => 'admin',
                 'array' => true,
-            ])
-        ;
+            ]);
     }
 
     /**

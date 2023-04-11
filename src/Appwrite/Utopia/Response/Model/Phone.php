@@ -27,8 +27,7 @@ class Phone extends Model
                 'description' => 'Country name.',
                 'default' => '',
                 'example' => 'United States',
-            ])
-        ;
+            ]);
     }
 
     /**

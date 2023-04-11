@@ -40,11 +40,12 @@ abstract class Worker
      * Function for identifying the worker needs to be set to unique name
      *
      * @return string
+     *
      * @throws Exception
      */
     public function getName(): string
     {
-        throw new Exception("Please implement getName method in worker");
+        throw new Exception('Please implement getName method in worker');
     }
 
     /**
@@ -52,11 +53,12 @@ abstract class Worker
      * Can include any preparations, such as connecting to external services or loading files
      *
      * @return void
+     *
      * @throws \Exception|\Throwable
      */
     public function init(): void
     {
-        throw new Exception("Please implement init method in worker");
+        throw new Exception('Please implement init method in worker');
     }
 
     /**
@@ -64,11 +66,12 @@ abstract class Worker
      * You can access $args here, it will contain event information
      *
      * @return void
+     *
      * @throws \Exception|\Throwable
      */
     public function run(): void
     {
-        throw new Exception("Please implement run method in worker");
+        throw new Exception('Please implement run method in worker');
     }
 
     /**
@@ -76,20 +79,23 @@ abstract class Worker
      * You can do cleanup here, such as disconnecting from services or removing temp files
      *
      * @return void
+     *
      * @throws \Exception|\Throwable
      */
     public function shutdown(): void
     {
-        throw new Exception("Please implement shutdown method in worker");
+        throw new Exception('Please implement shutdown method in worker');
     }
 
     public const DATABASE_PROJECT = 'project';
+
     public const DATABASE_CONSOLE = 'console';
 
     /**
      * A wrapper around 'init' function with non-worker-specific code
      *
      * @return void
+     *
      * @throws \Exception|\Throwable
      */
     public function setUp(): void
@@ -98,7 +104,7 @@ abstract class Worker
             $this->init();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
-                $errorCallback($error, "init", $this->getName());
+                $errorCallback($error, 'init', $this->getName());
             }
 
             throw $error;
@@ -109,6 +115,7 @@ abstract class Worker
      * A wrapper around 'run' function with non-worker-specific code
      *
      * @return void
+     *
      * @throws \Exception|\Throwable
      */
     public function perform(): void
@@ -122,7 +129,7 @@ abstract class Worker
             $this->run();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
-                $errorCallback($error, "run", $this->getName(), $this->args);
+                $errorCallback($error, 'run', $this->getName(), $this->args);
             }
 
             throw $error;
@@ -133,6 +140,7 @@ abstract class Worker
      * A wrapper around 'shutdown' function with non-worker-specific code
      *
      * @return void
+     *
      * @throws \Exception|\Throwable
      */
     public function tearDown(): void
@@ -141,17 +149,17 @@ abstract class Worker
             $this->shutdown();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
-                $errorCallback($error, "shutdown", $this->getName());
+                $errorCallback($error, 'shutdown', $this->getName());
             }
 
             throw $error;
         }
     }
 
-
     /**
      * Register callback. Will be executed when error occurs.
-     * @param callable $callback
+     *
+     * @param  callable  $callback
      * @return void
      */
     public static function error(callable $callback): void
@@ -161,8 +169,10 @@ abstract class Worker
 
     /**
      * Get internal project database
-     * @param string $projectId
+     *
+     * @param  string  $projectId
      * @return Database
+     *
      * @throws Exception
      */
     protected function getProjectDB(string $projectId, ?Document $project = null): Database
@@ -175,7 +185,7 @@ abstract class Worker
             }
 
             /** @var Document $project */
-            $project = Authorization::skip(fn() => $consoleDB->getDocument('projects', $projectId));
+            $project = Authorization::skip(fn () => $consoleDB->getDocument('projects', $projectId));
         }
 
         return $this->getDB(self::DATABASE_PROJECT, $projectId, $project->getInternalId(), $project);
@@ -183,7 +193,9 @@ abstract class Worker
 
     /**
      * Get console database
+     *
      * @return Database
+     *
      * @throws Exception
      */
     protected function getConsoleDB(): Database
@@ -193,11 +205,13 @@ abstract class Worker
 
     /**
      * Get database
-     * @param string $type One of (project, console)
-     * @param string $projectId of project or console DB
-     * @param string $projectInternalId
-     * @param Document|null $project
+     *
+     * @param  string  $type One of (project, console)
+     * @param  string  $projectId of project or console DB
+     * @param  string  $projectInternalId
+     * @param  Document|null  $project
      * @return Database
+     *
      * @throws Exception
      */
     private function getDB(
@@ -217,17 +231,17 @@ abstract class Worker
 
         switch ($type) {
             case self::DATABASE_PROJECT:
-                if (!$projectId) {
+                if (! $projectId) {
                     throw new \Exception('ProjectID not provided - cannot get database');
                 }
                 $namespace = "_$projectInternalId";
                 break;
             case self::DATABASE_CONSOLE:
-                $namespace = "_console";
+                $namespace = '_console';
                 $sleep = 5; // ConsoleDB needs extra sleep time to ensure tables are created
                 break;
             default:
-                throw new \Exception('Unknown database type: ' . $type);
+                throw new \Exception('Unknown database type: '.$type);
         }
 
         $attempts = 0;
@@ -242,13 +256,13 @@ abstract class Worker
 
                 if (
                     $project === null
-                    && !empty($projectId)
-                    && !$database->getDocument('projects', $projectId)->isEmpty()
+                    && ! empty($projectId)
+                    && ! $database->getDocument('projects', $projectId)->isEmpty()
                 ) {
                     throw new \Exception("Project does not exist: $projectId");
                 }
 
-                if ($type === self::DATABASE_CONSOLE && !$database->exists($database->getDefaultDatabase(), Database::METADATA)) {
+                if ($type === self::DATABASE_CONSOLE && ! $database->exists($database->getDefaultDatabase(), Database::METADATA)) {
                     throw new \Exception('Console project not ready');
                 }
 
@@ -256,7 +270,7 @@ abstract class Worker
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ($attempts)...");
                 if ($attempts >= DATABASE_RECONNECT_MAX_ATTEMPTS) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                    throw new \Exception('Failed to connect to database: '.$e->getMessage());
                 }
                 sleep($sleep);
             }
@@ -267,43 +281,46 @@ abstract class Worker
 
     /**
      * Get Functions Storage Device
-     * @param string $projectId of the project
+     *
+     * @param  string  $projectId of the project
      * @return Device
      */
     protected function getFunctionsDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+        return $this->getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
     }
 
     /**
      * Get Files Storage Device
-     * @param string $projectId of the project
+     *
+     * @param  string  $projectId of the project
      * @return Device
      */
     protected function getFilesDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+        return $this->getDevice(APP_STORAGE_UPLOADS.'/app-'.$projectId);
     }
-
 
     /**
      * Get Builds Storage Device
-     * @param string $projectId of the project
+     *
+     * @param  string  $projectId of the project
      * @return Device
      */
     protected function getBuildsDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+        return $this->getDevice(APP_STORAGE_BUILDS.'/app-'.$projectId);
     }
 
     protected function getCacheDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
+        return $this->getDevice(APP_STORAGE_CACHE.'/app-'.$projectId);
     }
 
     /**
      * Get Device based on selected storage environment
-     * @param string $root path of the device
+     *
+     * @param  string  $root path of the device
      * @return Device
      */
     public function getDevice(string $root): Device
@@ -318,6 +335,7 @@ abstract class Worker
                 $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
                 $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
                 $s3Acl = 'private';
+
                 return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
             case Storage::DEVICE_DO_SPACES:
                 $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
@@ -325,6 +343,7 @@ abstract class Worker
                 $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
                 $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
                 $doSpacesAcl = 'private';
+
                 return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
             case Storage::DEVICE_BACKBLAZE:
                 $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
@@ -332,6 +351,7 @@ abstract class Worker
                 $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
                 $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
                 $backblazeAcl = 'private';
+
                 return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
             case Storage::DEVICE_LINODE:
                 $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
@@ -339,6 +359,7 @@ abstract class Worker
                 $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
                 $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
                 $linodeAcl = 'private';
+
                 return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
             case Storage::DEVICE_WASABI:
                 $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
@@ -346,6 +367,7 @@ abstract class Worker
                 $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
                 $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
                 $wasabiAcl = 'private';
+
                 return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
         }
     }

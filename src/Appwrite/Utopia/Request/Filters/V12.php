@@ -11,44 +11,44 @@ class V12 extends Filter
     {
         switch ($model) {
             // No IDs -> Custom IDs
-            case "account.create":
-            case "account.createMagicURLSession":
-            case "users.create":
+            case 'account.create':
+            case 'account.createMagicURLSession':
+            case 'users.create':
                 $content = $this->addId($content, 'userId');
                 break;
-            case "functions.create":
+            case 'functions.create':
                 $content = $this->addId($content, 'functionId');
                 break;
-            case "teams.create":
+            case 'teams.create':
                 $content = $this->addId($content, 'teamId');
                 break;
 
-            // Status integer -> boolean
-            case "users.updateStatus":
+                // Status integer -> boolean
+            case 'users.updateStatus':
                 $content = $this->convertStatus($content);
                 break;
 
-            // Deprecating order type
-            case "functions.listExecutions":
+                // Deprecating order type
+            case 'functions.listExecutions':
                 $content = $this->removeOrderType($content);
                 break;
 
-            // The rest (more complex) formats
-            case "database.createDocument":
+                // The rest (more complex) formats
+            case 'database.createDocument':
                 $content = $this->addId($content, 'documentId');
                 $content = $this->removeParentProperties($content);
                 break;
-            case "database.listDocuments":
+            case 'database.listDocuments':
                 $content = $this->removeOrderCast($content);
                 $content = $this->convertOrder($content);
                 $content = $this->convertQueries($content);
                 break;
-            case "database.createCollection":
+            case 'database.createCollection':
                 $content = $this->addId($content, 'collectionId');
                 $content = $this->removeRules($content);
                 $content = $this->addCollectionPermissionLevel($content);
                 break;
-            case "database.updateCollection":
+            case 'database.updateCollection':
                 $content = $this->removeRules($content);
                 $content = $this->addCollectionPermissionLevel($content);
                 break;
@@ -62,12 +62,14 @@ class V12 extends Filter
     protected function addId(array $content, string $key): array
     {
         $content[$key] = 'unique()';
+
         return $content;
     }
 
     protected function addCollectionPermissionLevel(array $content): array
     {
         $content['permission'] = 'document';
+
         return $content;
     }
 
@@ -76,18 +78,21 @@ class V12 extends Filter
     protected function removeRules(array $content): array
     {
         unset($content['rules']);
+
         return $content;
     }
 
     protected function removeOrderType(array $content): array
     {
         unset($content['orderType']);
+
         return $content;
     }
 
     protected function removeOrderCast(array $content): array
     {
         unset($content['orderCast']);
+
         return $content;
     }
 
@@ -102,6 +107,7 @@ class V12 extends Filter
         if (isset($content['parentPropertyType'])) {
             unset($content['parentPropertyType']);
         }
+
         return $content;
     }
 
@@ -112,18 +118,19 @@ class V12 extends Filter
         if (isset($content['status'])) {
             $content['status'] = $content['status'] === 2 ? false : true;
         }
+
         return $content;
     }
 
     protected function convertOrder(array $content): array
     {
         if (isset($content['orderField'])) {
-            $content['orderAttributes'] = [ $content['orderField'] ];
+            $content['orderAttributes'] = [$content['orderField']];
             unset($content['orderField']);
         }
 
         if (isset($content['orderType'])) {
-            $content['orderTypes'] = [ $content['orderType'] ];
+            $content['orderTypes'] = [$content['orderType']];
             unset($content['orderType']);
         }
 
@@ -134,7 +141,7 @@ class V12 extends Filter
     {
         $queries = [];
 
-        if (!empty($content['filters'])) {
+        if (! empty($content['filters'])) {
             foreach ($content['filters'] as $filter) {
                 $operators = ['=' => 'equal', '!=' => 'notEqual', '>' => 'greater', '<' => 'lesser', '<=' => 'lesserEqual', '>=' => 'greaterEqual'];
                 foreach ($operators as $operator => $operatorVerbose) {
@@ -151,10 +158,10 @@ class V12 extends Filter
                         // Let's keep it at true and false string, but without "" around
                         // No action needed
                     } else {
-                        $filterValue = \is_numeric($filterValue) ? $filterValue : '"' . $filterValue . '"';
+                        $filterValue = \is_numeric($filterValue) ? $filterValue : '"'.$filterValue.'"';
                     }
 
-                    $query = $attributeKey . '.' . $operators[$usedOperator] . '(' . $filterValue . ')';
+                    $query = $attributeKey.'.'.$operators[$usedOperator].'('.$filterValue.')';
                     \array_push($queries, $query);
                 }
             }

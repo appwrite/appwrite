@@ -10,8 +10,6 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Utopia\Validator\Host;
-use Utopia\Validator\URL;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
@@ -26,19 +24,21 @@ use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\Host;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
@@ -72,17 +72,16 @@ App::post('/v1/account')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
-
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
             $whitelistIPs = $project->getAttribute('authWhitelistIPs');
 
-            if (!empty($whitelistEmails) && !\in_array($email, $whitelistEmails)) {
+            if (! empty($whitelistEmails) && ! \in_array($email, $whitelistEmails)) {
                 throw new Exception(Exception::USER_EMAIL_NOT_WHITELISTED);
             }
 
-            if (!empty($whitelistIPs) && !\in_array($request->getIP(), $whitelistIPs)) {
+            if (! empty($whitelistIPs) && ! \in_array($request->getIP(), $whitelistIPs)) {
                 throw new Exception(Exception::USER_IP_NOT_WHITELISTED);
             }
         }
@@ -99,7 +98,7 @@ App::post('/v1/account')
 
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
-            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -120,7 +119,7 @@ App::post('/v1/account')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
+                'search' => implode(' ', [$userId, $email, $name]),
             ])));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -168,7 +167,6 @@ App::post('/v1/account/sessions/email')
     ->inject('geodb')
     ->inject('events')
     ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
-
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -176,7 +174,7 @@ App::post('/v1/account/sessions/email')
             Query::equal('email', [$email]),
         ]);
 
-        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
+        if (! $profile || ! Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -226,31 +224,26 @@ App::post('/v1/account/sessions/email')
             Permission::delete(Role::user($profile->getId())),
         ]));
 
-
-        if (!Config::getParam('domainVerification')) {
+        if (! Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
-            ;
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]));
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $events
             ->setParam('userId', $profile->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -258,7 +251,7 @@ App::post('/v1/account/sessions/email')
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 Session')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
@@ -269,47 +262,46 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), fn($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: '.\implode(', ', \array_keys(\array_filter(Config::getParam('providers'), fn ($node) => (! $node['mock'])))).'.')
+    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' scopes are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-
         $protocol = $request->getProtocol();
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
-        $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
+        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $providerEnabled = $project->getAttribute('authProviders', [])[$provider.'Enabled'] ?? false;
 
-        if (!$providerEnabled) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        if (! $providerEnabled) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your '.APP_NAME.' console to continue.');
         }
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+        if (! empty($appSecret) && isset($appSecret['version'])) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
         if (empty($appId) || empty($appSecret)) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.');
         }
 
-        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
-        if (!\class_exists($className)) {
+        if (! \class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         if (empty($success)) {
-            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+            $success = $protocol.'://'.$request->getHostname().$oauthDefaultSuccess;
         }
 
         if (empty($failure)) {
-            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
+            $failure = $protocol.'://'.$request->getHostname().$oauthDefaultFailure;
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
@@ -323,7 +315,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
 App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
@@ -333,21 +325,20 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, Request $request, Response $response) {
-
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+            ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('docs', false)
@@ -358,21 +349,20 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, Request $request, Response $response) {
-
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+            ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->groups(['api', 'account', 'session'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
     ->label('audits.event', 'session.create')
@@ -394,33 +384,32 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('events')
     ->action(function (string $provider, string $code, string $state, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $events) use ($oauthDefaultSuccess) {
-
         $protocol = $request->getProtocol();
-        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
-        $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
+        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
+        $providerEnabled = $project->getAttribute('authProviders', [])[$provider.'Enabled'] ?? false;
 
-        if (!$providerEnabled) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        if (! $providerEnabled) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your '.APP_NAME.' console to continue.');
         }
 
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+        if (! empty($appSecret) && isset($appSecret['version'])) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
-        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
-        if (!\class_exists($className)) {
+        if (! \class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
         $oauth2 = new $className($appId, $appSecret, $callback);
 
-        if (!empty($state)) {
+        if (! empty($state)) {
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
             } catch (\Exception$exception) {
@@ -430,11 +419,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $state = $defaultState;
         }
 
-        if (!$validateURL->isValid($state['success'])) {
+        if (! $validateURL->isValid($state['success'])) {
             throw new Exception(Exception::PROJECT_INVALID_SUCCESS_URL);
         }
 
-        if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
+        if (! empty($state['failure']) && ! $validateURL->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
 
@@ -443,7 +432,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
 
         if (empty($accessToken)) {
-            if (!empty($state['failure'])) {
+            if (! empty($state['failure'])) {
                 $response->redirect($state['failure'], 301, 0);
             }
 
@@ -453,7 +442,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $oauth2ID = $oauth2->getUserID($accessToken);
 
         if (empty($oauth2ID)) {
-            if (!empty($state['failure'])) {
+            if (! empty($state['failure'])) {
                 $response->redirect($state['failure'], 301, 0);
             }
 
@@ -466,7 +455,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
-            if (!$currentDocument->isEmpty()) {
+            if (! $currentDocument->isEmpty()) {
                 $dbForProject->deleteDocument('sessions', $currentDocument->getId());
                 $dbForProject->deleteCachedDocument('users', $user->getId());
             }
@@ -503,7 +492,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 try {
                     $userId = ID::unique();
-                    $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                    $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                         '$id' => $userId,
                         '$permissions' => [
                             Permission::read(Role::any()),
@@ -524,7 +513,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
-                        'search' => implode(' ', [$userId, $email, $name])
+                        'search' => implode(' ', [$userId, $email, $name]),
                     ])));
                 } catch (Duplicate $th) {
                     throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -551,7 +540,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'providerUid' => $oauth2ID,
             'providerAccessToken' => $accessToken,
             'providerRefreshToken' => $refreshToken,
-            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -563,13 +552,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if ($isAnonymousUser) {
             $user
                 ->setAttribute('name', $oauth2->getUserName($accessToken))
-                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
-            ;
+                ->setAttribute('email', $oauth2->getUserEmail($accessToken));
         }
 
         $user
-            ->setAttribute('status', true)
-        ;
+            ->setAttribute('status', true);
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
@@ -588,10 +575,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $events
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
-        ;
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
-        if (!Config::getParam('domainVerification')) {
+        if (! Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
@@ -610,10 +596,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->redirect($state['success'])
-        ;
+            ->redirect($state['success']);
     });
 
 App::post('/v1/account/sessions/magic-url')
@@ -635,7 +620,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -644,7 +629,6 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('events')
     ->inject('mails')
     ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
-
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -655,7 +639,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $user = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
 
-        if (!$user) {
+        if (! $user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
@@ -688,7 +672,7 @@ App::post('/v1/account/sessions/magic-url')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email])
+                'search' => implode(' ', [$userId, $email]),
             ])));
         }
 
@@ -718,7 +702,7 @@ App::post('/v1/account/sessions/magic-url')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         if (empty($url)) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
+            $url = $request->getProtocol().'://'.$request->getHostname().'/auth/magic-url';
         }
 
         $url = Template::parseURL($url);
@@ -727,18 +711,18 @@ App::post('/v1/account/sessions/magic-url')
 
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
 
-        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
-        $subject = $locale->getText("emails.magicSession.subject");
+        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText('emails.magicSession.subject');
 
         $body
             ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
+            ->setParam('{{hello}}', $locale->getText('emails.magicSession.hello'))
             ->setParam('{{name}}', '')
-            ->setParam('{{body}}', $locale->getText("emails.magicSession.body"))
+            ->setParam('{{body}}', $locale->getText('emails.magicSession.body'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"))
+            ->setParam('{{footer}}', $locale->getText('emails.magicSession.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.magicSession.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.magicSession.signature'))
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
@@ -752,8 +736,7 @@ App::post('/v1/account/sessions/magic-url')
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->trigger()
-        ;
+            ->trigger();
 
         $events->setPayload(
             $response->output(
@@ -767,8 +750,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/sessions/magic-url')
@@ -800,10 +782,8 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('geodb')
     ->inject('events')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
-
         /** @var Utopia\Database\Document $user */
-
-        $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -811,7 +791,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $token = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
-        if (!$token) {
+        if (! $token) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -867,28 +847,25 @@ App::put('/v1/account/sessions/magic-url')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
-        if (!Config::getParam('domainVerification')) {
+        if (! Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -919,7 +896,6 @@ App::post('/v1/account/sessions/phone')
     ->inject('events')
     ->inject('messaging')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging) {
-
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -930,7 +906,7 @@ App::post('/v1/account/sessions/phone')
 
         $user = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
 
-        if (!$user) {
+        if (! $user) {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
@@ -963,7 +939,7 @@ App::post('/v1/account/sessions/phone')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $phone])
+                'search' => implode(' ', [$userId, $phone]),
             ])));
         }
 
@@ -1009,8 +985,7 @@ App::post('/v1/account/sessions/phone')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/sessions/phone')
@@ -1039,8 +1014,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('geodb')
     ->inject('events')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
-
-        $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -1048,7 +1022,7 @@ App::put('/v1/account/sessions/phone')
 
         $token = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
 
-        if (!$token) {
+        if (! $token) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -1102,28 +1076,25 @@ App::put('/v1/account/sessions/phone')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
-        if (!Config::getParam('domainVerification')) {
+        if (! Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1157,14 +1128,13 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('geodb')
     ->inject('events')
     ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $events) {
-
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
             throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
         }
 
-        if (!$user->isEmpty()) {
+        if (! $user->isEmpty()) {
             throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
         }
 
@@ -1179,7 +1149,7 @@ App::post('/v1/account/sessions/anonymous')
         }
 
         $userId = ID::unique();
-        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+        $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
             '$permissions' => [
                 Permission::read(Role::any()),
@@ -1200,7 +1170,7 @@ App::post('/v1/account/sessions/anonymous')
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
-            'search' => $userId
+            'search' => $userId,
         ])));
 
         // Create session token
@@ -1228,36 +1198,33 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
-        if (!Config::getParam('domainVerification')) {
+        if (! Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+        $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1280,8 +1247,6 @@ App::post('/v1/account/jwt')
     ->inject('user')
     ->inject('dbForProject')
     ->action(function (Response $response, Document $user, Database $dbForProject) {
-
-
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
@@ -1300,13 +1265,13 @@ App::post('/v1/account/jwt')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-            // 'uid'    => 1,
-            // 'aud'    => 'http://site.com',
-            // 'scopes' => ['user'],
-            // 'iss'    => 'http://api.mysite.com',
-            'userId' => $user->getId(),
-            'sessionId' => $current->getId(),
-        ])]), Response::MODEL_JWT);
+                // 'uid'    => 1,
+                // 'aud'    => 'http://site.com',
+                // 'scopes' => ['user'],
+                // 'iss'    => 'http://api.mysite.com',
+                'userId' => $user->getId(),
+                'sessionId' => $current->getId(),
+            ])]), Response::MODEL_JWT);
     });
 
 App::get('/v1/account')
@@ -1326,7 +1291,6 @@ App::get('/v1/account')
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
-
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
@@ -1347,7 +1311,6 @@ App::get('/v1/account/prefs')
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
-
         $prefs = $user->getAttribute('prefs', new \stdClass());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
@@ -1371,13 +1334,12 @@ App::get('/v1/account/sessions')
     ->inject('locale')
     ->inject('project')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
-
         $sessions = $user->getAttribute('sessions', []);
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
-            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
@@ -1410,7 +1372,6 @@ App::get('/v1/account/logs')
     ->inject('geodb')
     ->inject('dbForProject')
     ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
-
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
@@ -1423,7 +1384,7 @@ App::get('/v1/account/logs')
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
 
@@ -1438,8 +1399,8 @@ App::get('/v1/account/logs')
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -1473,7 +1434,6 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('project')
     ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Document $project) {
-
         $sessions = $user->getAttribute('sessions', []);
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
@@ -1482,13 +1442,12 @@ App::get('/v1/account/sessions/:sessionId')
 
         foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+                $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration))
-                ;
+                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration));
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -1521,7 +1480,6 @@ App::patch('/v1/account/name')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $events) {
-
         $user = $dbForProject->updateDocument('users', $user->getId(), $user
             ->setAttribute('name', $name)
             ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')])));
@@ -1556,9 +1514,8 @@ App::patch('/v1/account/password')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Event $events) {
-
         // Check old password only if its an existing user.
-        if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
+        if (! empty($user->getAttribute('passwordUpdate')) && ! Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -1601,8 +1558,8 @@ App::patch('/v1/account/email')
         $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
 
         if (
-            !$isAnonymousUser &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
+            ! $isAnonymousUser &&
+            ! Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -1653,12 +1610,11 @@ App::patch('/v1/account/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $events) {
-
         $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
 
         if (
-            !$isAnonymousUser &&
-            !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
+            ! $isAnonymousUser &&
+            ! Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
@@ -1703,7 +1659,6 @@ App::patch('/v1/account/prefs')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (array $prefs, Response $response, Document $user, Database $dbForProject, Event $events) {
-
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
 
         $events->setParam('userId', $user->getId());
@@ -1733,14 +1688,13 @@ App::patch('/v1/account/status')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
-
         $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
 
         $events
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
-        if (!Config::getParam('domainVerification')) {
+        if (! Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
 
@@ -1772,7 +1726,6 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('events')
     ->inject('project')
     ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Document $project) {
-
         $protocol = $request->getProtocol();
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
@@ -1792,19 +1745,16 @@ App::delete('/v1/account/sessions/:sessionId')
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session
                         ->setAttribute('current', true)
-                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-                    ;
+                        ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-                    if (!Config::getParam('domainVerification')) {
+                    if (! Config::getParam('domainVerification')) {
                         $response
-                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                        ;
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]));
                     }
 
                     $response
-                        ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-                    ;
+                        ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
                 }
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -1812,8 +1762,8 @@ App::delete('/v1/account/sessions/:sessionId')
                 $events
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
+                    ->setPayload($response->output($session, Response::MODEL_SESSION));
+
                 return $response->noContent();
             }
         }
@@ -1868,12 +1818,12 @@ App::patch('/v1/account/sessions/:sessionId')
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
 
-                $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-                $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+                $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
+                $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
 
-                $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+                $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
 
-                if (!\class_exists($className)) {
+                if (! \class_exists($className)) {
                     throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
                 }
 
@@ -1884,7 +1834,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                     ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')));
 
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
 
@@ -1897,8 +1847,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $events
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
+                    ->setPayload($response->output($session, Response::MODEL_SESSION));
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -1930,29 +1879,27 @@ App::delete('/v1/account/sessions')
     ->inject('locale')
     ->inject('events')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events) {
-
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
         foreach ($sessions as $session) {/** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
 
-            if (!Config::getParam('domainVerification')) {
+            if (! Config::getParam('domainVerification')) {
                 $response->addHeader('X-Fallback-Cookies', \json_encode([]));
             }
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-            ;
+                ->setAttribute('countryName', $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
                 $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
-                 // If current session delete the cookies too
+                // If current session delete the cookies too
                 $response
-                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                    ->addCookie(Auth::$cookieName.'_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
                 // Use current session for events.
@@ -1997,7 +1944,6 @@ App::post('/v1/account/recovery')
     ->inject('mails')
     ->inject('events')
     ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Event $events) {
-
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -2012,7 +1958,7 @@ App::post('/v1/account/recovery')
             Query::equal('email', [$email]),
         ]);
 
-        if (!$profile) {
+        if (! $profile) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
@@ -2051,18 +1997,18 @@ App::post('/v1/account/recovery')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
-        $subject = $locale->getText("emails.recovery.subject");
+        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText('emails.recovery.subject');
 
         $body
             ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
+            ->setParam('{{hello}}', $locale->getText('emails.recovery.hello'))
             ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{body}}', $locale->getText("emails.recovery.body"))
+            ->setParam('{{body}}', $locale->getText('emails.recovery.body'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"))
+            ->setParam('{{footer}}', $locale->getText('emails.recovery.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.recovery.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.recovery.signature'))
             ->setParam('{{project}}', $projectName)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
@@ -2071,7 +2017,6 @@ App::post('/v1/account/recovery')
 
         $body = $body->render();
 
-
         $mails
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name'))
@@ -2079,7 +2024,6 @@ App::post('/v1/account/recovery')
             ->setFrom($from)
             ->setSubject($subject)
             ->trigger();
-        ;
 
         $events
             ->setParam('userId', $profile->getId())
@@ -2088,8 +2032,7 @@ App::post('/v1/account/recovery')
             ->setPayload($response->output(
                 $recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
@@ -2138,7 +2081,7 @@ App::put('/v1/account/recovery')
         $tokens = $profile->getAttribute('tokens', []);
         $recovery = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
 
-        if (!$recovery) {
+        if (! $recovery) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -2162,8 +2105,7 @@ App::put('/v1/account/recovery')
 
         $events
             ->setParam('userId', $profile->getId())
-            ->setParam('tokenId', $recoveryDocument->getId())
-        ;
+            ->setParam('tokenId', $recoveryDocument->getId());
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -2186,7 +2128,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -2196,7 +2138,6 @@ App::post('/v1/account/verification')
     ->inject('events')
     ->inject('mails')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
-
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -2235,17 +2176,17 @@ App::post('/v1/account/verification')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
-        $subject = $locale->getText("emails.verification.subject");
+        $body = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
+        $subject = $locale->getText('emails.verification.subject');
         $body
             ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
+            ->setParam('{{hello}}', $locale->getText('emails.verification.hello'))
             ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{body}}', $locale->getText("emails.verification.body"))
+            ->setParam('{{body}}', $locale->getText('emails.verification.body'))
             ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.verification.signature"))
+            ->setParam('{{footer}}', $locale->getText('emails.verification.footer'))
+            ->setParam('{{thanks}}', $locale->getText('emails.verification.thanks'))
+            ->setParam('{{signature}}', $locale->getText('emails.verification.signature'))
             ->setParam('{{project}}', $projectName)
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{bg-body}}', '#f7f7f7')
@@ -2260,8 +2201,7 @@ App::post('/v1/account/verification')
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name'))
-            ->trigger()
-        ;
+            ->trigger();
 
         $events
             ->setParam('userId', $user->getId())
@@ -2269,8 +2209,7 @@ App::post('/v1/account/verification')
             ->setPayload($response->output(
                 $verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
@@ -2305,8 +2244,7 @@ App::put('/v1/account/verification')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $events) {
-
-        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2315,7 +2253,7 @@ App::put('/v1/account/verification')
         $tokens = $profile->getAttribute('tokens', []);
         $verification = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
-        if (!$verification) {
+        if (! $verification) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -2334,8 +2272,7 @@ App::put('/v1/account/verification')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verificationDocument->getId());
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -2365,7 +2302,6 @@ App::post('/v1/account/verification/phone')
     ->inject('events')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging) {
-
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
@@ -2406,8 +2342,7 @@ App::post('/v1/account/verification/phone')
         $messaging
             ->setRecipient($user->getAttribute('phone'))
             ->setMessage($secret)
-            ->trigger()
-        ;
+            ->trigger();
 
         $events
             ->setParam('userId', $user->getId())
@@ -2415,8 +2350,7 @@ App::post('/v1/account/verification/phone')
             ->setPayload($response->output(
                 $verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
@@ -2451,8 +2385,7 @@ App::put('/v1/account/verification/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $events) {
-
-        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -2460,7 +2393,7 @@ App::put('/v1/account/verification/phone')
 
         $verification = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
 
-        if (!$verification) {
+        if (! $verification) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -2478,8 +2411,7 @@ App::put('/v1/account/verification/phone')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verificationDocument->getId());
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });

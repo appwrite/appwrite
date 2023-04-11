@@ -22,8 +22,7 @@ class Event extends Validator
     /**
      * Is valid.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($value): bool
@@ -44,7 +43,7 @@ class Event extends Validator
         $hasSubResource = $count > 3 && ($events[$type]['$resource'] ?? false) && ($events[$type][$parts[2]]['$resource'] ?? false);
         $hasSubSubResource = $count > 5 && $hasSubResource && ($events[$type][$parts[2]][$parts[4]]['$resource'] ?? false);
 
-        if (!$type || !$resource) {
+        if (! $type || ! $resource) {
             return false;
         }
 
@@ -61,13 +60,13 @@ class Event extends Validator
             }
         }
 
-        if ($hasSubResource && !$hasSubSubResource) {
+        if ($hasSubResource && ! $hasSubSubResource) {
             if ($count === 6) {
                 $attribute = $parts[5];
             }
         }
 
-        if (!$hasSubResource) {
+        if (! $hasSubResource) {
             if ($count === 4) {
                 $attribute = $parts[3];
             }
@@ -80,36 +79,36 @@ class Event extends Validator
         $attribute ??= false;
 
         $action = match (true) {
-            !$hasSubResource && $count > 2 => $parts[2],
+            ! $hasSubResource && $count > 2 => $parts[2],
             $hasSubSubResource => $parts[6] ?? false,
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
 
-        if (!\array_key_exists($type, $events)) {
+        if (! \array_key_exists($type, $events)) {
             return false;
         }
 
         if ($subType) {
-            if ($action && !\array_key_exists($action, $events[$type][$subType])) {
+            if ($action && ! \array_key_exists($action, $events[$type][$subType])) {
                 return false;
             }
-            if (!($subResource) || !\array_key_exists($subType, $events[$type])) {
+            if (! ($subResource) || ! \array_key_exists($subType, $events[$type])) {
                 return false;
             }
         } else {
-            if ($action && !\array_key_exists($action, $events[$type])) {
+            if ($action && ! \array_key_exists($action, $events[$type])) {
                 return false;
             }
         }
 
         if ($attribute) {
             if (($subType)) {
-                if (!\array_key_exists($attribute, $events[$type][$subType][$action])) {
+                if (! \array_key_exists($attribute, $events[$type][$subType][$action])) {
                     return false;
                 }
             } else {
-                if (!\array_key_exists($attribute, $events[$type][$action])) {
+                if (! \array_key_exists($attribute, $events[$type][$action])) {
                     return false;
                 }
             }

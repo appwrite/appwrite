@@ -27,8 +27,8 @@ class MessagingGuestTest extends TestCase
                 'channels' => [
                     0 => 'documents',
                     1 => 'documents',
-                ]
-            ]
+                ],
+            ],
         ];
 
         $receivers = $realtime->getSubscribers($event);

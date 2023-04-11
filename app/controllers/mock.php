@@ -3,18 +3,17 @@
 global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
-use Utopia\Database\Document;
-use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 use Utopia\App;
+use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
+use Utopia\Storage\Validator\File;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Host;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
-use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\Helpers\ID;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -220,9 +219,9 @@ App::get('/v1/mock/tests/general/headers')
             'x-sdk-version' => $request->getHeader('x-sdk-version'),
         ];
         $res = array_map(function ($key, $value) {
-            return $key . ': ' . $value;
+            return $key.': '.$value;
         }, array_keys($res), $res);
-        $res = implode("; ", $res);
+        $res = implode('; ', $res);
 
         $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
     });
@@ -241,14 +240,12 @@ App::get('/v1/mock/tests/general/download')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response
             ->setContentType('text/plain')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send("GET:/v1/mock/tests/general/download:passed")
-        ;
+            ->send('GET:/v1/mock/tests/general/download:passed');
     });
 
 App::post('/v1/mock/tests/general/upload')
@@ -271,14 +268,13 @@ App::post('/v1/mock/tests/general/upload')
     ->inject('request')
     ->inject('response')
     ->action(function (string $x, int $y, array $z, mixed $file, Request $request, Response $response) {
-
         $file = $request->getFiles('file');
 
         $contentRange = $request->getHeader('content-range');
 
         $chunkSize = 5 * 1024 * 1024; // 5MB
 
-        if (!empty($contentRange)) {
+        if (! empty($contentRange)) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
             $size = $request->getContentRangeSize();
@@ -293,7 +289,7 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid content-range header');
             }
 
-            if ($start === 0 && !empty($id)) {
+            if ($start === 0 && ! empty($id)) {
                 throw new Exception(Exception::GENERAL_MOCK, 'First chunked request cannot have id header');
             }
 
@@ -317,7 +313,7 @@ App::post('/v1/mock/tests/general/upload')
                 $response->json([
                     '$id' => ID::custom('newfileid'),
                     'chunksTotal' => $file['size'] / $chunkSize,
-                    'chunksUploaded' => $start / $chunkSize
+                    'chunksUploaded' => $start / $chunkSize,
                 ]);
             }
         } else {
@@ -330,7 +326,7 @@ App::post('/v1/mock/tests/general/upload')
             }
 
             if ($file['size'] !== 38756) {
-                    throw new Exception(Exception::GENERAL_MOCK, 'Wrong file size');
+                throw new Exception(Exception::GENERAL_MOCK, 'Wrong file size');
             }
 
             if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
@@ -353,7 +349,6 @@ App::get('/v1/mock/tests/general/redirect')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response->redirect('/v1/mock/tests/general/redirect/done');
     });
 
@@ -387,7 +382,6 @@ App::get('/v1/mock/tests/general/set-cookie')
     ->inject('response')
     ->inject('request')
     ->action(function (Response $response, Request $request) {
-
         $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', $request->getHostname(), true, true);
     });
 
@@ -405,7 +399,6 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.mock', true)
     ->inject('request')
     ->action(function (Request $request) {
-
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
             throw new Exception(Exception::GENERAL_MOCK, 'Missing cookie value');
         }
@@ -424,7 +417,6 @@ App::get('/v1/mock/tests/general/empty')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response->noContent();
     });
 
@@ -450,9 +442,9 @@ App::get('/v1/mock/tests/general/headers')
             'x-sdk-version' => $request->getHeader('x-sdk-version'),
         ];
         $res = array_map(function ($key, $value) {
-            return $key . ': ' . $value;
+            return $key.': '.$value;
         }, array_keys($res), $res);
-        $res = implode("; ", $res);
+        $res = implode('; ', $res);
 
         $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
     });
@@ -503,11 +495,9 @@ App::get('/v1/mock/tests/general/502-error')
     ->label('sdk.mock', true)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response
             ->setStatusCode(502)
-            ->text('This is a text error')
-        ;
+            ->text('This is a text error');
     });
 
 App::get('/v1/mock/tests/general/oauth2')
@@ -522,8 +512,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
     ->action(function (string $client_id, string $redirectURI, string $scope, string $state, Response $response) {
-
-        $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
+        $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
 App::get('/v1/mock/tests/general/oauth2/token')
@@ -540,7 +529,6 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
     ->action(function (string $client_id, string $client_secret, string $grantType, string $redirectURI, string $code, string $refreshToken, Response $response) {
-
         if ($client_id != '1') {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid client ID');
         }
@@ -552,7 +540,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
         $responseJson = [
             'access_token' => '123456',
             'refresh_token' => 'tuvwxyz',
-            'expires_in' => 14400
+            'expires_in' => 14400,
         ];
 
         if ($grantType === 'authorization_code') {
@@ -580,7 +568,6 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->param('token', '', new Text(100), 'OAuth2 Access Token.')
     ->inject('response')
     ->action(function (string $token, Response $response) {
-
         if ($token != '123456') {
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid token');
         }
@@ -599,7 +586,6 @@ App::get('/v1/mock/tests/general/oauth2/success')
     ->label('docs', false)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response->json([
             'result' => 'success',
         ]);
@@ -612,7 +598,6 @@ App::get('/v1/mock/tests/general/oauth2/failure')
     ->label('docs', false)
     ->inject('response')
     ->action(function (Response $response) {
-
         $response
             ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
             ->json([
@@ -626,23 +611,22 @@ App::shutdown()
     ->inject('response')
     ->inject('request')
     ->action(function (App $utopia, Response $response, Request $request) {
-
         $result = [];
-        $route  = $utopia->match($request);
-        $path   = APP_STORAGE_CACHE . '/tests.json';
-        $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
+        $route = $utopia->match($request);
+        $path = APP_STORAGE_CACHE.'/tests.json';
+        $tests = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 
-        if (!\is_array($tests)) {
+        if (! \is_array($tests)) {
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to read results', 500);
         }
 
-        $result[$route->getMethod() . ':' . $route->getPath()] = true;
+        $result[$route->getMethod().':'.$route->getPath()] = true;
 
         $tests = \array_merge($tests, $result);
 
-        if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
+        if (! \file_put_contents($path, \json_encode($tests), LOCK_EX)) {
             throw new Exception(Exception::GENERAL_MOCK, 'Failed to save results', 500);
         }
 
-        $response->dynamic(new Document(['result' => $route->getMethod() . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
+        $response->dynamic(new Document(['result' => $route->getMethod().':'.$route->getPath().':passed']), Response::MODEL_MOCK);
     });

@@ -21,8 +21,7 @@ class Continent extends Model
                 'description' => 'Continent two letter code.',
                 'default' => '',
                 'example' => 'EU',
-            ])
-        ;
+            ]);
     }
 
     /**

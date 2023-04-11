@@ -33,7 +33,7 @@ class QueriesTest extends TestCase
     {
         $validator = new Queries();
 
-        $this->assertEquals(false, $validator->isValid(["this.is.invalid"]));
+        $this->assertEquals(false, $validator->isValid(['this.is.invalid']));
     }
 
     public function testInvalidMethod(): void
@@ -58,7 +58,7 @@ class QueriesTest extends TestCase
                 'key' => 'name',
                 'type' => Database::VAR_STRING,
                 'array' => false,
-            ])
+            ]),
         ];
         $validator = new Queries(
             new Cursor(),

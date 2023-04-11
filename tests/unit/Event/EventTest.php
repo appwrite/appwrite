@@ -10,15 +10,16 @@ use Utopia\App;
 class EventTest extends TestCase
 {
     protected ?Event $object = null;
+
     protected string $queue = '';
 
     public function setUp(): void
     {
         $redisHost = App::getEnv('_APP_REDIS_HOST', '');
         $redisPort = App::getEnv('_APP_REDIS_PORT', '');
-        \Resque::setBackend($redisHost . ':' . $redisPort);
+        \Resque::setBackend($redisHost.':'.$redisPort);
 
-        $this->queue = 'v1-tests' . uniqid();
+        $this->queue = 'v1-tests'.uniqid();
         $this->object = new Event($this->queue, 'TestsV1');
     }
 
@@ -77,7 +78,7 @@ class EventTest extends TestCase
     public function testGenerateEvents(): void
     {
         $event = Event::generateEvents('users.[userId].create', [
-            'userId' => 'torsten'
+            'userId' => 'torsten',
         ]);
         $this->assertCount(4, $event);
         $this->assertContains('users.torsten.create', $event);
@@ -86,7 +87,7 @@ class EventTest extends TestCase
         $this->assertContains('users.*', $event);
 
         $event = Event::generateEvents('users.[userId].update.email', [
-            'userId' => 'torsten'
+            'userId' => 'torsten',
         ]);
         $this->assertCount(6, $event);
         $this->assertContains('users.torsten.update.email', $event);
@@ -143,10 +144,9 @@ class EventTest extends TestCase
         $this->assertContains('databases.chaptersDB.collections.*.documents.*', $event);
         $this->assertContains('databases.chaptersDB.collections.*.documents.*.create', $event);
 
-
         try {
             $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [
-                'collectionId' => 'chapters'
+                'collectionId' => 'chapters',
             ]);
             $this->fail();
         } catch (\Throwable $th) {

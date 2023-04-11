@@ -33,8 +33,7 @@ class Database extends Model
                 'description' => 'Database update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-        ;
+            ]);
     }
 
     /**

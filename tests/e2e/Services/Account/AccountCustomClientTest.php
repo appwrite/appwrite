@@ -2,17 +2,15 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\SMS\Adapter\Mock;
 use Appwrite\Tests\Retry;
+use function sleep;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\DatetimeValidator;
-
-use function sleep;
 
 class AccountCustomClientTest extends Scope
 {
@@ -32,11 +30,11 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ]), [
             'provider' => $provider,
             'appId' => $appId,
@@ -46,7 +44,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -61,11 +59,11 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for Failure when disabled
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ]), [
             'provider' => $provider,
             'appId' => $appId,
@@ -75,7 +73,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -91,7 +89,7 @@ class AccountCustomClientTest extends Scope
 
     public function testBlockedAccount(): array
     {
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name (blocked)';
 
@@ -125,18 +123,18 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/'.$id.'/status', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -150,7 +148,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -169,10 +167,9 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
-
     public function testSelfBlockedAccount(): array
     {
-        $email = uniqid() . 'user55@localhost.test';
+        $email = uniqid().'user55@localhost.test';
         $password = 'password';
         $name = 'User Name (self blocked)';
 
@@ -205,13 +202,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -219,7 +216,7 @@ class AccountCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PATCH, '/account/status', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ], [
             'status' => false,
         ]);
@@ -230,7 +227,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -251,7 +248,7 @@ class AccountCustomClientTest extends Scope
 
     public function testCreateJWT(): array
     {
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name (JWT)';
 
@@ -285,13 +282,13 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -300,7 +297,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 201);
@@ -328,11 +325,11 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionId, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/'.$sessionId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 204);
@@ -365,7 +362,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
          * Test for FAILURE
@@ -374,7 +371,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -394,7 +391,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'oldPassword' => '',
         ]);
@@ -409,7 +406,7 @@ class AccountCustomClientTest extends Scope
      */
     public function testUpdateAnonymousAccountEmail($session)
     {
-        $email = uniqid() . 'new@localhost.test';
+        $email = uniqid().'new@localhost.test';
 
         /**
          * Test for FAILURE
@@ -418,7 +415,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'email' => $email,
             'password' => '',
@@ -432,7 +429,7 @@ class AccountCustomClientTest extends Scope
     public function testConvertAnonymousAccount()
     {
         $session = $this->testCreateAnonymousAccount();
-        $email = uniqid() . 'new@localhost.test';
+        $email = uniqid().'new@localhost.test';
         $password = 'new-password';
 
         /**
@@ -445,14 +442,14 @@ class AccountCustomClientTest extends Scope
         ]), [
             'userId' => ID::unique(),
             'email' => $email,
-            'password' => $password
+            'password' => $password,
         ]);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'email' => $email,
             'password' => $password,
@@ -463,13 +460,13 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $email = uniqid() . 'new@localhost.test';
+        $email = uniqid().'new@localhost.test';
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'email' => $email,
             'password' => $password,
@@ -511,18 +508,18 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
         $userId = $response['body']['$id'] ?? '';
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ]), [
             'provider' => $provider,
             'appId' => $appId,
@@ -532,17 +529,17 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
@@ -551,7 +548,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -567,7 +564,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -583,7 +580,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -602,7 +599,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -610,11 +607,11 @@ class AccountCustomClientTest extends Scope
 
         $sessionID = $response['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/' . $sessionID, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/'.$sessionID, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -624,7 +621,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 404);
@@ -687,7 +684,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'search' => '"' . $email . '"',
+            'search' => '"'.$email.'"',
 
         ]);
 
@@ -711,7 +708,6 @@ class AccountCustomClientTest extends Scope
         $this->assertCount(1, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
-
 
     public function testCreatePhone(): array
     {
@@ -745,7 +741,7 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique()
+            'userId' => ID::unique(),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -821,13 +817,13 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -863,19 +859,19 @@ class AccountCustomClientTest extends Scope
     public function testConvertPhoneToPassword(array $data): array
     {
         $session = $data['session'];
-        $email = uniqid() . 'new@localhost.test';
+        $email = uniqid().'new@localhost.test';
         $password = 'new-password';
 
         /**
          * Test for SUCCESS
          */
-        $email = uniqid() . 'new@localhost.test';
+        $email = uniqid().'new@localhost.test';
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'email' => $email,
             'password' => $password,
@@ -918,10 +914,10 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'phone' => $newPhone,
-            'password' => 'new-password'
+            'password' => 'new-password',
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -947,7 +943,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), []);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -972,7 +968,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
 
         ]));
 
@@ -987,7 +983,7 @@ class AccountCustomClientTest extends Scope
         $smsRequest = $this->getLastRequest();
 
         return \array_merge($data, [
-            'token' => $smsRequest['data']['message']
+            'token' => $smsRequest['data']['message'],
         ]);
     }
 
@@ -1007,7 +1003,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'userId' => $id,
             'secret' => $secret,
@@ -1022,7 +1018,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'userId' => ID::custom('ewewe'),
             'secret' => $secret,
@@ -1034,7 +1030,7 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$session,
         ]), [
             'userId' => $id,
             'secret' => '999999',

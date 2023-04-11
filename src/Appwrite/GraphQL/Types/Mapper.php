@@ -15,7 +15,9 @@ use Utopia\Validator;
 class Mapper
 {
     private static array $models = [];
+
     private static array $args = [];
+
     private static array $blacklist = [
         '/v1/mock',
         '/v1/graphql',
@@ -42,7 +44,7 @@ class Mapper
                 'permissions' => [
                     'type' => Type::listOf(Type::nonNull(Type::string())),
                     'defaultValue' => [],
-                ]
+                ],
             ],
         ];
 
@@ -65,7 +67,7 @@ class Mapper
     /**
      * Get the registered default arguments for a given key.
      *
-     * @param string $key
+     * @param  string  $key
      * @return array
      */
     public static function args(string $key): array
@@ -86,7 +88,7 @@ class Mapper
 
         $names = $route->getLabel('sdk.response.model', 'none');
         $models = \is_array($names)
-            ? \array_map(static fn($m) => static::$models[$m], $names)
+            ? \array_map(static fn ($m) => static::$models[$m], $names)
             : [static::$models[$names]];
 
         foreach ($models as $model) {
@@ -102,7 +104,7 @@ class Mapper
                 $parameterType = Mapper::param(
                     $utopia,
                     $parameter['validator'],
-                    !$parameter['optional'],
+                    ! $parameter['optional'],
                     $parameter['injections']
                 );
                 $params[$name] = [
@@ -118,7 +120,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($utopia, $route)
+                'resolve' => Resolvers::api($utopia, $route),
             ];
 
             if ($list) {
@@ -132,7 +134,7 @@ class Mapper
     /**
      * Get a type from the registry, creating it if it does not already exist.
      *
-     * @param string $name
+     * @param  string  $name
      * @return Type
      */
     public static function model(string $name): Type
@@ -151,23 +153,23 @@ class Mapper
                 'description' => 'Additional data',
                 'resolve' => static function ($object, $args, $context, $info) {
                     $data = \array_filter(
-                        (array)$object,
-                        fn($key) => !\str_starts_with($key, '_'),
+                        (array) $object,
+                        fn ($key) => ! \str_starts_with($key, '_'),
                         ARRAY_FILTER_USE_KEY
                     );
 
                     return \json_encode($data, JSON_FORCE_OBJECT);
-                }
+                },
             ];
         }
 
         // If model has no properties, explicitly add a 'status' field
         // because GraphQL requires at least 1 field per type.
-        if (!$model->isAny() && empty($model->getRules())) {
+        if (! $model->isAny() && empty($model->getRules())) {
             $fields['status'] = [
                 'type' => Type::string(),
                 'description' => 'Status',
-                'resolve' => static fn($object, $args, $context, $info) => 'OK',
+                'resolve' => static fn ($object, $args, $context, $info) => 'OK',
             ];
         }
 
@@ -189,7 +191,7 @@ class Mapper
                 'description' => $rule['description'],
             ];
 
-            if (!$rule['required']) {
+            if (! $rule['required']) {
                 $fields[$escapedKey]['defaultValue'] = $rule['default'];
             }
         }
@@ -207,11 +209,12 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
-     * @param Validator|callable $validator
-     * @param bool $required
-     * @param array $injections
+     * @param  App  $utopia
+     * @param  Validator|callable  $validator
+     * @param  bool  $required
+     * @param  array  $injections
      * @return Type
+     *
      * @throws Exception
      */
     public static function param(
@@ -224,7 +227,7 @@ class Mapper
             ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
 
-        switch ((!empty($validator)) ? $validator::class : '') {
+        switch ((! empty($validator)) ? $validator::class : '') {
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Task\Validator\Cron':
             case 'Appwrite\Utopia\Database\Validator\CustomId':
@@ -304,10 +307,11 @@ class Mapper
     /**
      * Map an {@see Attribute} to a GraphQL Type
      *
-     * @param string $type
-     * @param bool $array
-     * @param bool $required
+     * @param  string  $type
+     * @param  bool  $array
+     * @param  bool  $required
      * @return Type
+     *
      * @throws Exception
      */
     public static function attribute(string $type, bool $array, bool $required): Type
@@ -343,6 +347,7 @@ class Mapper
         }
 
         $complexModel = self::$models[$type];
+
         return self::model(\ucfirst($complexModel->getType()));
     }
 
@@ -383,7 +388,7 @@ class Mapper
                 return static::getHashOptionsImplementation($object);
         }
 
-        throw new Exception('Unknown union type: ' . $name);
+        throw new Exception('Unknown union type: '.$name);
     }
 
     private static function getAttributeImplementation(array $object): Type

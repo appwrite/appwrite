@@ -4,8 +4,8 @@ namespace Tests\Unit\Utopia\Database\Validator\Query;
 
 use Appwrite\Utopia\Database\Validator\Query\Base;
 use Appwrite\Utopia\Database\Validator\Query\Offset;
-use Utopia\Database\Query;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Query;
 
 class OffsetTest extends TestCase
 {

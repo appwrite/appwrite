@@ -2,9 +2,9 @@
 
 namespace Tests\E2E\Services\Databases;
 
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -20,7 +20,7 @@ class DatabasesConsoleClientTest extends Scope
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
@@ -32,7 +32,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -98,7 +98,6 @@ class DatabasesConsoleClientTest extends Scope
     //     $this->assertIsArray($response['body']['collectionsDelete']);
     // }
 
-
     /**
      * @depends testCreateCollection
      */
@@ -108,21 +107,20 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$data['moviesId'].'/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'range' => '32h'
+            'range' => '32h',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/randomCollectionId/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/randomCollectionId/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'range' => '24h'
+            'range' => '24h',
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -130,11 +128,11 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$data['moviesId'].'/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'range' => '24h'
+            'range' => '24h',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -156,7 +154,7 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$data['moviesId'].'/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -165,11 +163,11 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$data['moviesId'].'/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 1
+            'limit' => 1,
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -177,23 +175,23 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$data['moviesId'].'/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'offset' => 1
+            'offset' => 1,
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
-        $logs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/logs', array_merge([
+        $logs = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/'.$data['moviesId'].'/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'offset' => 1,
-            'limit' => 1
+            'limit' => 1,
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);

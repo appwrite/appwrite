@@ -27,7 +27,7 @@ class FunctionsClientTest extends Scope
                 'name' => 'Test Function',
                 'runtime' => 'php-8.0',
                 'execute' => [Role::any()->toString()],
-            ]
+            ],
         ];
 
         $function = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -35,7 +35,6 @@ class FunctionsClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
-
 
         $this->assertIsArray($function['body']['data']);
         $this->assertArrayNotHasKey('errors', $function['body']);
@@ -57,7 +56,7 @@ class FunctionsClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $functionId,
-            ]
+            ],
         ];
 
         $variables = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -74,15 +73,17 @@ class FunctionsClientTest extends Scope
 
     /**
      * @depends testCreateFunction
+     *
      * @param $function
      * @return array
+     *
      * @throws \Exception
      */
     public function testCreateDeployment($function): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php/code.tar.gz";
+        $code = realpath(__DIR__.'/../../../resources/functions').'/php/code.tar.gz';
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
@@ -91,10 +92,10 @@ class FunctionsClientTest extends Scope
                     'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
-                ]
+                ],
             ]),
             'map' => \json_encode([
-                'code' => ["variables.code"]
+                'code' => ['variables.code'],
             ]),
             'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
         ];
@@ -116,9 +117,11 @@ class FunctionsClientTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testCreateDeployment
+     *
      * @param $function
      * @param $deployment
      * @return array
+     *
      * @throws \Exception
      */
     public function testCreateExecution($function, $deployment): array
@@ -129,7 +132,7 @@ class FunctionsClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ]
+            ],
         ];
 
         $execution = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -139,13 +142,16 @@ class FunctionsClientTest extends Scope
 
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
+
         return $execution['body']['data']['functionsCreateExecution'];
     }
 
     /**
      * @depends testCreateFunction
+     *
      * @param $function
      * @return array
+     *
      * @throws \Exception
      */
     public function testGetExecutions($function): array
@@ -156,7 +162,7 @@ class FunctionsClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ]
+            ],
         ];
 
         $executions = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -175,9 +181,11 @@ class FunctionsClientTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testCreateExecution
+     *
      * @param $function
      * @param $execution
      * @return array
+     *
      * @throws \Exception
      */
     public function testGetExecution($function, $execution): array
@@ -189,7 +197,7 @@ class FunctionsClientTest extends Scope
             'variables' => [
                 'functionId' => $function['_id'],
                 'executionId' => $execution['_id'],
-            ]
+            ],
         ];
 
         $execution = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

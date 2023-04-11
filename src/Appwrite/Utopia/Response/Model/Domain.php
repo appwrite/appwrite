@@ -68,8 +68,7 @@ class Domain extends Model
                 'description' => 'Registered with Appwrite',
                 'default' => false,
                 'example' => true,
-            ])
-        ;
+            ]);
     }
 
     /**

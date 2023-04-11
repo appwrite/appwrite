@@ -6,179 +6,316 @@ trait Base
 {
     // Databases
     public static string $CREATE_DATABASE = 'create_database';
+
     public static string $GET_DATABASES = 'get_databases';
+
     public static string $GET_DATABASE = 'get_database';
+
     public static string $UPDATE_DATABASE = 'update_database';
+
     public static string $DELETE_DATABASE = 'delete_database';
+
     // Collections
     public static string $CREATE_COLLECTION = 'create_collection';
+
     public static string $GET_COLLECTION = 'get_collection';
+
     public static string $GET_COLLECTIONS = 'list_collections';
+
     public static string $UPDATE_COLLECTION = 'update_collection';
+
     public static string $DELETE_COLLECTION = 'delete_collection';
+
     // Attributes
     public static string $CREATE_STRING_ATTRIBUTE = 'create_string_attribute';
+
     public static string $CREATE_INTEGER_ATTRIBUTE = 'create_integer_attribute';
+
     public static string $CREATE_FLOAT_ATTRIBUTE = 'create_float_attribute';
+
     public static string $CREATE_BOOLEAN_ATTRIBUTE = 'create_boolean_attribute';
+
     public static string $CREATE_URL_ATTRIBUTE = 'create_url_attribute';
+
     public static string $CREATE_EMAIL_ATTRIBUTE = 'create_email_attribute';
+
     public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
+
     public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
+
     public static string $CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+
     public static string $GET_ATTRIBUTES = 'get_attributes';
+
     public static string $GET_ATTRIBUTE = 'get_attribute';
+
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
+
     // Indexes
     public static string $CREATE_INDEX = 'create_index';
+
     public static string $GET_INDEXES = 'get_indexes';
+
     public static string $GET_INDEX = 'get_index';
+
     public static string $DELETE_INDEX = 'delete_index';
+
     // Documents
     public static string $CREATE_DOCUMENT = 'create_document_rest';
+
     public static string $GET_DOCUMENTS = 'list_documents';
+
     public static string $GET_DOCUMENT = 'get_document';
+
     public static string $UPDATE_DOCUMENT = 'update_document';
+
     public static string $DELETE_DOCUMENT = 'delete_document';
 
     // Custom Entities
     public static string $CREATE_CUSTOM_ENTITY = 'create_custom_entity';
+
     public static string $GET_CUSTOM_ENTITIES = 'get_custom_entities';
+
     public static string $GET_CUSTOM_ENTITY = 'get_custom_entity';
+
     public static string $UPDATE_CUSTOM_ENTITY = 'update_custom_entity';
+
     public static string $DELETE_CUSTOM_ENTITY = 'delete_custom_entity';
 
     // Account
     public static string $CREATE_ACCOUNT = 'create_account';
+
     public static string $CREATE_ACCOUNT_SESSION = 'create_account_session';
+
     public static string $CREATE_ANONYMOUS_SESSION = 'create_anonymous_session';
+
     public static string $CREATE_ACCOUNT_JWT = 'create_account_jwt';
+
     public static string $CREATE_MAGIC_URL = 'create_magic_url';
+
     public static string $CREATE_PASSWORD_RECOVERY = 'create_password_recovery';
+
     public static string $CREATE_EMAIL_VERIFICATION = 'create_email_verification';
+
     public static string $CREATE_PHONE_VERIFICATION = 'create_phone_verification';
+
     public static string $GET_ACCOUNT = 'get_account';
+
     public static string $GET_ACCOUNT_SESSION = 'get_account_session';
+
     public static string $GET_ACCOUNT_SESSIONS = 'get_account_sessions';
+
     public static string $GET_ACCOUNT_PREFS = 'get_account_preferences';
+
     public static string $GET_ACCOUNT_LOGS = 'get_account_logs';
+
     public static string $UPDATE_ACCOUNT_NAME = 'update_account_name';
+
     public static string $UPDATE_ACCOUNT_EMAIL = 'update_account_email';
+
     public static string $UPDATE_ACCOUNT_PASSWORD = 'update_account_password';
+
     public static string $UPDATE_ACCOUNT_PREFS = 'update_account_prefs';
+
     public static string $UPDATE_ACCOUNT_PHONE = 'update_account_phone';
+
     public static string $UPDATE_ACCOUNT_STATUS = 'update_account_status';
+
     public static string $UPDATE_MAGIC_URL = 'confirm_magic_url';
+
     public static string $UPDATE_PASSWORD_RECOVERY = 'confirm_password_recovery';
+
     public static string $UPDATE_EMAIL_VERIFICATION = 'confirm_email_verification';
+
     public static string $UPDATE_PHONE_VERIFICATION = 'confirm_phone_verification';
+
     public static string $DELETE_ACCOUNT_SESSION = 'delete_account_session';
+
     public static string $DELETE_ACCOUNT_SESSIONS = 'delete_account_sessions';
 
     // Users
     public static string $CREATE_USER = 'create_user';
+
     public static string $GET_USER = 'get_user';
+
     public static string $GET_USERS = 'list_user';
+
     public static string $GET_USER_PREFERENCES = 'get_user_preferences';
+
     public static string $GET_USER_SESSIONS = 'get_user_sessions';
+
     public static string $GET_USER_MEMBERSHIPS = 'get_user_memberships';
+
     public static string $GET_USER_LOGS = 'get_user_logs';
+
     public static string $UPDATE_USER_STATUS = 'update_user_status';
+
     public static string $UPDATE_USER_NAME = 'update_user_name';
+
     public static string $UPDATE_USER_EMAIL = 'update_user_email';
+
     public static string $UPDATE_USER_EMAIL_VERIFICATION = 'update_email_verification';
+
     public static string $UPDATE_USER_PHONE_VERIFICATION = 'update_phone_verification';
+
     public static string $UPDATE_USER_PASSWORD = 'update_user_password';
+
     public static string $UPDATE_USER_PHONE = 'update_user_phone';
+
     public static string $UPDATE_USER_PREFS = 'update_user_prefs';
+
     public static string $DELETE_USER_SESSIONS = 'delete_user_sessions';
+
     public static string $DELETE_USER_SESSION = 'delete_user_session';
+
     public static string $DELETE_USER = 'delete_user';
 
     // Teams
     public static string $GET_TEAM = 'get_team';
+
     public static string $GET_TEAMS = 'list_teams';
+
     public static string $CREATE_TEAM = 'create_team';
+
     public static string $UPDATE_TEAM = 'update_team';
+
     public static string $DELETE_TEAM = 'delete_team';
+
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
+
     public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
+
     public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
+
     public static string $UPDATE_TEAM_MEMBERSHIP_ROLES = 'update_team_membership_roles';
+
     public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
+
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
     // Functions
     public static string $CREATE_FUNCTION = 'create_function';
+
     public static string $GET_FUNCTIONS = 'list_functions';
+
     public static string $GET_FUNCTION = 'get_function';
+
     public static string $GET_RUNTIMES = 'list_runtimes';
+
     public static string $UPDATE_FUNCTION = 'update_function';
+
     public static string $DELETE_FUNCTION = 'delete_function';
+
     // Variables
     public static string $CREATE_VARIABLE = 'create_variable';
+
     public static string $GET_VARIABLES = 'list_variables';
+
     public static string $GET_VARIABLE = 'get_variable';
+
     public static string $UPDATE_VARIABLE = 'update_variable';
+
     public static string $DELETE_VARIABLE = 'delete_variable';
 
     //Deployments
     public static string $CREATE_DEPLOYMENT = 'create_deployment';
+
     public static string $GET_DEPLOYMENTS = 'list_deployments';
+
     public static string $GET_DEPLOYMENT = 'get_deployment';
+
     public static string $UPDATE_DEPLOYMENT = 'update_deployment';
+
     public static string $DELETE_DEPLOYMENT = 'delete_deployment';
+
     // Executions
     public static string $GET_EXECUTIONS = 'list_executions';
+
     public static string $GET_EXECUTION = 'get_execution';
+
     public static string $CREATE_EXECUTION = 'create_execution';
+
     public static string $DELETE_EXECUTION = 'delete_execution';
+
     public static string $RETRY_BUILD = 'retry_build';
 
     // Buckets
     public static string $CREATE_BUCKET = 'create_bucket';
+
     public static string $GET_BUCKETS = 'list_buckets';
+
     public static string $GET_BUCKET = 'get_bucket';
+
     public static string $UPDATE_BUCKET = 'update_bucket';
+
     public static string $DELETE_BUCKET = 'delete_bucket';
+
     // Files
     public static string $CREATE_FILE = 'create_file';
+
     public static string $GET_FILES = 'list_files';
+
     public static string $GET_FILE = 'get_file';
+
     public static string $GET_FILE_PREVIEW = 'get_file_preview';
+
     public static string $GET_FILE_DOWNLOAD = 'get_file_download';
+
     public static string $GET_FILE_VIEW = 'get_file_view';
+
     public static string $UPDATE_FILE = 'update_file';
+
     public static string $DELETE_FILE = 'delete_file';
 
     // Health
     public static string $GET_HTTP_HEALTH = 'get_http_health';
+
     public static string $GET_DB_HEALTH = 'get_db_health';
+
     public static string $GET_CACHE_HEALTH = 'get_cache_health';
+
     public static string $GET_TIME_HEALTH = 'get_time_health';
+
     public static string $GET_WEBHOOKS_QUEUE_HEALTH = 'get_webhooks_queue_health';
+
     public static string $GET_LOGS_QUEUE_HEALTH = 'get_logs_queue_health';
+
     public static string $GET_CERTIFICATES_QUEUE_HEALTH = 'get_certificates_queue_health';
+
     public static string $GET_FUNCTION_QUEUE_HEALTH = 'get_functions_queue_health';
+
     public static string $GET_LOCAL_STORAGE_HEALTH = 'get_local_storage_health';
+
     public static string $GET_ANITVIRUS_HEALTH = 'get_antivirus_health';
 
     // Localization
     public static string $GET_LOCALE = 'get_locale';
+
     public static string $LIST_COUNTRIES = 'list_countries';
+
     public static string $LIST_EU_COUNTRIES = 'list_eu_countries';
+
     public static string $LIST_COUNTRY_PHONE_CODES = 'list_country_phone_codes';
+
     public static string $LIST_CONTINENTS = 'list_continents';
+
     public static string $LIST_CURRENCIES = 'list_currencies';
+
     public static string $LIST_LANGUAGES = 'list_languages';
 
     // Avatars
     public static string $GET_CREDIT_CARD_ICON = 'get_credit_card_icon';
+
     public static string $GET_BROWSER_ICON = 'get_browser_icon';
+
     public static string $GET_COUNTRY_FLAG = 'get_country_flag';
+
     public static string $GET_IMAGE_FROM_URL = 'get_image_from_url';
+
     public static string $GET_FAVICON = 'get_favicon';
+
     public static string $GET_QRCODE = 'get_qrcode';
+
     public static string $GET_USER_INITIALS = 'get_user_initials';
 
     // Complex queries
@@ -492,13 +629,13 @@ trait Base
                             ...attributeProperties
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
+                }'.PHP_EOL.self::$FRAGMENT_ATTRIBUTES;
             case self::$GET_ATTRIBUTE:
                 return 'query getAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesGetAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
                         ...attributeProperties
                     }
-                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
+                }'.PHP_EOL.self::$FRAGMENT_ATTRIBUTES;
             case self::$DELETE_ATTRIBUTE:
                 return 'mutation deleteAttribute($databaseId: String!, $collectionId: String!, $key: String!) {
                     databasesDeleteAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key) {
@@ -622,7 +759,7 @@ trait Base
                             ...options
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_HASH_OPTIONS;
+                }'.PHP_EOL.self::$FRAGMENT_HASH_OPTIONS;
             case self::$GET_USER_PREFERENCES:
                 return 'query getUserPreferences($userId : String!) {
                     usersGetPrefs(userId : $userId) {
@@ -1805,7 +1942,7 @@ trait Base
                             data
                         }
                     }
-                }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
+                }'.PHP_EOL.self::$FRAGMENT_ATTRIBUTES;
         }
 
         throw new \InvalidArgumentException('Invalid query type');

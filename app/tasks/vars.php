@@ -20,6 +20,6 @@ $cli
         }
 
         foreach ($vars as $key => $value) {
-            Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
+            Console::log('- '.$value['name'].'='.App::getEnv($value['name'], ''));
         }
     });

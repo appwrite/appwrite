@@ -24,7 +24,7 @@ class Dailymotion extends OAuth2
      */
     protected array $scopes = [
         'userinfo',
-        'email'
+        'email',
     ];
 
     /**
@@ -34,7 +34,7 @@ class Dailymotion extends OAuth2
         'email',
         'id',
         'fullname',
-        'verified'
+        'verified',
     ];
 
     /**
@@ -68,21 +68,20 @@ class Dailymotion extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->authEndpoint . '?' .
+        $url = $this->authEndpoint.'?'.
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
                 'redirect_uri' => $this->callback,
-                'scope' => \implode(' ', $this->getScopes())
+                'scope' => \implode(' ', $this->getScopes()),
             ]);
 
         return $url;
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -90,33 +89,31 @@ class Dailymotion extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . '/oauth/token',
-                ["Content-Type: application/x-www-form-urlencoded"],
+                $this->endpoint.'/oauth/token',
+                ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
-                    "client_id" => $this->appID,
-                    "client_secret" => $this->appSecret,
-                    "redirect_uri" => $this->callback,
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'redirect_uri' => $this->callback,
                     'code' => $code,
                     'scope' => \implode(' ', $this->getScopes()),
                 ])
             ), true);
         }
+
         return $this->tokens;
     }
 
-
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
-
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . '/oauth/token',
+            $this->endpoint.'/oauth/token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -130,13 +127,11 @@ class Dailymotion extends OAuth2
             $this->tokens['refresh_token'] = $refreshToken;
         }
 
-
         return $this->tokens;
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -149,8 +144,7 @@ class Dailymotion extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -166,8 +160,7 @@ class Dailymotion extends OAuth2
      *
      * @link https://developers.dailymotion.com/api/#user-fields
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -178,14 +171,12 @@ class Dailymotion extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-
 
         $username = $user['fullname'] ?? '';
 
@@ -193,8 +184,7 @@ class Dailymotion extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -202,8 +192,8 @@ class Dailymotion extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->endpoint . '/user/me?fields=' . \implode(',', $this->getFields()),
-                ['Authorization: Bearer ' . \urlencode($accessToken)],
+                $this->endpoint.'/user/me?fields='.\implode(',', $this->getFields()),
+                ['Authorization: Bearer '.\urlencode($accessToken)],
             );
             $this->user = \json_decode($user, true);
         }

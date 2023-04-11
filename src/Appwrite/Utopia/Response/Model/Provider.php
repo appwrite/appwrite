@@ -37,8 +37,7 @@ class Provider extends Model
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Provider is active and can be used to create session.',
                 'example' => '',
-            ])
-        ;
+            ]);
     }
 
     /**

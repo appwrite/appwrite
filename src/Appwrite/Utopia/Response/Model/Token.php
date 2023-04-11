@@ -39,8 +39,7 @@ class Token extends Model
                 'description' => 'Token expiration date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-        ;
+            ]);
     }
 
     /**

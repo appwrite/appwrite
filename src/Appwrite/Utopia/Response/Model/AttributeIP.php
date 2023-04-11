@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeIP extends Attribute
 {
@@ -36,13 +35,12 @@ class AttributeIP extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => '192.0.2.0',
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [
         'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_IP
+        'format' => \APP_DATABASE_ATTRIBUTE_IP,
     ];
 
     /**

@@ -80,7 +80,7 @@ class HTTPTest extends Scope
     {
         // Preparation
         $previousEndpoint = $this->client->getEndpoint();
-        $this->client->setEndpoint("http://localhost");
+        $this->client->setEndpoint('http://localhost');
 
         /**
          * Test for SUCCESS
@@ -107,7 +107,7 @@ class HTTPTest extends Scope
 
     public function testSpecs()
     {
-        $directory = __DIR__ . '/../../../app/config/specs/';
+        $directory = __DIR__.'/../../../app/config/specs/';
 
         $files = scandir($directory);
         $client = new Client();
@@ -131,7 +131,7 @@ class HTTPTest extends Scope
                     break;
                 }
             }
-            if (!$allowed) {
+            if (! $allowed) {
                 continue;
             }
 
@@ -140,7 +140,7 @@ class HTTPTest extends Scope
              */
             $response = $client->call(Client::METHOD_POST, '/validator/debug', [
                 'content-type' => 'application/json',
-            ], json_decode(file_get_contents($directory . $file), true));
+            ], json_decode(file_get_contents($directory.$file), true));
 
             $response['body'] = json_decode($response['body'], true);
             $this->assertEquals(200, $response['headers']['status-code']);

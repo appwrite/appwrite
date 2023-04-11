@@ -17,12 +17,12 @@ class BaseList extends Model
     protected string $type = '';
 
     /**
-     * @param string $name
-     * @param string $type
-     * @param string $key
-     * @param string $model
-     * @param bool $paging
-     * @param bool $public
+     * @param  string  $name
+     * @param  string  $type
+     * @param  string  $key
+     * @param  string  $model
+     * @param  bool  $paging
+     * @param  bool  $public
      */
     public function __construct(string $name, string $type, string $key, string $model, bool $paging = true, bool $public = true)
     {
@@ -34,13 +34,13 @@ class BaseList extends Model
             $namesWithCap = [
                 'documents', 'collections', 'users', 'files', 'buckets', 'functions',
                 'deployments', 'executions', 'projects', 'webhooks', 'keys',
-                'platforms', 'domains', 'memberships', 'teams'
+                'platforms', 'domains', 'memberships', 'teams',
             ];
 
             if (\in_array($name, $namesWithCap)) {
-                $description = 'Total number of ' . $key . ' documents that matched your query used as reference for offset pagination. When the `total` number of ' . $key . ' documents available is greater than 5000, total returned will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
+                $description = 'Total number of '.$key.' documents that matched your query used as reference for offset pagination. When the `total` number of '.$key.' documents available is greater than 5000, total returned will be capped at 5000, and cursor pagination should be used. Read more about [pagination](https://appwrite.io/docs/pagination).';
             } else {
-                $description = 'Total number of ' . $key . ' documents that matched your query.';
+                $description = 'Total number of '.$key.' documents that matched your query.';
             }
 
             $this->addRule('total', [
@@ -52,7 +52,7 @@ class BaseList extends Model
         }
         $this->addRule($key, [
             'type' => $model,
-            'description' => 'List of ' . $key . '.',
+            'description' => 'List of '.$key.'.',
             'default' => [],
             'array' => true,
         ]);

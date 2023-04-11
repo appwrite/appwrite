@@ -15,7 +15,7 @@ class Nested extends Model
             ])
             ->addRule('single', [
                 'type' => 'single',
-                'default' => ''
+                'default' => '',
             ]);
     }
 

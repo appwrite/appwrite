@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 trait DatabasesPermissionsScope
 {
     public array $users = [];
+
     public array $teams = [];
 
     public function createUser(string $id, string $email, string $password = 'test123!'): array
@@ -18,7 +19,7 @@ trait DatabasesPermissionsScope
         ], [
             'userId' => $id,
             'email' => $email,
-            'password' => $password
+            'password' => $password,
         ]);
 
         $this->assertEquals(201, $user['headers']['status-code']);
@@ -32,7 +33,7 @@ trait DatabasesPermissionsScope
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $this->client->parseCookie((string) $session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $user = [
             '$id' => $user['body']['$id'],
@@ -53,7 +54,7 @@ trait DatabasesPermissionsScope
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', $this->getServerHeader(), [
             'teamId' => $id,
-            'name' => $name
+            'name' => $name,
         ]);
         $this->teams[$id] = $team['body'];
 
@@ -62,16 +63,16 @@ trait DatabasesPermissionsScope
 
     public function addToTeam(string $user, string $team, array $roles = []): array
     {
-        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team . '/memberships', $this->getServerHeader(), [
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/'.$team.'/memberships', $this->getServerHeader(), [
             'teamId' => $team,
             'email' => $this->getCreatedUser($user)['email'],
             'roles' => $roles,
-            'url' => 'http://localhost:5000/join-us#title'
+            'url' => 'http://localhost:5000/join-us#title',
         ]);
 
         return [
             'user' => $membership['body']['userId'],
-            'membership' => $membership['body']['$id']
+            'membership' => $membership['body']['$id'],
         ];
     }
 
@@ -80,7 +81,7 @@ trait DatabasesPermissionsScope
         return [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
     }
 }

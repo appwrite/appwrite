@@ -11,7 +11,7 @@ class Registry
     /**
      * Check if a type exists in the registry.
      *
-     * @param string $type
+     * @param  string  $type
      * @return bool
      */
     public static function has(string $type): bool
@@ -22,7 +22,7 @@ class Registry
     /**
      * Get a type from the registry.
      *
-     * @param string $type
+     * @param  string  $type
      * @return Type
      */
     public static function get(string $type): Type
@@ -33,8 +33,8 @@ class Registry
     /**
      * Set a type in the registry.
      *
-     * @param string $type
-     * @param Type $typeObject
+     * @param  string  $type
+     * @param  Type  $typeObject
      */
     public static function set(string $type, Type $typeObject): void
     {

@@ -33,7 +33,7 @@ class IndexedQueriesTest extends TestCase
     {
         $validator = new IndexedQueries();
 
-        $this->assertEquals(false, $validator->isValid(["this.is.invalid"]));
+        $this->assertEquals(false, $validator->isValid(['this.is.invalid']));
     }
 
     public function testInvalidMethod(): void

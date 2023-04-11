@@ -10,7 +10,7 @@ class CollectionsTest extends TestCase
 
     public function setUp(): void
     {
-        $this->collections = require('app/config/collections.php');
+        $this->collections = require 'app/config/collections.php';
     }
 
     public function testDuplicateRules(): void

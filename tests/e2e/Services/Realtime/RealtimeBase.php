@@ -2,8 +2,8 @@
 
 namespace Tests\E2E\Services\Realtime;
 
-use WebSocket\ConnectionException;
 use WebSocket\Client as WebSocketClient;
+use WebSocket\ConnectionException;
 
 trait RealtimeBase
 {
@@ -14,15 +14,15 @@ trait RealtimeBase
         }
 
         $headers = array_merge([
-            'Origin' => 'appwrite.test'
+            'Origin' => 'appwrite.test',
         ], $headers);
 
         $query = [
             'project' => $projectId,
-            'channels' => $channels
+            'channels' => $channels,
         ];
 
-        return new WebSocketClient('ws://appwrite-traefik/v1/realtime?' . http_build_query($query), [
+        return new WebSocketClient('ws://appwrite-traefik/v1/realtime?'.http_build_query($query), [
             'headers' => $headers,
             'timeout' => 30,
         ]);
@@ -57,8 +57,8 @@ trait RealtimeBase
     {
         $client = new WebSocketClient('ws://appwrite-traefik/v1/realtime?project=123', [
             'headers' => [
-                'Origin' => 'appwrite.test'
-            ]
+                'Origin' => 'appwrite.test',
+            ],
         ]);
         $payload = json_decode($client->receive(), true);
 

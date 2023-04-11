@@ -19,30 +19,32 @@ class Swagger2 extends Format
     protected function getNestedModels(Model $model, array &$usedModels): void
     {
         foreach ($model->getRules() as $rule) {
-            if (!in_array($model->getType(), $usedModels)) {
+            if (! in_array($model->getType(), $usedModels)) {
                 continue;
             }
 
             if (\is_array($rule['type'])) {
                 foreach ($rule['type'] as $ruleType) {
-                    if (!in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
+                    if (! in_array($ruleType, ['string', 'integer', 'boolean', 'json', 'float'])) {
                         $usedModels[] = $ruleType;
 
                         foreach ($this->models as $m) {
                             if ($m->getType() === $ruleType) {
                                 $this->getNestedModels($m, $usedModels);
+
                                 continue;
                             }
                         }
                     }
                 }
             } else {
-                if (!in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
+                if (! in_array($rule['type'], ['string', 'integer', 'boolean', 'json', 'float'])) {
                     $usedModels[] = $rule['type'];
 
                     foreach ($this->models as $m) {
                         if ($m->getType() === $rule['type']) {
                             $this->getNestedModels($m, $usedModels);
+
                             continue;
                         }
                     }
@@ -123,7 +125,7 @@ class Swagger2 extends Format
             }
 
             $id = $route->getLabel('sdk.method', \uniqid());
-            $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
+            $desc = (! empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../../'.$route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
             $routeSecurity = $route->getLabel('sdk.auth', []);
@@ -152,7 +154,7 @@ class Swagger2 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($id),
+                'operationId' => $route->getLabel('sdk.namespace', 'default').ucfirst($id),
                 'consumes' => [],
                 'produces' => [],
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
@@ -163,8 +165,8 @@ class Swagger2 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.Template::fromCamelCaseToDash($id).'.md',
+                    'edit' => 'https://github.com/appwrite/appwrite/edit/master'.$route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
@@ -192,8 +194,8 @@ class Swagger2 extends Format
                 }
             }
 
-            if (!(\is_array($model)) &&  $model->isNone()) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+            if (! (\is_array($model)) && $model->isNone()) {
+                $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')] = [
                     'description' => in_array($produces, [
                         'image/*',
                         'image/jpeg',
@@ -205,42 +207,42 @@ class Swagger2 extends Format
                         'image/bmp',
                     ]) ? 'Image' : 'File',
                     'schema' => [
-                        'type' => 'file'
+                        'type' => 'file',
                     ],
                 ];
             } else {
                 if (\is_array($model)) {
-                    $modelDescription = \join(', or ', \array_map(fn ($m) => $m->getName(), $model));
+                    $modelDescription = \implode(', or ', \array_map(fn ($m) => $m->getName(), $model));
                     // model has multiple possible responses, we will use oneOf
                     foreach ($model as $m) {
                         $usedModels[] = $m->getType();
                     }
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                    $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')] = [
                         'description' => $modelDescription,
                         'schema' => [
                             'x-oneOf' => \array_map(function ($m) {
-                                return ['$ref' => '#/definitions/' . $m->getType()];
-                            }, $model)
+                                return ['$ref' => '#/definitions/'.$m->getType()];
+                            }, $model),
                         ],
                     ];
                 } else {
                     // Response definition using one type
                     $usedModels[] = $model->getType();
-                    $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')] = [
+                    $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')] = [
                         'description' => $model->getName(),
                         'schema' => [
-                            '$ref' => '#/definitions/' . $model->getType(),
+                            '$ref' => '#/definitions/'.$model->getType(),
                         ],
                     ];
                 }
             }
 
             if (in_array($route->getLabel('sdk.response.code', 500), [204, 301, 302, 308], true)) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+                $temp['responses'][(string) $route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
+                unset($temp['responses'][(string) $route->getLabel('sdk.response.code', '500')]['schema']);
             }
 
-            if ((!empty($scope))) { //  && 'public' != $scope
+            if ((! empty($scope))) { //  && 'public' != $scope
                 $securities = ['Project' => []];
 
                 foreach ($route->getLabel('sdk.auth', []) as $security) {
@@ -276,7 +278,7 @@ class Swagger2 extends Format
                 $node = [
                     'name' => $name,
                     'description' => $param['description'],
-                    'required' => !$param['optional'],
+                    'required' => ! $param['optional'],
                 ];
 
                 foreach ($this->services as $service) {
@@ -285,10 +287,10 @@ class Swagger2 extends Format
                     }
                 }
 
-                switch ((!empty($validator)) ? \get_class($validator) : '') {
+                switch ((! empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Validator\Boolean':
                         $node['type'] = $validator->getType();
@@ -299,11 +301,11 @@ class Swagger2 extends Format
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['type'] = $validator->getType();
@@ -358,7 +360,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['x-example'] = '["'.Permission::read(Role::any()).'"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['type'] = $validator->getType();
@@ -366,7 +368,7 @@ class Swagger2 extends Format
                         $node['items'] = [
                             'type' => 'string',
                         ];
-                        $node['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['x-example'] = '["'.Role::any()->toString().'"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['type'] = $validator->getType();
@@ -415,11 +417,11 @@ class Swagger2 extends Format
                         break;
                 }
 
-                if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
+                if ($param['optional'] && ! \is_null($param['default'])) { // Param has default value
                     $node['default'] = $param['default'];
                 }
 
-                if (false !== \strpos($url, ':' . $name)) { // Param is in URL path
+                if (false !== \strpos($url, ':'.$name)) { // Param is in URL path
                     $node['in'] = 'path';
                     $temp['parameters'][] = $node;
                 } elseif ($route->getMethod() == 'GET') { // Param is in query
@@ -433,7 +435,7 @@ class Swagger2 extends Format
                         continue;
                     }
 
-                    if (!$param['optional']) {
+                    if (! $param['optional']) {
                         $bodyRequired[] = $name;
                     }
 
@@ -453,14 +455,14 @@ class Swagger2 extends Format
                     }
                 }
 
-                $url = \str_replace(':' . $name, '{' . $name . '}', $url);
+                $url = \str_replace(':'.$name, '{'.$name.'}', $url);
             }
 
-            if (!empty($bodyRequired)) {
+            if (! empty($bodyRequired)) {
                 $body['schema']['required'] = $bodyRequired;
             }
 
-            if (!empty($body['schema']['properties'])) {
+            if (! empty($body['schema']['properties'])) {
                 $temp['parameters'][] = $body;
             }
 
@@ -474,7 +476,7 @@ class Swagger2 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels)) {
+            if (! in_array($model->getType(), $usedModels)) {
                 continue;
             }
 
@@ -486,7 +488,7 @@ class Swagger2 extends Format
                 'type' => 'object',
             ];
 
-            if (!empty($rules)) {
+            if (! empty($rules)) {
                 $output['definitions'][$model->getType()]['properties'] = [];
             }
 
@@ -494,7 +496,7 @@ class Swagger2 extends Format
                 $output['definitions'][$model->getType()]['additionalProperties'] = true;
             }
 
-            if (!empty($required)) {
+            if (! empty($required)) {
                 $output['definitions'][$model->getType()]['required'] = $required;
             }
 
@@ -539,17 +541,17 @@ class Swagger2 extends Format
                         if (\is_array($rule['type'])) {
                             if ($rule['array']) {
                                 $items = [
-                                    'x-anyOf' => \array_map(fn ($type) =>  ['$ref' => '#/definitions/' . $type], $rule['type'])
+                                    'x-anyOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/'.$type], $rule['type']),
                                 ];
                             } else {
                                 $items = [
-                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/' . $type], $rule['type'])
+                                    'x-oneOf' => \array_map(fn ($type) => ['$ref' => '#/definitions/'.$type], $rule['type']),
                                 ];
                             }
                         } else {
                             $items = [
                                 'type' => $type,
-                                '$ref' => '#/definitions/' . $rule['type'],
+                                '$ref' => '#/definitions/'.$rule['type'],
                             ];
                         }
                         break;
@@ -562,6 +564,7 @@ class Swagger2 extends Format
                         'description' => $rule['description'] ?? '',
                         'x-example' => $rule['example'] ?? null,
                     ];
+
                     continue;
                 }
 
@@ -592,7 +595,7 @@ class Swagger2 extends Format
                 if ($items) {
                     $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
                 }
-                if (!in_array($name, $required)) {
+                if (! in_array($name, $required)) {
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
                 }
             }

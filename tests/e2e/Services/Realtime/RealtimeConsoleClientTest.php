@@ -4,8 +4,8 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
@@ -29,7 +29,7 @@ class RealtimeConsoleClientTest extends Scope
          * Test for SUCCESS
          */
         $client = $this->getWebsocket(['account'], [
-            'origin' => 'http://localhost'
+            'origin' => 'http://localhost',
         ]);
         $response = json_decode($client->receive(), true);
 
@@ -43,8 +43,8 @@ class RealtimeConsoleClientTest extends Scope
         $client->send(\json_encode([
             'type' => 'authentication',
             'data' => [
-                'session' => $session
-            ]
+                'session' => $session,
+            ],
         ]));
 
         $response = json_decode($client->receive(), true);
@@ -64,8 +64,8 @@ class RealtimeConsoleClientTest extends Scope
         $client->send(\json_encode([
             'type' => 'authentication',
             'data' => [
-                'session' => 'invalid_session'
-            ]
+                'session' => 'invalid_session',
+            ],
         ]));
 
         $response = json_decode($client->receive(), true);
@@ -79,7 +79,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $client->send(\json_encode([
             'type' => 'authentication',
-            'data' => []
+            'data' => [],
         ]));
 
         $response = json_decode($client->receive(), true);
@@ -94,8 +94,8 @@ class RealtimeConsoleClientTest extends Scope
         $client->send(\json_encode([
             'type' => 'unknown',
             'data' => [
-                'session' => 'invalid_session'
-            ]
+                'session' => 'invalid_session',
+            ],
         ]));
 
         $response = json_decode($client->receive(), true);
@@ -120,7 +120,6 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals(1003, $response['data']['code']);
         $this->assertEquals('Message format is not valid.', $response['data']['message']);
 
-
         $client->close();
     }
 
@@ -131,7 +130,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ], $projectId);
 
         $response = json_decode($client->receive(), true);
@@ -159,7 +158,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Attributes
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -175,7 +174,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $actorsId = $actors['body']['$id'];
 
-        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
+        $name = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$actorsId.'/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -207,7 +206,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*.attributes.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
-        $this->assertContains("databases.*", $response['data']['events']);
+        $this->assertContains('databases.*', $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
@@ -227,7 +226,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*.attributes.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}", $response['data']['events']);
-        $this->assertContains("databases.*", $response['data']['events']);
+        $this->assertContains('databases.*', $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('available', $response['data']['payload']['status']);
 
@@ -248,7 +247,7 @@ class RealtimeConsoleClientTest extends Scope
         $databaseId = $data['databaseId'];
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ], $projectId);
 
         $response = json_decode($client->receive(), true);
@@ -264,7 +263,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Indexes
          */
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$actorsId.'/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -330,7 +329,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ], $projectId);
 
         $response = json_decode($client->receive(), true);
@@ -346,7 +345,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Index
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/key_name', array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/'.$databaseId.'/collections/'.$actorsId.'/indexes/key_name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -386,7 +385,7 @@ class RealtimeConsoleClientTest extends Scope
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ], $projectId);
 
         $response = json_decode($client->receive(), true);
@@ -402,7 +401,7 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Delete Attribute
          */
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/attributes/name', array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/'.$databaseId.'/collections/'.$data['actorsId'].'/attributes/name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -450,12 +449,11 @@ class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response1['headers']['status-code']);
 
-
         $projectId = 'console';
 
         $client = $this->getWebsocket(['console'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
         ], $projectId);
 
         $response = json_decode($client->receive(), true);
@@ -471,12 +469,11 @@ class RealtimeConsoleClientTest extends Scope
         /**
          * Test Create Deployment
          */
-
         $folder = 'php';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
+        $code = realpath(__DIR__.'/../../../resources/functions')."/$folder/code.tar.gz";
         $this->packageCode($folder);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [

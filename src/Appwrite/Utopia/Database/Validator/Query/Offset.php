@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Validator\Range;
 
@@ -13,7 +12,7 @@ class Offset extends Base
     /**
      * Query constructor
      *
-     * @param int $maxOffset
+     * @param  int  $maxOffset
      */
     public function __construct(int $maxOffset = 5000)
     {
@@ -27,7 +26,8 @@ class Offset extends Base
             return true;
         }
 
-        $this->message = 'Invalid offset: ' . $validator->getDescription();
+        $this->message = 'Invalid offset: '.$validator->getDescription();
+
         return false;
     }
 
@@ -36,8 +36,7 @@ class Offset extends Base
      *
      * Returns true if method is offset and values are within range.
      *
-     * @param Query $value
-     *
+     * @param  Query  $value
      * @return bool
      */
     public function isValid($query): bool
@@ -46,11 +45,13 @@ class Offset extends Base
         $method = $query->getMethod();
 
         if ($method !== Query::TYPE_OFFSET) {
-            $this->message = 'Query method invalid: ' . $method;
+            $this->message = 'Query method invalid: '.$method;
+
             return false;
         }
 
         $offset = $query->getValue();
+
         return $this->isValidOffset($offset);
     }
 

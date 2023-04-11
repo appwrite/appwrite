@@ -11,8 +11,9 @@ class View extends OldView
      *
      * Convert all applicable characters to HTML entities
      *
-     * @param  string $str
+     * @param  string  $str
      * @return string
+     *
      * @deprecated Use print method with escape filter
      */
     public function escape($str)

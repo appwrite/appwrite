@@ -46,7 +46,7 @@ class Paypal extends OAuth2
     protected array $scopes = [
         'openid',
         'profile',
-        'email'
+        'email',
     ];
 
     /**
@@ -62,14 +62,14 @@ class Paypal extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint[$this->environment] . 'connect/?' .
+        $url = $this->endpoint[$this->environment].'connect/?'.
             \http_build_query([
                 'flowEntry' => 'static',
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'scope' => \implode(' ', $this->getScopes()),
                 // paypal is not accepting localhost string into return uri
-                'redirect_uri' => \str_replace("localhost", "127.0.0.1", $this->callback),
+                'redirect_uri' => \str_replace('localhost', '127.0.0.1', $this->callback),
                 'state' => \json_encode($this->state),
             ]);
 
@@ -77,8 +77,7 @@ class Paypal extends OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -86,8 +85,8 @@ class Paypal extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->resourceEndpoint[$this->environment] . 'oauth2/token',
-                ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+                $this->resourceEndpoint[$this->environment].'oauth2/token',
+                ['Authorization: Basic '.\base64_encode($this->appID.':'.$this->appSecret)],
                 \http_build_query([
                     'code' => $code,
                     'grant_type' => 'authorization_code',
@@ -99,16 +98,15 @@ class Paypal extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->resourceEndpoint[$this->environment] . 'oauth2/token',
-            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+            $this->resourceEndpoint[$this->environment].'oauth2/token',
+            ['Authorization: Basic '.\base64_encode($this->appID.':'.$this->appSecret)],
             \http_build_query([
                 'refresh_token' => $refreshToken,
                 'grant_type' => 'refresh_token',
@@ -123,8 +121,7 @@ class Paypal extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -135,8 +132,7 @@ class Paypal extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -148,7 +144,7 @@ class Paypal extends OAuth2
                 return $email['primary'] === true;
             });
 
-            if (!empty($email)) {
+            if (! empty($email)) {
                 return $email[0]['value'];
             }
         }
@@ -161,8 +157,7 @@ class Paypal extends OAuth2
      *
      * @link https://developer.paypal.com/docs/api/identity/v1/#userinfo_get
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -177,8 +172,7 @@ class Paypal extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -189,20 +183,19 @@ class Paypal extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
         $header = [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . \urlencode($accessToken),
+            'Authorization: Bearer '.\urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->resourceEndpoint[$this->environment] . 'identity/oauth2/userinfo?schema=paypalv1.1',
+                $this->resourceEndpoint[$this->environment].'identity/oauth2/userinfo?schema=paypalv1.1',
                 $header
             );
             $this->user = \json_decode($user, true);

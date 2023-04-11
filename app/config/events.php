@@ -19,7 +19,7 @@ return [
                 '$description' => 'This event triggers when a session for a user is created.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a session for a user is deleted.'
+                '$description' => 'This event triggers when a session for a user is deleted.',
             ],
         ],
         'recovery' => [
@@ -30,7 +30,7 @@ return [
                 '$description' => 'This event triggers when a recovery token for a user is created.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a recovery token for a user is validated.'
+                '$description' => 'This event triggers when a recovery token for a user is validated.',
             ],
         ],
         'verification' => [
@@ -41,11 +41,11 @@ return [
                 '$description' => 'This event triggers when a verification token for a user is created.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a verification token for a user is validated.'
+                '$description' => 'This event triggers when a verification token for a user is validated.',
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a user is created.'
+            '$description' => 'This event triggers when a user is created.',
         ],
         'delete' => [
             '$description' => 'This event triggers when a user is deleted.',
@@ -67,7 +67,7 @@ return [
             'prefs' => [
                 '$description' => 'This event triggers when a user\'s preferences is updated.',
             ],
-        ]
+        ],
     ],
     'databases' => [
         '$model' => Response::MODEL_DATABASE,
@@ -85,10 +85,10 @@ return [
                     '$description' => 'This event triggers when a document is created.',
                 ],
                 'delete' => [
-                    '$description' => 'This event triggers when a document is deleted.'
+                    '$description' => 'This event triggers when a document is deleted.',
                 ],
                 'update' => [
-                    '$description' => 'This event triggers when a document is updated.'
+                    '$description' => 'This event triggers when a document is updated.',
                 ],
             ],
             'indexes' => [
@@ -99,8 +99,8 @@ return [
                     '$description' => 'This event triggers when an index is created.',
                 ],
                 'delete' => [
-                    '$description' => 'This event triggers when an index is deleted.'
-                ]
+                    '$description' => 'This event triggers when an index is deleted.',
+                ],
             ],
             'attributes' => [
                 '$model' => Response::MODEL_ATTRIBUTE,
@@ -110,28 +110,28 @@ return [
                     '$description' => 'This event triggers when an attribute is created.',
                 ],
                 'delete' => [
-                    '$description' => 'This event triggers when an attribute is deleted.'
-                ]
+                    '$description' => 'This event triggers when an attribute is deleted.',
+                ],
             ],
             'create' => [
-                '$description' => 'This event triggers when a collection is created.'
+                '$description' => 'This event triggers when a collection is created.',
             ],
             'delete' => [
                 '$description' => 'This event triggers when a collection is deleted.',
             ],
             'update' => [
                 '$description' => 'This event triggers when a collection is updated.',
-            ]
+            ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a database is created.'
+            '$description' => 'This event triggers when a database is created.',
         ],
         'delete' => [
             '$description' => 'This event triggers when a database is deleted.',
         ],
         'update' => [
             '$description' => 'This event triggers when a database is updated.',
-        ]
+        ],
     ],
     'buckets' => [
         '$model' => Response::MODEL_BUCKET,
@@ -145,21 +145,21 @@ return [
                 '$description' => 'This event triggers when a file is created.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a file is deleted.'
+                '$description' => 'This event triggers when a file is deleted.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a file is updated.'
+                '$description' => 'This event triggers when a file is updated.',
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a bucket is created.'
+            '$description' => 'This event triggers when a bucket is created.',
         ],
         'delete' => [
             '$description' => 'This event triggers when a bucket is deleted.',
         ],
         'update' => [
             '$description' => 'This event triggers when a bucket is updated.',
-        ]
+        ],
     ],
     'teams' => [
         '$model' => Response::MODEL_TEAM,
@@ -173,24 +173,24 @@ return [
                 '$description' => 'This event triggers when a membership is created.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a membership is deleted.'
+                '$description' => 'This event triggers when a membership is deleted.',
             ],
             'update' => [
                 '$description' => 'This event triggers when a membership is updated.',
                 'status' => [
-                    '$description' => 'This event triggers when a team memberships status is updated.'
-                ]
+                    '$description' => 'This event triggers when a team memberships status is updated.',
+                ],
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a bucket is created.'
+            '$description' => 'This event triggers when a bucket is created.',
         ],
         'delete' => [
             '$description' => 'This event triggers when a bucket is deleted.',
         ],
         'update' => [
             '$description' => 'This event triggers when a bucket is updated.',
-        ]
+        ],
     ],
     'functions' => [
         '$model' => Response::MODEL_FUNCTION,
@@ -204,10 +204,10 @@ return [
                 '$description' => 'This event triggers when a deployment is created.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a deployment is deleted.'
+                '$description' => 'This event triggers when a deployment is deleted.',
             ],
             'update' => [
-                '$description' => 'This event triggers when a deployment is updated.'
+                '$description' => 'This event triggers when a deployment is updated.',
             ],
         ],
         'executions' => [
@@ -218,20 +218,20 @@ return [
                 '$description' => 'This event triggers when an execution is created.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when an execution is deleted.'
+                '$description' => 'This event triggers when an execution is deleted.',
             ],
             'update' => [
-                '$description' => 'This event triggers when an execution is updated.'
+                '$description' => 'This event triggers when an execution is updated.',
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a function is created.'
+            '$description' => 'This event triggers when a function is created.',
         ],
         'delete' => [
             '$description' => 'This event triggers when a function is deleted.',
         ],
         'update' => [
             '$description' => 'This event triggers when a function is updated.',
-        ]
-    ]
+        ],
+    ],
 ];

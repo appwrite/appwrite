@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeBoolean extends Attribute
 {
@@ -29,13 +28,12 @@ class AttributeBoolean extends Attribute
                 'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
                 'default' => null,
                 'required' => false,
-                'example' => false
-            ])
-        ;
+                'example' => false,
+            ]);
     }
 
     public array $conditions = [
-        'type' => self::TYPE_BOOLEAN
+        'type' => self::TYPE_BOOLEAN,
     ];
 
     /**

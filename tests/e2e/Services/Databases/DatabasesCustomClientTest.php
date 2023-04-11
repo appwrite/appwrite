@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -21,23 +21,22 @@ class DatabasesCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'databaseId' => ID::unique(),
-            'name' => 'Test Database'
+            'name' => 'Test Database',
         ]);
 
         $databaseId = $database['body']['$id'];
 
         // Collection aliases write to create, update, delete
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
@@ -53,10 +52,10 @@ class DatabasesCustomClientTest extends Scope
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $movies['body']['$permissions']);
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/attributes/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$moviesId.'/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'title',
             'size' => 256,
@@ -66,7 +65,7 @@ class DatabasesCustomClientTest extends Scope
         sleep(1);
 
         // Document aliases write to update, delete
-        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$moviesId.'/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -76,7 +75,7 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
@@ -88,7 +87,7 @@ class DatabasesCustomClientTest extends Scope
          */
 
         // Document does not allow create permission
-        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $moviesId . '/documents', array_merge([
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$moviesId.'/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -98,7 +97,7 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
-            ]
+            ],
         ]);
 
         $this->assertEquals(400, $document2['headers']['status-code']);
@@ -112,7 +111,7 @@ class DatabasesCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
 
@@ -121,7 +120,7 @@ class DatabasesCustomClientTest extends Scope
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::custom('permissionCheckDatabase'),
             'name' => 'Test Database',
@@ -131,10 +130,10 @@ class DatabasesCustomClientTest extends Scope
 
         $databaseId = $database['body']['$id'];
         // Create collection
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'collectionId' => ID::custom('permissionCheck'),
             'name' => 'permissionCheck',
@@ -144,10 +143,10 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
 
         // Add attribute to collection
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/permissionCheck/attributes/string', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/permissionCheck/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'name',
             'size' => 255,
@@ -159,10 +158,10 @@ class DatabasesCustomClientTest extends Scope
         sleep(2);
 
         // Creating document by server, give read permission to our user + some other user
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/permissionCheck/documents', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/permissionCheck/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'documentId' => ID::custom('permissionCheckDocument'),
             'data' => [
@@ -180,44 +179,43 @@ class DatabasesCustomClientTest extends Scope
 
         // Update document
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/permissionCheck/documents/permissionCheckDocument', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/'.$databaseId.'/collections/permissionCheck/documents/permissionCheckDocument', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
                 'name' => 'AppwriteExpert',
-            ]
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Get name of the document, should be the new one
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/permissionCheck/documents/permissionCheckDocument', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/permissionCheck/documents/permissionCheckDocument', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals("AppwriteExpert", $response['body']['name']);
+        $this->assertEquals('AppwriteExpert', $response['body']['name']);
 
         // Cleanup to prevent collision with other tests
         // Delete collection
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/permissionCheck', array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/'.$databaseId.'/collections/permissionCheck', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
 
         // Wait for database worker to finish deleting collection
         sleep(2);
 
         // Make sure collection has been deleted
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/permissionCheck', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/'.$databaseId.'/collections/permissionCheck', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
         $this->assertEquals(404, $response['headers']['status-code']);
 

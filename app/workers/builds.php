@@ -3,24 +3,22 @@
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
+use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
-use Appwrite\Usage\Stats;
-use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Storage\Storage;
-use Utopia\Database\Document;
-use Utopia\Config\Config;
-use Utopia\Database\Query;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Builds V1 Worker');
-Console::success(APP_NAME . ' build worker v1 has started');
+Console::success(APP_NAME.' build worker v1 has started');
 
 // TODO: Executor should return appropriate response codes.
 class BuildsV1 extends Worker
@@ -29,7 +27,7 @@ class BuildsV1 extends Worker
 
     public function getName(): string
     {
-        return "builds";
+        return 'builds';
     }
 
     public function init(): void
@@ -47,7 +45,7 @@ class BuildsV1 extends Worker
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                Console::info('Creating build for deployment: ' . $deployment->getId());
+                Console::info('Creating build for deployment: '.$deployment->getId());
                 $this->buildDeployment($project, $resource, $deployment);
                 break;
 
@@ -75,7 +73,7 @@ class BuildsV1 extends Worker
         $key = $function->getAttribute('runtime');
         $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
@@ -95,7 +93,7 @@ class BuildsV1 extends Worker
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,
-                'duration' => 0
+                'duration' => 0,
             ]));
             $deployment->setAttribute('buildId', $buildId);
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
@@ -128,7 +126,7 @@ class BuildsV1 extends Worker
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
             'functionId' => $function->getId(),
-            'deploymentId' => $deployment->getId()
+            'deploymentId' => $deployment->getId(),
         ]);
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
@@ -149,6 +147,7 @@ class BuildsV1 extends Worker
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+
             return $carry;
         }, []);
 
@@ -160,7 +159,7 @@ class BuildsV1 extends Worker
                 deploymentId: $deployment->getId(),
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 source: $source,
-                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                destination: APP_STORAGE_BUILDS."/app-{$project->getId()}",
                 vars: $vars,
                 runtime: $key,
                 baseImage: $baseImage,
@@ -169,7 +168,7 @@ class BuildsV1 extends Worker
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \
-                    cd /usr/local/src/ && ./build.sh'
+                    cd /usr/local/src/ && ./build.sh',
                 ]
             );
 
@@ -194,8 +193,8 @@ class BuildsV1 extends Worker
 
             /** Update function schedule */
             $schedule = $function->getAttribute('schedule', '');
-            $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-            $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
+            $cron = (empty($function->getAttribute('deployment')) && ! empty($schedule)) ? new CronExpression($schedule) : null;
+            $next = (empty($function->getAttribute('deployment')) && ! empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
             $function->setAttribute('scheduleNext', $next);
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
         } catch (\Throwable $th) {

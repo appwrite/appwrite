@@ -20,7 +20,7 @@ class Runtime extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Runtime Name.',
                 'default' => '',
-                'example' => 'Python'
+                'example' => 'Python',
             ])
             ->addRule('version', [
                 'type' => self::TYPE_STRING,
@@ -52,8 +52,7 @@ class Runtime extends Model
                 'default' => '',
                 'example' => 'amd64',
                 'array' => true,
-            ])
-        ;
+            ]);
     }
 
     /**

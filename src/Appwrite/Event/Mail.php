@@ -3,14 +3,17 @@
 namespace Appwrite\Event;
 
 use Resque;
-use Utopia\Database\Document;
 
 class Mail extends Event
 {
     protected string $recipient = '';
+
     protected string $from = '';
+
     protected string $name = '';
+
     protected string $subject = '';
+
     protected string $body = '';
 
     public function __construct()
@@ -21,7 +24,7 @@ class Mail extends Event
     /**
      * Sets subject for the mail event.
      *
-     * @param string $subject
+     * @param  string  $subject
      * @return self
      */
     public function setSubject(string $subject): self
@@ -44,7 +47,7 @@ class Mail extends Event
     /**
      * Sets recipient for the mail event.
      *
-     * @param string $recipient
+     * @param  string  $recipient
      * @return self
      */
     public function setRecipient(string $recipient): self
@@ -67,7 +70,7 @@ class Mail extends Event
     /**
      * Sets from for the mail event.
      *
-     * @param string $from
+     * @param  string  $from
      * @return self
      */
     public function setFrom(string $from): self
@@ -90,7 +93,7 @@ class Mail extends Event
     /**
      * Sets body for the mail event.
      *
-     * @param string $body
+     * @param  string  $body
      * @return self
      */
     public function setBody(string $body): self
@@ -113,7 +116,7 @@ class Mail extends Event
     /**
      * Sets name for the mail event.
      *
-     * @param string $name
+     * @param  string  $name
      * @return self
      */
     public function setName(string $name): self
@@ -137,6 +140,7 @@ class Mail extends Event
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
+     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -147,7 +151,7 @@ class Mail extends Event
             'name' => $this->name,
             'subject' => $this->subject,
             'body' => $this->body,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
         ]);
     }
 }

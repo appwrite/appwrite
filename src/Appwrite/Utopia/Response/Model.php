@@ -7,11 +7,17 @@ use Utopia\Database\Document;
 abstract class Model
 {
     public const TYPE_STRING = 'string';
+
     public const TYPE_INTEGER = 'integer';
+
     public const TYPE_FLOAT = 'double';
+
     public const TYPE_BOOLEAN = 'boolean';
+
     public const TYPE_JSON = 'json';
+
     public const TYPE_DATETIME = 'datetime';
+
     public const TYPE_DATETIME_EXAMPLE = '2020-10-15T06:38:00.000+00:00';
 
     /**
@@ -38,7 +44,6 @@ abstract class Model
      * @var array
      */
     public array $conditions = [];
-
 
     /**
      * Filter Document Structure
@@ -78,8 +83,8 @@ abstract class Model
      * Add a New Rule
      * If rule is an array of documents with varying models
      *
-     * @param string $key
-     * @param array $options
+     * @param  string  $key
+     * @param  array  $options
      */
     protected function addRule(string $key, array $options): self
     {
@@ -87,7 +92,7 @@ abstract class Model
             'required' => true,
             'array' => false,
             'description' => '',
-            'example' => ''
+            'example' => '',
         ], $options);
 
         return $this;
@@ -97,8 +102,8 @@ abstract class Model
      * Delete an existing Rule
      * If rule exists, it will be removed
      *
-     * @param string $key
-     * @param array $options
+     * @param  string  $key
+     * @param  array  $options
      */
     protected function removeRule(string $key): self
     {

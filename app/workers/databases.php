@@ -6,10 +6,10 @@ use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Database V1 Worker');
-Console::success(APP_NAME . ' database worker v1 has started' . "\n");
+Console::success(APP_NAME.' database worker v1 has started'."\n");
 
 class DatabaseV1 extends Worker
 {
@@ -48,7 +48,7 @@ class DatabaseV1 extends Worker
                 break;
 
             default:
-                Console::error('No database operation for type: ' . $type);
+                Console::error('No database operation for type: '.$type);
                 break;
         }
     }
@@ -58,10 +58,10 @@ class DatabaseV1 extends Worker
     }
 
     /**
-     * @param Document $database
-     * @param Document $collection
-     * @param Document $attribute
-     * @param string $projectId
+     * @param  Document  $database
+     * @param  Document  $collection
+     * @param  Document  $attribute
+     * @param  string  $projectId
      */
     protected function createAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
     {
@@ -71,7 +71,7 @@ class DatabaseV1 extends Worker
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].update', [
             'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
-            'attributeId' => $attribute->getId()
+            'attributeId' => $attribute->getId(),
         ]);
         /**
          * Fetch attribute from the database, since with Resque float values are loosing informations.
@@ -92,7 +92,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+            if (! $dbForProject->createAttribute('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
                 throw new Exception('Failed to create Attribute');
             }
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
@@ -116,19 +116,19 @@ class DatabaseV1 extends Worker
                 options: [
                     'projectId' => $projectId,
                     'databaseId' => $database->getId(),
-                    'collectionId' => $collection->getId()
+                    'collectionId' => $collection->getId(),
                 ]
             );
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedDocument('database_'.$database->getInternalId(), $collectionId);
     }
 
     /**
-     * @param Document $database
-     * @param Document $collection
-     * @param Document $attribute
-     * @param string $projectId
+     * @param  Document  $database
+     * @param  Document  $collection
+     * @param  Document  $attribute
+     * @param  string  $projectId
      */
     protected function deleteAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
     {
@@ -138,7 +138,7 @@ class DatabaseV1 extends Worker
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete', [
             'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
-            'attributeId' => $attribute->getId()
+            'attributeId' => $attribute->getId(),
         ]);
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
@@ -152,7 +152,7 @@ class DatabaseV1 extends Worker
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && ! $dbForProject->deleteAttribute('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete Attribute');
             }
             $dbForProject->deleteDocument('attributes', $attribute->getId());
@@ -176,7 +176,7 @@ class DatabaseV1 extends Worker
                 options: [
                     'projectId' => $projectId,
                     'databaseId' => $database->getId(),
-                    'collectionId' => $collection->getId()
+                    'collectionId' => $collection->getId(),
                 ]
             );
         }
@@ -208,8 +208,7 @@ class DatabaseV1 extends Worker
                     $index
                         ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
                         ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
-                        ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN)
-                    ;
+                        ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
 
                     // Check if an index exists with the same attributes and orders
                     $exists = false;
@@ -233,15 +232,15 @@ class DatabaseV1 extends Worker
             }
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->deleteCachedDocument('database_'.$database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedCollection('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId());
     }
 
     /**
-     * @param Document $database
-     * @param Document $collection
-     * @param Document $index
-     * @param string $projectId
+     * @param  Document  $database
+     * @param  Document  $collection
+     * @param  Document  $index
+     * @param  string  $projectId
      */
     protected function createIndex(Document $database, Document $collection, Document $index, string $projectId): void
     {
@@ -251,7 +250,7 @@ class DatabaseV1 extends Worker
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].update', [
             'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
-            'indexId' => $index->getId()
+            'indexId' => $index->getId(),
         ]);
         $collectionId = $collection->getId();
         $key = $index->getAttribute('key', '');
@@ -262,7 +261,7 @@ class DatabaseV1 extends Worker
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
+            if (! $dbForProject->createIndex('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId(), $key, $type, $attributes, $lengths, $orders)) {
                 throw new Exception('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
@@ -286,19 +285,19 @@ class DatabaseV1 extends Worker
                 options: [
                     'projectId' => $projectId,
                     'databaseId' => $database->getId(),
-                    'collectionId' => $collection->getId()
+                    'collectionId' => $collection->getId(),
                 ]
             );
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->deleteCachedDocument('database_'.$database->getInternalId(), $collectionId);
     }
 
     /**
-     * @param Document $database
-     * @param Document $collection
-     * @param Document $index
-     * @param string $projectId
+     * @param  Document  $database
+     * @param  Document  $collection
+     * @param  Document  $index
+     * @param  string  $projectId
      */
     protected function deleteIndex(Document $database, Document $collection, Document $index, string $projectId): void
     {
@@ -308,14 +307,14 @@ class DatabaseV1 extends Worker
         $events = Event::generateEvents('databases.[databaseId].collections.[collectionId].indexes.[indexId].delete', [
             'databaseId' => $database->getId(),
             'collectionId' => $collection->getId(),
-            'indexId' => $index->getId()
+            'indexId' => $index->getId(),
         ]);
         $key = $index->getAttribute('key');
         $status = $index->getAttribute('status', '');
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteIndex('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+            if ($status !== 'failed' && ! $dbForProject->deleteIndex('database_'.$database->getInternalId().'_collection_'.$collection->getInternalId(), $key)) {
                 throw new Exception('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
@@ -339,11 +338,11 @@ class DatabaseV1 extends Worker
                 options: [
                     'projectId' => $projectId,
                     'databaseId' => $database->getId(),
-                    'collectionId' => $collection->getId()
+                    'collectionId' => $collection->getId(),
                 ]
             );
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collection->getId());
+        $dbForProject->deleteCachedDocument('database_'.$database->getInternalId(), $collection->getId());
     }
 }

@@ -12,7 +12,7 @@ class Lists extends Model
             ->addRule('singles', [
                 'type' => 'single',
                 'default' => '',
-                'array' => true
+                'array' => true,
             ]);
     }
 

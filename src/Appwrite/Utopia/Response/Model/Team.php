@@ -39,8 +39,7 @@ class Team extends Model
                 'description' => 'Total number of team members.',
                 'default' => 0,
                 'example' => 7,
-            ])
-        ;
+            ]);
     }
 
     /**

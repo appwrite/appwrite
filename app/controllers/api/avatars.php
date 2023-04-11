@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Utopia\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
@@ -14,23 +13,23 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
-
     $code = \strtolower($code);
     $type = \strtolower($type);
-    $set = Config::getParam('avatar-' . $type, []);
+    $set = Config::getParam('avatar-'.$type, []);
 
     if (empty($set)) {
         throw new Exception(Exception::AVATAR_SET_NOT_FOUND);
     }
 
-    if (!\array_key_exists($code, $set)) {
+    if (! \array_key_exists($code, $set)) {
         throw new Exception(Exception::AVATAR_NOT_FOUND);
     }
 
-    if (!\extension_loaded('imagick')) {
+    if (! \extension_loaded('imagick')) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
     }
 
@@ -38,8 +37,8 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $path = $set[$code];
     $type = 'png';
 
-    if (!\is_readable($path)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File not readable in ' . $path);
+    if (! \is_readable($path)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File not readable in '.$path);
     }
 
     $image = new Image(\file_get_contents($path));
@@ -47,10 +46,9 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
         ->setContentType('image/png')
-        ->file($data)
-    ;
+        ->file($data);
     unset($image);
 };
 
@@ -67,12 +65,12 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
-    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
+    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -132,18 +130,17 @@ App::get('/v1/avatars/image')
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->inject('response')
     ->action(function (string $url, int $width, int $height, Response $response) {
-
         $quality = 80;
         $output = 'png';
         $type = 'png';
 
-        if (!\extension_loaded('imagick')) {
+        if (! \extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
         $fetch = @\file_get_contents($url, false);
 
-        if (!$fetch) {
+        if (! $fetch) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
@@ -158,10 +155,9 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
             ->setContentType('image/png')
-            ->file($data)
-        ;
+            ->file($data);
         unset($image);
     });
 
@@ -181,14 +177,13 @@ App::get('/v1/avatars/favicon')
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
     ->action(function (string $url, Response $response) {
-
         $width = 56;
         $height = 56;
         $quality = 80;
         $output = 'png';
         $type = 'png';
 
-        if (!\extension_loaded('imagick')) {
+        if (! \extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
@@ -210,7 +205,7 @@ App::get('/v1/avatars/favicon')
 
         \curl_close($curl);
 
-        if (!$html) {
+        if (! $html) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
@@ -261,7 +256,7 @@ App::get('/v1/avatars/favicon')
         if (empty($outputHref) || empty($outputExt)) {
             $default = \parse_url($url);
 
-            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
+            $outputHref = $default['scheme'].'://'.$default['host'].'/favicon.ico';
             $outputExt = 'ico';
         }
 
@@ -272,15 +267,14 @@ App::get('/v1/avatars/favicon')
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
                 ->setContentType('image/x-icon')
-                ->file($data)
-            ;
+                ->file($data);
         }
 
         $fetch = @\file_get_contents($outputHref, false);
 
-        if (!$fetch) {
+        if (! $fetch) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 
@@ -290,10 +284,9 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
             ->setContentType('image/png')
-            ->file($data)
-        ;
+            ->file($data);
         unset($image);
     });
 
@@ -314,7 +307,6 @@ App::get('/v1/avatars/qr')
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
     ->action(function (string $text, int $size, int $margin, bool $download, Response $response) {
-
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
             'addQuietzone' => true,
@@ -332,10 +324,9 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 9))
-        ;
+            ->send($image->output('png', 9));
     });
 
 App::get('/v1/avatars/initials')
@@ -357,17 +348,16 @@ App::get('/v1/avatars/initials')
     ->inject('response')
     ->inject('user')
     ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
-
         $themes = [
             ['background' => '#FFA1CE'], // Default (Pink)
             ['background' => '#FDC584'], // Orange
             ['background' => '#94DBD1'], // Green
             ['background' => '#A1C4FF'], // Blue
             ['background' => '#FFA1CE'], // Pink
-            ['background' => '#CBB1FC'] // Purple
+            ['background' => '#CBB1FC'], // Purple
         ];
 
-        $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
+        $name = (! empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
@@ -389,7 +379,7 @@ App::get('/v1/avatars/initials')
         // Wrap rand value to avoid out of range
         $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
 
-        $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
+        $background = (! empty($background)) ? '#'.$background : $themes[$rand]['background'];
 
         $image = new \Imagick();
         $punch = new \Imagick();
@@ -398,8 +388,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $draw->setFont(__DIR__.'/../../assets/fonts/poppins-v9-latin-500.ttf');
+        $image->setFont(__DIR__.'/../../assets/fonts/poppins-v9-latin-500.ttf');
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
@@ -411,14 +401,13 @@ App::get('/v1/avatars/initials')
         $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
 
         $image->newImage($width, $height, $background);
-        $image->setImageFormat("png");
+        $image->setImageFormat('png');
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->file($image->getImageBlob())
-        ;
+            ->file($image->getImageBlob());
     });

@@ -16,7 +16,6 @@ $auth = Config::getParam('auth', []);
  * attributes => list of attributes
  * indexes => list of indexes
  */
-
 $collections = [
     'databases' => [
         '$collection' => ID::custom(Database::METADATA),
@@ -839,7 +838,7 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -946,16 +945,16 @@ $collections = [
                 'filters' => [],
             ],
             [
-              '$id' => ID::custom('registered'), 
-              'type' => Database::VAR_BOOLEAN,
-              'format' => '',
-              'size' => 0,
-              'signed' => true,
-              'required' => false,
-              'default' => null,
-              'array' => false,
-              'filters' => [],
-          ],
+                '$id' => ID::custom('registered'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
 
         ],
         'indexes' => [
@@ -1193,7 +1192,7 @@ $collections = [
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -1388,7 +1387,7 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -1453,7 +1452,7 @@ $collections = [
                 'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
-            ]
+            ],
         ],
     ],
 
@@ -1538,7 +1537,7 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -2415,7 +2414,7 @@ $collections = [
                 'default' => false,
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -2595,7 +2594,7 @@ $collections = [
                 'default' => '',
                 'array' => false,
                 'filters' => [],
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -2604,7 +2603,7 @@ $collections = [
                 'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
         ],
     ],
 
@@ -3010,7 +3009,7 @@ $collections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-        ]
+        ],
     ],
 
     'stats' => [
@@ -3147,7 +3146,7 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [], //TODO: use json filter
-            ]
+            ],
         ],
         'indexes' => [
             [
@@ -3157,7 +3156,7 @@ $collections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
-        ]
+        ],
     ],
     'cache' => [
         '$collection' => Database::METADATA,
@@ -3197,7 +3196,7 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
-         ],
+        ],
         'indexes' => [
             [
                 '$id' => '_key_accessedAt',
@@ -3465,7 +3464,7 @@ $collections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-        ]
+        ],
     ],
 
     'variables' => [
@@ -3515,7 +3514,7 @@ $collections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [ 'encrypt' ]
+                'filters' => ['encrypt'],
             ],
             [
                 '$id' => ID::custom('search'),

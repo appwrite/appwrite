@@ -9,9 +9,8 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
@@ -26,49 +25,69 @@ class Auth
         'phpass',
         'scrypt',
         'scryptMod',
-        'plaintext'
+        'plaintext',
     ];
 
     public const DEFAULT_ALGO = 'argon2';
+
     public const DEFAULT_ALGO_OPTIONS = ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
 
     /**
      * User Roles.
      */
     public const USER_ROLE_ANY = 'any';
+
     public const USER_ROLE_GUESTS = 'guests';
+
     public const USER_ROLE_USERS = 'users';
+
     public const USER_ROLE_ADMIN = 'admin';
+
     public const USER_ROLE_DEVELOPER = 'developer';
+
     public const USER_ROLE_OWNER = 'owner';
+
     public const USER_ROLE_APPS = 'apps';
+
     public const USER_ROLE_SYSTEM = 'system';
 
     /**
      * Token Types.
      */
     public const TOKEN_TYPE_LOGIN = 1; // Deprecated
+
     public const TOKEN_TYPE_VERIFICATION = 2;
+
     public const TOKEN_TYPE_RECOVERY = 3;
+
     public const TOKEN_TYPE_INVITE = 4;
+
     public const TOKEN_TYPE_MAGIC_URL = 5;
+
     public const TOKEN_TYPE_PHONE = 6;
 
     /**
      * Session Providers.
      */
     public const SESSION_PROVIDER_EMAIL = 'email';
+
     public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
+
     public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
+
     public const SESSION_PROVIDER_PHONE = 'phone';
 
     /**
      * Token Expiration times.
      */
     public const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+
     public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
+
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
+
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
+
     public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
 
     /**
@@ -94,7 +113,6 @@ class Auth
      * Set Cookie Name.
      *
      * @param $string
-     *
      * @return string
      */
     public static function setCookieName($string)
@@ -105,9 +123,8 @@ class Auth
     /**
      * Encode Session.
      *
-     * @param string $id
-     * @param string $secret
-     *
+     * @param  string  $id
+     * @param  string  $secret
      * @return string
      */
     public static function encodeSession($id, $secret)
@@ -121,8 +138,7 @@ class Auth
     /**
      * Decode Session.
      *
-     * @param string $session
-     *
+     * @param  string  $session
      * @return array
      *
      * @throws \Exception
@@ -132,7 +148,7 @@ class Auth
         $session = \json_decode(\base64_decode($session), true);
         $default = ['id' => null, 'secret' => ''];
 
-        if (!\is_array($session)) {
+        if (! \is_array($session)) {
             return $default;
         }
 
@@ -145,7 +161,6 @@ class Auth
      * One-way encryption
      *
      * @param $string
-     *
      * @return string
      */
     public static function hash(string $string)
@@ -158,10 +173,9 @@ class Auth
      *
      * One way string hashing for user passwords
      *
-     * @param string $string
-     * @param string $algo hashing algorithm to use
-     * @param array $options algo-specific options
-     *
+     * @param  string  $string
+     * @param  string  $algo hashing algorithm to use
+     * @param  array  $options algo-specific options
      * @return bool|string|null
      */
     public static function passwordHash(string $string, string $algo, array $options = [])
@@ -172,45 +186,51 @@ class Auth
             $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
-            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        if (! \in_array($algo, Auth::SUPPORTED_ALGOS)) {
+            throw new \Exception('Hashing algorithm \''.$algo.'\' is not supported.');
         }
 
         switch ($algo) {
             case 'argon2':
                 $hasher = new Argon2($options);
+
                 return $hasher->hash($string);
             case 'bcrypt':
                 $hasher = new Bcrypt($options);
+
                 return $hasher->hash($string);
             case 'md5':
                 $hasher = new Md5($options);
+
                 return $hasher->hash($string);
             case 'sha':
                 $hasher = new Sha($options);
+
                 return $hasher->hash($string);
             case 'phpass':
                 $hasher = new Phpass($options);
+
                 return $hasher->hash($string);
             case 'scrypt':
                 $hasher = new Scrypt($options);
+
                 return $hasher->hash($string);
             case 'scryptMod':
                 $hasher = new Scryptmodified($options);
+
                 return $hasher->hash($string);
             default:
-                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+                throw new \Exception('Hashing algorithm \''.$algo.'\' is not supported.');
         }
     }
 
     /**
      * Password verify.
      *
-     * @param string $plain
-     * @param string $hash
-     * @param string $algo hashing algorithm used to hash
-     * @param array $options algo-specific options
-     *
+     * @param  string  $plain
+     * @param  string  $hash
+     * @param  string  $algo hashing algorithm used to hash
+     * @param  array  $options algo-specific options
      * @return bool
      */
     public static function passwordVerify(string $plain, string $hash, string $algo, array $options = [])
@@ -221,34 +241,41 @@ class Auth
             $options = Auth::DEFAULT_ALGO_OPTIONS;
         }
 
-        if (!\in_array($algo, Auth::SUPPORTED_ALGOS)) {
-            throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+        if (! \in_array($algo, Auth::SUPPORTED_ALGOS)) {
+            throw new \Exception('Hashing algorithm \''.$algo.'\' is not supported.');
         }
 
         switch ($algo) {
             case 'argon2':
                 $hasher = new Argon2($options);
+
                 return $hasher->verify($plain, $hash);
             case 'bcrypt':
                 $hasher = new Bcrypt($options);
+
                 return $hasher->verify($plain, $hash);
             case 'md5':
                 $hasher = new Md5($options);
+
                 return $hasher->verify($plain, $hash);
             case 'sha':
                 $hasher = new Sha($options);
+
                 return $hasher->verify($plain, $hash);
             case 'phpass':
                 $hasher = new Phpass($options);
+
                 return $hasher->verify($plain, $hash);
             case 'scrypt':
                 $hasher = new Scrypt($options);
+
                 return $hasher->verify($plain, $hash);
             case 'scryptMod':
                 $hasher = new Scryptmodified($options);
+
                 return $hasher->verify($plain, $hash);
             default:
-                throw new \Exception('Hashing algorithm \'' . $algo . '\' is not supported.');
+                throw new \Exception('Hashing algorithm \''.$algo.'\' is not supported.');
         }
     }
 
@@ -257,8 +284,7 @@ class Auth
      *
      * Generate random password string
      *
-     * @param int $length
-     *
+     * @param  int  $length
      * @return string
      */
     public static function passwordGenerator(int $length = 20): string
@@ -271,8 +297,7 @@ class Auth
      *
      * Generate random password string
      *
-     * @param int $length
-     *
+     * @param  int  $length
      * @return string
      */
     public static function tokenGenerator(int $length = 128): string
@@ -285,8 +310,7 @@ class Auth
      *
      * Generate random code string
      *
-     * @param int $length
-     *
+     * @param  int  $length
      * @return string
      */
     public static function codeGenerator(int $length = 6): string
@@ -303,10 +327,9 @@ class Auth
     /**
      * Verify token and check that its not expired.
      *
-     * @param array  $tokens
-     * @param int    $type
-     * @param string $secret
-     *
+     * @param  array  $tokens
+     * @param  int  $type
+     * @param  string  $secret
      * @return bool|string
      */
     public static function tokenVerify(array $tokens, int $type, string $secret)
@@ -321,7 +344,7 @@ class Auth
                 $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
-                return (string)$token->getId();
+                return (string) $token->getId();
             }
         }
 
@@ -350,10 +373,9 @@ class Auth
     /**
      * Verify session and check that its not expired.
      *
-     * @param array  $sessions
-     * @param string $secret
-     * @param string $expires
-     *
+     * @param  array  $sessions
+     * @param  string  $secret
+     * @param  string  $expires
      * @return bool|string
      */
     public static function sessionVerify(array $sessions, string $secret, int $expires)
@@ -376,8 +398,7 @@ class Auth
     /**
      * Is Privileged User?
      *
-     * @param array $roles
-     *
+     * @param  array  $roles
      * @return bool
      */
     public static function isPrivilegedUser(array $roles): bool
@@ -396,8 +417,7 @@ class Auth
     /**
      * Is App User?
      *
-     * @param array $roles
-     *
+     * @param  array  $roles
      * @return bool
      */
     public static function isAppUser(array $roles): bool
@@ -412,14 +432,14 @@ class Auth
     /**
      * Returns all roles for a user.
      *
-     * @param Document $user
+     * @param  Document  $user
      * @return array
      */
     public static function getRoles(Document $user): array
     {
         $roles = [];
 
-        if (!self::isPrivilegedUser(Authorization::getRoles()) && !self::isAppUser(Authorization::getRoles())) {
+        if (! self::isPrivilegedUser(Authorization::getRoles()) && ! self::isAppUser(Authorization::getRoles())) {
             if ($user->getId()) {
                 $roles[] = Role::user($user->getId())->toString();
                 $roles[] = Role::users()->toString();
@@ -440,7 +460,7 @@ class Auth
         }
 
         foreach ($user->getAttribute('memberships', []) as $node) {
-            if (!isset($node['confirm']) || !$node['confirm']) {
+            if (! isset($node['confirm']) || ! $node['confirm']) {
                 continue;
             }
 

@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeEnum extends Attribute
 {
@@ -43,13 +42,12 @@ class AttributeEnum extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'element',
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [
         'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_ENUM
+        'format' => \APP_DATABASE_ATTRIBUTE_ENUM,
     ];
 
     /**

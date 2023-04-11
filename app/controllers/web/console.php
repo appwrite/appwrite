@@ -14,6 +14,6 @@ App::get('/console')
     ->label('scope', 'home')
     ->inject('response')
     ->action(function (Response $response) {
-        $fallback = file_get_contents(__DIR__ . '/../../../console/index.html');
+        $fallback = file_get_contents(__DIR__.'/../../../console/index.html');
         $response->html($fallback);
     });

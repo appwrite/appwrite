@@ -32,11 +32,11 @@ abstract class OAuth2
     /**
      * OAuth2 constructor.
      *
-     * @param string $appId
-     * @param string $appSecret
-     * @param string $callback
-     * @param array  $state
-     * @param array $scopes
+     * @param  string  $appId
+     * @param  string  $appSecret
+     * @param  string  $callback
+     * @param  array  $state
+     * @param  array  $scopes
      */
     public function __construct(string $appId, string $appSecret, string $callback, array $state = [], array $scopes = [])
     {
@@ -60,22 +60,19 @@ abstract class OAuth2
     abstract public function getLoginURL(): string;
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     abstract protected function getTokens(string $code): array;
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     abstract public function refreshTokens(string $refreshToken): array;
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     abstract public function getUserEmail(string $accessToken): string;
@@ -83,28 +80,25 @@ abstract class OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     abstract public function isEmailVerified(string $accessToken): bool;
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     abstract public function getUserName(string $accessToken): string;
 
     /**
      * @param $scope
-     *
      * @return $this
      */
     protected function addScope(string $scope): OAuth2
     {
         // Add a scope to the scopes array if it isn't already present
-        if (!\in_array($scope, $this->scopes)) {
+        if (! \in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
         }
 
@@ -120,8 +114,7 @@ abstract class OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return string
      */
     public function getAccessToken(string $code): string
@@ -132,8 +125,7 @@ abstract class OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return string
      */
     public function getRefreshToken(string $code): string
@@ -144,8 +136,7 @@ abstract class OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return string
      */
     public function getAccessTokenExpiry(string $code): string
@@ -160,7 +151,6 @@ abstract class OAuth2
     // json_decoding
     /**
      * @param $state
-     *
      * @return array
      */
     public function parseState(string $state)
@@ -169,11 +159,10 @@ abstract class OAuth2
     }
 
     /**
-     * @param string $method
-     * @param string $url
-     * @param array  $headers
-     * @param string $payload
-     *
+     * @param  string  $method
+     * @param  string  $url
+     * @param  array  $headers
+     * @param  string  $payload
      * @return string
      */
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
@@ -185,11 +174,11 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
 
-        if (!empty($payload)) {
+        if (! empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        $headers[] = 'Content-length: ' . \strlen($payload);
+        $headers[] = 'Content-length: '.\strlen($payload);
         \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Send the request & save response to $response
@@ -197,6 +186,6 @@ abstract class OAuth2
 
         \curl_close($ch);
 
-        return (string)$response;
+        return (string) $response;
     }
 }

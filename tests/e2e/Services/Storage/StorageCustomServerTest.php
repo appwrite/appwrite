@@ -84,8 +84,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets',
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -99,7 +99,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ],
+            'queries' => ['limit(1)'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -109,7 +109,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => ['offset(1)'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -119,7 +119,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("$id", "bucket1")' ],
+            'queries' => ['equal("$id", "bucket1")'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -129,7 +129,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("fileSecurity", true)' ],
+            'queries' => ['equal("fileSecurity", true)'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -139,7 +139,7 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $response['body']['buckets'][0]['$id'] . '")' ],
+            'queries' => ['cursorAfter("'.$response['body']['buckets'][0]['$id'].'")'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -148,6 +148,7 @@ class StorageCustomServerTest extends Scope
         $this->assertCount(1, $response['body']['buckets']);
 
         $this->assertEquals('bucket1', $response['body']['buckets'][0]['$id']);
+
         return $data;
     }
 
@@ -162,11 +163,11 @@ class StorageCustomServerTest extends Scope
          */
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/storage/buckets/' . $id,
+            '/storage/buckets/'.$id,
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -179,14 +180,13 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(
             Client::METHOD_GET,
             '/storage/buckets/empty',
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -198,8 +198,8 @@ class StorageCustomServerTest extends Scope
             '/storage/buckets/id-is-really-long-id-is-really-long-id-is-really-long-id-is-really-long',
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -218,7 +218,7 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -241,7 +241,7 @@ class StorageCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $id, array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -264,11 +264,11 @@ class StorageCustomServerTest extends Scope
          */
         $response = $this->client->call(
             Client::METHOD_DELETE,
-            '/storage/buckets/' . $id,
+            '/storage/buckets/'.$id,
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )
@@ -278,11 +278,11 @@ class StorageCustomServerTest extends Scope
 
         $response = $this->client->call(
             Client::METHOD_GET,
-            '/storage/buckets/' . $id,
+            '/storage/buckets/'.$id,
             array_merge(
                 [
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
                 ],
                 $this->getHeaders()
             )

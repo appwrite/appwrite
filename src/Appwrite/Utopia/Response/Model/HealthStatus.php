@@ -21,8 +21,7 @@ class HealthStatus extends Model
                 'description' => 'Service status. Possible values can are: `pass`, `fail`',
                 'default' => '',
                 'example' => 'pass',
-            ])
-        ;
+            ]);
     }
 
     /**

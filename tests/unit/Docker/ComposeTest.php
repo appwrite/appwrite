@@ -12,7 +12,7 @@ class ComposeTest extends TestCase
 
     public function setUp(): void
     {
-        $data = @file_get_contents(__DIR__ . '/../../resources/docker/docker-compose.yml');
+        $data = @file_get_contents(__DIR__.'/../../resources/docker/docker-compose.yml');
 
         if ($data === false) {
             throw new Exception('Failed to read compose file');

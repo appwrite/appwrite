@@ -5,15 +5,14 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
-use Utopia\App;
+use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -36,7 +35,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         $replace = $parts[1] ?? '';
 
         $params = match ($namespace) {
-            'user' => (array)$user,
+            'user' => (array) $user,
             'request' => $requestParams,
             default => $responsePayload,
         };
@@ -45,6 +44,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
             $label = \str_replace($find, $params[$replace], $label);
         }
     }
+
     return $label;
 };
 
@@ -104,7 +104,6 @@ App::init()
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
-
         $route = $utopia->match($request);
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
@@ -117,7 +116,7 @@ App::init()
         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
         $timeLimitArray = [];
 
-        $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
@@ -125,7 +124,7 @@ App::init()
             ->setParam('{userId}', $user->getId())
             ->setParam('{userAgent}', $request->getUserAgent(''))
             ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname() . $route->getPath())
+            ->setParam('{url}', $request->getHostname().$route->getPath())
             ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
@@ -138,8 +137,8 @@ App::init()
 
         foreach ($timeLimitArray as $timeLimit) {
             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (!empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+                if (! empty($value)) {
+                    $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
                 }
             }
 
@@ -153,25 +152,24 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $limit)
                     ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time)
-                ;
+                    ->addHeader('X-RateLimit-Reset', $time);
             }
 
             $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
-                && !$isAppUser          // User is not API key
-                && !$isPrivilegedUser   // User is not an admin
+                && ! $isAppUser          // User is not API key
+                && ! $isPrivilegedUser   // User is not an admin
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
         }
 
-    /*
-     * Background Jobs
-     */
+        /*
+         * Background Jobs
+         */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -203,14 +201,14 @@ App::init()
         $useCache = $route->getLabel('cache', false);
 
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+            $key = md5($request->getURI().implode('*', $request->getParams())).'*'.APP_CACHE_BUSTER;
             $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 $data = json_decode($data, true);
                 $parts = explode('/', $data['resourceType']);
                 $type = $parts[0] ?? null;
@@ -220,24 +218,24 @@ App::init()
 
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+                    if ($bucket->isEmpty() || (! $bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
-                    if (!$fileSecurity && !$valid) {
+                    if (! $fileSecurity && ! $valid) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
                     $parts = explode('/', $data['resource']);
                     $fileId = $parts[1] ?? null;
 
-                    if ($fileSecurity && !$valid) {
-                        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                    if ($fileSecurity && ! $valid) {
+                        $file = $dbForProject->getDocument('bucket_'.$bucket->getInternalId(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_'.$bucket->getInternalId(), $fileId));
                     }
 
                     if ($file->isEmpty()) {
@@ -246,11 +244,10 @@ App::init()
                 }
 
                 $response
-                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp).' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']))
-                ;
+                    ->send(base64_decode($data['payload']));
 
                 $route->setIsActive(false);
             } else {
@@ -265,7 +262,6 @@ App::init()
     ->inject('request')
     ->inject('project')
     ->action(function (App $utopia, Request $request, Document $project) {
-
         $route = $utopia->match($request);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -366,10 +362,9 @@ App::shutdown()
     ->inject('mode')
     ->inject('dbForProject')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
-
         $responsePayload = $response->getPayload();
 
-        if (!empty($events->getEvent())) {
+        if (! empty($events->getEvent())) {
             if (empty($events->getPayload())) {
                 $events->setPayload($responsePayload);
             }
@@ -418,7 +413,7 @@ App::shutdown()
                     roles: $target['roles'],
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $events->getParam('userId')
+                        'userId' => $events->getParam('userId'),
                     ]
                 );
             }
@@ -432,27 +427,27 @@ App::shutdown()
          * Audit labels
          */
         $pattern = $route->getLabel('audits.resource', null);
-        if (!empty($pattern)) {
+        if (! empty($pattern)) {
             $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-            if (!empty($resource) && $resource !== $pattern) {
+            if (! empty($resource) && $resource !== $pattern) {
                 $audits->setResource($resource);
             }
         }
 
         $pattern = $route->getLabel('audits.userId', null);
-        if (!empty($pattern)) {
+        if (! empty($pattern)) {
             $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
             $user = $dbForProject->getDocument('users', $userId);
             $audits->setUser($user);
         }
 
-        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
+        if (! empty($audits->getResource()) && ! empty($audits->getUser()->getId())) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
             $pattern = $route->getLabel('audits.payload', true);
-            if (!empty($pattern)) {
+            if (! empty($pattern)) {
                 $audits->setPayload($responsePayload);
             }
 
@@ -462,11 +457,11 @@ App::shutdown()
             $audits->trigger();
         }
 
-        if (!empty($deletes->getType())) {
+        if (! empty($deletes->getType())) {
             $deletes->trigger();
         }
 
-        if (!empty($database->getType())) {
+        if (! empty($database->getType())) {
             $database->trigger();
         }
 
@@ -478,35 +473,35 @@ App::shutdown()
             $resource = $resourceType = null;
             $data = $response->getPayload();
 
-            if (!empty($data['payload'])) {
+            if (! empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
-                if (!empty($pattern)) {
+                if (! empty($pattern)) {
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
                 $pattern = $route->getLabel('cache.resourceType', null);
-                if (!empty($pattern)) {
+                if (! empty($pattern)) {
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $key = md5($request->getURI().implode('*', $request->getParams())).'*'.APP_CACHE_BUSTER;
                 $data = json_encode([
-                'resourceType' => $resourceType,
-                'resource' => $resource,
-                'contentType' => $response->getContentType(),
-                'payload' => base64_encode($data['payload']),
-                ]) ;
+                    'resourceType' => $resourceType,
+                    'resource' => $resource,
+                    'contentType' => $response->getContentType(),
+                    'payload' => base64_encode($data['payload']),
+                ]);
 
                 $signature = md5($data);
-                $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $cacheLog = $dbForProject->getDocument('cache', $key);
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $key,
-                    'resource' => $resource,
-                    'accessedAt' => $now,
-                    'signature' => $signature,
+                        '$id' => $key,
+                        'resource' => $resource,
+                        'accessedAt' => $now,
+                        'signature' => $signature,
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
@@ -515,7 +510,7 @@ App::shutdown()
 
                 if ($signature !== $cacheLog->getAttribute('signature')) {
                     $cache = new Cache(
-                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                        new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-'.$project->getId())
                     );
                     $cache->save($key, $data);
                 }
@@ -525,12 +520,12 @@ App::shutdown()
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
-            && !empty($route->getLabel('sdk.namespace', null))
+            && ! empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');
             $usageParams = $route->getLabel('usage.params', []);
 
-            if (!empty($metric)) {
+            if (! empty($metric)) {
                 $usage->setParam($metric, 1);
                 foreach ($usageParams as $param) {
                     $param = $parseLabel($param, $responsePayload, $requestParams, $user);
@@ -544,7 +539,7 @@ App::shutdown()
 
             $fileSize = 0;
             $file = $request->getFiles('file');
-            if (!empty($file)) {
+            if (! empty($file)) {
                 $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
             }
 

@@ -15,7 +15,7 @@ class AccountCustomServerTest extends Scope
 
     public function testCreateAccount(): array
     {
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 

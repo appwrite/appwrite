@@ -3,8 +3,8 @@
 namespace Appwrite\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Validator\Query\Base;
-use Utopia\Validator;
 use Utopia\Database\Query;
+use Utopia\Validator;
 
 class Queries extends Validator
 {
@@ -21,7 +21,7 @@ class Queries extends Validator
     /**
      * Queries constructor
      *
-     * @param Base ...$validators a list of validators
+     * @param  Base  ...$validators a list of validators
      */
     public function __construct(Base ...$validators)
     {
@@ -48,17 +48,18 @@ class Queries extends Validator
      *
      * Otherwise, returns true.
      *
-     * @param mixed $value
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($value): bool
     {
         foreach ($value as $query) {
-            if (!$query instanceof Query) {
+            if (! $query instanceof Query) {
                 try {
                     $query = Query::parse($query);
                 } catch (\Throwable $th) {
                     $this->message = 'Invalid query: ${query}';
+
                     return false;
                 }
             }
@@ -98,16 +99,18 @@ class Queries extends Validator
                 if ($validator->getMethodType() !== $methodType) {
                     continue;
                 }
-                if (!$validator->isValid($query)) {
-                    $this->message = 'Query not valid: ' . $validator->getDescription();
+                if (! $validator->isValid($query)) {
+                    $this->message = 'Query not valid: '.$validator->getDescription();
+
                     return false;
                 }
 
                 $methodIsValid = true;
             }
 
-            if (!$methodIsValid) {
-                $this->message = 'Query method not valid: ' . $method;
+            if (! $methodIsValid) {
+                $this->message = 'Query method not valid: '.$method;
+
                 return false;
             }
         }

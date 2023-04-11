@@ -40,8 +40,7 @@ class Attribute extends Model
                 'default' => false,
                 'required' => false,
                 'example' => false,
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [];

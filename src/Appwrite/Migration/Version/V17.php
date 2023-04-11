@@ -23,7 +23,7 @@ class V17 extends Migration
             );
         }
 
-        Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        Console::log('Migrating Project: '.$this->project->getAttribute('name').' ('.$this->project->getId().')');
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -33,11 +33,11 @@ class V17 extends Migration
         $this->forEachDocument([$this, 'fixDocument']);
     }
 
-
     /**
      * Migrating all Bucket tables.
      *
      * @return void
+     *
      * @throws \Exception
      * @throws \PDOException
      */
@@ -81,7 +81,7 @@ class V17 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document
+     * @param  \Utopia\Database\Document  $document
      * @return \Utopia\Database\Document
      */
     protected function fixDocument(Document $document)
@@ -97,15 +97,15 @@ class V17 extends Migration
                  * Set default maxSessions
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT
+                    'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
                 ]));
                 break;
             case 'users':
-                 /**
+                /**
                  * Set hashOptions type
                  */
                 $document->setAttribute('hashOptions', array_merge($document->getAttribute('hashOptions', []), [
-                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO)
+                    'type' => $document->getAttribute('hash', Auth::DEFAULT_ALGO),
                 ]));
                 break;
         }

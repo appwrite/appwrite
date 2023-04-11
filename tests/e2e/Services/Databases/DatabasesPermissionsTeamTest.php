@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -17,6 +17,7 @@ class DatabasesPermissionsTeamTest extends Scope
     use DatabasesPermissionsScope;
 
     public array $collections = [];
+
     public string $databaseId = 'testpermissiondb';
 
     public function createTeams(): array
@@ -44,7 +45,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
         $this->assertEquals(201, $db['headers']['status-code']);
 
-        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
+        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections', $this->getServerHeader(), [
             'collectionId' => ID::custom('collection1'),
             'name' => 'Collection 1',
             'permissions' => [
@@ -57,13 +58,13 @@ class DatabasesPermissionsTeamTest extends Scope
 
         $this->collections['collection1'] = $collection1['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections/'.$this->collections['collection1'].'/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
         ]);
 
-        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections', $this->getServerHeader(), [
+        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections', $this->getServerHeader(), [
             'collectionId' => ID::custom('collection2'),
             'name' => 'Collection 2',
             'permissions' => [
@@ -71,12 +72,12 @@ class DatabasesPermissionsTeamTest extends Scope
                 Permission::create(Role::team($teams['team2']['$id'], 'owner')),
                 Permission::update(Role::team($teams['team2']['$id'], 'owner')),
                 Permission::delete(Role::team($teams['team2']['$id'], 'owner')),
-            ]
+            ],
         ]);
 
         $this->collections['collection2'] = $collection2['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/attributes/string', $this->getServerHeader(), [
+        $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections/'.$this->collections['collection2'].'/attributes/string', $this->getServerHeader(), [
             'key' => 'title',
             'size' => 256,
             'required' => true,
@@ -124,6 +125,7 @@ class DatabasesPermissionsTeamTest extends Scope
      *
      * Data providers lose object state
      * so explicitly pass $users to each iteration
+     *
      * @return array $users
      */
     public function testSetupDatabase(): array
@@ -140,7 +142,7 @@ class DatabasesPermissionsTeamTest extends Scope
 
         $this->createCollections($this->teams);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection1'] . '/documents', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections/'.$this->collections['collection1'].'/documents', $this->getServerHeader(), [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Lorem',
@@ -148,7 +150,7 @@ class DatabasesPermissionsTeamTest extends Scope
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $this->collections['collection2'] . '/documents', $this->getServerHeader(), [
+        $response = $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections/'.$this->collections['collection2'].'/documents', $this->getServerHeader(), [
             'documentId' => ID::unique(),
             'data' => [
                 'title' => 'Ipsum',
@@ -161,16 +163,17 @@ class DatabasesPermissionsTeamTest extends Scope
 
     /**
      * Data provider params are passed before test dependencies
+     *
      * @depends testSetupDatabase
      * @dataProvider readDocumentsProvider
      */
     public function testReadDocuments($user, $collection, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/'.$this->databaseId.'/collections/'.$collection.'/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$users[$user]['session'],
         ]);
 
         if ($success) {
@@ -186,11 +189,11 @@ class DatabasesPermissionsTeamTest extends Scope
      */
     public function testWriteDocuments($user, $collection, $success, $users)
     {
-        $documents = $this->client->call(Client::METHOD_POST, '/databases/' . $this->databaseId . '/collections/' . $collection  . '/documents', [
+        $documents = $this->client->call(Client::METHOD_POST, '/databases/'.$this->databaseId.'/collections/'.$collection.'/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users[$user]['session'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'='.$users[$user]['session'],
         ], [
             'documentId' => ID::unique(),
             'data' => [

@@ -239,7 +239,7 @@ return [
     Exception::AVATAR_SET_NOT_FOUND => [
         'name' => Exception::AVATAR_SET_NOT_FOUND,
         'description' => 'The requested avatar set could not be found.',
-        'code' => 404
+        'code' => 404,
     ],
     Exception::AVATAR_NOT_FOUND => [
         'name' => Exception::AVATAR_NOT_FOUND,
@@ -361,13 +361,13 @@ return [
     Exception::DATABASE_NOT_FOUND => [
         'name' => Exception::DATABASE_NOT_FOUND,
         'description' => 'Database not found',
-        'code' => 404
+        'code' => 404,
     ],
 
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
         'description' => 'Database already exists',
-        'code' => 409
+        'code' => 409,
     ],
 
     /** Collections */

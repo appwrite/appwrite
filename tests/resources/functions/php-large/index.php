@@ -10,6 +10,6 @@ return function ($request, $response) {
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => $request['variables']['APPWRITE_FUNCTION_RUNTIME_VERSION'],
         'APPWRITE_FUNCTION_EVENT' => $request['variables']['APPWRITE_FUNCTION_EVENT'],
         'APPWRITE_FUNCTION_EVENT_DATA' => $request['variables']['APPWRITE_FUNCTION_EVENT_DATA'],
-        'UNICODE_TEST' => "êä"
+        'UNICODE_TEST' => 'êä',
     ]);
 };

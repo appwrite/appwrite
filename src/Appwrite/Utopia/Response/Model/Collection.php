@@ -33,7 +33,7 @@ class Collection extends Model
                 'description' => 'Collection permissions. [Learn more about permissions](/docs/permissions).',
                 'default' => '',
                 'example' => ['read("any")'],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('databaseId', [
                 'type' => self::TYPE_STRING,
@@ -81,9 +81,8 @@ class Collection extends Model
                 'description' => 'Collection indexes.',
                 'default' => [],
                 'example' => new \stdClass(),
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

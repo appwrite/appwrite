@@ -2,11 +2,11 @@
 
 global $cli, $register;
 
-use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,7 +19,7 @@ function clearProjectsCache(Redis $redis, Document $project)
     try {
         $redis->del($redis->keys("cache-_{$project->getInternalId()}:*"));
     } catch (\Throwable $th) {
-        Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
+        Console::error('Failed to clear project ("'.$project->getId().'") cache with error: '.$th->getMessage());
     }
 }
 
@@ -28,15 +28,16 @@ $cli
     ->param('version', APP_VERSION_STABLE, new Text(32), 'Version to migrate to.', true)
     ->action(function ($version) use ($register) {
         Authorization::disable();
-        if (!array_key_exists($version, Migration::$versions)) {
+        if (! array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
+
             return;
         }
 
         $app = new App('UTC');
 
-        Console::success('Starting Data Migration to version ' . $version);
+        Console::success('Starting Data Migration to version '.$version);
 
         $db = $register->get('db', true);
         $redis = $register->get('cache', true);
@@ -68,10 +69,10 @@ $cli
             $totalProjects = $consoleDB->count('projects') + 1;
         }
 
-        $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
+        $class = 'Appwrite\\Migration\\Version\\'.Migration::$versions[$version];
         $migration = new $class();
 
-        while (!empty($projects)) {
+        while (! empty($projects)) {
             foreach ($projects as $project) {
                 /**
                  * Skip user projects with id 'console'
@@ -88,7 +89,7 @@ $cli
                         ->execute();
                 } catch (\Throwable $th) {
                     throw $th;
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
                 }
 
                 clearProjectsCache($redis, $project);
@@ -100,7 +101,7 @@ $cli
             $offset = $offset + $limit;
             $count = $count + $sum;
 
-            Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
+            Console::log('Migrated '.$count.'/'.$totalProjects.' projects...');
         }
 
         Swoole\Event::wait(); // Wait for Coroutines to finish

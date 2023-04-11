@@ -24,7 +24,7 @@ class V16 extends Migration
             );
         }
 
-        Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        Console::log('Migrating Project: '.$this->project->getAttribute('name').' ('.$this->project->getId().')');
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -102,7 +102,7 @@ class V16 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document
+     * @param  \Utopia\Database\Document  $document
      * @return \Utopia\Database\Document
      */
     protected function fixDocument(Document $document)
@@ -118,7 +118,7 @@ class V16 extends Migration
                  * Set default authDuration
                  */
                 $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
-                    'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG
+                    'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
                 ]));
 
                 /**
@@ -127,16 +127,16 @@ class V16 extends Migration
                 $authProviders = $document->getAttribute('authProviders', []);
 
                 foreach (Config::getParam('providers') as $provider => $value) {
-                    if (!$value['enabled']) {
+                    if (! $value['enabled']) {
                         continue;
                     }
 
-                    if (($authProviders[$provider . 'Appid'] ?? false) && ($authProviders[$provider . 'Secret'] ?? false)) {
-                        if (array_key_exists($provider . 'Enabled', $authProviders)) {
+                    if (($authProviders[$provider.'Appid'] ?? false) && ($authProviders[$provider.'Secret'] ?? false)) {
+                        if (array_key_exists($provider.'Enabled', $authProviders)) {
                             continue;
                         }
 
-                        $authProviders[$provider . 'Enabled'] = true;
+                        $authProviders[$provider.'Enabled'] = true;
                     }
                 }
 

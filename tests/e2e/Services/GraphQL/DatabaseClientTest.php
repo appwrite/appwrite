@@ -25,7 +25,7 @@ class DatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => ID::unique(),
                 'name' => 'Actors',
-            ]
+            ],
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -62,7 +62,7 @@ class DatabaseClientTest extends Scope
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
                 ],
-            ]
+            ],
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -97,7 +97,7 @@ class DatabaseClientTest extends Scope
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
-            ]
+            ],
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -129,7 +129,7 @@ class DatabaseClientTest extends Scope
                 'min' => 18,
                 'max' => 150,
                 'required' => true,
-            ]
+            ],
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -170,7 +170,7 @@ class DatabaseClientTest extends Scope
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-            ]
+            ],
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -193,6 +193,7 @@ class DatabaseClientTest extends Scope
 
     /**
      * @depends testCreateCollection
+     *
      * @throws \Exception
      */
     public function testGetDocuments($data): void
@@ -204,7 +205,7 @@ class DatabaseClientTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-            ]
+            ],
         ];
 
         $documents = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -219,6 +220,7 @@ class DatabaseClientTest extends Scope
 
     /**
      * @depends testCreateDocument
+     *
      * @throws \Exception
      */
     public function testGetDocument($data): void
@@ -231,7 +233,7 @@ class DatabaseClientTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'documentId' => $data['document']['_id'],
-            ]
+            ],
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -246,6 +248,7 @@ class DatabaseClientTest extends Scope
 
     /**
      * @depends testCreateDocument
+     *
      * @throws \Exception
      */
     public function testUpdateDocument($data): void
@@ -261,7 +264,7 @@ class DatabaseClientTest extends Scope
                 'data' => [
                     'name' => 'New Document Name',
                 ],
-            ]
+            ],
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -279,6 +282,7 @@ class DatabaseClientTest extends Scope
 
     /**
      * @depends testCreateDocument
+     *
      * @throws \Exception
      */
     public function testDeleteDocument($data): void
@@ -291,7 +295,7 @@ class DatabaseClientTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'documentId' => $data['document']['_id'],
-            ]
+            ],
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([

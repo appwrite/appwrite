@@ -2,11 +2,6 @@
 
 namespace Appwrite\Utopia;
 
-use Exception;
-use Swoole\Http\Request as SwooleRequest;
-use Utopia\Swoole\Response as SwooleResponse;
-use Swoole\Http\Response as SwooleHTTPResponse;
-use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Account;
@@ -17,72 +12,74 @@ use Appwrite\Utopia\Response\Model\AlgoPhpass;
 use Appwrite\Utopia\Response\Model\AlgoScrypt;
 use Appwrite\Utopia\Response\Model\AlgoScryptModified;
 use Appwrite\Utopia\Response\Model\AlgoSha;
-use Appwrite\Utopia\Response\Model\None;
 use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\Attribute;
-use Appwrite\Utopia\Response\Model\AttributeList;
-use Appwrite\Utopia\Response\Model\AttributeString;
-use Appwrite\Utopia\Response\Model\AttributeInteger;
-use Appwrite\Utopia\Response\Model\AttributeFloat;
 use Appwrite\Utopia\Response\Model\AttributeBoolean;
+use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\AttributeEmail;
 use Appwrite\Utopia\Response\Model\AttributeEnum;
+use Appwrite\Utopia\Response\Model\AttributeFloat;
+use Appwrite\Utopia\Response\Model\AttributeInteger;
 use Appwrite\Utopia\Response\Model\AttributeIP;
+use Appwrite\Utopia\Response\Model\AttributeList;
+use Appwrite\Utopia\Response\Model\AttributeString;
 use Appwrite\Utopia\Response\Model\AttributeURL;
-use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\Bucket;
+use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\Collection;
-use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
+use Appwrite\Utopia\Response\Model\Database;
+use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
-use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
-use Appwrite\Utopia\Response\Model\Bucket;
 use Appwrite\Utopia\Response\Model\Func;
-use Appwrite\Utopia\Response\Model\Index;
-use Appwrite\Utopia\Response\Model\JWT;
-use Appwrite\Utopia\Response\Model\Key;
-use Appwrite\Utopia\Response\Model\Language;
-use Appwrite\Utopia\Response\Model\User;
-use Appwrite\Utopia\Response\Model\Session;
-use Appwrite\Utopia\Response\Model\Team;
-use Appwrite\Utopia\Response\Model\Locale;
-use Appwrite\Utopia\Response\Model\Log;
-use Appwrite\Utopia\Response\Model\Membership;
-use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
-use Appwrite\Utopia\Response\Model\Phone;
-use Appwrite\Utopia\Response\Model\Platform;
-use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
-use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\Token;
-use Appwrite\Utopia\Response\Model\Webhook;
-use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
 use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
-use Appwrite\Utopia\Response\Model\Mock; // Keep last
+use Appwrite\Utopia\Response\Model\Index;
+use Appwrite\Utopia\Response\Model\JWT;
+use Appwrite\Utopia\Response\Model\Key;
+use Appwrite\Utopia\Response\Model\Language;
+use Appwrite\Utopia\Response\Model\Locale;
+use Appwrite\Utopia\Response\Model\Log;
+use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Metric;
+use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\None;
+use Appwrite\Utopia\Response\Model\Phone;
+use Appwrite\Utopia\Response\Model\Platform;
+use Appwrite\Utopia\Response\Model\Preferences;
+use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\Session;
+use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
-use Appwrite\Utopia\Response\Model\UsageDatabases;
+use Appwrite\Utopia\Response\Model\UsageDatabases; // Keep last
 use Appwrite\Utopia\Response\Model\UsageFunction;
 use Appwrite\Utopia\Response\Model\UsageFunctions;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
+use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\Webhook;
+use Exception;
+use Swoole\Http\Response as SwooleHTTPResponse;
+use Utopia\Database\Document;
+use Utopia\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -92,130 +89,222 @@ class Response extends SwooleResponse
 {
     // General
     public const MODEL_NONE = 'none';
+
     public const MODEL_ANY = 'any';
+
     public const MODEL_LOG = 'log';
+
     public const MODEL_LOG_LIST = 'logList';
+
     public const MODEL_ERROR = 'error';
+
     public const MODEL_METRIC = 'metric';
+
     public const MODEL_METRIC_LIST = 'metricList';
+
     public const MODEL_ERROR_DEV = 'errorDev';
+
     public const MODEL_BASE_LIST = 'baseList';
+
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
+
     public const MODEL_USAGE_DATABASE = 'usageDatabase';
+
     public const MODEL_USAGE_COLLECTION = 'usageCollection';
+
     public const MODEL_USAGE_USERS = 'usageUsers';
+
     public const MODEL_USAGE_BUCKETS = 'usageBuckets';
+
     public const MODEL_USAGE_STORAGE = 'usageStorage';
+
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
+
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
+
     public const MODEL_USAGE_PROJECT = 'usageProject';
 
     // Database
     public const MODEL_DATABASE = 'database';
+
     public const MODEL_DATABASE_LIST = 'databaseList';
+
     public const MODEL_COLLECTION = 'collection';
+
     public const MODEL_COLLECTION_LIST = 'collectionList';
+
     public const MODEL_INDEX = 'index';
+
     public const MODEL_INDEX_LIST = 'indexList';
+
     public const MODEL_DOCUMENT = 'document';
+
     public const MODEL_DOCUMENT_LIST = 'documentList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
+
     public const MODEL_ATTRIBUTE_LIST = 'attributeList';
+
     public const MODEL_ATTRIBUTE_STRING = 'attributeString';
+
     public const MODEL_ATTRIBUTE_INTEGER = 'attributeInteger';
+
     public const MODEL_ATTRIBUTE_FLOAT = 'attributeFloat';
+
     public const MODEL_ATTRIBUTE_BOOLEAN = 'attributeBoolean';
+
     public const MODEL_ATTRIBUTE_EMAIL = 'attributeEmail';
+
     public const MODEL_ATTRIBUTE_ENUM = 'attributeEnum';
+
     public const MODEL_ATTRIBUTE_IP = 'attributeIp';
+
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
+
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
+
     public const MODEL_USER = 'user';
+
     public const MODEL_USER_LIST = 'userList';
+
     public const MODEL_SESSION = 'session';
+
     public const MODEL_SESSION_LIST = 'sessionList';
+
     public const MODEL_TOKEN = 'token';
+
     public const MODEL_JWT = 'jwt';
+
     public const MODEL_PREFERENCES = 'preferences';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
+
     public const MODEL_ALGO_SHA = 'algoSha';
+
     public const MODEL_ALGO_SCRYPT = 'algoScrypt';
+
     public const MODEL_ALGO_SCRYPT_MODIFIED = 'algoScryptModified';
+
     public const MODEL_ALGO_BCRYPT = 'algoBcrypt';
+
     public const MODEL_ALGO_ARGON2 = 'algoArgon2';
+
     public const MODEL_ALGO_PHPASS = 'algoPhpass';
 
     // Storage
     public const MODEL_FILE = 'file';
+
     public const MODEL_FILE_LIST = 'fileList';
+
     public const MODEL_BUCKET = 'bucket';
+
     public const MODEL_BUCKET_LIST = 'bucketList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
+
     public const MODEL_COUNTRY = 'country';
+
     public const MODEL_COUNTRY_LIST = 'countryList';
+
     public const MODEL_CONTINENT = 'continent';
+
     public const MODEL_CONTINENT_LIST = 'continentList';
+
     public const MODEL_CURRENCY = 'currency';
+
     public const MODEL_CURRENCY_LIST = 'currencyList';
+
     public const MODEL_LANGUAGE = 'language';
+
     public const MODEL_LANGUAGE_LIST = 'languageList';
+
     public const MODEL_PHONE = 'phone';
+
     public const MODEL_PHONE_LIST = 'phoneList';
 
     // Teams
     public const MODEL_TEAM = 'team';
+
     public const MODEL_TEAM_LIST = 'teamList';
+
     public const MODEL_MEMBERSHIP = 'membership';
+
     public const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
+
     public const MODEL_FUNCTION_LIST = 'functionList';
+
     public const MODEL_RUNTIME = 'runtime';
+
     public const MODEL_RUNTIME_LIST = 'runtimeList';
+
     public const MODEL_DEPLOYMENT = 'deployment';
+
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
+
     public const MODEL_EXECUTION = 'execution';
+
     public const MODEL_EXECUTION_LIST = 'executionList';
+
     public const MODEL_BUILD = 'build';
+
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
+
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
 
     // Project
     public const MODEL_PROJECT = 'project';
+
     public const MODEL_PROJECT_LIST = 'projectList';
+
     public const MODEL_WEBHOOK = 'webhook';
+
     public const MODEL_WEBHOOK_LIST = 'webhookList';
+
     public const MODEL_KEY = 'key';
+
     public const MODEL_KEY_LIST = 'keyList';
+
     public const MODEL_PROVIDER = 'provider';
+
     public const MODEL_PROVIDER_LIST = 'providerList';
+
     public const MODEL_PLATFORM = 'platform';
+
     public const MODEL_PLATFORM_LIST = 'platformList';
+
     public const MODEL_DOMAIN = 'domain';
+
     public const MODEL_DOMAIN_LIST = 'domainList';
+
     public const MODEL_VARIABLE = 'variable';
+
     public const MODEL_VARIABLE_LIST = 'variableList';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
+
     public const MODEL_HEALTH_VERSION = 'healthVersion';
+
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
+
     public const MODEL_HEALTH_TIME = 'healthTime';
+
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
+
     public const MODEL_RULE = 'rule';
+
     public const MODEL_TASK = 'task';
 
     // Tests (keep last)
@@ -234,7 +323,7 @@ class Response extends SwooleResponse
     /**
      * Response constructor.
      *
-     * @param float $time
+     * @param  float  $time
      */
     public function __construct(SwooleHTTPResponse $response)
     {
@@ -353,6 +442,7 @@ class Response extends SwooleResponse
      * HTTP content types
      */
     public const CONTENT_TYPE_YAML = 'application/x-yaml';
+
     public const CONTENT_TYPE_NULL = 'null';
 
     /**
@@ -375,14 +465,15 @@ class Response extends SwooleResponse
     /**
      * Get Model Object
      *
-     * @param string $key
+     * @param  string  $key
      * @return Model
+     *
      * @throws Exception
      */
     public function getModel(string $key): Model
     {
-        if (!isset($this->models[$key])) {
-            throw new Exception('Undefined model: ' . $key);
+        if (! isset($this->models[$key])) {
+            throw new Exception('Undefined model: '.$key);
         }
 
         return $this->models[$key];
@@ -402,10 +493,11 @@ class Response extends SwooleResponse
      * Validate response objects and outputs
      *  the response according to given format type
      *
-     * @param Document $document
-     * @param string $model
+     * @param  Document  $document
+     * @param  string  $model
      *
      * return void
+     *
      * @throws Exception
      */
     public function dynamic(Document $document, string $model): void
@@ -419,11 +511,11 @@ class Response extends SwooleResponse
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
-                $this->json(!empty($output) ? $output : new \stdClass());
+                $this->json(! empty($output) ? $output : new \stdClass());
                 break;
 
             case self::CONTENT_TYPE_YAML:
-                $this->yaml(!empty($output) ? $output : new \stdClass());
+                $this->yaml(! empty($output) ? $output : new \stdClass());
                 break;
 
             case self::CONTENT_TYPE_NULL:
@@ -433,7 +525,7 @@ class Response extends SwooleResponse
                 if ($model === self::MODEL_NONE) {
                     $this->noContent();
                 } else {
-                    $this->json(!empty($output) ? $output : new \stdClass());
+                    $this->json(! empty($output) ? $output : new \stdClass());
                 }
                 break;
         }
@@ -442,18 +534,19 @@ class Response extends SwooleResponse
     /**
      * Generate valid response object from document data
      *
-     * @param Document $document
-     * @param string $model
+     * @param  Document  $document
+     * @param  string  $model
      *
      * return array
      * @return array
+     *
      * @throws Exception
      */
     public function output(Document $document, string $model): array
     {
-        $data       = $document;
-        $model      = $this->getModel($model);
-        $output     = [];
+        $data = $document;
+        $model = $this->getModel($model);
+        $output = [];
 
         $document = $model->filter($document);
 
@@ -464,17 +557,17 @@ class Response extends SwooleResponse
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
+            if (! $document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
                 if (\array_key_exists('default', $rule)) {
                     $document->setAttribute($key, $rule['default']);
                 } else {
-                    throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
+                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
                 }
             }
 
             if ($rule['array']) {
-                if (!is_array($data[$key])) {
-                    throw new Exception($key . ' must be an array of type ' . $rule['type']);
+                if (! is_array($data[$key])) {
+                    throw new Exception($key.' must be an array of type '.$rule['type']);
                 }
 
                 foreach ($data[$key] as $index => $item) {
@@ -484,7 +577,7 @@ class Response extends SwooleResponse
                                 $condition = false;
                                 foreach ($this->getModel($type)->conditions as $attribute => $val) {
                                     $condition = $item->getAttribute($attribute) === $val;
-                                    if (!$condition) {
+                                    if (! $condition) {
                                         break;
                                     }
                                 }
@@ -497,8 +590,8 @@ class Response extends SwooleResponse
                             $ruleType = $rule['type'];
                         }
 
-                        if (!array_key_exists($ruleType, $this->models)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        if (! array_key_exists($ruleType, $this->models)) {
+                            throw new Exception('Missing model for rule: '.$ruleType);
                         }
 
                         $data[$key][$index] = $this->output($item, $ruleType);
@@ -523,14 +616,13 @@ class Response extends SwooleResponse
      *
      * Generate HTTP response output including the response header (+cookies) and body and prints them.
      *
-     * @param string $body
-     *
+     * @param  string  $body
      * @return void
      */
     public function file(string $body = ''): void
     {
         $this->payload = [
-            'payload' => $body
+            'payload' => $body,
         ];
 
         $this->send($body);
@@ -544,14 +636,14 @@ class Response extends SwooleResponse
      *
      * @see https://en.wikipedia.org/wiki/YAML
      *
-     * @param array $data
-     *
+     * @param  array  $data
      * @return void
+     *
      * @throws Exception
      */
     public function yaml(array $data): void
     {
-        if (!extension_loaded('yaml')) {
+        if (! extension_loaded('yaml')) {
             throw new Exception('Missing yaml extension. Learn more at: https://www.php.net/manual/en/book.yaml.php');
         }
 
@@ -572,7 +664,6 @@ class Response extends SwooleResponse
      * Function to set a response filter
      *
      * @param $filter the response filter to set
-     *
      * @return void
      */
     public static function setFilter(?Filter $filter)

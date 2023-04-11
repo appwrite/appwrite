@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 
@@ -21,7 +20,7 @@ class Filter extends Base
     /**
      * Query constructor
      *
-     * @param int $maxValuesCount
+     * @param  int  $maxValuesCount
      */
     public function __construct(array $attributes = [], int $maxValuesCount = 100)
     {
@@ -35,8 +34,9 @@ class Filter extends Base
     protected function isValidAttribute($attribute): bool
     {
         // Search for attribute in schema
-        if (!isset($this->schema[$attribute])) {
-            $this->message = 'Attribute not found in schema: ' . $attribute;
+        if (! isset($this->schema[$attribute])) {
+            $this->message = 'Attribute not found in schema: '.$attribute;
+
             return false;
         }
 
@@ -45,14 +45,15 @@ class Filter extends Base
 
     protected function isValidAttributeAndValues(string $attribute, array $values): bool
     {
-        if (!$this->isValidAttribute($attribute)) {
+        if (! $this->isValidAttribute($attribute)) {
             return false;
         }
 
         $attributeSchema = $this->schema[$attribute];
 
         if (count($values) > $this->maxValuesCount) {
-            $this->message = 'Query on attribute has greater than ' . $this->maxValuesCount . ' values: ' . $attribute;
+            $this->message = 'Query on attribute has greater than '.$this->maxValuesCount.' values: '.$attribute;
+
             return false;
         }
 
@@ -65,8 +66,9 @@ class Filter extends Base
                 default => gettype($value) === $attributeType
             };
 
-            if (!$condition) {
-                $this->message = 'Query type does not match expected: ' . $attributeType;
+            if (! $condition) {
+                $this->message = 'Query type does not match expected: '.$attributeType;
+
                 return false;
             }
         }
@@ -81,8 +83,7 @@ class Filter extends Base
      *
      * Otherwise, returns false
      *
-     * @param Query $value
-     *
+     * @param  Query  $value
      * @return bool
      */
     public function isValid($query): bool
@@ -100,6 +101,7 @@ class Filter extends Base
             case Query::TYPE_GREATEREQUAL:
             case Query::TYPE_SEARCH:
                 $values = $query->getValues();
+
                 return $this->isValidAttributeAndValues($attribute, $values);
 
             default:

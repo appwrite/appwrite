@@ -12,7 +12,7 @@ class CNAME extends Validator
     protected $target;
 
     /**
-     * @param string $target
+     * @param  string  $target
      */
     public function __construct($target)
     {
@@ -30,13 +30,12 @@ class CNAME extends Validator
     /**
      * Check if CNAME record target value matches selected target
      *
-     * @param mixed $domain
-     *
+     * @param  mixed  $domain
      * @return bool
      */
     public function isValid($domain): bool
     {
-        if (!is_string($domain)) {
+        if (! is_string($domain)) {
             return false;
         }
 
@@ -46,7 +45,7 @@ class CNAME extends Validator
             return false;
         }
 
-        if (!$records) {
+        if (! $records) {
             return false;
         }
 

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 
@@ -15,8 +14,7 @@ class Cursor extends Base
      *
      * Otherwise, returns false
      *
-     * @param Query $value
-     *
+     * @param  Query  $value
      * @return bool
      */
     public function isValid($query): bool
@@ -30,7 +28,8 @@ class Cursor extends Base
             if ($validator->isValid($cursor)) {
                 return true;
             }
-            $this->message = 'Invalid cursor: ' . $validator->getDescription();
+            $this->message = 'Invalid cursor: '.$validator->getDescription();
+
             return false;
         }
 

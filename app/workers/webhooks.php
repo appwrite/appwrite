@@ -5,10 +5,10 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Webhooks V1 Worker');
-Console::success(APP_NAME . ' webhooks worker v1 has started');
+Console::success(APP_NAME.' webhooks worker v1 has started');
 
 class WebhooksV1 extends Worker
 {
@@ -16,7 +16,7 @@ class WebhooksV1 extends Worker
 
     public function getName(): string
     {
-        return "webhooks";
+        return 'webhooks';
     }
 
     public function init(): void
@@ -36,7 +36,7 @@ class WebhooksV1 extends Worker
             }
         }
 
-        if (!empty($this->errors)) {
+        if (! empty($this->errors)) {
             throw new Exception(\implode(" / \n\n", $this->errors));
         }
     }
@@ -45,7 +45,7 @@ class WebhooksV1 extends Worker
     {
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
-        $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
+        $signature = base64_encode(hash_hmac('sha1', $url.$payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));
@@ -64,28 +64,28 @@ class WebhooksV1 extends Worker
             CURLOPT_HTTPHEADER,
             [
                 'Content-Type: application/json',
-                'Content-Length: ' . \strlen($payload),
-                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+                'Content-Length: '.\strlen($payload),
+                'X-'.APP_NAME.'-Webhook-Id: '.$webhook->getId(),
+                'X-'.APP_NAME.'-Webhook-Events: '.implode(',', $events),
+                'X-'.APP_NAME.'-Webhook-Name: '.$webhook->getAttribute('name', ''),
+                'X-'.APP_NAME.'-Webhook-User-Id: '.$user->getId(),
+                'X-'.APP_NAME.'-Webhook-Project-Id: '.$project->getId(),
+                'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
             ]
         );
 
-        if (!$webhook->getAttribute('security', true)) {
+        if (! $webhook->getAttribute('security', true)) {
             \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
 
-        if (!empty($httpUser) && !empty($httpPass)) {
+        if (! empty($httpUser) && ! empty($httpPass)) {
             \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
             \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         }
 
         if (false === \curl_exec($ch)) {
-            $this->errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
+            $this->errors[] = \curl_error($ch).' in events '.implode(', ', $events).' for webhook '.$webhook->getAttribute('name');
         }
 
         \curl_close($ch);

@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeString extends Attribute
 {
@@ -24,8 +23,7 @@ class AttributeString extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'default',
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [

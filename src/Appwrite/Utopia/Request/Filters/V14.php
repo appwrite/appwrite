@@ -2,8 +2,8 @@
 
 namespace Appwrite\Utopia\Request\Filters;
 
-use Appwrite\Utopia\Request\Filter;
 use Appwrite\Migration\Version\V13 as MigrationV13;
+use Appwrite\Utopia\Request\Filter;
 
 class V14 extends Filter
 {
@@ -11,10 +11,10 @@ class V14 extends Filter
     public function parse(array $content, string $model): array
     {
         switch ($model) {
-            case "functions.create":
-            case "functions.update":
-            case "projects.createWebhook":
-            case "projects.updateWebhook":
+            case 'functions.create':
+            case 'functions.update':
+            case 'projects.createWebhook':
+            case 'projects.updateWebhook':
                 $content = $this->convertEvents($content);
                 break;
         }
@@ -27,7 +27,7 @@ class V14 extends Filter
         $migration = new MigrationV13();
 
         $events = $content['events'] ?? [];
-        $content['events']  = $migration->migrateEvents($events);
+        $content['events'] = $migration->migrateEvents($events);
 
         return $content;
     }

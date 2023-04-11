@@ -3,13 +3,13 @@
 namespace Tests\Unit\Auth;
 
 use Appwrite\Auth\Auth;
+use PHPUnit\Framework\TestCase;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Roles;
 
 class AuthTest extends TestCase
@@ -128,13 +128,13 @@ class AuthTest extends TestCase
         // Scrypt
         $plain = 'some-scrypt-password';
         $hash = 'b448ad7ba88b653b5b56b8053a06806724932d0751988bc9cd0ef7ff059e8ba8a020e1913b7069a650d3f99a1559aba0221f2c277826919513a054e76e339028';
-        $generatedHash = Auth::passwordHash($plain, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]);
+        $generatedHash = Auth::passwordHash($plain, 'scrypt', ['salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]);
 
-        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
-        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
-        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-wrong-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
-        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 10, 'costParallel' => 2]));
-        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scrypt', [ 'salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scrypt', ['salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scrypt', ['salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', ['salt' => 'some-wrong-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify($plain, $hash, 'scrypt', ['salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 10, 'costParallel' => 2]));
+        $this->assertEquals(false, Auth::passwordVerify('wrongPassword', $hash, 'scrypt', ['salt' => 'some-salt', 'length' => 64, 'costCpu' => 16384, 'costMemory' => 12, 'costParallel' => 2]));
 
         // ScryptModified tested are in provider-specific tests below
 
@@ -165,7 +165,7 @@ class AuthTest extends TestCase
         $saltSeparator = 'Bw==';
         $signerKey = 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==';
 
-        $options = [ 'salt' => $salt, 'saltSeparator' => $saltSeparator, 'signerKey' => $signerKey ];
+        $options = ['salt' => $salt, 'saltSeparator' => $saltSeparator, 'signerKey' => $signerKey];
         $generatedHash = Auth::passwordHash($plain, 'scryptMod', $options);
         $this->assertEquals(true, Auth::passwordVerify($plain, $generatedHash, 'scryptMod', $options));
         $this->assertEquals(true, Auth::passwordVerify($plain, $hash, 'scryptMod', $options));
@@ -340,7 +340,7 @@ class AuthTest extends TestCase
     public function testGuestRoles(): void
     {
         $user = new Document([
-            '$id' => ''
+            '$id' => '',
         ]);
 
         $roles = Auth::getRoles($user);
@@ -350,7 +350,7 @@ class AuthTest extends TestCase
 
     public function testUserRoles(): void
     {
-        $user  = new Document([
+        $user = new Document([
             '$id' => ID::custom('123'),
             'emailVerification' => true,
             'phoneVerification' => true,
@@ -361,18 +361,18 @@ class AuthTest extends TestCase
                     'confirm' => true,
                     'roles' => [
                         'administrator',
-                        'moderator'
-                    ]
+                        'moderator',
+                    ],
                 ],
                 [
                     '$id' => ID::custom('abc'),
                     'teamId' => ID::custom('def'),
                     'confirm' => true,
                     'roles' => [
-                        'guest'
-                    ]
-                ]
-            ]
+                        'guest',
+                    ],
+                ],
+            ],
         ]);
 
         $roles = Auth::getRoles($user);
@@ -409,7 +409,7 @@ class AuthTest extends TestCase
     public function testPrivilegedUserRoles(): void
     {
         Authorization::setRole(Auth::USER_ROLE_OWNER);
-        $user  = new Document([
+        $user = new Document([
             '$id' => ID::custom('123'),
             'emailVerification' => true,
             'phoneVerification' => true,
@@ -420,18 +420,18 @@ class AuthTest extends TestCase
                     'confirm' => true,
                     'roles' => [
                         'administrator',
-                        'moderator'
-                    ]
+                        'moderator',
+                    ],
                 ],
                 [
                     '$id' => ID::custom('abc'),
                     'teamId' => ID::custom('def'),
                     'confirm' => true,
                     'roles' => [
-                        'guest'
-                    ]
-                ]
-            ]
+                        'guest',
+                    ],
+                ],
+            ],
         ]);
 
         $roles = Auth::getRoles($user);
@@ -453,7 +453,7 @@ class AuthTest extends TestCase
     public function testAppUserRoles(): void
     {
         Authorization::setRole(Auth::USER_ROLE_APPS);
-        $user  = new Document([
+        $user = new Document([
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
@@ -462,18 +462,18 @@ class AuthTest extends TestCase
                     'confirm' => true,
                     'roles' => [
                         'administrator',
-                        'moderator'
-                    ]
+                        'moderator',
+                    ],
                 ],
                 [
                     '$id' => ID::custom('abc'),
                     'teamId' => ID::custom('def'),
                     'confirm' => true,
                     'roles' => [
-                        'guest'
-                    ]
-                ]
-            ]
+                        'guest',
+                    ],
+                ],
+            ],
         ]);
 
         $roles = Auth::getRoles($user);

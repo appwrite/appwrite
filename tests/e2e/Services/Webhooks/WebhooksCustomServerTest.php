@@ -30,10 +30,10 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $id, array_merge([
+        $actors = $this->client->call(Client::METHOD_PUT, '/databases/'.$databaseId.'/collections/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'name' => 'Actors1',
             'documentSecurity' => true,
@@ -48,8 +48,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*.update', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}.update", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
@@ -72,10 +72,10 @@ class WebhooksCustomServerTest extends Scope
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/indexes', array_merge([
+        $index = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$data['actorsId'].'/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'key' => 'fullname',
             'type' => 'key',
@@ -96,9 +96,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*.indexes.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create", $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -108,10 +108,10 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
 
         // Remove index
-        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/indexes/' . $index['body']['key'], array_merge([
+        $this->client->call(Client::METHOD_DELETE, '/databases/'.$databaseId.'/collections/'.$data['actorsId'].'/indexes/'.$index['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
         // // wait for database worker to remove index
@@ -121,9 +121,9 @@ class WebhooksCustomServerTest extends Scope
         // $this->assertEquals($webhook['method'], 'DELETE');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.indexes.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*.indexes.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*.indexes.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$actorsId}.indexes.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
@@ -143,7 +143,7 @@ class WebhooksCustomServerTest extends Scope
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $this->getHeaders()), [
             'databaseId' => ID::unique(),
             'name' => 'Actors DB',
@@ -154,10 +154,10 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'collectionId' => ID::unique(),
             'name' => 'Demo',
@@ -175,10 +175,10 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($actors['headers']['status-code'], 201);
         $this->assertNotEmpty($actors['body']['$id']);
 
-        $actors = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
+        $actors = $this->client->call(Client::METHOD_DELETE, '/databases/'.$databaseId.'/collections/'.$actors['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), []);
 
         $this->assertEquals($actors['headers']['status-code'], 204);
@@ -189,8 +189,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('databases.' . $databaseId . '.collections.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString('databases.'.$databaseId.'.collections.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("databases.{$databaseId}.collections.{$id}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
@@ -207,7 +207,7 @@ class WebhooksCustomServerTest extends Scope
 
     public function testCreateUser(): array
     {
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -268,11 +268,11 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/prefs', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/'.$id.'/prefs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'prefs' => ['a' => 'b']
+            'prefs' => ['a' => 'b'],
         ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
@@ -309,7 +309,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/'.$data['userId'].'/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -357,7 +357,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'], array_merge([
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/'.$data['userId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -444,7 +444,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/'.$data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -453,14 +453,14 @@ class WebhooksCustomServerTest extends Scope
             'execute' => [Role::any()->toString()],
             'vars' => [
                 'key1' => 'value1',
-            ]
+            ],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 200);
         $this->assertEquals($function['body']['$id'], $data['functionId']);
 
         // Create variable
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/variables', array_merge([
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/variables', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -484,12 +484,12 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
-        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/'.$data['functionId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test Failure',
-            'execute' => [ 'not-valid-permission' ]
+            'execute' => ['not-valid-permission'],
         ]);
 
         $this->assertEquals($function['headers']['status-code'], 400);
@@ -508,15 +508,15 @@ class WebhooksCustomServerTest extends Scope
         $stderr = '';
         $stdout = '';
         $folder = 'timeout';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/{$folder}/code.tar.gz";
-        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
+        $code = realpath(__DIR__.'/../../../resources/functions')."/{$folder}/code.tar.gz";
+        Console::execute('cd '.realpath(__DIR__.'/../../../resources/functions')."/{$folder}  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $stdout, $stderr);
 
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge([
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/deployments', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', \basename($code))
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
         ]);
 
         $id = $data['functionId'] ?? '';
@@ -557,7 +557,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $id . '/deployments/' . $deploymentId, array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$id.'/deployments/'.$deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -605,11 +605,11 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $id . '/executions', array_merge([
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$id.'/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'async' => true
+            'async' => true,
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
@@ -676,7 +676,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/' . $id . '/deployments/' . $deploymentId, array_merge([
+        $deployment = $this->client->call(Client::METHOD_DELETE, '/functions/'.$id.'/deployments/'.$deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -721,7 +721,7 @@ class WebhooksCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $id, array_merge([
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'.$id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
