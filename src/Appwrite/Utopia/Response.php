@@ -45,6 +45,7 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Bucket;
+use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
 use Appwrite\Utopia\Response\Model\JWT;
@@ -215,6 +216,9 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
 
+    // Console
+    public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
+
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
     public const MODEL_RULE = 'rule';
@@ -344,6 +348,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new ConsoleVariables())
             // Verification
             // Recovery
             // Tests (keep last)

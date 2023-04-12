@@ -417,10 +417,10 @@ App::post('/v1/teams/:teamId/memberships')
             if ($invitee->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
             }
-            if (!empty($email) && $invitee->getAttribute('email', '') != $email) {
+            if (!empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
             }
-            if (!empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+            if (!empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
             }
             $email = $invitee->getAttribute('email', '');
@@ -428,12 +428,12 @@ App::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') != $email) {
+            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
