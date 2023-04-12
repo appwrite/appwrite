@@ -1,4 +1,4 @@
-## 7.3.0
+## 8.0.0
 
 * Improve helper classes
 * Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs

@@ -1,4 +1,4 @@
-## 8.3.0
+## 9.0.0
 
 * Fix: back navigation bringing back web browser after OAuth session creation
 * Update: Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
