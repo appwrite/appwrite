@@ -191,7 +191,24 @@ App::post('/v1/vcs/github/incomingwebhook')
                 }
             } else if ($event == $github::EVENT_INSTALLATION) {
                 $installationId = $parsedPayload["installationId"];
-                // delete documents from all respective collections
+
+                $vcsInstallations = $dbForConsole->find('vcs_installations', [
+                    Query::equal('installationId', [$installationId]),
+                    Query::limit(1000)
+                ]);
+
+                foreach ($vcsInstallations as $installation) {
+                    $vcsRepos = $dbForConsole->find('vcs_repos', [
+                        Query::equal('vcsInstallationId', [$installation->getId()]),
+                        Query::limit(1000)
+                    ]);
+
+                    foreach ($vcsRepos as $repo) {
+                        $dbForConsole->deleteDocument('vcs_repos', $repo->getId());
+                    }
+
+                    $dbForConsole->deleteDocument('vcs_installations', $installation->getId());
+                }
             } else if ($event == $github::EVENT_PULL_REQUEST) {
                 // find last push to this branch
             }

@@ -556,6 +556,17 @@ $collections = [
         'name' => 'vcs_repos',
         'attributes' => [
             [
+                '$id' => ID::custom('vcsInstallationId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ],
+            [
                 '$id' => ID::custom('projectId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
