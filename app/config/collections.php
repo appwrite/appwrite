@@ -485,10 +485,10 @@ $collections = [
         ],
     ],
 
-    'vcs' => [
+    'vcs_installations' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcs'),
-        'name' => 'vcs',
+        '$id' => ID::custom('vcs_installations'),
+        'name' => 'vcs_installations',
         'attributes' => [
             [
                 '$id' => ID::custom('installationId'),
@@ -550,10 +550,10 @@ $collections = [
         ],
     ],
 
-    'vcs_map' => [
+    'vcs_repos' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcs_map'),
-        'name' => 'vcs_map',
+        '$id' => ID::custom('vcs_repos'),
+        'name' => 'vcs_repos',
         'attributes' => [
             [
                 '$id' => ID::custom('projectId'),

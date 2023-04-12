@@ -514,10 +514,10 @@ App::put('/v1/functions/:functionId')
             $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
             $projectInternalId = $project->getInternalId();
 
-            $vcs = $dbForConsole->findOne('vcs', [
+            $vcs_installations = $dbForConsole->findOne('vcs_installations', [
                 Query::equal('projectInternalId', [$projectInternalId])
               ]);
-            $installationId = $vcs->getAttribute('installationId');
+            $installationId = $vcs_installations->getAttribute('installationId');
 
             var_dump($installationId);
 
@@ -528,7 +528,7 @@ App::put('/v1/functions/:functionId')
             $code = $github->generateGitCloneCommand($repositoryId, $branchName);
 
             //Add document in VCS map collection
-            $vcs_mapping = new Document([
+            $vcs_repos = new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -543,7 +543,7 @@ App::put('/v1/functions/:functionId')
                 'resourceType' => "function"
             ]);
 
-            $vcs_mapping = $dbForConsole->createDocument('vcs_map', $vcs_mapping);
+            $vcs_repos = $dbForConsole->createDocument('vcs_repos', $vcs_repos);
 
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
