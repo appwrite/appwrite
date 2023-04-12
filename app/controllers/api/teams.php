@@ -223,7 +223,7 @@ App::get('/v1/teams/:teamId/prefs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $prefs = $team->getAttribute('prefs', new \stdClass());
+        $prefs = $team->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
