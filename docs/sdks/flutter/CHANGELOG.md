@@ -2,6 +2,8 @@
 
 * Fix: back navigation bringing back web browser after OAuth session creation
 * Update: Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
 
 ## 8.2.2
 

@@ -1,6 +1,9 @@
 ## 7.3.0
-* Inprove helper classes
+
+* Improve helper classes
 * Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
 
 ## 7.2.0
 
