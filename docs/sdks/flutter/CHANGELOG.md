@@ -1,9 +1,17 @@
+## 9.0.0
+
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
+* Added update attribute support
+* Added team prefs support
+* Changed function create/update `execute` parameter to optional
+* Changed team `update` to `updateName`
+* Changed `Account` service to use the `User` model instead of `Account`
+
 ## 8.3.0
 
 * Fix: back navigation bringing back web browser after OAuth session creation
 * Update: Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
-* Added relationships support
-* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
 
 ## 8.2.2
 
