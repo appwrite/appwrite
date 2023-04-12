@@ -1,9 +1,9 @@
 <?php
 
 return [
-    '/' => [
-        'key' => 'homepage',
-        'name' => 'Homepage',
+    'web/home' => [
+        'key' => 'web/home',
+        'name' => 'Home',
         'subtitle' => '',
         'description' => '',
         'controller' => 'web/home.php',
@@ -14,8 +14,8 @@ return [
         'optional' => false,
         'icon' => '',
     ],
-    'console' => [
-        'key' => 'console',
+    'web/console' => [
+        'key' => 'web/console',
         'name' => 'Console',
         'subtitle' => '',
         'description' => '',
@@ -185,5 +185,18 @@ return [
         'tests' => true,
         'optional' => true,
         'icon' => '/images/services/graphql.png',
+    ],
+    'console' => [
+        'key' => 'console',
+        'name' => 'Console',
+        'subtitle' => 'The Console service allows you to interact with console relevant informations.',
+        'description' => '',
+        'controller' => 'api/console.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
     ],
 ];

@@ -18,11 +18,6 @@ use Utopia\Database\Helpers\Role;
 class V15 extends Migration
 {
     /**
-     * @var \PDO $pdo
-     */
-    private $pdo;
-
-    /**
      * @var array<string>
      */
     protected array $providers;
