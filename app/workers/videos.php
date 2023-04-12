@@ -136,14 +136,14 @@ class VideosV1 extends Worker
                     ->setAttribute('videoFormatProfile', $video->has('format_profile') ? $video->get('format_profile') : '')
                     ->setAttribute('videoFrameRate', $video->has('frame_rate') ? strval($video->get('frame_rate')->getAbsoluteValue()) : '')
                     ->setAttribute('videoFrameRateMode', $video->has('frame_rate_mode') ? $video->get('frame_rate_mode')->getFullName() : '')
-                    ->setAttribute('videoBitRate', $video->has('bit_rate') ? strval($video->get('bit_rate')->getAbsoluteValue()) : '');
+                    ->setAttribute('videoBitRate', $video->has('bit_rate') ? $video->get('bit_rate')->getAbsoluteValue() : 0);
             }
 
             foreach ($mediaInfoContainer->getAudios() ?? [] as $audio) {
                 $this->video
                     ->setAttribute('audioFormat', $audio->has('format') ? strval($audio->get('format')->getShortName()) : '')
                     ->setAttribute('audioSampleRate', $audio->has('sampling_rate') ? strval($audio->get('sampling_rate')->getAbsoluteValue()) : '')
-                    ->setAttribute('audioBitRate', $audio->has('bit_rate') ? strval($audio->get('bit_rate')->getAbsoluteValue()) : '');
+                    ->setAttribute('audioBitRate', $audio->has('bit_rate') ? $audio->get('bit_rate')->getAbsoluteValue() : 0);
             }
 
             console::info('Input video id: ' . $this->video->getId() . PHP_EOL .
@@ -658,15 +658,27 @@ class VideosV1 extends Worker
         $handle = fopen($path, "r");
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
-                $line =  str_replace(['"'], '', $line);
+                $tmp = [];
+                $line = str_replace(['"'], '', $line);
                 $attributes = explode(',', $line);
-                $language = null;
-                foreach ($attributes as $attribute) {
-                    if (str_contains($attribute, "LANGUAGE")) {
-                        $parts = explode('=', $attribute);
-                        $language = $parts[1];
+                foreach ($attributes as $key => $attribute) {
+                    $parts = explode('=', $attribute);
+                    switch (true) {
+                        case str_contains($parts[0], 'LANGUAGE'):
+                            $attr['language'] = $parts[1];
+                            break;
+                        case str_contains($parts[0], 'BANDWIDTH'):
+                            $attr['bandwidth'] = $parts[1];
+                            break;
+                        case str_contains($parts[0], 'RESOLUTION'):
+                            $attr['resolution'] = $parts[1];
+                            break;
+                        case str_contains($parts[0], 'CODECS'):
+                            $attr['codecs'] = $parts[1] . ',' . $attributes[$key + 1];
+                            break;
                     }
                 }
+
                 $end = strpos($line, 'm3u8');
                 if ($end !== false) {
                     $start = strpos($line, $this->video->getId());
@@ -675,16 +687,27 @@ class VideosV1 extends Worker
                         $parts = explode('_', $path);
                         $tmp = [
                             'id' => $parts[1],
-                            'type' => str_contains($line, "TYPE=AUDIO") ? 'audio' : 'video',
                             'path' => $path
                         ];
-
-                        if (!empty($language)) {
-                            $tmp ['language'] = $language;
+                        if (str_contains($line, "TYPE=AUDIO")) {
+                            $tmp['type'] = 'audio';
+                            if (!empty($attr['language'])) {
+                                $tmp['language'] = $attr['language'];
+                            }
+                        } else {
+                            $tmp['type'] = 'video';
+                            if (!empty($attr['resolution'])) {
+                                $tmp['resolution'] = $attr['resolution'];
+                            }
+                            if (!empty($attr['bandwidth'])) {
+                                $tmp['bandwidth'] = $attr['bandwidth'];
+                            }
+                            if (!empty($attr['codecs'])) {
+                                $tmp['codecs'] = $attr['codecs'];
+                            }
                         }
-
-                        $files[] = $tmp;
                     }
+                    $files[] = $tmp;
                 }
             }
             fclose($handle);

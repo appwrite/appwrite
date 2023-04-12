@@ -812,6 +812,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
     ->groups(['api', 'videos'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'videos')
+    ->label('origin', '*')
     ->label('sdk.method', 'getMasterManifest')
     ->label('sdk.description', '/docs/references/videos/get-master-manifest.md') // TODO: Create markdown
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -862,7 +863,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
             }
 
             foreach ($renditions as $rendition) {
-                $uri = null;
+                $uri = $codecs = $resolution = $bandwidth = null;
                 $_audios = [];
                 $metadata = $rendition->getAttribute('metadata');
                 $streams = $metadata['hls'];
@@ -877,14 +878,18 @@ App::get('/v1/videos/:videoId/outputs/:output')
                         ];
                     } elseif ($stream['type'] === 'video') {
                         $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'];
+                        $resolution = $stream['resolution'] ?? $rendition->getAttribute('width') . 'x' . $rendition->getAttribute('height');
+                        $bandwidth  = $stream['bandwidth']  ?? ($rendition->getAttribute('videoBitRate') + $rendition->getAttribute('audioBitRate')) * 1024;
+                        $codecs     = $stream['codecs'] ?? null;
                     }
                 }
 
                 $_renditions[] = [
-                    'bandwidth'  => ($rendition->getAttribute('videoBitRate') + $rendition->getAttribute('audioBitRate')),
-                    'resolution' => $rendition->getAttribute('width') . 'X' . $rendition->getAttribute('height'),
+                    'bandwidth'  => $bandwidth,
+                    'resolution' => $resolution,
+                    'codecs' => $codecs,
                     'name' => $rendition->getAttribute('name'),
-                    'uri'  => $uri,
+                    'uri'  => rtrim($uri),
                     'subs' => !empty($_subtitles) ? 'subs' : null,
                     'audio' => !empty($_audios) ? 'group_audio' : null,
                 ];
@@ -978,6 +983,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
+    ->label('origin', '*')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('output', '', new WhiteList(['hls']), 'Output name.')
@@ -1041,6 +1047,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
+    ->label('origin', '*')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('output', '', new WhiteList(['hls', 'dash']), 'Output name')
@@ -1077,6 +1084,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
+    ->label('origin', '*')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('output', '', new WhiteList(['hls', 'dash']), 'Protocol name')
@@ -1142,6 +1150,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:se
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', '*/*')
     ->label('sdk.methodType', 'location')
+    ->label('origin', '*')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('output', '', new WhiteList(['hls', 'dash']), 'output name')
