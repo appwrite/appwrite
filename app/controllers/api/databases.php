@@ -3350,7 +3350,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $relation) {
+                foreach ($related as &$relation) {
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
