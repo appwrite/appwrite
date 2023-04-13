@@ -1,3 +1,8 @@
+# Version 1.3.1
+
+## Bugs
+- Fixed Migration issue regarding 500 error [4906](https://github.com/appwrite/appwrite/pull/5356)
+
 # Version 1.3.0
 
 ## Features

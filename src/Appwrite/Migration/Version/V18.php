@@ -33,9 +33,7 @@ class V18 extends Migration
         $this->migrateCollections();
 
         Console::info('Migrating Documents');
-        $this->forEachDocument(function (Document $document) {
-            $this->migrateDocument($document);
-        });
+        $this->forEachDocument([$this, 'fixDocument']);
     }
 
     /**
@@ -131,7 +129,7 @@ class V18 extends Migration
      * @param Document $document
      * @return Document
      */
-    private function migrateDocument(Document $document): Document
+    protected function fixDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
             case 'projects':
