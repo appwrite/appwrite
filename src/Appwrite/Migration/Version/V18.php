@@ -2,10 +2,8 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -13,10 +11,11 @@ class V18 extends Migration
 {
     public function execute(): void
     {
+
         /**
          * Disable SubQueries for Performance.
          */
-        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subqueryVariables'] as $name) {
+        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables'] as $name) {
             Database::addFilter(
                 $name,
                 fn () => null,
@@ -25,6 +24,10 @@ class V18 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+
+        Console::info('Migrating Databases');
+        $this->migrateDatabases();
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -34,18 +37,49 @@ class V18 extends Migration
     }
 
     /**
+     * Migrate all Databases.
+     *
+     * @return void
+     * @throws \Exception
+     */
+    private function migrateDatabases(): void
+    {
+        foreach ($this->documentsIterator('databases') as $database) {
+            $databaseTable = "database_{$database->getInternalId()}";
+
+            Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
+
+            foreach ($this->documentsIterator($databaseTable) as $collection) {
+                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
+
+                foreach ($collection['attributes'] ?? [] as $attribute) {
+                    if ($attribute['type'] !== Database::VAR_FLOAT) {
+                        continue;
+                    }
+                    $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
+                }
+            }
+        }
+    }
+
+    /**
      * Migrate all Collections.
      *
      * @return void
      */
-    protected function migrateCollections(): void
+    private function migrateCollections(): void
     {
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            foreach ($collection['attributes'] ?? [] as $attribute) {
+                if ($attribute['type'] !== Database::VAR_FLOAT) {
+                    continue;
+                }
+                $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
+            }
 
             switch ($id) {
                 case 'users':
@@ -59,6 +93,28 @@ class V18 extends Migration
                         Console::warning("'passwordHistory' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'teams':
+                    try {
+                        /**
+                         * Create 'prefs' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'prefs');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'prefs' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'attributes':
+                    try {
+                        /**
+                         * Create 'options' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'options');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'options' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 default:
                     break;
             }
@@ -70,23 +126,17 @@ class V18 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document
-     * @return \Utopia\Database\Document
+     * @param Document $document
+     * @return Document
      */
-    protected function fixDocument(Document $document)
+    protected function fixDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
             case 'projects':
                 /**
                  * Bump version number.
                  */
-                $document->setAttribute('version', '1.2.0');
-                break;
-            case 'projects':
-                /**
-                 * Bump version number.
-                 */
-                $document->setAttribute('passwordHistory', []);
+                $document->setAttribute('version', '1.3.0');
 
                 /**
                  * Set default passwordHistory
@@ -95,7 +145,24 @@ class V18 extends Migration
                     'passwordHistory' => 0,
                     'passwordDictionary' => false,
                 ]));
-
+                break;
+            case 'users':
+                /**
+                 * Default Password history
+                 */
+                $document->setAttribute('passwordHistory', []);
+                break;
+            case 'teams':
+                /**
+                 * Default prefs
+                 */
+                $document->setAttribute('prefs', new \stdClass());
+                break;
+            case 'attributes':
+                /**
+                 * Default options
+                 */
+                $document->setAttribute('options', new \stdClass());
                 break;
         }
 

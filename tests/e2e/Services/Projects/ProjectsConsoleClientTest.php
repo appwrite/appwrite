@@ -1808,8 +1808,6 @@ class ProjectsConsoleClientTest extends Scope
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
             'url' => 'https://appwrite.io/new',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => ''
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1856,8 +1854,6 @@ class ProjectsConsoleClientTest extends Scope
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.unknown'],
             'url' => 'https://appwrite.io/new',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1870,8 +1866,6 @@ class ProjectsConsoleClientTest extends Scope
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
             'url' => 'appwrite.io/new',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -2243,8 +2237,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Web App',
-            'key' => '',
-            'store' => '',
             'hostname' => 'localhost',
         ]);
 
@@ -2265,8 +2257,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
             'key' => 'com.example.ios',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2286,8 +2276,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
             'key' => 'com.example.android',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2306,8 +2294,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'flutter-web',
             'name' => 'Flutter App (Web)',
-            'key' => '',
-            'store' => '',
             'hostname' => 'flutter.appwrite.io',
         ]);
 
@@ -2328,8 +2314,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-ios',
             'name' => 'iOS App',
             'key' => 'com.example.ios',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2349,8 +2333,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-macos',
             'name' => 'macOS App',
             'key' => 'com.example.macos',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2370,8 +2352,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-watchos',
             'name' => 'watchOS App',
             'key' => 'com.example.watchos',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2391,8 +2371,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-tvos',
             'name' => 'tvOS App',
             'key' => 'com.example.tvos',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2414,8 +2392,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'unknown',
             'name' => 'Web App',
-            'key' => '',
-            'store' => '',
             'hostname' => 'localhost',
         ]);
 
@@ -2610,8 +2586,6 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Web App 2',
-            'key' => '',
-            'store' => '',
             'hostname' => 'localhost-new',
         ]);
 
@@ -2632,8 +2606,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Flutter App (iOS) 2',
             'key' => 'com.example.ios2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2653,8 +2625,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2673,8 +2643,6 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Web) 2',
-            'key' => '',
-            'store' => '',
             'hostname' => 'flutter2.appwrite.io',
         ]);
 
@@ -2695,8 +2663,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'iOS App 2',
             'key' => 'com.example.ios2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2716,8 +2682,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'macOS App 2',
             'key' => 'com.example.macos2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2737,8 +2701,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'watchOS App 2',
             'key' => 'com.example.watchos2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2758,8 +2720,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'tvOS App 2',
             'key' => 'com.example.tvos2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2780,8 +2740,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -2989,8 +2947,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Too Long Hostname',
-            'key' => '',
-            'store' => '',
             'hostname' => \str_repeat("bestdomain", 25) . '.com' // 250 + 4 chars total (exactly above limit)
         ]);
 
