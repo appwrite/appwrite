@@ -2898,92 +2898,120 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
+        $limit = Query::groupByType($queries)['limit'] ?? 25;
+        $offset = Query::groupByType($queries)['offset'] ?? 0;
+        $total = null;
+        $documents = [];
 
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($collection->getRead());
-        if (!$valid) {
-            $total = $documentSecurity
-                ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
-                : 0;
-        } else {
-            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
-        }
+        $loop = function () use ($filterQueries, $queries, $collection, $limit, $database, $dbForProject, &$total, &$offset, &$documents, &$loop) {
+            $page = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
 
-        // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization(Database::PERMISSION_READ);
+            $fullPage = \count($page) === $limit;
 
-            $valid = $validator->isValid($collection->getRead());
-            if (!$documentSecurity && !$valid) {
-                return false;
-            }
-
-            $valid = $valid || $validator->isValid($document->getRead());
-            if ($documentSecurity && !$valid) {
-                return false;
-            }
-
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$collectionId', $collection->getId());
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $relations = [$related];
+            if (\is_null($total)) {
+                $documentSecurity = $collection->getAttribute('documentSecurity', false);
+                $validator = new Authorization(Database::PERMISSION_READ);
+                $valid = $validator->isValid($collection->getRead());
+                if (!$valid) {
+                    $total = $documentSecurity
+                        ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
+                        : 0;
                 } else {
-                    $relations = $related;
+                    $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+                }
+            }
+
+            // Add $collectionId and $databaseId for all documents
+            $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+                $documentSecurity = $collection->getAttribute('documentSecurity', false);
+                $validator = new Authorization(Database::PERMISSION_READ);
+
+                $valid = $validator->isValid($collection->getRead());
+                if (!$documentSecurity && !$valid) {
+                    return false;
                 }
 
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(fn() =>
-                    $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $valid = $valid || $validator->isValid($document->getRead());
+                if ($documentSecurity && !$valid) {
+                    return false;
+                }
 
-                foreach ($relations as $index => $doc) {
-                    if ($doc instanceof Document) {
-                        if (!$processDocument($relatedCollection, $doc)) {
-                            unset($relations[$index]);
+                $document->setAttribute('$databaseId', $database->getId());
+                $document->setAttribute('$collectionId', $collection->getId());
+
+                $relationships = \array_filter(
+                    $collection->getAttribute('attributes', []),
+                    fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                );
+
+                foreach ($relationships as $relationship) {
+                    $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                    if (empty($related)) {
+                        continue;
+                    }
+                    if (!\is_array($related)) {
+                        $relations = [$related];
+                    } else {
+                        $relations = $related;
+                    }
+
+                    $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                    $relatedCollection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+
+                    foreach ($relations as $index => $doc) {
+                        if ($doc instanceof Document) {
+                            if (!$processDocument($relatedCollection, $doc)) {
+                                unset($relations[$index]);
+                            }
                         }
+                    }
+
+                    if (\is_array($related)) {
+                        $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                    } elseif (empty($relations)) {
+                        $document->setAttribute($relationship->getAttribute('key'), null);
                     }
                 }
 
-                if (\is_array($related)) {
-                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                } elseif (empty($relations)) {
-                    $document->setAttribute($relationship->getAttribute('key'), null);
+                return true;
+            };
+
+            // The linter is forcing this indentation
+            foreach ($page as $index => $document) {
+                if (!$processDocument($collection, $document)) {
+                    unset($page[$index]);
                 }
             }
 
-            return true;
+            foreach ($page as $document) {
+                if (
+                    \count($documents) === $limit
+                    || (\count($documents) == $limit && empty($documents) && !empty($offset))
+                ) {
+                    break;
+                }
+                $documents[] = $document;
+            }
+
+            if (\count($documents) !== $limit && $fullPage) {
+                foreach ($queries as $index => $query) {
+                    if ($query->getMethod() === Query::TYPE_OFFSET) {
+                        $offset = $query->getValue();
+                        unset($queries[$index]);
+                    }
+                }
+                $offset += $limit;
+                $queries[] = Query::offset($offset);
+                $loop();
+            }
         };
 
-    // The linter is forcing this indentation
-    foreach ($documents as $index => $document) {
-        if (!$processDocument($collection, $document)) {
-            unset($documents[$index]);
-
-            if ($valid) {
-                $total--;
-            }
-        }
-    }
-
-        $documents = \array_values($documents);
+        $loop();
 
         $response->dynamic(new Document([
             'total' => $total,
-            'documents' => $documents,
+            'documents' => \array_values($documents),
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 

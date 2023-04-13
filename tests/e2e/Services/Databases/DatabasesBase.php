@@ -1110,6 +1110,7 @@ trait DatabasesBase
         $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][1]));
         $this->assertFalse(array_key_exists('$internalId', $documents['body']['documents'][2]));
         $this->assertCount(3, $documents['body']['documents']);
+        $this->assertEquals(3, $documents['body']['total']);
 
         foreach ($documents['body']['documents'] as $document) {
             $this->assertEquals($data['moviesId'], $document['$collectionId']);
@@ -1129,6 +1130,7 @@ trait DatabasesBase
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
+        $this->assertEquals(3, $documents['body']['total']);
 
         return ['documents' => $documents['body']['documents'], 'databaseId' => $databaseId];
     }
@@ -1184,6 +1186,7 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertCount(0, $documents['body']['documents']);
         $this->assertEquals(0, $documents['body']['total']);
 
         return [];
@@ -1463,6 +1466,7 @@ trait DatabasesBase
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals(3, $documents['body']['total']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1475,6 +1479,64 @@ trait DatabasesBase
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2019, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
+        $this->assertEquals(3, $documents['body']['total']);
+
+        for ($i = 0; $i < 50; $i++) {
+            if ($i % 2 === 0) {
+                $permissions = [
+                    Permission::read(Role::user($this->getUser()['$id']))
+                ];
+            } else {
+                $permissions = [
+                    Permission::read(Role::user('123'))
+                ];
+            }
+
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'title' => 'Captain America ' . $i,
+                    'releaseYear' => 2020
+                ],
+                'permissions' => $permissions
+            ]);
+        }
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertCount(25, $documents['body']['documents']);
+        $this->assertEquals(28, $documents['body']['total']);
+
+        $ids = [];
+
+        foreach ($documents['body']['documents'] as $document) {
+            $ids[] = $document['$id'];
+        }
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['offset(25)'],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertCount(3, $documents['body']['documents']);
+        $this->assertEquals(28, $documents['body']['total']);
+
+        foreach ($documents['body']['documents'] as $document) {
+            $ids[] = $document['$id'];
+        }
+
+        $this->assertEquals(28, \count($ids));
 
         return [];
     }
