@@ -2743,8 +2743,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 if (empty($related)) {
                     continue;
                 }
-                if (!\is_array($related)) {
-                    $related = [$related];
+
+                if (\is_array($related) && \array_values($related) === $related) {
+                    $relations = $related;
+                } else {
+                    $relations = [$related];
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
@@ -2752,7 +2755,15 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as $relation) {
+                foreach ($relations as &$relation) {
+                    if (
+                        \is_array($related)
+                        && \array_values($related) !== $related
+                        && !isset($relation['$id'])
+                    ) {
+                        $relation['$id'] = ID::unique();
+                        $relation = new Document($relation);
+                    }
                     if ($relation instanceof Document) {
                         $current = Authorization::skip(
                             fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
@@ -2761,7 +2772,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         if ($current->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 
-                            if (!isset($relation['$id']) || $relation['$id'] === 'unique()') {
+                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
@@ -2773,6 +2784,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                         $checkPermissions($relatedCollection, $relation, $type);
                     }
+                }
+
+                if (\is_array($related) && \array_values($related) === $related) {
+                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                } else {
+                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
         };
@@ -3321,8 +3338,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 if (empty($related)) {
                     continue;
                 }
-                if (!\is_array($related)) {
-                    $related = [$related];
+
+                if (\is_array($related) && \array_values($related) === $related) {
+                    $relations = $related;
+                } else {
+                    $relations = [$related];
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
@@ -3331,6 +3351,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($related as $relation) {
+                    if (
+                        \is_array($relation)
+                        && \array_values($relation) !== $relation
+                        && !isset($relation['$id'])
+                    ) {
+                        $relation['$id'] = ID::unique();
+                        $relation = new Document($relation);
+                    }
                     if ($relation instanceof Document) {
                         $oldDocument = Authorization::skip(fn() => $dbForProject->getDocument(
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
@@ -3340,7 +3368,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         if ($oldDocument->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 
-                            if (!isset($relation['$id']) || $relation['$id'] === 'unique()') {
+                            if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
@@ -3352,6 +3380,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
                         $checkPermissions($relatedCollection, $relation, $oldDocument, $type);
                     }
+                }
+
+                if (\is_array($related) && \array_values($related) === $related) {
+                    $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
+                } else {
+                    $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
         };
