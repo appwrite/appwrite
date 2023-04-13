@@ -437,7 +437,7 @@ App::error()
                 $log->addExtra('line', $error->getLine());
                 $log->addExtra('trace', $error->getTraceAsString());
                 $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::$roles);
+                $log->addExtra('roles', Authorization::getRoles());
 
                 $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
                 $log->setAction($action);
@@ -584,27 +584,19 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge/:token')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->inject('request')
+    ->param('token', '', new Text(100, allowList: [
+        ...Text::NUMBERS,
+        ...Text::ALPHABET_LOWER,
+        ...Text::ALPHABET_UPPER,
+        '-',
+        '_'
+    ]), 'SSL verification token.')
     ->inject('response')
-    ->action(function (Request $request, Response $response) {
-        $uriChunks = \explode('/', $request->getURI());
-        $token = $uriChunks[\count($uriChunks) - 1];
-
-        $validator = new Text(100, allowList: [
-            ...Text::NUMBERS,
-            ...Text::ALPHABET_LOWER,
-            ...Text::ALPHABET_UPPER,
-            '-',
-            '_'
-        ]);
-
-        if (!$validator->isValid($token) || \count($uriChunks) !== 4) {
-            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'Invalid challenge token.');
-        }
+    ->action(function (string $token, Response $response) {
 
         $base = \realpath(APP_STORAGE_CERTIFICATES);
         $absolute = \realpath($base . '/.well-known/acme-challenge/' . $token);

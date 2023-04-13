@@ -81,7 +81,7 @@ App::post('/v1/graphql/mutation')
     ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
         $query = $request->getParams();
 
-        if ($request->getHeader('x-sdk-graphql') == 'true') {
+        if ($request->getHeader('x-sdk-graphql') === 'true') {
             $query = $query['query'];
         }
 

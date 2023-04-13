@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87de4ea3130e576470a63b21628e30fb",
+    "content-hash": "0a5009fd8aef51c8bdfcd37842d16d50",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2224,25 +2224,25 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.28.1",
+            "version": "dev-feat-routing-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "7f22c556fc5991e54e5811a68fb39809b21bda55"
+                "reference": "0d67d992ed6043cdc8b28ab0540ed66b2d1f06e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/7f22c556fc5991e54e5811a68fb39809b21bda55",
-                "reference": "7f22c556fc5991e54e5811a68fb39809b21bda55",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/0d67d992ed6043cdc8b28ab0540ed66b2d1f06e3",
+                "reference": "0d67d992ed6043cdc8b28ab0540ed66b2d1f06e3",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0.0"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpunit/phpunit": "^9.5.25",
-                "vimeo/psalm": "4.27.0"
+                "phpstan/phpstan": "1.9.x-dev",
+                "phpunit/phpunit": "^9.5.25"
             },
             "type": "library",
             "autoload": {
@@ -2262,9 +2262,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.28.1"
+                "source": "https://github.com/utopia-php/framework/tree/feat-routing-v2"
             },
-            "time": "2023-03-02T08:16:01+00:00"
+            "time": "2023-04-12T13:25:49+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5655,9 +5655,18 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-routing-v2",
+            "alias": "0.28.9",
+            "alias_normalized": "0.28.9.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
