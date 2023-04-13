@@ -1,3 +1,5 @@
+# Version 1.4.0
+- Added support for disallowing passwords that contain personal data [#5371](https://github.com/appwrite/appwrite/pull/5371)
 # Version 1.3.1
 
 ## Bugs
