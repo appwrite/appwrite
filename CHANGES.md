@@ -1,3 +1,8 @@
+# Version 1.3.2
+
+## Bugs
+- Fixed auto-setting custom ID on nested documents [#5363](https://github.com/appwrite/appwrite/pull/5363)
+
 # Version 1.3.1
 
 ## Bugs
