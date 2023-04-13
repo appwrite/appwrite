@@ -1276,6 +1276,17 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['body']['code']);
         $this->assertEquals(Exception::USER_PASSWORD_PERSONAL_DATA, $response['body']['type']);
 
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $name,
+            'name' => $name,
+            'userId' => $userId
+        ]);
+
         $phone = '+123456789';
         $response = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
             'content-type' => 'application/json',

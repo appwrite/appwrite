@@ -2,13 +2,11 @@
 
 namespace Appwrite\Auth\Validator;
 
-
 /**
  * Validates user password string against their personal data
  */
 class PersonalData extends Password
 {
-
     public function __construct(
         protected ?string $userId = null,
         protected ?string $email = null,
