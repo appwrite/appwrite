@@ -160,6 +160,16 @@ return [
         'description' => 'Passwords do not match. Please check the password and confirm password.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_RECENTLY_USED => [
+        'name' => Exception::USER_PASSWORD_RECENTLY_USED,
+        'description' => 'The password you are trying to use is similar to your previous password. Please choose a stronger password.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_PERSONAL_DATA => [
+        'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. Please choose a different password.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',

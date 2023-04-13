@@ -80,7 +80,7 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG];
+        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'disallowPersonalData' => false];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
@@ -638,7 +638,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     });
 
 App::patch('/v1/projects/:projectId/auth/disallow-personal-data')
-    ->desc('Enable or disable checking the user password against their personal data.')
+    ->desc('Enable or disable checking user passwords for similarity with their personal data.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -648,7 +648,7 @@ App::patch('/v1/projects/:projectId/auth/disallow-personal-data')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('enabled', false, new Boolean(false), 'Set whether or not to check Default is false.')
+    ->param('enabled', false, new Boolean(false), 'Set whether or not to check a password for similarity with personal data. Default is false.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {

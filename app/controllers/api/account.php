@@ -42,6 +42,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PersonalData;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -95,6 +96,13 @@ App::post('/v1/account')
 
             if ($total >= $limit) {
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+            $personalDataValidator = new PersonalData($userId, $email, $name, null);
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
 
@@ -1582,11 +1590,18 @@ App::patch('/v1/account/password')
             $history = $user->getAttribute('passwordHistory', []);
             $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
             if (!$validator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
             $history[] = $newPassword;
             array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+            $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
         }
 
         $user

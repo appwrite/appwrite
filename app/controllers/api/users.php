@@ -36,6 +36,7 @@ use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PersonalData;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $events): Document
@@ -51,6 +52,13 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         $userId = $userId == 'unique()'
             ? ID::unique()
             : ID::custom($userId);
+
+        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+            $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
 
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = $dbForProject->createDocument('users', new Document([
@@ -806,6 +814,13 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+            $personalDataValidator = new PersonalData($userId, $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -814,7 +829,7 @@ App::patch('/v1/users/:userId/password')
             $history = $user->getAttribute('passwordHistory', []);
             $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
             if (!$validator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
             $history[] = $newPassword;

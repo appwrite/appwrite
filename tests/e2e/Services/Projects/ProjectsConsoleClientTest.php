@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Extend\Exception;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
@@ -1071,7 +1072,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $headers = array_merge($this->getHeaders(), [
             'x-appwrite-mode' => 'admin',
@@ -1083,7 +1084,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
 
          /**
@@ -1230,6 +1231,115 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(false, $response['body']['authPasswordDictionary']);
 
         return $data;
+    }
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testUpdateDisallowPersonalData($data): void
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Enable Disallowing of Personal Data
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/disallow-personal-data', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(true, $response['body']['authDisallowPersonalData']);
+
+        /**
+         * Test for failure
+         */
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'username';
+        $userId = ID::unique();
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $email,
+            'name' => $name,
+            'userId' => $userId
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals(Exception::USER_PASSWORD_PERSONAL_DATA, $response['body']['type']);
+
+        $phone = '+123456789';
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'email' => $email,
+            'password' => $phone,
+            'name' => $name,
+            'userId' => $userId,
+            'phone' => $phone
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals(Exception::USER_PASSWORD_PERSONAL_DATA, $response['body']['type']);
+
+        /** Test for success */
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'username';
+        $userId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+            'userId' => $userId
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $email = uniqid() . 'user@localhost.test';
+        $userId = ID::unique();
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+            'userId' => $userId,
+            'phone' => $phone
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+
+        /**
+         * Reset
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['authPasswordDictionary']);
     }
 
 
