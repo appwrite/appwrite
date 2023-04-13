@@ -533,6 +533,7 @@ App::put('/v1/functions/:functionId')
                 Query::limit(100),
             ]);
             $vcsInstallationsId = $vcsInstallations->getId();
+            $vcsInstallationInternalId = $vcsInstallations->getInternalId();
 
             //Add document in VCS map collection
             $vcs_repos = new Document([
@@ -543,6 +544,7 @@ App::put('/v1/functions/:functionId')
                     Permission::delete(Role::any()),
                 ],
                 'vcsInstallationId' => $vcsInstallationsId,
+                'vcsInstallationInternalId' => $vcsInstallationInternalId,
                 'projectId' => $project->getId(),
                 'projectInternalId' => $projectInternalId,
                 'repositoryId' => $repositoryId,
