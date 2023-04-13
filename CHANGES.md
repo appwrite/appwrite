@@ -1,6 +1,28 @@
-# Version TBD
-- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+# Version 1.3.1
+
+## Bugs
+- Fixed Migration issue regarding 500 error [4906](https://github.com/appwrite/appwrite/pull/5356)
+
+# Version 1.3.0
+
+## Features
+- Password dictionary setting allows to compare user's password against command password database [4906](https://github.com/appwrite/appwrite/pull/4906)
+- Password history setting allows to save user's last used password so that it may not be used again.  Maximum number of history saved is 20, which can be configured. Minimum is 0 which means disabled. [#4866](https://github.com/appwrite/appwrite/pull/4866)
+- Update APIs to check X-Appwrite-Timestamp header [#5024](https://github.com/appwrite/appwrite/pull/5024)
+- Database relationships [#5238](https://github.com/appwrite/appwrite/pull/5238)
+- New query operators [#5238](https://github.com/appwrite/appwrite/pull/5238)
+- Team preferences [#5196](https://github.com/appwrite/appwrite/pull/5196)
+- Update attribute metadata [#5164](https://github.com/appwrite/appwrite/pull/5164)
+
+## Bugs
 - Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
+- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+- Fix deleting projects when organization is deleted [#5335](https://github.com/appwrite/appwrite/pull/5335)
+- Fix deleting collections from a project [#4983](https://github.com/appwrite/appwrite/pull/4983)
+- Fix cleaning up project databases [#4984](https://github.com/appwrite/appwrite/pull/4984)
+- Fix creating documents with attributes with special characters [#246](https://github.com/utopia-php/database/pull/246)
+- Fix deleting attribute not deleting metadata index [#246](https://github.com/utopia-php/database/pull/246)
+- Fix create attribute event payload [#246](https://github.com/utopia-php/database/pull/246)
 
 # Version 1.2.1
 ## Changes

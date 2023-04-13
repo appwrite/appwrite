@@ -346,6 +346,16 @@ $collections = [
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('options'),
+                'type' => Database::VAR_STRING,
+                'size' => 16384,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
         ],
         'indexes' => [
             [
@@ -1398,6 +1408,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('passwordHistory'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('password'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2016,6 +2037,17 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('prefs'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => new \stdClass(),
+                'array' => false,
+                'filters' => ['json'],
             ],
         ],
         'indexes' => [

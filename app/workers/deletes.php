@@ -58,6 +58,9 @@ class DeletesV1 extends Worker
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteMemberships($document, $project->getId());
+                        if ($project->getId() === 'console') {
+                            $this->deleteProjectsByTeam($document);
+                        }
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project->getId());
@@ -203,6 +206,21 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($projectId);
 
+        $relationships = \array_filter(
+            $document->getAttribute('attributes'),
+            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            if (!$relationship['twoWay']) {
+                continue;
+            }
+            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
+            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
+            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+        }
+
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
@@ -246,6 +264,24 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('memberships', [
             Query::equal('teamId', [$teamId])
         ], $this->getProjectDB($projectId));
+    }
+
+    /**
+     * @param \Utopia\Database\Document $document
+     * @return void
+     * @throws \Exception
+     */
+    protected function deleteProjectsByTeam(Document $document): void
+    {
+        $dbForConsole = $this->getConsoleDB();
+
+        $projects = $dbForConsole->find('projects', [
+            Query::equal('teamInternalId', [$document->getInternalId()])
+        ]);
+
+        foreach ($projects as $project) {
+            $this->deleteProject($project);
+        }
     }
 
     /**
