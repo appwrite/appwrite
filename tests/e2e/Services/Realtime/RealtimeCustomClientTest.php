@@ -1294,13 +1294,13 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($deployment['body']['$id']);
 
         // Wait for deployment to be built.
-        sleep(5);
+        sleep(10);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
+        ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']['$id']);
