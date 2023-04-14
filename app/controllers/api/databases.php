@@ -2908,7 +2908,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $skipAuth = [];
         $collections = [];
-        $getCollections = function(Document $collection) use (&$skipAuth, &$getCollections, &$dbForProject, &$database, &$collections) {
+        $getCollections = function (Document $collection) use (&$skipAuth, &$getCollections, &$dbForProject, &$database, &$collections) {
             foreach ($collection->getAttribute('attributes', []) as $attribute) {
                 if ($attribute['type'] === Database::VAR_RELATIONSHIP) {
                     $id = $attribute['options']['relatedCollection'] ?? null;
@@ -2925,48 +2925,42 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         };
 
         $getCollections($collection);
-        if (!$collection->getAttribute('documentSecurity', false)) {
-            $skipAuth[] = 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId();
-        }
+    if (!$collection->getAttribute('documentSecurity', false)) {
+        $skipAuth[] = 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId();
+    }
 
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, collectionsWithoutAuthorization: $skipAuth);
 
-        if (!$collection->getAttribute('documentSecurity', false)) {
-            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
-        } else {
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
-        }
+    if (!$collection->getAttribute('documentSecurity', false)) {
+        $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+    } else {
+        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+    }
 
-        $setMeta = function(Document $collection, Document &$document) use (&$setMeta, $collections, $database) {
+        $setMeta = function (Document $collection, Document &$document) use (&$setMeta, $collections, $database) {
             $document
                 ->setAttribute('$databaseId', $database->getId())
                 ->setAttribute('$collectionId', $collection->getId());
+
             foreach ($collection->getAttribute('attributes', []) as $attribute) {
                 if ($attribute['type'] === Database::VAR_RELATIONSHIP) {
                     $id = $attribute['options']['relatedCollection'] ?? null;
                     if ($id) {
                         if (is_array($document->getAttribute($attribute['key']))) {
-                            foreach($document->getAttribute($attribute['key']) as $nestedDocument) {
+                            foreach ($document->getAttribute($attribute['key']) as $nestedDocument) {
                                 $setMeta($collections[$id], $nestedDocument);
-                                $nestedDocument
-                                    ->setAttribute('$databaseId', $database->getId())
-                                    ->setAttribute('$collectionId', $collections[$id]->getId());
                             }
                         } else {
                             $setMeta($collections[$id], $document->getAttribute($attribute['key']));
-                            $document
-                                ->getAttribute($attribute['key'])
-                                    ->setAttribute('$databaseId', $database->getId())
-                                    ->setAttribute('$collectionId', $collections[$id]->getId());
                         }
                     }
                 }
             }
         };
 
-        foreach ($documents as &$document) {
-            $setMeta($collection, $document);
-        }
+    foreach ($documents as &$document) {
+        $setMeta($collection, $document);
+    }
 
         $response->dynamic(new Document([
             'total' => $total,
