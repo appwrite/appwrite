@@ -3339,6 +3339,26 @@ trait DatabasesBase
 
         $this->assertEquals('Library 1', $person1['body']['library']['libraryName']);
 
+        // Create without nested ID
+        $person2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $person['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'library' => [
+                    'libraryName' => 'Library 2',
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals('Library 2', $person2['body']['library']['libraryName']);
+
         // Ensure IDs were set and internal IDs removed
         $this->assertEquals($databaseId, $person1['body']['$databaseId']);
         $this->assertEquals($databaseId, $person1['body']['library']['$databaseId']);
@@ -3901,7 +3921,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, count($response['body']['documents']));
+        $this->assertEquals(2, count($response['body']['documents']));
         $this->assertEquals(null, $response['body']['documents'][0]['fullName']);
         $this->assertArrayNotHasKey("libraries", $response['body']['documents'][0]);
     }
