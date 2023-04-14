@@ -764,7 +764,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'description' => 'The minimum time a function has been inactive before it could be shut down and put to sleep. Containers are checked once every hour, and if they have been inactive for an interval longer than this threshold, they are put to sleep to free server resources. This feature intends to prevent the buildup of unused containers. Containers may remain active for longer than the interval before being put to sleep. If no value is provided, defaults to 60 seconds.',
                 'introduction' => '0.13.0',
                 'default' => '60',
                 'required' => false,
