@@ -518,17 +518,19 @@ $register->set('pools', function () {
         'user' => App::getEnv('_APP_REDIS_USER', ''),
         'pass' => App::getEnv('_APP_REDIS_PASS', ''),
     ]);
-
+    
     $connections = [
         'console' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'certificates' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE_CERTIFICATES', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'certificates' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT_CERTIFICATES', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
@@ -572,13 +574,30 @@ $register->set('pools', function () {
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
         $dsns = $connection['dsns'] ?? '';
+        $certificates = $connection['certificates'] ?? '';
         $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
         $config = [];
-        $dsns = explode(',', $connection['dsns'] ?? '');
+        $dsns = explode(',', $dsns);
+
+        $certificatesMap = [];
+        foreach (explode(',', $certificates) as $certificate) {
+            if(empty($certificate)) {
+                continue;
+            }
+
+            $certificate = explode('=', $certificate, 2);
+
+            if(\count($certificate) < 2) {
+                continue;
+            }
+
+            $certificatesMap[$certificate[0]] = $certificate[1];
+        }
 
         foreach ($dsns as &$dsn) {
-            $dsn = explode('=', $dsn);
+            $dsn = explode('=', $dsn, 2);
+            $certificate = $certificatesMap[$dsn[0]] ?? null;
             $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
@@ -611,16 +630,25 @@ $register->set('pools', function () {
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $certificate) {
+                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $certificate) {
+                            $config = array(
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                                 PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
                                 PDO::ATTR_EMULATE_PREPARES => true,
                                 PDO::ATTR_STRINGIFY_FETCHES => true
-                            ));
+                            );
+
+                            if(!empty($certificate)) {
+                                $config[PDO::MYSQL_ATTR_SSL_CA] = '';
+                            }
+
+                            $pdo = new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, $config);
+                            var_dump($pdo->query("SHOW STATUS LIKE 'Ssl_cipher';")->fetchAll());
+                            var_dump($pdo->query("SELECT 1+6;")->fetchAll());
+                            return $pdo;
                         });
                     };
                     break;
