@@ -2744,7 +2744,9 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     continue;
                 }
 
-                if (\is_array($related) && \array_values($related) === $related) {
+                $isList = \is_array($related) && \array_values($related) === $related;
+
+                if ($isList) {
                     $relations = $related;
                 } else {
                     $relations = [$related];
@@ -2786,7 +2788,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                     }
                 }
 
-                if (\is_array($related) && \array_values($related) === $related) {
+                if ($isList) {
                     $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
                 } else {
                     $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
@@ -3339,7 +3341,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     continue;
                 }
 
-                if (\is_array($related) && \array_values($related) === $related) {
+                $isList = \is_array($related) && \array_values($related) === $related;
+
+                if ($isList) {
                     $relations = $related;
                 } else {
                     $relations = [$related];
@@ -3382,7 +3386,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     }
                 }
 
-                if (\is_array($related) && \array_values($related) === $related) {
+                if ($isList) {
                     $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
                 } else {
                     $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
