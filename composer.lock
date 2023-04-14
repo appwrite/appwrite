@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87de4ea3130e576470a63b21628e30fb",
+    "content-hash": "6fa58159cbd70c765d7491a72b53b43f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2414,16 +2414,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.35.0",
+            "version": "0.35.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f162c142fd61753c4b413b15c3c4041f3cd00bb2"
+                "reference": "b5ac84e0c77145bd0a7f38718ad915729c64fa93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f162c142fd61753c4b413b15c3c4041f3cd00bb2",
-                "reference": "f162c142fd61753c4b413b15c3c4041f3cd00bb2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5ac84e0c77145bd0a7f38718ad915729c64fa93",
+                "reference": "b5ac84e0c77145bd0a7f38718ad915729c64fa93",
                 "shasum": ""
             },
             "require": {
@@ -2466,9 +2466,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.35.0"
+                "source": "https://github.com/utopia-php/database/tree/0.35.1"
             },
-            "time": "2023-04-11T04:02:22+00:00"
+            "time": "2023-04-13T04:30:08+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3159,12 +3159,11 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "e790e4bad005f426a8a9050eeaa9921b1d455b80"
+                "reference": "417f24442e43c50056c7af976b105442d2bb418c"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
-                "utopia-php/framework": "^0.26.0",
                 "vlucas/phpdotenv": "^5.5"
             },
             "require-dev": {
@@ -3203,7 +3202,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-04-11T14:48:22+00:00"
+            "time": "2023-04-14T08:14:59+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -3475,16 +3474,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.32.1",
+            "version": "0.32.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "ba1d7afd57e3baef06c04ce6abc26f79310146df"
+                "reference": "cdec289bcf38c99d0074414d2438e9967d0c9699"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ba1d7afd57e3baef06c04ce6abc26f79310146df",
-                "reference": "ba1d7afd57e3baef06c04ce6abc26f79310146df",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cdec289bcf38c99d0074414d2438e9967d0c9699",
+                "reference": "cdec289bcf38c99d0074414d2438e9967d0c9699",
                 "shasum": ""
             },
             "require": {
@@ -3520,9 +3519,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.32.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.32.2"
             },
-            "time": "2023-04-12T04:43:07+00:00"
+            "time": "2023-04-12T21:06:57+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -5928,7 +5927,14 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/vcs",
+            "version": "dev-feat-git-adapter",
+            "alias": "0.1.99",
+            "alias_normalized": "0.1.99.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/vcs": 20
