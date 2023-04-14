@@ -49,7 +49,7 @@
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.35.*",
+        "utopia-php/database": "dev-temp-security-levels as 0.35.9",
         "utopia-php/domains": "1.1.*",
         "utopia-php/framework": "0.28.*",
         "utopia-php/image": "0.5.*",

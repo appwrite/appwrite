@@ -2872,6 +2872,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
+        $documentSecurity = $collection->getAttribute('documentSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($collection->getRead());
+
+        if (!$documentSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         // Validate queries
         $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
@@ -2898,120 +2906,71 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $limit = Query::groupByType($queries)['limit'] ?? 25;
-        $offset = Query::groupByType($queries)['offset'] ?? 0;
-        $total = null;
-        $documents = [];
-
-        $loop = function () use ($filterQueries, $queries, $collection, $limit, $database, $dbForProject, &$total, &$offset, &$documents, &$loop) {
-            $page = Authorization::skip(fn() => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
-
-            $fullPage = \count($page) === $limit;
-
-            if (\is_null($total)) {
-                $documentSecurity = $collection->getAttribute('documentSecurity', false);
-                $validator = new Authorization(Database::PERMISSION_READ);
-                $valid = $validator->isValid($collection->getRead());
-                if (!$valid) {
-                    $total = $documentSecurity
-                        ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
-                        : 0;
-                } else {
-                    $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
-                }
-            }
-
-            // Add $collectionId and $databaseId for all documents
-            $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
-                $documentSecurity = $collection->getAttribute('documentSecurity', false);
-                $validator = new Authorization(Database::PERMISSION_READ);
-
-                $valid = $validator->isValid($collection->getRead());
-                if (!$documentSecurity && !$valid) {
-                    return false;
-                }
-
-                $valid = $valid || $validator->isValid($document->getRead());
-                if ($documentSecurity && !$valid) {
-                    return false;
-                }
-
-                $document->setAttribute('$databaseId', $database->getId());
-                $document->setAttribute('$collectionId', $collection->getId());
-
-                $relationships = \array_filter(
-                    $collection->getAttribute('attributes', []),
-                    fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-                );
-
-                foreach ($relationships as $relationship) {
-                    $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                    if (empty($related)) {
-                        continue;
-                    }
-                    if (!\is_array($related)) {
-                        $relations = [$related];
-                    } else {
-                        $relations = $related;
-                    }
-
-                    $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                    $relatedCollection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
-
-                    foreach ($relations as $index => $doc) {
-                        if ($doc instanceof Document) {
-                            if (!$processDocument($relatedCollection, $doc)) {
-                                unset($relations[$index]);
-                            }
+        $skipAuth = [];
+        $collections = [];
+        $getCollections = function(Document $collection) use (&$skipAuth, &$getCollections, &$dbForProject, &$database, &$collections) {
+            foreach ($collection->getAttribute('attributes', []) as $attribute) {
+                if ($attribute['type'] === Database::VAR_RELATIONSHIP) {
+                    $id = $attribute['options']['relatedCollection'] ?? null;
+                    if ($id) {
+                        $childCollection = $collections[$id] ?? Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $attribute['options']['relatedCollection']));
+                        $collections[$id] ??= $childCollection;
+                        if (!$childCollection->getAttribute('documentSecurity', false)) {
+                            $skipAuth[] = $childCollection->getId();
                         }
-                    }
-
-                    if (\is_array($related)) {
-                        $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-                    } elseif (empty($relations)) {
-                        $document->setAttribute($relationship->getAttribute('key'), null);
+                        $getCollections($childCollection);
                     }
                 }
-
-                return true;
-            };
-
-            // The linter is forcing this indentation
-            foreach ($page as $index => $document) {
-                if (!$processDocument($collection, $document)) {
-                    unset($page[$index]);
-                }
-            }
-
-            foreach ($page as $document) {
-                if (
-                    \count($documents) === $limit
-                    || (\count($documents) == $limit && empty($documents) && !empty($offset))
-                ) {
-                    break;
-                }
-                $documents[] = $document;
-            }
-
-            if (\count($documents) !== $limit && $fullPage) {
-                foreach ($queries as $index => $query) {
-                    if ($query->getMethod() === Query::TYPE_OFFSET) {
-                        $offset = $query->getValue();
-                        unset($queries[$index]);
-                    }
-                }
-                $offset += $limit;
-                $queries[] = Query::offset($offset);
-                $loop();
             }
         };
 
-        $loop();
+        $getCollections($collection);
+        if (!$collection->getAttribute('documentSecurity', false)) {
+            $skipAuth[] = 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId();
+        }
+
+        $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, collectionsWithoutAuthorization: $skipAuth);
+
+        if (!$collection->getAttribute('documentSecurity', false)) {
+            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+        } else {
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        }
+
+        $setMeta = function(Document $collection, Document &$document) use (&$setMeta, $collections, $database) {
+            $document
+                ->setAttribute('$databaseId', $database->getId())
+                ->setAttribute('$collectionId', $collection->getId());
+            foreach ($collection->getAttribute('attributes', []) as $attribute) {
+                if ($attribute['type'] === Database::VAR_RELATIONSHIP) {
+                    $id = $attribute['options']['relatedCollection'] ?? null;
+                    if ($id) {
+                        if (is_array($document->getAttribute($attribute['key']))) {
+                            foreach($document->getAttribute($attribute['key']) as $nestedDocument) {
+                                $setMeta($collections[$id], $nestedDocument);
+                                $nestedDocument
+                                    ->setAttribute('$databaseId', $database->getId())
+                                    ->setAttribute('$collectionId', $collections[$id]->getId());
+                            }
+                        } else {
+                            $setMeta($collections[$id], $document->getAttribute($attribute['key']));
+                            $document
+                                ->getAttribute($attribute['key'])
+                                    ->setAttribute('$databaseId', $database->getId())
+                                    ->setAttribute('$collectionId', $collections[$id]->getId());
+                        }
+                    }
+                }
+            }
+        };
+
+        foreach ($documents as &$document) {
+            $setMeta($collection, $document);
+        }
 
         $response->dynamic(new Document([
             'total' => $total,
-            'documents' => \array_values($documents),
+            'documents' => $documents,
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 

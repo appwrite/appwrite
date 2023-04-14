@@ -235,10 +235,9 @@ class DatabasesPermissionsMemberTest extends Scope
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collections['public'] . '/documents', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $users['user1']['session'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ]);
-
+        var_dump($documents);
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($anyCount, $documents['body']['total']);
 
