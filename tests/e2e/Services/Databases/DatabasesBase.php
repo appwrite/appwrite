@@ -1481,6 +1481,104 @@ trait DatabasesBase
         $this->assertCount(2, $documents['body']['documents']);
         $this->assertEquals(3, $documents['body']['total']);
 
+        // Create new collection
+        $songs = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Songs',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $songs['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        sleep(1);
+
+        for ($i = 0; $i < 50; $i++) {
+            if ($i % 2 === 0) {
+                $permissions = [
+                    Permission::read(Role::user($this->getUser()['$id']))
+                ];
+            } else {
+                $permissions = [
+                    Permission::read(Role::user('123'))
+                ];
+            }
+
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $songs['body']['$id'] . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'title' => 'Captain America ' . $i
+                ],
+                'permissions' => $permissions
+            ]);
+        }
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $songs['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertCount(25, $documents['body']['documents']);
+            $this->assertEquals(25, $documents['body']['total']);
+        } else {
+            $this->assertCount(25, $documents['body']['documents']);
+            $this->assertEquals(50, $documents['body']['total']);
+        }
+
+        $ids = [];
+
+        foreach ($documents['body']['documents'] as $document) {
+            $ids[] = $document['$id'];
+        }
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $songs['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['offset(25)'],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+
+        if ($this->getSide() === 'client') {
+            $this->assertCount(0, $documents['body']['documents']);
+            $this->assertEquals(25, $documents['body']['total']);
+        } else {
+            $this->assertCount(25, $documents['body']['documents']);
+            $this->assertEquals(50, $documents['body']['total']);
+        }
+
+        foreach ($documents['body']['documents'] as $document) {
+            $ids[] = $document['$id'];
+        }
+
+        if ($this->getSide() === 'client') {
+            $this->assertEquals(25, \count($ids));
+        } else {
+            $this->assertEquals(50, \count($ids));
+        }
+
         return [];
     }
 
@@ -3869,6 +3967,123 @@ trait DatabasesBase
             'sportsCollection' => $sports['body']['$id'],
             'playersCollection' => $players['body']['$id'],
         ];
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testNestedPermissionLevels(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $chickens = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'chickens',
+            'name' => 'Chickens',
+            'permissions' => [],
+            'documentSecurity' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $chickens['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(201, $chickens['headers']['status-code']);
+
+        $farmers = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'farmers',
+            'name' => 'Farmers',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $farmers['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(201, $farmers['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $farmers['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $chickens['body']['$id'],
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'twoWay' => true,
+            'key' => 'chickens',
+            'twoWayKey' => 'farmer',
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        sleep(1); // Wait for worker
+
+        $farmer = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $farmers['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'name' => 'Farmer 1',
+            ]
+        ]);
+
+        for ($i = 0; $i < 100; $i++) {
+            if ($i % 2 === 0) {
+                $permissions = [
+                    Permission::read(Role::user($this->getUser()['$id']))
+                ];
+            } else {
+                $permissions = [
+                    Permission::read(Role::user('123'))
+                ];
+            }
+
+            $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $chickens['body']['$id'] . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'Chicken ' . $i,
+                    'farmer' => $farmer['body']['$id'],
+                ],
+                'permissions' => $permissions
+            ]);
+        }
+
+        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $farmers['body']['$id'] . '/documents/' . $farmer['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals(50, count($document['body']['chickens']));
     }
 
     /**
