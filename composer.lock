@@ -2116,12 +2116,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "77e3d42cf97f1b399a49fd55094944b96b6a1602"
+                "reference": "0fa62bbb23ce2f189c17527fa5eab003e814d673"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/77e3d42cf97f1b399a49fd55094944b96b6a1602",
-                "reference": "77e3d42cf97f1b399a49fd55094944b96b6a1602",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0fa62bbb23ce2f189c17527fa5eab003e814d673",
+                "reference": "0fa62bbb23ce2f189c17527fa5eab003e814d673",
                 "shasum": ""
             },
             "require": {
@@ -2166,7 +2166,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/temp-security-levels"
             },
-            "time": "2023-04-14T01:01:20+00:00"
+            "time": "2023-04-14T07:52:40+00:00"
         },
         {
             "name": "utopia-php/domains",
