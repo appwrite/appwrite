@@ -551,7 +551,7 @@ class VideosV1 extends Worker
             '-force_key_frames', 'expr:gte(t,n_forced*2)' //enforce strict key frame
         ];
 
-        $segmentSize = 4;
+        $segmentSize = 8;
         if ($this->args['output'] === self::OUTPUT_DASH) {
                $media->dash()
                 ->setFormat($format)
