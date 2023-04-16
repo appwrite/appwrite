@@ -523,12 +523,14 @@ $register->set('pools', function () {
         'console' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
+            'certificates' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE_CERTIFICATES', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
+            'certificates' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT_CERTIFICATES', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],
@@ -577,8 +579,25 @@ $register->set('pools', function () {
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
 
+        $certificates = $connection['certificates'] ?? '';
+        $certificatesMap = [];
+        foreach (explode(',', $certificates) as $certificate) {
+            if(empty($certificate)) {
+                continue;
+            }
+
+            $certificate = explode('=', $certificate, 2);
+
+            if(\count($certificate) < 2) {
+                continue;
+            }
+
+            $certificatesMap[$certificate[0]] = $certificate[1];
+        }
+
         foreach ($dsns as &$dsn) {
-            $dsn = explode('=', $dsn);
+            $dsn = explode('=', $dsn, 2);
+            $certificate = $certificatesMap[$dsn[0]] ?? null;
             $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
@@ -611,16 +630,28 @@ $register->set('pools', function () {
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                    $resource = function () use ($name, $dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $certificate) {
+                        return new PDOProxy(function () use ($name, $dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase, $certificate) {
+                            $config = array(
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                                 PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
                                 PDO::ATTR_EMULATE_PREPARES => true,
                                 PDO::ATTR_STRINGIFY_FETCHES => true
-                            ));
+                            );
+
+                            if(!empty($certificate)) {
+                                $path = '/tmp/' . $name . '.cert';
+                                if(!\file_exists($path)) {
+                                    \file_put_contents($path, \str_replace('\n', "\n", $certificate));
+                                }
+
+                                $config[PDO::MYSQL_ATTR_SSL_CA] = $path;
+                            }
+
+                            $pdo = new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, $config);
+                            return $pdo;
                         });
                     };
                     break;
