@@ -826,6 +826,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
     ->inject('mode')
     ->action(function (string $videoId, string $output, Response $response, Database $dbForProject, string $mode) {
 
+        $dbStartTime = microtime(true);
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
         if ($video->isEmpty()) {
@@ -850,6 +851,9 @@ App::get('/v1/videos/:videoId/outputs/:output')
             Query::equal('status', ['ready']),
         ]));
 
+        $dbEnd        =  microtime(true) - $dbStartTime;
+        var_dump('$dbEnd = ' . $dbEnd);
+        $prosessStart = microtime(true);
         $_renditions = $_subtitles  = [];
 
         if ($output === 'hls') {
@@ -903,6 +907,10 @@ App::get('/v1/videos/:videoId/outputs/:output')
                 ->setContentType('application/x-mpegurl')
                 ->send($template->render(false))
             ;
+//            $prosessEnd =  microtime(true) - $prosessStart;
+//            var_dump('$dbEnd = ' . $dbEnd);
+//            var_dump('$prosessEnd = ' . $prosessEnd);
+
         } else {
             $adaptationId = 0;
             foreach ($renditions as $rendition) {

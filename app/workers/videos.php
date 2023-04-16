@@ -551,8 +551,7 @@ class VideosV1 extends Worker
             '-force_key_frames', 'expr:gte(t,n_forced*2)' //enforce strict key frame
         ];
 
-        $segmentSize = 10;
-
+        $segmentSize = 4;
         if ($this->args['output'] === self::OUTPUT_DASH) {
                $media->dash()
                 ->setFormat($format)
@@ -564,7 +563,6 @@ class VideosV1 extends Worker
         }
 
         $hls = $media->hls();
-
         foreach ($subtitles as $subtitle) {
             $sub = new HLSSubtitle($subtitle['path'], $subtitle['name'], $subtitle['code']);
             $sub->default();
@@ -573,7 +571,6 @@ class VideosV1 extends Worker
 
         $hls->setFormat($format)
             ->setHlsTime($segmentSize)
-            ->setHlsAllowCache(false)
             ->addRepresentation($representation)
             ->setAdditionalParams($additionalParams)
             ->save($this->outPath);
