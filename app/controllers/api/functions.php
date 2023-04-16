@@ -42,7 +42,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -68,14 +67,14 @@ App::post('/v1/functions')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
-    ->param('installationId', '', new Text(128), 'Installation ID of the GitHub App', true)
-    ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, string $installationId, string $repositoryId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        // TODO: Add support to link to GitHub repos from createFunction as well?
 
         $cron = !empty($schedule) ? new CronExpression($schedule) : null;
         $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
@@ -85,8 +84,6 @@ App::post('/v1/functions')
             '$id' => $functionId,
             'execute' => $execute,
             'enabled' => $enabled,
-            'installationId' => $installationId,
-            'repositoryId' => $repositoryId,
             'name' => $name,
             'runtime' => $runtime,
             'deployment' => '',
@@ -448,7 +445,7 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
-    ->param('installationId', '', new Text(128), 'Installation ID of the GitHub App', true)
+    ->param('vcsInstallationId', '', new Text(128), 'Installation ID from vcs_installations collection', true)
     ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -456,7 +453,7 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, string $installationId, string $repositoryId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, string $vcsInstallationId, string $repositoryId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $eventsInstance) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -469,11 +466,55 @@ App::put('/v1/functions/:functionId')
 
         $enabled ??= $function->getAttribute('enabled', true);
 
+        $vcsRepoId = null;
         $needToDeploy = false;
         //if repo id was previously empty and non empty now, we need to create a new deployment for this function
         $prevRepositoryId = $function->getAttribute('repositoryId');
-        if ($prevRepositoryId == "" && $repositoryId != "") {
+        if ($prevRepositoryId === "" && $repositoryId !== "") {
             $needToDeploy = true;
+        }
+
+        // activate the deployment for first run of a VCS repo
+        if ($needToDeploy) {
+            $deploymentId = ID::unique();
+            $entrypoint = 'index.js'; //TODO: Read from function settings
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+            //Add document in VCS repos collection
+            $vcs_repos = new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'vcsInstallationId' => $vcsInstallationId,
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'repositoryId' => $repositoryId,
+                'resourceId' => $functionId,
+                'resourceType' => "function"
+            ]);
+
+            $vcs_repos = $dbForConsole->createDocument('vcs_repos', $vcs_repos);
+            $vcsRepoId = $vcs_repos->getId();
+
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $function->getId(),
+                'resourceType' => 'functions',
+                'entrypoint' => $entrypoint,
+                'type' => "vcs",
+                'vcsRepoId' => $vcsRepoId,
+                'branch' => "master",
+                'search' => implode(' ', [$deploymentId, $entrypoint]),
+                'activate' => true,
+            ]));
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -485,8 +526,7 @@ App::put('/v1/functions/:functionId')
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
-            'installationId' => $installationId,
-            'repositoryId' => $repositoryId,
+            'vcsRepoId' => $vcsRepoId,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -503,80 +543,16 @@ App::put('/v1/functions/:functionId')
 
         $eventsInstance->setParam('functionId', $function->getId());
 
-        // activate the deployment for first run of a VCS repo
         if ($needToDeploy) {
-            $deploymentId = ID::unique();
-            $entrypoint = 'index.js'; //TODO: Read from function settings
-            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-            $projectInternalId = $project->getInternalId();
+            $buildEvent = new Build();
+            $buildEvent
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setProject($project)
+                ->trigger();
 
-            $vcs_installations = $dbForConsole->findOne('vcs_installations', [
-                Query::equal('projectInternalId', [$projectInternalId])
-              ]);
-            $installationId = $vcs_installations->getAttribute('installationId');
-
-            var_dump($installationId);
-
-            //TODO: Update GitHub Username in constructor
-            $github = new GitHub();
-            $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
-            $branchName = "main";
-            $code = $github->generateGitCloneCommand($repositoryId, $branchName);
-
-            $vcsInstallations = $dbForConsole->findOne('vcs_installations', [
-                Query::equal('projectId', [$project->getId()]),
-                Query::equal('provider', ["GitHub"]),
-                Query::limit(100),
-            ]);
-            $vcsInstallationsId = $vcsInstallations->getId();
-            $vcsInstallationInternalId = $vcsInstallations->getInternalId();
-
-            //Add document in VCS map collection
-            $vcs_repos = new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'vcsInstallationId' => $vcsInstallationsId,
-                'vcsInstallationInternalId' => $vcsInstallationInternalId,
-                'projectId' => $project->getId(),
-                'projectInternalId' => $projectInternalId,
-                'repositoryId' => $repositoryId,
-                'provider' => "GitHub",
-                'resourceId' => $functionId,
-                'resourceType' => "function"
-            ]);
-
-            $vcs_repos = $dbForConsole->createDocument('vcs_repos', $vcs_repos);
-
-            $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$id' => $deploymentId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'resourceId' => $function->getId(),
-                'resourceType' => 'functions',
-                'entrypoint' => $entrypoint,
-                'path' => $code,
-                'search' => implode(' ', [$deploymentId, $entrypoint]),
-                'activate' => true,
-                ]));
-
-                $buildEvent = new Build();
-                $buildEvent
-                    ->setType(BUILD_TYPE_DEPLOYMENT)
-                    ->setResource($function)
-                    ->setDeployment($deployment)
-                    ->setProject($project)
-                    ->trigger();
-
-                //TODO: Add event?
+            //TODO: Add event?
         }
 
         $response->dynamic($function, Response::MODEL_FUNCTION);

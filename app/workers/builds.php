@@ -16,10 +16,8 @@ use Utopia\Storage\Storage;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Query;
-use Utopia\Storage\Validator\File;
-use Utopia\Storage\Validator\FileExt;
-use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\Upload;
+use Utopia\Database\Validator\Authorization;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 require_once __DIR__ . '/../init.php';
 
@@ -64,6 +62,7 @@ class BuildsV1 extends Worker
     protected function buildDeployment(Document $project, Document $function, Document $deployment)
     {
         $dbForProject = $this->getProjectDB($project->getId());
+        $dbForConsole = $this->getConsoleDB();
 
         $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {
@@ -87,9 +86,26 @@ class BuildsV1 extends Worker
         if (empty($buildId)) {
             $buildId = ID::unique();
 
-            $isVcsEnabled = true; //TODO: Update the value dynamically
+            $vcsRepoId = $deployment->getAttribute('vcsRepoId');
+            $isVcsEnabled = $vcsRepoId !== null ? true : false;
             if ($isVcsEnabled) {
-                $gitCloneCommand = $deployment->getAttribute('path'); //TODO: If clone doesn't work for org, check $user in clone command
+                // fetch GitHub installation Id
+                $vcsRepos = Authorization::skip(fn () => $dbForConsole
+                    ->getDocument('vcs_repos', $vcsRepoId));
+                $vcsInstallationsId = $vcsRepos->getAtttribute('vcsInstallationsId');
+                $repositoryId = $vcsRepos->getAttribute('repositoryId');
+                $vcsInstallations = Authorization::skip(fn () => $dbForConsole
+                    ->getDocument('vcs_installations', $vcsInstallationsId));
+                $installationId = $vcsInstallations->getAttribute('installationId');
+
+                $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+                $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+
+                $github = new GitHub();
+                $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo'); //TODO: Update GitHub Username
+                $branchName = "main";
+                $gitCloneCommand = $github->generateGitCloneCommand($repositoryId, $branchName);
+                var_dump($gitCloneCommand);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -111,9 +127,7 @@ class BuildsV1 extends Worker
                 }
 
                 Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
-            }
 
-            if ($isVcsEnabled) {
                 $build = $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$permissions' => [],
