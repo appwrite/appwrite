@@ -40,6 +40,12 @@ class Team extends Model
                 'default' => 0,
                 'example' => 7,
             ])
+            ->addRule('prefs', [
+                'type' => Response::MODEL_PREFERENCES,
+                'description' => 'Team preferences as a key-value object',
+                'default' => new \stdClass(),
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
+            ])
         ;
     }
 

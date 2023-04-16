@@ -77,8 +77,11 @@ App::post('/v1/account/create')
 * sdk.namespace - Refers to the route namespace.
 * sdk.method - Refers to the sdk method that needs to called.
 * sdk.description - Description of the route, using markdown format.
-* sdk.sdk.response.code - Refers to the route http response status code expected.
+* sdk.response.code - Refers to the route http response status code expected.
 * sdk.auth.response.model - Refers the route http response expected.
+* sdk.offline.model - Refers to the local collection where offline data should be stored. No value indicates the data will not be cached
+* sdk.offline.key - Refers to the ID of the local data
+* sdk.offline.response.key - JSON property name that has the ID. Defaults to $id
 
 ```php
 App::post('/v1/account/jwt')
@@ -154,7 +157,7 @@ As the name implies, `param()` is used to define a request parameter.
 
 ```php
 App::get('/v1/account/logs')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
 ```
 
 ### 6. inject

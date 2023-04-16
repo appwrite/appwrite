@@ -30,6 +30,7 @@ use Appwrite\Utopia\Response\Model\AttributeEnum;
 use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeDatetime;
+use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
@@ -44,6 +45,7 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\Build;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Bucket;
+use Appwrite\Utopia\Response\Model\ConsoleVariables;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Index;
 use Appwrite\Utopia\Response\Model\JWT;
@@ -138,6 +140,7 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_IP = 'attributeIp';
     public const MODEL_ATTRIBUTE_URL = 'attributeUrl';
     public const MODEL_ATTRIBUTE_DATETIME = 'attributeDatetime';
+    public const MODEL_ATTRIBUTE_RELATIONSHIP = 'attributeRelationship';
 
     // Users
     public const MODEL_ACCOUNT = 'account';
@@ -218,6 +221,9 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+
+    // Console
+    public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
 
     // Transfers
     public const MODEL_TRANSFER = 'transfer';
@@ -308,6 +314,7 @@ class Response extends SwooleResponse
             ->setModel(new AttributeIP())
             ->setModel(new AttributeURL())
             ->setModel(new AttributeDatetime())
+            ->setModel(new AttributeRelationship())
             ->setModel(new Index())
             ->setModel(new ModelDocument())
             ->setModel(new Log())
@@ -361,6 +368,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new ConsoleVariables())
             ->setModel(new Transfer())
             ->setModel(new Destination())
             ->setModel(new DestinationValidation())
