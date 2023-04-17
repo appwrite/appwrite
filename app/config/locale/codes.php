@@ -79,12 +79,32 @@ return [
         "name" => "Arabic (Yemen)",
     ],
     [
+        "code" => "as",
+        "name" => "Assamese",
+    ],
+    [
+        "code" => "az",
+        "name" => "Azerbaijani",
+    ],
+    [
         "code" => "be",
         "name" => "Belarusian",
     ],
     [
         "code" => "bg",
         "name" => "Bulgarian",
+    ],
+    [
+        "code" => "bh",
+        "name" => "Bihari",
+    ],
+    [
+        "code" => "bn",
+        "name" => "Bengali",
+    ],
+    [
+        "code" => "bs",
+        "name" => "Bosnian",
     ],
     [
         "code" => "ca",
@@ -169,6 +189,10 @@ return [
     [
         "code" => "en-za",
         "name" => "English (South Africa)",
+    ],
+    [
+        "code" => "eo",
+        "name" => "Esperanto",
     ],
     [
         "code" => "es",
@@ -373,6 +397,10 @@ return [
     [
         "code" => "nb",
         "name" => "Norwegian (Bokmål)",
+    ],
+    [
+        "code" => "ne",
+        "name" => "Nepali",
     ],
     [
         "code" => "nl",
