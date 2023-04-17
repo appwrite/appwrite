@@ -619,7 +619,7 @@ services:
     command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.0.10-alpine
     container_name: appwrite-redis
     <<: *x-logging
     restart: unless-stopped

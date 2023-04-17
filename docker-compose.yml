@@ -690,7 +690,7 @@ services:
   #     - SMARTHOST_PORT=587
   
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.0.10-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >
