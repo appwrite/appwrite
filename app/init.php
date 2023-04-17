@@ -1040,6 +1040,11 @@ App::setResource('console', function () {
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authProviders' => [
+            'githubEnabled' => true,
+            'githubSecret' => '41d6e1ff2b0f9e63086e9901edea63f068bd55e6',
+            'githubAppid' => 'Iv1.4de83b7908eb1e0d'
+        ],
     ]);
 }, []);
 
