@@ -24,7 +24,9 @@ App::get('/v1/locale')
     ->inject('request')
     ->inject('response')
     ->inject('locale')
+    ->inject('geodb')
     ->action(function (Request $request, Response $response, Locale $locale, Reader $geodb) {
+        var_dump($locale);
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
         $output = [];
