@@ -6,7 +6,6 @@ return [
         'magicSession',
         'recovery',
         'invitation',
-        'certificate'
     ],
     'sms' => [
         'verification',
