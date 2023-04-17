@@ -2,7 +2,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.9
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG

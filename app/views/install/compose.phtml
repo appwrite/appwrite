@@ -15,7 +15,7 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.9
     container_name: appwrite-traefik
     <<: *x-logging
     command:
