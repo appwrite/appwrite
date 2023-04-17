@@ -664,15 +664,15 @@ Locale::$exceptions = false;
 
 $locales = Config::getParam('locale-codes', []);
 
-foreach($locales as $locale) {
+foreach ($locales as $locale) {
     $code = $locale['code'];
     $path = __DIR__ . '/config/locale/translations/' . $code . '.json';
 
-    if(!\file_exists($path)) {
+    if (!\file_exists($path)) {
         $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json';
     }
 
-    if(\file_exists($path)) {
+    if (\file_exists($path)) {
         Locale::setLanguageFromJSON($code, $path);
     }
 }
@@ -702,7 +702,7 @@ App::setResource('register', fn() => $register);
 
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
-App::setResource('localeCodes', function() {
+App::setResource('localeCodes', function () {
     return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
