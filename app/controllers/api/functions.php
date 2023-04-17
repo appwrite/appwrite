@@ -469,8 +469,8 @@ App::put('/v1/functions/:functionId')
         $vcsRepoId = null;
         $needToDeploy = false;
         //if repo id was previously empty and non empty now, we need to create a new deployment for this function
-        $prevRepositoryId = $function->getAttribute('repositoryId');
-        if ($prevRepositoryId === "" && $repositoryId !== "") {
+        $prevVcsRepoId = $function->getAttribute('vcsRepoId');
+        if ($prevVcsRepoId === null && $repositoryId !== "") {
             $needToDeploy = true;
         }
 
@@ -510,8 +510,9 @@ App::put('/v1/functions/:functionId')
                 'resourceType' => 'functions',
                 'entrypoint' => $entrypoint,
                 'type' => "vcs",
+                'vcsInstallationId' => $vcsInstallationId,
                 'vcsRepoId' => $vcsRepoId,
-                'branch' => "master",
+                'branch' => "main",
                 'search' => implode(' ', [$deploymentId, $entrypoint]),
                 'activate' => true,
             ]));
@@ -526,6 +527,7 @@ App::put('/v1/functions/:functionId')
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
+            'vcsInstallationId' => $vcsInstallationId,
             'vcsRepoId' => $vcsRepoId,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));

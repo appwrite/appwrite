@@ -2274,6 +2274,16 @@ $collections = [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('vcsInstallationId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 2048,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('vcsRepoId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
@@ -2417,6 +2427,13 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
+                '$id' => ID::custom('_key_vcsInstallationId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['vcsInstallationId'],
+                'lengths' => [768],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
                 '$id' => ID::custom('_key_vcsRepoId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['vcsRepoId'],
@@ -2538,6 +2555,16 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('vcsInstallationId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 2048,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
             ],
             [
                 '$id' => ID::custom('vcsRepoId'),

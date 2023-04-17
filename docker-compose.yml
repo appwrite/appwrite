@@ -397,6 +397,8 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_GITHUB_PRIVATE_KEY
       - _APP_GITHUB_APP_ID
+      - VCS_GITHUB_PRIVATE_KEY
+      - VCS_GITHUB_APP_ID
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates

@@ -85,7 +85,7 @@ App::get('/v1/vcs/github/incominginstallation')
             ->redirect("http://localhost:3000/console/project-$state/settings");
     });
 
-App::get('v1/vcs/github/installations/:installationId/repositories')
+App::get('v1/vcs/github/installations/:vcsInstallationId/repositories')
     ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -95,9 +95,14 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
-    ->param('installationId', '', new Text(256), 'GitHub App Installation ID')
+    ->param('vcsInstallationId', '', new Text(256), 'VCS Installation Id')
     ->inject('response')
-    ->action(function (string $installationId, Response $response) {
+    ->inject('dbForConsole')
+    ->action(function (string $vcsInstallationId, Response $response, Database $dbForConsole) {
+        $vcsInstallations = Authorization::skip(fn () => $dbForConsole
+            ->getDocument('vcs_installations', $vcsInstallationId));
+        $installationId = $vcsInstallations->getAttribute('installationId');
+
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
         //TODO: Update GitHub Username
@@ -153,10 +158,8 @@ App::post('/v1/vcs/github/incomingwebhook')
                         $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
                         $deploymentId = ID::unique();
                         $entrypoint = 'index.js'; //TODO: Read from function settings
-                        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
-                        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-                        $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
-                        $code = $github->generateGitCloneCommand($repositoryId, $branchName);
+                        $vcsRepoId = $resource->getId();
+                        $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
                         $activate = false;
 
                         if ($branchName == "main") {
@@ -173,7 +176,10 @@ App::post('/v1/vcs/github/incomingwebhook')
                             'resourceId' => $functionId,
                             'resourceType' => 'functions',
                             'entrypoint' => $entrypoint,
-                            'path' => $code,
+                            'type' => "vcs",
+                            'vcsInstallationId' => $vcsInstallationId,
+                            'vcsRepoId' => $vcsRepoId,
+                            'branch' => $branchName,
                             'search' => implode(' ', [$deploymentId, $entrypoint]),
                             'activate' => $activate,
                         ]));

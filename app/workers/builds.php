@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Cron\CronExpression;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
+use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\App;
@@ -86,16 +87,16 @@ class BuildsV1 extends Worker
         if (empty($buildId)) {
             $buildId = ID::unique();
 
+            $vcsInstallationId = $deployment->getAttribute('vcsInstallationId');
             $vcsRepoId = $deployment->getAttribute('vcsRepoId');
             $isVcsEnabled = $vcsRepoId !== null ? true : false;
+
             if ($isVcsEnabled) {
-                // fetch GitHub installation Id
                 $vcsRepos = Authorization::skip(fn () => $dbForConsole
                     ->getDocument('vcs_repos', $vcsRepoId));
-                $vcsInstallationsId = $vcsRepos->getAtttribute('vcsInstallationsId');
                 $repositoryId = $vcsRepos->getAttribute('repositoryId');
                 $vcsInstallations = Authorization::skip(fn () => $dbForConsole
-                    ->getDocument('vcs_installations', $vcsInstallationsId));
+                    ->getDocument('vcs_installations', $vcsInstallationId));
                 $installationId = $vcsInstallations->getAttribute('installationId');
 
                 $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
@@ -103,9 +104,8 @@ class BuildsV1 extends Worker
 
                 $github = new GitHub();
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo'); //TODO: Update GitHub Username
-                $branchName = "main";
+                $branchName = $deployment->getAttribute('branch');
                 $gitCloneCommand = $github->generateGitCloneCommand($repositoryId, $branchName);
-                var_dump($gitCloneCommand);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -166,7 +166,6 @@ class BuildsV1 extends Worker
             $build = $dbForProject->getDocument('builds', $buildId);
         }
 
-        var_dump($build);
         /** Request the executor to build the code... */
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
