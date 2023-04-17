@@ -75,7 +75,7 @@
         "captioning/captioning": "2.*",
         "ext-simplexml": "*",
         "webonyx/graphql-php": "14.11.*",
-        "mhor/php-mediainfo": "5.4.3",
+        "mhor/php-mediainfo": "5.4.3"
     },
     "repositories": [
         {

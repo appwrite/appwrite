@@ -243,11 +243,11 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-videos:/storage/videos:rw
       #- ./tests:/usr/src/code/tests #TODO remove when done!!
-      - ./vendor/aminyazdanpanah/php-ffmpeg-video-streaming:/usr/src/code/vendor/aminyazdanpanah/php-ffmpeg-video-streaming #TODO remove when done!!
-      - ./vendor/php-ffmpeg/php-ffmpeg:/usr/src/code/vendor/php-ffmpeg/php-ffmpeg #TODO remove when done!!
-      - ./vendor/alchemy/binary-driver:/usr/src/code/vendor/alchemy/binary-driver
+      #- ./vendor/aminyazdanpanah/php-ffmpeg-video-streaming:/usr/src/code/vendor/aminyazdanpanah/php-ffmpeg-video-streaming #TODO remove when done!!
+      #- ./vendor/php-ffmpeg/php-ffmpeg:/usr/src/code/vendor/php-ffmpeg/php-ffmpeg #TODO remove when done!!
+      #- ./vendor/alchemy/binary-driver:/usr/src/code/vendor/alchemy/binary-driver
       - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
-      - ./vendor/symfony/process:/usr/src/code/vendor/symfony/process
+      #- ./vendor/symfony/process:/usr/src/code/vendor/symfony/process
 
     depends_on:
       - redis
