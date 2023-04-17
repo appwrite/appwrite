@@ -49,9 +49,10 @@ App::init()
     ->inject('dbForConsole')
     ->inject('user')
     ->inject('locale')
+    ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
         /*
         * Request format
         */
@@ -135,7 +136,7 @@ App::init()
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
-        if (\in_array($localeParam, Config::getParam('locale-codes'))) {
+        if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
 

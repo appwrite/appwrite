@@ -73,6 +73,7 @@ use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
+use Appwrite\Utopia\Response\Model\LocaleCode;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
@@ -165,6 +166,8 @@ class Response extends SwooleResponse
 
     // Locale
     public const MODEL_LOCALE = 'locale';
+    public const MODEL_LOCALE_CODE = 'localeCode';
+    public const MODEL_LOCALE_CODE_LIST = 'localeCodeList';
     public const MODEL_COUNTRY = 'country';
     public const MODEL_COUNTRY_LIST = 'countryList';
     public const MODEL_CONTINENT = 'continent';
@@ -284,6 +287,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+            ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -316,6 +320,7 @@ class Response extends SwooleResponse
             ->setModel(new Token())
             ->setModel(new JWT())
             ->setModel(new Locale())
+            ->setModel(new LocaleCode())
             ->setModel(new File())
             ->setModel(new Bucket())
             ->setModel(new Team())
