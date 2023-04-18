@@ -50,7 +50,7 @@
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.35.*",
-        "utopia-php/domains": "1.1.*",
+        "utopia-php/domains": "0.3.*",
         "utopia-php/framework": "0.28.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/locale": "0.4.*",
