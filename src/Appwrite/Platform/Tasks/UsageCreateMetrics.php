@@ -13,7 +13,7 @@ use Utopia\Database\Validator\Authorization;
  * 1. docker compose exec -t appwrite usage-update-metrics
  * 2. docker compose exec -t appwrite usage-create-metrics
  * 3. docker compose exec -t appwrite usage-update-metrics commit=true
- **. docker compose exec -t appwrite usage-update-metrics rollback=true (in case somthing went wrong)
+ ** docker compose exec -t appwrite usage-update-metrics rollback=true (in case somthing went wrong)**
  */
 
 class UsageCreateMetrics extends Action
@@ -155,8 +155,8 @@ class UsageCreateMetrics extends Action
                         $filesCountPerProject++;
                     }
 
-                    createInfMetric($dbForProject, $bucket->getInternalId() . '.files.storage', $filesStoragePerProject);
-                    createInfMetric($dbForProject, $bucket->getInternalId() . '.files', $filesCountPerProject);
+                    createInfMetric($dbForProject, $bucket->getInternalId() . '.files.storage', $filesStorage);
+                    createInfMetric($dbForProject, $bucket->getInternalId() . '.files', $filesCount);
                     $bucketsCountPerProject++;
                 }
                 createInfMetric($dbForProject, 'files.storage', $filesStoragePerProject);
