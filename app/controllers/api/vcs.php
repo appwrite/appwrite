@@ -48,14 +48,8 @@ App::get('/v1/vcs/github/incominginstallation')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $setup_action, string $state, Response $response, Database $dbForConsole) {
-        //TODO: Fix the flow for updating GitHub installation
 
-        var_dump("hello1");
         $project = $dbForConsole->getDocument('projects', $state);
-
-        var_dump($project);
-
-        var_dump($state);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
@@ -63,23 +57,28 @@ App::get('/v1/vcs/github/incominginstallation')
 
         $projectInternalId = $project->getInternalId();
 
-        $github = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'installationId' => $installationId,
-            'projectId' => $state,
-            'projectInternalId' => $projectInternalId,
-            'provider' => "GitHub",
-            'accessToken' => null
+        $vcsInstallation = $dbForConsole->findOne('vcs_installations', [
+            Query::equal('installationId', [$installationId]),
+            Query::equal('projectInternalId', [$projectInternalId])
         ]);
 
-        $github = $dbForConsole->createDocument('vcs_installations', $github);
-
-        var_dump("hello");
+        if (!$vcsInstallation) {
+            $github = new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'installationId' => $installationId,
+                'projectId' => $state,
+                'projectInternalId' => $projectInternalId,
+                'provider' => "GitHub",
+                'accessToken' => null
+            ]);
+    
+            $github = $dbForConsole->createDocument('vcs_installations', $github);
+        }
 
         $response
             ->redirect("http://localhost:3000/console/project-$state/settings");
@@ -217,6 +216,9 @@ App::post('/v1/vcs/github/incomingwebhook')
                 }
             } else if ($event == $github::EVENT_PULL_REQUEST) {
                 // find last push to this branch
+                // find vcsRepoId using repoId
+                // find deploymentId using vcsRepoId
+                // find build status using deploymentId
             }
 
             $response->json($parsedPayload);
