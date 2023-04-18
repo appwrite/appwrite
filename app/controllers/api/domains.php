@@ -22,9 +22,9 @@ App::init()
   ->groups(['projects'])
   ->inject('project')
   ->action(function (Document $project) {
-      if ($project->getId() !== 'console') {
-          throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
-      }
+    if ($project->getId() !== 'console') {
+        throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+    }
   });
 
 App::post('/v1/domains/suggest')
@@ -91,24 +91,24 @@ App::post('/v1/domains')
       Database $dbForConsole,
       Registrar $registrar
   ) {
-      if (! $registrar->available($domain)) {
-          throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
-      }
+    if (! $registrar->available($domain)) {
+        throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
+    }
 
       $project = $dbForConsole->getDocument('projects', $projectId);
 
-      if ($project->isEmpty()) {
-          throw new Exception(Exception::PROJECT_NOT_FOUND);
-      }
+    if ($project->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
 
       $document = $dbForConsole->findOne('domains', [
           Query::equal('domain', [$domain]),
           Query::equal('projectInternalId', [$project->getInternalId()]),
       ]);
 
-      if ($document && ! $document->isEmpty()) {
-          throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
-      }
+    if ($document && ! $document->isEmpty()) {
+        throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
+    }
 
       $domain = new Domain($domain);
 
@@ -184,9 +184,9 @@ App::post('/v1/domains/purchase')
       Database $dbForConsole,
       Registrar $registrar
   ) {
-      if (! $registrar->available($domain)) {
-          throw new Exception();
-      }
+    if (! $registrar->available($domain)) {
+        throw new Exception();
+    }
 
       $contact = new Contact(
           $firstname,
@@ -204,26 +204,26 @@ App::post('/v1/domains/purchase')
           ''
       );
 
-      try {
-          $registrar->purchase($domain, [$contact]);
-      } catch (Exception $e) {
-          throw new Exception();
-      }
+    try {
+        $registrar->purchase($domain, [$contact]);
+    } catch (Exception $e) {
+        throw new Exception();
+    }
 
       $project = $dbForConsole->getDocument('projects', $projectId);
 
-      if ($project->isEmpty()) {
-          throw new Exception(Exception::PROJECT_NOT_FOUND);
-      }
+    if ($project->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
 
       $document = $dbForConsole->findOne('domains', [
           Query::equal('domain', [$domain]),
           Query::equal('projectInternalId', [$project->getInternalId()]),
       ]);
 
-      if ($document && ! $document->isEmpty()) {
-          throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
-      }
+    if ($document && ! $document->isEmpty()) {
+        throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
+    }
 
       $domain = new Domain($domain);
 
@@ -315,26 +315,26 @@ App::post('/v1/domains/transfer/in')
           ''
       );
 
-      try {
-          $registrar->transfer($domain, [$contact]);
-      } catch (Exception $e) {
-          throw new Exception();
-      }
+    try {
+        $registrar->transfer($domain, [$contact]);
+    } catch (Exception $e) {
+        throw new Exception();
+    }
 
       $project = $dbForConsole->getDocument('projects', $projectId);
 
-      if ($project->isEmpty()) {
-          throw new Exception(Exception::PROJECT_NOT_FOUND);
-      }
+    if ($project->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
 
       $document = $dbForConsole->findOne('domains', [
           Query::equal('domain', [$domain]),
           Query::equal('projectInternalId', [$project->getInternalId()]),
       ]);
 
-      if ($document && ! $document->isEmpty()) {
-          throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
-      }
+    if ($document && ! $document->isEmpty()) {
+        throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
+    }
 
       $domain = new Domain($domain);
 
@@ -396,9 +396,9 @@ App::get('/v1/domains')
   ->action(function (string $projectId, Response $response, Database $dbForConsole) {
       $project = $dbForConsole->getDocument('projects', $projectId);
 
-      if ($project->isEmpty()) {
-          throw new Exception(Exception::PROJECT_NOT_FOUND);
-      }
+    if ($project->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
 
       $domains = $dbForConsole->find('domains', [
           Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -428,18 +428,18 @@ App::get('/v1/domains/:domainId')
   ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
       $project = $dbForConsole->getDocument('projects', $projectId);
 
-      if ($project->isEmpty()) {
-          throw new Exception(Exception::PROJECT_NOT_FOUND);
-      }
+    if ($project->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
 
       $domain = $dbForConsole->findOne('domains', [
           Query::equal('_uid', [$domainId]),
           Query::equal('projectInternalId', [$project->getInternalId()]),
       ]);
 
-      if ($domain === false || $domain->isEmpty()) {
-          throw new Exception(Exception::DOMAIN_NOT_FOUND);
-      }
+    if ($domain === false || $domain->isEmpty()) {
+        throw new Exception(Exception::DOMAIN_NOT_FOUND);
+    }
 
       $response->dynamic($domain, Response::MODEL_DOMAIN);
   });
@@ -495,22 +495,22 @@ App::delete('/v1/domains/:domainId')
   ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
       $project = $dbForConsole->getDocument('projects', $projectId);
 
-      if ($project->isEmpty()) {
-          throw new Exception(Exception::PROJECT_NOT_FOUND);
-      }
+    if ($project->isEmpty()) {
+        throw new Exception(Exception::PROJECT_NOT_FOUND);
+    }
 
       $domain = $dbForConsole->findOne('domains', [
           Query::equal('_uid', [$domainId]),
           Query::equal('projectInternalId', [$project->getInternalId()]),
       ]);
 
-      if ($domain === false || $domain->isEmpty()) {
-          throw new Exception(Exception::DOMAIN_NOT_FOUND);
-      }
+    if ($domain === false || $domain->isEmpty()) {
+        throw new Exception(Exception::DOMAIN_NOT_FOUND);
+    }
 
-      if ($domain['registered'] === true) {
-          throw new Exception();
-      }
+    if ($domain['registered'] === true) {
+        throw new Exception();
+    }
 
       $response->noContent();
   });

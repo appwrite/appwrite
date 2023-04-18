@@ -75,225 +75,225 @@ class DomainsRegistrarClientTest extends Scope
       /**
        * @depends testCreateProject
        */
-      public function testSuggestDomain($data): void
-      {
-          $id = $data['projectId'] ?? '';
+    public function testSuggestDomain($data): void
+    {
+        $id = $data['projectId'] ?? '';
 
-          $response = $this->client->call(Client::METHOD_POST, '/domains/suggest', array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domain' => 'kittens.com',
-          ]);
+        $response = $this->client->call(Client::METHOD_POST, '/domains/suggest', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domain' => 'kittens.com',
+        ]);
 
-          $this->assertEquals(200, $response['headers']['status-code']);
-          $this->assertNotEmpty($response['body']['domains']);
-      }
-
-      /**
-       * @depends testCreateProject
-       */
-      public function testAvailableDomain($data): void
-      {
-          $id = $data['projectId'] ?? '';
-
-          $response = $this->client->call(Client::METHOD_POST, '/domains/available', array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domain' => 'google.com',
-          ]);
-
-          $available = $response['body']['domain']['available'];
-
-          $this->assertEquals(200, $response['headers']['status-code']);
-          $this->assertNotEmpty($response['body']['domain']);
-          $this->assertFalse($available);
-      }
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['domains']);
+    }
 
       /**
        * @depends testCreateProject
        */
-      public function testCreate3rdPartyDomain($data): array
-      {
-          $id = $data['projectId'] ?? '';
-          $domain = $this->generateRandomString().'.net';
+    public function testAvailableDomain($data): void
+    {
+        $id = $data['projectId'] ?? '';
 
-          $response = $this->client->call(Client::METHOD_POST, '/domains', array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domain' => $domain,
-          ]);
+        $response = $this->client->call(Client::METHOD_POST, '/domains/available', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domain' => 'google.com',
+        ]);
 
-          $this->assertEquals(201, $response['headers']['status-code']);
-          $this->assertNotEmpty($response['body']['$id']);
-          $this->assertEquals($domain, $response['body']['domain']);
-          $this->assertEquals(false, $response['body']['verification']);
+        $available = $response['body']['domain']['available'];
 
-          /**
-           * Test for FAILURE
-           */
-          $response = $response = $this->client->call(Client::METHOD_POST, '/domains', array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domain' => 'sdkljgfhsdflkjghsdflkgjsh.com',
-          ]);
-
-          return [];
-      }
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['domain']);
+        $this->assertFalse($available);
+    }
 
       /**
        * @depends testCreateProject
        */
-      public function testPurchaseDomain($data): array
-      {
-          $id = $data['projectId'] ?? '';
-          $domain = $this->generateRandomString().'.net';
+    public function testCreate3rdPartyDomain($data): array
+    {
+        $id = $data['projectId'] ?? '';
+        $domain = $this->generateRandomString() . '.net';
 
-          $response = $this->client->call(Client::METHOD_POST, '/domains/purchase', array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domain' => $domain,
-              'firstname' => 'firstname',
-              'lastname' => 'lastname',
-              'phone' => '+18037889693',
-              'email' => 'email@email.com',
-              'address1' => 'address1 st',
-              'address2' => 'unit address2',
-              'address3' => 'apt. address3',
-              'city' => 'city',
-              'state' => 'state',
-              'country' => 'us',
-              'postalcode' => '29223',
-              'org' => 'myorg',
-          ]);
+        $response = $this->client->call(Client::METHOD_POST, '/domains', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domain' => $domain,
+        ]);
 
-          $this->assertEquals(201, $response['headers']['status-code']);
-          $this->assertTrue($response['body']['registered']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($domain, $response['body']['domain']);
+        $this->assertEquals(false, $response['body']['verification']);
 
-          return [
-              'projectId' => $id,
-              'domain' => $domain,
-          ];
-      }
+        /**
+         * Test for FAILURE
+         */
+        $response = $response = $this->client->call(Client::METHOD_POST, '/domains', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domain' => 'sdkljgfhsdflkjghsdflkgjsh.com',
+        ]);
 
-      public function testTransferInDomain(): void
-      {
-          // This will always fail mainly because it's a test env,
-          // but also because:
-          // - we use random domains to test
-          // - transfer lock is default
-          // - unable to unlock transfer because domains (in tests) are new.
-          // ** Even when testing against my own live domains, it failed.
-          // So we test for a proper formatted response,
-          // with "successful" being "false".
-
-          $this->markTestSkipped('Transfer test skipped because it always fails.');
-      }
-
-      public function testTransferOutDomain(): void
-      {
-          // This will always fail mainly because it's a test env,
-          // but also because:
-          // - we use random domains to test
-          // - transfer lock is default
-          // - unable to unlock transfer because domains (in tests) are new.
-          // ** Even when testing against my own live domains, it failed.
-          // So we test for a proper formatted response,
-          // with "successful" being "false".
-
-          $this->markTestSkipped('Transfer test skipped because it always fails.');
-      }
+        return [];
+    }
 
       /**
        * @depends testCreateProject
        */
-      public function testDomainList($data): array
-      {
-          $id = $data['projectId'] ?? '';
+    public function testPurchaseDomain($data): array
+    {
+        $id = $data['projectId'] ?? '';
+        $domain = $this->generateRandomString() . '.net';
 
-          $response = $this->client->call(Client::METHOD_GET, '/domains', array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-          ]);
+        $response = $this->client->call(Client::METHOD_POST, '/domains/purchase', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domain' => $domain,
+            'firstname' => 'firstname',
+            'lastname' => 'lastname',
+            'phone' => '+18037889693',
+            'email' => 'email@email.com',
+            'address1' => 'address1 st',
+            'address2' => 'unit address2',
+            'address3' => 'apt. address3',
+            'city' => 'city',
+            'state' => 'state',
+            'country' => 'us',
+            'postalcode' => '29223',
+            'org' => 'myorg',
+        ]);
 
-          $this->assertEquals(200, $response['headers']['status-code']);
-          $this->assertTrue($response['body']['total'] > 0);
-          $this->assertTrue(count($response['body']['domains']) > 0);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['registered']);
 
-          return [
-              'projectId' => $id,
-              'domains' => $response['body']['domains'],
-          ];
-      }
+        return [
+            'projectId' => $id,
+            'domain' => $domain,
+        ];
+    }
+
+    public function testTransferInDomain(): void
+    {
+        // This will always fail mainly because it's a test env,
+        // but also because:
+        // - we use random domains to test
+        // - transfer lock is default
+        // - unable to unlock transfer because domains (in tests) are new.
+        // ** Even when testing against my own live domains, it failed.
+        // So we test for a proper formatted response,
+        // with "successful" being "false".
+
+        $this->markTestSkipped('Transfer test skipped because it always fails.');
+    }
+
+    public function testTransferOutDomain(): void
+    {
+        // This will always fail mainly because it's a test env,
+        // but also because:
+        // - we use random domains to test
+        // - transfer lock is default
+        // - unable to unlock transfer because domains (in tests) are new.
+        // ** Even when testing against my own live domains, it failed.
+        // So we test for a proper formatted response,
+        // with "successful" being "false".
+
+        $this->markTestSkipped('Transfer test skipped because it always fails.');
+    }
+
+      /**
+       * @depends testCreateProject
+       */
+    public function testDomainList($data): array
+    {
+        $id = $data['projectId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/domains', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['total'] > 0);
+        $this->assertTrue(count($response['body']['domains']) > 0);
+
+        return [
+            'projectId' => $id,
+            'domains' => $response['body']['domains'],
+        ];
+    }
 
       /**
        * @depends testDomainList
        */
-      public function testDomainGet($data): array
-      {
-          $id = $data['projectId'] ?? '';
-          $domains = $data['domains'] ?? [];
-          $domain = $domains[0];
-          $domainId = $domain['$id'];
+    public function testDomainGet($data): array
+    {
+        $id = $data['projectId'] ?? '';
+        $domains = $data['domains'] ?? [];
+        $domain = $domains[0];
+        $domainId = $domain['$id'];
 
-          $response = $this->client->call(Client::METHOD_GET, '/domains/'.$domainId, array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domainId' => $domains[0]['$id'],
-          ]);
+        $response = $this->client->call(Client::METHOD_GET, '/domains/' . $domainId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domainId' => $domains[0]['$id'],
+        ]);
 
-          $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
-          return [
-              'projectId' => $id,
-              'domainId' => $domainId,
-          ];
-      }
+        return [
+            'projectId' => $id,
+            'domainId' => $domainId,
+        ];
+    }
 
       /**
        * @depends testDomainGet
        */
-      public function testDomainDelete($data): string
-      {
-          $id = $data['projectId'] ?? '';
-          $domainId = $data['domainId'] ?? '';
+    public function testDomainDelete($data): string
+    {
+        $id = $data['projectId'] ?? '';
+        $domainId = $data['domainId'] ?? '';
 
-          $response = $this->client->call(Client::METHOD_DELETE, '/domains/'.$domainId, array_merge([
-              'content-type' => 'application/json',
-              'x-appwrite-project' => $this->getProject()['$id'],
-          ], $this->getHeaders()), [
-              'projectId' => $id,
-              'domainId' => $domainId,
-          ]);
+        $response = $this->client->call(Client::METHOD_DELETE, '/domains/' . $domainId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $id,
+            'domainId' => $domainId,
+        ]);
 
-          $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
-          return $domainId;
-      }
+        return $domainId;
+    }
 
-      private function generateRandomString(int $length = 10): string
-      {
-          $characters = 'abcdefghijklmnopqrstuvwxyz';
-          $charactersLength = strlen($characters);
-          $randomString = '';
+    private function generateRandomString(int $length = 10): string
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyz';
+        $charactersLength = strlen($characters);
+        $randomString = '';
 
-          for ($i = 0; $i < $length; $i++) {
-              $randomString .= $characters[random_int(0, $charactersLength - 1)];
-          }
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[random_int(0, $charactersLength - 1)];
+        }
 
-          return $randomString;
-      }
+        return $randomString;
+    }
 }
