@@ -12,5 +12,6 @@
 debug/
 app/sdks
 dev/yasd_init.php
+Makefile
 .phpunit.result.cache
 Makefile
