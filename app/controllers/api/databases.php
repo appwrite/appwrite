@@ -743,7 +743,7 @@ App::post('/v1/databases/:databaseId/collections')
             ]));
             $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
-            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+            $dbForProject->createCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), permissions: $permissions ?? [], documentSecurity: $documentSecurity);
         } catch (DuplicateException) {
             throw new Exception(Exception::COLLECTION_ALREADY_EXISTS);
         } catch (LimitException) {
@@ -1001,6 +1001,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$collectionId, $name])));
+            $dbForProject->updateCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $permissions, $documentSecurity);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (StructureException $exception) {
