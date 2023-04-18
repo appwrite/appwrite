@@ -425,22 +425,25 @@ Database::addFilter(
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
-        return json_encode([
+        $result = json_encode([
             'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
             'version' => '1',
         ]);
+
+        return $result;
     },
     function (mixed $value) {
         if (is_null($value)) {
             return null;
         }
         $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $result = OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
 
-        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+        return $result;
     }
 );
 

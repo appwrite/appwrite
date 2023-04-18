@@ -1831,13 +1831,15 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $oauth2->refreshTokens($refreshToken);
 
+                
                 $session
-                    ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
-                    ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')));
-
+                ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+                ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                ->setAttribute('providerAccessTokenExpiry', \time() + (int) $oauth2->getAccessTokenExpiry(''));
+                
+                
                 $dbForProject->updateDocument('sessions', $sessionId, $session);
-
+                
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
