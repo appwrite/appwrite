@@ -2953,6 +2953,7 @@ $collections = [
             ],
         ],
         'indexes' => [
+<<<<<<< HEAD
             [
                 '$id' => ID::custom('_fulltext_name'),
                 'type' => Database::INDEX_FULLTEXT,
@@ -2960,6 +2961,15 @@ $collections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
+=======
+            // [
+            //     '$id' => ID::custom('_fulltext_name'),
+            //     'type' => Database::INDEX_FULLTEXT,
+            //     'attributes' => ['name'],
+            //     'lengths' => [4096],
+            //     'orders' => [Database::ORDER_ASC],
+            // ],
+>>>>>>> 26ac039ae (Testing mongo/db)
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,

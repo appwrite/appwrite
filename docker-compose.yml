@@ -624,7 +624,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - influxdb
-      - mariadb
+      - mongo
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1

@@ -31,6 +31,10 @@ trait ProjectCustom
             'teamId' => ID::unique(),
             'name' => 'Demo Project Team',
         ]);
+
+
+        var_dump($team['headers']);
+
         $this->assertEquals(201, $team['headers']['status-code']);
         $this->assertEquals('Demo Project Team', $team['body']['name']);
         $this->assertNotEmpty($team['body']['$id']);
