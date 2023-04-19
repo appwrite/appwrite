@@ -2587,6 +2587,16 @@ $collections = [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('vcsCommentId'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 2048,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('size'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',

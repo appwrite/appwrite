@@ -90,6 +90,7 @@ class BuildsV1 extends Worker
             $vcsInstallationId = $deployment->getAttribute('vcsInstallationId');
             $vcsRepoId = $deployment->getAttribute('vcsRepoId');
             $isVcsEnabled = $vcsRepoId !== null ? true : false;
+            $addComment = false;
 
             if ($isVcsEnabled) {
                 $vcsRepos = Authorization::skip(fn () => $dbForConsole
@@ -143,6 +144,13 @@ class BuildsV1 extends Worker
                     'endTime' => null,
                     'duration' => 0
                 ]));
+                $commentId = $deployment->getAttribute('vcsCommentId');
+                if ($commentId) {
+                    $comment = "| Build Status |\r\n | --------------- |\r\n | Processing |";
+                    $github->updateComment("functions-example", $commentId, $comment);
+                    // TODO: Update repo name
+                    $addComment = true;
+                }
             } else {
                 $build = $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
@@ -168,6 +176,14 @@ class BuildsV1 extends Worker
 
         /** Request the executor to build the code... */
         $build->setAttribute('status', 'building');
+        if ($isVcsEnabled) {
+            $commentId = $deployment->getAttribute('vcsCommentId');
+            if ($commentId) {
+                $comment = "| Build Status |\r\n | --------------- |\r\n | Building |";
+                $github->updateComment("functions-example", $commentId, $comment);
+                // TODO: Update repo name
+            }
+        }
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         /** Trigger Webhook */
@@ -247,6 +263,16 @@ class BuildsV1 extends Worker
             $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['response']);
+
+            if ($isVcsEnabled) {
+                $commentId = $deployment->getAttribute('vcsCommentId');
+                if ($commentId) {
+                    $status = $response["status"];
+                    $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
+                    $github->updateComment("functions-example", $commentId, $comment);
+                    // TODO: Update repo name
+                }
+            }
 
             /* Also update the deployment buildTime */
             $deployment->setAttribute('buildTime', $response['duration']);
