@@ -43,4 +43,8 @@ jobs:
         build-args: |
           VERSION=1.XX.X
         push: false
-        tags: appwrite/appwrite:latest,appwrite/appwrite:1.XX.X,appwrite/appwrite:1.XX,appwrite/appwrite:1
+        tags: |
+          appwrite/appwrite:latest
+          appwrite/appwrite:1.XX.X
+          appwrite/appwrite:1.XX
+          appwrite/appwrite:1
