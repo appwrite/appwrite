@@ -40,10 +40,11 @@ jobs:
       with:
         context: .
         platforms: linux/amd64,linux/arm64
-        build-args: [ 'VERSION=1.XX.X' ]
+        build-args: |
+          VERSION=1.XX.X
         push: false
-        tags: 
-          - appwrite/appwrite:latest
-          - appwrite/appwrite:1.XX.X
-          - appwrite/appwrite:1.XX
-          - appwrite/appwrite:1
+        images: |
+          appwrite/appwrite:latest
+          appwrite/appwrite:1.XX.X
+          appwrite/appwrite:1.XX
+          appwrite/appwrite:1
