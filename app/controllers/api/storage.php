@@ -444,11 +444,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
             $fileId = $request->getHeader('x-appwrite-id', $fileId);
-            if (is_null($start) || is_null($end) || is_null($fileSize)) {
+            if (is_null($start) || is_null($end) || is_null($fileSize) || $end >= $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            if ($end === $fileSize) {
+            if ($end === $fileSize - 1) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to -1 notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
