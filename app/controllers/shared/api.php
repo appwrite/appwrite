@@ -200,8 +200,7 @@ App::init()
                 ->setSmtpPort($smtp['port'] ?? 25)
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
-                ->setSmtpSenderEmail($smtp['senderEmail'] ?? '')
-                ->setSmtpSenderName($smtp['senderName'] ?? '')
+                ->setSmtpSenderEmail($smtp['sender'] ?? '')
                 ->setSmtpReplyTo($smtp['replyTo'] ?? '');
         }
 

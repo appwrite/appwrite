@@ -542,6 +542,15 @@ App::post('/v1/teams/:teamId/memberships')
                 $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
                 $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+
+                $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
+                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
+                if($smtpEnabled && !empty($customTemplate)) {
+                    $body = $customTemplate['message'];
+                    $subject = $customTemplate['subject'];
+                    $from = $customTemplate['senderName'];
+                }
+
                 $body->setParam('{{owner}}', $user->getAttribute('name'));
                 $body->setParam('{{team}}', $team->getAttribute('name'));
 
@@ -572,6 +581,12 @@ App::post('/v1/teams/:teamId/memberships')
                 ;
             } elseif (!empty($phone)) {
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
+                if(!empty($customTemplate)) {
+                    $message = $customTemplate['message'];
+                }
+
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 

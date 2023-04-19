@@ -9,6 +9,7 @@ return [
     ],
     'sms' => [
         'verification',
+        'login',
         'invitation'
     ]
 ];

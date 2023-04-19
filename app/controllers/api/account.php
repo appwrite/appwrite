@@ -734,9 +734,16 @@ App::post('/v1/account/sessions/magic-url')
         $url = Template::unParseURL($url);
 
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
-
         $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
         $subject = $locale->getText("emails.magicSession.subject");
+
+        $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
+        $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
+        if($smtpEnabled && !empty($customTemplate)) {
+            $body = $customTemplate['message'];
+            $subject = $customTemplate['subject'];
+            $from = $customTemplate['senderName'];
+        }
 
         $body
             ->setParam('{{subject}}', $subject)
@@ -926,7 +933,8 @@ App::post('/v1/account/sessions/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('messaging')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging) {
+    ->inject('locale')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Locale $locale) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -1001,6 +1009,12 @@ App::post('/v1/account/sessions/phone')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+        
+        $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
+        if(!empty($customTemplate)) {
+            $message = $customTemplate['message'];
+        }
+
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
@@ -2098,6 +2112,14 @@ App::post('/v1/account/recovery')
         $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
         $subject = $locale->getText("emails.recovery.subject");
 
+        $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
+        $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
+        if($smtpEnabled && !empty($customTemplate)) {
+            $body = $customTemplate['message'];
+            $subject = $customTemplate['subject'];
+            $from = $customTemplate['senderName'];
+        }
+
         $body
             ->setParam('{{subject}}', $subject)
             ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
@@ -2281,6 +2303,15 @@ App::post('/v1/account/verification')
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
         $subject = $locale->getText("emails.verification.subject");
+
+        $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
+        $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
+        if($smtpEnabled && !empty($customTemplate)) {
+            $body = $customTemplate['message'];
+            $subject = $customTemplate['subject'];
+            $from = $customTemplate['senderName'];
+        }
+
         $body
             ->setParam('{{subject}}', $subject)
             ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
@@ -2408,7 +2439,9 @@ App::post('/v1/account/verification/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('messaging')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging) {
+    ->inject('project')
+    ->inject('locale')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging, Document $project, Locale $locale) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
@@ -2448,6 +2481,12 @@ App::post('/v1/account/verification/phone')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+        $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
+        if(!empty($customTemplate)) {
+            $message = $customTemplate['message'];
+        }
+
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 

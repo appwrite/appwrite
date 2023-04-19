@@ -183,18 +183,6 @@ class Mail extends Event
     }
 
     /**
-     * Set SMTP sender name
-     *
-     * @param string $senderName
-     * @return self
-     */
-    public function setSmtpSenderName(string $senderName): self
-    {
-        $this->smtp['senderName'] = $senderName;
-        return $this;
-    }
-
-    /**
      * Set SMTP sender email
      *
      * @param string $senderEmail
@@ -256,16 +244,6 @@ class Mail extends Event
     public function getSmtpPassword(): string
     {
         return $this->smtp['password'] ?? '';
-    }
-
-    /**
-     * Get SMTP sender name
-     *
-     * @return string
-     */
-    public function getSmtpSenderName(): string
-    {
-        return $this->smtp['senderName'] ?? '';
     }
 
     /**
