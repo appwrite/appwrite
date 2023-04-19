@@ -8,6 +8,8 @@ use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
@@ -49,8 +51,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $response
         ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
         ->setContentType('image/png')
-        ->file($data)
-    ;
+        ->file($data);
     unset($image);
 };
 
@@ -160,8 +161,7 @@ App::get('/v1/avatars/image')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->file($data)
-        ;
+            ->file($data);
         unset($image);
     });
 
@@ -274,8 +274,7 @@ App::get('/v1/avatars/favicon')
             $response
                 ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
                 ->setContentType('image/x-icon')
-                ->file($data)
-            ;
+                ->file($data);
         }
 
         $fetch = @\file_get_contents($outputHref, false);
@@ -292,8 +291,7 @@ App::get('/v1/avatars/favicon')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
-            ->file($data)
-        ;
+            ->file($data);
         unset($image);
     });
 
@@ -334,8 +332,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 9))
-        ;
+            ->send($image->output('png', 9));
     });
 
 App::get('/v1/avatars/initials')
@@ -419,6 +416,116 @@ App::get('/v1/avatars/initials')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->file($image->getImageBlob())
-        ;
+            ->file($image->getImageBlob());
+    });
+
+App::get('/v1/cards/cloud-og')
+    ->desc('Get Cloud Card')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    // ->label('cache', true)
+    // ->label('cache.resource', 'cards/cloud')
+    ->label('docs', false)
+    ->label('origin', '*')
+    ->param('width', 0, new Range(0, 4000), 'Resize  image card width, Pass an integer between 0 to 4000.', true)
+    ->param('height', 0, new Range(0, 4000), 'Resize image card height, Pass an integer between 0 to 4000.', true)
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (int $width, int $height, Document $user, Document $project, Database $dbForProject, Response $response) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+        }
+
+        $baseImage = new \Imagick("public/images/cards-cloud.png");
+
+        $name = $user->getAttribute('name', 'Anonymous');
+        $createdAt = new \DateTime($user->getCreatedAt());
+        $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
+
+        try {
+            $sessions = $user->getAttribute('sessions', []);
+            $session = $sessions[0] ?? new Document();
+
+            $provider = $session->getAttribute('provider');
+            $refreshToken = $session->getAttribute('providerRefreshToken');
+
+            $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+            $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+
+            $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+
+            if (!\class_exists($className)) {
+                throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
+            }
+
+            $oauth2 = new $className($appId, $appSecret, '', [], []);
+
+            $oauth2->refreshTokens($refreshToken);
+
+            $accessToken = $oauth2->getAccessToken('');
+            $refreshToken = $oauth2->getRefreshToken('');
+
+            $session
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+
+            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+
+            $dbForProject->deleteCachedDocument('users', $user->getId());
+
+            $githubUser = $oauth2->getUserSlug($accessToken);
+
+            $gitHub = $githubUser;
+        } catch (Exception $err) {
+            $gitHub = '';
+            \var_dump($err->getMessage());
+            \var_dump($err->getTraceAsString());
+            \var_dump($err->getLine());
+            \var_dump($err->getFile());
+        }
+
+        // setlocale(LC_ALL, "en_US.utf8");
+        // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
+        // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
+        // $gitHub = \iconv("utf-8", "ascii//TRANSLIT", $gitHub);
+
+        $text = new \ImagickDraw();
+        $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        $text->setFont("public/fonts/Poppins-Bold.ttf");
+        $text->setFillColor(new ImagickPixel('#FFFFFF'));
+        $text->setFontSize(58);
+        $text->setFontWeight(700);
+        $baseImage->annotateImage($text, 550, 585, -22.88, $name);
+
+        $text = new \ImagickDraw();
+        $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        $text->setFont("public/fonts/Inter-Medium.ttf");
+        $text->setFillColor(new ImagickPixel('#FFB9CC'));
+        $text->setFontSize(24);
+        $text->setFontWeight(500);
+        $text->setTextKerning(1.12);
+        $baseImage->annotateImage($text, 570, 630, -22.24, $memberSince);
+
+        $text = new \ImagickDraw();
+        $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        $text->setFont("public/fonts/Inter-Regular.ttf");
+        $text->setFillColor(new ImagickPixel('#FFB9CC'));
+        $text->setFontSize(26);
+        $text->setFontWeight(400);
+        $baseImage->annotateImage($text, 805, 380, 64.75, $gitHub);
+
+        // $metrics = $baseImage->queryFontMetrics($text, $gitHub);
+        // \var_dump($metrics['textWidth']);
+
+        if (!empty($width) || !empty($height)) {
+            $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
+        }
+
+        $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->setContentType('image/png')
+            ->file($baseImage->getImageBlob());
     });
