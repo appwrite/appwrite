@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16.14.2-alpine3.15 as node
+FROM --platform=$BUILDPLATFORM node:16.14.2-alpine3.15 as node
 
 COPY app/console /usr/local/src/console
 
