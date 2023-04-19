@@ -2925,34 +2925,16 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
-        $documents = Authorization::skip(fn () => $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries));
-
-        $documentSecurity = $collection->getAttribute('documentSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($collection->getRead());
-        if (!$valid) {
-            $total = $documentSecurity
-                ? $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT)
-                : 0;
-        } else {
-            $total = Authorization::skip(fn() => $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
-        }
+        $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization(Database::PERMISSION_READ);
-
-            $valid = $validator->isValid($collection->getRead());
-            if (!$documentSecurity && !$valid) {
+            if ($document->isEmpty()) {
                 return false;
             }
 
-            $valid = $valid || $validator->isValid($document->getRead());
-            if ($documentSecurity && !$valid) {
-                return false;
-            }
-
+            $document->removeAttribute('$collection');
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -2996,17 +2978,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         };
 
     // The linter is forcing this indentation
-    foreach ($documents as $index => $document) {
-        if (!$processDocument($collection, $document)) {
-            unset($documents[$index]);
-
-            if ($valid) {
-                $total--;
-            }
-        }
+    foreach ($documents as $document) {
+        $processDocument($collection, $document);
     }
-
-        $documents = \array_values($documents);
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -3062,7 +3036,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $queries = Query::parseQueries($queries);
 
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries));
+        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3070,17 +3044,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization(Database::PERMISSION_READ);
-
-            $valid = $validator->isValid($collection->getRead());
-            if (!$documentSecurity && !$valid) {
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND);
-            }
-
-            $valid = $valid || $validator->isValid($document->getRead());
-            if ($documentSecurity && !$valid) {
-                throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+            if ($document->isEmpty()) {
+                return;
             }
 
             $document->setAttribute('$databaseId', $database->getId());
@@ -3362,7 +3327,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
-                foreach ($related as &$relation) {
+                foreach ($relations as &$relation) {
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
@@ -3405,14 +3370,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
 
     try {
-        $document = Authorization::skip(fn() => $dbForProject->withRequestTimestamp(
+        $document = $dbForProject->withRequestTimestamp(
             $requestTimestamp,
             fn () => $dbForProject->updateDocument(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $document->getId(),
                 $newDocument
             )
-        ));
+        );
     } catch (AuthorizationException) {
         throw new Exception(Exception::USER_UNAUTHORIZED);
     } catch (DuplicateException) {
