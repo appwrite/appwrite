@@ -739,7 +739,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
-        if($smtpEnabled && !empty($customTemplate)) {
+        if ($smtpEnabled && !empty($customTemplate)) {
             $body = $customTemplate['message'];
             $subject = $customTemplate['subject'];
             $from = $customTemplate['senderName'];
@@ -1009,9 +1009,9 @@ App::post('/v1/account/sessions/phone')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
-        
+
         $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
-        if(!empty($customTemplate)) {
+        if (!empty($customTemplate)) {
             $message = $customTemplate['message'];
         }
 
@@ -2114,7 +2114,7 @@ App::post('/v1/account/recovery')
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
-        if($smtpEnabled && !empty($customTemplate)) {
+        if ($smtpEnabled && !empty($customTemplate)) {
             $body = $customTemplate['message'];
             $subject = $customTemplate['subject'];
             $from = $customTemplate['senderName'];
@@ -2306,7 +2306,7 @@ App::post('/v1/account/verification')
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
-        if($smtpEnabled && !empty($customTemplate)) {
+        if ($smtpEnabled && !empty($customTemplate)) {
             $body = $customTemplate['message'];
             $subject = $customTemplate['subject'];
             $from = $customTemplate['senderName'];
@@ -2483,7 +2483,7 @@ App::post('/v1/account/verification/phone')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
         $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
-        if(!empty($customTemplate)) {
+        if (!empty($customTemplate)) {
             $message = $customTemplate['message'];
         }
 

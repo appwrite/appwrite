@@ -524,6 +524,11 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::PROJECT_DEFAULT_TEMPLATE_DELETION => [
+        'name' => Exception::PROJECT_DEFAULT_TEMPLATE_DELETION,
+        'description' => 'The default template for the project cannot be deleted.',
+        'code' => 401,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',

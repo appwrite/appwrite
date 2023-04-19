@@ -545,7 +545,7 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
-                if($smtpEnabled && !empty($customTemplate)) {
+                if ($smtpEnabled && !empty($customTemplate)) {
                     $body = $customTemplate['message'];
                     $subject = $customTemplate['subject'];
                     $from = $customTemplate['senderName'];
@@ -583,7 +583,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
-                if(!empty($customTemplate)) {
+                if (!empty($customTemplate)) {
                     $message = $customTemplate['message'];
                 }
 

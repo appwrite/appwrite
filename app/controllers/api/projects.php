@@ -1815,3 +1815,89 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
     });
+
+App::DELETE('/v1/projects/:projectId/templates/sms/:type/:locale')
+    ->desc('Reset custom SMS template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getSmsTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
+
+        if (is_null($template)) {
+            throw new Exception(Exception::PROJECT_DEFAULT_TEMPLATE_DELETION);
+        }
+
+        unset($template['sms.' . $type . '-' . $locale]);
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
+
+        $response->dynamic(new Document([
+            'type' => $type,
+            'locale' => $locale,
+            'message' => $template['message']
+        ]), Response::MODEL_SMS_TEMPLATE);
+    });
+
+App::DELETE('/v1/projects/:projectId/templates/email/:type/:locale')
+    ->desc('Reset custom email template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getEmailTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+
+        if (is_null($template)) {
+            throw new Exception(Exception::PROJECT_DEFAULT_TEMPLATE_DELETION);
+        }
+
+        unset($templates['email.' . $type . '-' . $locale]);
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
+
+        $response->dynamic(new Document([
+            'type' => $type,
+            'locale' => $locale,
+            'senderName' => $template['senderName'],
+            'senderEmail' => $template['senderEmail'],
+            'subject' => $template['subject'],
+            'replyTo' => $template['replyTo'],
+            'message' => $template['message']
+        ]), Response::MODEL_EMAIL_TEMPLATE);
+    });
