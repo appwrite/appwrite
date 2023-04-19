@@ -2853,9 +2853,7 @@ trait DatabasesBase
         ]);
 
         // Current user has no collection permissions and document permissions are disabled
-        $this->assertEquals(200, $documentsUser2['headers']['status-code']);
-        $this->assertEquals(0, $documentsUser2['body']['total']);
-        $this->assertEquals(true, empty($documentsUser2['body']['documents']));
+        $this->assertEquals(404, $documentsUser2['headers']['status-code']);
 
         // Enable document permissions
         $collection = $this->client->call(CLient::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, [

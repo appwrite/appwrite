@@ -2886,10 +2886,17 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+            if (!$collection->getAttribute('documentSecurity', false)) {
+                $validator = new Authorization(Database::PERMISSION_READ);
+                if (!$validator->isValid($collection->getRead())) {
+                    $collection = new Document();
+                }
             }
+        }
+
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Validate queries
