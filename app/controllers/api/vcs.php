@@ -14,7 +14,6 @@ use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\ID;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
-use Appwrite\Utopia\Response\Model\Installation;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
