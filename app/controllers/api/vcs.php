@@ -12,6 +12,8 @@ use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\ID;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\Queries\Installations;
+use Appwrite\Utopia\Response\Model\Installation;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
@@ -224,3 +226,49 @@ App::post('/v1/vcs/github/incomingwebhook')
             $response->json($parsedPayload);
         }
     );
+
+App::get('/v1/vcs/github/installations')
+    ->groups(['api', 'vcs'])
+    ->desc('List installations')
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.method', 'listInstallations')
+    ->label('sdk.description', '/docs/references/functions/list-installations.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_INSTALLATION_LIST)
+    ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+
+        $queries = Query::parseQueries($queries);
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $vcsInstallationId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('vcs_installations', $vcsInstallationId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Installation '{$vcsInstallationId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $response->dynamic(new Document([
+            'installations' => $dbForProject->find('vcs_installations', $queries),
+            'total' => $dbForProject->count('vcs_installations', $filterQueries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_INSTALLATION_LIST);
+    });
