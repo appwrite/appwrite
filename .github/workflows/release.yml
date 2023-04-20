@@ -1,10 +1,9 @@
 name: "Release"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+on:
+  release:
+    types: [published]
 
-on: [pull_request]
 jobs:
   tests:
     name: Unit & E2E
@@ -35,16 +34,23 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: appwrite/appwrite
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}
+          type=semver,pattern={{major}}.{{minor}}
+
     - name: Build and push
       uses: docker/build-push-action@v4
       with:
         context: .
         platforms: linux/amd64,linux/arm64
         build-args: |
-          VERSION=1.XX.X
+          VERSION=${{ steps.meta.outputs.version }}
         push: false
-        tags: |
-          appwrite/appwrite:latest
-          appwrite/appwrite:1.XX.X
-          appwrite/appwrite:1.XX
-          appwrite/appwrite:1
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
