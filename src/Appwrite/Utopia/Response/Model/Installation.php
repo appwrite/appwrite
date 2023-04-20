@@ -33,7 +33,7 @@ class Installation extends Model
                 'description' => 'Installation provider.',
                 'default' => [],
                 'example' => 'github',
-                'array' => true,
+                'array' => false,
             ])
             ->addRule('installationId', [
                 'type' => self::TYPE_STRING,
