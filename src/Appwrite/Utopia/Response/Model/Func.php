@@ -105,6 +105,12 @@ class Func extends Model
                 'default' => 15,
                 'example' => 15,
             ])
+            ->addRule('vcsInstallationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function vcs installation id.',
+                'default' => '',
+                'example' => '644051bd6572792165cc',
+            ])
         ;
     }
 
