@@ -323,7 +323,7 @@ App::post('/v1/vcs/github/incomingwebhook')
         }
     );
 
-App::get('/v1/vcs/github/installations')
+App::get('/v1/vcs/installations')
     ->groups(['api', 'vcs'])
     ->desc('List installations')
     ->label('scope', 'public')
