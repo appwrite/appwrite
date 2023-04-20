@@ -337,8 +337,8 @@ App::get('/v1/vcs/github/installations')
     ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
 
         $queries = Query::parseQueries($queries);
 
@@ -352,7 +352,7 @@ App::get('/v1/vcs/github/installations')
         if ($cursor) {
             /** @var Query $cursor */
             $vcsInstallationId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('vcs_installations', $vcsInstallationId);
+            $cursorDocument = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Installation '{$vcsInstallationId}' for the 'cursor' value not found.");
@@ -364,7 +364,7 @@ App::get('/v1/vcs/github/installations')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'installations' => $dbForProject->find('vcs_installations', $queries),
-            'total' => $dbForProject->count('vcs_installations', $filterQueries, APP_LIMIT_COUNT),
+            'installations' => $dbForConsole->find('vcs_installations', $queries),
+            'total' => $dbForConsole->count('vcs_installations', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_INSTALLATION_LIST);
     });
