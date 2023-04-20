@@ -3279,7 +3279,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $permissions = $document->getPermissions() ?? [];
         }
 
-        $data = \array_merge($document->getArrayCopy(), $data);
         $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
@@ -3368,6 +3367,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         };
 
         $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+
+    $data = \array_merge($document->getArrayCopy(), $data);
 
     try {
         $document = $dbForProject->withRequestTimestamp(
