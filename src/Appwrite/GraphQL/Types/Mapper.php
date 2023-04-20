@@ -254,6 +254,7 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
             case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
             case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Files':
