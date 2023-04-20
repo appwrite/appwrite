@@ -445,8 +445,8 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
-    ->param('vcsInstallationId', '', new Text(128), 'Installation ID from vcs_installations collection', true)
-    ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
+    ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('repositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
@@ -456,6 +456,18 @@ App::put('/v1/functions/:functionId')
     ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, string $vcsInstallationId, string $repositoryId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $eventsInstance) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $installation = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
@@ -488,7 +500,8 @@ App::put('/v1/functions/:functionId')
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-                'vcsInstallationId' => $vcsInstallationId,
+                'vcsInstallationId' => $installation->getId(),
+                'vcsInstallationIntenralId' => $installation->getInternalId(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'repositoryId' => $repositoryId,
@@ -510,7 +523,8 @@ App::put('/v1/functions/:functionId')
                 'resourceType' => 'functions',
                 'entrypoint' => $entrypoint,
                 'type' => "vcs",
-                'vcsInstallationId' => $vcsInstallationId,
+                'vcsInstallationId' => $installation->getId(),
+                'vcsInstallationInternalId' => $installation->getInternalId(),
                 'vcsRepoId' => $vcsRepoId,
                 'branch' => "main",
                 'search' => implode(' ', [$deploymentId, $entrypoint]),
@@ -527,7 +541,8 @@ App::put('/v1/functions/:functionId')
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
-            'vcsInstallationId' => $vcsInstallationId,
+            'vcsInstallationId' => $installation->getId(),
+            'vcsInstallationInternalId' => $installation->getInternalId(),
             'vcsRepoId' => $vcsRepoId,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));

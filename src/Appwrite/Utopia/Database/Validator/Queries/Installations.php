@@ -5,7 +5,8 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class Installations extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'provider'
+        'provider',
+        'organization'
     ];
 
     /**

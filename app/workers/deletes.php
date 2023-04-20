@@ -65,6 +65,9 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project->getId());
                         break;
+                    case DELETE_TYPE_INSTALLATIONS:
+                        $this->deleteInstallation($document, $project->getId());
+                        break;
                     default:
                         if (\str_starts_with($document->getCollection(), 'database_')) {
                             $this->deleteCollection($document, $project->getId());
@@ -705,6 +708,43 @@ class DeletesV1 extends Worker
     }
 
     /**
+     * @param string $collection collectionID
+     * @param Query[] $queries
+     * @param Database $database
+     * @param callable $callback
+     */
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $results = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+
+        while ($sum === $limit) {
+            $chunk++;
+
+            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+
+            $sum = count($results);
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+
+        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    /**
      * @param Document $document certificates document
      * @throws \Utopia\Database\Exception\Authorization
      */
@@ -760,5 +800,21 @@ class DeletesV1 extends Worker
         $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
+    }
+
+    protected function deleteInstallation(Document $document, string $projectId)
+    {
+        $dbForProject = $this->getProjectDB($projectId);
+
+        $this->listByGroup('functions', [
+            Query::equal('vcsInstallationInternalId', [$document->getInternalId()])
+        ], $dbForProject, function($function) use ($dbForProject) {
+            $function = $function
+                ->setAttribute('vcsInstallationId', '')
+                ->setAttribute('vcsInstallationInternalId', '')
+                ->setAttribute('repoId', '')
+                ->setAttribute('repoInternalId', '');
+            $dbForProject->updateDocument('functions', $function->getId(), $function);
+        });
     }
 }

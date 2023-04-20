@@ -35,6 +35,13 @@ class Installation extends Model
                 'example' => 'github',
                 'array' => false,
             ])
+            ->addRule('organization', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Installation organization.',
+                'default' => [],
+                'example' => 'appwrite',
+                'array' => false,
+            ])
             ->addRule('installationId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Provider installation ID.',

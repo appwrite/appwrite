@@ -2,6 +2,7 @@
 
 use Utopia\App;
 use Appwrite\Event\Build;
+use Appwrite\Event\Delete;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
@@ -27,7 +28,7 @@ App::get('/v1/vcs/github/installations')
     ->label('origin', '*')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'vcs')
-    ->label('sdk.method', 'createInstallation')
+    ->label('sdk.method', 'createGitHubInstallation')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
@@ -36,8 +37,9 @@ App::get('/v1/vcs/github/installations')
     ->inject('project')
     ->action(function (Response $response, Document $project) {
         $projectId = $project->getId();
-        //TODO: Update the name of the GitHub App
-        $response->redirect("https://github.com/apps/demoappkh/installations/new?state=$projectId");
+
+        $appName = App::getEnv('VCS_GITHUB_NAME', '');
+        $response->redirect(`https://github.com/apps/"{$appName}"/installations/new?state={$projectId}`);
     });
 
 App::get('/v1/vcs/github/incominginstallation')
@@ -47,9 +49,10 @@ App::get('/v1/vcs/github/incominginstallation')
     ->param('installation_id', '', new Text(256), 'installation_id')
     ->param('setup_action', '', new Text(256), 'setup_action')
     ->param('state', '', new Text(256), 'state')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $installationId, string $setup_action, string $state, Response $response, Database $dbForConsole) {
+    ->action(function (string $installationId, string $setupAction, string $state, Request $request, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $state);
 
@@ -65,7 +68,7 @@ App::get('/v1/vcs/github/incominginstallation')
         ]);
 
         if (!$vcsInstallation) {
-            $github = new Document([
+            $vcsInstallation = new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -75,18 +78,23 @@ App::get('/v1/vcs/github/incominginstallation')
                 'installationId' => $installationId,
                 'projectId' => $state,
                 'projectInternalId' => $projectInternalId,
-                'provider' => "GitHub",
+                'provider' => 'GitHub',
+                'organization' => '(todo) My Awesome Organization',
                 'accessToken' => null
             ]);
 
-            $github = $dbForConsole->createDocument('vcs_installations', $github);
+            $vcsInstallation = $dbForConsole->createDocument('vcs_installations', $vcsInstallation);
+        } else {
+            $vcsInstallation = $vcsInstallation->setAttribute('organization', '(todo) My Awesome Organization');
+            $vcsInstallation = $dbForConsole->updateDocument('vcs_installations', $vcsInstallation->getId(), $vcsInstallation);
         }
 
-        $response
-            ->redirect("http://localhost:3000/console/project-$state/settings");
+        $url = $request->getProtocol() . '://' . $request->getHostname() . "console/project-$state/settings/git-installations";
+
+        $response->redirect($url);
     });
 
-App::get('v1/vcs/github/installations/:vcsInstallationId/repositories')
+App::get('v1/vcs/github/installations/:installationId/repositories')
     ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -95,14 +103,21 @@ App::get('v1/vcs/github/installations/:vcsInstallationId/repositories')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
-    ->param('vcsInstallationId', '', new Text(256), 'VCS Installation Id')
+    ->label('sdk.response.model', Response::MODEL_REPOSITORY_LIST)
+    ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $vcsInstallationId, Response $response, Database $dbForConsole) {
-        $vcsInstallations = Authorization::skip(fn () => $dbForConsole
-            ->getDocument('vcs_installations', $vcsInstallationId));
-        $installationId = $vcsInstallations->getAttribute('installationId');
+    ->action(function (string $vcsInstallationId, Response $response, Document $project, Database $dbForConsole) {
+        $installation = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $installationId = $installation->getAttribute('installationId');
 
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
@@ -110,7 +125,11 @@ App::get('v1/vcs/github/installations/:vcsInstallationId/repositories')
         $github = new GitHub();
         $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
         $repos = $github->listRepositoriesForGitHubApp();
-        $response->json($repos);
+
+        $response->dynamic(new Document([
+            'repositories' => $repos,
+            'total' => \count($repos),
+        ]), Response::MODEL_REPOSITORY_LIST);
     });
 
 App::post('/v1/vcs/github/incomingwebhook')
@@ -330,17 +349,20 @@ App::get('/v1/vcs/installations')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'vcs')
     ->label('sdk.method', 'listInstallations')
-    ->label('sdk.description', '/docs/references/functions/list-installations.md')
+    ->label('sdk.description', '/docs/references/vcs/list-installations.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_INSTALLATION_LIST)
     ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
+    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
 
         $queries = Query::parseQueries($queries);
+
+        $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -367,4 +389,40 @@ App::get('/v1/vcs/installations')
             'installations' => $dbForConsole->find('vcs_installations', $queries),
             'total' => $dbForConsole->count('vcs_installations', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_INSTALLATION_LIST);
+    });
+
+App::delete('/v1/vcs/installations/:installationId')
+    ->groups(['api', 'vcs'])
+    ->desc('Delete Installation')
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.method', 'deleteInstallation')
+    ->label('sdk.description', '/docs/references/vcs/delete-installation.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('installationId', '', new Text(256), 'Installation Id')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('deletes')
+    ->action(function (string $vcsInstallationId, Response $response, Document $project, Database $dbForProject, Delete $deletes) {
+
+        $installation = $dbForProject->getDocument('vcs_installations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if (!$dbForProject->deleteDocument('vcs_installations', $installation->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation from DB');
+        }
+
+        $deletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($installation);
+
+        $response->noContent();
     });

@@ -110,6 +110,9 @@ class Exception extends \Exception
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
 
+    /** VCS */
+    public const INSTALLATION_NOT_FOUND            = 'installation_not_found';
+
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
 
