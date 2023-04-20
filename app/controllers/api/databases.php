@@ -3368,7 +3368,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
 
-    $data = \array_merge($document->getArrayCopy(), $data);
+    $newDocument = new Document(\array_merge($document->getArrayCopy(), $data));
 
     try {
         $document = $dbForProject->withRequestTimestamp(
