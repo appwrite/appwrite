@@ -465,8 +465,16 @@ App::put('/v1/functions/:functionId')
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
-        if ($installation->isEmpty()) {
+        if (!empty($vcsInstallationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if(!empty($vcsInstallationId) && empty($repositoryId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID); // TODO: More specific error
+        }
+
+        if(!empty($repositoryId) && empty($vcsInstallationId)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID); // TODO: More specific error
         }
 
         if ($function->isEmpty()) {
@@ -481,8 +489,8 @@ App::put('/v1/functions/:functionId')
         $vcsRepoId = null;
         $needToDeploy = false;
         //if repo id was previously empty and non empty now, we need to create a new deployment for this function
-        $prevVcsRepoId = $function->getAttribute('vcsRepoId');
-        if ($prevVcsRepoId === null && $repositoryId !== "") {
+        $prevVcsRepoId = $function->getAttribute('vcsRepoId', '');
+        if (empty($prevVcsRepoId) && !empty($repositoryId)) {
             $needToDeploy = true;
         }
 
@@ -501,7 +509,7 @@ App::put('/v1/functions/:functionId')
                     Permission::delete(Role::any()),
                 ],
                 'vcsInstallationId' => $installation->getId(),
-                'vcsInstallationIntenralId' => $installation->getInternalId(),
+                'vcsInstallationInternalId' => $installation->getInternalId(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'repositoryId' => $repositoryId,
@@ -530,6 +538,12 @@ App::put('/v1/functions/:functionId')
                 'search' => implode(' ', [$deploymentId, $entrypoint]),
                 'activate' => true,
             ]));
+        }
+
+        // Disconnect repo
+        if(!empty($prevVcsRepoId) && empty($repositoryId)) {
+            $dbForConsole->deleteDocument('vcs_repos', $prevVcsRepoId);
+            $vcsRepoId = '';
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [

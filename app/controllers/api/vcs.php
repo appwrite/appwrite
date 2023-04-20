@@ -38,7 +38,10 @@ App::get('/v1/vcs/github/installations')
         $projectId = $project->getId();
 
         $appName = App::getEnv('VCS_GITHUB_NAME');
-        $response->redirect(`https://github.com/apps/"{$appName}"/installations/new?state={$projectId}`);
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect("https://github.com/apps/$appName/installations/new?state=$projectId");
     });
 
 App::get('/v1/vcs/github/incominginstallation')
@@ -55,8 +58,11 @@ App::get('/v1/vcs/github/incominginstallation')
 
         $project = $dbForConsole->getDocument('projects', $state);
 
+        \var_dump($project);
+
         if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
+            $url = $request->getProtocol() . '://' . $request->getHostname() . "/";
+            $response->redirect($url);
         }
 
         $projectInternalId = $project->getInternalId();
@@ -88,9 +94,12 @@ App::get('/v1/vcs/github/incominginstallation')
             $vcsInstallation = $dbForConsole->updateDocument('vcs_installations', $vcsInstallation->getId(), $vcsInstallation);
         }
 
-        $url = $request->getProtocol() . '://' . $request->getHostname() . "console/project-$state/settings/git-installations";
+        $url = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$state/settings/git-installations";
 
-        $response->redirect($url);
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($url);
     });
 
 App::get('v1/vcs/github/installations/:installationId/repositories')
@@ -218,7 +227,8 @@ App::post('/v1/vcs/github/incomingwebhook')
                     }
                 }
             } else if ($event == $github::EVENT_INSTALLATION) {
-                if ($parsedPayload["action" == "deleted"]) {
+                if ($parsedPayload["action"] == "deleted") {
+                    // TODO: Use worker for this job instead
                     $installationId = $parsedPayload["installationId"];
 
                     $vcsInstallations = $dbForConsole->find('vcs_installations', [
