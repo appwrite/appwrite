@@ -405,11 +405,11 @@ App::delete('/v1/vcs/installations/:installationId')
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->inject('response')
     ->inject('project')
-    ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function (string $vcsInstallationId, Response $response, Document $project, Database $dbForProject, Delete $deletes) {
+    ->action(function (string $vcsInstallationId, Response $response, Document $project, Database $dbForConsole, Delete $deletes) {
 
-        $installation = $dbForProject->getDocument('vcs_installations', $vcsInstallationId, [
+        $installation = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
@@ -417,7 +417,7 @@ App::delete('/v1/vcs/installations/:installationId')
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!$dbForProject->deleteDocument('vcs_installations', $installation->getId())) {
+        if (!$dbForConsole->deleteDocument('vcs_installations', $installation->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation from DB');
         }
 
