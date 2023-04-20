@@ -2317,7 +2317,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('repoId'),
+                '$id' => ID::custom('vcsRepoId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => 2048,

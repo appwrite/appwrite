@@ -38,7 +38,7 @@ App::get('/v1/vcs/github/installations')
     ->action(function (Response $response, Document $project) {
         $projectId = $project->getId();
 
-        $appName = App::getEnv('VCS_GITHUB_NAME', '');
+        $appName = App::getEnv('VCS_GITHUB_NAME');
         $response->redirect(`https://github.com/apps/"{$appName}"/installations/new?state={$projectId}`);
     });
 
@@ -121,9 +121,9 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
 
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        //TODO: Update GitHub Username
+        $githubAppName = App::getEnv('VCS_GITHUB_NAME');
         $github = new GitHub();
-        $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
+        $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
         $repos = $github->listRepositoriesForGitHubApp();
 
         $response->dynamic(new Document([
@@ -149,6 +149,7 @@ App::post('/v1/vcs/github/incomingwebhook')
             $github = new GitHub();
             $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+            $githubAppName = App::getEnv('VCS_GITHUB_NAME');
             $parsedPayload = $github->parseWebhookEventPayload($event, $payload);
             $parsedPayload = json_decode($parsedPayload, true);
 
@@ -247,7 +248,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                     $installationId = $parsedPayload["installationId"];
                     $pullRequestNumber = $parsedPayload["pullRequestNumber"];
                     $repositoryName = $parsedPayload["repositoryName"];
-                    $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo');
+                    $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
 
                     $vcsRepos = $dbForConsole->find('vcs_repos', [
                         Query::equal('repositoryId', [$repositoryId]),

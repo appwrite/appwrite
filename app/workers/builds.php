@@ -102,9 +102,10 @@ class BuildsV1 extends Worker
 
                 $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
                 $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+                $githubAppName = App::getEnv('VCS_GITHUB_NAME');
 
                 $github = new GitHub();
-                $github->initialiseVariables($installationId, $privateKey, $githubAppId, 'vermakhushboo'); //TODO: Update GitHub Username
+                $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
                 $branchName = $deployment->getAttribute('branch');
                 $gitCloneCommand = $github->generateGitCloneCommand($repositoryId, $branchName);
                 $stdout = '';

@@ -809,11 +809,13 @@ class DeletesV1 extends Worker
         $this->listByGroup('functions', [
             Query::equal('vcsInstallationInternalId', [$document->getInternalId()])
         ], $dbForProject, function($function) use ($dbForProject) {
+            $dbForProject->deleteDocument('vcs_repos', $function->getAttribute('vcsRepoId'));
+
             $function = $function
                 ->setAttribute('vcsInstallationId', '')
                 ->setAttribute('vcsInstallationInternalId', '')
-                ->setAttribute('repoId', '')
-                ->setAttribute('repoInternalId', '');
+                ->setAttribute('vcsRepoId', '')
+                ->setAttribute('vcsRepoInternalId', '');
             $dbForProject->updateDocument('functions', $function->getId(), $function);
         });
     }
