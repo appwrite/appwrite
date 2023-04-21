@@ -2113,12 +2113,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9cfa9679f4fdbfb81bff1333d516b8b43e77c5c2"
+                "reference": "6ce621ac9d97e3ff18e1595c328526b3050ab68b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9cfa9679f4fdbfb81bff1333d516b8b43e77c5c2",
-                "reference": "9cfa9679f4fdbfb81bff1333d516b8b43e77c5c2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6ce621ac9d97e3ff18e1595c328526b3050ab68b",
+                "reference": "6ce621ac9d97e3ff18e1595c328526b3050ab68b",
                 "shasum": ""
             },
             "require": {
@@ -2163,7 +2163,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-collection-level-permissions"
             },
-            "time": "2023-04-20T18:37:34+00:00"
+            "time": "2023-04-21T10:56:21+00:00"
         },
         {
             "name": "utopia-php/domains",
