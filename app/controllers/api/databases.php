@@ -2760,8 +2760,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
                 foreach ($relations as &$relation) {
                     if (
-                        \is_array($related)
-                        && \array_values($related) !== $related
+                        \is_array($relation)
+                        && \array_values($relation) !== $relation
                         && !isset($relation['$id'])
                     ) {
                         $relation['$id'] = ID::unique();
