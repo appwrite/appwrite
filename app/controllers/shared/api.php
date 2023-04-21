@@ -554,3 +554,12 @@ App::shutdown()
                 ->submit();
         }
     });
+
+App::init()
+    ->groups(['usage'])
+    ->inject('utopia')
+    ->action(function (App $utopia) {
+        if ($utopia::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
+    });

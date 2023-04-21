@@ -2457,7 +2457,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
 App::get('/v1/databases/usage')
     ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -2471,9 +2471,6 @@ App::get('/v1/databases/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
@@ -2578,7 +2575,7 @@ App::get('/v1/databases/usage')
 
 App::get('/v1/databases/:databaseId/usage')
     ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -2593,9 +2590,6 @@ App::get('/v1/databases/:databaseId/usage')
     ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
@@ -2691,7 +2685,7 @@ App::get('/v1/databases/:databaseId/usage')
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for a collection')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -2716,9 +2710,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [

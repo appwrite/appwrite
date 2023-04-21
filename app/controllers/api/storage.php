@@ -1447,7 +1447,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
 App::get('/v1/storage/usage')
     ->desc('Get usage stats for storage')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'storage', 'usage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
@@ -1461,9 +1461,6 @@ App::get('/v1/storage/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [
@@ -1560,7 +1557,7 @@ App::get('/v1/storage/usage')
 
 App::get('/v1/storage/:bucketId/usage')
     ->desc('Get usage stats for a storage bucket')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'storage', 'usage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
@@ -1581,9 +1578,6 @@ App::get('/v1/storage/:bucketId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $periods = [
                 '24h' => [

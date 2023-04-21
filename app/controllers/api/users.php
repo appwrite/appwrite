@@ -1098,7 +1098,7 @@ App::delete('/v1/users/:userId')
 
 App::get('/v1/users/usage')
     ->desc('Get usage stats for the users API')
-    ->groups(['api', 'users'])
+    ->groups(['api', 'users', 'usage'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -1114,9 +1114,6 @@ App::get('/v1/users/usage')
     ->action(function (string $range, string $provider, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [

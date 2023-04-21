@@ -245,7 +245,7 @@ App::get('/v1/projects/:projectId')
 
 App::get('/v1/projects/:projectId/usage')
     ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects'])
+    ->groups(['api', 'projects', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -268,9 +268,6 @@ App::get('/v1/projects/:projectId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') != 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
