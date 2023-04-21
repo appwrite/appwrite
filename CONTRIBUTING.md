@@ -109,9 +109,9 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite UI is built with two frameworks [Svelte](https://svelte.dev/) and [Svelte Kit](https://kit.svelte.dev/). You can refer the repo [Appwrite-Console](https://github.com/appwrite/console) to learn and explore. Appwrite is using [Pink](https://github.com/appwrite/pink) for CSS.
+Appwrite's UI is built with [Svelte](https://svelte.dev/), [Svelte Kit](https://kit.svelte.dev/), and the [Pink Design](https://github.com/appwrite/pink) component library. You can find the source code in the [Appwrite Console](https://github.com/appwrite/console) repository.
 
-To contribute to the UI, head over to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md)
+To contribute to the UI, head to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md) of Appwrite Console.
 
 ### Get Started
 
