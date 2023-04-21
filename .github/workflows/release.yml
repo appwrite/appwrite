@@ -19,10 +19,6 @@ jobs:
         # Fetch submodules
         submodules: recursive
 
-    # This is a separate action that sets up buildx runner
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
 
@@ -41,9 +37,9 @@ jobs:
       with:
         images: appwrite/appwrite
         tags: |
-          type=semver,pattern={{version}}
           type=semver,pattern={{major}}
           type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}.{{minor}}.{{patch}}
 
     - name: Build and push
       uses: docker/build-push-action@v4
