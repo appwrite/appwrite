@@ -181,6 +181,10 @@ App::init()
             ? null
             : '.' . $request->getHostname());
 
+        if ($request->getHostname() == 'cloud.appwrite.io') {
+            Config::setParam('cookieDomain', '.' . 'appwrite.io');
+        }
+
         /*
         * Response format
         */
