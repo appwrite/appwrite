@@ -671,7 +671,10 @@ class VideosV1 extends Worker
                             $attr['resolution'] = $parts[1];
                             break;
                         case str_contains($parts[0], 'CODECS'):
-                            $attr['codecs'] = $parts[1] . ',' . $attributes[$key + 1];
+                            $attr['codecs'] = $parts[1];
+                            if(!empty($attributes[$key + 1])){
+                                $attr['codecs'] .= ',' . $attributes[$key + 1];
+                            }
                             break;
                     }
                 }
