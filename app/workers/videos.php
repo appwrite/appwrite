@@ -58,6 +58,7 @@ class VideosV1 extends Worker
     private Document $bucket;
     private FFProbe $ffprobe;
     private FFMpeg $ffmpeg;
+    private bool $isVideo = false;
 
     public function getName(): string
     {
@@ -128,6 +129,7 @@ class VideosV1 extends Worker
                 ->setAttribute('format', $general->has('format') ? $general->get('format')->getShortName() : '');
 
             foreach ($mediaInfoContainer->getVideos() ?? [] as $video) {
+                $this->isVideo = true;
                 $this->video
                     ->setAttribute('height', $video->has('height') ? $video->get('height')->getAbsoluteValue() : 0)
                     ->setAttribute('width', $video->has('width') ? $video->get('width')->getAbsoluteValue() : 0)
@@ -163,10 +165,13 @@ class VideosV1 extends Worker
                 ),
             );
         }
-
+        $this->video->getAttribute('videoBitRate');
         $media = $this->ffmpeg->open($inPath);
 
         if ($this->action === 'preview') {
+            if (!$this->isVideo) {
+                return;
+            }
             console::info('Creating preview image from second ' . $this->args['second']);
 
             $path = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/preview/';
@@ -242,6 +247,9 @@ class VideosV1 extends Worker
              * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
              * Text Domain:       playerjs
             */
+            if (!$this->isVideo) {
+                return;
+            }
 
                 $interval = 2;
                 $ranges = [
@@ -671,9 +679,10 @@ class VideosV1 extends Worker
                             $attr['resolution'] = $parts[1];
                             break;
                         case str_contains($parts[0], 'CODECS'):
-                            $attr['codecs'] = $parts[1];
-                            if(!empty($attributes[$key + 1])){
-                                $attr['codecs'] .= ',' . $attributes[$key + 1];
+                            $attr['codecs'] = trim($parts[1], " \n\r\t\v\x00");
+
+                            if (!empty($attributes[$key + 1])) {
+                                $attr['codecs'] .= ',' . trim($attributes[$key + 1], " \n\r\t\v\x00");
                             }
                             break;
                     }

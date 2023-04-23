@@ -807,7 +807,7 @@ App::delete('/v1/videos/:videoId/renditions/:renditionId')
         $response->noContent();
     });
 
-App::get('/v1/videos/:videoId/outputs/:output')
+App::get('/v1/videos/:videoId/outputs/:output/:fileName')
     ->desc('Get video master renditions manifest')
     ->groups(['api', 'videos'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -821,10 +821,11 @@ App::get('/v1/videos/:videoId/outputs/:output')
     ->label('scope', 'videos.read')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('output', '', new WhiteList(['hls', 'dash']), 'output name')
+    ->param('fileName', '', new WhiteList(['master.m3u8', 'master.mpd']), 'manifest filename')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $videoId, string $output, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $videoId, string $output, string $fileName, Response $response, Database $dbForProject, string $mode) {
 
         $dbStartTime = microtime(true);
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
@@ -852,7 +853,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
         ]));
 
         $dbEnd        =  microtime(true) - $dbStartTime;
-        var_dump('$dbEnd = ' . $dbEnd);
+        var_dump('$dbTime = ' . $dbEnd);
         $prosessStart = microtime(true);
         $_renditions = $_subtitles  = [];
 
@@ -862,7 +863,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
                     'name' => $subtitle->getAttribute('name'),
                     'code' => $subtitle->getAttribute('code'),
                     'default' => !empty($subtitle->getAttribute('default')) ? 'YES' : 'NO',
-                    'uri' => $baseUrl . '/subtitles/' . $subtitle->getId(),
+                    'uri' => $baseUrl . '/subtitles/' . $subtitle->getId() . '/subtitles.m3u8',
                 ];
             }
 
@@ -878,10 +879,10 @@ App::get('/v1/videos/:videoId/outputs/:output')
                             'name' => $stream['language'],
                             'default' => ($i === 0) ? 'YES' : 'NO',
                             'language' => $stream['language'],
-                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'],
+                            'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'] . '/playlist.m3u8',
                         ];
                     } elseif ($stream['type'] === 'video') {
-                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'];
+                        $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'] . '/playlist.m3u8';
                         $resolution = $stream['resolution'] ?? $rendition->getAttribute('width') . 'x' . $rendition->getAttribute('height');
                         $bandwidth  = $stream['bandwidth']  ?? ($rendition->getAttribute('videoBitRate') + $rendition->getAttribute('audioBitRate')) * 1024;
                         $codecs     = $stream['codecs'] ?? null;
@@ -910,7 +911,6 @@ App::get('/v1/videos/:videoId/outputs/:output')
 //            $prosessEnd =  microtime(true) - $prosessStart;
 //            var_dump('$dbEnd = ' . $dbEnd);
 //            var_dump('$prosessEnd = ' . $prosessEnd);
-
         } else {
             $adaptationId = 0;
             foreach ($renditions as $rendition) {
@@ -942,11 +942,11 @@ App::get('/v1/videos/:videoId/outputs/:output')
 
                     foreach ($segments ?? [] as $segment) {
                         if ($segment->getAttribute('isInit')) {
-                            $representation['segmentList']['init'] = $segment->getId();
+                            $representation['segmentList']['init'] = $segment->getId() . '/segment.m4s';
                             continue;
                         }
 
-                        $representation['segmentList']['media'][] = $segment->getId();
+                        $representation['segmentList']['media'][] = $segment->getId() . '/segment.m4s';
                     }
 
                     $attributes = (array)$adaptation->attributes();
@@ -964,7 +964,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
             foreach ($subtitles ?? [] as $subtitle) {
                 $_subtitles[] = [
                     'id' => $adaptationId,
-                    'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId(),
+                    'baseUrl' => $baseUrl . '/subtitles/' . $subtitle->getId() . '/subtitle.vtt',
                     'name' => $subtitle->getAttribute('name'),
                 ];
                 $adaptationId++;
@@ -981,7 +981,7 @@ App::get('/v1/videos/:videoId/outputs/:output')
         }
     });
 
-App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:streamId')
+App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:streamId/:fileName')
     ->desc('Get video rendition manifest')
     ->groups(['api', 'videos'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -997,10 +997,11 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
     ->param('output', '', new WhiteList(['hls']), 'Output name.')
     ->param('renditionId', null, new UID(), 'Rendition unique ID.')
     ->param('streamId', 0, new Range(0, 10), 'Stream ID.')
+    ->param('fileName', '', new WhiteList(['playlist.m3u8']), 'Playlist filename')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $videoId, string $output, string $renditionId, string $streamId, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $videoId, string $output, string $renditionId, string $streamId, string $fileName, Response $response, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
@@ -1034,7 +1035,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
         foreach ($segments as $segment) {
             $_segments[] = [
                 'duration' => $segment->getAttribute('duration'),
-                'url' => TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output . '/renditions/' . $renditionId . '/segments/' . $segment->getId(),
+                'url' => TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output . '/renditions/' . $renditionId . '/segments/' . $segment->getId() . '/segment.ts',
             ];
         }
 
@@ -1045,7 +1046,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
             ->send($template->render(false));
     });
 
-App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:segmentId')
+App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:segmentId/:fileName')
     ->desc('Get video rendition segment')
     ->groups(['api', 'videos'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1061,10 +1062,11 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:
     ->param('output', '', new WhiteList(['hls', 'dash']), 'Output name')
     ->param('renditionId', '', new UID(), 'Rendition unique ID.')
     ->param('segmentId', '', new UID(), 'Segment unique ID.')
+    ->param('fileName', '', new WhiteList(['segment.ts', 'segment.m4s']), 'Segment filename')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
-    ->action(function (string $videoId, string $output, string $renditionId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos) {
+    ->action(function (string $videoId, string $output, string $renditionId, string $segmentId, string $fileName, Response $response, Database $dbForProject, Device $deviceVideos) {
 
         $segment = Authorization::skip(fn() => $dbForProject->getDocument('videos_renditions_segments', $segmentId));
         if ($segment->isEmpty()) {
@@ -1076,13 +1078,13 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/segments/:
         if ($output === 'hls') {
             $response->setContentType('video/MP2T')
                 ->send($data);
-        } else {
-            $response->setContentType('video/iso.segment')
-                ->send($data);
         }
+
+        $response->setContentType('video/iso.segment')
+            ->send($data);
     });
 
-App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
+App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/:fileName')
     ->desc('Get video subtitle')
     ->groups(['api', 'videos'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1097,11 +1099,12 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
     ->param('videoId', null, new UID(), 'Video unique ID.')
     ->param('output', '', new WhiteList(['hls', 'dash']), 'Protocol name')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
+    ->param('fileName', '', new WhiteList(['subtitles.m3u8', 'subtitle.vtt']), 'Subtitle filename')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
-    ->action(function (string $videoId, string $output, string $subtitleId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
+    ->action(function (string $videoId, string $output, string $subtitleId, $fileName, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {
@@ -1119,36 +1122,36 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId')
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        if ($output === 'hls') {
-            $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
-                Query::equal('subtitleId', [$subtitleId]),
-            ]));
-
-            if (empty($segments)) {
-                throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
-            }
-
-            $_segments = [];
-            foreach ($segments as $segment) {
-                $_segments[] = [
-                    'duration' => $segment->getAttribute('duration'),
-                    'url' => TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId(),
-                ];
-            }
-
-            $template = new View(__DIR__ . '/../../views/videos/hls-subtitles.phtml');
-            $template->setParam('targetDuration', $subtitle->getAttribute('targetDuration'));
-            $template->setParam('segments', $_segments);
-            $response->setContentType('application/x-mpegurl')
-                ->send($template->render(false));
-        } else {
-            $data = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId')) . '/'  . $subtitle->getId() . '.vtt');
+        if ($output === 'dash') {
+            $data = $deviceVideos->read($deviceVideos->getPath($subtitle->getAttribute('videoId')) . '/subtitles/'  . $subtitle->getId() . '.vtt');
             $response->setContentType('text/vtt')
                 ->send($data);
         }
+
+        $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
+            Query::equal('subtitleId', [$subtitleId]),
+        ]));
+
+        if (empty($segments)) {
+            throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
+        }
+
+        $_segments = [];
+        foreach ($segments as $segment) {
+            $_segments[] = [
+                'duration' => $segment->getAttribute('duration'),
+                'url' => TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output . '/subtitles/' . $subtitleId . '/segments/' . $segment->getId() . '/subtitle.vtt',
+            ];
+        }
+
+        $template = new View(__DIR__ . '/../../views/videos/hls-subtitles.phtml');
+        $template->setParam('targetDuration', $subtitle->getAttribute('targetDuration'));
+        $template->setParam('segments', $_segments);
+        $response->setContentType('application/x-mpegurl')
+                 ->send($template->render(false));
     });
 
-App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:segmentId')
+App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:segmentId/:fileName')
     ->desc('Get video subtitle segment')
     ->groups(['api', 'videos'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1164,11 +1167,12 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/segments/:se
     ->param('output', '', new WhiteList(['hls', 'dash']), 'output name')
     ->param('subtitleId', '', new UID(), 'Subtitle unique ID.')
     ->param('segmentId', '', new UID(), 'Segment unique ID.')
+    ->param('fileName', '', new WhiteList(['subtitle.vtt']), 'Subtitle filename')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deviceVideos')
     ->inject('mode')
-    ->action(function (string $videoId, string $output, string $subtitleId, string $segmentId, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
+    ->action(function (string $videoId, string $output, string $subtitleId, string $segmentId, string $fileName, Response $response, Database $dbForProject, Device $deviceVideos, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
         if ($video->isEmpty()) {

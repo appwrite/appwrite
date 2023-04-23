@@ -31,7 +31,7 @@ echo '<?xml version="1.0" encoding="utf-8"?>'; ?>
          <AdaptationSet id="<?php if (isset($subtitle['id'])): echo $subtitle['id'];  endif;?>"  lang="<?php if (isset($subtitle['name'])): echo $this->escape($subtitle['name']);  endif;?>" mimeType="text/vtt">
              <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
              <Representation>
-                <BaseURL><?php if (isset($subtitle['baseUrl'])): $this->escape($subtitle['baseUrl']); endif;?></BaseURL>
+                <BaseURL><?php if (isset($subtitle['baseUrl'])): echo $this->escape($subtitle['baseUrl']); endif;?></BaseURL>
             </Representation>
         </AdaptationSet>
         <?php endforeach; ?>
