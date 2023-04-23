@@ -1,9 +1,9 @@
 <?php
 
 return [
-    '/' => [
-        'key' => 'homepage',
-        'name' => 'Homepage',
+    'web/home' => [
+        'key' => 'web/home',
+        'name' => 'Home',
         'subtitle' => '',
         'description' => '',
         'controller' => 'web/home.php',
@@ -14,8 +14,8 @@ return [
         'optional' => false,
         'icon' => '',
     ],
-    'console' => [
-        'key' => 'console',
+    'web/console' => [
+        'key' => 'web/console',
         'name' => 'Console',
         'subtitle' => '',
         'description' => '',

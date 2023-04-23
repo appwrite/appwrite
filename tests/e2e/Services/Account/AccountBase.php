@@ -6,7 +6,7 @@ use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait AccountBase
 {

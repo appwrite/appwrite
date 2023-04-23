@@ -53,7 +53,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\Messaging\Adapters\SMS\Mock;
@@ -86,6 +86,7 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
@@ -99,8 +100,8 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.2.1';
+const APP_CACHE_BUSTER = 503;
+const APP_VERSION_STABLE = '1.3.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -284,12 +285,23 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('attributes', [
-                Query::equal('collectionInternalId', [$document->getInternalId()]),
-                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getLimitForAttributes()),
-            ]);
+        $attributes = $database->find('attributes', [
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
+            Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+            Query::limit($database->getLimitForAttributes()),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $options = $attribute->getAttribute('options');
+                foreach ($options as $key => $value) {
+                    $attribute->setAttribute($key, $value);
+                }
+                $attribute->removeAttribute('options');
+            }
+        }
+
+        return $attributes;
     }
 );
 
@@ -606,6 +618,12 @@ $register->set('smtp', function () {
 });
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
+});
+$register->set('passwordsDictionary', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
 });
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
@@ -1027,6 +1045,11 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
+App::setResource('passwordsDictionary', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary');
+}, ['register']);
+
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
@@ -1143,3 +1166,17 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $params,
     );
 }, ['utopia', 'dbForProject']);
+
+App::setResource('requestTimestamp', function ($request) {
+    //TODO: Move this to the Request class itself
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);
