@@ -6,6 +6,8 @@ use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class V18 extends Migration
 {
@@ -89,6 +91,12 @@ class V18 extends Migration
                     continue;
                 }
                 $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
+            }
+
+            try {
+                $this->projectDB->updateCollection($id, [Permission::create(Role::any())], true);
+            } catch (\Throwable $th) {
+                Console::warning($th->getMessage());
             }
 
             switch ($id) {
