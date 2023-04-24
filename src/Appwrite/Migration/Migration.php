@@ -37,6 +37,9 @@ abstract class Migration
      */
     protected Database $consoleDB;
 
+    /**
+     * @var \PDO
+     */
     protected \PDO $pdo;
 
     /**
@@ -102,6 +105,12 @@ abstract class Migration
         return $this;
     }
 
+    /**
+     * Set PDO for Migration.
+     *
+     * @param \PDO $pdo
+     * @return \Appwrite\Migration\Migration
+     */
     public function setPDO(\PDO $pdo): self
     {
         $this->pdo = $pdo;

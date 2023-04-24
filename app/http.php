@@ -115,12 +115,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             if (!$dbForConsole->getCollection($key)->isEmpty()) {
                 continue;
             }
-            /**
-             * Skip to prevent 0.16 migration issues.
-             */
-            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
-                continue;
-            }
 
             Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
 
@@ -215,6 +209,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         }
 
         Console::success('[Setup] - Server database init completed...');
+        var_dump($dbForConsole->find(Database::METADATA));
     });
 
     Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
