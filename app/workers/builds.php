@@ -106,6 +106,7 @@ class BuildsV1 extends Worker
 
                 $github = new GitHub();
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
+                $repositoryName = $github->getRepositoryName($repositoryId);
                 $branchName = $deployment->getAttribute('branch');
                 $gitCloneCommand = $github->generateGitCloneCommand($repositoryId, $branchName);
                 $stdout = '';
@@ -148,8 +149,8 @@ class BuildsV1 extends Worker
                 $commentId = $deployment->getAttribute('vcsCommentId');
                 if ($commentId) {
                     $comment = "| Build Status |\r\n | --------------- |\r\n | Processing |";
-                    $github->updateComment("functions-example", $commentId, $comment);
-                    // TODO: Update repo name
+                    
+                    $github->updateComment($repositoryName, $commentId, $comment);
                     $addComment = true;
                 }
             } else {
@@ -181,8 +182,7 @@ class BuildsV1 extends Worker
             $commentId = $deployment->getAttribute('vcsCommentId');
             if ($commentId) {
                 $comment = "| Build Status |\r\n | --------------- |\r\n | Building |";
-                $github->updateComment("functions-example", $commentId, $comment);
-                // TODO: Update repo name
+                $github->updateComment($repositoryName, $commentId, $comment);
             }
         }
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -270,8 +270,7 @@ class BuildsV1 extends Worker
                 if ($commentId) {
                     $status = $response["status"];
                     $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
-                    $github->updateComment("functions-example", $commentId, $comment);
-                    // TODO: Update repo name
+                    $github->updateComment($repositoryName, $commentId, $comment);
                 }
             }
 
