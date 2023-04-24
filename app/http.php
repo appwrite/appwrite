@@ -209,7 +209,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         }
 
         Console::success('[Setup] - Server database init completed...');
-        var_dump($dbForConsole->find(Database::METADATA));
     });
 
     Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
