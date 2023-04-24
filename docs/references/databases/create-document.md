@@ -1,1 +1,1 @@
-Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](/docs/server/databases#databasesCreateCollection) API or directly from your database console.
+Create a new document. Before using this route, you should create a new collection and at least one attribute using either a [server integration](/docs/server/databases#databasesCreateCollection) API or directly from the Appwrite Console.
