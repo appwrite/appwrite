@@ -2,13 +2,13 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\IndexedQueries;
-use Appwrite\Utopia\Database\Validator\Query\Cursor;
-use Appwrite\Utopia\Database\Validator\Query\Filter;
-use Appwrite\Utopia\Database\Validator\Query\Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset;
-use Appwrite\Utopia\Database\Validator\Query\Order;
-use Appwrite\Utopia\Database\Validator\Query\Select;
+use Utopia\Database\Validator\IndexedQueries;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Filter;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Query\Order;
+use Utopia\Database\Validator\Query\Select;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 

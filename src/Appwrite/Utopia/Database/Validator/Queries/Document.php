@@ -2,8 +2,8 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\Queries;
-use Appwrite\Utopia\Database\Validator\Query\Select;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Select;
 use Utopia\Database\Database;
 
 class Document extends Queries
