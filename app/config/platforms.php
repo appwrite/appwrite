@@ -28,7 +28,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
                 'demos' => [
                     [
                         'icon' => 'react.svg',
@@ -76,7 +76,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-flutter.git',
                 'gitRepoName' => 'sdk-for-flutter',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'apple',
@@ -94,7 +94,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-apple.git',
                 'gitRepoName' => 'sdk-for-apple',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'objective-c',
@@ -111,7 +111,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-objective-c.git',
                 'gitRepoName' => 'sdk-for-objective-c',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'android',
@@ -129,7 +129,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-android.git',
                 'gitRepoName' => 'sdk-for-android',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'main',
+                'gitBranch' => 'dev',
                 'docDirectories' => [
                     'Kotlin' => 'kotlin',
                     'Java' => 'java',
@@ -196,14 +196,14 @@ return [
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
-                'gitBranch' => 'main',
+                'gitBranch' => 'dev',
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
             ],
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '2.0.0',
+                'version' => '2.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,
@@ -216,7 +216,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-cli.git',
                 'gitRepoName' => 'sdk-for-cli',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
         ],
     ],
@@ -244,7 +244,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'deno',
@@ -262,7 +262,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-deno.git',
                 'gitRepoName' => 'sdk-for-deno',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'php',
@@ -280,7 +280,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-php.git',
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'python',
@@ -298,7 +298,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-python.git',
                 'gitRepoName' => 'sdk-for-python',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'ruby',
@@ -316,7 +316,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-ruby.git',
                 'gitRepoName' => 'sdk-for-ruby',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'go',
@@ -334,7 +334,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-go.git',
                 'gitRepoName' => 'sdk-for-go',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'java',
@@ -352,7 +352,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-java.git',
                 'gitRepoName' => 'sdk-for-java',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'dotnet',
@@ -370,7 +370,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-dotnet.git',
                 'gitRepoName' => 'sdk-for-dotnet',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'main',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'dart',
@@ -388,7 +388,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-dart.git',
                 'gitRepoName' => 'sdk-for-dart',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'master',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'kotlin',
@@ -406,7 +406,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-kotlin.git',
                 'gitRepoName' => 'sdk-for-kotlin',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'main',
+                'gitBranch' => 'dev',
                 'docDirectories' => [
                     'Kotlin' => 'kotlin',
                     'Java' => 'java',
@@ -428,7 +428,7 @@ return [
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-swift.git',
                 'gitRepoName' => 'sdk-for-swift',
                 'gitUserName' => 'appwrite',
-                'gitBranch' => 'main',
+                'gitBranch' => 'dev',
             ],
             [
                 'key' => 'graphql',
