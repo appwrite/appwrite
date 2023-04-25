@@ -434,63 +434,67 @@ App::get('/v1/cards/cloud-og')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (int $width, int $height, Document $user, Document $project, Database $dbForProject, Response $response) {
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
-        }
+        // if ($user->isEmpty()) {
+        //     throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+        // }
 
-        $baseImage = new \Imagick("public/images/cards-cloud.png");
+        $baseImage = new \Imagick("public/images/cards-cloud-og3.png");
 
-        $name = $user->getAttribute('name', 'Anonymous');
-        $createdAt = new \DateTime($user->getCreatedAt());
-        $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
+        // $name = $user->getAttribute('name', 'Anonymous');
+        // $createdAt = new \DateTime($user->getCreatedAt());
+        // $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
-        try {
-            $sessions = $user->getAttribute('sessions', []);
-            $session = $sessions[0] ?? new Document();
+        // try {
+        //     $sessions = $user->getAttribute('sessions', []);
+        //     $session = $sessions[0] ?? new Document();
 
-            $provider = $session->getAttribute('provider');
-            $refreshToken = $session->getAttribute('providerRefreshToken');
+        //     $provider = $session->getAttribute('provider');
+        //     $refreshToken = $session->getAttribute('providerRefreshToken');
 
-            $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-            $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        //     $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+        //     $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
-            $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+        //     $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
-            if (!\class_exists($className)) {
-                throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
-            }
+        //     if (!\class_exists($className)) {
+        //         throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
+        //     }
 
-            $oauth2 = new $className($appId, $appSecret, '', [], []);
+        //     $oauth2 = new $className($appId, $appSecret, '', [], []);
 
-            $oauth2->refreshTokens($refreshToken);
+        //     $oauth2->refreshTokens($refreshToken);
 
-            $accessToken = $oauth2->getAccessToken('');
-            $refreshToken = $oauth2->getRefreshToken('');
+        //     $accessToken = $oauth2->getAccessToken('');
+        //     $refreshToken = $oauth2->getRefreshToken('');
 
-            $session
-                ->setAttribute('providerAccessToken', $accessToken)
-                ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+        //     $session
+        //         ->setAttribute('providerAccessToken', $accessToken)
+        //         ->setAttribute('providerRefreshToken', $refreshToken)
+        //         ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-            $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        //     $dbForProject->updateDocument('sessions', $session->getId(), $session);
 
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+        //     $dbForProject->deleteCachedDocument('users', $user->getId());
 
-            $githubUser = $oauth2->getUserSlug($accessToken);
+        //     $githubUser = $oauth2->getUserSlug($accessToken);
 
-            $gitHub = $githubUser;
-        } catch (Exception $err) {
-            $gitHub = '';
-            \var_dump($err->getMessage());
-            \var_dump($err->getTraceAsString());
-            \var_dump($err->getLine());
-            \var_dump($err->getFile());
-        }
+        //     $gitHub = $githubUser;
+        // } catch (Exception $err) {
+        //     $gitHub = '';
+        //     \var_dump($err->getMessage());
+        //     \var_dump($err->getTraceAsString());
+        //     \var_dump($err->getLine());
+        //     \var_dump($err->getFile());
+        // }
 
         // setlocale(LC_ALL, "en_US.utf8");
         // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
         // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
         // $gitHub = \iconv("utf-8", "ascii//TRANSLIT", $gitHub);
+
+        $name = 'Matej Bačo';
+        $memberSince = 'Member since 12 Nov 2023';
+        $gitHub = 'meldiron';
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
@@ -498,24 +502,32 @@ App::get('/v1/cards/cloud-og')
         $text->setFillColor(new ImagickPixel('#FFFFFF'));
         $text->setFontSize(58);
         $text->setFontWeight(700);
-        $baseImage->annotateImage($text, 550, 585, -22.88, $name);
 
-        $text = new \ImagickDraw();
-        $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont("public/fonts/Inter-Medium.ttf");
-        $text->setFillColor(new ImagickPixel('#FFB9CC'));
-        $text->setFontSize(24);
-        $text->setFontWeight(500);
-        $text->setTextKerning(1.12);
-        $baseImage->annotateImage($text, 570, 630, -22.24, $memberSince);
+        $text->skewY(20);
+        $text->skewX(20);
+        $text->setGravity(Imagick::GRAVITY_CENTER);
+        $text->annotation(350, 635, $name);
 
-        $text = new \ImagickDraw();
-        $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont("public/fonts/Inter-Regular.ttf");
-        $text->setFillColor(new ImagickPixel('#FFB9CC'));
-        $text->setFontSize(26);
-        $text->setFontWeight(400);
-        $baseImage->annotateImage($text, 805, 380, 64.75, $gitHub);
+
+        $baseImage->drawImage($text);
+        // $baseImage->annotateImage($text, 550, 535, -8.86, $name);
+
+        // $text = new \ImagickDraw();
+        // $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        // $text->setFont("public/fonts/Inter-Medium.ttf");
+        // $text->setFillColor(new ImagickPixel('#FFB9CC'));
+        // $text->setFontSize(24);
+        // $text->setFontWeight(500);
+        // $text->setTextKerning(1.12);
+        // $baseImage->annotateImage($text, 570, 630, -22.24, $memberSince);
+
+        // $text = new \ImagickDraw();
+        // $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        // $text->setFont("public/fonts/Inter-Regular.ttf");
+        // $text->setFillColor(new ImagickPixel('#FFB9CC'));
+        // $text->setFontSize(26);
+        // $text->setFontWeight(400);
+        // $baseImage->annotateImage($text, 805, 380, 64.75, $gitHub);
 
         // $metrics = $baseImage->queryFontMetrics($text, $gitHub);
         // \var_dump($metrics['textWidth']);
