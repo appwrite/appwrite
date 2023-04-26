@@ -142,6 +142,10 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
+        if($this->paused) {
+            return;
+        }
+
         $client = new Client($this->queue, $this->connection);
 
         $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
@@ -174,6 +178,7 @@ class Func extends Event
         $this->payload = $event->getPayload();
         $this->event = $event->getEvent();
         $this->params = $event->getParams();
+        $this->paused = $event->isPaused();
         return $this;
     }
 }

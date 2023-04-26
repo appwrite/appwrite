@@ -46,6 +46,7 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected bool $paused = false;
 
     /**
      * @param string $queue
@@ -263,6 +264,10 @@ class Event
      */
     public function trigger(): string|bool
     {
+        if($this->paused) {
+            return;
+        }
+
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
@@ -467,5 +472,23 @@ class Event
          * Force a non-assoc array.
          */
         return \array_values($events);
+    }
+
+    /**
+     * Get the value of paused
+     */
+    public function isPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    /**
+     * Set the value of paused
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
     }
 }
