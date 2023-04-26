@@ -470,7 +470,7 @@ App::get('/v1/avatars/initials')
             ->file($image->getImageBlob());
     });
 
-    App::get('/v1/cards/cloud')
+App::get('/v1/cards/cloud')
     ->desc('Get Front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -512,7 +512,7 @@ App::get('/v1/avatars/initials')
             $isEmployee = \in_array($email, $employees);
             $employeeNumber = $isEmployee ? \array_search($email, $employees) : '';
     
-            $isPlatinum = false; // TODO: Randomness logic
+            $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
             $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
@@ -645,7 +645,7 @@ App::get('/v1/avatars/initials')
             ->file($baseImage->getImageBlob());
     });
 
-    App::get('/v1/cards/cloud-back')
+App::get('/v1/cards/cloud-back')
     ->desc('Get Back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -685,7 +685,7 @@ App::get('/v1/avatars/initials')
             $isEmployee = \in_array($email, $employees);
 
             $isGolden = $isEmployee || $isHero || $isContributor;
-            $isPlatinum = false; // TODO: Randomness logic
+            $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
             $userId = '63e0bcf3c3eb803ba530';
 
@@ -711,6 +711,107 @@ App::get('/v1/avatars/initials')
         $text->setFontSize(28);
         $text->setFontWeight(400);
         $baseImage->annotateImage($text, 512, 600, 0, $userId);
+
+        if (!empty($width) || !empty($height)) {
+            $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
+        }
+
+        $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->setContentType('image/png')
+            ->file($baseImage->getImageBlob());
+    });
+
+App::get('/v1/cards/cloud-og')
+    ->desc('Get OG Image From Cloud Card')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    // ->label('cache', true)
+    // ->label('cache.resourceType', 'cards/cloud-og')
+    // ->label('cache.resource', 'card/{request.userId}')
+    ->label('docs', false)
+    ->label('origin', '*')
+    ->param('userId', '', new UID(), 'User ID.', true)
+    ->param('mock', '', new WhiteList(['employee', 'employee-2digit', 'employee-3digit', 'hero', 'contributor', 'normal', 'platinum', 'normal-no-github', 'normal-long', 'normal-bg2', 'normal-bg3', 'normal-right', 'platinum-right', 'golden-right']), 'Mocking behaviour.', true)
+    ->param('width', 0, new Range(0, 1024), 'Resize  image card width, Pass an integer between 0 to 1024.', true)
+    ->param('height', 0, new Range(0, 1024), 'Resize image card height, Pass an integer between 0 to 1024.', true)
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->inject('response')
+    ->inject('heroes')
+    ->inject('contributors')
+    ->inject('employees')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees) use ($getUserGitHub) {
+        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+
+        if ($user->isEmpty() && empty($mock)) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        if(!$mock) {
+            $internalId = $user->getInternalId();
+            $bgVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
+            $cardVariation = $internalId % 2 === 0 ? '1' : '2';
+
+            $name = $user->getAttribute('name', 'Anonymous');
+            $email = $user->getAttribute('email', '');
+            $createdAt = new \DateTime($user->getCreatedAt());
+    
+            $gitHub = $getUserGitHub($user, $project, $dbForProject);
+            $githubName = $gitHub['name'] ?? '';
+            $githubId = $gitHub['id'] ?? '';
+    
+            $isHero = \in_array($email, $heroes);
+            $isContributor = \in_array($githubId, $contributors);
+            $isEmployee = \in_array($email, $employees);
+            $employeeNumber = $isEmployee ? \array_search($email, $employees) : '';
+    
+            $isPlatinum = $user->getInternalId() % 100 === 0;
+        } else {
+            $bgVariation = \str_ends_with($mock, '-bg2') ? '2' :( \str_ends_with($mock, '-bg3') ? '3' : '1');
+            $cardVariation = \str_ends_with($mock, '-right') ? '2' : '1';
+            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $createdAt = new \DateTime('now');
+            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $isHero = $mock === 'hero';
+            $isContributor = $mock === 'contributor';
+            $isEmployee = \str_starts_with($mock, 'employee');
+            $employeeNumber = match ($mock) {
+                'employee' => '1',
+                'employee-2digit' => '18',
+                'employee-3digit' => '246',
+                default => ''
+            };
+
+            $isPlatinum = $mock === 'platinum';
+        }
+
+        $isGolden = $isEmployee || $isHero || $isContributor;
+        $isPlatinum = $isGolden ? false : $isPlatinum;
+        $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
+
+        $baseImage = new \Imagick("public/images/cards/cloud/og-background{$bgVariation}.png");
+        $cardType = $isGolden ? '-golden' : ($isPlatinum ? '-platinum' : '');
+        $image = new Imagick("public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
+        $image->setGravity(Imagick::GRAVITY_CENTER);
+        $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 0, 0);
+
+        // TODO: isemployee
+        // TODO: isContributor
+        // TODO: isHero
+        // TODO: 
+
+        setlocale(LC_ALL, "en_US.utf8");
+        $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
+        $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
+        $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
+
+
+        // TODO: Name
+        // TODO: memberSince
+        // TODO: githubName
 
         if (!empty($width) || !empty($height)) {
             $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
