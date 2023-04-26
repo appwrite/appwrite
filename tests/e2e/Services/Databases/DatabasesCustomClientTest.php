@@ -81,6 +81,10 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
+        var_dump("\n###############################\n");
+        var_dump($document1);
+        var_dump("\n###############################\n");
+
         $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
