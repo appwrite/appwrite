@@ -76,19 +76,26 @@ $getUserGitHub = function (Document $user, Document $project, Database $dbForPro
 
         $oauth2 = new $className($appId, $appSecret, '', [], []);
 
-        $oauth2->refreshTokens($refreshToken);
+        try {
+            $oauth2->refreshTokens($refreshToken);
 
-        $accessToken = $oauth2->getAccessToken('');
-        $refreshToken = $oauth2->getRefreshToken('');
+            $accessToken = $oauth2->getAccessToken('');
+            $refreshToken = $oauth2->getRefreshToken('');
 
-        $session
-            ->setAttribute('providerAccessToken', $accessToken)
-            ->setAttribute('providerRefreshToken', $refreshToken)
-            ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+            $session
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-        Authorization::skip(fn() => $dbForProject->updateDocument('sessions', $session->getId(), $session));
+            Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $session->getId(), $session));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->deleteCachedDocument('users', $user->getId());
+        } catch (Throwable $err) {
+            // Race contition
+            $sessions = $user->getAttribute('sessions', []);
+            $session = $sessions[0] ?? new Document();
+            $accessToken = $session->getAttribute('providerAccessToken');
+        }
 
         $githubUser = $oauth2->getUserSlug($accessToken);
         $githubId = $oauth2->getUserID($accessToken);
@@ -474,9 +481,9 @@ App::get('/v1/cards/cloud')
     ->desc('Get Front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    ->label('cache', true)
-    ->label('cache.resourceType', 'cards/cloud')
-    ->label('cache.resource', 'card/{request.userId}')
+    // ->label('cache', true)
+    // ->label('cache.resourceType', 'cards/cloud')
+    // ->label('cache.resource', 'card/{request.userId}')
     ->label('docs', false)
     ->label('origin', '*')
     ->param('userId', '', new UID(), 'User ID.', true)
@@ -498,20 +505,20 @@ App::get('/v1/cards/cloud')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if(!$mock) {
+        if (!$mock) {
             $name = $user->getAttribute('name', 'Anonymous');
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
-    
+
             $gitHub = $getUserGitHub($user, $project, $dbForProject);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
-    
+
             $isHero = \in_array($email, $heroes);
             $isContributor = \in_array($githubId, $contributors);
             $isEmployee = \in_array($email, $employees);
             $employeeNumber = $isEmployee ? \array_search($email, $employees) : '';
-    
+
             $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
             $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
@@ -538,7 +545,7 @@ App::get('/v1/cards/cloud')
 
         $baseImage = new \Imagick("public/images/cards/cloud/" . $imagePath);
 
-        if($isEmployee) {
+        if ($isEmployee) {
             $image = new Imagick('public/images/cards/cloud/employee.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 795, 35);
@@ -562,11 +569,11 @@ App::get('/v1/cards/cloud')
             $startX = 900;
             $totalWidth = $metricsHashtag['textWidth'] + 12 + $metricsText['textWidth'];
 
-            $hashtagX = ($metricsHashtag['textWidth']/2);
-            $textX = $hashtagX + 12 + ($metricsText['textWidth']/2);
-            
-            $hashtagX -= $totalWidth/2;
-            $textX -= $totalWidth/2;
+            $hashtagX = ($metricsHashtag['textWidth'] / 2);
+            $textX = $hashtagX + 12 + ($metricsText['textWidth'] / 2);
+
+            $hashtagX -= $totalWidth / 2;
+            $textX -= $totalWidth / 2;
 
             $hashtagX += $startX;
             $textX += $startX;
@@ -575,13 +582,13 @@ App::get('/v1/cards/cloud')
             $baseImage->annotateImage($text, $textX, 150, 0, $employeeNumber);
         }
 
-        if($isContributor) {
+        if ($isContributor) {
             $image = new Imagick('public/images/cards/cloud/contributor.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 795, 35);
         }
 
-        if($isHero) {
+        if ($isHero) {
             $image = new Imagick('public/images/cards/cloud/hero.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 795, 35);
@@ -597,11 +604,11 @@ App::get('/v1/cards/cloud')
         $text->setFont("public/fonts/Poppins-Bold.ttf");
         $text->setFillColor(new \ImagickPixel('#FFFFFF'));
 
-        if(\strlen($name) > 33) {
+        if (\strlen($name) > 33) {
             $name = \substr($name, 0, 33);
         }
 
-        if(\strlen($name) <= 23) {
+        if (\strlen($name) <= 23) {
             $text->setFontSize(80);
         } else {
             $text->setFontSize(54);
@@ -649,9 +656,9 @@ App::get('/v1/cards/cloud-back')
     ->desc('Get Back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    ->label('cache', true)
-    ->label('cache.resourceType', 'cards/cloud-back')
-    ->label('cache.resource', 'card/{request.userId}')
+    // ->label('cache', true)
+    // ->label('cache.resourceType', 'cards/cloud-back')
+    // ->label('cache.resource', 'card/{request.userId}')
     ->label('docs', false)
     ->label('origin', '*')
     ->param('userId', '', new UID(), 'User ID.', true)
@@ -673,13 +680,13 @@ App::get('/v1/cards/cloud-back')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if(!$mock) {
+        if (!$mock) {
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
-    
+
             $gitHub = $getUserGitHub($user, $project, $dbForProject);
             $githubId = $gitHub['id'] ?? '';
-    
+
             $isHero = \in_array($email, $heroes);
             $isContributor = \in_array($githubId, $contributors);
             $isEmployee = \in_array($email, $employees);
@@ -750,7 +757,7 @@ App::get('/v1/cards/cloud-og')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if(!$mock) {
+        if (!$mock) {
             $internalId = $user->getInternalId();
             $bgVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
             $cardVariation = $internalId % 2 === 0 ? '1' : '2';
@@ -758,19 +765,19 @@ App::get('/v1/cards/cloud-og')
             $name = $user->getAttribute('name', 'Anonymous');
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
-    
+
             $gitHub = $getUserGitHub($user, $project, $dbForProject);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
-    
+
             $isHero = \in_array($email, $heroes);
             $isContributor = \in_array($githubId, $contributors);
             $isEmployee = \in_array($email, $employees);
             $employeeNumber = $isEmployee ? \array_search($email, $employees) : '';
-    
+
             $isPlatinum = $user->getInternalId() % 100 === 0;
         } else {
-            $bgVariation = \str_ends_with($mock, '-bg2') ? '2' :( \str_ends_with($mock, '-bg3') ? '3' : '1');
+            $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : '1';
             $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
@@ -797,17 +804,17 @@ App::get('/v1/cards/cloud-og')
         $cardType = $isGolden ? '-golden' : ($isPlatinum ? '-platinum' : '');
 
         $image = new Imagick("public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
-        $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008/2 - $image->getImageWidth() / 2, 1008/2 - $image->getImageHeight() / 2);
+        $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008 / 2 - $image->getImageWidth() / 2, 1008 / 2 - $image->getImageHeight() / 2);
 
         $image = new Imagick("public/images/cards/cloud/og-background-logo.png");
-        if($cardVariation === '1') {
+        if ($cardVariation === '1') {
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 32, 1008 - $image->getImageHeight() - 32);
         } else {
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008 - $image->getImageWidth() - 32, 1008 - $image->getImageHeight() - 32);
         }
 
         $image = new Imagick("public/images/cards/cloud/og-shadow{$cardType}.png");
-        if($cardVariation === '1') {
+        if ($cardVariation === '1') {
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, -450, 700);
         } else {
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, -20, 710);
