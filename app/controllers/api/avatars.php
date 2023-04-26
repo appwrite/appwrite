@@ -11,6 +11,8 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 use Utopia\Image\Image;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
@@ -53,6 +55,55 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
         ->setContentType('image/png')
         ->file($data);
     unset($image);
+};
+
+$getUserGitHub = function (Document $user, Document $project, Database $dbForProject) {
+    try {
+        $sessions = $user->getAttribute('sessions', []);
+        $session = $sessions[0] ?? new Document();
+
+        $provider = $session->getAttribute('provider');
+        $refreshToken = $session->getAttribute('providerRefreshToken');
+
+        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+
+        if (!\class_exists($className)) {
+            throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
+        }
+
+        $oauth2 = new $className($appId, $appSecret, '', [], []);
+
+        $oauth2->refreshTokens($refreshToken);
+
+        $accessToken = $oauth2->getAccessToken('');
+        $refreshToken = $oauth2->getRefreshToken('');
+
+        $session
+            ->setAttribute('providerAccessToken', $accessToken)
+            ->setAttribute('providerRefreshToken', $refreshToken)
+            ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+
+        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $githubUser = $oauth2->getUserSlug($accessToken);
+        $githubId = $oauth2->getUserID($accessToken);
+
+        return [
+            'name' => $githubUser,
+            'id' => $githubId
+        ];
+    } catch (Exception $err) {
+        \var_dump($err->getMessage());
+        \var_dump($err->getTraceAsString());
+        \var_dump($err->getLine());
+        \var_dump($err->getFile());
+        return [];
+    }
 };
 
 App::get('/v1/avatars/credit-cards/:code')
@@ -419,118 +470,171 @@ App::get('/v1/avatars/initials')
             ->file($image->getImageBlob());
     });
 
-App::get('/v1/cards/cloud-og')
-    ->desc('Get Cloud Card')
+    App::get('/v1/cards/cloud')
+    ->desc('Get Front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     // ->label('cache', true)
     // ->label('cache.resource', 'cards/cloud')
     ->label('docs', false)
     ->label('origin', '*')
-    ->param('width', 0, new Range(0, 4000), 'Resize  image card width, Pass an integer between 0 to 4000.', true)
-    ->param('height', 0, new Range(0, 4000), 'Resize image card height, Pass an integer between 0 to 4000.', true)
+    ->param('userId', '', new UID(), 'User ID.', true)
+    ->param('mock', '', new WhiteList(['employee', 'employee-2digit', 'employee-3digit', 'hero', 'contributor', 'normal', 'platinum', 'normal-no-github', 'normal-long']), 'Mocking behaviour.', true)
+    ->param('width', 0, new Range(0, 1024), 'Resize  image card width, Pass an integer between 0 to 1024.', true)
+    ->param('height', 0, new Range(0, 1024), 'Resize image card height, Pass an integer between 0 to 1024.', true)
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('response')
-    ->action(function (int $width, int $height, Document $user, Document $project, Database $dbForProject, Response $response) {
-        // if ($user->isEmpty()) {
-        //     throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
-        // }
+    ->inject('heroes')
+    ->inject('contributors')
+    ->inject('employees')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees) use ($getUserGitHub) {
+        if (!empty($userId)) {
+            $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        }
 
-        $baseImage = new \Imagick("public/images/cards-cloud-og3.png");
+        if ($user->isEmpty() && empty($mock)) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+        }
 
-        // $name = $user->getAttribute('name', 'Anonymous');
-        // $createdAt = new \DateTime($user->getCreatedAt());
-        // $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
+        if(!$mock) {
+            $name = $user->getAttribute('name', 'Anonymous');
+            $email = $user->getAttribute('email', '');
+            $createdAt = new \DateTime($user->getCreatedAt());
+    
+            $gitHub = $getUserGitHub($user, $project, $dbForProject);
+            $githubName = $gitHub['name'] ?? '';
+            $githubId = $gitHub['id'] ?? '';
+    
+            $isHero = \in_array($email, $heroes);
+            $isContributor = \in_array($githubId, $contributors);
+            $isEmployee = \in_array($email, $employees);
+            $employeeNumber = $isEmployee ? \array_search($email, $employees) : '';
+    
+            $isPlatinum = false; // TODO: Randomness logic
+        } else {
+            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $createdAt = new \DateTime('now');
+            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $isHero = $mock === 'hero';
+            $isContributor = $mock === 'contributor';
+            $isEmployee = \str_starts_with($mock, 'employee');
+            $employeeNumber = match ($mock) {
+                'employee' => '1',
+                'employee-2digit' => '18',
+                'employee-3digit' => '246',
+                default => ''
+            };
 
-        // try {
-        //     $sessions = $user->getAttribute('sessions', []);
-        //     $session = $sessions[0] ?? new Document();
+            $isPlatinum = $mock === 'platinum';
+        }
 
-        //     $provider = $session->getAttribute('provider');
-        //     $refreshToken = $session->getAttribute('providerRefreshToken');
+        $isGolden = $isEmployee || $isHero || $isContributor;
+        $isPlatinum = $isGolden ? false : $isPlatinum;
+        $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
-        //     $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        //     $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $imagePath = $isGolden ? 'front-golden.png' : ($isPlatinum ? 'front-platinum.png' : 'front.png');
 
-        //     $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+        $baseImage = new \Imagick("public/images/cards/cloud/" . $imagePath);
 
-        //     if (!\class_exists($className)) {
-        //         throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
-        //     }
+        if($isEmployee) {
+            $image = new Imagick('public/images/cards/cloud/employee.png');
+            $image->setGravity(Imagick::GRAVITY_CENTER);
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 820, 50);
 
-        //     $oauth2 = new $className($appId, $appSecret, '', [], []);
+            $text = new \ImagickDraw();
+            $text->setTextAlignment(Imagick::ALIGN_CENTER);
+            $text->setFont("public/fonts/Inter-Bold.ttf");
+            $text->setFillColor(new \ImagickPixel('#FFFADF'));
+            $text->setFontSize(\strlen($employeeNumber) <= 2 ? 54 : 48);
+            $text->setFontWeight(700);
+            $metricsText = $baseImage->queryFontMetrics($text, $employeeNumber);
 
-        //     $oauth2->refreshTokens($refreshToken);
+            $hashtag = new \ImagickDraw();
+            $hashtag->setTextAlignment(Imagick::ALIGN_CENTER);
+            $hashtag->setFont("public/fonts/Inter-Bold.ttf");
+            $hashtag->setFillColor(new \ImagickPixel('#FFFADF'));
+            $hashtag->setFontSize(28);
+            $hashtag->setFontWeight(700);
+            $metricsHashtag = $baseImage->queryFontMetrics($hashtag, '#');
 
-        //     $accessToken = $oauth2->getAccessToken('');
-        //     $refreshToken = $oauth2->getRefreshToken('');
+            $startX = 900;
+            $totalWidth = $metricsHashtag['textWidth'] + 12 + $metricsText['textWidth'];
 
-        //     $session
-        //         ->setAttribute('providerAccessToken', $accessToken)
-        //         ->setAttribute('providerRefreshToken', $refreshToken)
-        //         ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+            $hashtagX = ($metricsHashtag['textWidth']/2);
+            $textX = $hashtagX + 12 + ($metricsText['textWidth']/2);
+            
+            $hashtagX -= $totalWidth/2;
+            $textX -= $totalWidth/2;
 
-        //     $dbForProject->updateDocument('sessions', $session->getId(), $session);
+            $hashtagX += $startX;
+            $textX += $startX;
 
-        //     $dbForProject->deleteCachedDocument('users', $user->getId());
+            $baseImage->annotateImage($hashtag, $hashtagX, 150, 0, '#');
+            $baseImage->annotateImage($text, $textX, 150, 0, $employeeNumber);
+        }
 
-        //     $githubUser = $oauth2->getUserSlug($accessToken);
+        if($isContributor) {
+            $image = new Imagick('public/images/cards/cloud/contributor.png');
+            $image->setGravity(Imagick::GRAVITY_CENTER);
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 820, 50);
+        }
 
-        //     $gitHub = $githubUser;
-        // } catch (Exception $err) {
-        //     $gitHub = '';
-        //     \var_dump($err->getMessage());
-        //     \var_dump($err->getTraceAsString());
-        //     \var_dump($err->getLine());
-        //     \var_dump($err->getFile());
-        // }
+        if($isHero) {
+            $image = new Imagick('public/images/cards/cloud/hero.png');
+            $image->setGravity(Imagick::GRAVITY_CENTER);
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 820, 50);
+        }
 
-        // setlocale(LC_ALL, "en_US.utf8");
-        // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
-        // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
-        // $gitHub = \iconv("utf-8", "ascii//TRANSLIT", $gitHub);
-
-        $name = 'Matej Bačo';
-        $memberSince = 'Member since 12 Nov 2023';
-        $gitHub = 'meldiron';
+        setlocale(LC_ALL, "en_US.utf8");
+        $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
+        $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
+        $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
         $text->setFont("public/fonts/Poppins-Bold.ttf");
-        $text->setFillColor(new ImagickPixel('#FFFFFF'));
-        $text->setFontSize(58);
+        $text->setFillColor(new \ImagickPixel('#FFFFFF'));
+
+        if(\strlen($name) > 33) {
+            $name = \substr($name, 0, 33);
+        }
+
+        if(\strlen($name) <= 23) {
+            $text->setFontSize(80);
+        } else {
+            $text->setFontSize(54);
+        }
         $text->setFontWeight(700);
+        $baseImage->annotateImage($text, 512, 480, 0, $name);
 
-        $text->skewY(20);
-        $text->skewX(20);
-        $text->setGravity(Imagick::GRAVITY_CENTER);
-        $text->annotation(350, 635, $name);
+        $text = new \ImagickDraw();
+        $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        $text->setFont("public/fonts/Inter-SemiBold.ttf");
+        $text->setFillColor(new \ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
+        $text->setFontSize(28);
+        $text->setFontWeight(600);
+        $text->setTextKerning(1.08);
+        $baseImage->annotateImage($text, 512, 550, 0, \strtoupper($memberSince));
 
+        if (!empty($githubName)) {
+            $text = new \ImagickDraw();
+            $text->setTextAlignment(Imagick::ALIGN_CENTER);
+            $text->setFont("public/fonts/Inter-Regular.ttf");
+            $text->setFillColor(new \ImagickPixel('#FFFFFF'));
+            $text->setFontSize(32);
+            $text->setFontWeight(400);
+            $metrics = $baseImage->queryFontMetrics($text, $githubName);
 
-        $baseImage->drawImage($text);
-        // $baseImage->annotateImage($text, 550, 535, -8.86, $name);
+            $baseImage->annotateImage($text, 512 + 20 + 4, 380, 0, $githubName);
 
-        // $text = new \ImagickDraw();
-        // $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        // $text->setFont("public/fonts/Inter-Medium.ttf");
-        // $text->setFillColor(new ImagickPixel('#FFB9CC'));
-        // $text->setFontSize(24);
-        // $text->setFontWeight(500);
-        // $text->setTextKerning(1.12);
-        // $baseImage->annotateImage($text, 570, 630, -22.24, $memberSince);
-
-        // $text = new \ImagickDraw();
-        // $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        // $text->setFont("public/fonts/Inter-Regular.ttf");
-        // $text->setFillColor(new ImagickPixel('#FFB9CC'));
-        // $text->setFontSize(26);
-        // $text->setFontWeight(400);
-        // $baseImage->annotateImage($text, 805, 380, 64.75, $gitHub);
-
-        // $metrics = $baseImage->queryFontMetrics($text, $gitHub);
-        // \var_dump($metrics['textWidth']);
+            $image = new Imagick('public/images/cards/cloud/github.png');
+            $image->setGravity(Imagick::GRAVITY_CENTER);
+            $precisionFix = 5;
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2) - 20 - 4, 380 - ($metrics['textHeight'] - $precisionFix));
+        }
 
         if (!empty($width) || !empty($height)) {
             $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
@@ -541,3 +645,97 @@ App::get('/v1/cards/cloud-og')
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
+
+    App::get('/v1/cards/cloud-back')
+    ->desc('Get Back Of Cloud Card')
+    ->groups(['api', 'avatars'])
+    ->label('scope', 'avatars.read')
+    // ->label('cache', true)
+    // ->label('cache.resource', 'cards/cloud')
+    ->label('docs', false)
+    ->label('origin', '*')
+    ->param('userId', '', new UID(), 'User ID.', true)
+    ->param('mock', '', new WhiteList(['golden', 'normal', 'platinum']), 'Mocking behaviour.', true)
+    ->param('width', 0, new Range(0, 1024), 'Resize  image card width, Pass an integer between 0 to 1024.', true)
+    ->param('height', 0, new Range(0, 1024), 'Resize image card height, Pass an integer between 0 to 1024.', true)
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->inject('response')
+    ->inject('heroes')
+    ->inject('contributors')
+    ->inject('employees')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees) use ($getUserGitHub) {
+        if (!empty($userId)) {
+            $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        }
+
+        if ($user->isEmpty() && empty($mock)) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+        }
+
+        if(!$mock) {
+            $userId = $user->getId();
+            $email = $user->getAttribute('email', '');
+    
+            $gitHub = $getUserGitHub($user, $project, $dbForProject);
+            $githubId = $gitHub['id'] ?? '';
+    
+            $isHero = \in_array($email, $heroes);
+            $isContributor = \in_array($githubId, $contributors);
+            $isEmployee = \in_array($email, $employees);
+
+            $isGolden = $isEmployee || $isHero || $isContributor;
+            $isPlatinum = false; // TODO: Randomness logic
+        } else {
+            $userId = '63e0bcf3c3eb803ba530';
+
+            $isGolden = $mock === 'golden';
+            $isPlatinum = $mock === 'platinum';
+        }
+
+        $userId = 'UID ' . $userId;
+
+        $isPlatinum = $isGolden ? false : $isPlatinum;
+
+        $imagePath = $isGolden ? 'back-golden.png' : ($isPlatinum ? 'back-platinum.png' : 'back.png');
+
+        $baseImage = new \Imagick("public/images/cards/cloud/" . $imagePath);
+
+        setlocale(LC_ALL, "en_US.utf8");
+        $userId = \iconv("utf-8", "ascii//TRANSLIT", $userId);
+
+        $text = new \ImagickDraw();
+        $text->setTextAlignment(Imagick::ALIGN_CENTER);
+        $text->setFont("public/fonts/SourceCodePro-Regular.ttf");
+        $text->setFillColor(new \ImagickPixel($isGolden ? '#664A1E' : ($isPlatinum ? '#555555' : '#E8E9F0')));
+        $text->setFontSize(28);
+        $text->setFontWeight(400);
+        $baseImage->annotateImage($text, 512, 600, 0, $userId);
+
+        if (!empty($width) || !empty($height)) {
+            $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
+        }
+
+        $response
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+            ->setContentType('image/png')
+            ->file($baseImage->getImageBlob());
+    });
+
+// TODO: Uncomment cache flags
+
+// TODO: 3D:
+// $baseImage = new \Imagick("public/images/cards/cloud/front.png");
+// $text = new \ImagickDraw();
+// $text->setTextAlignment(Imagick::ALIGN_CENTER);
+// $text->setFont("public/fonts/Poppins-Bold.ttf");
+// $text->setFillColor(new ImagickPixel('#FFFFFF'));
+// $text->setFontSize(58);
+// $text->setFontWeight(700);
+// $text->skewY(20);
+// $text->skewX(20);
+// $text->setGravity(Imagick::GRAVITY_CENTER);
+// $text->annotation(350, 635, $name);
+// $baseImage->drawImage($text);

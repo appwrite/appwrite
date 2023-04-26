@@ -1191,3 +1191,21 @@ App::setResource('servers', function () {
 
     return $languages;
 });
+
+App::setResource('contributors', function () {
+    $path = 'app/config/cloud/contributors.json';
+    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    return $list;
+}, []);
+
+App::setResource('employees', function () {
+    $path = 'app/config/cloud/employees.json';
+    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    return $list;
+}, []);
+
+App::setResource('heroes', function () {
+    $path = 'app/config/cloud/heroes.json';
+    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    return $list;
+}, []);
