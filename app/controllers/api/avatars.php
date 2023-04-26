@@ -474,8 +474,9 @@ App::get('/v1/avatars/initials')
     ->desc('Get Front Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    // ->label('cache', true)
-    // ->label('cache.resource', 'cards/cloud')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'cards/cloud')
+    ->label('cache.resource', 'card/{request.userId}')
     ->label('docs', false)
     ->label('origin', '*')
     ->param('userId', '', new UID(), 'User ID.', true)
@@ -491,12 +492,10 @@ App::get('/v1/avatars/initials')
     ->inject('contributors')
     ->inject('employees')
     ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees) use ($getUserGitHub) {
-        if (!empty($userId)) {
-            $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
-        }
+        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if(!$mock) {
@@ -542,7 +541,7 @@ App::get('/v1/avatars/initials')
         if($isEmployee) {
             $image = new Imagick('public/images/cards/cloud/employee.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
-            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 820, 50);
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 795, 35);
 
             $text = new \ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_CENTER);
@@ -579,13 +578,13 @@ App::get('/v1/avatars/initials')
         if($isContributor) {
             $image = new Imagick('public/images/cards/cloud/contributor.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
-            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 820, 50);
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 795, 35);
         }
 
         if($isHero) {
             $image = new Imagick('public/images/cards/cloud/hero.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
-            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 820, 50);
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 795, 35);
         }
 
         setlocale(LC_ALL, "en_US.utf8");
@@ -650,8 +649,9 @@ App::get('/v1/avatars/initials')
     ->desc('Get Back Of Cloud Card')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    // ->label('cache', true)
-    // ->label('cache.resource', 'cards/cloud')
+    ->label('cache', true)
+    ->label('cache.resourceType', 'cards/cloud-back')
+    ->label('cache.resource', 'card/{request.userId}')
     ->label('docs', false)
     ->label('origin', '*')
     ->param('userId', '', new UID(), 'User ID.', true)
@@ -667,12 +667,10 @@ App::get('/v1/avatars/initials')
     ->inject('contributors')
     ->inject('employees')
     ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees) use ($getUserGitHub) {
-        if (!empty($userId)) {
-            $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
-        }
+        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         if(!$mock) {
@@ -723,8 +721,6 @@ App::get('/v1/avatars/initials')
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
-
-// TODO: Uncomment cache flags
 
 // TODO: 3D:
 // $baseImage = new \Imagick("public/images/cards/cloud/front.png");
