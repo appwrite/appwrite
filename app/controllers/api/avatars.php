@@ -86,7 +86,7 @@ $getUserGitHub = function (Document $user, Document $project, Database $dbForPro
             ->setAttribute('providerRefreshToken', $refreshToken)
             ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-        $dbForProject->updateDocument('sessions', $session->getId(), $session);
+        Authorization::skip(fn() => $dbForProject->updateDocument('sessions', $session->getId(), $session));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
@@ -793,10 +793,25 @@ App::get('/v1/cards/cloud-og')
         $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
         $baseImage = new \Imagick("public/images/cards/cloud/og-background{$bgVariation}.png");
+
         $cardType = $isGolden ? '-golden' : ($isPlatinum ? '-platinum' : '');
+
         $image = new Imagick("public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
-        $image->setGravity(Imagick::GRAVITY_CENTER);
-        $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 0, 0);
+        $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008/2 - $image->getImageWidth() / 2, 1008/2 - $image->getImageHeight() / 2);
+
+        $image = new Imagick("public/images/cards/cloud/og-background-logo.png");
+        if($cardVariation === '1') {
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 32, 1008 - $image->getImageHeight() - 32);
+        } else {
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008 - $image->getImageWidth() - 32, 1008 - $image->getImageHeight() - 32);
+        }
+
+        $image = new Imagick("public/images/cards/cloud/og-shadow{$cardType}.png");
+        if($cardVariation === '1') {
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, -450, 700);
+        } else {
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, -20, 710);
+        }
 
         // TODO: isemployee
         // TODO: isContributor
