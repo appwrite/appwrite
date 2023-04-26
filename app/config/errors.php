@@ -70,7 +70,7 @@ return [
     ],
     Exception::GENERAL_ROUTE_NOT_FOUND => [
         'name' => Exception::GENERAL_ROUTE_NOT_FOUND,
-        'description' => 'The requested route was not found. Please refer to the docs and try again.',
+        'description' => 'The requested route was not found. Please refer to the API docs and try again.',
         'code' => 404,
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
@@ -102,7 +102,7 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email already exists in your project.',
+        'description' => 'A user with the same id, email, or phone already exists in your project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
@@ -408,6 +408,16 @@ return [
         'description' => 'Document with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::DOCUMENT_UPDATE_CONFLICT => [
+        'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
+        'description' => 'Remote document is newer than local.',
+        'code' => 409,
+    ],
+    Exception::DOCUMENT_DELETE_RESTRICTED => [
+        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
+        'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
+    ],
 
     /** Attributes */
     Exception::ATTRIBUTE_NOT_FOUND => [
@@ -417,12 +427,12 @@ return [
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the <span class="tag">available</span> state.',
+        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_NOT_AVAILABLE => [
         'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not yet <span class="tag">available</span>. Please try again later.',
+        'description' => 'The requested attribute is not yet available. Please try again later.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
@@ -432,7 +442,7 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
+        'description' => 'Default values cannot be set for array or required attributes.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
@@ -448,6 +458,11 @@ return [
     Exception::ATTRIBUTE_VALUE_INVALID => [
         'name' => Exception::ATTRIBUTE_VALUE_INVALID,
         'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_TYPE_INVALID => [
+        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
+        'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
 
@@ -486,7 +501,7 @@ return [
     ],
     Exception::PROJECT_PROVIDER_UNSUPPORTED => [
         'name' => Exception::PROJECT_PROVIDER_UNSUPPORTED,
-        'description' => 'The chosen OAuth provider is unsupported. Please check <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session"> the docs</a> for the complete list of supported OAuth providers.',
+        'description' => 'The chosen OAuth provider is unsupported. Please check the <a href="/docs/client/account?sdk=web-default#accountCreateOAuth2Session">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers.',
         'code' => 501,
     ],
     Exception::PROJECT_INVALID_SUCCESS_URL => [
@@ -548,5 +563,20 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
+    ],
+    Exception::DOMAIN_TARGET_INVALID => [
+        'name' => Exception::DOMAIN_TARGET_INVALID,
+        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
+    Exception::GRAPHQL_NO_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Param "query" is not optional.',
+        'code' => 400,
+    ],
+    Exception::GRAPHQL_TOO_MANY_QUERIES => [
+        'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
+        'description' => 'Too many queries.',
+        'code' => 400,
     ],
 ];

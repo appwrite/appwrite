@@ -482,9 +482,9 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'Local\'. List of supported adapters are \'Local\', \'S3\', \'DOSpaces\', \'Backblaze\', \'Linode\' and \'Wasabi\'.',
+                'description' => 'Select default storage device. The default value is \'local\'. List of supported adapters are \'local\', \'s3\', \'dospaces\', \'backblaze\', \'linode\' and \'wasabi\'.',
                 'introduction' => '0.13.0',
-                'default' => 'Local',
+                'default' => 'local',
                 'required' => false,
                 'question' => '',
             ],
@@ -764,7 +764,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'description' => 'The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
                 'introduction' => '0.13.0',
                 'default' => '60',
                 'required' => false,
@@ -863,6 +863,39 @@ return [
                 'description' => 'The maximum duration (in seconds) upto which to retain hourly usage metrics. The default value is 8640000 seconds (100 days).',
                 'introduction' => '',
                 'default' => '8640000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'GraphQL',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
+                'description' => 'Maximum number of batched queries per request. The default value is 10.',
+                'introduction' => '1.2.0',
+                'default' => '10',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GRAPHQL_MAX_COMPLEXITY',
+                'description' => 'Maximum complexity of a GraphQL query. One field adds one to query complexity. Lists multiply the complexity by the number of items requested. The default value is 250.',
+                'introduction' => '1.2.0',
+                'default' => '250',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GRAPHQL_MAX_DEPTH',
+                'description' => 'Maximum depth of a GraphQL query. One nested field level adds one to query depth. The default value is 3.',
+                'introduction' => '1.2.0',
+                'default' => '3',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

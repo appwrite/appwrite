@@ -83,7 +83,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./dev:/usr/local/dev
+      - ./dev:/usr/src/code/dev
     depends_on:
       - mariadb
       - redis
@@ -174,6 +174,9 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_GRAPHQL_MAX_BATCH_SIZE
+      - _APP_GRAPHQL_MAX_COMPLEXITY
+      - _APP_GRAPHQL_MAX_DEPTH
 
   appwrite-realtime:
     entrypoint: realtime
@@ -341,7 +344,6 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -471,6 +473,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./dev:/usr/src/code/dev
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
       - /tmp:/tmp:rw
@@ -552,6 +555,7 @@ services:
     entrypoint: worker-messaging
     <<: *x-logging
     container_name: appwrite-worker-messaging
+    restart: unless-stopped
     image: appwrite-dev
     networks:
       - appwrite
@@ -615,7 +619,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./dev:/usr/local/dev
     depends_on:
       - influxdb
       - mariadb
@@ -819,6 +822,18 @@ services:
   #   ports:
   #     - '3001:80'
   
+  graphql-explorer:
+    container_name: appwrite-graphql-explorer
+    image: appwrite/altair:0.3.0
+    restart: unless-stopped
+    networks:
+      - appwrite
+    ports:
+      - "9509:3000"
+    environment:
+      - SERVER_URL=http://localhost/v1/graphql
+
+
   # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:

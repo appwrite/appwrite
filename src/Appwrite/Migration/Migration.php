@@ -10,7 +10,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
 use Utopia\App;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -37,6 +37,8 @@ abstract class Migration
      */
     protected Database $consoleDB;
 
+    protected \PDO $pdo;
+
     /**
      * @var array
      */
@@ -47,6 +49,11 @@ abstract class Migration
         '1.0.3' => 'V15',
         '1.1.0' => 'V16',
         '1.1.1' => 'V16',
+        '1.1.2' => 'V16',
+        '1.2.0' => 'V17',
+        '1.2.1' => 'V17',
+        '1.3.0' => 'V18',
+        '1.3.1' => 'V18',
     ];
 
     /**
@@ -91,6 +98,13 @@ abstract class Migration
         $this->projectDB->setNamespace('_' . $this->project->getId());
 
         $this->consoleDB = $consoleDB;
+
+        return $this;
+    }
+
+    public function setPDO(\PDO $pdo): self
+    {
+        $this->pdo = $pdo;
 
         return $this;
     }
@@ -326,6 +340,25 @@ abstract class Migration
             lengths: $index['lengths'] ?? [],
             orders: $index['orders'] ?? []
         );
+    }
+
+    /**
+     * Change a collection attribute's internal type
+     *
+     * @param string $collection
+     * @param string $attribute
+     * @param string $type
+     * @return void
+     */
+    protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
+    {
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+
+        try {
+            $stmt->execute();
+        } catch (\Exception $e) {
+            Console::warning($e->getMessage());
+        }
     }
 
     /**

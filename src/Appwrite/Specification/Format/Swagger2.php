@@ -5,9 +5,10 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
+use Utopia\Validator\Nullable;
 
 class Swagger2 extends Format
 {
@@ -171,6 +172,9 @@ class Swagger2 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
+                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
+                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
+                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
                 ],
             ];
 
@@ -261,7 +265,12 @@ class Swagger2 extends Format
 
             $bodyRequired = [];
 
-            foreach ($route->getParams() as $name => $param) { // Set params
+            $parameters = \array_merge(
+                $route->getParams(),
+                $route->getLabel('sdk.parameters', []),
+            );
+
+            foreach ($parameters as $name => $param) { // Set params
                 /** @var \Utopia\Validator $validator */
                 $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
 
@@ -275,6 +284,13 @@ class Swagger2 extends Format
                     if ($route->getLabel('sdk.namespace', 'default') === $service['name'] && in_array($name, $service['x-globalAttributes'] ?? [])) {
                         $node['x-global'] = true;
                     }
+                }
+
+                $isNullable = $validator instanceof Nullable;
+
+                if ($isNullable) {
+                    /** @var Nullable $validator */
+                    $validator = $validator->getValidator();
                 }
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
@@ -307,7 +323,7 @@ class Swagger2 extends Format
                         $node['format'] = 'email';
                         $node['x-example'] = 'email@example.com';
                         break;
-                    case 'Appwrite\Network\Validator\URL':
+                    case 'Utopia\Validator\URL':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
@@ -388,7 +404,7 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\Length':
                         $node['type'] = $validator->getType();
                         break;
-                    case 'Appwrite\Network\Validator\Host':
+                    case 'Utopia\Validator\Host':
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = 'https://example.com';
@@ -438,6 +454,10 @@ class Swagger2 extends Format
 
                     if ($node['x-global'] ?? false) {
                         $body['schema']['properties'][$name]['x-global'] = true;
+                    }
+
+                    if ($isNullable) {
+                        $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
 
                     if (\array_key_exists('items', $node)) {

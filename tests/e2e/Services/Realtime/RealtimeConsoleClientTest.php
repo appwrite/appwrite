@@ -8,9 +8,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class RealtimeConsoleClientTest extends Scope
 {
@@ -443,7 +443,7 @@ class RealtimeConsoleClientTest extends Scope
                 'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
-            'timeout' => 10,
+            'timeout' => 10
         ]);
 
         $functionId = $response1['body']['$id'] ?? '';
@@ -482,6 +482,7 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';

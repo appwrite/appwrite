@@ -14,10 +14,10 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 
 require_once __DIR__ . '/../init.php';
 
@@ -82,18 +82,22 @@ class FunctionsV1 extends Worker
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
-                    $this->execute(
-                        project: $project,
-                        function: $function,
-                        dbForProject: $database,
-                        trigger: 'event',
-                        // Pass first, most verbose event pattern
-                        event: $events[0],
-                        eventData: $payload,
-                        user: $user
-                    );
+                    try {
+                        $this->execute(
+                            project: $project,
+                            function: $function,
+                            dbForProject: $database,
+                            trigger: 'event',
+                            // Pass first, most verbose event pattern
+                            event: $events[0],
+                            eventData: $payload,
+                            user: $user
+                        );
 
-                    Console::success('Triggered function: ' . $events[0]);
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        Console::error("Failed to execute " . $function->getId() . " with error: " . $th->getMessage());
+                    }
                 }
             }
 

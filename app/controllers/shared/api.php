@@ -5,18 +5,16 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
-use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -98,13 +96,12 @@ App::init()
     ->inject('user')
     ->inject('events')
     ->inject('audits')
-    ->inject('mails')
     ->inject('usage')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -175,10 +172,6 @@ App::init()
      */
         $events
             ->setEvent($route->getLabel('event', ''))
-            ->setProject($project)
-            ->setUser($user);
-
-        $mails
             ->setProject($project)
             ->setUser($user);
 
@@ -316,6 +309,45 @@ App::init()
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
                 break;
         }
+    });
+
+/**
+ * Limit user session
+ *
+ * Delete older sessions if the number of sessions have crossed
+ * the session limit set for the project
+ */
+App::shutdown()
+    ->groups(['session'])
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
+        $session = $response->getPayload();
+        $userId = $session['userId'] ?? '';
+        if (empty($userId)) {
+            return;
+        }
+
+        $user = $dbForProject->getDocument('users', $userId);
+        if ($user->isEmpty()) {
+            return;
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $count = \count($sessions);
+        if ($count <= $sessionLimit) {
+            return;
+        }
+
+        for ($i = 0; $i < ($count - $sessionLimit); $i++) {
+            $session = array_shift($sessions);
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+        $dbForProject->deleteCachedDocument('users', $userId);
     });
 
 App::shutdown()

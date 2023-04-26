@@ -18,10 +18,8 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Appwrite\Extend\PDO;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
@@ -30,16 +28,33 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
+use Appwrite\Extend\Exception;
+use Appwrite\Extend\PDO;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
-use Appwrite\Network\Validator\URL;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Usage\Stats;
-use Appwrite\Utopia\View;
+use MaxMind\Db\Reader;
+use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Database\PDOConfig;
+use Swoole\Database\PDOPool;
+use Swoole\Database\RedisConfig;
+use Swoole\Database\RedisPool;
 use Utopia\App;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Logger;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -48,31 +63,18 @@ use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
-use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Cache\Adapter\Redis as RedisCache;
-use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Document;
-use Utopia\Database\Database;
-use Utopia\Database\Validator\Structure;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Swoole\Database\PDOConfig;
-use Swoole\Database\PDOPool;
-use Swoole\Database\RedisConfig;
-use Swoole\Database\RedisPool;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Storage\Device;
-use Utopia\Storage\Storage;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
+use Utopia\Storage\Storage;
+use Utopia\Validator\Range;
+use Utopia\Validator\IP;
+use Utopia\Validator\URL;
+use Utopia\Validator\WhiteList;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -84,6 +86,9 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
+const APP_LIMIT_USER_SESSIONS_MAX = 100;
+const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
@@ -92,10 +97,11 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
+const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.1.1';
+const APP_CACHE_BUSTER = 503;
+const APP_VERSION_STABLE = '1.3.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -279,12 +285,23 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('attributes', [
-                Query::equal('collectionInternalId', [$document->getInternalId()]),
-                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getLimitForAttributes()),
-            ]);
+        $attributes = $database->find('attributes', [
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
+            Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+            Query::limit($database->getLimitForAttributes()),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $options = $attribute->getAttribute('options');
+                foreach ($options as $key => $value) {
+                    $attribute->setAttribute($key, $value);
+                }
+                $attribute->removeAttribute('options');
+            }
+        }
+
+        return $attributes;
     }
 );
 
@@ -600,7 +617,13 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
+});
+$register->set('passwordsDictionary', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
 });
 $register->set('db', function () {
  // This is usually for our workers or CLI commands scope
@@ -628,6 +651,9 @@ $register->set('cache', function () {
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
     return $redis;
+});
+$register->set('promiseAdapter', function () {
+    return new Swoole();
 });
 
 /*
@@ -747,7 +773,7 @@ App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => 'web',
+        'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -759,7 +785,7 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
         )
     );
 
@@ -770,7 +796,7 @@ App::setResource('clients', function ($request, $console, $project) {
                 fn ($node) => $node['hostname'],
                 \array_filter(
                     $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
                 )
             )
         )
@@ -790,9 +816,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Authorization::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (APP_MODE_ADMIN === $mode) {
         Auth::setCookieName('a_session_' . $console->getId());
+        $authDuration = Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     }
 
     $session = Auth::decodeSession(
@@ -828,8 +856,6 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
     }
-
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
@@ -903,7 +929,7 @@ App::setResource('console', function () {
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'localhost',
             ], // Current host is added on app init
         ],
@@ -961,7 +987,7 @@ App::setResource('deviceBuilds', function ($project) {
 
 function getDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+    switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
         case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
@@ -1019,6 +1045,11 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
+App::setResource('passwordsDictionary', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary');
+}, ['register']);
+
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
@@ -1041,7 +1072,111 @@ App::setResource('servers', function () {
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);
-    }, $server['languages']);
+    }, $server['sdks']);
 
     return $languages;
 });
+
+App::setResource('promiseAdapter', function ($register) {
+    return $register->get('promiseAdapter');
+}, ['register']);
+
+App::setResource('schema', function ($utopia, $dbForProject) {
+
+    $complexity = function (int $complexity, array $args) {
+        $queries = Query::parseQueries($args['queries'] ?? []);
+        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+        return $complexity * $limit;
+    };
+
+    $attributes = function (int $limit, int $offset) use ($dbForProject) {
+        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+            Query::limit($limit),
+            Query::offset($offset),
+        ]));
+
+        return \array_map(function ($attr) {
+            return $attr->getArrayCopy();
+        }, $attrs);
+    };
+
+    $urls = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'read' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'delete' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+    ];
+
+    $params = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return [ 'queries' => $args['queries']];
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            $id = $args['id'] ?? 'unique()';
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'documentId' => $id,
+                'collectionId' => $collectionId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            $documentId = $args['id'];
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'documentId' => $documentId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+    ];
+
+    return Schema::build(
+        $utopia,
+        $complexity,
+        $attributes,
+        $urls,
+        $params,
+    );
+}, ['utopia', 'dbForProject']);
+
+App::setResource('requestTimestamp', function ($request) {
+    //TODO: Move this to the Request class itself
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);

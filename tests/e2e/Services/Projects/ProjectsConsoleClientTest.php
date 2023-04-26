@@ -10,7 +10,7 @@ use Tests\E2E\Services\Projects\ProjectsBase;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -54,6 +54,23 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('keys', $response['body']);
 
         $projectId = $response['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Project Test',
+            'teamId' => $team['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Project Test', $response['body']['name']);
+        $this->assertEquals($team['body']['$id'], $response['body']['teamId']);
+        $this->assertArrayHasKey('platforms', $response['body']);
+        $this->assertArrayHasKey('webhooks', $response['body']);
+        $this->assertArrayHasKey('keys', $response['body']);
 
         /**
          * Test for FAILURE
@@ -116,9 +133,9 @@ class ProjectsConsoleClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['total'], 1);
+        $this->assertEquals($response['body']['total'], 2);
         $this->assertIsArray($response['body']['projects']);
-        $this->assertCount(1, $response['body']['projects']);
+        $this->assertCount(2, $response['body']['projects']);
         $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
@@ -129,9 +146,9 @@ class ProjectsConsoleClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['total'], 1);
+        $this->assertEquals($response['body']['total'], 2);
         $this->assertIsArray($response['body']['projects']);
-        $this->assertCount(1, $response['body']['projects']);
+        $this->assertCount(2, $response['body']['projects']);
         $this->assertEquals($response['body']['projects'][0]['$id'], $data['projectId']);
 
         /**
@@ -195,7 +212,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => [ 'offset(2)' ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -224,7 +241,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']['projects']);
+        $this->assertCount(3, $response['body']['projects']);
         $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
         $this->assertEquals('Project Test', $response['body']['projects'][1]['name']);
 
@@ -235,9 +252,9 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']['projects']);
+        $this->assertCount(3, $response['body']['projects']);
         $this->assertEquals('Project Test', $response['body']['projects'][0]['name']);
-        $this->assertEquals('Project Test 2', $response['body']['projects'][1]['name']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][2]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -248,8 +265,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-        $this->assertCount(1, $response['body']['projects']);
-        $this->assertEquals('Project Test 2', $response['body']['projects'][0]['name']);
+        $this->assertCount(2, $response['body']['projects']);
+        $this->assertEquals('Project Test 2', $response['body']['projects'][1]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
             'content-type' => 'application/json',
@@ -857,6 +874,365 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    /**
+     * @depends testUpdateProjectAuthLimit
+     */
+    public function testUpdateProjectAuthSessionsLimit($data): array
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Test for failure
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 0,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(1, $response['body']['authSessionsLimit']);
+
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Create new user
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * create new session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionId1 = $response['body']['$id'];
+
+        /**
+         * create new session
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionCookie = $response['headers']['set-cookie'];
+        $sessionId2 = $response['body']['$id'];
+
+        // request was called in parallel and test failed
+        sleep(5);
+
+        /**
+         * List sessions
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'Cookie' => $sessionCookie,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $sessions = $response['body']['sessions'];
+
+        $this->assertEquals(1, count($sessions));
+        $this->assertEquals($sessionId2, $sessions[0]['$id']);
+
+        /**
+         * Reset Limit
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/max-sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 10,
+        ]);
+
+        return $data;
+    }
+
+
+    /**
+     * @depends testUpdateProjectAuthLimit
+     */
+    public function testUpdateProjectAuthPasswordHistory($data): array
+    {
+        $id = $data['projectId'] ?? '';
+
+        /**
+         * Test for Failure
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 25,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+
+        /**
+         * Test for Success
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 1,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['authPasswordHistory']);
+
+
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Create new user
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $userId = $response['body']['$id'];
+
+        // create session
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $id];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'cookie' => 'a_session_' . $id . '=' . $session,
+        ]), [
+            'oldPassword' => $password,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+        $headers = array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'admin',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $headers, [
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+
+         /**
+         * Reset
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['authPasswordHistory']);
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateProjectAuthLimit
+     */
+    public function testUpdateProjectAuthPasswordDictionary($data): array
+    {
+        $id = $data['projectId'] ?? '';
+
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Test for Success
+         */
+
+        /**
+         * create account
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => $password,
+            'name' => $name,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        /**
+         * Create user
+         */
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => 'password',
+            'name' => 'Cristiano Ronaldo',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        /**
+         * Enable Disctionary
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(true, $response['body']['authPasswordDictionary']);
+
+        /**
+         * Test for failure
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Create user
+         */
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
+        ]), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'user@localhost.test',
+            'password' => 'password',
+            'name' => 'Cristiano Ronaldo',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $headers = array_merge($this->getHeaders(), [
+            'x-appwrite-mode' => 'admin',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $userId . '/password', $headers, [
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+
+         /**
+         * Reset
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'limit' => 0,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['authPasswordHistory']);
+
+        /**
+         * Reset
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(false, $response['body']['authPasswordDictionary']);
+
+        return $data;
+    }
+
+
     public function testUpdateProjectServiceStatusAdmin(): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
@@ -1279,8 +1655,6 @@ class ProjectsConsoleClientTest extends Scope
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
             'url' => 'https://appwrite.io/new',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => ''
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1327,8 +1701,6 @@ class ProjectsConsoleClientTest extends Scope
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.unknown'],
             'url' => 'https://appwrite.io/new',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1341,8 +1713,6 @@ class ProjectsConsoleClientTest extends Scope
             'events' => ['users.*.delete', 'users.*.sessions.*.delete', 'buckets.*.files.*.create'],
             'url' => 'appwrite.io/new',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -1714,8 +2084,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Web App',
-            'key' => '',
-            'store' => '',
             'hostname' => 'localhost',
         ]);
 
@@ -1736,8 +2104,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'flutter-ios',
             'name' => 'Flutter App (iOS)',
             'key' => 'com.example.ios',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1757,8 +2123,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'flutter-android',
             'name' => 'Flutter App (Android)',
             'key' => 'com.example.android',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1775,11 +2139,28 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'type' => 'flutter-web',
+            'name' => 'Flutter App (Web)',
+            'hostname' => 'flutter.appwrite.io',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('Flutter App (Web)', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('flutter.appwrite.io', $response['body']['hostname']);
+
+        $data = array_merge($data, ['platformFultterWebId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'type' => 'apple-ios',
             'name' => 'iOS App',
             'key' => 'com.example.ios',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1799,8 +2180,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-macos',
             'name' => 'macOS App',
             'key' => 'com.example.macos',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1820,8 +2199,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-watchos',
             'name' => 'watchOS App',
             'key' => 'com.example.watchos',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1841,8 +2218,6 @@ class ProjectsConsoleClientTest extends Scope
             'type' => 'apple-tvos',
             'name' => 'tvOS App',
             'key' => 'com.example.tvos',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1864,8 +2239,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'unknown',
             'name' => 'Web App',
-            'key' => '',
-            'store' => '',
             'hostname' => 'localhost',
         ]);
 
@@ -1889,7 +2262,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(7, $response['body']['total']);
+        $this->assertEquals(8, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -1952,6 +2325,22 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('com.example.android', $response['body']['key']);
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
+
+        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultterWebId, $response['body']['$id']);
+        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('Flutter App (Web)', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('flutter.appwrite.io', $response['body']['hostname']);
 
         $platformAppleIosId = $data['platformAppleIosId'] ?? '';
 
@@ -2044,8 +2433,6 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Web App 2',
-            'key' => '',
-            'store' => '',
             'hostname' => 'localhost-new',
         ]);
 
@@ -2066,8 +2453,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Flutter App (iOS) 2',
             'key' => 'com.example.ios2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2087,8 +2472,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2100,6 +2483,25 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('', $response['body']['store']);
         $this->assertEquals('', $response['body']['hostname']);
 
+        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Flutter App (Web) 2',
+            'hostname' => 'flutter2.appwrite.io',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultterWebId, $response['body']['$id']);
+        $this->assertEquals('flutter-web', $response['body']['type']);
+        $this->assertEquals('Flutter App (Web) 2', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('flutter2.appwrite.io', $response['body']['hostname']);
+
         $platformAppleIosId = $data['platformAppleIosId'] ?? '';
 
         $response = $this->client->call(Client::METHOD_PUT, '/projects/' . $id . '/platforms/' . $platformAppleIosId, array_merge([
@@ -2108,8 +2510,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'iOS App 2',
             'key' => 'com.example.ios2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2129,8 +2529,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'macOS App 2',
             'key' => 'com.example.macos2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2150,8 +2548,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'watchOS App 2',
             'key' => 'com.example.watchos2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2171,8 +2567,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'tvOS App 2',
             'key' => 'com.example.tvos2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -2193,8 +2587,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Flutter App (Android) 2',
             'key' => 'com.example.android2',
-            'store' => '',
-            'hostname' => '',
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -2254,6 +2646,23 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformFultterWebId = $data['platformFultterWebId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/platforms/' . $platformFultterWebId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -2385,8 +2794,6 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'type' => 'web',
             'name' => 'Too Long Hostname',
-            'key' => '',
-            'store' => '',
             'hostname' => \str_repeat("bestdomain", 25) . '.com' // 250 + 4 chars total (exactly above limit)
         ]);
 

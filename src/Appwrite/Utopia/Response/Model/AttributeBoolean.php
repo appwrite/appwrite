@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Attribute;
 
 class AttributeBoolean extends Attribute
 {

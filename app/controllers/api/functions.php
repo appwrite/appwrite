@@ -9,9 +9,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Usage\Stats;
 use Utopia\Storage\Device;
@@ -25,7 +25,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Appwrite\Utopia\Database\Validator\Queries\Variables;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -33,7 +32,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -61,9 +59,9 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -125,7 +123,7 @@ App::get('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
-    ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -440,7 +438,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
@@ -601,8 +599,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
-    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
+    ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
+    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -619,13 +617,19 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $file = $request->getFiles('code');
-        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
-        $upload = new Upload();
+
+        // GraphQL multipart spec adds files with index keys
+        if (empty($file)) {
+            $file = $request->getFiles(0);
+        }
 
         if (empty($file)) {
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
+
+        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
@@ -785,7 +789,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1080,7 +1084,7 @@ App::post('/v1/functions/:functionId/executions')
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' => 'waiting', // waiting / processing / completed / failed
+            'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
@@ -1217,7 +1221,7 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1342,7 +1346,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
-    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject) {
@@ -1458,7 +1462,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject) {

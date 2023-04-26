@@ -36,9 +36,14 @@ class FilterTest extends TestCase
     public function testValue(): void
     {
         // Test for Success
-        $this->assertEquals($this->validator->isValid(Query::equal('attr', ['v'])), true, $this->validator->getDescription());
+        $this->assertEquals($this->validator->isValid(Query::between('attr', '1975-12-06', '2050-12-06')), true, $this->validator->getDescription());
+        $this->assertEquals($this->validator->isValid(Query::isNotNull('attr')), true, $this->validator->getDescription());
+        $this->assertEquals($this->validator->isValid(Query::isNull('attr')), true, $this->validator->getDescription());
+        $this->assertEquals($this->validator->isValid(Query::startsWith('attr', 'super')), true, $this->validator->getDescription());
+        $this->assertEquals($this->validator->isValid(Query::endsWith('attr', 'man')), true, $this->validator->getDescription());
 
         // Test for Failure
+        $this->assertEquals($this->validator->isValid(Query::select(['attr'])), false, $this->validator->getDescription());
         $this->assertEquals($this->validator->isValid(Query::limit(1)), false, $this->validator->getDescription());
         $this->assertEquals($this->validator->isValid(Query::limit(0)), false, $this->validator->getDescription());
         $this->assertEquals($this->validator->isValid(Query::limit(100)), false, $this->validator->getDescription());

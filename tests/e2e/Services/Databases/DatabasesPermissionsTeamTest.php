@@ -6,9 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class DatabasesPermissionsTeamTest extends Scope
 {
@@ -176,7 +176,7 @@ class DatabasesPermissionsTeamTest extends Scope
         if ($success) {
             $this->assertCount(1, $documents['body']['documents']);
         } else {
-            $this->assertEquals(401, $documents['headers']['status-code']);
+            $this->assertCount(0, $documents['body']['documents']);
         }
     }
 

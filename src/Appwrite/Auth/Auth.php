@@ -12,7 +12,7 @@ use Appwrite\Auth\Hash\Sha;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
@@ -30,7 +30,7 @@ class Auth
     ];
 
     public const DEFAULT_ALGO = 'argon2';
-    public const DEFAULT_ALGO_OPTIONS = ['memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
+    public const DEFAULT_ALGO_OPTIONS = ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
 
     /**
      * User Roles.
