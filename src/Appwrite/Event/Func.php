@@ -178,7 +178,6 @@ class Func extends Event
         $this->payload = $event->getPayload();
         $this->event = $event->getEvent();
         $this->params = $event->getParams();
-        $this->paused = $event->isPaused();
         return $this;
     }
 }
