@@ -3,6 +3,7 @@
 ## Bugs
 - Fixed auto-setting custom ID on nested documents [#5363](https://github.com/appwrite/appwrite/pull/5363)
 - Fixed listDocuments not returning all the documents [#5395](https://github.com/appwrite/appwrite/pull/5395)
+- Fixed deleting keys, webhooks, platforms and domains after deleting project [#5395](https://github.com/appwrite/appwrite/pull/5395)
 
 # Version 1.3.1
 
