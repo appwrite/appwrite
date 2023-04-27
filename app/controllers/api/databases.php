@@ -46,10 +46,8 @@ use Appwrite\Event\Event;
 use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
-//use Appwrite\Utopia\Database\Validator\Queries\Document as DocumentValidator;
-//use Appwrite\Utopia\Database\Validator\Queries\Documents;
-use Utopia\Database\Validator\Documents;
-use Utopia\Database\Validator\DocumentValidator;
+use Utopia\Database\Validator\Queries\Documents as DocumentsValidator;
+use Utopia\Database\Validator\Queries\Document as DocumentValidator;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Nullable;
@@ -2875,7 +2873,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Validate queries
-        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $queriesValidator = new DocumentsValidator($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
