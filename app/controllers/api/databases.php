@@ -46,8 +46,8 @@ use Appwrite\Event\Event;
 use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
-use Utopia\Database\Validator\Queries\Documents as QueriesDocumentsValidator;
-use Utopia\Database\Validator\Queries\Document as QueriesDocumentValidator;
+use Utopia\Database\Validator\Queries\Documents as DocumentsQueriesValidator;
+use Utopia\Database\Validator\Queries\Document as DocumentQueriesValidator;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Nullable;
@@ -2873,7 +2873,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Validate queries
-        $queriesValidator = new QueriesDocumentsValidator($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $queriesValidator = new DocumentsQueriesValidator($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
@@ -3027,7 +3027,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         // Validate queries
-        $queriesValidator = new QueriesDocumentValidator($collection->getAttribute('attributes'));
+        $queriesValidator = new DocumentQueriesValidator($collection->getAttribute('attributes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
