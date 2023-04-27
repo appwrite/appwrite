@@ -487,7 +487,7 @@ App::get('/v1/cards/cloud')
     ->label('docs', false)
     ->label('origin', '*')
     ->param('userId', '', new UID(), 'User ID.', true)
-    ->param('mock', '', new WhiteList(['employee', 'employee-2digit', 'employee-3digit', 'hero', 'contributor', 'normal', 'platinum', 'normal-no-github', 'normal-long']), 'Mocking behaviour.', true)
+    ->param('mock', '', new WhiteList(['employee', 'employee-2digit', 'hero', 'contributor', 'normal', 'platinum', 'normal-no-github', 'normal-long']), 'Mocking behaviour.', true)
     ->param('width', 0, new Range(0, 1024), 'Resize  image card width, Pass an integer between 0 to 1024.', true)
     ->param('height', 0, new Range(0, 1024), 'Resize image card height, Pass an integer between 0 to 1024.', true)
     ->inject('user')
@@ -545,7 +545,6 @@ App::get('/v1/cards/cloud')
             $employeeNumber = match ($mock) {
                 'employee' => '1',
                 'employee-2digit' => '18',
-                'employee-3digit' => '246',
                 default => ''
             };
 
@@ -644,16 +643,16 @@ App::get('/v1/cards/cloud')
             $text->setFontSize(54);
         }
         $text->setFontWeight(700);
-        $baseImage->annotateImage($text, 512, 480, 0, $name);
+        $baseImage->annotateImage($text, 512, 477, 0, $name);
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
         $text->setFont("public/fonts/Inter-SemiBold.ttf");
         $text->setFillColor(new \ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
-        $text->setFontSize(28);
+        $text->setFontSize(27);
         $text->setFontWeight(600);
-        $text->setTextKerning(1.12);
-        $baseImage->annotateImage($text, 512, 550, 0, \strtoupper($memberSince));
+        $text->setTextKerning(1.08);
+        $baseImage->annotateImage($text, 512, 541, 0, \strtoupper($memberSince));
 
         if (!empty($githubName)) {
             $text = new \ImagickDraw();
@@ -664,12 +663,12 @@ App::get('/v1/cards/cloud')
             $text->setFontWeight(400);
             $metrics = $baseImage->queryFontMetrics($text, $githubName);
 
-            $baseImage->annotateImage($text, 512 + 20 + 4, 380, 0, $githubName);
+            $baseImage->annotateImage($text, 512 + 20 + 4, 373, 0, $githubName);
 
             $image = new Imagick('public/images/cards/cloud/github.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $precisionFix = 5;
-            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2) - 20 - 4, 380 - ($metrics['textHeight'] - $precisionFix));
+            $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2) - 20 - 4, 373 - ($metrics['textHeight'] - $precisionFix));
         }
 
         if (!empty($width) || !empty($height)) {
@@ -747,7 +746,7 @@ App::get('/v1/cards/cloud-back')
         $text->setFillColor(new \ImagickPixel($isGolden ? '#664A1E' : ($isPlatinum ? '#555555' : '#E8E9F0')));
         $text->setFontSize(28);
         $text->setFontWeight(400);
-        $baseImage->annotateImage($text, 512, 600, 0, $userId);
+        $baseImage->annotateImage($text, 512, 596, 0, $userId);
 
         if (!empty($width) || !empty($height)) {
             $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
@@ -769,7 +768,7 @@ App::get('/v1/cards/cloud-og')
     ->label('docs', false)
     ->label('origin', '*')
     ->param('userId', '', new UID(), 'User ID.', true)
-    ->param('mock', '', new WhiteList(['employee', 'employee-2digit', 'employee-3digit', 'hero', 'contributor', 'normal', 'platinum', 'normal-no-github', 'normal-long', 'normal-bg2', 'normal-bg3', 'normal-right', 'platinum-right', 'hero-right', 'contributor-right', 'employee-right']), 'Mocking behaviour.', true)
+    ->param('mock', '', new WhiteList(['employee', 'employee-2digit', 'hero', 'contributor', 'normal', 'platinum', 'normal-no-github', 'normal-long', 'normal-long-right', 'normal-bg2', 'normal-bg3', 'normal-right', 'platinum-right', 'hero-right', 'contributor-right', 'employee-right', 'employee-2digit-right']), 'Mocking behaviour.', true)
     ->param('width', 0, new Range(0, 1024), 'Resize  image card width, Pass an integer between 0 to 1024.', true)
     ->param('height', 0, new Range(0, 1024), 'Resize image card height, Pass an integer between 0 to 1024.', true)
     ->inject('user')
@@ -824,9 +823,9 @@ App::get('/v1/cards/cloud-og')
         } else {
             $bgVariation = \str_ends_with($mock, '-bg2') ? '2' : (\str_ends_with($mock, '-bg3') ? '3' : '1');
             $cardVariation = \str_ends_with($mock, '-right') ? '2' : '1';
-            $name = $mock === 'normal-long' ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
+            $name = \str_starts_with($mock, 'normal-long') ? 'Sir First Walter O\'Brian Junior' : 'Walter O\'Brian';
             $createdAt = new \DateTime('now');
-            $githubName = $mock === 'normal-no-github' ? '' : ($mock === 'normal-long' ? 'sir-first-walterobrian-junior' : 'walterobrian');
+            $githubName = $mock === 'normal-no-github' ? '' : (\str_starts_with($mock, 'normal-long') ? 'sir-first-walterobrian-junior' : 'walterobrian');
             $isHero = \str_starts_with($mock, 'hero');
             $isContributor = \str_starts_with($mock, 'contributor');
             $isEmployee = \str_starts_with($mock, 'employee');
@@ -834,11 +833,11 @@ App::get('/v1/cards/cloud-og')
                 'employee' => '1',
                 'employee-right' => '1',
                 'employee-2digit' => '18',
-                'employee-3digit' => '246',
+                'employee-2digit-right' => '18',
                 default => ''
             };
 
-            $isPlatinum = $mock === 'platinum';
+            $isPlatinum = \str_starts_with($mock, 'platinum');
         }
 
         if ($isEmployee) {
@@ -961,31 +960,41 @@ App::get('/v1/cards/cloud-og')
             $name = \substr($name, 0, 33);
         }
 
-        if (\strlen($name) <= 23) {
-            $text->setFontSize(48);
+        if($cardVariation === '1') {
+            if (\strlen($name) <= 23) {
+                $text->setFontSize(54);
+            } else {
+                $text->setFontSize(32);
+            }
         } else {
-            $text->setFontSize(28);
+            if (\strlen($name) <= 23) {
+                $text->setFontSize(48);
+            } else {
+                $text->setFontSize(28);
+            }
         }
+       
         $text->setFontWeight(700);
 
         if ($cardVariation === '1') {
-            $baseImage->annotateImage($text, 550, 600,  -22, $name);
+            $baseImage->annotateImage($text, 555, 605,  -22, $name);
         } else {
-            $baseImage->annotateImage($text, 440, 585, 32, $name);
+            $baseImage->annotateImage($text, 435, 590, 31.37, $name);
         }
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
         $text->setFont("public/fonts/Inter-SemiBold.ttf");
         $text->setFillColor(new \ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
-        $text->setFontSize(18);
+        $text->setFontSize(21);
         $text->setFontWeight(600);
         $text->setTextKerning(1.12);
 
         if ($cardVariation === '1') {
-            $baseImage->annotateImage($text, 580, 630,  -22, $memberSince);
+            $baseImage->annotateImage($text, 585, 635,  -22, $memberSince);
         } else {
-            $baseImage->annotateImage($text, 420, 620, 32, $memberSince);
+            $text->setFontSize(20);
+            $baseImage->annotateImage($text, 412, 628, 31.37, $memberSince);
         }
 
         if (!empty($githubName)) {
@@ -1011,10 +1020,14 @@ App::get('/v1/cards/cloud-og')
 
             if ($cardVariation === '1') {
                 $group->rotateImage(new ImagickPixel('#00000000'), -22);
-                $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 440, 475);
+                $x = 510 - $group->getImageWidth() / 2;
+                $y = 530 - $group->getImageHeight() / 2;
+                $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, $x, $y);
             } else {
-                $group->rotateImage(new ImagickPixel('#00000000'), 32);
-                $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 410, 465);
+                $group->rotateImage(new ImagickPixel('#00000000'), 31.11);
+                $x = 485 - $group->getImageWidth() / 2;
+                $y = 530 - $group->getImageHeight() / 2;
+                $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, $x, $y);
             }
         }
 
