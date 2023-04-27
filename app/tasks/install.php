@@ -95,9 +95,9 @@ $cli
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as &$var) {
+                        foreach ($vars as $i => $var) {
                             if ($var['name'] === $key) {
-                                $var['default'] = $value;
+                                $vars[$i]['default'] = $value;
                             }
                         }
                     }
@@ -114,9 +114,9 @@ $cli
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as &$var) {
+                        foreach ($vars as $i => $var) {
                             if ($var['name'] === $key) {
-                                $var['default'] = $value;
+                                $vars[$i]['default'] = $value;
                             }
                         }
                     }
@@ -146,7 +146,7 @@ $cli
 
         $input = [];
 
-        foreach ($vars as $key => $var) {
+        foreach ($vars as $var) {
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
                 if ($data && $var['default'] !== null) {
                     $input[$var['name']] = $var['default'];
