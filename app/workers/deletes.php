@@ -333,6 +333,11 @@ class DeletesV1 extends Worker
             Query::equal('projectInternalId', [$projectInternalId])
         ], $dbForConsole);
 
+        // Delete Webhooks
+        $this->deleteByGroup('webhooks', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
         // Delete metadata tables
         try {
             $dbForProject->deleteCollection('_metadata');
