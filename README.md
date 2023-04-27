@@ -45,7 +45,7 @@ Find out more at: [https://appwrite.io](https://appwrite.io)
 
 Table of Contents:
 
-- [Get Started](#get-started)
+- [Getting Started](#getting-started)
 - [Self-Hosting](#self-hosting)
   - [Unix](#unix)
   - [Windows](#windows)
@@ -64,7 +64,7 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Get Started
+## Getting Started
 The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information. 
 
 ## Self-Hosting
@@ -111,7 +111,7 @@ For advanced production and custom installation, check out our Docker [environme
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/self-hosting).
 
 ## One-Click Setups
 
