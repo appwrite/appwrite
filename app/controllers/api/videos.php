@@ -852,9 +852,8 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
             Query::equal('status', ['ready']),
         ]));
 
-        $dbEnd        =  microtime(true) - $dbStartTime;
-        var_dump('$dbTime = ' . $dbEnd);
-        $prosessStart = microtime(true);
+        var_dump('$dbTime = ' . microtime(true) - $dbStartTime);
+
         $_renditions = $_subtitles  = [];
 
         if ($output === 'hls') {
@@ -872,8 +871,16 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
                 $_audios = [];
                 $metadata = $rendition->getAttribute('metadata');
                 $streams = $metadata['hls'];
+                $audioLang = null;
                 foreach ($streams as $i => $stream) {
+                    /**
+                     * Two soundtracks with same language (Dolby)
+                     */
                     if ($stream['type'] === 'audio') {
+                        if ($stream['language'] === $audioLang) {
+                            continue;
+                        }
+
                         $_audios[] = [
                             'type' => 'group_audio',
                             'name' => $stream['language'],
@@ -881,6 +888,8 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
                             'language' => $stream['language'],
                             'uri' => $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'] . '/playlist.m3u8',
                         ];
+
+                        $audioLang = $stream['language'];
                     } elseif ($stream['type'] === 'video') {
                         $uri = $baseUrl . '/renditions/' . $rendition->getId() . '/streams/' . $stream['id'] . '/playlist.m3u8';
                         $resolution = $stream['resolution'] ?? $rendition->getAttribute('width') . 'x' . $rendition->getAttribute('height');
@@ -908,9 +917,6 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
                 ->setContentType('application/x-mpegurl')
                 ->send($template->render(false))
             ;
-//            $prosessEnd =  microtime(true) - $prosessStart;
-//            var_dump('$dbEnd = ' . $dbEnd);
-//            var_dump('$prosessEnd = ' . $prosessEnd);
         } else {
             $adaptationId = 0;
             foreach ($renditions as $rendition) {
@@ -922,7 +928,20 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
                 $attributes = (array)$xml->attributes();
                 $mpd = $attributes['@attributes'] ?? [];
                 $streamId = 0;
+                $audioLang = null;
                 foreach ($xml->Period->AdaptationSet ?? [] as $adaptation) {
+
+                    /**
+                    * Two soundtracks with same language (Dolby)
+                    */
+                    if ((string)$adaptation['contentType'] === 'audio') {
+                        if ($adaptation['lang'] == $audioLang) {
+                            continue;
+                        }
+
+                         $audioLang = (string)$adaptation['lang'];
+                    }
+
                     $representation = [];
                     $representation['id'] = $streamId;
                     $attributes = (array)$adaptation->Representation->attributes();
