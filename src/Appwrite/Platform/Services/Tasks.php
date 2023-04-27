@@ -13,6 +13,7 @@ use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Hamster;
+use Appwrite\Platform\Tasks\MigrateNew;
 use Appwrite\Platform\Tasks\PatchDeleteScheduleUpdatedAtAttribute;
 use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
@@ -39,6 +40,7 @@ class Tasks extends Service
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(VolumeSync::getName(), new VolumeSync())
-            ->addAction(Specs::getName(), new Specs());
+            ->addAction(Specs::getName(), new Specs())
+            ->addAction(MigrateNew::getName(), new MigrateNew());
     }
 }
