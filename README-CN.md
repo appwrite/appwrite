@@ -36,6 +36,8 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
 
 内容：
 
+
+- [开始](#开始)
 - [安装](#安装)
   - [Unix](#unix)
   - [Windows](#windows)
@@ -53,6 +55,9 @@ Appwrite 可以提供给开发者用户验证，外部授权，用户数据读�
 - [安全](#安全)
 - [订阅我们](#订阅我们)
 - [版权说明](#版权说明)
+
+## 开始
+要轻松开始使用Appwrite，您可以[**免费注册Appwrite Cloud**](https://cloud.appwrite.io/)。在Appwrite Cloud公开测试版期间，您可以完全免费使用Appwrite，而且我们不会收集您的信用卡信息。
 
 ## 安装
 

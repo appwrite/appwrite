@@ -45,7 +45,8 @@ Find out more at: [https://appwrite.io](https://appwrite.io)
 
 Table of Contents:
 
-- [Installation](#installation)
+- [Get Started](#get-started)
+- [Self-Hosting](#self-hosting)
   - [Unix](#unix)
   - [Windows](#windows)
     - [CMD](#cmd)
@@ -63,11 +64,14 @@ Table of Contents:
 - [Follow Us](#follow-us)
 - [License](#license)
 
-## Installation
+## Get Started
+The easiest way to get started with Appwrite is by [signing up for Appwrite Cloud](https://cloud.appwrite.io/). While Appwrite Cloud is in public beta, you can build with Appwrite completely free, and we won't collect you credit card information. 
+
+## Self-Hosting
 
 Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as Kubernetes, Docker Swarm, or Rancher.
 
-The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
+Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
 ### Unix
 
