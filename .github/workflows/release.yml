@@ -6,7 +6,7 @@ on:
 
 jobs:
   tests:
-    name: Unit & E2E
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
