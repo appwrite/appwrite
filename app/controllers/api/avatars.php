@@ -57,12 +57,16 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     unset($image);
 };
 
-$getUserGitHub = function (Document $user, Document $project, Database $dbForProject) {
+$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole) {
     try {
+        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+
         $sessions = $user->getAttribute('sessions', []);
         $session = $sessions[0] ?? new Document();
 
         $provider = $session->getAttribute('provider');
+        $accessToken = $session->getAttribute('providerAccessToken');
+        $accessTokenExpiry = $session->getAttribute('providerAccessTokenExpiry');
         $refreshToken = $session->getAttribute('providerRefreshToken');
 
         $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
@@ -76,25 +80,45 @@ $getUserGitHub = function (Document $user, Document $project, Database $dbForPro
 
         $oauth2 = new $className($appId, $appSecret, '', [], []);
 
-        try {
-            $oauth2->refreshTokens($refreshToken);
+        $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
+        $isExpired = true;
+        if ($isExpired) {
+            try {
+                $oauth2->refreshTokens($refreshToken);
 
-            $accessToken = $oauth2->getAccessToken('');
-            $refreshToken = $oauth2->getRefreshToken('');
+                $accessToken = $oauth2->getAccessToken('');
+                $refreshToken = $oauth2->getRefreshToken('');
 
-            $session
-                ->setAttribute('providerAccessToken', $accessToken)
-                ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                if (empty($accessToken) || empty($refreshToken)) {
+                    throw new \Exception("Generation race-condition occured."); // Handeled properly in catch
+                }
 
-            Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $session->getId(), $session));
+                $session
+                    ->setAttribute('providerAccessToken', $accessToken)
+                    ->setAttribute('providerRefreshToken', $refreshToken)
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-            $dbForProject->deleteCachedDocument('users', $user->getId());
-        } catch (Throwable $err) {
-            // TODO: Fix Race contition
-            $sessions = $user->getAttribute('sessions', []);
-            $session = $sessions[0] ?? new Document();
-            $accessToken = $session->getAttribute('providerAccessToken');
+                Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $session->getId(), $session));
+
+                $dbForProject->deleteCachedDocument('users', $user->getId());
+            } catch (Throwable $err) {
+                $index = 0;
+                do {
+                    $oldAccessToken = $accessToken;
+
+                    $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+                    $sessions = $user->getAttribute('sessions', []);
+                    $session = $sessions[0] ?? new Document();
+                    $accessToken = $session->getAttribute('providerAccessToken');
+
+                    if ($accessToken !== $oldAccessToken) {
+                        break;
+                    }
+
+                    $index++;
+                    sleep(0.5);
+                } while ($index < 10);
+            }
         }
 
         $githubUser = $oauth2->getUserSlug($accessToken);
@@ -510,7 +534,7 @@ App::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user, $project, $dbForProject);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -525,7 +549,7 @@ App::get('/v1/cards/cloud')
                 $createdAt = new \DateTime($employees[$email]['memberSince'] ?? '');
             }
 
-            if (!$isEmployee) {
+            if (!$isEmployee && !empty($githubName)) {
                 $employeeGitHub = \array_search(\strtolower($githubName), \array_map(fn ($employee) => \strtolower($employee['gitHub']) ?? '', $employees));
                 if (!empty($employeeGitHub)) {
                     $isEmployee = true;
@@ -713,7 +737,7 @@ App::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user, $project, $dbForProject);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -795,7 +819,7 @@ App::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user, $project, $dbForProject);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -810,7 +834,7 @@ App::get('/v1/cards/cloud-og')
                 $createdAt = new \DateTime($employees[$email]['memberSince'] ?? '');
             }
 
-            if (!$isEmployee) {
+            if (!$isEmployee && !empty($githubName)) {
                 $employeeGitHub = \array_search(\strtolower($githubName), \array_map(fn ($employee) => \strtolower($employee['gitHub']) ?? '', $employees));
                 if (!empty($employeeGitHub)) {
                     $isEmployee = true;
@@ -913,7 +937,7 @@ App::get('/v1/cards/cloud-og')
             if ($cardVariation === '1') {
                 $group->rotateImage(new ImagickPixel('#00000000'), -22);
 
-                if(\strlen($employeeNumber) <= 1) {
+                if (\strlen($employeeNumber) <= 1) {
                     $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 660, 245);
                 } else {
                     $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 655, 247);
@@ -921,7 +945,7 @@ App::get('/v1/cards/cloud-og')
             } else {
                 $group->rotateImage(new ImagickPixel('#00000000'), 32);
 
-                if(\strlen($employeeNumber) <= 1) {
+                if (\strlen($employeeNumber) <= 1) {
                     $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 775, 465);
                 } else {
                     $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 767, 470);
@@ -960,7 +984,7 @@ App::get('/v1/cards/cloud-og')
             $name = \substr($name, 0, 33);
         }
 
-        if($cardVariation === '1') {
+        if ($cardVariation === '1') {
             if (\strlen($name) <= 23) {
                 $text->setFontSize(54);
             } else {
@@ -973,7 +997,7 @@ App::get('/v1/cards/cloud-og')
                 $text->setFontSize(28);
             }
         }
-       
+
         $text->setFontWeight(700);
 
         if ($cardVariation === '1') {
