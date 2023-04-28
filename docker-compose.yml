@@ -165,6 +165,8 @@ services:
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_REGION
+      - _APP_CONSOLE_GITHUB_APP_ID
+      - _APP_CONSOLE_GITHUB_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
