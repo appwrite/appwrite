@@ -89,8 +89,10 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                 $accessToken = $oauth2->getAccessToken('');
                 $refreshToken = $oauth2->getRefreshToken('');
 
-                if (empty($accessToken) || empty($refreshToken)) {
-                    throw new \Exception("Generation race-condition occured."); // Handeled properly in catch
+                $verificationId = $oauth2->getUserID($accessToken);
+
+                if (empty($verificationId)) {
+                    throw new \Exception("Locked tokens."); // Race codition, handeled in catch
                 }
 
                 $session
@@ -104,23 +106,24 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             } catch (Throwable $err) {
                 $index = 0;
                 do {
-                    $oldAccessToken = $accessToken;
+                    $previousAccessToken = $session->getAttribute('providerAccessToken');
 
                     $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
                     $sessions = $user->getAttribute('sessions', []);
                     $session = $sessions[0] ?? new Document();
                     $accessToken = $session->getAttribute('providerAccessToken');
 
-                    if ($accessToken !== $oldAccessToken) {
+                    if ($accessToken !== $previousAccessToken) {
                         break;
                     }
 
                     $index++;
-                    sleep(0.5);
+                    \usleep(500000);
                 } while ($index < 10);
             }
         }
 
+        $oauth2 = new $className($appId, $appSecret, '', [], []);
         $githubUser = $oauth2->getUserSlug($accessToken);
         $githubId = $oauth2->getUserID($accessToken);
 
