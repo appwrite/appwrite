@@ -190,7 +190,9 @@ App::post('/v1/vcs/github/incomingwebhook')
                         $deploymentId = ID::unique();
                         $entrypoint = 'index.js'; //TODO: Read from function settings
                         $vcsRepoId = $resource->getId();
+                        $vcsRepoInternalId = $resource->getInternalId();
                         $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
+                        $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
                         $activate = false;
 
                         if ($branchName == "main") {
@@ -209,7 +211,9 @@ App::post('/v1/vcs/github/incomingwebhook')
                             'entrypoint' => $entrypoint,
                             'type' => "vcs",
                             'vcsInstallationId' => $vcsInstallationId,
+                            'vcsInstallationInternalId' => $vcsInstallationInternalId,
                             'vcsRepoId' => $vcsRepoId,
+                            'vcsRepoInternalId' => $vcsRepoInternalId,
                             'branch' => $branchName,
                             'search' => implode(' ', [$deploymentId, $entrypoint]),
                             'activate' => $activate,
@@ -307,7 +311,9 @@ App::post('/v1/vcs/github/incomingwebhook')
                                 $deploymentId = ID::unique();
                                 $entrypoint = 'index.js'; //TODO: Read from function settings
                                 $vcsRepoId = $resource->getId();
+                                $vcsRepoInternalId = $resource->getInternalId();
                                 $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
+                                $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
                                 $activate = false;
 
                                 if ($branchName == "main") {
@@ -326,7 +332,9 @@ App::post('/v1/vcs/github/incomingwebhook')
                                     'entrypoint' => $entrypoint,
                                     'type' => "vcs",
                                     'vcsInstallationId' => $vcsInstallationId,
+                                    'vcsInstallationInternalId' => $vcsInstallationInternalId,
                                     'vcsRepoId' => $vcsRepoId,
+                                    'vcsRepoInternalId' => $vcsRepoInternalId,
                                     'branch' => $branchName,
                                     'vcsCommentId' => $commentId,
                                     'search' => implode(' ', [$deploymentId, $entrypoint]),

@@ -805,11 +805,12 @@ class DeletesV1 extends Worker
     protected function deleteInstallation(Document $document, string $projectId)
     {
         $dbForProject = $this->getProjectDB($projectId);
+        $dbForConsole = $this->getConsoleDB();
 
         $this->listByGroup('functions', [
             Query::equal('vcsInstallationInternalId', [$document->getInternalId()])
-        ], $dbForProject, function($function) use ($dbForProject) {
-            $dbForProject->deleteDocument('vcs_repos', $function->getAttribute('vcsRepoId'));
+        ], $dbForProject, function($function) use ($dbForProject, $dbForConsole) {
+            $dbForConsole->deleteDocument('vcs_repos', $function->getAttribute('vcsRepoId'));
 
             $function = $function
                 ->setAttribute('vcsInstallationId', '')

@@ -519,6 +519,7 @@ App::put('/v1/functions/:functionId')
 
             $vcs_repos = $dbForConsole->createDocument('vcs_repos', $vcs_repos);
             $vcsRepoId = $vcs_repos->getId();
+            $vcsRepoInternalId = $vcs_repos->getInternalId();
 
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
@@ -534,6 +535,7 @@ App::put('/v1/functions/:functionId')
                 'vcsInstallationId' => $installation->getId(),
                 'vcsInstallationInternalId' => $installation->getInternalId(),
                 'vcsRepoId' => $vcsRepoId,
+                'vcsRepoInternalId' => $vcsRepoInternalId,
                 'branch' => "main",
                 'search' => implode(' ', [$deploymentId, $entrypoint]),
                 'activate' => true,
@@ -544,6 +546,7 @@ App::put('/v1/functions/:functionId')
         if(!empty($prevVcsRepoId) && empty($repositoryId)) {
             $dbForConsole->deleteDocument('vcs_repos', $prevVcsRepoId);
             $vcsRepoId = '';
+            $vcsRepoInternalId = '';
         }
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -558,6 +561,7 @@ App::put('/v1/functions/:functionId')
             'vcsInstallationId' => $installation->getId(),
             'vcsInstallationInternalId' => $installation->getInternalId(),
             'vcsRepoId' => $vcsRepoId,
+            'vcsRepoInternalId' => $vcsRepoInternalId,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
