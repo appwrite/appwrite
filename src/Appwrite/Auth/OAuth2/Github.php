@@ -166,7 +166,7 @@ class Github extends OAuth2
     public function getUserSlug(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-        
+
         return $user['login'] ?? '';
     }
 
