@@ -159,28 +159,28 @@ class V18 extends Migration
                 /**
                  * Set default passwordHistory
                  */
-                $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
+                $document->setAttribute('auths', array_merge([
                     'passwordHistory' => 0,
                     'passwordDictionary' => false,
-                ]));
+                ], $document->getAttribute('auths', [])));
                 break;
             case 'users':
                 /**
                  * Default Password history
                  */
-                $document->setAttribute('passwordHistory', []);
+                $document->setAttribute('passwordHistory', $document->getAttribute('passwordHistory', []));
                 break;
             case 'teams':
                 /**
                  * Default prefs
                  */
-                $document->setAttribute('prefs', new \stdClass());
+                $document->setAttribute('prefs', $document->getAttribute('prefs', new \stdClass()));
                 break;
             case 'attributes':
                 /**
                  * Default options
                  */
-                $document->setAttribute('options', new \stdClass());
+                $document->setAttribute('options', $document->getAttribute('options', new \stdClass()));
                 break;
         }
 
