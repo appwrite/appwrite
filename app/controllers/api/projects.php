@@ -29,6 +29,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Cache\Cache;
 use Utopia\Pools\Group;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -96,39 +97,45 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'name' => $name,
-            'teamInternalId' => $team->getInternalId(),
-            'teamId' => $team->getId(),
-            'region' => $region,
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'version' => APP_VERSION_STABLE,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => ID::custom($legalTaxId),
-            'services' => new stdClass(),
-            'platforms' => null,
-            'authProviders' => [],
-            'webhooks' => null,
-            'keys' => null,
-            'domains' => null,
-            'auths' => $auths,
-            'search' => implode(' ', [$projectId, $name]),
-            'database' => $database,
-        ]));
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId,
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'name' => $name,
+                'teamInternalId' => $team->getInternalId(),
+                'teamId' => $team->getId(),
+                'region' => $region,
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => ID::custom($legalTaxId),
+                'services' => new stdClass(),
+                'platforms' => null,
+                'authProviders' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'domains' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
+        
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");

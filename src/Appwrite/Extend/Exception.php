@@ -156,6 +156,7 @@ class Exception extends \Exception
     public const PROJECT_UNKNOWN                   = 'project_unknown';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
+    public const PROJECT_ALREADY_EXISTS            = 'project_already_exists';
     public const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';

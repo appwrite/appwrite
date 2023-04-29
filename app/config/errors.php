@@ -484,6 +484,11 @@ return [
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
+    Exception::PROJECT_ALREADY_EXISTS => [
+        'name' => Exception::PROJECT_ALREADY_EXISTS,
+        'description' => 'Project with the requested ID already exists.',
+        'code' => 403,
+    ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
         'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
