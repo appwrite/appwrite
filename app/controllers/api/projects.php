@@ -128,7 +128,7 @@ App::post('/v1/projects')
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
-        
+
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
