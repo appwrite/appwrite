@@ -96,6 +96,7 @@ COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app
+COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
