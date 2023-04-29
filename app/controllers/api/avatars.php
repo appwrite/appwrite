@@ -889,15 +889,15 @@ App::get('/v1/cards/cloud-og')
         $isPlatinum = $isGolden ? false : $isPlatinum;
         $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
-        $baseImage = new \Imagick(__DIR__ . '/../../../public/images/cards/cloud/og-background{$bgVariation}.png');
+        $baseImage = new \Imagick(__DIR__ . "/../../../public/images/cards/cloud/og-background{$bgVariation}.png");
 
         $cardType = $isGolden ? '-golden' : ($isPlatinum ? '-platinum' : '');
 
-        $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png');
+        $image = new Imagick(__DIR__ . "/../../../public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
         $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008 / 2 - $image->getImageWidth() / 2, 1008 / 2 - $image->getImageHeight() / 2);
 
         $imageLogo = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/og-background-logo.png');
-        $imageShadow = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/og-shadow{$cardType}.png');
+        $imageShadow = new Imagick(__DIR__ . "/../../../public/images/cards/cloud/og-shadow{$cardType}.png");
         if ($cardVariation === '1') {
             $baseImage->compositeImage($imageLogo, Imagick::COMPOSITE_OVER, 32, 1008 - $imageLogo->getImageHeight() - 32);
             $baseImage->compositeImage($imageShadow, Imagick::COMPOSITE_OVER, -450, 700);
