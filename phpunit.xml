@@ -6,8 +6,8 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="false"
-        >
+         stopOnFailure="true"
+>
     <extensions>
         <extension class="Appwrite\Tests\TestHook" />
     </extensions>
