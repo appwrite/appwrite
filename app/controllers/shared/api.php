@@ -462,7 +462,6 @@ App::shutdown()
 
                 foreach ($caches as $cache) {
                     $key = $cache->getId();
-                    \var_dump("Pruning " . $key);
 
                     $cache = new Cache(
                         new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
