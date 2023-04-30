@@ -190,6 +190,11 @@ return [
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
+    Exception::INVALID_USERNAME => [
+        'name' => Exception::INVALID_USERNAME,
+        'description' => 'Username must contain alphanumeric characters and whitespace',
+        'code' => 409,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

@@ -98,6 +98,11 @@ App::post('/v1/account')
             }
         }
 
+        $regex = '/^[a-zA-Z0-9 ]*$/';
+        if (!preg_match($regex, $name)) {
+            throw new Exception(Exception::INVALID_USERNAME);
+        }
+
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
         try {
