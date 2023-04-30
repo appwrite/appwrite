@@ -21,6 +21,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -438,6 +439,43 @@ App::shutdown()
         }
 
         /**
+         * Cache Buster
+         */
+        $bustCache = $route->getLabel('cacheBuster', false);
+        if ($bustCache) {
+            $payload = $response->getPayload();
+
+            if (!empty($payload)) {
+                $resources = [];
+
+                $patterns = $route->getLabel('cacheBuster.resource', []);
+                if (!empty($patterns)) {
+                    foreach ($patterns as $pattern) {
+                        $resources[] = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                    }
+                }
+
+                $caches = Authorization::skip(fn () => $dbForProject->find('cache', [
+                    Query::equal('resource', $resources),
+                    Query::limit(100)
+                ]));
+
+                foreach ($caches as $cache) {
+                    $key = $cache->getId();
+                    \var_dump("Pruning " . $key);
+
+                    $cache = new Cache(
+                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                    );
+
+                    $cache->purge($key);
+
+                    Authorization::skip(fn () => $dbForProject->deleteDocument('cache', $cache->getId()));
+                }
+            }
+        }
+
+        /**
          * Cache label
          */
         $useCache = $route->getLabel('cache', false);
@@ -468,6 +506,7 @@ App::shutdown()
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
+
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
