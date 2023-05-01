@@ -183,12 +183,26 @@ class Github extends OAuth2
             $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
 
             $emails = \json_decode($emails, true);
+
+            $verifiedEmail = null;
+            $primaryEmail = null;
+
             foreach ($emails as $email) {
                 if (isset($email['verified']) && $email['verified'] === true) {
-                    $this->user['email'] = $email['email'];
-                    $this->user['verified'] = $email['verified'];
-                    break;
+                    $verifiedEmail = $email;
+
+                    if (isset($email['primary']) && $email['primary'] === true) {
+                        $primaryEmail = $email;
+                    }
                 }
+            }
+
+            if (!empty($primaryEmail)) {
+                $this->user['email'] = $primaryEmail['email'];
+                $this->user['verified'] = $primaryEmail['verified'];
+            } elseif (!empty($verifiedEmail)) {
+                $this->user['email'] = $verifiedEmail['email'];
+                $this->user['verified'] = $verifiedEmail['verified'];
             }
         }
 
