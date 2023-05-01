@@ -197,10 +197,10 @@ class Github extends OAuth2
                 }
             }
 
-            if(!empty($primaryEmail)) {
+            if (!empty($primaryEmail)) {
                 $this->user['email'] = $primaryEmail['email'];
                 $this->user['verified'] = $primaryEmail['verified'];
-            } else if(!empty($verifiedEmail)) {
+            } elseif (!empty($verifiedEmail)) {
                 $this->user['email'] = $verifiedEmail['email'];
                 $this->user['verified'] = $verifiedEmail['verified'];
             }
