@@ -2113,12 +2113,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "52f351230fab5922c6b63bd19b0bf4891d940d8f"
+                "reference": "0b7a496dbaec817909a41380728d43c9dc3ecfd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/52f351230fab5922c6b63bd19b0bf4891d940d8f",
-                "reference": "52f351230fab5922c6b63bd19b0bf4891d940d8f",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0b7a496dbaec817909a41380728d43c9dc3ecfd4",
+                "reference": "0b7a496dbaec817909a41380728d43c9dc3ecfd4",
                 "shasum": ""
             },
             "require": {
@@ -2163,7 +2163,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/appwrite-validators"
             },
-            "time": "2023-04-27T15:49:03+00:00"
+            "time": "2023-05-01T08:52:04+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3034,16 +3034,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.32.2",
+            "version": "0.32.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "cdec289bcf38c99d0074414d2438e9967d0c9699"
+                "reference": "4057e14a61335070034b1cbdce9e39bef94d997d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/cdec289bcf38c99d0074414d2438e9967d0c9699",
-                "reference": "cdec289bcf38c99d0074414d2438e9967d0c9699",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/4057e14a61335070034b1cbdce9e39bef94d997d",
+                "reference": "4057e14a61335070034b1cbdce9e39bef94d997d",
                 "shasum": ""
             },
             "require": {
@@ -3079,9 +3079,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.32.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.32.3"
             },
-            "time": "2023-04-12T21:06:57+00:00"
+            "time": "2023-04-27T19:22:05+00:00"
         },
         {
             "name": "doctrine/deprecations",

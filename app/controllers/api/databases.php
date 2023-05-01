@@ -468,7 +468,7 @@ App::get('/v1/databases')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -794,7 +794,7 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -2882,7 +2882,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
