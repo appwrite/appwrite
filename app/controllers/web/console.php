@@ -34,7 +34,7 @@ App::get('/console')
             $ogTags = [
                 '<title>Appwrite Cloud Membership Card</title>',
                 '<meta name="description" content="Appwrite Cloud is now LIVE! Share your Cloud card for a chance to win an exclusive Cloud hoodie!">',
-                '<meta property="og:url" content="' . $domain . '/' . $request->getURI() . '">',
+                '<meta property="og:url" content="' . $domain . $request->getURI() . '">',
                 '<meta name="og:image:type" content="image/png">',
                 '<meta name="og:image:width" content="1008">',
                 '<meta name="og:image:height" content="1008">',
@@ -44,7 +44,7 @@ App::get('/console')
                 '<meta property="og:image" content="' . $ogImageUrl . '">',
                 '<meta name="twitter:card" content="summary_large_image">',
                 '<meta property="twitter:domain" content="' . $request->getHostname() . '">',
-                '<meta property="twitter:url" content="' . $domain . '/' . $request->getURI() . '">',
+                '<meta property="twitter:url" content="' . $domain . $request->getURI() . '">',
                 '<meta name="twitter:title" content="Appwrite Cloud Membership Card">',
                 '<meta name="twitter:image:type" content="image/png">',
                 '<meta name="twitter:image:width" content="1008">',
