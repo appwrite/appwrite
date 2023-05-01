@@ -982,6 +982,9 @@ App::get('/v1/cards/cloud-og')
             $text->setFontWeight(700);
 
             if ($cardVariation === '3') {
+                $hashtag->setFontSize(16);
+                $text->setFontSize(\strlen($employeeNumber) <= 1 ? 30 : 26);
+
                 $hashtag->skewY(20);
                 $hashtag->skewX(20);
                 $text->skewY(20);
@@ -1030,7 +1033,7 @@ App::get('/v1/cards/cloud-og')
                 $group->newImage(300, 300, '#00000000');
 
                 $hashtag->annotation(0, $metricsText['textHeight'], '#');
-                $text->annotation($metricsHashtag['textWidth'] + 6, $metricsText['textHeight'], $employeeNumber);
+                $text->annotation($metricsHashtag['textWidth'] + 2, $metricsText['textHeight'], $employeeNumber);
 
                 $group->drawImage($hashtag);
                 $group->drawImage($text);
@@ -1038,13 +1041,12 @@ App::get('/v1/cards/cloud-og')
                 $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 640, 293);
 
                 if (\strlen($employeeNumber) <= 1) {
-                    $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 662, 310);
+                    $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 670, 317);
                 } else {
-                    $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 659, 320);
+                    $baseImage->compositeImage($group, Imagick::COMPOSITE_OVER, 663, 322);
                 }
             }
         }
-
 
         if ($isContributor) {
             $file = $cardVariation === '3' ? 'contributor-skew.png' : 'contributor.png';
@@ -1146,7 +1148,7 @@ App::get('/v1/cards/cloud-og')
 
             $textName->skewY(20);
             $textName->skewX(20);
-            $textName->annotation(320, 695, $name);
+            $textName->annotation(320, 700, $name);
 
             $textMember->skewY(20);
             $textMember->skewX(20);
@@ -1161,7 +1163,7 @@ App::get('/v1/cards/cloud-og')
             $text->setTextAlignment(Imagick::ALIGN_LEFT);
             $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Regular.ttf');
             $text->setFillColor(new \ImagickPixel('#FFFFFF'));
-            $text->setFontSize($scalingDown ? 22 : 26);
+            $text->setFontSize($scalingDown ? 16 : 20);
             $text->setFontWeight(400);
 
             if ($cardVariation === '1') {
@@ -1205,12 +1207,12 @@ App::get('/v1/cards/cloud-og')
                 $text->skewX(20);
                 $text->setTextAlignment(\Imagick::ALIGN_CENTER);
 
-                $text->annotation(325 + 15 + 2, 630, $githubName);
+                $text->annotation(320 + 15 + 2, 640, $githubName);
                 $metrics = $baseImage->queryFontMetrics($text, $githubName);
 
                 $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github-skew.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
-                $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2), 510 + \strlen($githubName) * 1.3);
+                $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2), 518 + \strlen($githubName) * 1.3);
 
                 $baseImage->drawImage($text);
             }
