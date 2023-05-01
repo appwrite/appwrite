@@ -566,6 +566,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
+            if(empty($email)) {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'OAuth provider failed to return email.');
+            }
+
             /**
              * Is verified is not used yet, since we don't know after an accout is created anymore if it was verified or not.
              */
