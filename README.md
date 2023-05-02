@@ -1,5 +1,4 @@
-> It's going to get cloudy! 🌩 ☂️
-> The Appwrite Cloud is coming soon! You can learn more about our upcoming hosted solution and signup for free credits at: https://appwrite.io/cloud
+> The Appwrite Cloud is now live in public beta and ready for you to use! Say goodbye to the hassle of self-hosting and enjoy a seamless, hosted experience. To get started, sign up now at [cloud.appwrite.io](https://cloud.appwrite.io). We can't wait for you to experience the power and convenience of our new hosted solution. See you in the Cloud!" 🌥️☁️
 
 <br />
 <p align="center">
@@ -25,7 +24,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Announcing Appwrite 1.3 with Database Relationships! Learn what's new!**](https://dev.to/appwrite/join-celebrations-appwrite-13-ships-relationships-57fc)
+[**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
