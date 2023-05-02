@@ -99,7 +99,7 @@ App::post('/v1/account')
         }
         
         $regex = '(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])';
-        if (!preg_match($regex, $name)) {
+        if (preg_match($regex, $name)) {
             throw new Exception(Exception::INVALID_USERNAME);
         }
 
