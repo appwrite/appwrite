@@ -21,7 +21,6 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -469,7 +468,6 @@ App::shutdown()
                 $cacheLog  = $dbForProject->getDocument('cache', $key);
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
-
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
