@@ -1,4 +1,4 @@
-> The Appwrite Cloud is now live in public beta and ready for you to use! Say goodbye to the hassle of self-hosting and enjoy a seamless, hosted experience. To get started, sign up now at [cloud.appwrite.io](https://cloud.appwrite.io). We can't wait for you to experience the power and convenience of our new hosted solution. See you in the Cloud!" 🌥️☁️
+> The Appwrite Cloud is now live in public beta and ready for you to use! Say goodbye to the hassle of self-hosting and enjoy a seamless, hosted experience. To get started, sign up now at [cloud.appwrite.io](https://cloud.appwrite.io). We can't wait for you to experience the power and convenience of our new hosted solution. See you in the Cloud!" 🌥️
 
 <br />
 <p align="center">
