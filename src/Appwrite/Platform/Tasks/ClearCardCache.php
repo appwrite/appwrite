@@ -34,7 +34,7 @@ class ClearCardCache extends Action
 
         Console::title('ClearCardCache V1');
         Console::success(APP_NAME . ' ClearCardCache v1 has started');
-        $resources = ['card-cloud/' . $userId, 'card-cloud-back/' . $userId, 'card-cloud-og/' . $userId];
+        $resources = ['card/' . $userId, 'card-back/' . $userId, 'card-og/' . $userId];
 
         $caches = Authorization::skip(fn () => $dbForConsole->find('cache', [
             Query::equal('resource', $resources),
