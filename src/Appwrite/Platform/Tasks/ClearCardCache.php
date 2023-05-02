@@ -42,8 +42,8 @@ class ClearCardCache extends Action
         ]));
 
         $count = \count($caches);
-        Console::info("Going to delete {$count} cache records in 5 seconds...");
-        \sleep(5);
+        Console::info("Going to delete {$count} cache records in 10 seconds...");
+        \sleep(10);
 
         foreach ($caches as $cache) {
             $key = $cache->getId();
