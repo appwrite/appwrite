@@ -872,7 +872,8 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
     }
 
-    $authJWT = $request->getParam('jwt', $request->getHeader('x-appwrite-jwt', ''));;
+    $authJWT = $request->getParam('jwt', $request->getHeader('x-appwrite-jwt', ''));
+    ;
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.

@@ -328,6 +328,15 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
+        // JWT as request param
+        $response = $this->client->call(Client::METHOD_GET, '/account?jwt=' . $jwt, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
