@@ -701,17 +701,17 @@ App::get('/v1/cards/cloud')
         }
 
         setlocale(LC_ALL, "en_US.utf8");
-        $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
-        $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
-        $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
+        // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
+        // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
+        // $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
         $text->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
         $text->setFillColor(new \ImagickPixel('#FFFFFF'));
 
-        if (\strlen($name) > 33) {
-            $name = \substr($name, 0, 33);
+        if (\strlen($name) > 32) {
+            $name = \substr($name, 0, 32);
         }
 
         if (\strlen($name) <= 23) {
@@ -818,7 +818,7 @@ App::get('/v1/cards/cloud-back')
         $baseImage = new \Imagick(__DIR__ . '/../../../public/images/cards/cloud/' . $imagePath);
 
         setlocale(LC_ALL, "en_US.utf8");
-        $userId = \iconv("utf-8", "ascii//TRANSLIT", $userId);
+        // $userId = \iconv("utf-8", "ascii//TRANSLIT", $userId);
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
@@ -1085,17 +1085,17 @@ App::get('/v1/cards/cloud-og')
         }
 
         setlocale(LC_ALL, "en_US.utf8");
-        $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
-        $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
-        $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
+        // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
+        // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
+        // $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
 
         $textName = new \ImagickDraw();
         $textName->setTextAlignment(Imagick::ALIGN_CENTER);
         $textName->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
         $textName->setFillColor(new \ImagickPixel('#FFFFFF'));
 
-        if (\strlen($name) > 33) {
-            $name = \substr($name, 0, 33);
+        if (\strlen($name) > 32) {
+            $name = \substr($name, 0, 32);
         }
 
         if ($cardVariation === '1') {
@@ -1171,11 +1171,11 @@ App::get('/v1/cards/cloud-og')
 
                 $group = new Imagick();
                 $groupWidth = $metrics['textWidth'] + 32 + 4;
-                $group->newImage($groupWidth, $metrics['textHeight'] + ($scalingDown ? 10 : 0), '#00000000');
+                $group->newImage($groupWidth, $metrics['textHeight'] + 10, '#00000000');
                 $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $image->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
-                $precisionFix = 5;
+                $precisionFix = -1;
 
                 $group->compositeImage($image, Imagick::COMPOSITE_OVER, 0, 0);
                 $group->annotateImage($text, 32 + 4, $metrics['textHeight'] - $precisionFix, 0, $githubName);
@@ -1189,11 +1189,11 @@ App::get('/v1/cards/cloud-og')
 
                 $group = new Imagick();
                 $groupWidth = $metrics['textWidth'] + 32 + 4;
-                $group->newImage($groupWidth, $metrics['textHeight'] + ($scalingDown ? 10 : 0), '#00000000');
+                $group->newImage($groupWidth, $metrics['textHeight'] + 10, '#00000000');
                 $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $image->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
-                $precisionFix = 5;
+                $precisionFix = -1;
 
                 $group->compositeImage($image, Imagick::COMPOSITE_OVER, 0, 0);
                 $group->annotateImage($text, 32 + 4, $metrics['textHeight'] - $precisionFix, 0, $githubName);
