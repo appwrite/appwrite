@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "337bf088f3cec320e1c8d059ef1efb7f",
+    "content-hash": "d17652f4b2ab219da983b0ff3f5456d9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1805,26 +1805,26 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-add-key-attribute",
+            "version": "0.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "59a9cbd71f8e5261301a9bd4e277b4f48601f487"
+                "reference": "403641f16a53b81ac40b91111a86e5672da49e8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/59a9cbd71f8e5261301a9bd4e277b4f48601f487",
-                "reference": "59a9cbd71f8e5261301a9bd4e277b4f48601f487",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/403641f16a53b81ac40b91111a86e5672da49e8c",
+                "reference": "403641f16a53b81ac40b91111a86e5672da49e8c",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.36.*"
+                "utopia-php/database": "0.35.*"
             },
             "require-dev": {
-                "laravel/pint": "1.5.*",
+                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "^1.9",
                 "phpunit/phpunit": "^9.4"
             },
@@ -1848,9 +1848,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/add-key-attribute"
+                "source": "https://github.com/utopia-php/abuse/tree/0.24.0"
             },
-            "time": "2023-05-01T13:53:36+00:00"
+            "time": "2023-04-11T05:31:55+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1909,24 +1909,24 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-add-attribute-key",
+            "version": "0.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "a5a158257ab4e90e9b25e1564840765998a092a5"
+                "reference": "adc209f2e16878e5468f0b9cfd9f7f7ab497db31"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/a5a158257ab4e90e9b25e1564840765998a092a5",
-                "reference": "a5a158257ab4e90e9b25e1564840765998a092a5",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/adc209f2e16878e5468f0b9cfd9f7f7ab497db31",
+                "reference": "adc209f2e16878e5468f0b9cfd9f7f7ab497db31",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "0.36.*"
+                "utopia-php/database": "0.35.*"
             },
             "require-dev": {
-                "laravel/pint": "1.5.*",
+                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "^1.8",
                 "phpunit/phpunit": "^9.3"
             },
@@ -1950,9 +1950,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/add-attribute-key"
+                "source": "https://github.com/utopia-php/audit/tree/0.25.0"
             },
-            "time": "2023-05-01T15:15:44+00:00"
+            "time": "2023-04-11T05:31:15+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2113,12 +2113,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9b693eb2b28ec789cce815994b133ca42b21cd0b"
+                "reference": "d131ad4f68084c72dd1afaf25f584e1d561b3b6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9b693eb2b28ec789cce815994b133ca42b21cd0b",
-                "reference": "9b693eb2b28ec789cce815994b133ca42b21cd0b",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/d131ad4f68084c72dd1afaf25f584e1d561b3b6d",
+                "reference": "d131ad4f68084c72dd1afaf25f584e1d561b3b6d",
                 "shasum": ""
             },
             "require": {
@@ -2163,7 +2163,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/appwrite-validators"
             },
-            "time": "2023-05-01T14:10:12+00:00"
+            "time": "2023-05-02T15:44:22+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3784,16 +3784,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.20.3",
+            "version": "1.20.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "6c04009f6cae6eda2f040745b6b846080ef069c2"
+                "reference": "7d568c87a9df9c5f7e8b5f075fc469aa8cb0a4cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/6c04009f6cae6eda2f040745b6b846080ef069c2",
-                "reference": "6c04009f6cae6eda2f040745b6b846080ef069c2",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/7d568c87a9df9c5f7e8b5f075fc469aa8cb0a4cd",
+                "reference": "7d568c87a9df9c5f7e8b5f075fc469aa8cb0a4cd",
                 "shasum": ""
             },
             "require": {
@@ -3823,9 +3823,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.20.3"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.20.4"
             },
-            "time": "2023-04-25T09:01:03+00:00"
+            "time": "2023-05-02T09:19:37+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5654,28 +5654,14 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/abuse",
-            "version": "dev-add-key-attribute",
-            "alias": "0.25.0",
-            "alias_normalized": "0.25.0.0"
-        },
-        {
-            "package": "utopia-php/audit",
-            "version": "dev-add-attribute-key",
-            "alias": "0.26.0",
-            "alias_normalized": "0.26.0.0"
-        },
-        {
             "package": "utopia-php/database",
             "version": "dev-appwrite-validators",
-            "alias": "0.36.0",
-            "alias_normalized": "0.36.0.0"
+            "alias": "0.35.0",
+            "alias_normalized": "0.35.0.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20,
         "utopia-php/database": 20
     },
     "prefer-stable": false,
