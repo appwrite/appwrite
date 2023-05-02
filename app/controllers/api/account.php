@@ -97,6 +97,11 @@ App::post('/v1/account')
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
         }
+        
+        $regex = '(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])';
+        if (!preg_match($regex, $name)) {
+            throw new Exception(Exception::INVALID_USERNAME);
+        }
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);

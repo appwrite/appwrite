@@ -74,6 +74,7 @@ class Exception extends \Exception
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const INVALID_USERNAME                  = 'invalid_username';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
