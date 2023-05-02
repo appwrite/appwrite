@@ -439,42 +439,6 @@ App::shutdown()
         }
 
         /**
-         * Cache Buster
-         */
-        $bustCache = $route->getLabel('cacheBuster', false);
-        if ($bustCache) {
-            $payload = $response->getPayload();
-
-            if (!empty($payload)) {
-                $resources = [];
-
-                $patterns = $route->getLabel('cacheBuster.resource', []);
-                if (!empty($patterns)) {
-                    foreach ($patterns as $pattern) {
-                        $resources[] = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-                    }
-                }
-
-                $caches = Authorization::skip(fn () => $dbForProject->find('cache', [
-                    Query::equal('resource', $resources),
-                    Query::limit(100)
-                ]));
-
-                foreach ($caches as $cache) {
-                    $key = $cache->getId();
-
-                    $cache = new Cache(
-                        new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-                    );
-
-                    $cache->purge($key);
-
-                    Authorization::skip(fn () => $dbForProject->deleteDocument('cache', $cache->getId()));
-                }
-            }
-        }
-
-        /**
          * Cache label
          */
         $useCache = $route->getLabel('cache', false);
