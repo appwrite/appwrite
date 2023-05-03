@@ -37,9 +37,9 @@ jobs:
       with:
         images: appwrite/appwrite
         tags: |
-          type=semver,pattern={{major}}
-          type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}.{{minor}}.{{patch}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
 
     - name: Build and push
       uses: docker/build-push-action@v4
