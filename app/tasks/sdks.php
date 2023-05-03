@@ -239,8 +239,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cd ' . $target . ' && \
                         git init --initial-branch=' . $gitBranch . ' && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch && \
-                        git pull ' . $gitUrl . ' && \
+                        git fetch origin ' . $gitBranch . ' && \
+                        git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
                         cp -r ' . $result . '/* ' . $target . '/ && \
                         git add . && \

@@ -1237,7 +1237,7 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            Query::equal('projectId', [$project->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);
 

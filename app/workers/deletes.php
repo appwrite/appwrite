@@ -9,7 +9,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Appwrite\Resque\Worker;
 use Executor\Executor;
-use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
@@ -291,12 +290,13 @@ class DeletesV1 extends Worker
     protected function deleteProject(Document $document): void
     {
         $projectId = $document->getId();
+        $projectInternalId = $document->getInternalId();
 
-        // Delete project domains and certificates
+        // Delete project certificates
         $dbForConsole = $this->getConsoleDB();
 
         $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$document->getInternalId()])
+            Query::equal('projectInternalId', [$projectInternalId])
         ]);
 
         foreach ($domains as $domain) {
@@ -317,6 +317,26 @@ class DeletesV1 extends Worker
                 $dbForProject->deleteCollection($collection->getId());
             }
         }
+
+        // Delete Platforms
+        $this->deleteByGroup('platforms', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete Domains
+        $this->deleteByGroup('domains', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete Keys
+        $this->deleteByGroup('keys', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete Webhooks
+        $this->deleteByGroup('webhooks', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
 
         // Delete metadata tables
         try {

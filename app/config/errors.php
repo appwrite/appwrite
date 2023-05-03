@@ -102,7 +102,7 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email already exists in your project.',
+        'description' => 'A user with the same id, email, or phone already exists in your project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
