@@ -820,7 +820,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -862,7 +862,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -908,7 +908,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -946,7 +946,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1068,7 +1068,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1105,7 +1105,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1148,7 +1148,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1270,7 +1270,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1307,7 +1307,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1351,7 +1351,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1488,7 +1488,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
+            Query::equal('$id', [$domainId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1522,7 +1522,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
+            Query::equal('$id', [$domainId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1582,7 +1582,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
+            Query::equal('$id', [$domainId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
