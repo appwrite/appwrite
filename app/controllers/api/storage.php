@@ -128,7 +128,7 @@ App::post('/v1/storage/buckets')
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes, permissions: $permissions ?? [], documentSecurity: $fileSecurity);
         } catch (Duplicate) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
@@ -274,6 +274,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('encryption', $encryption)
                 ->setAttribute('compression', $compression)
                 ->setAttribute('antivirus', $antivirus));
+        $dbForProject->updateCollection('bucket_' . $bucket->getInternalId(), $permissions, $fileSecurity);
 
         $events
             ->setParam('bucketId', $bucket->getId())
