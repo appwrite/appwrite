@@ -199,7 +199,7 @@ class ProjectsConsoleClientTest extends Scope
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals($response['body']['total'], 2);
+        $this->assertEquals($response['body']['total'], 3);
         $this->assertIsArray($response['body']['projects']);
         $this->assertCount(2, $response['body']['projects']);
         $this->assertEquals($response['body']['projects'][0]['name'], 'Project Test');
