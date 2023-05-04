@@ -85,6 +85,7 @@ class DatabaseV1 extends Worker
         $key = $attribute->getAttribute('key', '');
         $type = $attribute->getAttribute('type', '');
         $size = $attribute->getAttribute('size', 0);
+        $minSize = $attribute->getAttribute('minSize', 0);
         $required = $attribute->getAttribute('required', false);
         $default = $attribute->getAttribute('default', null);
         $signed = $attribute->getAttribute('signed', true);
@@ -123,7 +124,7 @@ class DatabaseV1 extends Worker
                     }
                     break;
                 default:
-                    if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                    if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters, $minSize)) {
                         throw new Exception('Failed to create Attribute');
                     }
             }

@@ -13,7 +13,13 @@ class AttributeString extends Attribute
         $this
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Attribute size.',
+                'description' => 'Maximun Attribute size.',
+                'default' => 0,
+                'example' => 128,
+            ])
+            ->addRule('minSize', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minimum Attribute size.',
                 'default' => 0,
                 'example' => 128,
             ])

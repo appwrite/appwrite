@@ -64,6 +64,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
     $size = $attribute->getAttribute('size', 0);
+    $minSize = $attribute->getAttribute('minSize', 0);
     $required = $attribute->getAttribute('required', true);
     $signed = $attribute->getAttribute('signed', true); // integers are signed by default
     $array = $attribute->getAttribute('array', false);
@@ -119,6 +120,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
             'size' => $size,
+            'minSize' => $minSize,
             'required' => $required,
             'signed' => $signed,
             'default' => $default,
@@ -1093,7 +1095,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
+    ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute Maximum size for text attributes, in number of characters.')
+    ->param('minSize', 0, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute minimun size for text attributes, in number of characters.', true)
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -1101,7 +1104,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?int $minSize, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size);
@@ -1113,6 +1116,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'key' => $key,
             'type' => Database::VAR_STRING,
             'size' => $size,
+            'minSize' => $minSize,
             'required' => $required,
             'default' => $default,
             'array' => $array,
