@@ -1,12 +1,10 @@
-> It's going to get cloudy! 🌩 ☂️
-> The Appwrite Cloud is coming soon! You can learn more about our upcoming hosted solution and signup for free credits at: https://appwrite.io/cloud
+> Great news! Appwrite Cloud is now in public beta! Sign up at [cloud.appwrite.io](https://cloud.appwrite.io) for a hassle-free, hosted experience. Join us in the Cloud today! ☁️🎉
 
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
     <br />
-    <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
+    <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
     <br />
     <br />
 </p>
@@ -26,7 +24,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Announcing Appwrite 1.3 with Database Relationships! Learn what's new!**](https://dev.to/appwrite/join-celebrations-appwrite-13-ships-relationships-57fc)
+[**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
