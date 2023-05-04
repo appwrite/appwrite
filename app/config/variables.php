@@ -682,15 +682,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_FUNCTIONS_CONTAINERS',
-                'description' => 'The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
-                'introduction' => '0.7.0',
-                'default' => '10',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_FUNCTIONS_CPUS',
                 'description' => 'The maximum number of CPU core a single cloud function is allowed to use. Please note that setting a value higher than available cores will result in a function error, which might result in an error. The default value is empty. When it\'s empty, CPU limit will be disabled.',
                 'introduction' => '0.7.0',
@@ -764,7 +755,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
+                'description' => 'The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds. Note: The minimum inactive time is constrained by the MAINTENANCE_INTERVAL. If the maintenance interval is set to a value greater than the inactive threshold, functions may remain active for longer than the specified interval before being shut down.',
                 'introduction' => '0.13.0',
                 'default' => '60',
                 'required' => false,
