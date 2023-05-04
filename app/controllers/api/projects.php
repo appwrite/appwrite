@@ -1802,19 +1802,20 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
-        $message = $template
-            ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-            ->setParam('{{name}}', '')
-            ->setParam('{{body}}', $localeObj->getText("emails.{$type}.body"))
-            ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-            ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
-            ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
-            ->setParam('{{direction}}', $localeObj->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000')
-            ->render();
-        if (is_null($template)) {
+        if(is_null($template)) {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+            $message = $message
+                ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
+                ->setParam('{{name}}', '')
+                ->setParam('{{body}}', $localeObj->getText("emails.{$type}.body"))
+                ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
+                ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
+                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
+                ->setParam('{{direction}}', $localeObj->getText('settings.direction'))
+                ->setParam('{{bg-body}}', '#f7f7f7')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{text-content}}', '#000000')
+                ->render();
             $template = [
                 'message' => $message,
                 'subject' => $localeObj->getText('emails.' . $type . '.subject'),
