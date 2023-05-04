@@ -552,3 +552,11 @@ App::shutdown()
                 ->submit();
         }
     });
+
+App::init()
+    ->groups(['usage'])
+    ->action(function () {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
+    });
