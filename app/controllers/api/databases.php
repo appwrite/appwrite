@@ -2926,7 +2926,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_DOCUMENT_COUNT);
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
