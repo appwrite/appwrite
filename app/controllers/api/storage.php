@@ -128,7 +128,7 @@ App::post('/v1/storage/buckets')
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes, permissions: $permissions ?? [], documentSecurity: $fileSecurity);
         } catch (Duplicate) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
@@ -274,6 +274,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('encryption', $encryption)
                 ->setAttribute('compression', $compression)
                 ->setAttribute('antivirus', $antivirus));
+        $dbForProject->updateCollection('bucket_' . $bucket->getInternalId(), $permissions, $fileSecurity);
 
         $events
             ->setParam('bucketId', $bucket->getId())
@@ -1447,7 +1448,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
 App::get('/v1/storage/usage')
     ->desc('Get usage stats for storage')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'storage', 'usage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
@@ -1557,7 +1558,7 @@ App::get('/v1/storage/usage')
 
 App::get('/v1/storage/:bucketId/usage')
     ->desc('Get usage stats for a storage bucket')
-    ->groups(['api', 'storage'])
+    ->groups(['api', 'storage', 'usage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')

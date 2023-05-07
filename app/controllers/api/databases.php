@@ -3279,6 +3279,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $permissions = $document->getPermissions() ?? [];
         }
 
+        $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
         $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
@@ -3367,8 +3368,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         };
 
         $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
-
-    $newDocument = new Document(\array_merge($document->getArrayCopy(), $data));
 
     try {
         $document = $dbForProject->withRequestTimestamp(
@@ -3603,7 +3602,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
 App::get('/v1/databases/usage')
     ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -3721,7 +3720,7 @@ App::get('/v1/databases/usage')
 
 App::get('/v1/databases/:databaseId/usage')
     ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -3831,7 +3830,7 @@ App::get('/v1/databases/:databaseId/usage')
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for a collection')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')

@@ -182,6 +182,19 @@ class V18 extends Migration
                  */
                 $document->setAttribute('options', $document->getAttribute('options', new \stdClass()));
                 break;
+            case 'buckets':
+                /**
+                 * Set the bucket permission in the metadata table
+                 */
+                try {
+                    $internalBucketId = "bucket_{$this->project->getInternalId()}";
+                    $permissions = $document->getPermissions();
+                    $fileSecurity = $document->getAttribute('fileSecurity', false);
+                    $this->projectDB->updateCollection($internalBucketId, $permissions, $fileSecurity);
+                } catch (\Throwable $th) {
+                    Console::warning($th->getMessage());
+                }
+                break;
         }
 
         return $document;
