@@ -45,7 +45,7 @@
         "appwrite/php-runtimes": "0.11.*",
         "utopia-php/abuse": "0.25.*",
         "utopia-php/analytics": "0.2.*",
-        "utopia-php/audit": "0.26.*",
+        "utopia-php/audit": "dev-rm_userInternalId as 0.26.0",
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.13.*",
         "utopia-php/config": "0.2.*",
