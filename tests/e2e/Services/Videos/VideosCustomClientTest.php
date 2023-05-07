@@ -313,7 +313,7 @@ class VideosCustomClientTest extends Scope
         }
         sleep(30);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -358,7 +358,7 @@ class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1508, strlen($response['body']));
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/dash/master.mpd', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

@@ -18,6 +18,8 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
@@ -79,6 +81,7 @@ class VideosV1 extends Worker
         @mkdir($this->outDir, 0755, true);
         $this->outPath = $this->outDir . $this->video->getId();
     }
+
 
     public function run(): void
     {
@@ -165,25 +168,21 @@ class VideosV1 extends Worker
         }
         $this->video->getAttribute('videoBitRate');
         $media = $this->ffmpeg->open($this->inPath);
-
-        switch ($this->action) {
-            case 'preview':
-                $this->createPreview($media);
-                break;
-
-            case 'timeline':
-                $this->createTimeLine($media);
-                break;
-
-            default:
-                $this->createOutput($media);
-                break;
-        }
+        match ($this->action) {
+            'preview'  => $this->createPreview($media),
+            'timeline' => $this->createTimeLine($media),
+            default => $this->createOutput($media),
+        };
 
         unset($media);
     }
 
 
+    /**
+     * @throws Authorization
+     * @throws Throwable
+     * @throws Structure
+     */
     private function createPreview($media): void
     {
 
@@ -214,7 +213,7 @@ class VideosV1 extends Worker
         );
 
         $preview = $this->database->findOne('videos_previews', [
-            Query::equal('videoId', [$this->video->getId()]),
+            Query::equal('videoInternalId', [$this->video->getInternalId()]),
             Query::equal('type', [$this->action]),
             Query::equal('name', [$name]),
         ]);
@@ -228,8 +227,8 @@ class VideosV1 extends Worker
                 'path' => $path,
                 'second' => $this->args['second'],
             ]));
-
             $this->video->setAttribute('previewId', $preview->getId());
+            $this->video->setAttribute('previewInternalId', $preview->getInternalId());
             $this->database->updateDocument(
                 'videos',
                 $this->video->getId(),
@@ -253,6 +252,11 @@ class VideosV1 extends Worker
         }
     }
 
+    /**
+     * @throws Authorization
+     * @throws Structure
+     * @throws Throwable
+     */
     private function createTimeLine($media): void
     {
 
@@ -362,11 +366,17 @@ class VideosV1 extends Worker
         }
     }
 
+    /**
+     * @throws Authorization
+     * @throws Exception
+     * @throws Throwable
+     * @throws Structure
+     */
     private function createOutput($media): void
     {
         $subs = [];
         $subtitles = $this->database->find('videos_subtitles', [
-            Query::equal('videoId', [$this->video->getId()]),
+            Query::equal('videoInternalId', [$this->video->getInternalId()]),
             Query::equal('status', [''])
         ]);
 
