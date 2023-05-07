@@ -889,7 +889,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    $projectId = '644a75323601130be4a8';
+    $projectId = '64575eb69a8995fbde21';
 
     if ($projectId === 'console') {
         return $console;
@@ -936,7 +936,6 @@ App::setResource('console', function () {
 
 App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
-
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");

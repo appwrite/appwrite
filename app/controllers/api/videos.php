@@ -100,9 +100,11 @@ App::post('/v1/videos')
 
         $video = Authorization::skip(function () use ($dbForProject, $bucketId, $file) {
             return $dbForProject->createDocument('videos', new Document([
-                'bucketId'  => $bucketId,
-                'fileId'    => $file->getId(),
-                'size'      => $file->getAttribute('sizeOriginal'),
+                'bucketId' => $file->getAttribute('bucketId'),
+                'bucketInternalId' => $file->getAttribute('bucketInternalId'),
+                'fileId'  => $file->getId(),
+                'fileInternalId' => $file->getInternalId(),
+                'size' => $file->getAttribute('sizeOriginal'),
             ]));
         });
 
@@ -191,10 +193,13 @@ App::put('/v1/videos/:videoId')
 
         $video = Authorization::skip(fn() =>
         $dbForProject->updateDocument('videos', $videoId, new Document([
-            'bucketId'  => $bucketId,
-            'fileId'    => $file->getId(),
+            'bucketId'  => $file->getAttribute('bucketId'),
+            'bucketInternalId' => $file->getAttribute('bucketInternalId'),
+            'fileId' => $file->getId(),
+            'fileInternalId' => $file->getInternalId(),
             'size'      => $file->getAttribute('sizeOriginal'),
             'previewId' =>  null,
+            'previewInternalId' =>  null,
             'duration' =>  null,
             'width' =>  null,
             'height' =>  null,
@@ -480,9 +485,12 @@ App::post('/v1/videos/:videoId/subtitles')
 
         $subtitle = Authorization::skip(fn() =>
             $dbForProject->createDocument('videos_subtitles', new Document([
-                'videoId'   => $videoId,
-                'bucketId'  => $bucketId,
-                'fileId'    => $fileId,
+                'videoId'   => $video->getId(),
+                'videoInternalId' => $video->getInternalId(),
+                'bucketId'  => $file->getAttribute('bucketId'),
+                'bucketInternalId'  => $file->getAttribute('bucketInternalId'),
+                'fileId'    => $file->getId(),
+                'fileInternalId' => $file->getInternalId(),
                 'name'      => $name,
                 'code'      => $code,
                 'default'   => $default,
@@ -546,7 +554,22 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(action: function (string $subtitleId, string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Response $response, Database $dbForProject) {
+    ->inject('mode')
+    ->action(action: function (string $subtitleId, string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Response $response, Database $dbForProject, string $mode) {
+
+        $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
+
+        if ($video->isEmpty()) {
+            throw new Exception(Exception::VIDEO_NOT_FOUND);
+        }
+
+        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
+
+        $file = validateFilePermissions($dbForProject, $bucketId, $fileId, $mode);
+
+        if (!in_array($file->getAttribute('mimeType'), ['text/vtt','text/plain'])) {
+            throw new Exception(Exception::VIDEO_SUBTITLE_NOT_VALID);
+        }
 
         $code = strtolower($code);
         $languages = Config::getParam('locale-languages');
@@ -562,9 +585,12 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
             throw new Exception(Exception::VIDEO_SUBTITLE_NOT_FOUND);
         }
 
-        $subtitle->setAttribute('videoId', $videoId)
-                 ->setAttribute('bucketId', $bucketId)
-                 ->setAttribute('fileId', $fileId)
+        $subtitle->setAttribute('videoId', $video->getId())
+                 ->setAttribute('videoInternalId', $video->getInternalId())
+                 ->setAttribute('bucketId', $file->getAttribute('bucketId'))
+                 ->setAttribute('bucketInternalId', $file->getAttribute('bucketInternalId'))
+                 ->setAttribute('fileId', $file->getId())
+                 ->setAttribute('fileInternalId', $file->getInternalId())
                  ->setAttribute('name', $name)
                  ->setAttribute('code', $code)
                  ->setAttribute('default', $default);
@@ -1276,9 +1302,9 @@ App::patch('/v1/videos/profiles/:profileId')
 
         $profile->setAttribute('name', $name)
                  ->setAttribute('videoBitRate', (int)$videoBitRate)
-                ->setAttribute('audioBitRate', (int)$audioBitRate)
-                ->setAttribute('width', (int)$width)
-                ->setAttribute('height', (int)$height);
+                 ->setAttribute('audioBitRate', (int)$audioBitRate)
+                 ->setAttribute('width', (int)$width)
+                 ->setAttribute('height', (int)$height);
 
 
         $profile = Authorization::skip(fn() => $dbForProject->updateDocument('videos_profiles', $profile->getId(), $profile));

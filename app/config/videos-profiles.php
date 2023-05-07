@@ -17,10 +17,24 @@ return [
         'height' => 576,
     ],
     [
-        'name' => '720p',
+        'name' => '1080p',
         'videoBitRate' => 3551,
         'audioBitRate' => 128,
         'width' => 1280,
         'height' => 720,
+    ],
+    [
+        'name' => '720p',
+        'videoBitRate' => 4800,
+        'audioBitRate' => 128,
+        'width' => 1920,
+        'height' => 1080,
+    ],
+    [
+        'name' => '2160p',
+        'videoBitRate' => 16000,
+        'audioBitRate' => 356,
+        'width' => 4096,
+        'height' => 2160,
     ],
 ];

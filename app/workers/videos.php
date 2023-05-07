@@ -46,6 +46,7 @@ class VideosV1 extends Worker
     private string $basePath = '/tmp/';
     //private string $basePath = '/usr/src/code/tests/tmp/';
     private string $inDir;
+    private string $inPath;
     private string $outDir;
     private string $outPath;
     private string $renditionName;
@@ -81,19 +82,17 @@ class VideosV1 extends Worker
 
     public function run(): void
     {
-        $startTime = time();
+
         $this->database = $this->getProjectDB($this->project->getId());
         $this->bucket = $this->database->getDocument('buckets', $this->video->getAttribute('bucketId'));
         $this->file = $this->database->getDocument('bucket_' . $this->bucket->getInternalId(), $this->video->getAttribute('fileId'));
         $path = basename($this->file->getAttribute('path'));
-        $inPath = $this->inDir . $path;
+        $this->inPath = $this->inDir . $path;
 
         /**
          * Write original asset to tmp
          */
         $result = $this->write($this->project, $this->file);
-
-        console::info('Transferring video from storage to ' . $this->inDir);
 
         if (empty($result)) {
             console::error('Storage transfer error');
@@ -103,18 +102,17 @@ class VideosV1 extends Worker
             . 'X' . $this->profile->getAttribute('height')
             . '@' . ($this->profile->getAttribute('videoBitRate') + $this->profile->getAttribute('audioBitRate'));
 
-
         /**
          * FFMpeg init
          */
         $this->ffprobe = FFProbe::create();
         $this->ffmpeg = FFMpeg::create([
             'timeout' => 0,
-            'ffmpeg.threads'  => 12
+            'ffmpeg.threads' => 12
         ]);
 
-        if (!$this->ffprobe->isValid($inPath)) {
-            console::error('Not an valid Video file "' . $inPath . '"');
+        if (!$this->ffprobe->isValid($this->inPath)) {
+            console::error('Not an valid Video file "' .  $this->inPath . '"');
         }
 
         if (empty($this->video->getAttribute('duration'))) {
@@ -122,7 +120,7 @@ class VideosV1 extends Worker
              * Original asset metadata
              */
             $mediaInfo = new MediaInfo();
-            $mediaInfoContainer = $mediaInfo->getInfo($inPath);
+            $mediaInfoContainer = $mediaInfo->getInfo($this->inPath);
             $general = $mediaInfoContainer->getGeneral();
             $this->video
                 ->setAttribute('duration', $general->has('duration') ? $general->get('duration')->getMilliseconds() : 0)
@@ -166,186 +164,208 @@ class VideosV1 extends Worker
             );
         }
         $this->video->getAttribute('videoBitRate');
-        $media = $this->ffmpeg->open($inPath);
+        $media = $this->ffmpeg->open($this->inPath);
 
-        if ($this->action === 'preview') {
-            if (!$this->isVideo) {
-                return;
-            }
-            console::info('Creating preview image from second ' . $this->args['second']);
+        switch ($this->action) {
+            case 'preview':
+                $this->createPreview($media);
+                break;
 
-            $path = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/preview/';
-            $name = 'preview.jpg';
-            $media
-                ->filters()
-                ->resize(new \FFMpeg\Coordinate\Dimension($this->video->getAttribute('width'), $this->video->getAttribute('height')))
-                ->synchronize();
-            $media
-                ->frame(\FFMpeg\Coordinate\TimeCode::fromSeconds($this->args['second']))
-                ->save($this->outDir . $name);
+            case 'timeline':
+                $this->createTimeLine($media);
+                break;
 
-            /**
-             * Upload preview
-             */
-            console::info('Uploading ' . $name);
+            default:
+                $this->createOutput($media);
+                break;
+        }
 
-            $this->getVideoDevice($this->project->getId())->write(
-                $path .  $name,
-                (new Local('/'))->read($this->outDir . $name),
-                mime_content_type($this->outDir . $name)
+        unset($media);
+    }
+
+
+    private function createPreview($media): void
+    {
+
+        if (!$this->isVideo) {
+            return;
+        }
+        console::info('Creating preview image from second ' . $this->args['second']);
+
+        $path = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/preview/';
+        $name = 'preview.jpg';
+        $media
+            ->filters()
+            ->resize(new \FFMpeg\Coordinate\Dimension($this->video->getAttribute('width'), $this->video->getAttribute('height')))
+            ->synchronize();
+        $media
+            ->frame(\FFMpeg\Coordinate\TimeCode::fromSeconds($this->args['second']))
+            ->save($this->outDir . $name);
+
+        /**
+         * Upload preview
+         */
+        console::info('Uploading ' . $name);
+
+        $this->getVideoDevice($this->project->getId())->write(
+            $path . $name,
+            (new Local('/'))->read($this->outDir . $name),
+            mime_content_type($this->outDir . $name)
+        );
+
+        $preview = $this->database->findOne('videos_previews', [
+            Query::equal('videoId', [$this->video->getId()]),
+            Query::equal('type', [$this->action]),
+            Query::equal('name', [$name]),
+        ]);
+
+        if (empty($preview)) {
+            $preview = $this->database->createDocument('videos_previews', new Document([
+                'videoId' => $this->video->getId(),
+                'videoInternalId' => $this->video->getInternalId(),
+                'type' => $this->action,
+                'name' => $name,
+                'path' => $path,
+                'second' => $this->args['second'],
+            ]));
+
+            $this->video->setAttribute('previewId', $preview->getId());
+            $this->database->updateDocument(
+                'videos',
+                $this->video->getId(),
+                new document(
+                    array_filter((array)$this->video, fn($value) => !is_null($value))
+                ),
             );
+        } else {
+            $this->database->updateDocument(
+                'videos_previews',
+                $preview->getId(),
+                $preview->setAttribute('second', $this->args['second'])
+            );
+            /**
+             * Clean preview cache
+             */
+            (new Delete())
+                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResource('preview/' . $preview->getId())
+                ->trigger();
+        }
+    }
 
-            $preview = $this->database->findOne('videos_previews', [
-                Query::equal('videoId', [$this->video->getId()]),
-                Query::equal('type', [$this->action]),
-                Query::equal('name', [$name]),
-            ]);
+    private function createTimeLine($media): void
+    {
 
-            if (empty($preview)) {
-                $preview = $this->database->createDocument('videos_previews', new Document([
-                    'videoId' => $this->video->getId(),
-                    'type' => $this->action,
-                    'name' => $name,
-                    'path' => $path,
-                    'second' => $this->args['second'],
-                ]));
-
-                $this->video->setAttribute('previewId', $preview->getId());
-                $this->database->updateDocument(
-                    'videos',
-                    $this->video->getId(),
-                    new document(
-                        array_filter((array)$this->video, fn ($value) => !is_null($value))
-                    ),
-                );
-            } else {
-                $this->database->updateDocument(
-                    'videos_previews',
-                    $preview->getId(),
-                    $preview->setAttribute('second', $this->args['second'])
-                );
-                /**
-                 * Clean preview cache
-                 */
-                (new Delete())
-                    ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-                    ->setResource('preview/' . $preview->getId())
-                    ->trigger();
-            }
-
+        /*
+         * Title:             PlayerJS Thumbnails & WebVTT Creator
+         * URI:               https://playerjs.com/docs/q=thumbnailsphpwebvtt
+         * Version:           1.0
+         * Author:            Playerjs.com
+         * Author URI:        https://playerjs.com
+         * License:           GPL-2.0+
+         * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+         * Text Domain:       playerjs
+        */
+        if (!$this->isVideo) {
             return;
         }
 
-        if ($this->action === 'timeline') {
-            /*
-             * Title:             PlayerJS Thumbnails & WebVTT Creator
-             * URI:               https://playerjs.com/docs/q=thumbnailsphpwebvtt
-             * Version:           1.0
-             * Author:            Playerjs.com
-             * Author URI:        https://playerjs.com
-             * License:           GPL-2.0+
-             * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
-             * Text Domain:       playerjs
-            */
-            if (!$this->isVideo) {
-                return;
+        $interval = 2;
+        $ranges = [
+            ['from' => 120, 'to' => 600, 'interval' => 5],
+            ['from' => 600, 'to' => 1800, 'interval' => 10],
+            ['from' => 1800, 'to' => 3600, 'interval' => 20],
+            ['from' => 3600, 'to' => 99999, 'interval' => 30],
+        ];
+
+        foreach ($ranges as $range) {
+            if (
+                $this->video->getAttribute('duration') > $range['from'] &&
+                $this->video->getAttribute('duration') <= $range['to']
+            ) {
+                $interval = $range['interval'];
+                break;
             }
-
-                $interval = 2;
-                $ranges = [
-                    ['from' => 120, 'to' => 600, 'interval' => 5],
-                    ['from' => 600, 'to' => 1800 , 'interval' => 10],
-                    ['from' => 1800, 'to' => 3600, 'interval' => 20],
-                    ['from' => 3600, 'to' => 99999, 'interval' => 30],
-                ];
-
-                foreach ($ranges as $range) {
-                    if (
-                        $this->video->getAttribute('duration') > $range['from'] &&
-                        $this->video->getAttribute('duration') <= $range['to']
-                    ) {
-                        $interval = $range['interval'];
-                        break;
-                    }
-                }
-
-                $timeline['aspect']  = $this->video->getAttribute('width')  / $this->video->getAttribute('height');
-                $timeline['width']   = 160;
-                $timeline['height']  = round($timeline['width'] / $timeline['aspect']);
-                $timeline['size']    = '5x5';
-
-                $cmd = [
-                    '/usr/bin/ffmpeg',
-                    '-i ' . $inPath,
-                    '-hide_banner',
-                    '-loglevel error',
-                    '-vsync vfr',
-                    '-vf \'select=isnan(prev_selected_t)+gte(t-prev_selected_t\,' . $interval . '),scale=' . $timeline['width'] . ':' . $timeline['height'] . ',tile=' . $timeline['size'] . '\'',
-                    '-qscale:v 3',
-                    $this->outDir . 'sprite%d.jpg',
-                    ];
-                $result = shell_exec(implode(" ", $cmd));
-
-                /**
-                 * Vtt creation*
-                 */
-                if ($result !== false) {
-                    $size = explode('x', $timeline['size']);
-                    $counter = 0;
-                    $images  = ceil((($this->video->getAttribute('duration') / 1000) / $interval) / ($size[0] * $size[1]));
-                    $data = "WEBVTT";
-                    $path = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/timeline/';
-                    for ($image = 1; $image <= $images; $image++) {
-                        $sprite = $this->database->createDocument('videos_previews', new Document([
-                            'videoId'   =>  $this->video->getId(),
-                            'type'      =>  'sprite',
-                            'name'      =>  'sprite' . $image . '.jpg',
-                            'path'      =>  $path,
-                        ]));
-
-                        $url = TMP_HOST . 'v1/videos/' . $this->video->getId() . '/preview/' . $sprite->getId() . '/';
-                        for ($col = 0; $col < $size[0]; $col++) {
-                            for ($row = 0; $row < $size[1]; $row++) {
-                                $data .= "\n" . gmdate("H:i:s", $counter * $interval) . " --> " . gmdate("H:i:s", ($counter + 1) * $interval) . "\n" . $url . "#xywh=" . ($row * $timeline['width']) . "," . ($col * $timeline['height']) . "," . $timeline['width'] . "," . $timeline['height'];
-                                $counter++;
-                            }
-                        }
-                    }
-
-                    if ($counter > 0) {
-                        /**
-                         * Upload vtt
-                         */
-                        $this->getVideoDevice($this->project->getId())->write(
-                            $this->getVideoDevice($this->project->getId())->getPath($this->video->getId() . '/timeline/timeline.vtt'),
-                            $data,
-                            'text/vtt'
-                        );
-
-                        console::info('Uploading timeline vtt');
-
-                        /**
-                         * Upload sprites*
-                         */
-                        $dir = new DirectoryIterator($this->outDir);
-                        foreach ($dir as $fileinfo) {
-                            if (!$fileinfo->isDot()) {
-                                console::info('Uploading ' . $fileinfo->getFilename());
-                                $this->getVideoDevice($this->project->getId())->write(
-                                    $path . $fileinfo->getFilename(),
-                                    (new Local('/'))->read($this->outDir . $fileinfo->getFilename()),
-                                    mime_content_type($this->outDir . $fileinfo->getFilename())
-                                );
-                            }
-                        }
-                    }
-                }
-
-                return;
         }
 
+        $timeline['aspect'] = $this->video->getAttribute('width') / $this->video->getAttribute('height');
+        $timeline['width'] = 160;
+        $timeline['height'] = round($timeline['width'] / $timeline['aspect']);
+        $timeline['size'] = '5x5';
+
+        $cmd = [
+            '/usr/bin/ffmpeg',
+            '-i ' .  $this->inPath,
+            '-hide_banner',
+            '-loglevel error',
+            '-vsync vfr',
+            '-vf \'select=isnan(prev_selected_t)+gte(t-prev_selected_t\,' . $interval . '),scale=' . $timeline['width'] . ':' . $timeline['height'] . ',tile=' . $timeline['size'] . '\'',
+            '-qscale:v 3',
+            $this->outDir . 'sprite%d.jpg',
+        ];
+        $result = shell_exec(implode(" ", $cmd));
+
+        /**
+         * Vtt creation*
+         */
+        if ($result !== false) {
+            $size = explode('x', $timeline['size']);
+            $counter = 0;
+            $images = ceil((($this->video->getAttribute('duration') / 1000) / $interval) / ($size[0] * $size[1]));
+            $data = "WEBVTT";
+            $path = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/timeline/';
+            for ($image = 1; $image <= $images; $image++) {
+                $sprite = $this->database->createDocument('videos_previews', new Document([
+                    'videoId' => $this->video->getId(),
+                    'videoInternalId' => $this->video->getInternalId(),
+                    'type' => 'sprite',
+                    'name' => 'sprite' . $image . '.jpg',
+                    'path' => $path,
+                ]));
+
+                $url = TMP_HOST . 'v1/videos/' . $this->video->getId() . '/preview/' . $sprite->getId() . '/';
+                for ($col = 0; $col < $size[0]; $col++) {
+                    for ($row = 0; $row < $size[1]; $row++) {
+                        $data .= "\n" . gmdate("H:i:s", $counter * $interval) . " --> " . gmdate("H:i:s", ($counter + 1) * $interval) . "\n" . $url . "#xywh=" . ($row * $timeline['width']) . "," . ($col * $timeline['height']) . "," . $timeline['width'] . "," . $timeline['height'];
+                        $counter++;
+                    }
+                }
+            }
+
+            if ($counter > 0) {
+                /**
+                 * Upload vtt
+                 */
+                $this->getVideoDevice($this->project->getId())->write(
+                    $this->getVideoDevice($this->project->getId())->getPath($this->video->getId() . '/timeline/timeline.vtt'),
+                    $data,
+                    'text/vtt'
+                );
+
+                console::info('Uploading timeline vtt');
+
+                /**
+                 * Upload sprites*
+                 */
+                $dir = new DirectoryIterator($this->outDir);
+                foreach ($dir as $fileinfo) {
+                    if (!$fileinfo->isDot()) {
+                        console::info('Uploading ' . $fileinfo->getFilename());
+                        $this->getVideoDevice($this->project->getId())->write(
+                            $path . $fileinfo->getFilename(),
+                            (new Local('/'))->read($this->outDir . $fileinfo->getFilename()),
+                            mime_content_type($this->outDir . $fileinfo->getFilename())
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private function createOutput($media): void
+    {
         $subs = [];
-        $subtitles =  $this->database->find('videos_subtitles', [
+        $subtitles = $this->database->find('videos_subtitles', [
             Query::equal('videoId', [$this->video->getId()]),
             Query::equal('status', [''])
         ]);
@@ -354,7 +374,7 @@ class VideosV1 extends Worker
             $subtitle->setAttribute('status', self::STATUS_START);
             $this->database->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle);
             $bucket = $this->database->getDocument('buckets', $subtitle->getAttribute('bucketId'));
-            $file   = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $subtitle->getAttribute('fileId'));
+            $file = $this->database->getDocument('bucket_' . $bucket->getInternalId(), $subtitle->getAttribute('fileId'));
             $path = basename($file->getAttribute('path'));
             $this->write($this->project, $file);
 
@@ -369,40 +389,41 @@ class VideosV1 extends Worker
             }
 
             $subs[] = [
-                 'name' => $subtitle->getAttribute('name'),
-                 'code' => $subtitle->getAttribute('code'),
-                 'path' => $subtitlePath,
+                'name' => $subtitle->getAttribute('name'),
+                'code' => $subtitle->getAttribute('code'),
+                'path' => $subtitlePath,
             ];
         }
 
         $query = $this->database->createDocument('videos_renditions', new Document([
-               'videoId'  =>  $this->video->getId(),
-               'profileId' => $this->profile->getId(),
-               'name'      => $this->renditionName,
-               'startedAt' => DateTime::now(),
-               'status'    => self::STATUS_START,
-               'width'     => $this->profile->getAttribute('width'),
-               'height'    => $this->profile->getAttribute('height'),
-               'videoBitRate' => $this->profile->getAttribute('videoBitRate'),
-               'audioBitRate' =>  $this->profile->getAttribute('audioBitRate'),
-               'output'    => $this->args['output'],
-            ]));
+            'videoId' => $this->video->getId(),
+            'videoInternalId' => $this->video->getInternalId(),
+            'profileId' => $this->profile->getId(),
+            'profileInternalId' => $this->profile->getInternalId(),
+            'name' => $this->renditionName,
+            'startedAt' => DateTime::now(),
+            'status' => self::STATUS_START,
+            'width' => $this->profile->getAttribute('width'),
+            'height' => $this->profile->getAttribute('height'),
+            'videoBitRate' => $this->profile->getAttribute('videoBitRate'),
+            'audioBitRate' => $this->profile->getAttribute('audioBitRate'),
+            'output' => $this->args['output'],
+        ]));
 
         $this->send($query);
 
         $renditionRootPath = $this->getVideoDevice($this->project->getId())->getPath($this->video->getId()) . '/';
-        $renditionPath     = $renditionRootPath . $this->renditionName . '-' . $query->getId() .  '/';
+        $renditionPath = $renditionRootPath . $this->renditionName . '-' . $query->getId() . '/';
 
         try {
             $representation = (new Representation())
                 ->setKiloBitRate($this->profile->getAttribute('videoBitRate'))
                 ->setAudioKiloBitRate($this->profile->getAttribute('audioBitRate'))
-                ->setResize($this->profile->getAttribute('width'), $this->profile->getAttribute('height'))
-            ;
+                ->setResize($this->profile->getAttribute('width'), $this->profile->getAttribute('height'));
 
             console::info('Output video id:' . $this->video->getId() . PHP_EOL .
                 'Output name: ' . $this->file->getAttribute('name') . PHP_EOL .
-                'Output width: ' . $this->profile->getAttribute('width')  . PHP_EOL .
+                'Output width: ' . $this->profile->getAttribute('width') . PHP_EOL .
                 'Output height: ' . $this->profile->getAttribute('height') . PHP_EOL .
                 'Output video BitRate:' . $this->profile->getAttribute('videoBitRate') . PHP_EOL .
                 'Output audio BitRate:' . $this->profile->getAttribute('audioBitRate') . PHP_EOL .
@@ -419,7 +440,6 @@ class VideosV1 extends Worker
 
             $this->transcode($media, $format, $representation, $subs);
 
-            unset($media);
             //exec('/usr/bin/ffmpeg -y -i /usr/src/code/tests/tmp/637f59c88f9ff0fe3b1f/637e1b82aeab8980400e/in/637f59ab5bce0e36d05e.mp4 -c:v libx264 -c:a aac -bf 1 -keyint_min 25 -g 250 -sc_threshold 40 -use_timeline 0 -use_template 0 -seg_duration 10 -hls_playlist 0 -f dash -dn -sn -vf scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1 -b_strategy 1 -bf 3 -force_key_frames "expr:gte(t,n_forced*2)" -map 0 -s:v:0 1024x576 -b:v:0 2538k -b:a:0 128k -strict -2 -threads 12 /usr/src/code/tests/tmp/637f59c88f9ff0fe3b1f/637e1b82aeab8980400e/out/637f59c88f9ff0fe3b1f.mpd2>&1', $o, $v);
             //var_dump($o);
             //var_dump($v);
@@ -431,12 +451,13 @@ class VideosV1 extends Worker
                     if (!empty($m3u8['segments'])) {
                         foreach ($m3u8['segments'] as $segment) {
                             $this->database->createDocument('videos_renditions_segments', new Document([
-                                    'renditionId' => $query->getId(),
-                                    'streamId' => (int)$stream['id'],
-                                    'fileName' => $segment['fileName'],
-                                    'path' => $renditionPath,
-                                    'duration' => $segment['duration'],
-                                ]));
+                                'renditionId' => $query->getId(),
+                                'renditionInternalId' => $query->getInternalId(),
+                                'streamId' => (int)$stream['id'],
+                                'fileName' => $segment['fileName'],
+                                'path' => $renditionPath,
+                                'duration' => $segment['duration'],
+                            ]));
                         }
                     }
 
@@ -448,13 +469,14 @@ class VideosV1 extends Worker
 
                 if (!empty($mpd['segments'])) {
                     foreach ($mpd['segments'] as $segment) {
-                            $this->database->createDocument('videos_renditions_segments', new Document([
-                                'renditionId' => $query->getId(),
-                                'streamId' => $segment['streamId'],
-                                'fileName' => $segment['fileName'],
-                                'path' => $renditionPath,
-                                'isInit' => $segment['isInit'],
-                                ]));
+                        $this->database->createDocument('videos_renditions_segments', new Document([
+                            'renditionId' => $query->getId(),
+                            'renditionInternalId' => $query->getInternalId(),
+                            'streamId' => $segment['streamId'],
+                            'fileName' => $segment['fileName'],
+                            'path' => $renditionPath,
+                            'isInit' => $segment['isInit'],
+                        ]));
                     }
                 }
 
@@ -472,12 +494,13 @@ class VideosV1 extends Worker
                 if ($this->args['output'] === self::OUTPUT_HLS) {
                     $m3u8 = $this->getSegments($this->outPath . '_subtitles_' . $subtitle['code'] . '.m3u8');
                     foreach ($m3u8['segments'] ?? [] as $segment) {
-                            $this->database->createDocument('videos_subtitles_segments', new Document([
-                                'subtitleId'  =>  $subtitle->getId(),
-                                'fileName'    => $segment['fileName'],
-                                'path'        => $renditionRootPath . 'subtitles/',
-                                'duration' => $segment['duration'],
-                            ]));
+                        $this->database->createDocument('videos_subtitles_segments', new Document([
+                            'subtitleId' => $subtitle->getId(),
+                            'subtitleInternalId' => $subtitle->getInternalId(),
+                            'fileName' => $segment['fileName'],
+                            'path' => $renditionRootPath . 'subtitles/',
+                            'duration' => $segment['duration'],
+                        ]));
                     }
                     $subtitle->setAttribute('targetDuration', $m3u8['targetDuration']);
                 } else {
@@ -491,7 +514,7 @@ class VideosV1 extends Worker
 
             console::info('Rendition ' . $query->getId() . ' conversion, done');
 
-            /** Upload**/
+            /** Upload **/
             $dir = new DirectoryIterator($this->outDir);
             foreach ($dir as $fileinfo) {
                 if (!$fileinfo->isDot()) {
@@ -504,12 +527,12 @@ class VideosV1 extends Worker
                     console::info('Uploading ' . $fileinfo->getFilename());
 
                     $this->getVideoDevice($this->project->getId())->write(
-                        $to .  $fileinfo->getFilename(),
+                        $to . $fileinfo->getFilename(),
                         $data,
                         mime_content_type($this->outDir . $fileinfo->getFilename())
                     );
 
-                    if ($fileinfo->key()  === 0) {
+                    if ($fileinfo->key() === 0) {
                         $query->setAttribute('progress', '100');
                         $query->setAttribute('status', self::STATUS_UPLOADING);
                         $query->setAttribute('path', $renditionPath);
@@ -522,8 +545,6 @@ class VideosV1 extends Worker
             $query->setAttribute('status', self::STATUS_READY);
             $this->database->updateDocument('videos_renditions', $query->getId(), $query);
             $this->send($query, 'update');
-
-            Console::warning('Job total time ' . (microtime(true) - $startTime) . ' seconds');
         } catch (\Throwable $th) {
             $query->setAttribute('metadata', json_encode([
                 'code' => $th->getCode(),
@@ -768,6 +789,7 @@ class VideosV1 extends Worker
      */
     private function write(Document $project, Document $file): bool
     {
+        console::info('Writing file to ' . $this->inDir);
 
         $fullPath = $file->getAttribute('path');
         $path = basename($file->getAttribute('path'));
