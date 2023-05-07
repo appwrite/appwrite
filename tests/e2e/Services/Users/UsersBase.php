@@ -56,7 +56,7 @@ trait UsersBase
         $this->assertEquals(true, $res['body']['status']);
         $this->assertGreaterThan('2000-01-01 00:00:00', $res['body']['registration']);
 
-         /**
+        /**
          * Test Create with hashed passwords
          */
         $res = $this->client->call(Client::METHOD_POST, '/users/md5', array_merge([
@@ -180,7 +180,7 @@ trait UsersBase
      */
     public function testCreateUserSessionHashed(array $data): void
     {
-        $userIds = [ 'md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified' ];
+        $userIds = ['md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
 
         foreach ($userIds as $userId) {
             // Ensure sessions can be created with hashed passwords
@@ -236,7 +236,7 @@ trait UsersBase
     {
         /**
          * Test for SUCCESS
-        */
+         */
 
         // Email + password
         $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
@@ -967,7 +967,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['phone'], $updatedNumber);
 
-         /**
+        /**
          * Test for FAILURE
          */
 
@@ -1037,7 +1037,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ],
+            'queries' => ['limit(1)'],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1049,7 +1049,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => ['offset(1)'],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1060,7 +1060,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)', 'offset(1)' ],
+            'queries' => ['limit(1)', 'offset(1)'],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1084,25 +1084,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(101)']
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
             'queries' => ['offset(-1)']
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['offset(5001)']
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);

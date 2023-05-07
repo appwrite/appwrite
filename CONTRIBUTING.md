@@ -321,7 +321,7 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 The following steps are used to generate a new console SDK:
 
-1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container.
+1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs version=<version-number> mode=normal` command in a running `appwrite/appwrite` container.
 2. Generate a new SDK using the command `php app/cli.php sdks`.
 3. Change your working dir using `cd app/sdks/console-web`.
 4. Build the new SDK `npm run build`.
@@ -433,6 +433,14 @@ composer format <your file path>
 composer lint
 # Run on single file or folder
 composer lint <your file path>
+```
+
+## Clearing the Cache
+
+If you need to clear the cache, you can do so by running the following command:
+
+```bash
+docker compose exec redis redis-cli FLUSHALL
 ```
 
 ## Tutorials

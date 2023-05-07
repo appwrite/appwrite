@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM node:16.14.2-alpine3.15 as node
+FROM --platform=$BUILDPLATFORM node:16.14.2-alpine3.15 as node
 
 COPY app/console /usr/local/src/console
 
@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.1.0 as final
+FROM appwrite/base:0.2.2 as final
 
 LABEL maintainer="team@appwrite.io"
 
