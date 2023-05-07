@@ -256,7 +256,6 @@ class UsageTest extends Scope
         $filesCreate = $data['filesCreate'];
         $filesDelete = $data['filesDelete'];
 
-
         sleep(20);
 
         // console request
