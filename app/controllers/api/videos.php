@@ -750,7 +750,7 @@ App::get('/v1/videos/:videoId/renditions')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $queries = [
-            Query::equal('videoId', [$video->getId()]),
+            Query::equal('videoInternalId', [$video->getInternalId()]),
             Query::equal('status', ['ready']),
         ];
 
@@ -863,7 +863,7 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
 
         $renditions = Authorization::skip(fn () => $dbForProject->find('videos_renditions', [
-            Query::equal('videoId', [$video->getId()]),
+            Query::equal('videoInternalId', [$video->getInternalId()]),
             Query::equal('status', ['ready']),
             Query::equal('output', [$output]),
         ]));
@@ -874,7 +874,7 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
 
         $baseUrl = TMP_HOST . 'v1/videos/' . $videoId . '/outputs/' . $output;
         $subtitles = Authorization::skip(fn() => $dbForProject->find('videos_subtitles', [
-            Query::equal('videoId', [$video->getId()]),
+            Query::equal('videoInternalId', [$video->getInternalId()]),
             Query::equal('status', ['ready']),
         ]));
 
@@ -975,7 +975,7 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
                     $attributes = (array)$adaptation->Representation->SegmentList->attributes();
                     $representation['segmentList']['attributes'] = $attributes['@attributes'] ?? [];
                     $segments = Authorization::skip(fn () => $dbForProject->find('videos_renditions_segments', [
-                        Query::equal('renditionId', [$rendition->getId()]),
+                        Query::equal('renditionInternalId', [$rendition->getInternalId()]),
                         Query::equal('streamId', [$streamId]),
                         Query::orderAsc('_id'),
                         Query::limit(5000),
@@ -1066,7 +1066,7 @@ App::get('/v1/videos/:videoId/outputs/:output/renditions/:renditionId/streams/:s
         }
 
         $segments = Authorization::skip(fn () => $dbForProject->find('videos_renditions_segments', [
-            Query::equal('renditionId', [$renditionId]),
+            Query::equal('renditionInternalId', [$rendition->getInternalId()]),
             Query::equal('streamId', [$streamId]),
             Query::orderAsc('_id'),
             Query::limit(5000)
@@ -1305,7 +1305,6 @@ App::patch('/v1/videos/profiles/:profileId')
                  ->setAttribute('audioBitRate', (int)$audioBitRate)
                  ->setAttribute('width', (int)$width)
                  ->setAttribute('height', (int)$height);
-
 
         $profile = Authorization::skip(fn() => $dbForProject->updateDocument('videos_profiles', $profile->getId(), $profile));
 
