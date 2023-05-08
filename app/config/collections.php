@@ -3411,6 +3411,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                'array' => false,
+                '$id' => ID::custom('bucketInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

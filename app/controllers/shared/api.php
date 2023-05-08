@@ -112,13 +112,11 @@ $databaseListener = function (string $event, Document $document, Document $proje
             }
             break;
         case str_starts_with($document->getCollection(), 'bucket_'): // files
-            $parts = explode('_', $document->getCollection());
-            $bucketInternalId  = $parts[1];
             $queueForUsage
                 ->addMetric(METRIC_FILES, $value) // per project
                 ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
-                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
-                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
+                ->addMetric(str_replace('{bucketInternalId}', $document->getAttribute('bucketInternalId'), METRIC_BUCKET_ID_FILES), $value) // per bucket
+                ->addMetric(str_replace('{bucketInternalId}', $document->getAttribute('bucketInternalId'), METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
             break;
         case $document->getCollection() === 'functions':
             $queueForUsage
