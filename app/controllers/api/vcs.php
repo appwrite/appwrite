@@ -37,7 +37,7 @@ App::get('/v1/vcs/github/installations')
     ->action(function (Response $response, Document $project) {
         $projectId = $project->getId();
 
-        $appName = App::getEnv('VCS_GITHUB_NAME');
+        $appName = App::getEnv('VCS_GITHUB_APP_NAME');
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
@@ -129,9 +129,8 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
 
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        $githubAppName = App::getEnv('VCS_GITHUB_NAME');
         $github = new GitHub();
-        $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
+        $github->initialiseVariables($installationId, $privateKey, $githubAppId);
         $repos = $github->listRepositoriesForGitHubApp();
 
         $response->dynamic(new Document([
@@ -157,14 +156,14 @@ App::post('/v1/vcs/github/incomingwebhook')
             $github = new GitHub();
             $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-            $githubAppName = App::getEnv('VCS_GITHUB_NAME');
             $parsedPayload = $github->parseWebhookEventPayload($event, $payload);
-            $parsedPayload = json_decode($parsedPayload, true);
 
             if ($event == $github::EVENT_PUSH) {
                 $branchName = $parsedPayload["branch"];
                 $repositoryId = $parsedPayload["repositoryId"];
                 $installationId = $parsedPayload["installationId"];
+                $SHA = $parsedPayload["SHA"];
+                $owner = $parsedPayload["owner"];
 
                 //find functionId from functions table
                 $resources = $dbForConsole->find('vcs_repos', [
@@ -219,12 +218,17 @@ App::post('/v1/vcs/github/incomingwebhook')
                             'activate' => $activate,
                         ]));
 
+                        $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$projectId/functions/function-$functionId";
+
                         $buildEvent = new Build();
                         $buildEvent
                             ->setType(BUILD_TYPE_DEPLOYMENT)
                             ->setResource($function)
                             ->setDeployment($deployment)
                             ->setProject($project)
+                            ->setSHA($SHA)
+                            ->setOwner($owner)
+                            ->setTargetUrl($targetUrl)
                             ->trigger();
 
                         //TODO: Add event?
@@ -261,7 +265,8 @@ App::post('/v1/vcs/github/incomingwebhook')
                     $installationId = $parsedPayload["installationId"];
                     $pullRequestNumber = $parsedPayload["pullRequestNumber"];
                     $repositoryName = $parsedPayload["repositoryName"];
-                    $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
+                    $owner = $parsedPayload["owner"];
+                    $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
                     $vcsRepos = $dbForConsole->find('vcs_repos', [
                         Query::equal('repositoryId', [$repositoryId]),
@@ -285,7 +290,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                             $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
                             $buildStatus = $build->getAttribute('status');
                             $comment = "| Build Status |\r\n | --------------- |\r\n | $buildStatus |";
-                            $commentId = $github->addComment($repositoryName, $pullRequestNumber, $comment);
+                            $commentId = $github->addComment($owner, $repositoryName, $pullRequestNumber, $comment);
                         } else {
                             $startNewDeployment = true;
                         }
@@ -293,7 +298,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                         $startNewDeployment = true;
                     }
                     if ($startNewDeployment) {
-                        $commentId = strval($github->addComment($repositoryName, $pullRequestNumber, "Build is not deployed yet 🚀"));
+                        $commentId = strval($github->addComment($owner, $repositoryName, $pullRequestNumber, "Build is not deployed yet 🚀"));
 
                         foreach ($vcsRepos as $resource) {
                             $resourceType = $resource->getAttribute('resourceType');
@@ -347,6 +352,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                                     ->setResource($function)
                                     ->setDeployment($deployment)
                                     ->setProject($project)
+                                    ->setOwner($owner)
                                     ->trigger();
 
                                 //TODO: Add event?

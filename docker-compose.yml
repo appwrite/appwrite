@@ -179,7 +179,7 @@ services:
       - _APP_GRAPHQL_MAX_DEPTH
       - VCS_GITHUB_PRIVATE_KEY
       - VCS_GITHUB_APP_ID
-      - VCS_GITHUB_NAME
+      - VCS_GITHUB_APP_NAME
 
   appwrite-realtime:
     entrypoint: realtime
@@ -400,7 +400,7 @@ services:
       - _APP_GITHUB_APP_ID
       - VCS_GITHUB_PRIVATE_KEY
       - VCS_GITHUB_APP_ID
-      - VCS_GITHUB_NAME
+      - VCS_GITHUB_APP_NAME
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates

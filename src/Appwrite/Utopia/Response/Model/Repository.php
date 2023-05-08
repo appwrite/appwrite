@@ -17,10 +17,16 @@ class Repository extends Model
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
-                'type' => self::TYPE_DATETIME,
+                'type' => self::TYPE_STRING,
                 'description' => 'Repository Name.',
                 'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'example' => 'appwrite',
+            ])
+            ->addRule('owner', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Repository Owner.',
+                'default' => '',
+                'example' => '{"login": "Example Owner"}',
             ])
         ;
     }

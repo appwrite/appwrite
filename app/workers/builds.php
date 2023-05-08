@@ -46,12 +46,15 @@ class BuildsV1 extends Worker
         $project = new Document($this->args['project'] ?? []);
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
+        $SHA = $this->args['SHA'] ?? '';
+        $owner = $this->args['owner'] ?? '';
+        $targetUrl = $this->args['targetUrl'] ?? '';
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                $this->buildDeployment($project, $resource, $deployment);
+                $this->buildDeployment($project, $resource, $deployment, $SHA, $owner, $targetUrl);
                 break;
 
             default:
@@ -60,7 +63,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(Document $project, Document $function, Document $deployment)
+    protected function buildDeployment(Document $project, Document $function, Document $deployment, string $SHA = '', string $owner = '', string $targetUrl = '')
     {
         $dbForProject = $this->getProjectDB($project->getId());
         $dbForConsole = $this->getConsoleDB();
@@ -96,19 +99,19 @@ class BuildsV1 extends Worker
                 $vcsRepos = Authorization::skip(fn () => $dbForConsole
                     ->getDocument('vcs_repos', $vcsRepoId));
                 $repositoryId = $vcsRepos->getAttribute('repositoryId');
+                $owner = $vcsRepos->getAttribute('repositoryOwner');
                 $vcsInstallations = Authorization::skip(fn () => $dbForConsole
                     ->getDocument('vcs_installations', $vcsInstallationId));
                 $installationId = $vcsInstallations->getAttribute('installationId');
 
                 $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
                 $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-                $githubAppName = App::getEnv('VCS_GITHUB_NAME');
 
                 $github = new GitHub();
-                $github->initialiseVariables($installationId, $privateKey, $githubAppId, $githubAppName);
+                $github->initialiseVariables($installationId, $privateKey, $githubAppId);
                 $repositoryName = $github->getRepositoryName($repositoryId);
                 $branchName = $deployment->getAttribute('branch');
-                $gitCloneCommand = $github->generateGitCloneCommand($repositoryId, $branchName);
+                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -146,11 +149,14 @@ class BuildsV1 extends Worker
                     'endTime' => null,
                     'duration' => 0
                 ]));
+                if ($SHA !== "" && $owner !== ""){
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "pending", "Deployment is being processed..", $targetUrl, "Appwrite Deployment");
+                }
                 $commentId = $deployment->getAttribute('vcsCommentId');
                 if ($commentId) {
                     $comment = "| Build Status |\r\n | --------------- |\r\n | Processing |";
                     
-                    $github->updateComment($repositoryName, $commentId, $comment);
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
                     $addComment = true;
                 }
             } else {
@@ -182,7 +188,7 @@ class BuildsV1 extends Worker
             $commentId = $deployment->getAttribute('vcsCommentId');
             if ($commentId) {
                 $comment = "| Build Status |\r\n | --------------- |\r\n | Building |";
-                $github->updateComment($repositoryName, $commentId, $comment);
+                $github->updateComment($owner, $repositoryName, $commentId, $comment);
             }
         }
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -266,11 +272,20 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['response']);
 
             if ($isVcsEnabled) {
+
+                $status = $response["status"];
+
+                if ($status === "ready" && $SHA !== "" && $owner !== "") {
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "success", "Deployment is successful!", $targetUrl, "Appwrite Deployment");
+                }
+                else if ($status === "failed" && $SHA !== "" && $owner !== "") {
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "failure", "Deployment failed.", $targetUrl, "Appwrite Deployment");
+                }
+
                 $commentId = $deployment->getAttribute('vcsCommentId');
                 if ($commentId) {
-                    $status = $response["status"];
                     $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
-                    $github->updateComment($repositoryName, $commentId, $comment);
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
                 }
             }
 

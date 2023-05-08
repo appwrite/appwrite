@@ -10,6 +10,9 @@ class Build extends Event
     protected string $type = '';
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
+    protected string $SHA = '';
+    protected string $owner = '';
+    protected string $targetUrl = '';
 
     public function __construct()
     {
@@ -86,6 +89,45 @@ class Build extends Event
     }
 
     /**
+     * Sets commit SHA for the build event.
+     *
+     * @param string $SHA is the commit hash of the incoming commit
+     * @return self
+     */
+    public function setSHA(string $SHA): self
+    {
+        $this->SHA = $SHA;
+
+        return $this;
+    }
+
+    /**
+     * Sets repository owner name for the build event.
+     *
+     * @param string $owner is the name of the repository owner
+     * @return self
+     */
+    public function setOwner(string $owner): self
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
+    /**
+     * Sets redirect target url for the deployment
+     *
+     * @param string $targetUrl is the url that is to be set
+     * @return self
+     */
+    public function setTargetUrl(string $targetUrl): self
+    {
+        $this->targetUrl = $targetUrl;
+
+        return $this;
+    }
+
+    /**
      * Executes the function event and sends it to the functions worker.
      *
      * @return string|bool
@@ -97,7 +139,10 @@ class Build extends Event
             'project' => $this->project,
             'resource' => $this->resource,
             'deployment' => $this->deployment,
-            'type' => $this->type
+            'type' => $this->type,
+            'SHA' => $this->SHA,
+            'owner' => $this->owner,
+            'targetUrl' => $this->targetUrl
         ]);
     }
 }

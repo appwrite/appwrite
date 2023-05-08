@@ -632,6 +632,17 @@ $collections = [
                 'filters' => []
             ],
             [
+                '$id' => ID::custom('repositoryOwner'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => []
+            ],
+            [
                 '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
