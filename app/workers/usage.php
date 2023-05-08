@@ -28,8 +28,8 @@ $periods['inf'] = '0000-00-00 00:00';
 const INFINITI_PERIOD = '_inf_';
 
 /**
- * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files
- * When we remove a parent document we need to deduct his children aggregation from the project scope
+ * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
+ * When we remove a parent document we need to deduct his children aggregation from the project scope.
  */
 Server::setResource('reduce', function (Cache $cache, Registry $register, $pools) {
     return function ($database, $projectInternalId, Document $document, array &$metrics) use ($pools, $cache, $register): void {
