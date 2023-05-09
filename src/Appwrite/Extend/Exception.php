@@ -52,6 +52,7 @@ class Exception extends \Exception
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
+    public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';

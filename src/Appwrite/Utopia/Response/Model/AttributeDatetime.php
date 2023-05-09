@@ -18,10 +18,10 @@ class AttributeDatetime extends Attribute
                 'example' => 'birthDay',
             ])
             ->addRule('type', [
-                'type' => self::TYPE_DATETIME,
+                'type' => self::TYPE_STRING,
                 'description' => 'Attribute type.',
                 'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'example' => self::TYPE_DATETIME,
             ])
             ->addRule('format', [
                 'type' => self::TYPE_DATETIME,
