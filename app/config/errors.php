@@ -524,8 +524,8 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
-    Exception::PROJECT_DEFAULT_TEMPLATE_DELETION => [
-        'name' => Exception::PROJECT_DEFAULT_TEMPLATE_DELETION,
+    Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
+        'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'The default template for the project cannot be deleted.',
         'code' => 401,
     ],

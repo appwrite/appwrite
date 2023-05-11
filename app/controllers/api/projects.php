@@ -1857,7 +1857,7 @@ App::DELETE('/v1/projects/:projectId/templates/sms/:type/:locale')
         $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
-            throw new Exception(Exception::PROJECT_DEFAULT_TEMPLATE_DELETION);
+            throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
         unset($template['sms.' . $type . '-' . $locale]);
@@ -1898,7 +1898,7 @@ App::DELETE('/v1/projects/:projectId/templates/email/:type/:locale')
         $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
-            throw new Exception(Exception::PROJECT_DEFAULT_TEMPLATE_DELETION);
+            throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
         unset($templates['email.' . $type . '-' . $locale]);
