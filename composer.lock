@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d388807afe22fb473b5136a75cb3d7e7",
+    "content-hash": "86bc4c68a6cdf7c44b5e5ae0a99dfcb8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -868,93 +868,6 @@
             "time": "2022-11-29T16:25:20+00:00"
         },
         {
-            "name": "league/csv",
-            "version": "9.9.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thephpleague/csv.git",
-                "reference": "b4418ede47fbd88facc34e40a16c8ce9153b961b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/csv/zipball/b4418ede47fbd88facc34e40a16c8ce9153b961b",
-                "reference": "b4418ede47fbd88facc34e40a16c8ce9153b961b",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": "^8.1.2"
-            },
-            "require-dev": {
-                "doctrine/collections": "^2.1.2",
-                "ext-dom": "*",
-                "ext-xdebug": "*",
-                "friendsofphp/php-cs-fixer": "^v3.14.3",
-                "phpbench/phpbench": "^1.2.8",
-                "phpstan/phpstan": "^1.10.4",
-                "phpstan/phpstan-deprecation-rules": "^1.1.2",
-                "phpstan/phpstan-phpunit": "^1.3.10",
-                "phpstan/phpstan-strict-rules": "^1.5.0",
-                "phpunit/phpunit": "^10.0.14"
-            },
-            "suggest": {
-                "ext-dom": "Required to use the XMLConverter and the HTMLConverter classes",
-                "ext-iconv": "Needed to ease transcoding CSV using iconv stream filters"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "9.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/functions_include.php"
-                ],
-                "psr-4": {
-                    "League\\Csv\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Ignace Nyamagana Butera",
-                    "email": "nyamsprod@gmail.com",
-                    "homepage": "https://github.com/nyamsprod/",
-                    "role": "Developer"
-                }
-            ],
-            "description": "CSV data manipulation made easy in PHP",
-            "homepage": "https://csv.thephpleague.com",
-            "keywords": [
-                "convert",
-                "csv",
-                "export",
-                "filter",
-                "import",
-                "read",
-                "transform",
-                "write"
-            ],
-            "support": {
-                "docs": "https://csv.thephpleague.com",
-                "issues": "https://github.com/thephpleague/csv/issues",
-                "rss": "https://github.com/thephpleague/csv/releases.atom",
-                "source": "https://github.com/thephpleague/csv"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/sponsors/nyamsprod",
-                    "type": "github"
-                }
-            ],
-            "time": "2023-03-11T15:57:12+00:00"
-        },
-        {
             "name": "matomo/device-detector",
             "version": "6.0.0",
             "source": {
@@ -1667,24 +1580,25 @@
         },
         {
             "name": "utopia-php/analytics",
-            "version": "0.2.0",
+            "version": "0.10.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/analytics.git",
-                "reference": "adfc2d057a7f6ab618a77c8a20ed3e35485ff416"
+                "reference": "14c805114736f44c26d6d24b176a2f8b93d86a1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/adfc2d057a7f6ab618a77c8a20ed3e35485ff416",
-                "reference": "adfc2d057a7f6ab618a77c8a20ed3e35485ff416",
+                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/14c805114736f44c26d6d24b176a2f8b93d86a1f",
+                "reference": "14c805114736f44c26d6d24b176a2f8b93d86a1f",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4"
+                "php": ">=8.0",
+                "utopia-php/cli": "^0.15.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "dev-main",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -1696,16 +1610,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
             "description": "A simple library to track events & users.",
             "keywords": [
                 "analytics",
@@ -1716,9 +1620,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/analytics/issues",
-                "source": "https://github.com/utopia-php/analytics/tree/0.2.0"
+                "source": "https://github.com/utopia-php/analytics/tree/0.10.2"
             },
-            "time": "2021-03-23T21:33:07+00:00"
+            "time": "2023-03-22T12:01:09+00:00"
         },
         {
             "name": "utopia-php/audit",
@@ -1818,16 +1722,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.14.0",
+            "version": "0.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "c30ef985a4e739758a0d95eb0706b357b6d8c086"
+                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c30ef985a4e739758a0d95eb0706b357b6d8c086",
-                "reference": "c30ef985a4e739758a0d95eb0706b357b6d8c086",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
                 "shasum": ""
             },
             "require": {
@@ -1835,8 +1739,10 @@
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6"
+                "squizlabs/php_codesniffer": "^3.6",
+                "vimeo/psalm": "4.0.1"
             },
             "type": "library",
             "autoload": {
@@ -1847,12 +1753,6 @@
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
             ],
             "description": "A simple CLI library to manage command line applications",
             "keywords": [
@@ -1865,9 +1765,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.14.0"
+                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
             },
-            "time": "2022-10-09T10:19:07+00:00"
+            "time": "2023-03-01T05:55:14+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2325,23 +2225,24 @@
         },
         {
             "name": "utopia-php/orchestration",
-            "version": "0.9.0",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "1d4f66684b8c4927f31b695817eae6d84aafd172"
+                "reference": "55f43513b3f940a3f4f9c2cde7682d0c2581beb0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/1d4f66684b8c4927f31b695817eae6d84aafd172",
-                "reference": "1d4f66684b8c4927f31b695817eae6d84aafd172",
+                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/55f43513b3f940a3f4f9c2cde7682d0c2581beb0",
+                "reference": "55f43513b3f940a3f4f9c2cde7682d0c2581beb0",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/cli": "0.14.*"
+                "utopia-php/cli": "0.15.*"
             },
             "require-dev": {
+                "laravel/pint": "^1.2",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -2368,34 +2269,34 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.9.0"
+                "source": "https://github.com/utopia-php/orchestration/tree/0.9.1"
             },
-            "time": "2022-11-09T17:38:00+00:00"
+            "time": "2023-03-17T15:05:06+00:00"
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.3.1",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4"
+                "reference": "a9e7a501f33e0da59779782359a747cb8d34cf6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/fe9f64420957dc8fb6201d22b499572f021411e4",
-                "reference": "fe9f64420957dc8fb6201d22b499572f021411e4",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a9e7a501f33e0da59779782359a747cb8d34cf6f",
+                "reference": "a9e7a501f33e0da59779782359a747cb8d34cf6f",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/cli": "0.14.*",
-                "utopia-php/framework": "0.25.*"
+                "utopia-php/cli": "0.15.*",
+                "utopia-php/framework": "0.26.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6"
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -2417,9 +2318,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.3.1"
+                "source": "https://github.com/utopia-php/platform/tree/0.3.3"
             },
-            "time": "2022-11-10T07:04:24+00:00"
+            "time": "2023-03-07T08:52:22+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -2527,21 +2428,21 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.5.1",
+            "version": "0.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "4b39e1f232b2e619b0d7fb4004f2356df334ddc1"
+                "reference": "310271c5cd477541208d7fa74a4dea64df8e04a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/4b39e1f232b2e619b0d7fb4004f2356df334ddc1",
-                "reference": "4b39e1f232b2e619b0d7fb4004f2356df334ddc1",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/310271c5cd477541208d7fa74a4dea64df8e04a0",
+                "reference": "310271c5cd477541208d7fa74a4dea64df8e04a0",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/cli": "0.14.*",
+                "utopia-php/cli": "0.15.*",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
@@ -2582,9 +2483,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.5.1"
+                "source": "https://github.com/utopia-php/queue/tree/0.5.2"
             },
-            "time": "2022-11-16T19:47:26+00:00"
+            "time": "2023-03-07T08:54:10+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5544,8 +5445,8 @@
         {
             "package": "utopia-php/framework",
             "version": "dev-fix-wildcard-edge-cases",
-            "alias": "0.25.99",
-            "alias_normalized": "0.25.99.0"
+            "alias": "0.26.99",
+            "alias_normalized": "0.26.99.0"
         }
     ],
     "minimum-stability": "stable",
