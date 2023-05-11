@@ -708,11 +708,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('entrypoint', null, new Text('1028'), 'Entrypoint File.', false)
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
-    ->param('buildCommand', null, new Text('1028'), 'Build Command.', false)
-    ->param('installCommand', null, new Text('1028'), 'Install Command.', false)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -728,17 +725,9 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        if ($entrypoint === 'fromFunction()') {
-            $entrypoint = $function->getAttribute('entrypoint', '');
-        }
-
-        if ($buildCommand === 'fromFunction()') {
-            $buildCommand = $function->getAttribute('buildCommand', '');
-        }
-
-        if ($installCommand === 'fromFunction()') {
-            $installCommand = $function->getAttribute('installCommand', '');
-        }
+        $entrypoint = $function->getAttribute('entrypoint', '');
+        $buildCommand = $function->getAttribute('buildCommand', '');
+        $installCommand = $function->getAttribute('installCommand', '');
 
         if (empty($entrypoint)) {
             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
