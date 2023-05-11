@@ -1802,7 +1802,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
-        if(is_null($template)) {
+        if (is_null($template)) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
             $message = $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
