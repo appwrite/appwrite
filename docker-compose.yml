@@ -145,7 +145,6 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
-      - _APP_HAMSTER_RECIPIENTS
       - _APP_USAGE_STATS
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
@@ -176,6 +175,8 @@ services:
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_REGION
+      - _APP_CONSOLE_GITHUB_APP_ID
+      - _APP_CONSOLE_GITHUB_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
@@ -585,8 +586,9 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_CACHE
-      - _APP_HAMSTER_RECIPIENTS
       - _APP_HAMSTER_INTERVAL
+      - _APP_HAMSTER_TIME
+      - _APP_MIXPANEL_TOKEN
 
   appwrite-maintenance:
     entrypoint: maintenance

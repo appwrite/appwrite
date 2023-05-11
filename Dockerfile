@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.1.0 as final
+FROM appwrite/base:0.2.2 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -136,6 +136,7 @@ COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app
+COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
@@ -156,6 +157,8 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
+    chmod +x /usr/local/bin/clear-card-cache && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
