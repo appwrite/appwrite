@@ -143,7 +143,7 @@ class Func extends Event
     public function trigger(): string|bool
     {
         if ($this->paused) {
-            return;
+            return false;
         }
 
         $client = new Client($this->queue, $this->connection);
