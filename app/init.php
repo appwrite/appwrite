@@ -47,6 +47,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
@@ -672,6 +673,7 @@ foreach ($locales as $locale) {
     if (!\file_exists($path)) {
         $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
         if (!\file_exists($path)) {
+            Console::error('Unable to find tralsnations for ' . $locale . ' so using en.json');
             $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
         }
     }
