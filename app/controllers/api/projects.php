@@ -475,6 +475,40 @@ App::patch('/v1/projects/:projectId/service')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/service/all')
+    ->desc('Update all service status')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateServiceStatusAll')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('status', null, new Boolean(), 'Service status.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $status, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
+
+        $services = [];
+        foreach ($allServices as $service) {
+            $services[$service] = $status;
+        }
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
     ->groups(['api', 'projects'])
