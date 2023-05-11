@@ -1649,94 +1649,6 @@ App::patch('/v1/projects/:projectId/smtp')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
-    ->desc('Update custom SMS template')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSmsTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
-    ->param('message', '', new Text(0), 'Template message')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $templates = $project->getAttribute('templates', []);
-        $templates['sms.' . $type . '-' . $locale] = [
-            'message' => $message
-        ];
-
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
-
-        $response->dynamic(new Document([
-            'message' => $message,
-            'type' => $type,
-            'locale' => $locale,
-        ]), Response::MODEL_SMS_TEMPLATE);
-    });
-
-App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
-    ->desc('Update custom email templates')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateEmailTemplate')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
-    ->param('senderName', '', new Text(255), 'Name of the email sender')
-    ->param('senderEmail', '', new Email(), 'Email of the sender')
-    ->param('subject', '', new Text(255), 'Email Subject')
-    ->param('message', '', new Text(0), 'Template message')
-    ->param('replyTo', '', new Email(), 'Reply to email', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $type, string $locale, string $senderName, string $senderEmail, string $subject, string $message, string $replyTo, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $templates = $project->getAttribute('templates', []);
-        $templates['email.' . $type . '-' . $locale] = [
-            'senderName' => $senderName,
-            'senderEmail' => $senderEmail,
-            'subject' => $subject,
-            'replyTo' => $replyTo,
-            'message' => $message
-        ];
-
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
-
-        $response->dynamic(new Document([
-            'type' => $type,
-            'locale' => $locale,
-            'senderName' => $senderName,
-            'senderEmail' => $senderEmail,
-            'subject' => $subject,
-            'replyTo' => $replyTo,
-            'message' => $message
-        ]), Response::MODEL_EMAIL_TEMPLATE);
-    });
-
 App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
@@ -1828,6 +1740,94 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $template['locale'] = $locale;
 
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
+    });
+
+App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
+    ->desc('Update custom SMS template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateSmsTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('message', '', new Text(0), 'Template message')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $templates['sms.' . $type . '-' . $locale] = [
+            'message' => $message
+        ];
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
+
+        $response->dynamic(new Document([
+            'message' => $message,
+            'type' => $type,
+            'locale' => $locale,
+        ]), Response::MODEL_SMS_TEMPLATE);
+    });
+
+App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
+    ->desc('Update custom email templates')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateEmailTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('senderName', '', new Text(255), 'Name of the email sender')
+    ->param('senderEmail', '', new Email(), 'Email of the sender')
+    ->param('subject', '', new Text(255), 'Email Subject')
+    ->param('message', '', new Text(0), 'Template message')
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, string $senderName, string $senderEmail, string $subject, string $message, string $replyTo, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $templates['email.' . $type . '-' . $locale] = [
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'subject' => $subject,
+            'replyTo' => $replyTo,
+            'message' => $message
+        ];
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
+
+        $response->dynamic(new Document([
+            'type' => $type,
+            'locale' => $locale,
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'subject' => $subject,
+            'replyTo' => $replyTo,
+            'message' => $message
+        ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
 App::DELETE('/v1/projects/:projectId/templates/sms/:type/:locale')
