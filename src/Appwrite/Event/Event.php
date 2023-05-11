@@ -264,8 +264,8 @@ class Event
      */
     public function trigger(): string|bool
     {
-        if($this->paused) {
-            return;
+        if ($this->paused) {
+            return false;
         }
 
         return Resque::enqueue($this->queue, $this->class, [

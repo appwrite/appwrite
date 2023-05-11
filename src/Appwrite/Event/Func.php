@@ -142,7 +142,7 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
-        if($this->paused) {
+        if ($this->paused) {
             return;
         }
 
