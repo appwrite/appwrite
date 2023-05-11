@@ -246,10 +246,6 @@ trait LocaleBase
                 $this->assertContains($code['code'], $defaultCountries, $code['code'] . ' country should be removed from ' . $lang['code']);
             }
 
-            // foreach (array_keys($defaultCountries) as $i => $code) {
-            //     $this->assertArrayHasKey($code, $response['body']['countries'], $code . ' country is missing from ' . $lang . ' (total: ' . count($response['body']['countries']) . ')');
-            // }
-
             $this->assertEquals($response['headers']['status-code'], 200);
             $this->assertEquals(194, $response['body']['total']);
 
@@ -262,10 +258,6 @@ trait LocaleBase
             foreach ($response['body']['continents'] as $i => $code) {
                 $this->assertContains($code['code'], $defaultContinents, $code['code'] . ' continent should be removed from ' . $lang['code']);
             }
-
-            // foreach (array_keys($defaultContinents) as $i => $code) {
-            //     $this->assertArrayHasKey($code, $response['body']['continents'], $code . ' continent is missing from ' . $lang . ' (total: ' . count($response['body']['continents']) . ')');
-            // }
 
             $this->assertEquals($response['headers']['status-code'], 200);
             $this->assertEquals(7, $response['body']['total']);
