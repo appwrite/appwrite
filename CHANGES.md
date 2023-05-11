@@ -1,12 +1,24 @@
+# Version 1.3.3
+
+## Bugs
+- Fixed migration resetting some data [#5455](https://github.com/appwrite/appwrite/pull/5455)
+
+# Version 1.3.2
+
+## Bugs
+- Fixed auto-setting custom ID on nested documents [#5363](https://github.com/appwrite/appwrite/pull/5363)
+- Fixed listDocuments not returning all the documents [#5395](https://github.com/appwrite/appwrite/pull/5395)
+- Fixed deleting keys, webhooks, platforms and domains after deleting project [#5395](https://github.com/appwrite/appwrite/pull/5395)
+
 # Version 1.3.1
 
 ## Bugs
-- Fixed Migration issue regarding 500 error [4906](https://github.com/appwrite/appwrite/pull/5356)
+- Fixed Migration issue regarding 500 error [#5356](https://github.com/appwrite/appwrite/pull/5356)
 
 # Version 1.3.0
 
 ## Features
-- Password dictionary setting allows to compare user's password against command password database [4906](https://github.com/appwrite/appwrite/pull/4906)
+- Password dictionary setting allows to compare user's password against command password database [#4906](https://github.com/appwrite/appwrite/pull/4906)
 - Password history setting allows to save user's last used password so that it may not be used again.  Maximum number of history saved is 20, which can be configured. Minimum is 0 which means disabled. [#4866](https://github.com/appwrite/appwrite/pull/4866)
 - Update APIs to check X-Appwrite-Timestamp header [#5024](https://github.com/appwrite/appwrite/pull/5024)
 - Database relationships [#5238](https://github.com/appwrite/appwrite/pull/5238)

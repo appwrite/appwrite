@@ -6,6 +6,8 @@ use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class V18 extends Migration
 {
@@ -25,6 +27,7 @@ class V18 extends Migration
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+        $this->addDocumentSecurityToProject();
 
         Console::info('Migrating Databases');
         $this->migrateDatabases();
@@ -58,6 +61,15 @@ class V18 extends Migration
                     }
                     $this->changeAttributeInternalType($collectionTable, $attribute['key'], 'DOUBLE');
                 }
+
+                try {
+                    $documentSecurity = $collection->getAttribute('documentSecurity', false);
+                    $permissions = $collection->getPermissions();
+
+                    $this->projectDB->updateCollection($collectionTable, $permissions, $documentSecurity);
+                } catch (\Throwable $th) {
+                    Console::warning($th->getMessage());
+                }
             }
         }
     }
@@ -79,6 +91,12 @@ class V18 extends Migration
                     continue;
                 }
                 $this->changeAttributeInternalType($id, $attribute['$id'], 'DOUBLE');
+            }
+
+            try {
+                $this->projectDB->updateCollection($id, [Permission::create(Role::any())], true);
+            } catch (\Throwable $th) {
+                Console::warning($th->getMessage());
             }
 
             switch ($id) {
@@ -141,31 +159,52 @@ class V18 extends Migration
                 /**
                  * Set default passwordHistory
                  */
-                $document->setAttribute('auths', array_merge($document->getAttribute('auths', []), [
+                $document->setAttribute('auths', array_merge([
                     'passwordHistory' => 0,
                     'passwordDictionary' => false,
-                ]));
+                ], $document->getAttribute('auths', [])));
                 break;
             case 'users':
                 /**
                  * Default Password history
                  */
-                $document->setAttribute('passwordHistory', []);
+                $document->setAttribute('passwordHistory', $document->getAttribute('passwordHistory', []));
                 break;
             case 'teams':
                 /**
                  * Default prefs
                  */
-                $document->setAttribute('prefs', new \stdClass());
+                $document->setAttribute('prefs', $document->getAttribute('prefs', new \stdClass()));
                 break;
             case 'attributes':
                 /**
                  * Default options
                  */
-                $document->setAttribute('options', new \stdClass());
+                $document->setAttribute('options', $document->getAttribute('options', new \stdClass()));
                 break;
         }
 
         return $document;
+    }
+
+    protected function addDocumentSecurityToProject(): void
+    {
+        try {
+            /**
+             * Create 'documentSecurity' column
+             */
+            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+
+        try {
+            /**
+             * Set 'documentSecurity' column to 1 if NULL
+             */
+            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
     }
 }
