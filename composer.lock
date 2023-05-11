@@ -1981,19 +1981,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "bb7d020c257bd1d17daa0c61f0d5d29906c3d5ed"
+                "reference": "465873344b3c77392444fc70e8bcdf36f089d4b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bb7d020c257bd1d17daa0c61f0d5d29906c3d5ed",
-                "reference": "bb7d020c257bd1d17daa0c61f0d5d29906c3d5ed",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/465873344b3c77392444fc70e8bcdf36f089d4b4",
+                "reference": "465873344b3c77392444fc70e8bcdf36f089d4b4",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0.0"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.5.25",
                 "vimeo/psalm": "4.27.0"
             },
@@ -2017,7 +2018,7 @@
                 "issues": "https://github.com/utopia-php/framework/issues",
                 "source": "https://github.com/utopia-php/framework/tree/fix-wildcard-edge-cases"
             },
-            "time": "2023-02-19T10:59:04+00:00"
+            "time": "2023-05-11T20:03:11+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2826,12 +2827,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "fb483b33b538111d7ba6881c4b36264a57b323ad"
+                "reference": "3bd342fbfa771d573fbf877af8ec977e5c7e9194"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/fb483b33b538111d7ba6881c4b36264a57b323ad",
-                "reference": "fb483b33b538111d7ba6881c4b36264a57b323ad",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3bd342fbfa771d573fbf877af8ec977e5c7e9194",
+                "reference": "3bd342fbfa771d573fbf877af8ec977e5c7e9194",
                 "shasum": ""
             },
             "require": {
@@ -2869,7 +2870,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/feat-add-path-keyword"
             },
-            "time": "2023-02-21T15:02:58+00:00"
+            "time": "2023-05-11T20:31:12+00:00"
         },
         {
             "name": "doctrine/deprecations",

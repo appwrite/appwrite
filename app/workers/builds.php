@@ -175,11 +175,11 @@ class BuildsV1 extends Worker
         try {
             $command = '';
 
-            if(!empty($deployment->getAttribute('installCommand', ''))) {
+            if (!empty($deployment->getAttribute('installCommand', ''))) {
                 $command .= $deployment->getAttribute('installCommand', '');
             }
 
-            if(!empty($deployment->getAttribute('buildCommand', ''))) {
+            if (!empty($deployment->getAttribute('buildCommand', ''))) {
                 $separator = empty($command) ? '' : ' && ';
                 $command .= $separator . $deployment->getAttribute('buildCommand', '');
             }
