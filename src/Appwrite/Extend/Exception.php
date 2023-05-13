@@ -177,6 +177,7 @@ class Exception extends \Exception
     /** Domain */
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
+    public const DOMAIN_FORBIDDEN                  = 'domain_forbidden';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
 
     protected $type = '';

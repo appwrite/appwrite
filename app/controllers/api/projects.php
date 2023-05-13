@@ -1191,9 +1191,12 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if ($domain === App::getEnv('_APP_DOMAIN', '') || $domain === App::getEnv('_APP_DOMAIN_TARGET', '')) {
+            throw new Exception(Exception::DOMAIN_FORBIDDEN);
+        }
+
         $document = $dbForConsole->findOne('domains', [
-            Query::equal('domain', [$domain]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('domain', [$domain])
         ]);
 
         if ($document && !$document->isEmpty()) {
@@ -1389,6 +1392,10 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         if ($domain === false || $domain->isEmpty()) {
             throw new Exception(Exception::DOMAIN_NOT_FOUND);
+        }
+
+        if ($domain->getAttribute('domain') === App::getEnv('_APP_DOMAIN', '') || $domain->getAttribute('domain') === App::getEnv('_APP_DOMAIN_TARGET', '')) {
+            throw new Exception(Exception::DOMAIN_FORBIDDEN);
         }
 
         $dbForConsole->deleteDocument('domains', $domain->getId());

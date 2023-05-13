@@ -683,7 +683,7 @@ class DeletesV1 extends Worker
         $consoleDB = $this->getConsoleDB();
 
         // If domain has certificate generated
-        if (isset($document['certificateId'])) {
+        if (isset($document['$id'])) {
             $domainUsingCertificate = $consoleDB->findOne('domains', [
                 Query::equal('certificateId', [$document['certificateId']])
             ]);

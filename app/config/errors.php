@@ -541,8 +541,13 @@ return [
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
+        'description' => 'The requested domain is currently in use by a project.',
         'code' => 409,
+    ],
+    Exception::DOMAIN_FORBIDDEN => [
+        'name' => Exception::DOMAIN_FORBIDDEN,
+        'description' => 'The requested domain is not available for the current project.',
+        'code' => 403,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
