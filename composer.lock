@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "86bc4c68a6cdf7c44b5e5ae0a99dfcb8",
+    "content-hash": "e517892c33b9d686f2a94d5b6a4b5ee6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1977,24 +1977,23 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-fix-wildcard-edge-cases",
+            "version": "0.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "465873344b3c77392444fc70e8bcdf36f089d4b4"
+                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/465873344b3c77392444fc70e8bcdf36f089d4b4",
-                "reference": "465873344b3c77392444fc70e8bcdf36f089d4b4",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e8da5576370366d3bf9c574ec855f8c96fe4f34e",
+                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0"
+                "php": ">=8.0.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.5.25",
                 "vimeo/psalm": "4.27.0"
             },
@@ -2016,9 +2015,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/fix-wildcard-edge-cases"
+                "source": "https://github.com/utopia-php/framework/tree/0.26.0"
             },
-            "time": "2023-05-11T20:03:11+00:00"
+            "time": "2023-01-13T08:14:43+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5442,17 +5441,10 @@
             "version": "dev-feat-add-path-keyword",
             "alias": "0.28.99",
             "alias_normalized": "0.28.99.0"
-        },
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-fix-wildcard-edge-cases",
-            "alias": "0.26.99",
-            "alias_normalized": "0.26.99.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/framework": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,

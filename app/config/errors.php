@@ -337,7 +337,7 @@ return [
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
-        'description' => 'Entrypoint missing. Specify it on deployment or in function settings.',
+        'description' => 'Entrypoint missing. Specify it in function settings.',
         'code' => 404,
     ],
 
