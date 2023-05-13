@@ -546,7 +546,7 @@ return [
     ],
     Exception::DOMAIN_FORBIDDEN => [
         'name' => Exception::DOMAIN_FORBIDDEN,
-        'description' => 'The requested domain is not available for the current project.',
+        'description' => 'The requested domain cannot be used as a custom domain.',
         'code' => 403,
     ],
     Exception::VARIABLE_NOT_FOUND => [
