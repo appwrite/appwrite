@@ -111,7 +111,7 @@ class VideosV1 extends Worker
         $this->ffprobe = FFProbe::create();
         $this->ffmpeg = FFMpeg::create([
             'timeout' => 0,
-            'ffmpeg.threads' => 12
+            'ffmpeg.threads' => 4
         ]);
 
         if (!$this->ffprobe->isValid($this->inPath)) {
@@ -585,12 +585,13 @@ class VideosV1 extends Worker
         $additionalParams = [
             '-dn',
             '-sn',
-            '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1',
-            '-bf', '3',
+            '-vf', 'scale=iw:-2:force_original_aspect_ratio=increase,setsar=1:1', //keep frame size
+            '-crf',  '22', // constant rate factor
+            '-bf', '3', // bframe
             '-force_key_frames', 'expr:gte(t,n_forced*2)' //enforce strict key frame
         ];
 
-        $segmentSize = 8;
+        $segmentSize = 6;
         if ($this->args['output'] === self::OUTPUT_DASH) {
                $media->dash()
                 ->setFormat($format)
