@@ -7,41 +7,41 @@ use Resque;
 use ResqueScheduler;
 use Utopia\Database\Document;
 
-class Transfer extends Event
+class Import extends Event
 {
     protected string $type = '';
-    protected ?Document $transfer = null;
+    protected ?Document $import = null;
 
     public function __construct()
     {
-        parent::__construct(Event::TRANSFER_QUEUE_NAME, Event::TRANSFER_CLASS_NAME);
+        parent::__construct(Event::IMPORTS_QUEUE_NAME, Event::IMPORTS_CLASS_NAME);
     }
 
     /**
-     * Sets transfer document for the transfer event.
+     * Sets import document for the import event.
      *
-     * @param Document $transfer
+     * @param Document $import
      * @return self
      */
-    public function setTransfer(Document $transfer): self
+    public function setImport(Document $import): self
     {
-        $this->transfer = $transfer;
+        $this->import = $import;
 
         return $this;
     }
 
     /**
-     * Returns set transfer document for the function event.
+     * Returns set import document for the function event.
      *
      * @return null|Document
      */
-    public function getTransfer(): ?Document
+    public function getImport(): ?Document
     {
-        return $this->transfer;
+        return $this->import;
     }
 
     /**
-     * Sets transfer type for the transfer event.
+     * Sets import type for the import event.
      * 
      * @param string $type
      * 
@@ -55,7 +55,7 @@ class Transfer extends Event
     }
 
     /**
-     * Returns set transfer type for the transfer event.
+     * Returns set import type for the import event.
      * 
      * @return string
      */
@@ -65,7 +65,7 @@ class Transfer extends Event
     }
 
     /**
-     * Executes the transfer event and sends it to the transfers worker.
+     * Executes the import event and sends it to the imports worker.
      *
      * @return string|bool
      * @throws \InvalidArgumentException
@@ -75,12 +75,12 @@ class Transfer extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'transfer' => $this->transfer
+            'import' => $this->import
         ]);
     }
 
     /**
-     * Schedules the transfer event and schedules it in the transfers worker queue.
+     * Schedules the import event and schedules it in the imports worker queue.
      *
      * @param \DateTime|int $at
      * @return void
@@ -92,7 +92,7 @@ class Transfer extends Event
         ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'transfer' => $this->transfer
+            'import' => $this->import
         ]);
     }
 

@@ -584,40 +584,20 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
-    // Transfers
-    Exception::TRANSFER_NOT_FOUND => [
-        'name' => Exception::TRANSFER_NOT_FOUND,
-        'description' => 'Transfer with the requested ID could not be found.',
+    // Imports
+    Exception::IMPORT_NOT_FOUND => [
+        'name' => Exception::IMPORT_NOT_FOUND,
+        'description' => 'Import with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::TRANSFER_ALREADY_EXISTS => [
-        'name' => Exception::TRANSFER_ALREADY_EXISTS,
-        'description' => 'Transfer with the requested ID already exists.',
+    Exception::IMPORT_ALREADY_EXISTS => [
+        'name' => Exception::IMPORT_ALREADY_EXISTS,
+        'description' => 'Import with the requested ID already exists.',
         'code' => 409,
     ],
-    Exception::TRANSFER_SOURCE_NOT_FOUND => [
-        'name' => Exception::TRANSFER_SOURCE_NOT_FOUND,
-        'description' => 'Transfer source with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::TRANSFER_DESTINATION_NOT_FOUND => [
-        'name' => Exception::TRANSFER_DESTINATION_NOT_FOUND,
-        'description' => 'Transfer destination with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::TRANSFER_SOURCE_FAILED => [
-        'name' => Exception::TRANSFER_SOURCE_FAILED,
-        'description' => 'Transfer source failed to complete the transfer.',
-        'code' => 500,
-    ],
-    Exception::TRANSFER_DESTINATION_FAILED => [
-        'name' => Exception::TRANSFER_DESTINATION_FAILED,
-        'description' => 'Transfer destination failed to complete the transfer.',
-        'code' => 500,
-    ],
-    Exception::TRANSFER_IN_PROGRESS => [
-        'name' => Exception::TRANSFER_IN_PROGRESS,
-        'description' => 'Transfer is already in progress.',
+    Exception::IMPORT_IN_PROGRESS => [
+        'name' => Exception::IMPORT_IN_PROGRESS,
+        'description' => 'Import is already in progress.',
         'code' => 409,
     ],    
 ];

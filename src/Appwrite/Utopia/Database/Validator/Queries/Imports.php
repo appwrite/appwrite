@@ -2,16 +2,15 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class Transfers extends Base
+class Imports extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'status',
         'stage',
         'source',
-        'destination',
         'resources',
-        'totalProgress',
-        'latestProgress',
+        'statusCounters',
+        'resourceData',
         'errorData'
     ];
 
@@ -21,6 +20,6 @@ class Transfers extends Base
      */
     public function __construct()
     {
-        parent::__construct('transfers', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('imports', self::ALLOWED_ATTRIBUTES);
     }
 }

@@ -3581,10 +3581,10 @@ $collections = [
         ],
     ],
 
-    'transfers' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'transfers',
-        'name' => 'transfers',
+    'imports' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('imports'),
+        'name' => 'Imports',
         'attributes' => [
             [
                 '$id' => ID::custom('status'),
@@ -3612,18 +3612,7 @@ $collections = [
                 '$id' => ID::custom('source'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('destination'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => 8192,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -3642,7 +3631,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('totalProgress'),
+                '$id' => ID::custom('statusCounters'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 3000,
@@ -3653,10 +3642,10 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('latestProgress'),
+                '$id' => ID::custom('resourceData'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => 131070,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -3709,16 +3698,9 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_destination',
+                '$id' => '_key_statusCounters',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['destination'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_latestProgress',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['latestProgress'],
+                'attributes' => ['statusCounters'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -3731,178 +3713,6 @@ $collections = [
             ]
         ],
     ],
-
-    'sources' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'sources',
-        'name' => 'sources',
-        'attributes' => [
-            [
-                '$id' => ID::custom('type'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('name'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('data'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 3000,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('lastCheck'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 65535,
-                'signed' => true,
-                'required' => false,
-                'default' => new \stdClass(),
-                'array' => false,
-                'filters' => ['json'],
-            ],
-            [
-                '$id' => ID::custom('search'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ]
-        ],
-        'indexes' => [
-            [
-                '$id' => '_key_type',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['type'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_name',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['name'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_fulltext_search'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
-                'lengths' => [],
-                'orders' => [],
-            ]
-        ]
-    ],
-
-    'destinations' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'destinations',
-        'name' => 'destinations',
-        'attributes' => [
-            [
-                '$id' => ID::custom('type'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('name'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('data'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 1000,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('lastCheck'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 65535,
-                'signed' => true,
-                'required' => false,
-                'default' => new \stdClass(),
-                'array' => false,
-                'filters' => ['json'],
-            ],
-            [
-                '$id' => ID::custom('search'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ]
-        ],
-        'indexes' => [
-            [
-                '$id' => '_key_type',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['type'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_name',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['name'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_fulltext_search'),
-                'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['search'],
-                'lengths' => [],
-                'orders' => [],
-            ]
-        ]
-    ]
 ];
 
 return $collections;

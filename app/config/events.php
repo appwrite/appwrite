@@ -236,5 +236,19 @@ return [
         'update' => [
             '$description' => 'This event triggers when a function is updated.',
         ]
-    ]
+    ],
+    'imports' => [
+        '$model' => Response::MODEL_IMPORT,
+        '$resource' => true,
+        '$description' => 'This event triggers on any imports event.',
+        'create' => [
+            '$description' => 'This event triggers when an import is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when an import is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when an import is updated.',
+        ]
+    ],
 ];

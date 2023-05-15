@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class TransferValidationError extends Any
+class ImportValidationError extends Any
 {
     /**
      * Get Name
@@ -13,7 +13,7 @@ class TransferValidationError extends Any
      */
     public function getName(): string
     {
-        return 'Transfer Validiation Error';
+        return 'Import Validiation Error';
     }
 
     /**
@@ -23,6 +23,6 @@ class TransferValidationError extends Any
      */
     public function getType(): string
     {
-        return Response::MODEL_TRANSFER_VALIDATION_ERROR;
+        return Response::MODEL_IMPORT_VALIDATION_ERROR;
     }
 }

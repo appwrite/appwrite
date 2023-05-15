@@ -51,8 +51,8 @@ $admins = [
     'functions.write',
     'execution.read',
     'execution.write',
-    'transfers.read',
-    'transfers.write'
+    'imports.read',
+    'imports.write'
 ];
 
 return [

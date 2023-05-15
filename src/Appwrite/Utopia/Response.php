@@ -85,12 +85,8 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
-use Appwrite\Utopia\Response\Model\Transfer;
-use Appwrite\Utopia\Response\Model\Source;
-use Appwrite\Utopia\Response\Model\Destination;
-use Appwrite\Utopia\Response\Model\DestinationValidation;
-use Appwrite\Utopia\Response\Model\SourceValidation;
-use Appwrite\Utopia\Response\Model\TransferValidationError;
+use Appwrite\Utopia\Response\Model\Import;
+use Appwrite\Utopia\Response\Model\ImportValidationError;
 
 /**
  * @method int getStatusCode()
@@ -225,16 +221,10 @@ class Response extends SwooleResponse
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
 
-    // Transfers
-    public const MODEL_TRANSFER = 'transfer';
-    public const MODEL_TRANSFER_LIST = 'transferList';
-    public const MODEL_TRANSFER_VALIDATION_ERROR = 'transferValidationError';
-    public const MODEL_SOURCE = 'source';
-    public const MODEL_SOURCE_LIST = 'sourceList';
-    public const MODEL_SOURCE_VALIDATION = 'sourceValidation';
-    public const MODEL_DESTINATION = 'destination';
-    public const MODEL_DESTINATION_LIST = 'destinationList';
-    public const MODEL_DESTINATION_VALIDATION = 'destinationValidation';
+    // Imports
+    public const MODEL_IMPORT = 'import';
+    public const MODEL_IMPORT_LIST = 'importList';
+    public const MODEL_IMPORT_VALIDATION_ERROR = 'importValidationError';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -297,9 +287,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
-            ->setModel(new BaseList('Transfers List', self::MODEL_TRANSFER_LIST, 'transfers', self::MODEL_TRANSFER))
-            ->setModel(new BaseList('Sources List', self::MODEL_SOURCE_LIST, 'sources', self::MODEL_SOURCE))
-            ->setModel(new BaseList('Destination List', self::MODEL_DESTINATION_LIST, 'destinations', self::MODEL_DESTINATION))
+            ->setModel(new BaseList('Imports List', self::MODEL_IMPORT_LIST, 'imports', self::MODEL_IMPORT))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -369,12 +357,8 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new ConsoleVariables())
-            ->setModel(new Transfer())
-            ->setModel(new Destination())
-            ->setModel(new DestinationValidation())
-            ->setModel(new Source())
-            ->setModel(new SourceValidation())
-            ->setModel(new TransferValidationError())
+            ->setModel(new Import())
+            ->setModel(new ImportValidationError())
             // Verification
             // Recovery
             // Tests (keep last)

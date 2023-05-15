@@ -5,14 +5,14 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Transfer extends Model
+class Import extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Transfer ID.',
+                'description' => 'Import ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
@@ -30,46 +30,40 @@ class Transfer extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Transfer status.',
+                'description' => 'Import status.',
                 'default' => '',
                 'example' => 'pending',
             ])
             ->addRule('stage', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Transfer stage.',
+                'description' => 'Import stage.',
                 'default' => '',
                 'example' => 'init',
             ])
             ->addRule('source', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Source ID.',
+                'description' => 'An object containing the source of the import.',
                 'default' => '',
-                'example' => '5e5ea5c16897e',
-            ])
-            ->addRule('destination', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Destination ID.',
-                'default' => '',
-                'example' => '5e5ea5c16897e',
+                'example' => '{"type": "Appwrite", "endpoint": "xxxxxxxx", ...}',
             ])
             ->addRule('resources', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Resources to transfer.',
+                'description' => 'Resources to import.',
                 'default' => [],
-                'example' => ['users'],
+                'example' => ['user'],
                 'array' => true
             ])
-            ->addRule('totalProgress', [
+            ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
-                'description' => 'A group of counters that represent the total progress of the transfer.',
+                'description' => 'A group of counters that represent the total progress of the import.',
                 'default' => [],
-                'example' => '{"source":[], "destination": []}',
+                'example' => '{"Database": {"PENDING": 0, "SUCCESS": 1, "ERROR": 0, "SKIP": 0, "PROCESSING": 0, "WARNING": 0}}',
             ])
-            ->addRule('latestProgress', [
+            ->addRule('resourceData', [
                 'type' => self::TYPE_JSON,
-                'description' => 'The latest progress of the transfer.',
+                'description' => 'An array of objects containing the report data of the resources that were imported.',
                 'default' => [],
-                'example' => '{"source":[], "destination": []}',
+                'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
             ])
             ->addRule('errorData', [
                 'type' => self::TYPE_JSON,
@@ -87,7 +81,7 @@ class Transfer extends Model
      */
     public function getName(): string
     {
-        return 'Transfer';
+        return 'Import';
     }
 
     /**
@@ -97,6 +91,6 @@ class Transfer extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_TRANSFER;
+        return Response::MODEL_IMPORT;
     }
 }
