@@ -58,7 +58,8 @@ class EventTest extends TestCase
         $this->assertEquals(\Resque::size($this->queue), 1);
     }
 
-    public function testPause(): void {
+    public function testPause(): void
+    {
         $this->object->setPaused(true);
         $this->assertTrue($this->object->isPaused());
         $this->object->setPaused(false);
