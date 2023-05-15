@@ -14,6 +14,9 @@ use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\ID;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
+use Appwrite\Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Query\Limit;
+use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
@@ -57,8 +60,6 @@ App::get('/v1/vcs/github/incominginstallation')
     ->action(function (string $installationId, string $setupAction, string $state, Request $request, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $state);
-
-        \var_dump($project);
 
         if ($project->isEmpty()) {
             $url = $request->getProtocol() . '://' . $request->getHostname() . "/";
@@ -113,25 +114,52 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_REPOSITORY_LIST)
     ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $vcsInstallationId, Response $response, Document $project, Database $dbForConsole) {
+    ->action(function (string $vcsInstallationId, array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
         $installation = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
+
+        $userName = $installation->getAttribute('userName'); //TODO: Check why is it not always getting updated
+
+        var_dump("username");
+        var_dump($userName);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
         $installationId = $installation->getAttribute('installationId');
-
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
         $github = new GitHub();
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
-        $repos = $github->listRepositoriesForGitHubApp();
+
+        $queries = Query::parseQueries($queries);
+        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $limit = $query ? $query->getValue() : '<default>'; // no of repos per page
+        $query = Query::getByType($queries, Query::TYPE_OFFSET)[0] ?? null;
+        $offset = $query ? $query->getValue() : '<default>';
+
+        if (empty($offset)) {
+            $offset = 0;
+        }
+
+        if (empty($limit)) {
+            $limit = 20;
+        }
+
+        if (empty($search)) {
+            $search = "";
+        }
+
+        $page = ($offset / $limit) + 1; //TODO: check the correct value, might be +/-1
+
+        $repos = $github->searchRepositories($userName, $search, $page, $limit);
 
         $response->dynamic(new Document([
             'repositories' => $repos,
@@ -234,16 +262,16 @@ App::post('/v1/vcs/github/incomingwebhook')
                         //TODO: Add event?
                     }
                 }
-            } else if ($event == $github::EVENT_INSTALLATION) {
+            } else if ($event == $github::EVENT_INSTALLATION or $event == "installation_repositories") { //create variables
+                $installationId = $parsedPayload["installationId"];
+
+                $vcsInstallations = $dbForConsole->find('vcs_installations', [
+                    Query::equal('installationId', [$installationId]),
+                    Query::limit(1000)
+                ]);
+
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead
-                    $installationId = $parsedPayload["installationId"];
-
-                    $vcsInstallations = $dbForConsole->find('vcs_installations', [
-                        Query::equal('installationId', [$installationId]),
-                        Query::limit(1000)
-                    ]);
-
                     foreach ($vcsInstallations as $installation) {
                         $vcsRepos = $dbForConsole->find('vcs_repos', [
                             Query::equal('vcsInstallationId', [$installation->getId()]),
@@ -255,6 +283,12 @@ App::post('/v1/vcs/github/incomingwebhook')
                         }
 
                         $dbForConsole->deleteDocument('vcs_installations', $installation->getId());
+                    }
+                } else {
+                    $userName = $parsedPayload["userName"];
+                    foreach ($vcsInstallations as $installation) {
+                        $installation = $installation->setAttribute('userName', $userName);
+                        $installation = $dbForConsole->updateDocument('vcs_installations', $installation->getId(), $installation);
                     }
                 }
             } else if ($event == $github::EVENT_PULL_REQUEST) {
