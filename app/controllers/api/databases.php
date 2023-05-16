@@ -471,7 +471,6 @@ App::get('/v1/databases')
         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $databaseId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
 
