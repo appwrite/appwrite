@@ -42,9 +42,9 @@ class Import extends Event
 
     /**
      * Sets import type for the import event.
-     * 
+     *
      * @param string $type
-     * 
+     *
      * @return self
      */
     public function setType(string $type): self
@@ -56,7 +56,7 @@ class Import extends Event
 
     /**
      * Returns set import type for the import event.
-     * 
+     *
      * @return string
      */
     public function getType(): string

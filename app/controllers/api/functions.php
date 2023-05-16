@@ -911,7 +911,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
-            
+
             $response->send($deviceFunctions->read($path, $start, ($end - $start + 1)));
         }
 

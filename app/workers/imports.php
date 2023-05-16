@@ -246,7 +246,7 @@ class ImportsV1 extends Worker
                 $this->updateImportDocument($importDocument, $projectDocument);
                 return;
             }
-            
+
             $importDocument->setAttribute('status', 'completed');
             $importDocument->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {

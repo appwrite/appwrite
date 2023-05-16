@@ -599,5 +599,5 @@ return [
         'name' => Exception::IMPORT_IN_PROGRESS,
         'description' => 'Import is already in progress.',
         'code' => 409,
-    ],    
+    ],
 ];
