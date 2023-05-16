@@ -8,9 +8,9 @@ using Appwrite;
 
 var client = new Client()
   .SetEndpoint("http://cloud.appwrite.io/v1")  // Make sure your endpoint is accessible
-  .SetProject("5ff3379a01d25")                // Your project ID
-  .SetKey("cd868db89")                        // Your secret API key
-  .SetSelfSigned();                           // Use only on dev mode with a self-signed SSL cert
+  .SetProject("5ff3379a01d25")                 // Your project ID
+  .SetKey("cd868db89")                         // Your secret API key
+  .SetSelfSigned();                            // Use only on dev mode with a self-signed SSL cert
 
 var users = new Users(client);
 
