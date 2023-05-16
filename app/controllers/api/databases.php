@@ -46,7 +46,7 @@ use Appwrite\Event\Event;
 use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
-use Utopia\Database\Validator\Queries\Documents as DocumentsQueriesValidator;
+use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\Queries\Document as DocumentQueriesValidator;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
@@ -528,7 +528,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -867,7 +867,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -2900,7 +2900,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Validate queries
-        $queriesValidator = new DocumentsQueriesValidator($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
+        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
@@ -3101,7 +3101,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
