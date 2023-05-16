@@ -83,6 +83,18 @@ class V17 extends Migration
 
                     try {
                         /**
+                         * Create 'bucketInternalId' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+
+                case 'builds':
+                    try {
+                        /**
                          * Delete 'endTime' attribute (use startTime+duration if needed)
                          */
                         $this->projectDB->deleteAttribute($id, 'endTime');
