@@ -58,7 +58,7 @@ class ImportsV1 extends Worker
      * @return Source
      * @throws \Exception
      */
-    function processSource(array $source): Source
+    protected function processSource(array $source): Source
     {
         switch ($source['type']) {
             case 'firebase':
