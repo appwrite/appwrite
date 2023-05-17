@@ -907,7 +907,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
-    $projectId = '645905a0594ef29a8680';
+    $projectId = '64635cdd5f809d98d3ad';
 
     if ($projectId === 'console') {
         return $console;

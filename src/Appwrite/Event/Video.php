@@ -9,7 +9,7 @@ class Video extends Event
 {
     protected ?Document $video = null;
     protected ?Document $profile = null;
-    protected int $second = 5;
+    protected ?Document $subtitle = null;
     protected string $output = '';
     protected string $action = '';
 
@@ -111,26 +111,26 @@ class Video extends Event
     }
 
     /**
-     * Sets second from duration.
+     * Sets subtitle.
      *
-     * @param int $second
+     * @param Document $subtitle
      * @return self
      */
-    public function setSecond(int $second): self
+    public function setSubtitle(Document $subtitle): self
     {
-        $this->second = $second;
+        $this->subtitle = $subtitle;
 
         return $this;
     }
 
     /**
-     * Returns second from duration.
+     * Returns Subtitle.
      *
-     * @return int
+     * @return null|Document
      */
-    public function getSecond(): int
+    public function getSubtitle(): ?Document
     {
-        return $this->second;
+        return $this->subtitle;
     }
 
 
@@ -147,8 +147,13 @@ class Video extends Event
             'project' => $this->project,
             'user' => $this->user,
             'video' => $this->video,
-            'second' => $this->getSecond(),
         ];
+
+        if (!empty($this->getSubtitle())) {
+            $keys = array_merge($keys, [
+                'subtitle' => $this->getSubtitle(),
+            ]);
+        }
 
         if (!empty($this->getOutput())) {
             $keys = array_merge($keys, [

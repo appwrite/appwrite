@@ -109,12 +109,6 @@ App::post('/v1/videos')
         });
 
         (new Video())
-            ->setAction('preview')
-            ->setProject($project)
-            ->setVideo($video)
-            ->trigger();
-
-        (new Video())
             ->setAction('timeline')
             ->setProject($project)
             ->setVideo($video)
@@ -328,50 +322,6 @@ App::get('/v1/videos/:videoId/timeline')
             ->send($data);
     });
 
-App::post('/v1/videos/:videoId/preview')
-    ->desc('Create Video preview from a given point in duration (second)')
-    ->groups(['api', 'videos'])
-    ->label('scope', 'videos.write')
-    ->label('audits.event', 'preview.create')
-    ->label('audits.resource', 'video/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'videos')
-    ->label('sdk.method', 'createPreview')
-    ->label('sdk.description', '/docs/references/videos/create-preview.md') // TODO: Create markdown
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_VIDEO)
-    ->param('videoId', '', new UID(), 'Video  unique ID.')
-    ->param('second', 5, new Numeric(), 'Second from video duration.')
-    ->inject('request')
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('mode')
-    ->action(action: function (string $videoId, int $second, Request $request, Response $response, Document $project, Database $dbForProject, string $mode) {
-
-        $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
-        if ($video->isEmpty()) {
-            throw new Exception(Exception::VIDEO_NOT_FOUND);
-        }
-
-        validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
-
-        $range = new Range(1, ($video['duration'] / 1000), Validator::TYPE_INTEGER);
-        if (!$range->isValid($second)) {
-            throw new Exception(Exception::VIDEO_SECOND_OUT_OF_RANGE);
-        }
-
-        (new Video())
-            ->setAction('preview')
-            ->setProject($project)
-            ->setVideo($video)
-            ->setSecond($second)
-            ->trigger();
-
-        $response->setStatusCode(Response::STATUS_CODE_CREATED);
-        $response->dynamic($video, Response::MODEL_VIDEO);
-    });
 
 App::get('/v1/videos/:videoId/preview/:previewId')
     ->desc('Get video file preview')
@@ -466,9 +416,10 @@ App::post('/v1/videos/:videoId/subtitles')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('request')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Database $dbForProject, string $mode) {
+    ->action(action: function (string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Request $request, Response $response, Document $project, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
@@ -495,6 +446,13 @@ App::post('/v1/videos/:videoId/subtitles')
                 'code'      => $code,
                 'default'   => $default,
             ])));
+
+        (new Video())
+            ->setAction('subtitle')
+            ->setProject($project)
+            ->setVideo($video)
+            ->setSubtitle($subtitle)
+            ->trigger();
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($subtitle, Response::MODEL_SUBTITLE);
@@ -553,9 +511,10 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
     ->param('code', '', new Text(3), 'Subtitle  ISO 639-2 three letters alpha code.')
     ->param('default', false, new Boolean(true), 'Default subtitle.')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(action: function (string $subtitleId, string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Response $response, Database $dbForProject, string $mode) {
+    ->action(action: function (string $subtitleId, string $videoId, string $bucketId, string $fileId, string $name, string $code, bool $default, Response $response, Document $project, Database $dbForProject, string $mode) {
 
         $video = Authorization::skip(fn() => $dbForProject->getDocument('videos', $videoId));
 
@@ -597,6 +556,13 @@ App::patch('/v1/videos/:videoId/subtitles/:subtitleId')
 
         $subtitle = Authorization::skip(fn() => $dbForProject->updateDocument('videos_subtitles', $subtitle->getId(), $subtitle));
 
+        (new Video())
+            ->setAction('subtitle')
+            ->setProject($project)
+            ->setVideo($video)
+            ->setSubtitle($subtitle)
+            ->trigger();
+
         $response->dynamic($subtitle, Response::MODEL_SUBTITLE);
     });
 
@@ -637,6 +603,14 @@ App::delete('/v1/videos/:videoId/subtitles/:subtitleId')
 
         if (!$deleted) {
             throw new Exception('Failed to remove video subtitle', 500, Exception::GENERAL_SERVER_ERROR);
+        }
+
+        $segments = Authorization::skip(fn() => $dbForProject->find('videos_subtitles_segments', [
+            Query::equal('subtitleInternalId', [$subtitle->getInternalId()]),
+        ]));
+
+        foreach ($segments as $segment) {
+            $dbForProject->deleteDocument('videos_subtitles_segments', $segment->getId());
         }
 
         $response->noContent();
@@ -877,8 +851,6 @@ App::get('/v1/videos/:videoId/outputs/:output/:fileName')
             Query::equal('videoInternalId', [$video->getInternalId()]),
             Query::equal('status', ['ready']),
         ]));
-
-        var_dump('$dbTime = ' . microtime(true) - $dbStartTime);
 
         $_renditions = $_subtitles  = [];
 
@@ -1157,7 +1129,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/:fileName')
         }
 
         validateFilePermissions($dbForProject, $video['bucketId'], $video['fileId'], $mode);
-
+        //var_dump('$subtitleId=',$subtitleId);
         $subtitle = Authorization::skip(fn () => $dbForProject->findOne('videos_subtitles', [
             Query::equal('_uid', [$subtitleId]),
             Query::equal('status', ['ready']),
@@ -1176,7 +1148,7 @@ App::get('/v1/videos/:videoId/outputs/:output/subtitles/:subtitleId/:fileName')
         $segments = Authorization::skip(fn () => $dbForProject->find('videos_subtitles_segments', [
             Query::equal('subtitleId', [$subtitleId]),
         ]));
-
+        //var_dump('$segments=',$segments);
         if (empty($segments)) {
             throw new Exception(Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND);
         }
