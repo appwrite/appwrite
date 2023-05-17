@@ -449,6 +449,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
+            $idValidator = new UID();
+            if (!$idValidator->isValid($request->getHeader('x-appwrite-id'))) {
+                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
+            }
+
             if ($end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to -1 notify it's last chunk
                 $chunks = $chunk = -1;
