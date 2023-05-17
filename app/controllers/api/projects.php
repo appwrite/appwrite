@@ -1728,11 +1728,14 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
                 ->setParam('{{bg-content}}', '#ffffff')
                 ->setParam('{{text-content}}', '#000000')
                 ->render();
+
+            $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));    
+            $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from;
             $template = [
                 'message' => $message,
                 'subject' => $localeObj->getText('emails.' . $type . '.subject'),
                 'senderEmail' => App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', ''),
-                'senderName' => App::getEnv('_APP_SYSTEM_EMAIL_NAME', '')
+                'senderName' => $from
             ];
         }
 
