@@ -16,6 +16,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -97,6 +98,14 @@ App::post('/v1/account')
             if ($total >= $limit) {
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
             }
+        }
+
+        // Makes sure this email is not already used in another identity
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+        ]);
+        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -461,6 +470,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
+        
 
         if (empty($oauth2ID)) {
             if (!empty($state['failure'])) {
@@ -468,6 +478,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             throw new Exception(Exception::USER_MISSING_ID);
+        }
+
+        $name = $oauth2->getUserName($accessToken);
+        $email = $oauth2->getUserEmail($accessToken);
+
+        // Check if this identity is connected to a different user
+        if (!$user->isEmpty()) {
+            $userId = $user->getId();
+
+            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+                Query::equal('providerEmail', [$email]),
+                Query::notEqual('userId', $userId),
+            ]);
+            if (!empty($identitiesWithMatchingEmail)) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -493,8 +519,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
-            $name = $oauth2->getUserName($accessToken);
-            $email = $oauth2->getUserEmail($accessToken);
 
             /**
              * Is verified is not used yet, since we don't know after an accout is created anymore if it was verified or not.
@@ -508,7 +532,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $user->setAttributes($userWithEmail->getArrayCopy());
             }
 
-            if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
+            // If user is not found, check if there is an identity with the same provider user ID
+            if ($user === false || $user->isEmpty()) {
+                $identity = $dbForProject->findOne('identities', [
+                    Query::equal('provider', [$provider]),
+                    Query::equal('providerUid', [$oauth2ID]),
+                ]);
+
+                if ($identity !== false && !$identity->isEmpty()) {
+                    $user = $dbForProject->getDocument('users', $identity->getAttribute('userId'));
+                }
+            }
+
+            if ($user === false || $user->isEmpty()) { // Last option -> create the user
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
@@ -519,7 +555,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                 }
 
-                $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+                // Makes sure this email is not already used in another identity
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$email]),
+                ]);
+                if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                    $failureRedirect(Exception::USER_EMAIL_ALREADY_EXISTS);
+                }
 
                 try {
                     $userId = ID::unique();
@@ -555,8 +597,54 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
+        Authorization::setRole(Role::user($user->getId())->toString());
+        Authorization::setRole(Role::users()->toString());
+
         if (false === $user->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
+        }
+
+        $identity = $dbForProject->findOne('identities', [
+            Query::equal('userInternalId', [$user->getInternalId()]),
+            Query::equal('provider', [$provider]),
+            Query::equal('providerUid', [$oauth2ID]),
+        ]);
+        if ($identity === false || $identity->isEmpty()) {
+            // Before creating the identity, check if the email is already associated with another user
+            $userId = $user->getId();
+
+            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+                Query::equal('providerEmail', [$email]),
+                Query::notEqual('userId', $user->getId()),
+            ]);
+            if (!empty($identitiesWithMatchingEmail)) {
+                $failureRedirect(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
+
+            $dbForProject->createDocument('identities', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'userInternalId' => $user->getInternalId(),
+                'userId' => $userId,
+                'provider' => $provider,
+                'status' => 'connected',
+                'providerUid' => $oauth2ID,
+                'providerEmail' => $email,
+                'providerAccessToken' => $accessToken,
+                'providerRefreshToken' => $refreshToken,
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+            ]));
+        } else {
+            $identity
+                ->setAttribute('status', 'connected')
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
+            $dbForProject->updateDocument('identities', $identity->getId(), $identity);
         }
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
@@ -638,6 +726,86 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
+App::get('/v1/account/identities')
+    ->desc('List Identities')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('usage.metric', 'users.{scope}.requests.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'listConnected')
+    ->label('sdk.description', '/docs/references/account/list-connected.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_IDENTITY_LIST)
+    ->label('sdk.offline.model', '/account/identities')
+    ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->action(function (array $queries, Response $response, Document $user, Database $dbForProject) {
+
+        $queries = Query::parseQueries($queries);
+
+        $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $identityId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('identities', $identityId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Identity '{$identityId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $results = $dbForProject->find('identities', $queries);
+        $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+
+        $response->dynamic(new Document([
+            'identities' => $results,
+            'total' => $total,
+        ]), Response::MODEL_IDENTITY_LIST);
+    });
+
+App::delete('/v1/account/identities/:identityId')
+    ->desc('Delete Identity')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('event', 'users.[userId].identities.[identityId].delete')
+    ->label('audits.event', 'identity.delete')
+    ->label('audits.resource', 'identity/{request.$identityId}')
+    ->label('audits.userId', '{user.$id}')
+    ->label('usage.metric', 'identities.{scope}.requests.delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'deleteIdentity')
+    ->label('sdk.description', '/docs/references/account/delete-identity.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('identityId', [], new UID(), '')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $identityId, Response $response, Database $dbForProject) {
+
+        $identity = $dbForProject->getDocument('identities', $identityId);
+
+        if ($identity->isEmpty()) {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('identities', $identityId);
+
+        return $response->noContent();
+    });
+
 App::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session')
     ->groups(['api', 'account'])
@@ -688,6 +856,14 @@ App::post('/v1/account/sessions/magic-url')
                 if ($total >= $limit) {
                     throw new Exception(Exception::USER_COUNT_EXCEEDED);
                 }
+            }
+
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
             }
 
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
@@ -1685,6 +1861,15 @@ App::patch('/v1/account/email')
         }
 
         $email = \strtolower($email);
+
+        // Makes sure this email is not already used in another identity
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+            Query::notEqual('userId', $user->getId()),
+        ]);
+        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+        }
 
         $user
             ->setAttribute('email', $email)
