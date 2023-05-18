@@ -177,6 +177,7 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
+      - PHP_IDE_CONFIG=serverName=swoole-http
 
   appwrite-realtime:
     entrypoint: realtime

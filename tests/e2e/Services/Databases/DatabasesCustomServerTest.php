@@ -27,6 +27,7 @@ class DatabasesCustomServerTest extends Scope
             'databaseId' => ID::custom('first'),
             'name' => 'Test 1',
         ]);
+
         $this->assertEquals(201, $test1['headers']['status-code']);
         $this->assertEquals('Test 1', $test1['body']['name']);
 
@@ -244,7 +245,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $database['headers']['status-code']);
         $this->assertEquals($databaseId, $database['body']['$id']);
         $this->assertEquals('Test 1', $database['body']['name']);
-
+        $this->assertEquals(true, $database['body']['enabled']);
         return ['databaseId' => $database['body']['$id']];
     }
 

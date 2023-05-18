@@ -384,11 +384,12 @@ App::post('/v1/databases')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DATABASE) // Model for database needs to be created
     ->param('databaseId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
+    ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Is Database enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -396,6 +397,7 @@ App::post('/v1/databases')
             $dbForProject->createDocument('databases', new Document([
                 '$id' => $databaseId,
                 'name' => $name,
+                'enabled' => $enabled,
                 'search' => implode(' ', [$databaseId, $name]),
             ]));
             $database = $dbForProject->getDocument('databases', $databaseId);
@@ -619,10 +621,11 @@ App::put('/v1/databases/:databaseId')
     ->label('sdk.response.model', Response::MODEL_DATABASE)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Is Database enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $databaseId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -633,6 +636,7 @@ App::put('/v1/databases/:databaseId')
         try {
             $database = $dbForProject->updateDocument('databases', $databaseId, $database
                 ->setAttribute('name', $name)
+                ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$databaseId, $name])));
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -714,10 +718,11 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('name', '', new Text(128), 'Collection name. Max length: 128 chars.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permissions strings. By default, no user is granted with any permissions. [Learn more about permissions](/docs/permissions).', true)
     ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](/docs/permissions).', true)
+    ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -737,7 +742,7 @@ App::post('/v1/databases/:databaseId/collections')
                 'databaseId' => $databaseId,
                 '$permissions' => $permissions ?? [],
                 'documentSecurity' => $documentSecurity,
-                'enabled' => true,
+                'enabled' => $enabled,
                 'name' => $name,
                 'search' => implode(' ', [$collectionId, $name]),
             ]));
