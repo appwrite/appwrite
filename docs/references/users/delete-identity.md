@@ -1,0 +1,1 @@
+Delete an identity by its unique ID.
