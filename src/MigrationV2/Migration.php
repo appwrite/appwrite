@@ -18,12 +18,12 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 class Migration
 {
 
-    protected const TYPE_ATTRIBUTE_ADDED = 'attribute_added';
+    protected const TYPE_ATTRIBUTE_CREATED = 'attribute_created';
     protected const TYPE_ATTRIBUTE_UPDATED = 'attribute_updated';
-    protected const TYPE_ATTRIBUTE_REMOVED = 'attribute_removed';
+    protected const TYPE_ATTRIBUTE_DELETED = 'attribute_deleted';
 
-    protected const TYPE_COLLECTION_ADDED = 'collection_added';
-    protected const TYPE_COLLECTION_REMOVED = 'collection_removed';
+    protected const TYPE_COLLECTION_CREATED = 'collection_created';
+    protected const TYPE_COLLECTION_DELETED = 'collection_deleted';
 
     protected const MODE_BEFORE = 'before';
     protected const MODE_AFTER = 'after';
@@ -66,7 +66,7 @@ class Migration
         foreach ($schema1 as $key => $collection) {
             if (!isset($schema2[$key])) {
                 $differences[] = [
-                    'type' => self::TYPE_COLLECTION_REMOVED,
+                    'type' => self::TYPE_COLLECTION_DELETED,
                     'collection' => $key
                 ];
                 continue;
@@ -96,7 +96,7 @@ class Migration
 
                 if (!$found) {
                     $differences[] = [
-                        'type' => self::TYPE_ATTRIBUTE_REMOVED,
+                        'type' => self::TYPE_ATTRIBUTE_DELETED,
                         'collection' => $key,
                         'attribute' => $id,
                         'old' => $attribute
@@ -116,7 +116,7 @@ class Migration
 
                 if (!$found) {
                     $differences[] = [
-                        'type' => self::TYPE_ATTRIBUTE_ADDED,
+                        'type' => self::TYPE_ATTRIBUTE_CREATED,
                         'collection' => $key,
                         'attribute' => $id,
                         'new' => $attribute2
@@ -129,7 +129,7 @@ class Migration
         foreach ($schema2 as $key => $collection) {
             if (!isset($schema1[$key])) {
                 $differences[] = [
-                    'type' => self::TYPE_COLLECTION_ADDED,
+                    'type' => self::TYPE_COLLECTION_CREATED,
                     'collection' => $collection,
                 ];
             }
@@ -149,8 +149,8 @@ class Migration
 
     protected function confirm()
     {
-        Console::success("The following attributed will be added");
-        $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_ADDED);
+        Console::success("The following attributed will be created");
+        $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
         foreach ($attributesAdded as $attribute) {
             Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
         }
@@ -161,20 +161,23 @@ class Migration
             Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
         }
 
-        Console::success("The following attributed will be removed");
-        $attributesRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_REMOVED);
-        foreach ($attributesRemoved as $attribute) {
-            Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
+        if ($this->mode === self::MODE_AFTER) {
+            Console::success("The following attributed will be deleted");
+            $attributesRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
+            foreach ($attributesRemoved as $attribute) {
+                Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
+            }
         }
+        
 
         Console::success("The following collections will be added");
-        $collectionsAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_ADDED);
+        $collectionsAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
         foreach ($collectionsAdded as $collection) {
             Console::log("  {$collection['collection']}");
         }
 
         Console::success("The following collections will be removed");
-        $collectionsRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_REMOVED);
+        $collectionsRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_DELETED);
         foreach ($collectionsRemoved as $collection) {
             Console::log("  {$collection['collection']}");
         }
@@ -197,20 +200,20 @@ class Migration
             foreach ($this->differences as $difference) {
                 Console::log("Performing {$difference['type']} for " . $difference['attribute'] ?? '' .  "in collection {$difference['collection']} ");
                 switch ($difference['type']) {
-                    case self::TYPE_ATTRIBUTE_ADDED:
-                        $this->applyAddAttribute($difference['collection'], $difference['new']);
+                    case self::TYPE_ATTRIBUTE_CREATED:
+                        $this->createAttribute($difference['collection'], $difference['new']);
                         break;
                     case self::TYPE_ATTRIBUTE_UPDATED:
-                        $this->applyUpdateAttribute($difference['collection'], $difference['old'], $difference['new']);
+                        $this->updateAttribute($difference['collection'], $difference['old'], $difference['new']);
                         break;
-                    case self::TYPE_ATTRIBUTE_REMOVED:
-                        $this->applyDeleteAttribute($difference['collection'], $difference['old']);
+                    case self::TYPE_ATTRIBUTE_DELETED:
+                        $this->deleteAttribute($difference['collection'], $difference['old']);
                         break;
-                    case self::TYPE_COLLECTION_ADDED:
-                        $this->applyAddCollection($difference['collection']);
+                    case self::TYPE_COLLECTION_CREATED:
+                        $this->createCollection($difference['collection']);
                         break;
-                    case self::TYPE_COLLECTION_REMOVED:
-                        $this->applyDeleteCollection($difference['collection']);
+                    case self::TYPE_COLLECTION_DELETED:
+                        $this->deleteCollection($difference['collection']);
                         break;
                 }
             }
@@ -219,7 +222,7 @@ class Migration
         }
     }
 
-    protected function applyAddCollection(array $collection): void
+    protected function createCollection(array $collection): void
     {
         // try {
         //     if ($this->mode == self::MODE_BEFORE) {
@@ -239,7 +242,7 @@ class Migration
         // }
     }
 
-    protected function applyDeleteCollection(array $collection): void
+    protected function deleteCollection(array $collection): void
     {
         try {
             if ($this->mode == self::MODE_AFTER) {
@@ -259,7 +262,7 @@ class Migration
         }
     }
 
-    protected function applyAddAttribute(string $collection, array $attribute): void
+    protected function createAttribute(string $collection, array $attribute): void
     {
         try {
             if ($this->mode == self::MODE_BEFORE) {
@@ -291,7 +294,7 @@ class Migration
         }
     }
 
-    protected function applyUpdateAttribute(string $collection, array $oldAttribute, array $newAttribute): void
+    protected function updateAttribute(string $collection, array $oldAttribute, array $newAttribute): void
     {
 
         // TODO consdier case when name of the attribute is changed.
@@ -352,7 +355,7 @@ class Migration
         }
     }
 
-    protected function applyDeleteAttribute(string $collection, array $attribute): void
+    protected function deleteAttribute(string $collection, array $attribute): void
     {
         try {
             if ($this->mode === self::MODE_AFTER) {
