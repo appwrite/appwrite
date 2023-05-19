@@ -39,6 +39,7 @@ use Utopia\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Query\Limit;
 use Appwrite\Utopia\Database\Validator\Query\Offset;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Database as EventDatabase;
@@ -366,6 +367,65 @@ function updateAttribute(
         ->setParam('attributeId', $attribute->getId());
 
     return $attribute;
+}
+
+/**
+ * Recursively processes a collection to get it's relationships
+ *
+ * Returns true if the user has access to the collection
+ */
+function getCollectionRelationships(Document $collection, bool $mode, Database $dbForProject, int $depth, array &$collections): bool
+{
+    // Don't include this collection if the user doesn't have access to it
+    if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+        if (!$collection->getAttribute('documentSecurity', false)) {
+            $validator = new Authorization(Database::PERMISSION_READ);
+            if (!$validator->isValid($collection->getRead())) {
+                return false;
+            }
+        }
+    }
+
+    if ($depth + 1 > Database::RELATION_MAX_DEPTH) {
+        return true;
+    }
+
+    $relationshipAttributes = \array_filter(
+        $collection->getAttribute('attributes', []),
+        fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+    );
+
+    $attributes = [];
+    foreach ($relationshipAttributes as $attribute) {
+        /** @var Document $attribute */
+        $relatedCollection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $collection->getAttribute('databaseInternalId'), $attribute->getAttribute('relatedCollection')));
+
+        $added = getCollectionRelationships($relatedCollection, $mode, $dbForProject, $depth + 1, $collections);
+        if (!$added) {
+            continue;
+        }
+
+        $attributes[$attribute->getAttribute('key')] = $attribute->getArrayCopy([
+            'key',
+            'type',
+            'relatedCollection',
+            'relationType',
+            'twoWay',
+            'twoWayKey',
+            'onDelete',
+            'side'
+        ]);
+    }
+
+    if (!empty($attributes)) {
+        $collections[$collection->getId()] = [
+            'databaseId' => $collection->getAttribute('databaseId'),
+            'collectionId' => $collection->getId(),
+            'attributes' => $attributes,
+        ];
+    }
+
+    return true;
 }
 
 App::post('/v1/databases')
@@ -2641,12 +2701,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
     ->param('data', [], new JSON(), 'Document data as JSON object.')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](/docs/permissions).', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -2850,6 +2911,12 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setContext('database', $database)
         ;
 
+    if ($request->getHeader('x-sdk-offline')) {
+        $collections = [];
+        getCollectionRelationships($collection, $mode, $dbForProject, 0, $collections);
+        $response->addHeader('x-appwrite-relations', \json_encode(\array_values($collections), JSON_THROW_ON_ERROR, 512));
+    }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($document, Response::MODEL_DOCUMENT);
@@ -2873,10 +2940,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Request $request, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2982,6 +3050,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $processDocument($collection, $document);
     }
 
+    if ($request->getHeader('x-sdk-offline')) {
+        $collections = [];
+        getCollectionRelationships($collection, $mode, $dbForProject, 0, $collections);
+        $response->addHeader('x-appwrite-relations', \json_encode(\array_values($collections), JSON_THROW_ON_ERROR, 512));
+    }
+
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
@@ -3008,10 +3082,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only method allowed is select.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Request $request, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3080,6 +3155,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         };
 
         $processDocument($collection, $document);
+
+    if ($request->getHeader('x-sdk-offline')) {
+        $collections = [];
+        getCollectionRelationships($collection, $mode, $dbForProject, 0, $collections);
+        $response->addHeader('x-appwrite-relations', \json_encode(\array_values($collections), JSON_THROW_ON_ERROR, 512));
+    }
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -3213,11 +3294,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->param('data', [], new JSON(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('requestTimestamp')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Request $request, Response $response, Database $dbForProject, Event $events, string $mode) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3430,6 +3512,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setContext('database', $database)
         ;
 
+    if ($request->getHeader('x-sdk-offline')) {
+        $collections = [];
+        getCollectionRelationships($collection, $mode, $dbForProject, 0, $collections);
+        $response->addHeader('x-appwrite-relations', \json_encode(\array_values($collections), JSON_THROW_ON_ERROR, 512));
+    }
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
@@ -3458,12 +3545,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('documentId', '', new UID(), 'Document ID.')
     ->inject('requestTimestamp')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('deletes')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Request $request, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
 
         $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3597,6 +3685,12 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
         ;
+
+    if ($request->getHeader('x-sdk-offline')) {
+        $collections = [];
+        getCollectionRelationships($collection, $mode, $dbForProject, 0, $collections);
+        $response->addHeader('x-appwrite-relations', \json_encode(\array_values($collections), JSON_THROW_ON_ERROR, 512));
+    }
 
         $response->noContent();
     });
