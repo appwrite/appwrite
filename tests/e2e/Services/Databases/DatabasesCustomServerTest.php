@@ -286,6 +286,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+        $this->assertTrue($database['body']['enabled']);
 
         $databaseId = $database['body']['$id'];
         /**
@@ -330,7 +331,9 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals($test1['body']['$id'], $collections['body']['collections'][0]['$id']);
+        $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
         $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
+        $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
 
         $base = array_reverse($collections['body']['collections']);
 
