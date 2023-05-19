@@ -308,6 +308,8 @@ trait AccountBase
 
         $this->assertEquals(true, $response['body']['sessions'][0]['current']);
 
+        $this->assertEquals(true, $response['body']['sessions'][0]['expire']);
+
         /**
          * Test for FAILURE
          */
