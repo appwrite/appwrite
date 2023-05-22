@@ -5,19 +5,19 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
-use Utopia\Database\Helpers\ID;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\Database\Query;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\ID;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 
 App::get('/v1/vcs/github/installations')
@@ -254,10 +254,9 @@ App::post('/v1/vcs/github/incomingwebhook')
                             ->setType(BUILD_TYPE_DEPLOYMENT)
                             ->setResource($function)
                             ->setDeployment($deployment)
-                            ->setProject($project)
-                            ->setSHA($SHA)
-                            ->setOwner($owner)
                             ->setTargetUrl($targetUrl)
+                            ->setSHA($SHA)
+                            ->setProject($project)
                             ->trigger();
 
                         //TODO: Add event?
@@ -381,7 +380,6 @@ App::post('/v1/vcs/github/incomingwebhook')
                                     ->setResource($function)
                                     ->setDeployment($deployment)
                                     ->setProject($project)
-                                    ->setOwner($owner)
                                     ->trigger();
 
                                 //TODO: Add event?

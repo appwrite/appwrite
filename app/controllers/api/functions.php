@@ -525,14 +525,13 @@ App::put('/v1/functions/:functionId')
     ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
     ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
-    ->param('repositoryOwner', '', new Text(128), 'Repository Owner of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $repositoryId, string $repositoryOwner, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $repositoryId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -589,7 +588,6 @@ App::put('/v1/functions/:functionId')
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'repositoryId' => $repositoryId,
-                'repositoryOwner' => $repositoryOwner,
                 'resourceId' => $functionId,
                 'resourceType' => "function"
             ]);

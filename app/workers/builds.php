@@ -45,14 +45,13 @@ class BuildsV1 extends Worker
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
         $SHA = $this->args['SHA'] ?? '';
-        $owner = $this->args['owner'] ?? '';
         $targetUrl = $this->args['targetUrl'] ?? '';
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                $this->buildDeployment($project, $resource, $deployment, $SHA, $owner, $targetUrl);
+                $this->buildDeployment($project, $resource, $deployment, $SHA, $targetUrl);
                 break;
 
             default:
@@ -61,7 +60,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(Document $project, Document $function, Document $deployment, string $SHA = '', string $owner = '', string $targetUrl = '')
+    protected function buildDeployment(Document $project, Document $function, Document $deployment, string $SHA = '', string $targetUrl = '')
     {
         global $register;
 
@@ -109,7 +108,6 @@ class BuildsV1 extends Worker
                 $vcsRepos = Authorization::skip(fn () => $dbForConsole
                     ->getDocument('vcs_repos', $vcsRepoId));
                 $repositoryId = $vcsRepos->getAttribute('repositoryId');
-                $owner = $vcsRepos->getAttribute('repositoryOwner');
                 $vcsInstallations = Authorization::skip(fn () => $dbForConsole
                     ->getDocument('vcs_installations', $vcsInstallationId));
                 $installationId = $vcsInstallations->getAttribute('installationId');
@@ -119,6 +117,7 @@ class BuildsV1 extends Worker
 
                 $github = new GitHub();
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+                $owner = $github->getOwnerName($installationId);
                 $repositoryName = $github->getRepositoryName($repositoryId);
                 $branchName = $deployment->getAttribute('branch');
                 $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName);

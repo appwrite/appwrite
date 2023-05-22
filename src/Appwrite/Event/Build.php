@@ -11,7 +11,6 @@ class Build extends Event
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
     protected string $SHA = '';
-    protected string $owner = '';
     protected string $targetUrl = '';
 
     public function __construct()
@@ -28,19 +27,6 @@ class Build extends Event
     public function setSHA(string $SHA): self
     {
         $this->SHA = $SHA;
-
-        return $this;
-    }
-
-    /**
-     * Sets repository owner name for the build event.
-     *
-     * @param string $owner is the name of the repository owner
-     * @return self
-     */
-    public function setOwner(string $owner): self
-    {
-        $this->owner = $owner;
 
         return $this;
     }
@@ -141,7 +127,6 @@ class Build extends Event
             'deployment' => $this->deployment,
             'type' => $this->type,
             'SHA' => $this->SHA,
-            'owner' => $this->owner,
             'targetUrl' => $this->targetUrl
         ]);
     }
