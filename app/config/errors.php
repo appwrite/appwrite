@@ -324,6 +324,13 @@ return [
         'code' => 416,
     ],
 
+    /** VCS */
+    Exception::INSTALLATION_NOT_FOUND => [
+        'name' => Exception::INSTALLATION_NOT_FOUND,
+        'description' => 'Installation with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [
         'name' => Exception::FUNCTION_NOT_FOUND,

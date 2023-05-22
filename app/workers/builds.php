@@ -16,6 +16,8 @@ use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Storage;
+use Utopia\Database\Validator\Authorization;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 require_once __DIR__ . '/../init.php';
 
@@ -43,12 +45,15 @@ class BuildsV1 extends Worker
         $project = new Document($this->args['project'] ?? []);
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
+        $SHA = $this->args['SHA'] ?? '';
+        $owner = $this->args['owner'] ?? '';
+        $targetUrl = $this->args['targetUrl'] ?? '';
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                $this->buildDeployment($project, $resource, $deployment);
+                $this->buildDeployment($project, $resource, $deployment, $SHA, $owner, $targetUrl);
                 break;
 
             default:
@@ -57,11 +62,12 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(Document $project, Document $function, Document $deployment)
+    protected function buildDeployment(Document $project, Document $function, Document $deployment, string $SHA = '', string $owner = '', string $targetUrl = '')
     {
         global $register;
 
         $dbForProject = $this->getProjectDB($project);
+        $dbForConsole = $this->getConsoleDB();
 
         $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {
@@ -80,7 +86,8 @@ class BuildsV1 extends Worker
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
+        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
+        /** @TODO : move this to the registry or someplace else */
         $device = Storage::DEVICE_LOCAL;
         try {
             $dsn = new DSN($connection);
@@ -94,6 +101,94 @@ class BuildsV1 extends Worker
         $durationStart = \microtime(true);
         if (empty($buildId)) {
             $buildId = ID::unique();
+
+            $vcsInstallationId = $deployment->getAttribute('vcsInstallationId');
+            $vcsRepoId = $deployment->getAttribute('vcsRepoId');
+            $isVcsEnabled = $vcsRepoId !== null ? true : false;
+            $addComment = false;
+
+            if ($isVcsEnabled) {
+                $vcsRepos = Authorization::skip(fn () => $dbForConsole
+                    ->getDocument('vcs_repos', $vcsRepoId));
+                $repositoryId = $vcsRepos->getAttribute('repositoryId');
+                $owner = $vcsRepos->getAttribute('repositoryOwner');
+                $vcsInstallations = Authorization::skip(fn () => $dbForConsole
+                    ->getDocument('vcs_installations', $vcsInstallationId));
+                $installationId = $vcsInstallations->getAttribute('installationId');
+
+                $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+                $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+
+                $github = new GitHub();
+                $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+                $repositoryName = $github->getRepositoryName($repositoryId);
+                $branchName = $deployment->getAttribute('branch');
+                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName);
+                $stdout = '';
+                $stderr = '';
+                Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                Console::execute($gitCloneCommand . ' /tmp/builds/' . $buildId . '/code', '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code .', '', $stdout, $stderr);
+
+                $deviceFunctions = $this->getFunctionsDevice($project->getId());
+
+                $fileName = 'code.tar.gz';
+                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+
+                $deploymentId = $deployment->getId();
+                $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+
+                $result = $deviceFunctions->move($fileTmpName, $path);
+
+                if (!$result) {
+                    throw new \Exception("Unable to move file");
+                }
+
+                Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
+
+                $build = $dbForProject->createDocument('builds', new Document([
+                    '$id' => $buildId,
+                    '$permissions' => [],
+                    'startTime' => $startTime,
+                    'deploymentId' => $deployment->getId(),
+                    'status' => 'processing',
+                    'outputPath' => '',
+                    'runtime' => $function->getAttribute('runtime'),
+                    'source' => $path,
+                    'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                    'stdout' => '',
+                    'stderr' => '',
+                    'endTime' => null,
+                    'duration' => 0
+                ]));
+                if ($SHA !== "" && $owner !== "") {
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "pending", "Deployment is being processed..", $targetUrl, "Appwrite Deployment");
+                }
+                $commentId = $deployment->getAttribute('vcsCommentId');
+                if ($commentId) {
+                    $comment = "| Build Status |\r\n | --------------- |\r\n | Processing |";
+
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                    $addComment = true;
+                }
+            } else {
+                $build = $dbForProject->createDocument('builds', new Document([
+                    '$id' => $buildId,
+                    '$permissions' => [],
+                    'startTime' => $startTime,
+                    'deploymentId' => $deployment->getId(),
+                    'status' => 'processing',
+                    'outputPath' => '',
+                    'runtime' => $function->getAttribute('runtime'),
+                    'source' => $deployment->getAttribute('path'),
+                    'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                    'stdout' => '',
+                    'stderr' => '',
+                    'endTime' => null,
+                    'duration' => 0
+                ]));
+            }
+
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
                 '$permissions' => [],
@@ -121,6 +216,14 @@ class BuildsV1 extends Worker
         /** Request the executor to build the code... */
         $build->setAttribute('status', 'building');
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+        if ($isVcsEnabled) {
+            $commentId = $deployment->getAttribute('vcsCommentId');
+            if ($commentId) {
+                $comment = "| Build Status |\r\n | --------------- |\r\n | Building |";
+                $github->updateComment($owner, $repositoryName, $commentId, $comment);
+            }
+        }
 
         /** Trigger Webhook */
         $deploymentModel = new Deployment();
@@ -166,6 +269,10 @@ class BuildsV1 extends Worker
         );
 
         $source = $deployment->getAttribute('path');
+
+        if ($isVcsEnabled) {
+            $source = $path;
+        }
 
         $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
@@ -213,6 +320,22 @@ class BuildsV1 extends Worker
             $build->setAttribute('size', $response['size']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
+
+            if ($isVcsEnabled) {
+                $status = $response["status"];
+
+                if ($status === "ready" && $SHA !== "" && $owner !== "") {
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "success", "Deployment is successful!", $targetUrl, "Appwrite Deployment");
+                } elseif ($status === "failed" && $SHA !== "" && $owner !== "") {
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "failure", "Deployment failed.", $targetUrl, "Appwrite Deployment");
+                }
+
+                $commentId = $deployment->getAttribute('vcsCommentId');
+                if ($commentId) {
+                    $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                }
+            }
 
             /* Also update the deployment buildTime */
             $deployment->setAttribute('buildTime', $response['duration']);

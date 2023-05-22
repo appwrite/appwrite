@@ -111,6 +111,18 @@ class Func extends Model
                 'default' => '',
                 'example' => 'npm install',
             ])
+            ->addRule('repositoryId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS Repository ID',
+                'default' => false,
+                'example' => '35493993',
+            ])
+            ->addRule('vcsInstallationId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Function vcs installation id.',
+                'default' => '',
+                'example' => '644051bd6572792165cc',
+            ])
         ;
     }
 

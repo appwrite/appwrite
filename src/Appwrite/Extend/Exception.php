@@ -106,6 +106,9 @@ class Exception extends \Exception
     public const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
 
+    /** VCS */
+    public const INSTALLATION_NOT_FOUND            = 'installation_not_found';
+
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';

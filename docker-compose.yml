@@ -177,6 +177,9 @@ services:
       - _APP_REGION
       - _APP_CONSOLE_GITHUB_APP_ID
       - _APP_CONSOLE_GITHUB_SECRET
+      - VCS_GITHUB_APP_NAME
+      - VCS_GITHUB_PRIVATE_KEY
+      - VCS_GITHUB_APP_ID
 
   appwrite-realtime:
     entrypoint: realtime
@@ -382,7 +385,9 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes: 
+    volumes:
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -412,6 +417,9 @@ services:
       - _APP_CONNECTIONS_STORAGE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - VCS_GITHUB_APP_NAME
+      - VCS_GITHUB_PRIVATE_KEY
+      - VCS_GITHUB_APP_ID
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates

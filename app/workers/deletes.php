@@ -64,6 +64,10 @@ class DeletesV1 extends Worker
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project);
+                        break;
+                    case DELETE_TYPE_INSTALLATIONS:
+                        $this->deleteInstallation($document, $project);
+                        break;
                     case DELETE_TYPE_RULES:
                         $this->deleteRule($document, $project);
                         break;
@@ -329,7 +333,7 @@ class DeletesV1 extends Worker
                         'teams',
                         $teamId,
                         // Ensure that total >= 0
-                            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
+                        $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
                     );
                 }
             }
@@ -632,6 +636,43 @@ class DeletesV1 extends Worker
      * @param Database $database
      * @param callable $callback
      */
+    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $results = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+
+        while ($sum === $limit) {
+            $chunk++;
+
+            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+
+            $sum = count($results);
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+
+        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    /**
+     * @param string $collection collectionID
+     * @param Query[] $queries
+     * @param Database $database
+     * @param callable $callback
+     */
     protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
     {
         $count = 0;
@@ -735,6 +776,25 @@ class DeletesV1 extends Worker
         $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
+    }
+
+    protected function deleteInstallation(Document $document, Document $project)
+    {
+        $dbForProject = $this->getProjectDB($projectId);
+        $dbForConsole = $this->getConsoleDB();
+
+        $this->listByGroup('functions', [
+            Query::equal('vcsInstallationInternalId', [$document->getInternalId()])
+        ], $dbForProject, function ($function) use ($dbForProject, $dbForConsole) {
+            $dbForConsole->deleteDocument('vcs_repos', $function->getAttribute('vcsRepoId'));
+
+            $function = $function
+                ->setAttribute('vcsInstallationId', '')
+                ->setAttribute('vcsInstallationInternalId', '')
+                ->setAttribute('vcsRepoId', '')
+                ->setAttribute('vcsRepoInternalId', '');
+            $dbForProject->updateDocument('functions', $function->getId(), $function);
+        });
     }
 
     protected function deleteRuntimes(?Document $function, Document $project)
