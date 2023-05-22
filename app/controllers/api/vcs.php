@@ -136,15 +136,15 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
 
         $page = 1;
         $per_page = 100; // max limit of GitHub API
-        $total_repos = $github->getTotalReposCount();
         $repos = []; // Array to store all repositories
 
         // loop to store all repos in repos array
-        for ($i = 0; $i < ceil($total_repos / $per_page); $i++) {
+
+        do {
             $repositories = $github->listRepositoriesForGitHubApp($page, $per_page);
             $repos = array_merge($repos, $repositories);
             $page++;
-        }
+        } while ($repositories == $per_page);
 
         // Filter repositories based on search parameter
         if (!empty($search)) {
