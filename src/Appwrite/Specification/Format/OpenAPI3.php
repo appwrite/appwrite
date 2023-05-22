@@ -5,8 +5,8 @@ namespace Appwrite\Specification\Format;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
 
 class OpenAPI3 extends Format
@@ -170,6 +170,9 @@ class OpenAPI3 extends Format
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $route->getLabel('sdk.packaging', false),
+                    'offline-model' => $route->getLabel('sdk.offline.model', ''),
+                    'offline-key' => $route->getLabel('sdk.offline.key', ''),
+                    'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
                 ],
             ];
 
@@ -311,7 +314,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
-                    case 'Appwrite\Network\Validator\URL':
+                    case 'Utopia\Validator\URL':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';
@@ -391,7 +394,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = $validator->getType();
                         break;
-                    case 'Appwrite\Network\Validator\Host':
+                    case 'Utopia\Validator\Host':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['x-example'] = 'https://example.com';

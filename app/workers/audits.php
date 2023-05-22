@@ -29,6 +29,7 @@ Server::setResource('execute', function () {
 
         $audit = new Audit($dbForProject);
         $audit->log(
+            userInternalId: $user->getInternalId(),
             userId: $user->getId(),
             // Pass first, most verbose event pattern
             event: $event,

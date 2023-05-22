@@ -73,6 +73,14 @@ class EventTest extends TestCase
         $this->assertEquals($this->object->getQueueSize(), 1);
     }
 
+    public function testPause(): void
+    {
+        $this->object->setPaused(true);
+        $this->assertTrue($this->object->isPaused());
+        $this->object->setPaused(false);
+        $this->assertNotTrue($this->object->isPaused());
+    }
+
     public function testReset(): void
     {
         $this->object

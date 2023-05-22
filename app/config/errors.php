@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_CODES_DISABLED => [
+        'name' => Exception::GENERAL_CODES_DISABLED,
+        'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
+        'code' => 500,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -123,6 +128,11 @@ return [
     Exception::USER_EMAIL_NOT_WHITELISTED => [
         'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
         'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
+        'code' => 401,
+    ],
+    Exception::USER_INVALID_CODE => [
+        'name' => Exception::USER_INVALID_CODE,
+        'description' => 'The specified code is not valid. Contact your administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_IP_NOT_WHITELISTED => [
@@ -548,5 +558,20 @@ return [
         'name' => Exception::DOMAIN_VERIFICATION_FAILED,
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
+    ],
+    Exception::DOMAIN_TARGET_INVALID => [
+        'name' => Exception::DOMAIN_TARGET_INVALID,
+        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
+    Exception::GRAPHQL_NO_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Param "query" is not optional.',
+        'code' => 400,
+    ],
+    Exception::GRAPHQL_TOO_MANY_QUERIES => [
+        'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
+        'description' => 'Too many queries.',
+        'code' => 400,
     ],
 ];

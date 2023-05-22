@@ -143,7 +143,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container for better resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -345,54 +345,6 @@ return [
         ],
     ],
     [
-        'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
-        'variables' => [
-            [
-                'name' => '_APP_INFLUXDB_HOST',
-                'description' => 'InfluxDB server host name address. Default value is: \'influxdb\'.',
-                'introduction' => '',
-                'default' => 'influxdb',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_INFLUXDB_PORT',
-                'description' => 'InfluxDB server TCP port. Default value is: \'8086\'.',
-                'introduction' => '',
-                'default' => '8086',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
-        'variables' => [
-            [
-                'name' => '_APP_STATSD_HOST',
-                'description' => 'StatsD server host name address. Default value is: \'telegraf\'.',
-                'introduction' => '',
-                'default' => 'telegraf',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_STATSD_PORT',
-                'description' => 'StatsD server TCP port. Default value is: \'8125\'.',
-                'introduction' => '',
-                'default' => '8125',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-        ],
-    ],
-    [
         'category' => 'SMTP',
         'description' => "Appwrite is using an SMTP server for emailing your projects users and server admins. The SMTP env vars are used to allow Appwrite server to connect to the SMTP container.\n\nIf running in production, it might be easier to use a 3rd party SMTP server as it might be a little more difficult to set up a production SMTP server that will not send all your emails into your user\'s SPAM folder.",
         'variables' => [
@@ -528,7 +480,7 @@ return [
                 'name' => '_APP_STORAGE_DEVICE',
                 'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
-                'default' => 'Local',
+                'default' => 'local',
                 'required' => false,
                 'question' => '',
             ],
@@ -956,6 +908,39 @@ return [
                 'question' => '',
                 'filter' => ''
             ]
+        ],
+    ],
+    [
+        'category' => 'GraphQL',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
+                'description' => 'Maximum number of batched queries per request. The default value is 10.',
+                'introduction' => '1.2.0',
+                'default' => '10',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GRAPHQL_MAX_COMPLEXITY',
+                'description' => 'Maximum complexity of a GraphQL query. One field adds one to query complexity. Lists multiply the complexity by the number of items requested. The default value is 250.',
+                'introduction' => '1.2.0',
+                'default' => '250',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_GRAPHQL_MAX_DEPTH',
+                'description' => 'Maximum depth of a GraphQL query. One nested field level adds one to query depth. The default value is 3.',
+                'introduction' => '1.2.0',
+                'default' => '3',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
 ];

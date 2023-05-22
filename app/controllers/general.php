@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -234,7 +234,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -385,7 +385,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -632,6 +632,7 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
+include_once __DIR__ . '/shared/api/auth.php';
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];
