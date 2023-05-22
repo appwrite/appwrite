@@ -114,7 +114,7 @@ class Func extends Model
             ->addRule('repositoryId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS Repository ID',
-                'default' => false,
+                'default' => '',
                 'example' => '35493993',
             ])
             ->addRule('vcsInstallationId', [

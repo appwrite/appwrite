@@ -124,6 +124,8 @@ ENV _APP_SERVER=swoole \
     _APP_LOGGING_PROVIDER= \
     _APP_LOGGING_CONFIG=
 
+RUN apk add git
+
 RUN \
   if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \

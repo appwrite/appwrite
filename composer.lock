@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc4cf0faa56a3e2d63e7d887ec618a17",
+    "content-hash": "4478e6ea7546002b03722b73527f1286",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2359,16 +2359,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.26.0",
+            "version": "dev-fix-wildcards-g4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e"
+                "reference": "3a3ed1296bf31c34bc0a8f80d707cabff2b02f6e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e8da5576370366d3bf9c574ec855f8c96fe4f34e",
-                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/3a3ed1296bf31c34bc0a8f80d707cabff2b02f6e",
+                "reference": "3a3ed1296bf31c34bc0a8f80d707cabff2b02f6e",
                 "shasum": ""
             },
             "require": {
@@ -2397,9 +2397,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.26.0"
+                "source": "https://github.com/utopia-php/framework/tree/fix-wildcards-g4"
             },
-            "time": "2023-01-13T08:14:43+00:00"
+            "time": "2023-05-22T13:29:36+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5797,6 +5797,12 @@
             "alias_normalized": "0.28.99.0"
         },
         {
+            "package": "utopia-php/framework",
+            "version": "dev-fix-wildcards-g4",
+            "alias": "0.26.99",
+            "alias_normalized": "0.26.99.0"
+        },
+        {
             "package": "utopia-php/vcs",
             "version": "dev-feat-git-adapter",
             "alias": "0.1.99",
@@ -5805,6 +5811,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/framework": 20,
         "utopia-php/vcs": 20,
         "appwrite/sdk-generator": 20
     },

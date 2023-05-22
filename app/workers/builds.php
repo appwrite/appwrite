@@ -274,6 +274,8 @@ class BuildsV1 extends Worker
 
             $command = \str_replace('"', '\\"', $command);
 
+            \var_dump($path);
+
             $response = $this->executor->createRuntime(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),

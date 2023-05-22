@@ -92,6 +92,7 @@ App::get('/v1/vcs/github/incominginstallation')
             $vcsInstallation = $dbForConsole->updateDocument('vcs_installations', $vcsInstallation->getId(), $vcsInstallation);
         }
 
+        // TODO: Figure out port
         $url = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$state/settings/git-installations";
 
         $response
@@ -132,6 +133,9 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
         $github = new GitHub();
+        \var_dump($installation);
+        \var_dump($privateKey);
+        \var_dump($githubAppId);
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
         $page = 1;
@@ -247,6 +251,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                             'activate' => $activate,
                         ]));
 
+                        // TODO: Figure out port
                         $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$projectId/functions/function-$functionId";
 
                         $buildEvent = new Build();
