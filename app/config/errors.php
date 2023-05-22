@@ -112,7 +112,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
+        'description' => 'The current user has been blocked.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
