@@ -14,7 +14,6 @@ use Utopia\Database\ID;
 use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Storage;
 use Utopia\Database\Validator\Authorization;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -102,10 +101,9 @@ class BuildsV1 extends Worker
         if (empty($buildId)) {
             $buildId = ID::unique();
 
-            $vcsInstallationId = $deployment->getAttribute('vcsInstallationId');
-            $vcsRepoId = $deployment->getAttribute('vcsRepoId');
-            $isVcsEnabled = $vcsRepoId !== null ? true : false;
-            $addComment = false;
+            $vcsInstallationId = $deployment->getAttribute('vcsInstallationId', '');
+            $vcsRepoId = $deployment->getAttribute('vcsRepoId', '');
+            $isVcsEnabled = $vcsRepoId ? true : false;
 
             if ($isVcsEnabled) {
                 $vcsRepos = Authorization::skip(fn () => $dbForConsole
@@ -152,7 +150,7 @@ class BuildsV1 extends Worker
                     'startTime' => $startTime,
                     'deploymentId' => $deployment->getId(),
                     'status' => 'processing',
-                    'outputPath' => '',
+                    'path' => '',
                     'runtime' => $function->getAttribute('runtime'),
                     'source' => $path,
                     'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
@@ -169,43 +167,27 @@ class BuildsV1 extends Worker
                     $comment = "| Build Status |\r\n | --------------- |\r\n | Processing |";
 
                     $github->updateComment($owner, $repositoryName, $commentId, $comment);
-                    $addComment = true;
                 }
             } else {
                 $build = $dbForProject->createDocument('builds', new Document([
                     '$id' => $buildId,
                     '$permissions' => [],
                     'startTime' => $startTime,
+                    'deploymentInternalId' => $deployment->getInternalId(),
                     'deploymentId' => $deployment->getId(),
                     'status' => 'processing',
-                    'outputPath' => '',
+                    'path' => '',
                     'runtime' => $function->getAttribute('runtime'),
                     'source' => $deployment->getAttribute('path'),
-                    'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                    'sourceType' => $device,
                     'stdout' => '',
                     'stderr' => '',
                     'endTime' => null,
-                    'duration' => 0
+                    'duration' => 0,
+                    'size' => 0
                 ]));
             }
 
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => $startTime,
-                'deploymentInternalId' => $deployment->getInternalId(),
-                'deploymentId' => $deployment->getId(),
-                'status' => 'processing',
-                'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path'),
-                'sourceType' => $device,
-                'stdout' => '',
-                'stderr' => '',
-                'endTime' => null,
-                'duration' => 0,
-                'size' => 0
-            ]));
             $deployment->setAttribute('buildId', $build->getId());
             $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);

@@ -523,12 +523,11 @@ App::put('/v1/functions/:functionId')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.', true)
     ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
     ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
-    ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
-    ->param('repositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
-    ->param('repositoryOwner', '', new Text(128, 0), 'Repository Owner of the repo linked to the function', true)
+    ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
+    ->param('repositoryOwner', '', new Text(128), 'Repository Owner of the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
     ->inject('project')
     ->inject('user')
     ->inject('events')
@@ -609,7 +608,7 @@ App::put('/v1/functions/:functionId')
                 'resourceId' => $function->getId(),
                 'resourceType' => 'functions',
                 'entrypoint' => $entrypoint,
-                'type' => "vcs",
+                'type' => 'vcs',
                 'vcsInstallationId' => $installation->getId(),
                 'vcsInstallationInternalId' => $installation->getInternalId(),
                 'vcsRepoId' => $vcsRepoId,
@@ -640,8 +639,8 @@ App::put('/v1/functions/:functionId')
             'installCommand' => $installCommand,
             'vcsInstallationId' => $installation->getId(),
             'vcsInstallationInternalId' => $installation->getInternalId(),
-            'vcsRepoId' => $vcsRepoId,
-            'vcsRepoInternalId' => $vcsRepoInternalId,
+            'vcsRepoId' => $vcsRepoId ?? $function->getAttribute('vcsRepoId', ''),
+            'vcsRepoInternalId' => $vcsRepoInternalId ?? $function->getAttribute('vcsRepoInternalId', ''),
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
@@ -932,6 +931,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'metadata' => $metadata,
+                    'type' => 'manual'
                 ]));
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
@@ -965,6 +965,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
                     'activate' => $activate,
                     'metadata' => $metadata,
+                    'type' => 'manual'
                 ]));
             } else {
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('chunksUploaded', $chunksUploaded)->setAttribute('metadata', $metadata));
