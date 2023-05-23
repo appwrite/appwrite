@@ -274,7 +274,9 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ], ['name' => 'Test 1']);
+        ], [
+            'name' => 'Test 1'
+        ]);
 
         $this->assertEquals(200, $database['headers']['status-code']);
         $this->assertEquals('Test 1', $database['body']['name']);
