@@ -262,7 +262,8 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'name' => 'Test 1 Updated',
-            'enabled' => false]);
+            'enabled' => false,
+        ]);
 
         $this->assertEquals(200, $database['headers']['status-code']);
         $this->assertEquals('Test 1 Updated', $database['body']['name']);
