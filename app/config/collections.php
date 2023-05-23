@@ -2462,6 +2462,16 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('branch'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('logging'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,

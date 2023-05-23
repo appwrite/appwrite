@@ -213,10 +213,11 @@ App::post('/v1/vcs/github/incomingwebhook')
                         $vcsRepoInternalId = $resource->getInternalId();
                         $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
                         $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
+                        $productionBranch = $resource->getAttribute('branch', 'main');
                         $activate = false;
 
                         // TODO: Configurable in function settings
-                        if ($branchName == "main") {
+                        if ($branchName == $productionBranch) {
                             $activate = true;
                         }
 

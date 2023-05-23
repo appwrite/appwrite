@@ -525,13 +525,14 @@ App::put('/v1/functions/:functionId')
     ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
     ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('repositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
+    ->param('branch', 'main', new Text(128), 'Production branch for the repo linked to the function', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $repositoryId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $repositoryId, string $branch, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -611,7 +612,7 @@ App::put('/v1/functions/:functionId')
                 'vcsInstallationInternalId' => $installation->getInternalId(),
                 'vcsRepoId' => $vcsRepoId,
                 'vcsRepoInternalId' => $vcsRepoInternalId,
-                'branch' => "main",
+                'branch' => $branch,
                 'search' => implode(' ', [$deploymentId, $entrypoint]),
                 'activate' => true,
             ]));
@@ -639,6 +640,7 @@ App::put('/v1/functions/:functionId')
             'vcsInstallationInternalId' => $installation->getInternalId(),
             'vcsRepoId' => $vcsRepoId ?? $function->getAttribute('vcsRepoId', ''),
             'vcsRepoInternalId' => $vcsRepoInternalId ?? $function->getAttribute('vcsRepoInternalId', ''),
+            'branch'=> $branch,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
