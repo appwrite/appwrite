@@ -119,6 +119,7 @@ RUN mkdir -p /storage/uploads && \
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
     chmod +x /usr/local/bin/clear-card-cache && \
+    chmod +x /usr/local/bin/users-calc && \
     chmod +x /usr/local/bin/maintenance && \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/usage && \
