@@ -1789,6 +1789,12 @@ App::patch('/v1/account/status')
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
 
+        $protocol = $request->getProtocol();
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
+
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
