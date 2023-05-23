@@ -1068,6 +1068,39 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     return $database;
 }, ['pools', 'cache']);
 
+App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $databaseName = $project->getAttribute('database');
+
+        if (isset($databases[$databaseName])) {
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get($databaseName)
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
+
+        $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+
+    return $getProjectDB;
+}, ['pools', 'dbForConsole', 'cache']);
+
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];

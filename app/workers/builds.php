@@ -305,12 +305,9 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['stdout']);
 
             if ($isVcsEnabled) {
-                $status = $response["status"];
-
-                if ($status === "ready" && $SHA !== "" && $owner !== "") {
+                $status = 'ready';
+                if ($SHA !== "" && $owner !== "") {
                     $github->updateCommitStatus($repositoryName, $SHA, $owner, "success", "Deployment is successful!", $targetUrl, "Appwrite Deployment");
-                } elseif ($status === "failed" && $SHA !== "" && $owner !== "") {
-                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "failure", "Deployment failed.", $targetUrl, "Appwrite Deployment");
                 }
 
                 $commentId = $deployment->getAttribute('vcsCommentId');
@@ -351,6 +348,19 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
             Console::error($th->getMessage());
+
+            if ($isVcsEnabled) {
+                $status = 'failed';
+                if ($SHA !== "" && $owner !== "") {
+                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "failure", "Deployment failed.", $targetUrl, "Appwrite Deployment");
+                }
+
+                $commentId = $deployment->getAttribute('vcsCommentId');
+                if ($commentId) {
+                    $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                }
+            }
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 

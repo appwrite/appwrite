@@ -11,10 +11,7 @@ use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
-use Utopia\Cache\Adapter\Redis;
-use Utopia\Cache\Cache;
 use Utopia\Database\Query;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
@@ -70,7 +67,7 @@ App::get('/v1/vcs/github/incominginstallation')
             Query::equal('projectInternalId', [$projectInternalId])
         ]);
 
-        if (!$vcsInstallation) {
+        if ($vcsInstallation === false || $vcsInstallation->isEmpty()) {
             $vcsInstallation = new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
@@ -133,9 +130,6 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
         $github = new GitHub();
-        \var_dump($installation);
-        \var_dump($privateKey);
-        \var_dump($githubAppId);
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
         $page = 1;
@@ -179,11 +173,9 @@ App::post('/v1/vcs/github/incomingwebhook')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('cache')
-    ->inject('db')
+    ->inject('getProjectDB')
     ->action(
-        function (Request $request, Response $response, Database $dbForConsole, mixed $cache, mixed $db) {
-            $cache = new Cache(new Redis($cache));
+        function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) {
             $event = $request->getHeader('x-github-event', '');
             $payload = $request->getRawPayload();
             $github = new GitHub();
@@ -207,26 +199,23 @@ App::post('/v1/vcs/github/incomingwebhook')
                 foreach ($resources as $resource) {
                     $resourceType = $resource->getAttribute('resourceType');
 
-                    if ($resourceType == "function") {
-                        // TODO: For cloud, we might have different $db
-                        $dbForProject = new Database(new MariaDB($db), $cache);
-                        $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                        $dbForProject->setNamespace("_{$resource->getAttribute('projectInternalId')}");
+                    if ($resourceType === "function") {
+                        $projectId = $resource->getAttribute('projectId');
+                        //TODO: Why is Authorization::skip needed?
+                        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+                        $dbForProject = $getProjectDB($project);
 
                         $functionId = $resource->getAttribute('resourceId');
                         //TODO: Why is Authorization::skip needed?
                         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-                        $projectId = $resource->getAttribute('projectId');
-                        //TODO: Why is Authorization::skip needed?
-                        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
                         $deploymentId = ID::unique();
-                        $entrypoint = 'index.js'; //TODO: Read from function settings
                         $vcsRepoId = $resource->getId();
                         $vcsRepoInternalId = $resource->getInternalId();
                         $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
                         $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
                         $activate = false;
 
+                        // TODO: Configurable in function settings
                         if ($branchName == "main") {
                             $activate = true;
                         }
@@ -240,14 +229,16 @@ App::post('/v1/vcs/github/incomingwebhook')
                             ],
                             'resourceId' => $functionId,
                             'resourceType' => 'functions',
-                            'entrypoint' => $entrypoint,
+                            'entrypoint' => $function->getAttribute('entrypoint'),
+                            'installCommand' => $function->getAttribute('installCommand'),
+                            'buildCommand' => $function->getAttribute('buildCommand'),
                             'type' => 'vcs',
                             'vcsInstallationId' => $vcsInstallationId,
                             'vcsInstallationInternalId' => $vcsInstallationInternalId,
                             'vcsRepoId' => $vcsRepoId,
                             'vcsRepoInternalId' => $vcsRepoInternalId,
                             'branch' => $branchName,
-                            'search' => implode(' ', [$deploymentId, $entrypoint]),
+                            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
                             'activate' => $activate,
                         ]));
 
@@ -306,90 +297,27 @@ App::post('/v1/vcs/github/incomingwebhook')
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    $dbForProject = new Database(new MariaDB($db), $cache);
-                    $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                    // TODO: Use for loop instead
+                    $vcsRepo = $vcsRepos[0];
 
-                    if ($vcsRepos) {
-                        $dbForProject->setNamespace("_{$vcsRepos[0]->getAttribute('projectInternalId')}");
-                        $vcsRepoId = $vcsRepos[0]->getId();
-                        $deployment = Authorization::skip(fn () => $dbForProject->find('deployments', [
-                            Query::equal('vcsRepoId', [$vcsRepoId]),
-                            Query::equal('branch', [$branchName]),
-                            Query::orderDesc('$createdAt')
-                        ]));
 
-                        if ($deployment) {
-                            $buildId = $deployment[0]->getAttribute('buildId');
-                            $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-                            $buildStatus = $build->getAttribute('status');
-                            $comment = "| Build Status |\r\n | --------------- |\r\n | $buildStatus |";
-                            $commentId = $github->addComment($owner, $repositoryName, $pullRequestNumber, $comment);
-                        } else {
-                            $startNewDeployment = true;
-                        }
-                    } else {
-                        $startNewDeployment = true;
-                    }
-                    if ($startNewDeployment) {
-                        $commentId = strval($github->addComment($owner, $repositoryName, $pullRequestNumber, "Build is not deployed yet 🚀"));
+                    $projectId = $vcsRepo->getAttribute('projectId');
+                    //TODO: Why is Authorization::skip needed?
+                    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+                    $dbForProject = $getProjectDB($project);
+                    $vcsRepoId = $vcsRepo->getId();
+                    $deployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
+                        Query::equal('vcsRepoId', [$vcsRepoId]),
+                        Query::equal('branch', [$branchName]),
+                        Query::orderDesc('$createdAt'),
+                    ]));
 
-                        foreach ($vcsRepos as $resource) {
-                            $resourceType = $resource->getAttribute('resourceType');
-
-                            if ($resourceType == "function") {
-                                // TODO: For cloud, we might have different $db
-                                $dbForProject->setNamespace("_{$resource->getAttribute('projectInternalId')}");
-
-                                $functionId = $resource->getAttribute('resourceId');
-                                //TODO: Why is Authorization::skip needed?
-                                $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-                                $projectId = $resource->getAttribute('projectId');
-                                //TODO: Why is Authorization::skip needed?
-                                $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-                                $deploymentId = ID::unique();
-                                $entrypoint = 'index.js'; //TODO: Read from function settings
-                                $vcsRepoId = $resource->getId();
-                                $vcsRepoInternalId = $resource->getInternalId();
-                                $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
-                                $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
-                                $activate = false;
-
-                                if ($branchName == "main") {
-                                    $activate = true;
-                                }
-
-                                $deployment = $dbForProject->createDocument('deployments', new Document([
-                                    '$id' => $deploymentId,
-                                    '$permissions' => [
-                                        Permission::read(Role::any()),
-                                        Permission::update(Role::any()),
-                                        Permission::delete(Role::any()),
-                                    ],
-                                    'resourceId' => $functionId,
-                                    'resourceType' => 'functions',
-                                    'entrypoint' => $entrypoint,
-                                    'type' => 'vcs',
-                                    'vcsInstallationId' => $vcsInstallationId,
-                                    'vcsInstallationInternalId' => $vcsInstallationInternalId,
-                                    'vcsRepoId' => $vcsRepoId,
-                                    'vcsRepoInternalId' => $vcsRepoInternalId,
-                                    'branch' => $branchName,
-                                    'vcsCommentId' => $commentId,
-                                    'search' => implode(' ', [$deploymentId, $entrypoint]),
-                                    'activate' => $activate,
-                                ]));
-
-                                $buildEvent = new Build();
-                                $buildEvent
-                                    ->setType(BUILD_TYPE_DEPLOYMENT)
-                                    ->setResource($function)
-                                    ->setDeployment($deployment)
-                                    ->setProject($project)
-                                    ->trigger();
-
-                                //TODO: Add event?
-                            }
-                        }
+                    if ($deployment !== false && !$deployment->isEmpty()) {
+                        $buildId = $deployment->getAttribute('buildId');
+                        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+                        $buildStatus = $build->getAttribute('status');
+                        $comment = "| Build Status |\r\n | --------------- |\r\n | $buildStatus |";
+                        $github->addComment($owner, $repositoryName, $pullRequestNumber, $comment);
                     }
                 }
             }
