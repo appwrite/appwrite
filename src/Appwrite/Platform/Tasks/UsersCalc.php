@@ -73,6 +73,7 @@ class UsersCalc extends Action
         $offset = 0;
         while (!empty($projects)) {
             foreach ($projects as $project) {
+
                 /**
                  * Skip user projects with id 'console'
                  */
@@ -121,43 +122,42 @@ class UsersCalc extends Action
 
             $offset = $offset + $limit;
             $count = $count + $sum;
-
-            Console::log('Iterated through ' . ($count - 1) . '/' . $totalProjects . ' projects...');
-
-            /** @var PHPMailer $mail */
-            $mail = $register->get('smtp');
-
-            $mail->clearAddresses();
-            $mail->clearAllRecipients();
-            $mail->clearReplyTos();
-            $mail->clearAttachments();
-            $mail->clearBCCs();
-            $mail->clearCCs();
-
-            try {
-                /** Addresses */
-                $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-                $recipients = explode(',', App::getEnv('_APP_HAMSTER_RECIPIENTS', 'shimon@appwrite.io'));
-
-                foreach ($recipients as $recipient) {
-                    $mail->addAddress($recipient);
-                }
-
-                /** Attachments */
-                $mail->addAttachment($this->path);
-
-                /** Content */
-                $mail->Subject = "Cloud Report for {$this->date}";
-                $mail->Body = "Please find the daily cloud report atttached";
-
-                $mail->send();
-                Console::success('Email has been sent!');
-            } catch (Exception $e) {
-                Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
-            }
         }
+        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects...');
         $pools
             ->get('console')
             ->reclaim();
+
+        /** @var PHPMailer $mail */
+        $mail = $register->get('smtp');
+
+        $mail->clearAddresses();
+        $mail->clearAllRecipients();
+        $mail->clearReplyTos();
+        $mail->clearAttachments();
+        $mail->clearBCCs();
+        $mail->clearCCs();
+
+        try {
+            /** Addresses */
+            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', App::getEnv('_APP_HAMSTER_RECIPIENTS', 'shimon@appwrite.io'));
+
+            foreach ($recipients as $recipient) {
+                $mail->addAddress($recipient);
+            }
+
+            /** Attachments */
+            $mail->addAttachment($this->path);
+
+            /** Content */
+            $mail->Subject = "Cloud Report for {$this->date}";
+            $mail->Body = "Please find the daily cloud report atttached";
+
+            $mail->send();
+            Console::success('Email has been sent!');
+        } catch (Exception $e) {
+            Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        }
     }
 }
