@@ -501,7 +501,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
 
 App::delete('/v1/projects/:projectId')
     ->desc('Delete Project')
-    ->groups(['api', 'projects'])
+    ->groups(['api', 'projects', 'project_delete'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
