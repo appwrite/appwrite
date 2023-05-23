@@ -125,31 +125,6 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
     return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
-CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb');
-    /** @var InfluxDB\Client $client */
-    $attempts = 0;
-    $max = 10;
-    $sleep = 1;
-
-    do { // check if telegraf database is ready
-        try {
-            $attempts++;
-            $database = $client->selectDB('telegraf');
-            if (in_array('telegraf', $client->listDatabases())) {
-                break; // leave the do-while if successful
-            }
-        } catch (\Throwable $th) {
-            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('InfluxDB database not ready yet');
-            }
-            sleep($sleep);
-        }
-    } while ($attempts < $max);
-    return $database;
-}, ['register']);
-
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);

@@ -614,7 +614,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
-      - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-usage:
     entrypoint: worker-usage

@@ -2,52 +2,54 @@
 
 require_once __DIR__ . '/../worker.php';
 
+use Appwrite\Event\Usage;
 use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
-use Domnikl\Statsd\Client;
 use Executor\Executor;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Queue\Connection;
 use Utopia\Queue\Server;
+use Utopia\Database\Helpers\Role;
+
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-Server::setResource('execute', function () {
+Server::setResource('execute', function (Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage) {
     return function (
-        Client $statsd,
-        Database $dbForProject,
         Document $project,
         Document $function,
-        Func $queueForFunctions,
         string $trigger,
+        string $data = null,
+        ?Document $user = null,
+        string $jwt = null,
         string $event = null,
         string $eventData = null,
-        ?Document $user = null,
-        string $data = null,
         string $executionId = null,
-        string $jwt = null,
-        Connection $queueConnection,
-    ) {
+    ) use (
+        $dbForProject,
+        $queueForFunctions,
+        $queueForUsage
+) {
+
         $user ??= new Document();
         $functionId = $function->getId();
+        $functionInternalId = $function->getInternalId();
         $deploymentId = $function->getAttribute('deployment', '');
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deploymentInternalId = $deployment->getInternalId();
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
@@ -84,6 +86,8 @@ Server::setResource('execute', function () {
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
                 'functionId' => $functionId,
+                'functionInternalId' => $functionInternalId,
+                'deploymentInternalId' => $deploymentInternalId,
                 'deploymentId' => $deploymentId,
                 'trigger' => $trigger,
                 'status' => 'waiting',
@@ -91,7 +95,7 @@ Server::setResource('execute', function () {
                 'response' => '',
                 'stderr' => '',
                 'duration' => 0.0,
-                'search' => implode(' ', [$functionId, $executionId]),
+                'search' => implode(' ', [$function->getId(), $executionId]),
             ]));
 
             // TODO: @Meldiron Trigger executions.create event here
@@ -99,6 +103,14 @@ Server::setResource('execute', function () {
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
+
+            /**
+             * Usage
+             */
+
+            $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1) // per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
         }
 
         $execution->setAttribute('status', 'processing');
@@ -135,7 +147,7 @@ Server::setResource('execute', function () {
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
+                source: $build->getAttribute('outputPath', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
             );
 
@@ -165,7 +177,7 @@ Server::setResource('execute', function () {
 
         /** Trigger Webhook */
         $executionModel = new Execution();
-        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME, $queueConnection);
+        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
         $executionUpdate
             ->setProject($project)
             ->setUser($user)
@@ -205,31 +217,23 @@ Server::setResource('execute', function () {
             roles: $target['roles']
         );
 
-        /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $usage = new Stats($statsd);
-            $usage
-                ->setParam('projectId', $project->getId())
-                ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
-                ->setParam('executions.{scope}.compute', 1)
-                ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('duration'))
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0)
-                ->submit();
-        }
+        /** Trigger usage queue */
+        $queueForUsage
+            ->setProject($project)
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+            ->trigger()
+        ;
     };
-});
+}, ['dbForProject', 'queueForFunctions', 'queueForUsage']);
 
 $server->job()
     ->inject('message')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->inject('statsd')
-    ->inject('queue')
+    ->inject('queueForUsage')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, Connection $queue, callable $execute) {
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -271,20 +275,17 @@ $server->job()
                         continue;
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
+
                     $execute(
-                        statsd: $statsd,
-                        dbForProject: $dbForProject,
                         project: $project,
                         function: $function,
-                        queueForFunctions: $queueForFunctions,
                         trigger: 'event',
                         event: $events[0],
                         eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
                         user: $user,
                         data: null,
                         executionId: null,
-                        jwt: null,
-                        queueConnection: $queue
+                        jwt: null
                     );
                     Console::success('Triggered function: ' . $events[0]);
                 }
@@ -312,8 +313,7 @@ $server->job()
                     data: $data,
                     user: $user,
                     jwt: $jwt,
-                    statsd: $statsd,
-                    queueConnection: $queue
+                    queueForUsage: $queueForUsage,
                 );
                 break;
             case 'schedule':
@@ -329,8 +329,7 @@ $server->job()
                     data: null,
                     user: null,
                     jwt: null,
-                    statsd: $statsd,
-                    queueConnection: $queue
+                    queueForUsage: $queueForUsage,
                 );
                 break;
         }

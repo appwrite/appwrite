@@ -4,62 +4,74 @@ require_once __DIR__ . '/../worker.php';
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
-use Appwrite\Usage\Stats;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Message;
+use Utopia\Queue\Server;
+use Utopia\Registry\Registry;
 use Utopia\Storage\Storage;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-function buildDeployment(Document $project, Document $function, Document $deployment)
-{
-    global $register;
-    $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+Server::setResource('buildDeployment', function (Registry $register, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage) {
+    return function (
+        Document $deployment,
+        Document $project,
+        Document $function,
+    ) use (
+        $register,
+        $dbForProject,
+        $queueForFunctions,
+        $queueForUsage
+) {
 
-    $dbForProject = getProjectDB($project);
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $dbForProject = getProjectDB($project);
+        $function = $dbForProject->getDocument('functions', $function->getId());
 
-    $function = $dbForProject->getDocument('functions', $function->getId());
-    if ($function->isEmpty()) {
-        throw new Exception('Function not found', 404);
-    }
+        if ($function->isEmpty()) {
+            throw new Exception('Function not found', 404);
+        }
 
-    $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-    if ($deployment->isEmpty()) {
-        throw new Exception('Deployment not found', 404);
-    }
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        if ($deployment->isEmpty()) {
+            throw new Exception('Deployment not found', 404);
+        }
 
-    $runtimes = Config::getParam('runtimes', []);
-    $key = $function->getAttribute('runtime');
-    $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
-    if (\is_null($runtime)) {
-        throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
-    }
+        $runtimes = Config::getParam('runtimes', []);
+        $key = $function->getAttribute('runtime');
+        $runtime = $runtimes[$key] ?? null;
+        if (\is_null($runtime)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
+        }
 
-    $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
-    $device = Storage::DEVICE_LOCAL;
-    try {
-        $dsn = new DSN($connection);
-        $device = $dsn->getScheme();
-    } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
-    }
+        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
+        $device = Storage::DEVICE_LOCAL;
+        try {
+            $dsn = new DSN($connection);
+            $device = $dsn->getScheme();
+        } catch (\Exception $e) {
+            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+        }
 
-    $buildId = $deployment->getAttribute('buildId', '');
-    $startTime = DateTime::now();
-    if (empty($buildId)) {
-        $buildId = ID::unique();
-        $build = $dbForProject->createDocument('builds', new Document([
+        $buildId = $deployment->getAttribute('buildId', '');
+        $startTime = DateTime::now();
+
+        if (empty($buildId)) {
+            $buildId = ID::unique();
+            $build = $dbForProject->createDocument('builds', new Document([
             '$id' => $buildId,
             '$permissions' => [],
             'startTime' => $startTime,
@@ -73,25 +85,26 @@ function buildDeployment(Document $project, Document $function, Document $deploy
             'stdout' => '',
             'stderr' => '',
             'duration' => 0
-        ]));
-        $deployment->setAttribute('buildId', $buildId);
-        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-    } else {
-        $build = $dbForProject->getDocument('builds', $buildId);
-    }
+            ]));
+
+            $deployment->setAttribute('buildId', $buildId);
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+        } else {
+            $build = $dbForProject->getDocument('builds', $buildId);
+        }
 
     /** Request the executor to build the code... */
-    $build->setAttribute('status', 'building');
-    $build = $dbForProject->updateDocument('builds', $buildId, $build);
+        $build->setAttribute('status', 'building');
+        $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
     /** Trigger Webhook */
-    $deploymentModel = new Deployment();
+        $deploymentModel = new Deployment();
 
-    $pools = $register->get('pools');
-    $connection = $pools->get('queue')->pop()->getResource();
+        $pools = $register->get('pools');
+        $connection = $pools->get('queue')->pop()->getResource();
 
-    $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME, $connection);
-    $deploymentUpdate
+        $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME, $connection);
+        $deploymentUpdate
         ->setProject($project)
         ->setEvent('functions.[functionId].deployments.[deploymentId].update')
         ->setParam('functionId', $function->getId())
@@ -100,113 +113,28 @@ function buildDeployment(Document $project, Document $function, Document $deploy
         ->trigger();
 
     /** Trigger Functions */
-    $pools = $register->get('pools');
-    $connection = $pools->get('queue')->pop();
+        $pools = $register->get('pools');
+        $connection = $pools->get('queue')->pop();
 
-    $functions = new Func($connection->getResource());
-    $functions
+        $functions = new Func($connection->getResource());
+        $functions
         ->from($deploymentUpdate)
         ->trigger();
 
-    $connection->reclaim();
+        $connection->reclaim();
 
     /** Trigger Realtime */
-    $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
+        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
         'functionId' => $function->getId(),
         'deploymentId' => $deployment->getId()
-    ]);
-    $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
-        event: $allEvents[0],
-        payload: $build,
-        project: $project
-    );
-
-    Realtime::send(
-        projectId: 'console',
-        payload: $build->getArrayCopy(),
-        events: $allEvents,
-        channels: $target['channels'],
-        roles: $target['roles']
-    );
-
-    $source = $deployment->getAttribute('path');
-
-    $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-        $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-        return $carry;
-    }, []);
-
-    try {
-        $response = $executor->createRuntime(
-            projectId: $project->getId(),
-            deploymentId: $deployment->getId(),
-            source: $source,
-            image: $runtime['image'],
-            remove: true,
-            entrypoint: $deployment->getAttribute('entrypoint'),
-            workdir: '/usr/code',
-            destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-            variables: $vars,
-            commands: [
-                'sh', '-c',
-                'tar -zxf /tmp/code.tar.gz -C /usr/code && \
-                cd /usr/local/src/ && ./build.sh'
-            ]
-        );
-
-        /** Update the build document */
-        $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
-        $build->setAttribute('duration', \intval($response['duration']));
-        $build->setAttribute('status', $response['status']);
-        $build->setAttribute('path', $response['path']);
-        $build->setAttribute('size', $response['size']);
-        $build->setAttribute('stderr', $response['stderr']);
-        $build->setAttribute('stdout', $response['stdout']);
-
-        /* Also update the deployment buildTime */
-        $deployment->setAttribute('buildTime', $response['duration']);
-
-        Console::success("Build id: $buildId created");
-
-        $function->setAttribute('scheduleUpdatedAt', DateTime::now());
-
-        /** Set auto deploy */
-        if ($deployment->getAttribute('activate') === true) {
-            $function->setAttribute('deployment', $deployment->getId());
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
-        }
-
-        /** Update function schedule */
-        $dbForConsole = getConsoleDB();
-        $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
-
-        $schedule
-            ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-
-
-        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-    } catch (\Throwable $th) {
-        $endTime = DateTime::now();
-        $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
-        $build->setAttribute('duration', $interval->format('%s') + 0);
-        $build->setAttribute('status', 'failed');
-        $build->setAttribute('stderr', $th->getMessage());
-        Console::error($th->getMessage());
-    } finally {
-        $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
-        /**
-         * Send realtime Event
-         */
+        ]);
         $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+        // Pass first, most verbose event pattern
             event: $allEvents[0],
             payload: $build,
             project: $project
         );
+
         Realtime::send(
             projectId: 'console',
             payload: $build->getArrayCopy(),
@@ -215,28 +143,109 @@ function buildDeployment(Document $project, Document $function, Document $deploy
             roles: $target['roles']
         );
 
-        /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $statsd = $register->get('statsd');
-            $usage = new Stats($statsd);
-            $usage
-                ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('projectId', $project->getId())
-                ->setParam('functionId', $function->getId())
-                ->setParam('builds.{scope}.compute', 1)
-                ->setParam('buildStatus', $build->getAttribute('status', ''))
-                ->setParam('buildTime', $build->getAttribute('duration'))
-                ->setParam('buildSize', $build->getAttribute('size'))
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0)
-                ->submit();
+        $source = $deployment->getAttribute('path');
+
+        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            return $carry;
+        }, []);
+
+        try {
+            $response = $executor->createRuntime(
+                deploymentId: $deployment->getId(),
+                projectId: $project->getId(),
+                source: $source,
+                image: $runtime['image'],
+                remove: true,
+                entrypoint: $deployment->getAttribute('entrypoint'),
+                workdir: '/usr/code',
+                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                variables: $vars,
+                commands: [
+                'sh', '-c',
+                'tar -zxf /tmp/code.tar.gz -C /usr/code && \
+                cd /usr/local/src/ && ./build.sh'
+                ]
+            );
+
+            /** Update the build document */
+            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('duration', \intval($response['duration']));
+            $build->setAttribute('status', $response['status']);
+            $build->setAttribute('path', $response['path']);
+            $build->setAttribute('size', $response['size']);
+            $build->setAttribute('stderr', $response['stderr']);
+            $build->setAttribute('stdout', $response['stdout']);
+
+            /* Also update the deployment buildTime */
+            $deployment->setAttribute('buildTime', $response['duration']);
+
+            Console::success("Build id: $buildId created");
+
+            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
+
+            /** Set auto deploy */
+            if ($deployment->getAttribute('activate') === true) {
+                $function->setAttribute('deployment', $deployment->getId());
+                $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
+            }
+
+            /** Update function schedule */
+            $dbForConsole = getConsoleDB();
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+
+            $schedule
+            ->setAttribute('schedule', $function->getAttribute('schedule'))
+            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
+
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+        } catch (\Throwable $th) {
+            $endTime = DateTime::now();
+            $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
+            $build->setAttribute('duration', $interval->format('%s') + 0);
+            $build->setAttribute('status', 'failed');
+            $build->setAttribute('stderr', $th->getMessage());
+            Console::error($th->getMessage());
+        } finally {
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+            /**
+             * Send realtime Event
+             */
+            $target = Realtime::fromPayload(
+            // Pass first, most verbose event pattern
+                event: $allEvents[0],
+                payload: $build,
+                project: $project
+            );
+            Realtime::send(
+                projectId: 'console',
+                payload: $build->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
+
+            /** Trigger usage queue */
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_BUILDS, 1) // per project
+                ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+                ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->trigger();
         }
-    }
-}
+    };
+}, ['register', 'queueForFunctions', 'queueForUsage']);
 
 $server->job()
     ->inject('message')
-    ->action(function (Message $message) {
+    ->inject('buildDeployment')
+    ->action(function (Message $message, callable $buildDeployment) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -252,7 +261,11 @@ $server->job()
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                buildDeployment($project, $resource, $deployment);
+                $buildDeployment(
+                    $project,
+                    $resource,
+                    $deployment
+                );
                 break;
 
             default:

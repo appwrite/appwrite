@@ -11,6 +11,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
+use Appwrite\Event\Usage;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -130,7 +131,9 @@ Server::setResource('queueForFunctions', function (Connection $queue) {
 Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-
+Server::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -152,7 +155,7 @@ if (empty(App::getEnv('QUEUE'))) {
 }
 
 $adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
-$server = new Server($adapter);
+$server  = new Server($adapter);
 
 $server
     ->shutdown()
@@ -211,7 +214,7 @@ function getCache(): Cache
     global $register;
 
     $pools = $register->get('pools');
-    /** @var \Utopia\Pools\Group $pools */
+    /** @var Group $pools */
 
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
@@ -226,85 +229,50 @@ function getCache(): Cache
     return new Cache(new Sharding($adapters));
 }
 
-/**
- * Get Console DB
- *
- * @returns Database
- */
-function getConsoleDB(): Database
-{
-    global $register;
+Server::setResource('getProjectDB', function (Registry $register, Database $dbForConsole) {
+    return function (Document $project) use ($register, $dbForConsole) {
+        /** @var Group $pools */
+        $pools = $register->get('pools');
 
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
 
-    $dbAdapter = $pools
-        ->get('console')
-        ->pop()
-        ->getResource();
+        $dbAdapter = $pools
+            ->get($project->getAttribute('database'))
+            ->pop()
+            ->getResource();
 
-    $database = new Database($dbAdapter, getCache());
+        $database = new Database($dbAdapter, getCache());
+        $database->setNamespace('_' . $project->getInternalId());
 
-    $database->setNamespace('console');
-
-    return $database;
-}
-
-/**
- * Get Project DB
- *
- * @param Document $project
- * @returns Database
- */
-function getProjectDB(Document $project): Database
-{
-    global $register;
-
-    /** @var \Utopia\Pools\Group $pools */
-    $pools = $register->get('pools');
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return getConsoleDB();
-    }
-
-    $dbAdapter = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource();
-
-    $database = new Database($dbAdapter, getCache());
-    $database->setNamespace('_' . $project->getInternalId());
-
-    return $database;
-}
-
+        return $database;
+    };
+}, ['register']);
 
 /**
  * Get Functions Storage Device
  * @param string $projectId of the project
  * @return Device
  */
-function getFunctionsDevice($projectId): Device
-{
+Server::setResource('getFunctionsDevice', function (string $projectId) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
-}
+});
 
 /**
  * Get Files Storage Device
  * @param string $projectId of the project
  * @return Device
  */
-function getFilesDevice($projectId): Device
-{
+Server::setResource('getFilesDevice', function (string $projectId) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
-}
+});
 
 /**
  * Get Builds Storage Device
  * @param string $projectId of the project
  * @return Device
  */
-function getBuildsDevice($projectId): Device
-{
+Server::setResource('getBuildsDevice', function (string $projectId) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
-}
+});

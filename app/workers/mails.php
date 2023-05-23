@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Template\Template;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
@@ -8,37 +9,12 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
+use Utopia\Registry\Registry;
 
 require_once __DIR__ . '/../worker.php';
 
-
 Authorization::disable();
 Authorization::setDefaultStatus(false);
-
-/*
-     * Returns a prefix from a mail type
-     *
-     * @param $type
-     *
-     * @return string
-     */
-function getPrefix(string $type): string
-{
-    switch ($type) {
-        case MAIL_TYPE_RECOVERY:
-            return 'emails.recovery';
-        case MAIL_TYPE_CERTIFICATE:
-            return 'emails.certificate';
-        case MAIL_TYPE_INVITATION:
-            return 'emails.invitation';
-        case MAIL_TYPE_VERIFICATION:
-            return 'emails.verification';
-        case MAIL_TYPE_MAGIC_SESSION:
-            return 'emails.magicSession';
-        default:
-            throw new Exception('Undefined Mail Type : ' . $type, 500);
-    }
-}
 
 /**
  * Returns true if all the required terms in a locale exist. False otherwise
@@ -48,26 +24,27 @@ function getPrefix(string $type): string
  *
  * @return bool
  */
-function doesLocaleExist(Locale $locale, string $prefix): bool
-{
+Server::setResource('doesLocaleExist', function () {
+    return function (Locale $locale, string $prefix) {
 
-    if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
-        return false;
-    }
+        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
+            return false;
+        }
 
-    return true;
-}
+        return true;
+    };
+});
 
 $server->job()
     ->inject('message')
-    ->action(function (Message $message) {
+    ->inject('doesLocaleExist')
+    ->inject('register')
+    ->action(function (Message $message, callable $doesLocaleExist, Registry $register) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
-
-        global $register;
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             Console::info('Skipped mail processing. No SMTP server hostname has been set.');
@@ -82,41 +59,50 @@ $server->job()
         $url = $payload['url'];
         $name = $payload['name'];
         $type = $payload['type'];
-        $prefix = getPrefix($type);
+
+        $prefix = match ($type) {
+            MAIL_TYPE_RECOVERY => 'emails.recovery',
+            MAIL_TYPE_CERTIFICATE => 'emails.certificate',
+            MAIL_TYPE_INVITATION => 'emails.invitation',
+            MAIL_TYPE_VERIFICATION => 'emails.verification',
+            MAIL_TYPE_MAGIC_SESSION => 'emails.magicSession',
+            default => throw new Exception('Undefined Mail Type : ' . $type, 500)
+        };
+
         $locale = new Locale($payload['locale']);
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-        if (!doesLocaleExist($locale, $prefix)) {
-            $locale->setDefault('en');
-        }
+    if (!$doesLocaleExist($locale, $prefix)) {
+        $locale->setDefault('en');
+    }
 
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
-        switch ($type) {
-            case MAIL_TYPE_CERTIFICATE:
-                $domain = $payload['domain'];
-                $error = $payload['error'];
-                $attempt = $payload['attempt'];
+    switch ($type) {
+        case MAIL_TYPE_CERTIFICATE:
+            $domain = $payload['domain'];
+            $error = $payload['error'];
+            $attempt = $payload['attempt'];
 
-                $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
-                $body->setParam('{{domain}}', $domain);
-                $body->setParam('{{error}}', $error);
-                $body->setParam('{{attempt}}', $attempt);
-                break;
-            case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
-                break;
-            case MAIL_TYPE_RECOVERY:
-            case MAIL_TYPE_VERIFICATION:
-            case MAIL_TYPE_MAGIC_SESSION:
-                $subject = $locale->getText("$prefix.subject");
-                break;
-            default:
-                throw new Exception('Undefined Mail Type : ' . $type, 500);
-        }
+            $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
+            $body->setParam('{{domain}}', $domain);
+            $body->setParam('{{error}}', $error);
+            $body->setParam('{{attempt}}', $attempt);
+            break;
+        case MAIL_TYPE_INVITATION:
+            $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
+            $body->setParam('{{owner}}', $user->getAttribute('name'));
+            $body->setParam('{{team}}', $team->getAttribute('name'));
+            break;
+        case MAIL_TYPE_RECOVERY:
+        case MAIL_TYPE_VERIFICATION:
+        case MAIL_TYPE_MAGIC_SESSION:
+            $subject = $locale->getText("$prefix.subject");
+            break;
+        default:
+            throw new Exception('Undefined Mail Type : ' . $type, 500);
+    }
 
         $body
             ->setParam('{{subject}}', $subject)
@@ -135,7 +121,7 @@ $server->job()
 
         $body = $body->render();
 
-        /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
+        /** @var PHPMailer $mail */
         $mail = $register->get('smtp');
 
         // Set project mail
@@ -161,11 +147,11 @@ $server->job()
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
 
-        try {
-            $mail->send();
-        } catch (\Exception $error) {
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
-        }
+    try {
+        $mail->send();
+    } catch (\Exception $error) {
+        throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+    }
     });
 
 $server->workerStart();

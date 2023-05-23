@@ -12,9 +12,8 @@ use Utopia\Queue\Server;
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-Server::setResource('execute', function () {
+Server::setResource('execute', function (Database $dbForProject) {
     return function (
-        Database $dbForProject,
         string $event,
         array $payload,
         string $mode,
@@ -23,7 +22,7 @@ Server::setResource('execute', function () {
         string $ip,
         Document $user,
         Document $project
-    ) {
+    ) use ($dbForProject) {
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
 
@@ -45,13 +44,13 @@ Server::setResource('execute', function () {
             ]
         );
     };
-});
+}, ['dbForProject']);
 
 $server->job()
     ->inject('message')
     ->inject('dbForProject')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, callable $execute) {
+    ->action(function (Message $message, callable $execute) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -68,7 +67,6 @@ $server->job()
         $user = new Document($payload['user'] ?? []);
 
         $execute(
-            $dbForProject,
             $event,
             $auditPayload,
             $mode,
