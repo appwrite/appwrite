@@ -129,6 +129,7 @@ App::post('/v1/projects')
                 'domains' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
+                'database' => $database
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
