@@ -39,6 +39,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Appwrite\Template\Template;
 use Utopia\Locale\Locale;
+use PHPMailer\PHPMailer\PHPMailer;
 
 App::init()
     ->groups(['projects'])
@@ -1632,6 +1633,21 @@ App::patch('/v1/projects/:projectId/smtp')
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        // validate SMTP settings
+        $mail = new PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Username = $username;
+        $mail->Password = $password;
+        $mail->Host = $host;
+        $mail->Port = $port;
+        $mail->SMTPSecure = $secure;
+        $mail->SMTPAutoTLS = false;
+        $valid = $mail->SmtpConnect();
+
+        if(!$valid) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
         $smtp = [

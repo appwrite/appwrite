@@ -524,6 +524,11 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::PROJECT_SMTP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
+        'description' => 'Provided SMTP config is invalid.',
+        'code' => 400,
+    ],
     Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'The default template for the project cannot be deleted.',
