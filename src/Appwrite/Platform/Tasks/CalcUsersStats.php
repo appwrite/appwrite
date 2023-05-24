@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
-use League\Csv\Reader;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
@@ -15,7 +14,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 
-class UsersCalc extends Action
+class CalcUsersStats extends Action
 {
     private array $columns = [
         'Project ID',
@@ -29,7 +28,7 @@ class UsersCalc extends Action
 
     public static function getName(): string
     {
-        return 'users-calc';
+        return 'calc-users-stats';
     }
 
     public function __construct()
@@ -48,6 +47,7 @@ class UsersCalc extends Action
 
     public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
     {
+        //docker compose exec -t appwrite calc-users-stats
 
         Console::title('Cloud Users calculation V1');
         Console::success(APP_NAME . ' cloud Users calculation has started');
@@ -141,7 +141,7 @@ class UsersCalc extends Action
         try {
             /** Addresses */
             $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_HAMSTER_RECIPIENTS', 'shimon@appwrite.io'));
+            $recipients = explode(',', App::getEnv('_APP_HAMSTER_RECIPIENTS', ''));
 
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);
@@ -153,7 +153,6 @@ class UsersCalc extends Action
             /** Content */
             $mail->Subject = "Cloud Report for {$this->date}";
             $mail->Body = "Please find the daily cloud report atttached";
-
             $mail->send();
             Console::success('Email has been sent!');
         } catch (Exception $e) {
