@@ -72,6 +72,7 @@
         "influxdb/influxdb-php": "1.15.2",
         "phpmailer/phpmailer": "6.6.0",
         "chillerlan/php-qrcode": "4.3.3",
+        "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0",
         "league/csv": "9.7.1"
     },
