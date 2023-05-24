@@ -544,10 +544,11 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
-        return [
-            'databaseId' => $databaseId,
-            'collectionId' => $test1['body']['$id'],
-        ];
+        return
+            [
+                'databaseId' => $databaseId,
+                'collectionId' => $test1['body']['$id'],
+            ];
     }
 
     /**
