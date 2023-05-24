@@ -20,8 +20,8 @@ class CalcUsersStats extends Action
         'Project ID',
         'Project Name',
         'Team ID',
-         'Team name',
-         'Users'
+        'Team name',
+        'Users'
     ];
 
     protected string $directory = '/usr/local';
