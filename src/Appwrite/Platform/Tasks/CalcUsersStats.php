@@ -155,7 +155,7 @@ class CalcUsersStats extends Action
         try {
             /** Addresses */
             $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_HAMSTER_RECIPIENTS', ''));
+            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
 
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);
