@@ -73,7 +73,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
     $options = $attribute->getAttribute('options', []);
 
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -193,16 +193,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
         ->setCollection($collection)
-        ->setDocument($attribute)
-    ;
+        ->setDocument($attribute);
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId())
-    ;
+        ->setParam('attributeId', $attribute->getId());
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
@@ -224,7 +222,7 @@ function updateAttribute(
     array $elements = null,
     array $options = []
 ): Document {
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -262,7 +260,7 @@ function updateAttribute(
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
     }
 
-    $collectionId =  'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
+    $collectionId = 'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
 
     $attribute
         ->setAttribute('default', $default)
@@ -509,7 +507,7 @@ App::get('/v1/databases/:databaseId')
     ->inject('dbForProject')
     ->action(function (string $databaseId, Response $response, Database $dbForProject) {
 
-        $database =  $dbForProject->getDocument('databases', $databaseId);
+        $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -627,7 +625,7 @@ App::put('/v1/databases/:databaseId')
     ->inject('events')
     ->action(function (string $databaseId, string $name, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
-        $database =  $dbForProject->getDocument('databases', $databaseId);
+        $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -685,13 +683,11 @@ App::delete('/v1/databases/:databaseId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($database)
-        ;
+            ->setDocument($database);
 
         $events
             ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, Response::MODEL_DATABASE))
-        ;
+            ->setPayload($response->output($database, Response::MODEL_DATABASE));
 
         $response->noContent();
     });
@@ -724,9 +720,9 @@ App::post('/v1/databases/:databaseId/collections')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled'))) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -786,9 +782,9 @@ App::get('/v1/databases/:databaseId/collections')
     ->inject('dbForProject')
     ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled'))) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -841,9 +837,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -879,7 +875,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('geodb')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -980,9 +976,9 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -1045,9 +1041,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('deletes')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -1065,15 +1061,13 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($collection)
-        ;
+            ->setDocument($collection);
 
         $events
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
-            ->setPayload($response->output($collection, Response::MODEL_COLLECTION))
-        ;
+            ->setPayload($response->output($collection, Response::MODEL_COLLECTION));
 
         $response->noContent();
     });
@@ -1598,7 +1592,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         Database $dbForProject,
         EventDatabase $database,
         Event $events
-) {
+    ) {
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
@@ -1658,7 +1652,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1709,7 +1703,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2182,7 +2176,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             $events,
             type: Database::VAR_RELATIONSHIP,
             required: false,
-            options : [
+            options: [
                 'onDelete' => $onDelete
             ]
         );
@@ -2223,7 +2217,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2276,8 +2270,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setType(DATABASE_TYPE_DELETE_ATTRIBUTE)
             ->setCollection($collection)
             ->setDatabase($db)
-            ->setDocument($attribute)
-        ;
+            ->setDocument($attribute);
 
         // Select response model based on type and format
         $type = $attribute->getAttribute('type');
@@ -2305,8 +2298,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
             ->setParam('attributeId', $attribute->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $db)
-            ->setPayload($response->output($attribute, $model))
-        ;
+            ->setPayload($response->output($attribute, $model));
 
         $response->noContent();
     });
@@ -2340,7 +2332,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2363,7 +2355,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         // Convert Document[] to array of attribute metadata
-        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldAttributes = \array_map(fn($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
         $oldAttributes[] = [
             'key' => '$id',
@@ -2449,16 +2441,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->setType(DATABASE_TYPE_CREATE_INDEX)
             ->setDatabase($db)
             ->setCollection($collection)
-            ->setDocument($index)
-        ;
+            ->setDocument($index);
 
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
             ->setContext('collection', $collection)
-            ->setContext('database', $db)
-        ;
+            ->setContext('database', $db);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -2485,7 +2475,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2525,7 +2515,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2576,7 +2566,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2604,8 +2594,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setType(DATABASE_TYPE_DELETE_INDEX)
             ->setDatabase($db)
             ->setCollection($collection)
-            ->setDocument($index)
-        ;
+            ->setDocument($index);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -2613,8 +2602,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setParam('indexId', $index->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $db)
-            ->setPayload($response->output($index, Response::MODEL_INDEX))
-        ;
+            ->setPayload($response->output($index, Response::MODEL_INDEX));
 
         $response->noContent();
     });
@@ -2665,7 +2653,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -2740,7 +2728,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2819,7 +2807,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2852,8 +2840,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
-            ->setContext('database', $database)
-        ;
+            ->setContext('database', $database);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2883,9 +2870,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -2945,7 +2932,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2961,8 +2948,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(fn() =>
-                    $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $relatedCollection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
                     if ($doc instanceof Document) {
@@ -2982,7 +2968,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             return true;
         };
 
-    // The linter is forcing this indentation
+        // The linter is forcing this indentation
     foreach ($documents as $document) {
         $processDocument($collection, $document);
     }
@@ -3018,9 +3004,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -3058,7 +3044,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3113,7 +3099,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('geodb')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -3230,9 +3216,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -3309,7 +3295,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3377,7 +3363,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     try {
         $document = $dbForProject->withRequestTimestamp(
             $requestTimestamp,
-            fn () => $dbForProject->updateDocument(
+            fn() => $dbForProject->updateDocument(
                 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                 $document->getId(),
                 $newDocument
@@ -3398,7 +3384,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3431,8 +3417,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
-            ->setContext('database', $database)
-        ;
+            ->setContext('database', $database);
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -3469,9 +3454,9 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty()) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -3506,7 +3491,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3537,7 +3522,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $checkPermissions($collection, $document);
 
-        Authorization::skip(fn () => $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
+        Authorization::skip(fn() => $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
             try {
                 $dbForProject->deleteDocument(
                     'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
@@ -3560,7 +3545,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3590,8 +3575,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $deletes
             ->setType(DELETE_TYPE_AUDIT)
-            ->setDocument($document)
-        ;
+            ->setDocument($document);
 
         $events
             ->setParam('databaseId', $databaseId)
@@ -3599,8 +3583,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database)
-            ->setPayload($response->output($document, Response::MODEL_DOCUMENT))
-        ;
+            ->setPayload($response->output($document, Response::MODEL_DOCUMENT));
 
         $response->noContent();
     });
@@ -3705,16 +3688,16 @@ App::get('/v1/databases/usage')
                 'databasesCount' => $stats['databases.$all.count.total'] ?? [],
                 'documentsCount' => $stats['documents.$all.count.total'] ?? [],
                 'collectionsCount' => $stats['collections.$all.count.total'] ?? [],
-                'documentsCreate' =>  $stats['documents.$all.requests.create'] ?? [],
-                'documentsRead' =>  $stats['documents.$all.requests.read'] ?? [],
+                'documentsCreate' => $stats['documents.$all.requests.create'] ?? [],
+                'documentsRead' => $stats['documents.$all.requests.read'] ?? [],
                 'documentsUpdate' => $stats['documents.$all.requests.update'] ?? [],
                 'documentsDelete' => $stats['documents.$all.requests.delete'] ?? [],
                 'collectionsCreate' => $stats['collections.$all.requests.create'] ?? [],
-                'collectionsRead' =>  $stats['collections.$all.requests.read'] ?? [],
+                'collectionsRead' => $stats['collections.$all.requests.read'] ?? [],
                 'collectionsUpdate' => $stats['collections.$all.requests.update'] ?? [],
                 'collectionsDelete' => $stats['collections.$all.requests.delete'] ?? [],
                 'databasesCreate' => $stats['databases.$all.requests.create'] ?? [],
-                'databasesRead' =>  $stats['databases.$all.requests.read'] ?? [],
+                'databasesRead' => $stats['databases.$all.requests.read'] ?? [],
                 'databasesUpdate' => $stats['databases.$all.requests.update'] ?? [],
                 'databasesDelete' => $stats['databases.$all.requests.delete'] ?? [],
             ]);
@@ -3818,12 +3801,12 @@ App::get('/v1/databases/:databaseId/usage')
                 'range' => $range,
                 'collectionsCount' => $stats["collections.{$databaseId}.count.total"] ?? [],
                 'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"] ?? [],
-                'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"] ?? [],
+                'collectionsRead' => $stats["collections.{$databaseId}.requests.read"] ?? [],
                 'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"] ?? [],
                 'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"] ?? [],
                 'documentsCount' => $stats["documents.{$databaseId}.count.total"] ?? [],
-                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"] ?? [],
-                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"] ?? [],
+                'documentsCreate' => $stats["documents.{$databaseId}.requests.create"] ?? [],
+                'documentsRead' => $stats["documents.{$databaseId}.requests.read"] ?? [],
                 'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"] ?? [],
                 'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"] ?? [],
             ]);
@@ -3933,8 +3916,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"] ?? [],
                 'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"] ?? [],
                 'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"] ?? [],
-                'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"] ?? [],
-                'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete" ?? []]
+                'documentsUpdate' => $stats["documents.{$databaseId}/{$collectionId}.requests.update"] ?? [],
+                'documentsDelete' => $stats["documents.{$databaseId}/{$collectionId}.requests.delete" ?? []]
             ]);
         }
 
