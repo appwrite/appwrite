@@ -41,7 +41,7 @@ Server::setResource('execute', function () {
         string $executionId = null,
     ) {
         $error = null; // Used to re-throw at the end to trigger Logger (Sentry)
-        
+
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
@@ -222,7 +222,7 @@ Server::setResource('execute', function () {
                 ->submit();
         }
 
-        if(!empty($error)) {
+        if (!empty($error)) {
             $projectId = $project->getId();
             throw new Exception("Error in project #{$projectId}, function #{$functionId}: " . $error);
         }
