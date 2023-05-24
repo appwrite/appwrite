@@ -135,9 +135,6 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
