@@ -20,6 +20,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
 use Utopia\Queue\Server;
 
 Authorization::disable();
@@ -27,6 +28,7 @@ Authorization::setDefaultStatus(false);
 
 Server::setResource('execute', function () {
     return function (
+        Log $log,
         Func $queueForFunctions,
         Database $dbForProject,
         Client $statsd,
@@ -45,6 +47,9 @@ Server::setResource('execute', function () {
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
+
+        $log->addExtra('functionId', $functionId);
+        $log->addExtra('projectId', $project->getId());
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -223,8 +228,7 @@ Server::setResource('execute', function () {
         }
 
         if (!empty($error)) {
-            $projectId = $project->getId();
-            throw new Exception("Error in project #{$projectId}, function #{$functionId}: " . $error);
+            throw new Exception($error);
         }
     };
 });
@@ -235,7 +239,8 @@ $server->job()
     ->inject('queueForFunctions')
     ->inject('statsd')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute) {
+    ->inject('log')
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute, Log $log) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -278,6 +283,7 @@ $server->job()
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
+                        log: $log,
                         statsd: $statsd,
                         dbForProject: $dbForProject,
                         project: $project,
@@ -306,6 +312,7 @@ $server->job()
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $execute(
+                    log: $log,
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
@@ -322,6 +329,7 @@ $server->job()
                 break;
             case 'schedule':
                 $execute(
+                    log: $log,
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,

@@ -85,6 +85,8 @@ Server::setResource('queueForFunctions', function (Registry $register) {
     );
 }, ['register']);
 
+Server::setResource('log', fn() => new Log());
+
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -119,7 +121,8 @@ $server
     ->error()
     ->inject('error')
     ->inject('logger')
-    ->action(function (Throwable $error, Logger $logger) {
+    ->inject('log')
+    ->action(function (Throwable $error, Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -127,8 +130,6 @@ $server
         }
 
         if ($error->getCode() >= 500 || $error->getCode() === 0) {
-            $log = new Log();
-
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
