@@ -105,15 +105,17 @@ class CalcUsersStats extends Action
 
                     /** Get Team Name and Id */
                     $teamId = $project->getAttribute('teamId', null);
+                    $teamName = null;
                     if ($teamId) {
                         $team = $dbForConsole->getDocument('teams', $teamId);
+                        $teamName = $team->getAttribute('name');
                     }
 
-                    $stats['Team ID'] = $team->getId() ?? 'N/A';
-                    $stats['Team name'] = $team->getAttribute('name', 'N/A');
+                    $stats['Team ID']   = $teamId;
+                    $stats['Team name'] = $teamName;
 
                     /** Get Total Users */
-                    $stats['users'] = $dbForProject->count('users', [], APP_LIMIT_COUNT);
+                    $stats['users'] = $dbForProject->count('users', []);
 
                     $csv->insertOne(array_values($stats));
                 } catch (\Throwable $th) {
