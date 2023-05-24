@@ -20,6 +20,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
 use Utopia\Queue\Server;
 
 Authorization::disable();
@@ -27,6 +28,7 @@ Authorization::setDefaultStatus(false);
 
 Server::setResource('execute', function () {
     return function (
+        Log $log,
         Func $queueForFunctions,
         Database $dbForProject,
         Client $statsd,
@@ -40,9 +42,15 @@ Server::setResource('execute', function () {
         string $eventData = null,
         string $executionId = null,
     ) {
+        $error = null; // Used to re-throw at the end to trigger Logger (Sentry)
+        $errorCode = 0;
+
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
+
+        $log->addExtra('functionId', $functionId);
+        $log->addExtra('projectId', $project->getId());
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -153,10 +161,8 @@ Server::setResource('execute', function () {
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
 
-            Console::error($th->getTraceAsString());
-            Console::error($th->getFile());
-            Console::error($th->getLine());
-            Console::error($th->getMessage());
+            $error = $th->getMessage();
+            $errorCode = $th->getCode();
         }
 
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
@@ -217,6 +223,10 @@ Server::setResource('execute', function () {
                 ->setParam('networkResponseSize', 0)
                 ->submit();
         }
+
+        if (!empty($error)) {
+            throw new Exception($error, $errorCode);
+        }
     };
 });
 
@@ -226,7 +236,8 @@ $server->job()
     ->inject('queueForFunctions')
     ->inject('statsd')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute) {
+    ->inject('log')
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute, Log $log) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -269,6 +280,7 @@ $server->job()
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
+                        log: $log,
                         statsd: $statsd,
                         dbForProject: $dbForProject,
                         project: $project,
@@ -297,6 +309,7 @@ $server->job()
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $execute(
+                    log: $log,
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
@@ -313,6 +326,7 @@ $server->job()
                 break;
             case 'schedule':
                 $execute(
+                    log: $log,
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
