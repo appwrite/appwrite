@@ -19,6 +19,7 @@ use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
+use Appwrite\Platform\Tasks\CalcUsersStats;
 
 class Tasks extends Service
 {
@@ -41,6 +42,7 @@ class Tasks extends Service
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(VolumeSync::getName(), new VolumeSync())
-            ->addAction(Specs::getName(), new Specs());
+            ->addAction(Specs::getName(), new Specs())
+            ->addAction(CalcUsersStats::getName(), new CalcUsersStats());
     }
 }
