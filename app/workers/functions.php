@@ -40,6 +40,8 @@ Server::setResource('execute', function () {
         string $eventData = null,
         string $executionId = null,
     ) {
+        $error = null; // Used to re-throw at the end to trigger Logger (Sentry)
+        
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
@@ -157,6 +159,8 @@ Server::setResource('execute', function () {
             Console::error($th->getFile());
             Console::error($th->getLine());
             Console::error($th->getMessage());
+
+            $error = $th->getMessage();
         }
 
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
@@ -216,6 +220,11 @@ Server::setResource('execute', function () {
                 ->setParam('networkRequestSize', 0)
                 ->setParam('networkResponseSize', 0)
                 ->submit();
+        }
+
+        if(!empty($error)) {
+            $projectId = $project->getId();
+            throw new Exception("Error in project #{$projectId}, function #{$functionId}: " . $error);
         }
     };
 });
