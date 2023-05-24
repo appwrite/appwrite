@@ -721,8 +721,8 @@ App::post('/v1/databases/:databaseId/collections')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
     ->inject('mode')
+    ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $events) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
