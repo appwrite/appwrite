@@ -19,7 +19,9 @@ class CalcUsersStats extends Action
     private array $columns = [
         'Project ID',
         'Project Name',
-        'Users'
+        'Team ID',
+         'Team name',
+         'Users'
     ];
 
     protected string $directory = '/usr/local';
@@ -99,6 +101,16 @@ class CalcUsersStats extends Action
 
                     /** Get Project Name */
                     $stats['Project Name'] = $project->getAttribute('name');
+
+
+                    /** Get Team Name and Id */
+                    $teamId = $project->getAttribute('teamId', null);
+                    if ($teamId) {
+                        $team = $dbForConsole->getDocument('teams', $teamId);
+                    }
+
+                    $stats['Team ID'] = $team->getId() ?? 'N/A';
+                    $stats['Team name'] = $team->getAttribute('name', 'N/A');
 
                     /** Get Total Users */
                     $stats['users'] = $dbForProject->count('users', [], APP_LIMIT_COUNT);
