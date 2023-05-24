@@ -73,7 +73,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
     $options = $attribute->getAttribute('options', []);
 
-    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -193,14 +193,16 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
         ->setCollection($collection)
-        ->setDocument($attribute);
+        ->setDocument($attribute)
+    ;
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId());
+        ->setParam('attributeId', $attribute->getId())
+    ;
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
@@ -222,7 +224,7 @@ function updateAttribute(
     array $elements = null,
     array $options = []
 ): Document {
-    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -260,7 +262,7 @@ function updateAttribute(
         throw new Exception(Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED, 'Cannot set default value for array attributes');
     }
 
-    $collectionId = 'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
+    $collectionId =  'database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId();
 
     $attribute
         ->setAttribute('default', $default)
@@ -683,11 +685,13 @@ App::delete('/v1/databases/:databaseId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($database);
+            ->setDocument($database)
+        ;
 
         $events
             ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, Response::MODEL_DATABASE));
+            ->setPayload($response->output($database, Response::MODEL_DATABASE))
+        ;
 
         $response->noContent();
     });
@@ -719,7 +723,7 @@ App::post('/v1/databases/:databaseId/collections')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $events) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
