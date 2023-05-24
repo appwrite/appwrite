@@ -482,6 +482,8 @@ services:
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_PROVIDER
 
   appwrite-worker-mails:
     entrypoint: worker-mails

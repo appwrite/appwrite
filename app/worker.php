@@ -129,7 +129,7 @@ $server
             throw $error;
         }
 
-        if ($error->getCode() >= 500 || $error->getCode() === 0) {
+        if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
@@ -147,7 +147,8 @@ $server
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $logger->addLog($log);
+            $responseCode = $logger->addLog($log);
+            Console::info('Usage stats log pushed with status code: ' . $responseCode);
         }
 
         Console::error('[Error] Type: ' . get_class($error));

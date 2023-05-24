@@ -43,6 +43,7 @@ Server::setResource('execute', function () {
         string $executionId = null,
     ) {
         $error = null; // Used to re-throw at the end to trigger Logger (Sentry)
+        $errorCode = 0;
 
         $user ??= new Document();
         $functionId = $function->getId();
@@ -160,12 +161,8 @@ Server::setResource('execute', function () {
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
 
-            Console::error($th->getTraceAsString());
-            Console::error($th->getFile());
-            Console::error($th->getLine());
-            Console::error($th->getMessage());
-
             $error = $th->getMessage();
+            $errorCode = $th->getCode();
         }
 
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
@@ -228,7 +225,7 @@ Server::setResource('execute', function () {
         }
 
         if (!empty($error)) {
-            throw new Exception($error);
+            throw new Exception($error, $errorCode);
         }
     };
 });
