@@ -27,6 +27,7 @@ class DatabasesConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+        $this->assertTrue($database['body']['enabled']);
 
         $databaseId = $database['body']['$id'];
         /**
@@ -49,6 +50,38 @@ class DatabasesConsoleClientTest extends Scope
 
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
+
+        /**
+         * Test When database is disabled but can still create collections
+         */
+        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'name' => 'invalidDocumentDatabase Updated',
+            'enabled' => false,
+        ]);
+
+        $this->assertFalse($database['body']['enabled']);
+
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'collectionId' => ID::unique(),
+            'name' => 'TvShows',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $movies['headers']['status-code']);
+        $this->assertEquals($movies['body']['name'], 'TvShows');
 
         return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
     }
