@@ -2998,7 +2998,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $project['headers']['status-code']);
 
         // Delete Project
-        $team = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+        $project = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
