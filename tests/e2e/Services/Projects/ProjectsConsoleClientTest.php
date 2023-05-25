@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Extend\Exception;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
@@ -98,7 +99,37 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        return ['projectId' => $projectId];
+        return [
+            'projectId' => $projectId,
+            'teamId' => $team['body']['$id']
+        ];
+    }
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateDuplicateProject($data)
+    {
+        $teamId = $data['teamId'] ?? '';
+        $projectId = $data['projectId'] ?? '';
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $projectId,
+            'name' => 'Project Duplicate',
+            'teamId' => $teamId,
+            'region' => 'default'
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(409, $response['body']['code']);
+        $this->assertEquals(Exception::PROJECT_ALREADY_EXISTS, $response['body']['type']);
+        $this->assertEquals('Project with the requested ID already exists.', $response['body']['message']);
     }
 
     /**
