@@ -166,6 +166,71 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
         ]), Response::MODEL_REPOSITORY_LIST);
     });
 
+$createGitDeployments = function (array $vcsRepos, string $branchName, string $SHA, Database $dbForConsole, callable $getProjectDB, Request $request) {
+    foreach ($vcsRepos as $resource) {
+        $resourceType = $resource->getAttribute('resourceType');
+
+        if ($resourceType === "function") {
+            $projectId = $resource->getAttribute('projectId');
+            //TODO: Why is Authorization::skip needed?
+            $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+            $dbForProject = $getProjectDB($project);
+
+            $functionId = $resource->getAttribute('resourceId');
+            //TODO: Why is Authorization::skip needed?
+            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+            $deploymentId = ID::unique();
+            $vcsRepoId = $resource->getId();
+            $vcsRepoInternalId = $resource->getInternalId();
+            $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
+            $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
+            $productionBranch = $resource->getAttribute('branch', 'main');
+            $activate = false;
+
+            if ($branchName == $productionBranch) {
+                $activate = true;
+            }
+
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $functionId,
+                'resourceType' => 'functions',
+                'entrypoint' => $function->getAttribute('entrypoint'),
+                'installCommand' => $function->getAttribute('installCommand'),
+                'buildCommand' => $function->getAttribute('buildCommand'),
+                'type' => 'vcs',
+                'vcsInstallationId' => $vcsInstallationId,
+                'vcsInstallationInternalId' => $vcsInstallationInternalId,
+                'vcsRepoId' => $vcsRepoId,
+                'vcsRepoInternalId' => $vcsRepoInternalId,
+                'branch' => $branchName,
+                'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
+                'activate' => $activate,
+            ]));
+
+            // TODO: Figure out port
+            $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$projectId/functions/function-$functionId";
+
+            $buildEvent = new Build();
+            $buildEvent
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setTargetUrl($targetUrl)
+                ->setSHA($SHA)
+                ->setProject($project)
+                ->trigger();
+
+            //TODO: Add event?
+        }
+    }
+};
+
 App::post('/v1/vcs/github/incomingwebhook')
     ->desc('Captures GitHub Webhook Events')
     ->groups(['api', 'vcs'])
@@ -175,7 +240,7 @@ App::post('/v1/vcs/github/incomingwebhook')
     ->inject('dbForConsole')
     ->inject('getProjectDB')
     ->action(
-        function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) {
+        function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
             $event = $request->getHeader('x-github-event', '');
             $payload = $request->getRawPayload();
             $github = new GitHub();
@@ -191,74 +256,12 @@ App::post('/v1/vcs/github/incomingwebhook')
                 $owner = $parsedPayload["owner"];
 
                 //find functionId from functions table
-                $resources = $dbForConsole->find('vcs_repos', [
+                $vcsRepos = $dbForConsole->find('vcs_repos', [
                     Query::equal('repositoryId', [$repositoryId]),
                     Query::limit(100),
                 ]);
 
-                foreach ($resources as $resource) {
-                    $resourceType = $resource->getAttribute('resourceType');
-
-                    if ($resourceType === "function") {
-                        $projectId = $resource->getAttribute('projectId');
-                        //TODO: Why is Authorization::skip needed?
-                        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-                        $dbForProject = $getProjectDB($project);
-
-                        $functionId = $resource->getAttribute('resourceId');
-                        //TODO: Why is Authorization::skip needed?
-                        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-                        $deploymentId = ID::unique();
-                        $vcsRepoId = $resource->getId();
-                        $vcsRepoInternalId = $resource->getInternalId();
-                        $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
-                        $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
-                        $productionBranch = $resource->getAttribute('branch', 'main');
-                        $activate = false;
-
-                        // TODO: Configurable in function settings
-                        if ($branchName == $productionBranch) {
-                            $activate = true;
-                        }
-
-                        $deployment = $dbForProject->createDocument('deployments', new Document([
-                            '$id' => $deploymentId,
-                            '$permissions' => [
-                                Permission::read(Role::any()),
-                                Permission::update(Role::any()),
-                                Permission::delete(Role::any()),
-                            ],
-                            'resourceId' => $functionId,
-                            'resourceType' => 'functions',
-                            'entrypoint' => $function->getAttribute('entrypoint'),
-                            'installCommand' => $function->getAttribute('installCommand'),
-                            'buildCommand' => $function->getAttribute('buildCommand'),
-                            'type' => 'vcs',
-                            'vcsInstallationId' => $vcsInstallationId,
-                            'vcsInstallationInternalId' => $vcsInstallationInternalId,
-                            'vcsRepoId' => $vcsRepoId,
-                            'vcsRepoInternalId' => $vcsRepoInternalId,
-                            'branch' => $branchName,
-                            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
-                            'activate' => $activate,
-                        ]));
-
-                        // TODO: Figure out port
-                        $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$projectId/functions/function-$functionId";
-
-                        $buildEvent = new Build();
-                        $buildEvent
-                            ->setType(BUILD_TYPE_DEPLOYMENT)
-                            ->setResource($function)
-                            ->setDeployment($deployment)
-                            ->setTargetUrl($targetUrl)
-                            ->setSHA($SHA)
-                            ->setProject($project)
-                            ->trigger();
-
-                        //TODO: Add event?
-                    }
-                }
+                $createGitDeployments($vcsRepos, $branchName, $SHA, $dbForConsole, $getProjectDB, $request);
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead
@@ -284,7 +287,6 @@ App::post('/v1/vcs/github/incomingwebhook')
                 }
             } elseif ($event == $github::EVENT_PULL_REQUEST) {
                 if ($parsedPayload["action"] == "opened" or $parsedPayload["action"] == "reopened") {
-                    $startNewDeployment = false;
                     $branchName = $parsedPayload["branch"];
                     $repositoryId = $parsedPayload["repositoryId"];
                     $installationId = $parsedPayload["installationId"];
@@ -298,9 +300,12 @@ App::post('/v1/vcs/github/incomingwebhook')
                         Query::orderDesc('$createdAt')
                     ]);
 
+                    if (\count($vcsRepos) === 0) {
+                        $createGitDeployments($vcsRepos, $branchName, '', $dbForConsole, $getProjectDB, $request);
+                    }
+
                     // TODO: Use for loop instead
                     $vcsRepo = $vcsRepos[0];
-
 
                     $projectId = $vcsRepo->getAttribute('projectId');
                     //TODO: Why is Authorization::skip needed?
