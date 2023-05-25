@@ -688,7 +688,7 @@ App::delete('/v1/projects/:projectId')
     ->inject('user')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
+    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
