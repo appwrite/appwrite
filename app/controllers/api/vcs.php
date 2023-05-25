@@ -10,6 +10,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Utopia\Database\Query;
 use Utopia\Database\ID;
@@ -29,36 +30,58 @@ App::get('/v1/vcs/github/installations')
     ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
+    ->param('redirect', '', fn($clients) => new Host($clients), 'URL to redirect back to your Git authorization. Only console hostnames are allowed.', true, ['clients'])
     ->inject('response')
     ->inject('project')
-    ->action(function (Response $response, Document $project) {
+    ->action(function (string $redirect, Response $response, Document $project) {
         $projectId = $project->getId();
+
+        $state = \json_encode([
+            'projectId' => $projectId,
+            'redirect' => $redirect
+        ]);
 
         $appName = App::getEnv('VCS_GITHUB_APP_NAME');
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect("https://github.com/apps/$appName/installations/new?state=$projectId");
+            ->redirect("https://github.com/apps/$appName/installations/new?" . \http_build_query([
+                'state' => $state
+            ]));
     });
 
 App::get('/v1/vcs/github/incominginstallation')
     ->desc('Capture installation id and state after GitHub App Installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
-    ->param('installation_id', '', new Text(256), 'installation_id')
-    ->param('setup_action', '', new Text(256), 'setup_action')
-    ->param('state', '', new Text(256), 'state')
+    ->param('installation_id', '', new Text(256), 'GitHub installation ID')
+    ->param('setup_action', '', new Text(256), 'GitHub setup actuon type')
+    ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $setupAction, string $state, Request $request, Response $response, Database $dbForConsole) {
+        $state = \json_decode($state, true);
 
-        $project = $dbForConsole->getDocument('projects', $state);
+        $projectId = $state['projectId'] ?? '';
+        $redirect = $state['redirect'] ?? '';
+
+        if (empty($redirect)) {
+            $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            $url = $request->getProtocol() . '://' . $request->getHostname() . "/";
-            $response->redirect($url);
+            $response->redirect($redirect);
         }
+
+        $installationId = $installationId;
+        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+        $github = new GitHub();
+        $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+        $owner = $github->getOwnerName($installationId);
 
         $projectInternalId = $project->getInternalId();
 
@@ -76,26 +99,23 @@ App::get('/v1/vcs/github/incominginstallation')
                     Permission::delete(Role::any()),
                 ],
                 'installationId' => $installationId,
-                'projectId' => $state,
+                'projectId' => $projectId,
                 'projectInternalId' => $projectInternalId,
                 'provider' => 'GitHub',
-                'organization' => '(todo) My Awesome Organization',
+                'organization' => $owner,
                 'accessToken' => null
             ]);
 
             $vcsInstallation = $dbForConsole->createDocument('vcs_installations', $vcsInstallation);
         } else {
-            $vcsInstallation = $vcsInstallation->setAttribute('organization', '(todo) My Awesome Organization');
+            $vcsInstallation = $vcsInstallation->setAttribute('organization', $owner);
             $vcsInstallation = $dbForConsole->updateDocument('vcs_installations', $vcsInstallation->getId(), $vcsInstallation);
         }
-
-        // TODO: Figure out port
-        $url = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$state/settings/git-installations";
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($url);
+            ->redirect($redirect);
     });
 
 App::get('v1/vcs/github/installations/:installationId/repositories')
@@ -136,13 +156,15 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
         $per_page = 100; // max limit of GitHub API
         $repos = []; // Array to store all repositories
 
-        // loop to store all repos in repos array
-
         do {
             $repositories = $github->listRepositoriesForGitHubApp($page, $per_page);
+            $repositories = \array_map(function ($repository) {
+                $repository['id'] = \strval($repository['id']);
+                return $repository;
+            }, $repositories);
             $repos = array_merge($repos, $repositories);
             $page++;
-        } while ($repositories == $per_page);
+        } while (\count($repositories) === $per_page);
 
         // Filter repositories based on search parameter
         if (!empty($search)) {
@@ -164,6 +186,48 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
             'repositories' => $repos,
             'total' => \count($repos),
         ]), Response::MODEL_REPOSITORY_LIST);
+    });
+
+App::get('v1/vcs/github/installations/:installationId/repositories/:repositoryId/branches')
+    ->desc('List Repository Branches')
+    ->groups(['api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.method', 'listRepositoryBranches')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BRANCH_LIST)
+    ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('repositoryId', '', new Text(256), 'Repository Id')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $vcsInstallationId, string $repositoryId, Response $response, Document $project, Database $dbForConsole) {
+        $installation = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $installationId = $installation->getAttribute('installationId');
+        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+        $github = new GitHub();
+        $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+
+        $owner = $github->getOwnerName($installationId);
+        $repoName = $github->getRepositoryName($repositoryId);
+        $branches = $github->listBranches($owner, $repoName);
+
+        $response->dynamic(new Document([
+            'branches' => \array_map(function ($branch) {
+                return [ 'name' => $branch ];
+            }, $branches),
+            'total' => \count($branches),
+        ]), Response::MODEL_BRANCH_LIST);
     });
 
 $createGitDeployments = function (array $vcsRepos, string $branchName, string $SHA, Database $dbForConsole, callable $getProjectDB, Request $request) {
@@ -206,8 +270,8 @@ $createGitDeployments = function (array $vcsRepos, string $branchName, string $S
                 'type' => 'vcs',
                 'vcsInstallationId' => $vcsInstallationId,
                 'vcsInstallationInternalId' => $vcsInstallationInternalId,
-                'vcsRepoId' => $vcsRepoId,
-                'vcsRepoInternalId' => $vcsRepoInternalId,
+                'vcsRepositoryId' => $vcsRepoId,
+                'vcsRepositoryInternalId' => $vcsRepoInternalId,
                 'branch' => $branchName,
                 'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
                 'activate' => $activate,
@@ -264,7 +328,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                 $createGitDeployments($vcsRepos, $branchName, $SHA, $dbForConsole, $getProjectDB, $request);
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
-                    // TODO: Use worker for this job instead
+                    // TODO: Use worker for this job instead (update function as well)
                     $installationId = $parsedPayload["installationId"];
 
                     $vcsInstallations = $dbForConsole->find('vcs_installations', [
@@ -313,7 +377,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                     $dbForProject = $getProjectDB($project);
                     $vcsRepoId = $vcsRepo->getId();
                     $deployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
-                        Query::equal('vcsRepoId', [$vcsRepoId]),
+                        Query::equal('vcsRepositoryId', [$vcsRepoId]),
                         Query::equal('branch', [$branchName]),
                         Query::orderDesc('$createdAt'),
                     ]));

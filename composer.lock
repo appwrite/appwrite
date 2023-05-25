@@ -3090,7 +3090,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "a3f5d680e79431b661bde03774b8c4e4d71e6023"
+                "reference": "de473962979c1ebd9c98952a0c22ce3e29242002"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
@@ -3134,7 +3134,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-05-22T12:56:31+00:00"
+            "time": "2023-05-25T15:25:45+00:00"
         },
         {
             "name": "utopia-php/websocket",

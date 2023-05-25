@@ -30,6 +30,7 @@ use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -183,6 +184,8 @@ class Response extends SwooleResponse
     public const MODEL_INSTALLATION_LIST = 'installationList';
     public const MODEL_REPOSITORY = 'repository';
     public const MODEL_REPOSITORY_LIST = 'repositoryList';
+    public const MODEL_BRANCH = 'branch';
+    public const MODEL_BRANCH_LIST = 'branchList';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -271,6 +274,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
             ->setModel(new BaseList('Repositories List', self::MODEL_REPOSITORY_LIST, 'repositories', self::MODEL_REPOSITORY))
+            ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
@@ -327,6 +331,7 @@ class Response extends SwooleResponse
             ->setModel(new Func())
             ->setModel(new Installation())
             ->setModel(new Repository())
+            ->setModel(new Branch())
             ->setModel(new Runtime())
             ->setModel(new Deployment())
             ->setModel(new Execution())

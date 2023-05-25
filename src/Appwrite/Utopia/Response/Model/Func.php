@@ -111,17 +111,23 @@ class Func extends Model
                 'default' => '',
                 'example' => 'npm install',
             ])
-            ->addRule('repositoryId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'VCS Repository ID',
-                'default' => '',
-                'example' => '35493993',
-            ])
             ->addRule('vcsInstallationId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function vcs installation id.',
                 'default' => '',
                 'example' => '644051bd6572792165cc',
+            ])
+            ->addRule('repositoryId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Git Repository ID',
+                'default' => '',
+                'example' => 'appwrite',
+            ])
+            ->addRule('branch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Git branch name',
+                'default' => '',
+                'example' => 'main',
             ])
         ;
     }

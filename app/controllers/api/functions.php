@@ -533,6 +533,7 @@ App::put('/v1/functions/:functionId')
     ->inject('events')
     ->inject('dbForConsole')
     ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $repositoryId, string $branch, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+        // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -565,7 +566,7 @@ App::put('/v1/functions/:functionId')
         $vcsRepoId = null;
         $needToDeploy = false;
         //if repo id was previously empty and non empty now, we need to create a new deployment for this function
-        $prevVcsRepoId = $function->getAttribute('vcsRepoId', '');
+        $prevVcsRepoId = $function->getAttribute('vcsRepositoryId', '');
         if (empty($prevVcsRepoId) && !empty($repositoryId)) {
             $needToDeploy = true;
         }
@@ -610,8 +611,8 @@ App::put('/v1/functions/:functionId')
                 'type' => 'vcs',
                 'vcsInstallationId' => $installation->getId(),
                 'vcsInstallationInternalId' => $installation->getInternalId(),
-                'vcsRepoId' => $vcsRepoId,
-                'vcsRepoInternalId' => $vcsRepoInternalId,
+                'vcsRepositoryId' => $vcsRepoId,
+                'vcsRepositoryInternalId' => $vcsRepoInternalId,
                 'branch' => $branch,
                 'search' => implode(' ', [$deploymentId, $entrypoint]),
                 'activate' => true,
@@ -638,9 +639,10 @@ App::put('/v1/functions/:functionId')
             'installCommand' => $installCommand,
             'vcsInstallationId' => $installation->getId(),
             'vcsInstallationInternalId' => $installation->getInternalId(),
-            'vcsRepoId' => $vcsRepoId ?? $function->getAttribute('vcsRepoId', ''),
-            'vcsRepoInternalId' => $vcsRepoInternalId ?? $function->getAttribute('vcsRepoInternalId', ''),
-            'branch'=> $branch,
+            'repositoryId' => $repositoryId,
+            'vcsRepositoryId' => $vcsRepoId ?? $function->getAttribute('vcsRepositoryId', ''),
+            'vcsRepositoryInternalId' => $vcsRepoInternalId ?? $function->getAttribute('vcsRepositoryInternalId', ''),
+            'branch' => $branch,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 

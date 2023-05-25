@@ -101,7 +101,7 @@ class BuildsV1 extends Worker
             $buildId = ID::unique();
 
             $vcsInstallationId = $deployment->getAttribute('vcsInstallationId', '');
-            $vcsRepoId = $deployment->getAttribute('vcsRepoId', '');
+            $vcsRepoId = $deployment->getAttribute('vcsRepositoryId', '');
             $isVcsEnabled = $vcsRepoId ? true : false;
 
             if ($isVcsEnabled) {
