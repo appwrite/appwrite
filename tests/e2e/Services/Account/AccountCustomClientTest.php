@@ -482,6 +482,7 @@ class AccountCustomClientTest extends Scope
         $dateValidator = new DatetimeValidator();
         $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
+        $this->assertEquals($response['body']['passwordUpdate'], ''); // Updating email should not update the password
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -492,7 +493,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals($response['headers']['status-code'], 401);
 
         return [];
     }
@@ -858,7 +859,7 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
-     * @depends testCreateSessionWithPhone
+     * @depends testUpdatePhone
      */
     public function testConvertPhoneToPassword(array $data): array
     {
@@ -878,7 +879,6 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'email' => $email,
-            'password' => $password,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -888,6 +888,18 @@ class AccountCustomClientTest extends Scope
         $dateValidator = new DatetimeValidator();
         $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
+        $this->assertEquals($response['body']['passwordUpdate'], ''); // Updating email should not update the password
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -904,7 +916,7 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
-     * @depends testConvertPhoneToPassword
+     * @depends testCreateSessionWithPhone
      */
     public function testUpdatePhone(array $data): array
     {
@@ -921,7 +933,6 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'phone' => $newPhone,
-            'password' => 'new-password'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
