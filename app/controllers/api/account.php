@@ -180,7 +180,7 @@ App::post('/v1/account/sessions/email')
             Query::equal('email', [$email]),
         ]);
 
-        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
+        if (!$profile || empty($profile->getAttribute('passwordUpdate')) || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
