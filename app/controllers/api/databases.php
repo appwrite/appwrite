@@ -785,11 +785,12 @@ App::get('/v1/databases/:databaseId/collections')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject) {
+    ->inject('mode')
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled'))) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -840,11 +841,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
+    ->inject('mode')
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled')  && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -978,12 +980,13 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->param('enabled', true, new Boolean(), 'Is collection enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('mode')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $events) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -1042,13 +1045,14 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('mode')
     ->inject('events')
     ->inject('deletes')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode, Event $events, Delete $deletes) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+        if ($database->isEmpty() || (!$database->getAttribute('enabled')  && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
