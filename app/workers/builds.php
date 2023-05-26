@@ -51,7 +51,8 @@ class BuildsV1 extends Worker
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                $this->buildDeployment($project, $resource, $deployment, $SHA, $targetUrl);
+                $github = new GitHub($this->getCache());
+                $this->buildDeployment($github, $project, $resource, $deployment, $SHA, $targetUrl);
                 break;
 
             default:
@@ -60,7 +61,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(Document $project, Document $function, Document $deployment, string $SHA = '', string $targetUrl = '')
+    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, string $SHA = '', string $targetUrl = '')
     {
         global $register;
 
@@ -115,7 +116,6 @@ class BuildsV1 extends Worker
                 $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
                 $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
 
-                $github = new GitHub();
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId);
                 $owner = $github->getOwnerName($installationId);
                 $repositoryName = $github->getRepositoryName($repositoryId);

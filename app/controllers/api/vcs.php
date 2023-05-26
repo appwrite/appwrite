@@ -57,10 +57,11 @@ App::get('/v1/vcs/github/incominginstallation')
     ->param('installation_id', '', new Text(256), 'GitHub installation ID')
     ->param('setup_action', '', new Text(256), 'GitHub setup actuon type')
     ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.')
+    ->inject('gitHub')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $installationId, string $setupAction, string $state, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (string $installationId, string $setupAction, string $state, GitHub $github, Request $request, Response $response, Database $dbForConsole) {
         $state = \json_decode($state, true);
 
         $projectId = $state['projectId'] ?? '';
@@ -79,7 +80,6 @@ App::get('/v1/vcs/github/incominginstallation')
         $installationId = $installationId;
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        $github = new GitHub();
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
         $owner = $github->getOwnerName($installationId);
 
@@ -130,10 +130,11 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
     ->label('sdk.response.model', Response::MODEL_REPOSITORY_LIST)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->inject('gitHub')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $vcsInstallationId, string $search, Response $response, Document $project, Database $dbForConsole) {
+    ->action(function (string $vcsInstallationId, string $search, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
         if (empty($search)) {
             $search = "";
         }
@@ -149,7 +150,6 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
         $installationId = $installation->getAttribute('installationId');
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        $github = new GitHub();
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
         $page = 1;
@@ -200,10 +200,11 @@ App::get('v1/vcs/github/installations/:installationId/repositories/:repositoryId
     ->label('sdk.response.model', Response::MODEL_BRANCH_LIST)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('repositoryId', '', new Text(256), 'Repository Id')
+    ->inject('gitHub')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $vcsInstallationId, string $repositoryId, Response $response, Document $project, Database $dbForConsole) {
+    ->action(function (string $vcsInstallationId, string $repositoryId, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
         $installation = $dbForConsole->getDocument('vcs_installations', $vcsInstallationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
@@ -215,7 +216,6 @@ App::get('v1/vcs/github/installations/:installationId/repositories/:repositoryId
         $installationId = $installation->getAttribute('installationId');
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        $github = new GitHub();
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($installationId);
@@ -299,15 +299,15 @@ App::post('/v1/vcs/github/incomingwebhook')
     ->desc('Captures GitHub Webhook Events')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
+    ->inject('gitHub')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('getProjectDB')
     ->action(
-        function (Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
+        function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
             $event = $request->getHeader('x-github-event', '');
             $payload = $request->getRawPayload();
-            $github = new GitHub();
             $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
             $parsedPayload = $github->parseWebhookEventPayload($event, $payload);

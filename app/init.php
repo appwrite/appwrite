@@ -69,6 +69,7 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\OAuth2\Github;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -77,6 +78,7 @@ use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
+use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -1231,3 +1233,7 @@ App::setResource('heroes', function () {
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
 }, []);
+
+App::setResource('gitHub', function (Cache $cache) {
+    return new VcsGitHub($cache);
+}, ['cache']);
