@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Users;
 
 use Appwrite\Tests\Retry;
+use Appwrite\Utopia\Response;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
@@ -1014,6 +1015,98 @@ trait UsersBase
         $this->assertCount(1, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], $id);
         $this->assertEquals($response['body']['users'][0]['phone'], $newNumber);
+    }
+
+    /**
+     * @return array{}
+     */
+    public function userLabelsProvider()
+    {
+        return [
+            'single label' => [
+                ['admin'],
+                Response::STATUS_CODE_OK,
+                ['admin'],
+            ],
+            'replace with multiple labels' => [
+                ['vip', 'pro'],
+                Response::STATUS_CODE_OK,
+                ['vip', 'pro'],
+            ],
+            'clear labels' => [
+                [],
+                Response::STATUS_CODE_OK,
+                [],
+            ],
+            'duplicate labels' => [
+                ['vip', 'vip', 'pro'],
+                Response::STATUS_CODE_OK,
+                ['vip', 'pro'],
+            ],
+            'invalid label' => [
+                ['invalid-label'],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+            'too long' => [
+                [\str_repeat('a', 129)],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+            'too many labels' => [
+                [\array_fill(0, 101, 'a')],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+        ];
+    }
+
+    /**
+     * @depends testGetUser
+     * @dataProvider userLabelsProvider
+     */
+    public function testUpdateUserLabels(array $labels, int $expectedStatus, array $expectedLabels, array $data): array
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => $labels,
+        ]);
+
+        $this->assertEquals($expectedStatus, $user['headers']['status-code']);
+        if ($expectedStatus === Response::STATUS_CODE_OK) {
+            $this->assertEquals($user['body']['labels'], $expectedLabels);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateUserLabelsWithoutLabels(array $data): array
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(Response::STATUS_CODE_BAD_REQUEST, $user['headers']['status-code']);
+
+        return $data;
+    }
+
+    public function testUpdateUserLabelsNonExistentUser(): void
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/dne/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['admin'],
+        ]);
+
+        $this->assertEquals(Response::STATUS_CODE_NOT_FOUND, $user['headers']['status-code']);
     }
 
 
