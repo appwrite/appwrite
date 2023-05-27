@@ -158,10 +158,6 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
 
         do {
             $repositories = $github->listRepositoriesForGitHubApp($page, $per_page);
-            $repositories = \array_map(function ($repository) {
-                $repository['id'] = \strval($repository['id']);
-                return $repository;
-            }, $repositories);
             $repos = array_merge($repos, $repositories);
             $page++;
         } while (\count($repositories) === $per_page);
@@ -181,6 +177,11 @@ App::get('v1/vcs/github/installations/:installationId/repositories')
 
         // Limit the maximum results to 5
         $repos = array_slice($repos, 0, 5);
+
+        $repos = \array_map(function ($repo) {
+            $repo['id'] = \strval($repo['id']);
+            return new Document($repo);
+        }, $repos);
 
         $response->dynamic(new Document([
             'repositories' => $repos,
