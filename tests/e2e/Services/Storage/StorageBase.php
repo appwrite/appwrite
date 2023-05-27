@@ -248,7 +248,7 @@ trait StorageBase
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'content-range' => 'bytes 0-' . $size. '/' . $size,
+            'content-range' => 'bytes 0-' . $size . '/' . $size,
             'x-appwrite-id' => 'unique()',
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
