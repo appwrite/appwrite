@@ -456,6 +456,10 @@ class Auth
             }
         }
 
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $roles[] = 'label:' . $label;
+        }
+
         return $roles;
     }
 
