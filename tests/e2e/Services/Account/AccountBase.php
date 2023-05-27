@@ -39,6 +39,7 @@ trait AccountBase
         $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
+        $this->assertEquals($response['body']['labels'], []);
 
         /**
          * Test for FAILURE

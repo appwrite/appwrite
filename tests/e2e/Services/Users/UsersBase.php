@@ -35,6 +35,7 @@ trait UsersBase
         $this->assertEquals($body['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($body['status'], true);
         $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
+        $this->assertEquals($body['labels'], []);
 
         /**
          * Test Create with Custom ID for SUCCESS

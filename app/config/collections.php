@@ -1245,6 +1245,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('passwordHistory'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
