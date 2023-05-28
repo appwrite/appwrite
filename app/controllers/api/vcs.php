@@ -12,6 +12,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
+use Appwrite\Vcs\Comment;
 use Utopia\Database\Query;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
@@ -30,7 +31,7 @@ App::get('/v1/vcs/github/installations')
     ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
-    ->param('redirect', '', fn($clients) => new Host($clients), 'URL to redirect back to your Git authorization. Only console hostnames are allowed.', true, ['clients'])
+    ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Git authorization. Only console hostnames are allowed.', true, ['clients'])
     ->inject('response')
     ->inject('project')
     ->action(function (string $redirect, Response $response, Document $project) {
@@ -225,24 +226,22 @@ App::get('v1/vcs/github/installations/:installationId/repositories/:repositoryId
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {
-                return [ 'name' => $branch ];
+                return ['name' => $branch];
             }, $branches),
             'total' => \count($branches),
         ]), Response::MODEL_BRANCH_LIST);
     });
 
-$createGitDeployments = function (array $vcsRepos, string $branchName, string $SHA, Database $dbForConsole, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (array $vcsRepos, string $branchName, string $SHA, string $commentId, Database $dbForConsole, callable $getProjectDB, Request $request) {
     foreach ($vcsRepos as $resource) {
         $resourceType = $resource->getAttribute('resourceType');
 
         if ($resourceType === "function") {
             $projectId = $resource->getAttribute('projectId');
-            //TODO: Why is Authorization::skip needed?
             $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
 
             $functionId = $resource->getAttribute('resourceId');
-            //TODO: Why is Authorization::skip needed?
             $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
             $deploymentId = ID::unique();
             $vcsRepoId = $resource->getId();
@@ -254,6 +253,18 @@ $createGitDeployments = function (array $vcsRepos, string $branchName, string $S
 
             if ($branchName == $productionBranch) {
                 $activate = true;
+            }
+
+            if (empty($commentId)) {
+                $latestDeployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
+                    Query::equal('vcsRepositoryId', [$vcsRepoId]),
+                    Query::equal('branch', [$branchName]),
+                    Query::equal('resourceType', ['functions']),
+                    Query::orderDesc('$createdAt'),
+                ]));
+                if ($latestDeployment !== false && !$latestDeployment->isEmpty()) {
+                    $commentId = $latestDeployment->getAttribute('vcsCommentId', '');
+                }
             }
 
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -273,6 +284,7 @@ $createGitDeployments = function (array $vcsRepos, string $branchName, string $S
                 'vcsInstallationInternalId' => $vcsInstallationInternalId,
                 'vcsRepositoryId' => $vcsRepoId,
                 'vcsRepositoryInternalId' => $vcsRepoInternalId,
+                'vcsCommentId' => $commentId,
                 'branch' => $branchName,
                 'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
                 'activate' => $activate,
@@ -326,7 +338,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                     Query::limit(100),
                 ]);
 
-                $createGitDeployments($vcsRepos, $branchName, $SHA, $dbForConsole, $getProjectDB, $request);
+                $createGitDeployments($vcsRepos, $branchName, $SHA, '', $dbForConsole, $getProjectDB, $request);
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead (update function as well)
@@ -365,30 +377,50 @@ App::post('/v1/vcs/github/incomingwebhook')
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    if (\count($vcsRepos) === 0) {
-                        $createGitDeployments($vcsRepos, $branchName, '', $dbForConsole, $getProjectDB, $request);
-                    }
+                    if (\count($vcsRepos) !== 0) {
+                        $comment = new Comment();
 
-                    // TODO: Use for loop instead
-                    $vcsRepo = $vcsRepos[0];
+                        foreach ($vcsRepos as $vcsRepo) {
+                            $projectId = $vcsRepo->getAttribute('projectId');
+                            $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+                            $dbForProject = $getProjectDB($project);
 
-                    $projectId = $vcsRepo->getAttribute('projectId');
-                    //TODO: Why is Authorization::skip needed?
-                    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-                    $dbForProject = $getProjectDB($project);
-                    $vcsRepoId = $vcsRepo->getId();
-                    $deployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
-                        Query::equal('vcsRepositoryId', [$vcsRepoId]),
-                        Query::equal('branch', [$branchName]),
-                        Query::orderDesc('$createdAt'),
-                    ]));
+                            $vcsRepoId = $vcsRepo->getId();
 
-                    if ($deployment !== false && !$deployment->isEmpty()) {
-                        $buildId = $deployment->getAttribute('buildId');
-                        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-                        $buildStatus = $build->getAttribute('status');
-                        $comment = "| Build Status |\r\n | --------------- |\r\n | $buildStatus |";
-                        $github->addComment($owner, $repositoryName, $pullRequestNumber, $comment);
+                            $deployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
+                                Query::equal('vcsRepositoryId', [$vcsRepoId]),
+                                Query::equal('branch', [$branchName]),
+                                Query::equal('resourceType', ['functions']),
+                                Query::orderDesc('$createdAt'),
+                            ]));
+
+                            if (!$deployment || $deployment->isEmpty()) {
+                                $function = Authorization::skip(fn () => $dbForProject->findOne('functions', [
+                                    Query::equal('vcsRepositoryId', [$vcsRepoId]),
+                                    Query::orderDesc('$createdAt'),
+                                ]));
+                                $build = new Document([]);
+                            } else {
+                                $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', '')));
+                                $build = Authorization::skip(fn () =>  $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+                            }
+
+                            if (!$function || $function->isEmpty()) {
+                                continue;
+                            }
+
+                            $status = !$build || $build->isEmpty() ? 'waiting' : $build->getAttribute('status', 'waiting');
+                            $deploymentId = !$build || $build->isEmpty() ? '' : $build->getAttribute('deploymentId', '');
+
+                            $comment->addBuild($project, $function, $status, $deploymentId);
+                        }
+
+                        $commentId = '';
+                        if (!$comment->isEmpty()) {
+                            $commentId = $github->createComment($owner, $repositoryName, $pullRequestNumber, $comment->generateComment());
+                        }
+
+                        $createGitDeployments($vcsRepos, $branchName, '', $commentId, $dbForConsole, $getProjectDB, $request);
                     }
                 }
             }

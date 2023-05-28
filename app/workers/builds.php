@@ -7,6 +7,7 @@ use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
+use Appwrite\Vcs\Comment;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -163,9 +164,10 @@ class BuildsV1 extends Worker
                 }
                 $commentId = $deployment->getAttribute('vcsCommentId');
                 if ($commentId) {
-                    $comment = "| Build Status |\r\n | --------------- |\r\n | Processing |";
-
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                    $comment = new Comment();
+                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                    $comment->addBuild($project, $function, 'processing', $deployment->getId());
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
                 }
             } else {
                 $build = $dbForProject->createDocument('builds', new Document([
@@ -201,8 +203,10 @@ class BuildsV1 extends Worker
         if ($isVcsEnabled) {
             $commentId = $deployment->getAttribute('vcsCommentId');
             if ($commentId) {
-                $comment = "| Build Status |\r\n | --------------- |\r\n | Building |";
-                $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                $comment = new Comment();
+                $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                $comment->addBuild($project, $function, 'building', $deployment->getId());
+                $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             }
         }
 
@@ -303,15 +307,16 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['stdout']);
 
             if ($isVcsEnabled) {
-                $status = 'ready';
                 if ($SHA !== "" && $owner !== "") {
                     $github->updateCommitStatus($repositoryName, $SHA, $owner, "success", "Deployment is successful!", $targetUrl, "Appwrite Deployment");
                 }
 
                 $commentId = $deployment->getAttribute('vcsCommentId');
                 if ($commentId) {
-                    $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                    $comment = new Comment();
+                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                    $comment->addBuild($project, $function, 'ready', $deployment->getId());
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
                 }
             }
 
@@ -355,8 +360,10 @@ class BuildsV1 extends Worker
 
                 $commentId = $deployment->getAttribute('vcsCommentId');
                 if ($commentId) {
-                    $comment = "| Build Status |\r\n | --------------- |\r\n | $status |";
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment);
+                    $comment = new Comment();
+                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                    $comment->addBuild($project, $function, 'failed', $deployment->getId());
+                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
                 }
             }
         } finally {

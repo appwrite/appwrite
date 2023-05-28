@@ -1091,7 +1091,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
-        $deployment->setAttribute('status', $build->getAttribute('status', 'processing'));
+        $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
         $deployment->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
         $deployment->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
 
