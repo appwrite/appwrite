@@ -574,7 +574,7 @@ App::put('/v1/functions/:functionId')
         // activate the deployment for first run of a VCS repo
         if ($needToDeploy) {
             $deploymentId = ID::unique();
-            $entrypoint = 'index.js'; //TODO: Read from function settings
+            $entrypoint = $function->getAttribute('entrypoint', '');
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
             //Add document in VCS repos collection
@@ -608,6 +608,8 @@ App::put('/v1/functions/:functionId')
                 'resourceId' => $function->getId(),
                 'resourceType' => 'functions',
                 'entrypoint' => $entrypoint,
+                'buildCommand' => $buildCommand,
+                'installCommand' => $installCommand,
                 'type' => 'vcs',
                 'vcsInstallationId' => $installation->getId(),
                 'vcsInstallationInternalId' => $installation->getInternalId(),
@@ -960,6 +962,8 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
+                    'buildCommand' => $buildCommand,
+                    'installCommand' => $installCommand,
                     'path' => $path,
                     'size' => $fileSize,
                     'chunksTotal' => $chunks,
