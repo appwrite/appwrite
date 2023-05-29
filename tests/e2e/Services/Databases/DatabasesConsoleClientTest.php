@@ -113,10 +113,10 @@ class DatabasesConsoleClientTest extends Scope
     {
         $databaseId = $data['databaseId'];
         $moviesCollectionId = $data['moviesId'];
+
         /**
          * Test When database is disabled but can still call get collection
          */
-
         $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -128,20 +128,18 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertTrue($collection['body']['enabled']);
     }
 
-
     /**
      * @depends testCreateCollection
      * @param array $data
      */
     public function testUpdateCollection(array $data)
     {
-
         $databaseId = $data['databaseId'];
         $moviesCollectionId = $data['moviesId'];
+
         /**
          * Test When database is disabled but can still call update collection
          */
-
         $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -156,7 +154,6 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertFalse($collection['body']['enabled']);
     }
 
-
     /**
      * @depends testCreateCollection
      * @param array $data
@@ -165,6 +162,7 @@ class DatabasesConsoleClientTest extends Scope
     {
         $databaseId = $data['databaseId'];
         $tvShowsId = $data['tvShowsId'];
+
         /**
          * Test When database is disabled but can still call Delete collection
          */
