@@ -28,7 +28,6 @@ Server::setResource('execute', function (Database $dbForProject) {
 
         $audit = new Audit($dbForProject);
         $audit->log(
-            userInternalId: $user->getInternalId(),
             userId: $user->getId(),
             // Pass first, most verbose event pattern
             event: $event,
@@ -44,13 +43,13 @@ Server::setResource('execute', function (Database $dbForProject) {
             ]
         );
     };
-}, ['dbForProject']);
+},['dbForProject']);
 
 $server->job()
     ->inject('message')
     ->inject('dbForProject')
     ->inject('execute')
-    ->action(function (Message $message, callable $execute) {
+    ->action(function (Message $message, Database $dbForProject, callable $execute) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -67,6 +66,7 @@ $server->job()
         $user = new Document($payload['user'] ?? []);
 
         $execute(
+            $dbForProject,
             $event,
             $auditPayload,
             $mode,

@@ -3,9 +3,8 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
+use Resque;
 use Utopia\Database\Document;
-use Utopia\Queue\Client;
-use Utopia\Queue\Connection;
 
 class Event
 {
@@ -23,6 +22,9 @@ class Event
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+
+    public const USAGE_QUEUE_NAME = 'v1-usage';
+    public const USAGE_CLASS_NAME = 'UsageV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
@@ -44,18 +46,16 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
-    protected Connection $connection;
 
     /**
      * @param string $queue
      * @param string $class
      * @return void
      */
-    public function __construct(string $queue, string $class, Connection $connection)
+    public function __construct(string $queue, string $class)
     {
         $this->queue = $queue;
         $this->class = $class;
-        $this->connection = $connection;
     }
 
     /**
@@ -263,29 +263,13 @@ class Event
      */
     public function trigger(): string|bool
     {
-        $client = new Client($this->queue, $this->connection);
-
-        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
-
-        return $client->enqueue([
+        return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
             'context' => $this->context,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
-    }
-
-    /**
-     * Get Queue Size
-     *
-     * @return int
-     */
-    public function getQueueSize(): int
-    {
-        $client = new Client($this->queue, $this->connection);
-
-        return $client->getQueueSize();
     }
 
     /**
@@ -456,9 +440,9 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
+                            $filtered1 = \array_filter($paramKeys, fn(string $k) => $k === $subCurrent);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
+                            $filtered2 = \array_filter($paramKeys, fn(string $k) => $k === $current);
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
                             $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
                         }
@@ -466,7 +450,7 @@ class Event
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
+                        $filtered = \array_filter($paramKeys, fn(string $k) => $k === $current);
                         $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
                     }
                 }

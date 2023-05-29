@@ -12,6 +12,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
+use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -20,7 +21,9 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Platform\Service;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -38,6 +41,7 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 
+Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 global $register;
@@ -138,71 +142,9 @@ Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
-Server::setResource('statsd', function ($register) {
-    return $register->get('statsd');
-}, ['register']);
-
 Server::setResource('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
-
-$pools = $register->get('pools');
-$connection = $pools->get('queue')->pop()->getResource();
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
-
-if (empty(App::getEnv('QUEUE'))) {
-    throw new Exception('Please configure "QUEUE" environemnt variable.');
-}
-
-$adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
-$server  = new Server($adapter);
-
-$server
-    ->shutdown()
-    ->inject('pools')
-    ->action(function (Group $pools) {
-        $pools->reclaim();
-    });
-
-$server
-    ->error()
-    ->inject('error')
-    ->inject('logger')
-    ->action(function (Throwable $error, Logger $logger) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
-
-        if ($error instanceof PDOException) {
-            throw $error;
-        }
-
-        if ($error->getCode() >= 500 || $error->getCode() === 0) {
-            $log = new Log();
-
-            $log->setNamespace("appwrite-worker");
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
-            $log->addTag('verboseType', get_class($error));
-            $log->addTag('code', $error->getCode());
-            $log->addExtra('file', $error->getFile());
-            $log->addExtra('line', $error->getLine());
-            $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
-
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            $logger->addLog($log);
-        }
-
-        Console::error('[Error] Type: ' . get_class($error));
-        Console::error('[Error] Message: ' . $error->getMessage());
-        Console::error('[Error] File: ' . $error->getFile());
-        Console::error('[Error] Line: ' . $error->getLine());
-    });
 
 /**
  * Get Console DB
@@ -276,3 +218,76 @@ Server::setResource('getFilesDevice', function (string $projectId) {
 Server::setResource('getBuildsDevice', function (string $projectId) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
 });
+
+$pools = $register->get('pools');
+$platform = new Appwrite();
+$_args = (!empty($args) || !isset($_SERVER['argv']) ? $args : $_SERVER['argv']);
+
+if (isset($_args[0])) {
+    $workerName = end($_args);
+} else {
+    throw new Exception('Missing command');
+}
+
+$platform->init(Service::TYPE_WORKER, [
+    'queue' => App::getEnv('QUEUE'),
+    'workerNumber' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
+    'connection' => $pools->get('queue')->pop()->getResource(),
+    'name' => $workerName,
+]);
+
+
+
+$worker = $platform->getWorker();
+
+$worker
+    ->shutdown()
+    ->inject('pools')
+    ->action(function (Group $pools) {
+        $pools->reclaim();
+    });
+
+$worker
+    ->error()
+    ->inject('error')
+    ->inject('logger')
+    ->action(function (Throwable $error, Logger|null $logger) {
+        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+
+        if ($error instanceof PDOException) {
+            throw $error;
+        }
+
+        if ($error->getCode() >= 500 || $error->getCode() === 0) {
+            $log = new Log();
+
+            $log->setNamespace("appwrite-worker");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $logger->addLog($log);
+        }
+
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
+    });
+
+
+
+$worker->workerStart();
+$worker->start();

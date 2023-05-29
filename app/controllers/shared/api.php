@@ -157,13 +157,12 @@ App::init()
     ->inject('queueForEvents')
     ->inject('queueForAudits')
     ->inject('queueForMail')
-    ->inject('usage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Mail $queueForMail, Stats $usage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Usage $queueForUsage, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Mail $queueForMail, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -418,14 +417,13 @@ App::shutdown()
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForAudits')
-    ->inject('usage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('mode')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('queueForUsage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $queueForEvents, Audit $queueForAudits, Stats $usage, Delete $queueForDeletes, EventDatabase $queueForDatabase, string $mode, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, string $mode, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
