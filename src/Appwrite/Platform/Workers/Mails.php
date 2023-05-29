@@ -2,7 +2,11 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Template\Template;
 use Exception;
+use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
@@ -12,20 +16,19 @@ class Mails extends Action
 {
     public static function getName(): string
     {
-        return 'audits';
+        return 'mails';
     }
 
     public function __construct()
     {
         $this
-            ->desc('Audits worker')
+            ->desc('Mails worker')
             ->inject('message')
-            ->inject('dbForProject')
             ->inject('register')
-            ->callback(fn($message, $dbForProject, $register) => $this->action($message, $dbForProject, $register));
+            ->callback(fn($message, $register) => $this->action($message, $register));
     }
 
-    public function action(Message $message, $dbForProject, $register): void
+    public function action(Message $message, $register): void
     {
 
         $payload = $message->getPayload() ?? [];
@@ -60,7 +63,7 @@ class Mails extends Action
         $locale = new Locale($payload['locale']);
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-        if (!$doesLocaleExist($locale, $prefix)) {
+        if (!$this->doesLocaleExist($locale, $prefix)) {
             $locale->setDefault('en');
         }
 
@@ -143,22 +146,21 @@ class Mails extends Action
     }
 
 
-/**
- * Returns true if all the required terms in a locale exist. False otherwise
- *
- * @param Locale $locale
- * @param string $prefix
- * @return bool
- */
-private function doesLocaleExist(Locale $locale, string $prefix)
-{
+    /**
+     * Returns true if all the required terms in a locale exist. False otherwise
+     *
+     * @param Locale $locale
+     * @param string $prefix
+     * @return bool
+     * @throws Exception
+     */
+    private function doesLocaleExist(Locale $locale, string $prefix): bool
+    {
 
-    if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
-        return false;
+        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
+            return false;
+        }
+
+        return true;
     }
-
-    return true;
-}
-
-
 }
