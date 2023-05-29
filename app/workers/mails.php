@@ -1,33 +1,45 @@
 <?php
 
-namespace Appwrite\Platform\Workers;
-
-use Exception;
+use Appwrite\Template\Template;
+use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
-use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Queue\Server;
+use Utopia\Registry\Registry;
 
-class Mails extends Action
-{
-    public static function getName(): string
-    {
-        return 'audits';
-    }
+require_once __DIR__ . '/../worker.php';
 
-    public function __construct()
-    {
-        $this
-            ->desc('Audits worker')
-            ->inject('message')
-            ->inject('dbForProject')
-            ->inject('register')
-            ->callback(fn($message, $dbForProject, $register) => $this->action($message, $dbForProject, $register));
-    }
+Authorization::disable();
+Authorization::setDefaultStatus(false);
 
-    public function action(Message $message, $dbForProject, $register): void
-    {
+/**
+ * Returns true if all the required terms in a locale exist. False otherwise
+ *
+ * @param $locale
+ * @param $prefix
+ *
+ * @return bool
+ */
+Server::setResource('doesLocaleExist', function () {
+    return function (Locale $locale, string $prefix) {
 
+        if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
+            return false;
+        }
+
+        return true;
+    };
+});
+
+$server->job()
+    ->inject('message')
+    ->inject('doesLocaleExist')
+    ->inject('register')
+    ->action(function (Message $message, callable $doesLocaleExist, Registry $register) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -60,37 +72,37 @@ class Mails extends Action
         $locale = new Locale($payload['locale']);
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-        if (!$doesLocaleExist($locale, $prefix)) {
-            $locale->setDefault('en');
-        }
+    if (!$doesLocaleExist($locale, $prefix)) {
+        $locale->setDefault('en');
+    }
 
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
         $subject = '';
-        switch ($type) {
-            case MAIL_TYPE_CERTIFICATE:
-                $domain = $payload['domain'];
-                $error = $payload['error'];
-                $attempt = $payload['attempt'];
+    switch ($type) {
+        case MAIL_TYPE_CERTIFICATE:
+            $domain = $payload['domain'];
+            $error = $payload['error'];
+            $attempt = $payload['attempt'];
 
-                $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
-                $body->setParam('{{domain}}', $domain);
-                $body->setParam('{{error}}', $error);
-                $body->setParam('{{attempt}}', $attempt);
-                break;
-            case MAIL_TYPE_INVITATION:
-                $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
-                break;
-            case MAIL_TYPE_RECOVERY:
-            case MAIL_TYPE_VERIFICATION:
-            case MAIL_TYPE_MAGIC_SESSION:
-                $subject = $locale->getText("$prefix.subject");
-                break;
-            default:
-                throw new Exception('Undefined Mail Type : ' . $type, 500);
-        }
+            $subject = \sprintf($locale->getText("$prefix.subject"), $domain);
+            $body->setParam('{{domain}}', $domain);
+            $body->setParam('{{error}}', $error);
+            $body->setParam('{{attempt}}', $attempt);
+            break;
+        case MAIL_TYPE_INVITATION:
+            $subject = \sprintf($locale->getText("$prefix.subject"), $team->getAttribute('name'), $projectName);
+            $body->setParam('{{owner}}', $user->getAttribute('name'));
+            $body->setParam('{{team}}', $team->getAttribute('name'));
+            break;
+        case MAIL_TYPE_RECOVERY:
+        case MAIL_TYPE_VERIFICATION:
+        case MAIL_TYPE_MAGIC_SESSION:
+            $subject = $locale->getText("$prefix.subject");
+            break;
+        default:
+            throw new Exception('Undefined Mail Type : ' . $type, 500);
+    }
 
         $body
             ->setParam('{{subject}}', $subject)
@@ -135,30 +147,12 @@ class Mails extends Action
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
 
-        try {
-            $mail->send();
-        } catch (\Exception $error) {
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
-        }
+    try {
+        $mail->send();
+    } catch (\Exception $error) {
+        throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
     }
+    });
 
-
-/**
- * Returns true if all the required terms in a locale exist. False otherwise
- *
- * @param Locale $locale
- * @param string $prefix
- * @return bool
- */
-private function doesLocaleExist(Locale $locale, string $prefix)
-{
-
-    if (!$locale->getText('emails.sender') || !$locale->getText("$prefix.hello") || !$locale->getText("$prefix.subject") || !$locale->getText("$prefix.body") || !$locale->getText("$prefix.footer") || !$locale->getText("$prefix.thanks") || !$locale->getText("$prefix.signature")) {
-        return false;
-    }
-
-    return true;
-}
-
-
-}
+$server->workerStart();
+$server->start();
