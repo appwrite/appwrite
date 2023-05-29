@@ -15,6 +15,7 @@ use Utopia\Database\ID;
 use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Storage\Storage;
 use Utopia\Database\Validator\Authorization;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -110,8 +111,7 @@ class BuildsV1 extends Worker
                 $vcsRepos = Authorization::skip(fn () => $dbForConsole
                     ->getDocument('vcs_repos', $vcsRepoId));
                 $repositoryId = $vcsRepos->getAttribute('repositoryId');
-                $vcsInstallations = Authorization::skip(fn () => $dbForConsole
-                    ->getDocument('vcs_installations', $vcsInstallationId));
+                $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcs_installations', $vcsInstallationId));
                 $installationId = $vcsInstallations->getAttribute('installationId');
 
                 $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
@@ -159,15 +159,9 @@ class BuildsV1 extends Worker
                     'endTime' => null,
                     'duration' => 0
                 ]));
-                if ($SHA !== "" && $owner !== "") {
-                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "pending", "Deployment is being processed..", $targetUrl, "Appwrite Deployment");
-                }
-                $commentId = $deployment->getAttribute('vcsCommentId');
-                if ($commentId) {
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                    $comment->addBuild($project, $function, 'processing', $deployment->getId());
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+
+                if ($isVcsEnabled) {
+                    $this->runGitAction('processing', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
                 }
             } else {
                 $build = $dbForProject->createDocument('builds', new Document([
@@ -201,13 +195,7 @@ class BuildsV1 extends Worker
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         if ($isVcsEnabled) {
-            $commentId = $deployment->getAttribute('vcsCommentId');
-            if ($commentId) {
-                $comment = new Comment();
-                $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $function, 'building', $deployment->getId());
-                $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-            }
+            $this->runGitAction('building', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
         }
 
         /** Trigger Webhook */
@@ -307,17 +295,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['stdout']);
 
             if ($isVcsEnabled) {
-                if ($SHA !== "" && $owner !== "") {
-                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "success", "Deployment is successful!", $targetUrl, "Appwrite Deployment");
-                }
-
-                $commentId = $deployment->getAttribute('vcsCommentId');
-                if ($commentId) {
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                    $comment->addBuild($project, $function, 'ready', $deployment->getId());
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-                }
+                $this->runGitAction('ready', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
             }
 
             /* Also update the deployment buildTime */
@@ -353,18 +331,7 @@ class BuildsV1 extends Worker
             Console::error($th->getMessage());
 
             if ($isVcsEnabled) {
-                $status = 'failed';
-                if ($SHA !== "" && $owner !== "") {
-                    $github->updateCommitStatus($repositoryName, $SHA, $owner, "failure", "Deployment failed.", $targetUrl, "Appwrite Deployment");
-                }
-
-                $commentId = $deployment->getAttribute('vcsCommentId');
-                if ($commentId) {
-                    $comment = new Comment();
-                    $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                    $comment->addBuild($project, $function, 'failed', $deployment->getId());
-                    $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-                }
+                $this->runGitAction('failed', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
             }
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -402,6 +369,44 @@ class BuildsV1 extends Worker
                     ->submit();
             }
         }
+    }
+
+    protected function runGitAction(string $status, GitHub $github, string $SHA, string $owner, string $repositoryName, string $targetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject)
+    {
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $commentId = $deployment->getAttribute('vcsCommentId', '');
+
+        if (empty($commentId)) {
+            return;
+        }
+
+        if (!empty($SHA)) {
+            $message = match ($status) {
+                'ready' => 'Build succeeded.',
+                'failed' => 'Build failed.',
+                'processing' => 'Building...',
+                default => $status
+            };
+
+            $state = match ($status) {
+                'ready' => 'success',
+                'failed' => 'failure',
+                'processing' => 'pending',
+                default => $status
+            };
+
+            $functionName = $function->getAttribute('name');
+            $projectName = $project->getAttribute('name');
+
+            $name = "{$functionName} ({$projectName})";
+
+            $github->updateCommitStatus($repositoryName, $SHA, $owner, $state, $message, $targetUrl, $name);
+        }
+
+        $comment = new Comment();
+        $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+        $comment->addBuild($project, $function, $status, $deployment->getId());
+        $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
     }
 
     public function shutdown(): void
