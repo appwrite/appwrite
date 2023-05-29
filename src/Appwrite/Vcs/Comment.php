@@ -60,7 +60,7 @@ class Comment
 
         foreach ($projects as $projectId => $project) {
             $text .= "### {$project['name']} `{$projectId}`\n\n";
-            $text .= "| Function | Status | Execute |\n";
+            $text .= "| Function | Status | Actions |\n";
             $text .= "| :- | :-  | :- |\n";
 
             foreach ($project['functions'] as $functionId => $function) {
@@ -72,7 +72,7 @@ class Comment
                     'failed' => '❌ Failed',
                 };
 
-                $execute = $function['status'] === 'ready' ? "[HTTP](#) \\| [Console](#)" : '_Build must be ready first_';
+                $execute = $function['status'] === 'ready' ? "[Execute](#) \\| [Activate](#)" : '_Build must be ready first_';
 
                 $text .= "| **{$function['name']}** `{$functionId}` | {$status} ([Logs](#)) | {$execute} |\n";
             }
