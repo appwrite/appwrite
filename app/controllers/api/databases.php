@@ -1120,13 +1120,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1176,13 +1171,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1248,13 +1238,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1306,13 +1291,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1363,13 +1343,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1438,13 +1413,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1527,13 +1497,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1595,13 +1560,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1651,13 +1611,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
 
         $filters = [];
 
-        switch ($encrypt) {
-            case true:
-                $filters[] = 'encrypt';
-                break;
-            case false:
-                $filters[] = 'decrypt';
-                break;
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $filters[] = 'datetime';
