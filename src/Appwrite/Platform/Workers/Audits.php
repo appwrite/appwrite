@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Exception;
+use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -11,6 +12,8 @@ use Utopia\Queue\Message;
 
 class Audits extends Action
 {
+    protected static array $init;
+
     public static function getName(): string
     {
         return 'audits';
@@ -25,8 +28,10 @@ class Audits extends Action
             ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
     }
 
+
     public function action(Message $message, $dbForProject): void
     {
+
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {

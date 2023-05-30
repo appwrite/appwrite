@@ -221,22 +221,19 @@ Server::setResource('getBuildsDevice', function (string $projectId) {
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
-$_args = (!empty($args) || !isset($_SERVER['argv']) ? $args : $_SERVER['argv']);
+$args = $_SERVER['argv'];
 
-if (isset($_args[0])) {
-    $workerName = end($_args);
+if (isset($args[0])) {
+    $workerName = end($args);
 } else {
-    throw new Exception('Missing command');
+    throw new Exception('Missing worker name');
 }
 
 $platform->init(Service::TYPE_WORKER, [
-    'queue' => App::getEnv('QUEUE'),
-    'workerNumber' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
+    'workersNumber' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
     'connection' => $pools->get('queue')->pop()->getResource(),
-    'name' => $workerName,
+    'workerName' => $workerName,
 ]);
-
-
 
 $worker = $platform->getWorker();
 

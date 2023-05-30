@@ -18,10 +18,10 @@ use Utopia\Queue\Message;
 
 class Messaging extends Action
 {
-    private ?DSN $dsn;
-    private string $user;
-    private string $secret;
-    private string $provider;
+    private ?DSN $dsn = null;
+    private string $user = '';
+    private string $secret = '';
+    private string $provider = '';
 
     public static function getName(): string
     {
@@ -31,9 +31,11 @@ class Messaging extends Action
     public function __construct()
     {
         $this->provider  = App::getEnv('_APP_SMS_PROVIDER', '');
-        $this->dsn    = !empty($this->provider) ? new DSN($this->provider) : null;
-        $this->user   = !empty($this->provider) ? $this->dsn->getUser() : '';
-        $this->secret = !empty($this->provider) ? $this->dsn->getPassword() : '';
+        if (!empty($this->provider)) {
+            $this->dsn = new DSN($this->provider);
+            $this->user = $this->dsn->getUser();
+            $this->secret = $this->dsn->getPassword();
+        }
 
         $this
             ->desc('Messaging worker')
