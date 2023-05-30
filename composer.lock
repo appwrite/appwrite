@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3cce14666cf2f40a8eb49befac06cb97",
+    "content-hash": "329498d12fabaa764c4178881cb07788",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2058,24 +2058,23 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.28.2",
+            "version": "0.26.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "bc0144ff3983afa6724c43f2ce578fdbceec21f9"
+                "reference": "feb8941f8dbd37f869986ca56c81a0f76b29fbcd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bc0144ff3983afa6724c43f2ce578fdbceec21f9",
-                "reference": "bc0144ff3983afa6724c43f2ce578fdbceec21f9",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/feb8941f8dbd37f869986ca56c81a0f76b29fbcd",
+                "reference": "feb8941f8dbd37f869986ca56c81a0f76b29fbcd",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0"
+                "php": ">=8.0.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.5.25",
                 "vimeo/psalm": "4.27.0"
             },
@@ -2097,9 +2096,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.28.2"
+                "source": "https://github.com/utopia-php/framework/tree/0.26.1"
             },
-            "time": "2023-05-30T06:47:57+00:00"
+            "time": "2023-05-30T07:18:22+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2357,16 +2356,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.4.0",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "a2a91940314dc7e23ae0b487be456ca508920e7f"
+                "reference": "a9e7a501f33e0da59779782359a747cb8d34cf6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a2a91940314dc7e23ae0b487be456ca508920e7f",
-                "reference": "a2a91940314dc7e23ae0b487be456ca508920e7f",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a9e7a501f33e0da59779782359a747cb8d34cf6f",
+                "reference": "a9e7a501f33e0da59779782359a747cb8d34cf6f",
                 "shasum": ""
             },
             "require": {
@@ -2374,7 +2373,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.28.*"
+                "utopia-php/framework": "0.26.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2392,17 +2391,17 @@
             ],
             "description": "Light and Fast Platform Library",
             "keywords": [
+                "cache",
                 "framework",
                 "php",
-                "platform",
                 "upf",
                 "utopia"
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.4.0"
+                "source": "https://github.com/utopia-php/platform/tree/0.3.3"
             },
-            "time": "2023-05-30T07:18:41+00:00"
+            "time": "2023-03-07T08:52:22+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -2954,16 +2953,16 @@
         },
         {
             "name": "doctrine/deprecations",
-            "version": "v1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "0e2a4f1f8cdfc7a92ec3b01c9334898c806b30de"
+                "reference": "8cffffb2218e01f3b370bf763e00e81697725259"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/0e2a4f1f8cdfc7a92ec3b01c9334898c806b30de",
-                "reference": "0e2a4f1f8cdfc7a92ec3b01c9334898c806b30de",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/8cffffb2218e01f3b370bf763e00e81697725259",
+                "reference": "8cffffb2218e01f3b370bf763e00e81697725259",
                 "shasum": ""
             },
             "require": {
@@ -2991,9 +2990,9 @@
             "homepage": "https://www.doctrine-project.org/",
             "support": {
                 "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/v1.0.0"
+                "source": "https://github.com/doctrine/deprecations/tree/v1.1.0"
             },
-            "time": "2022-05-02T15:47:09+00:00"
+            "time": "2023-05-29T18:55:17+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -3653,16 +3652,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.21.0",
+            "version": "1.21.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "6df62b08faef4f899772bc7c3bbabb93d2b7a21c"
+                "reference": "b0c366dd2cea79407d635839d25423ba07c55dd6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/6df62b08faef4f899772bc7c3bbabb93d2b7a21c",
-                "reference": "6df62b08faef4f899772bc7c3bbabb93d2b7a21c",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/b0c366dd2cea79407d635839d25423ba07c55dd6",
+                "reference": "b0c366dd2cea79407d635839d25423ba07c55dd6",
                 "shasum": ""
             },
             "require": {
@@ -3693,9 +3692,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.21.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.21.3"
             },
-            "time": "2023-05-17T13:13:44+00:00"
+            "time": "2023-05-29T19:31:28+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
