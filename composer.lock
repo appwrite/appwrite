@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "169ab6e7dd540e45309d3c5093506fad",
+    "content-hash": "3cce14666cf2f40a8eb49befac06cb97",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2010,6 +2010,53 @@
             "time": "2020-02-23T07:40:02+00:00"
         },
         {
+            "name": "utopia-php/dsn",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/dsn.git",
+                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3",
+                "squizlabs/php_codesniffer": "^3.6",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\DSN\\": "src/DSN"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library for parsing and managing Data Source Names ( DSNs )",
+            "keywords": [
+                "dsn",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/dsn/issues",
+                "source": "https://github.com/utopia-php/dsn/tree/0.1.0"
+            },
+            "time": "2022-10-26T10:06:20+00:00"
+        },
+        {
             "name": "utopia-php/framework",
             "version": "0.28.2",
             "source": {
@@ -2310,16 +2357,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.3.3",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "a9e7a501f33e0da59779782359a747cb8d34cf6f"
+                "reference": "a2a91940314dc7e23ae0b487be456ca508920e7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a9e7a501f33e0da59779782359a747cb8d34cf6f",
-                "reference": "a9e7a501f33e0da59779782359a747cb8d34cf6f",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a2a91940314dc7e23ae0b487be456ca508920e7f",
+                "reference": "a2a91940314dc7e23ae0b487be456ca508920e7f",
                 "shasum": ""
             },
             "require": {
@@ -2327,7 +2374,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.26.*"
+                "utopia-php/framework": "0.28.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2345,17 +2392,17 @@
             ],
             "description": "Light and Fast Platform Library",
             "keywords": [
-                "cache",
                 "framework",
                 "php",
+                "platform",
                 "upf",
                 "utopia"
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.3.3"
+                "source": "https://github.com/utopia-php/platform/tree/0.4.0"
             },
-            "time": "2023-03-07T08:52:22+00:00"
+            "time": "2023-05-30T07:18:41+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -5496,5 +5543,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
