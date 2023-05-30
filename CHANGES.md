@@ -1,8 +1,14 @@
+# Version 1.4.0
+
+## Bugs
+
+- Fix string attribute not allowing default with 0 length [#5602](https://github.com/appwrite/appwrite/pull/5602)
+
 # Version 1.3.4
 
 ## Bugs
 
-- Update migration to properly migrate bucket permissiosn [#5497](https://github.com/appwrite/appwrite/pull/5497)
+- Update migration to properly migrate bucket permissions [#5497](https://github.com/appwrite/appwrite/pull/5497)
 
 # Version 1.3.3
 
