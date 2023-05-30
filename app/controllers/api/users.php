@@ -686,7 +686,8 @@ App::put('/v1/users/:userId/labels')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Event $events) {
+    ->inject('prepareUserSearch')
+    ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Event $events, callable $prepareUserSearch) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -695,6 +696,7 @@ App::put('/v1/users/:userId/labels')
         }
 
         $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
+        $user->setAttribute('search', $prepareUserSearch($user));
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -797,7 +799,8 @@ App::patch('/v1/users/:userId/name')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->inject('prepareUserSearch')
+    ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $events, callable $prepareUserSearch) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -805,10 +808,8 @@ App::patch('/v1/users/:userId/name')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user
-            ->setAttribute('name', $name)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));
-        ;
+        $user->setAttribute('name', $name);
+        $user->setAttribute('search', $prepareUserSearch($user));
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -897,7 +898,8 @@ App::patch('/v1/users/:userId/email')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $events) {
+    ->inject('prepareUserSearch')
+    ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $events, callable $prepareUserSearch) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -910,7 +912,9 @@ App::patch('/v1/users/:userId/email')
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name', ''), $user->getAttribute('phone', '')]));
+        ;
+
+        $user->setAttribute('search', $prepareUserSearch($user));
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -943,7 +947,8 @@ App::patch('/v1/users/:userId/phone')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $events) {
+    ->inject('prepareUserSearch')
+    ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $events, callable $prepareUserSearch) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -954,8 +959,8 @@ App::patch('/v1/users/:userId/phone')
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));
         ;
+        $user->setAttribute('search', $prepareUserSearch($user));
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
