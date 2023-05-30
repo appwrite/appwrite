@@ -12,8 +12,6 @@ use Utopia\Queue\Message;
 
 class Audits extends Action
 {
-    protected static array $init;
-
     public static function getName(): string
     {
         return 'audits';
@@ -25,8 +23,10 @@ class Audits extends Action
             ->desc('Audits worker')
             ->inject('message')
             ->inject('dbForProject')
-            ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
+            ->inject('polls')
+            ->callback(fn ($message, $dbForProject, $pools) => $this->action($message, $dbForProject, $pools));
     }
+
 
 
     public function action(Message $message, $dbForProject): void
