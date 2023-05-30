@@ -1086,6 +1086,12 @@ trait DatabasesBase
 
         $this->assertEquals(400, $document4['headers']['status-code']);
 
+        // Delete document 4 with incomplete path
+        $this->assertEquals(404, $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()))['headers']['status-code']);
+
         return $data;
     }
 
