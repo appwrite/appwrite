@@ -257,36 +257,36 @@ class CalcTierStats extends Action
         $pools
             ->get('console')
             ->reclaim();
-//
-//        /** @var PHPMailer $mail */
-//        $mail = $register->get('smtp');
-//
-//        $mail->clearAddresses();
-//        $mail->clearAllRecipients();
-//        $mail->clearReplyTos();
-//        $mail->clearAttachments();
-//        $mail->clearBCCs();
-//        $mail->clearCCs();
-//
-//        try {
-//            /** Addresses */
-//            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-//            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
-//
-//            foreach ($recipients as $recipient) {
-//                $mail->addAddress($recipient);
-//            }
-//
-//            /** Attachments */
-//            $mail->addAttachment($this->path);
-//
-//            /** Content */
-//            $mail->Subject = "Cloud Report for {$this->date}";
-//            $mail->Body = "Please find the daily cloud report atttached";
-//            $mail->send();
- //           Console::success('Email has been sent!');
-   //     } catch (Exception $e) {
-        //    Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
-     //   }
+
+        /** @var PHPMailer $mail */
+        $mail = $register->get('smtp');
+
+        $mail->clearAddresses();
+        $mail->clearAllRecipients();
+        $mail->clearReplyTos();
+        $mail->clearAttachments();
+        $mail->clearBCCs();
+        $mail->clearCCs();
+
+        try {
+            /** Addresses */
+            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
+
+            foreach ($recipients as $recipient) {
+                $mail->addAddress($recipient);
+            }
+
+            /** Attachments */
+            $mail->addAttachment($this->path);
+
+            /** Content */
+            $mail->Subject = "Cloud Report for {$this->date}";
+            $mail->Body = "Please find the daily cloud report atttached";
+            $mail->send();
+            Console::success('Email has been sent!');
+        } catch (Exception $e) {
+            Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+        }
     }
 }
