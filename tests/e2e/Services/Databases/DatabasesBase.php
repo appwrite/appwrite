@@ -157,6 +157,7 @@ trait DatabasesBase
     public function testCreateAttributes(array $data): array
     {
         $databaseId = $data['databaseId'];
+
         $title = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -165,6 +166,17 @@ trait DatabasesBase
             'key' => 'title',
             'size' => 256,
             'required' => true,
+        ]);
+
+        $description = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'description',
+            'size' => 256,
+            'required' => false,
+            'default' => '',
         ]);
 
         $releaseYear = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
@@ -226,6 +238,13 @@ trait DatabasesBase
         $this->assertEquals($title['body']['size'], 256);
         $this->assertEquals($title['body']['required'], true);
 
+        $this->assertEquals(202, $description['headers']['status-code']);
+        $this->assertEquals($description['body']['key'], 'description');
+        $this->assertEquals($description['body']['type'], 'string');
+        $this->assertEquals($description['body']['size'], 256);
+        $this->assertEquals($description['body']['required'], false);
+        $this->assertEquals($description['body']['default'], '');
+
         $this->assertEquals(202, $releaseYear['headers']['status-code']);
         $this->assertEquals($releaseYear['body']['key'], 'releaseYear');
         $this->assertEquals($releaseYear['body']['type'], 'integer');
@@ -266,13 +285,14 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount(6, $movies['body']['attributes']);
+        $this->assertCount(7, $movies['body']['attributes']);
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][1]['key'], $releaseYear['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][2]['key'], $duration['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][3]['key'], $actors['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][4]['key'], $datetime['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][5]['key'], $relationship['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][1]['key'], $description['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][2]['key'], $releaseYear['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][3]['key'], $duration['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][4]['key'], $actors['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][5]['key'], $datetime['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][6]['key'], $relationship['body']['key']);
 
         return $data;
     }

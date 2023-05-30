@@ -1,3 +1,9 @@
+# Version 1.3.5
+
+## Bugs
+
+- Fix minimum length for string attribute default values [#5606](https://github.com/appwrite/appwrite/pull/5606)
+
 # Version 1.3.4
 
 ## Bugs
