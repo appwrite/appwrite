@@ -3,6 +3,7 @@
 ## Bugs
 
 - Fix minimum length for string attribute default values [#5606](https://github.com/appwrite/appwrite/pull/5606)
+- Update framework to fix route mismatches [#5603](https://github.com/appwrite/appwrite/pull/5603)
 
 # Version 1.3.4
 
