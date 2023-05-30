@@ -252,7 +252,9 @@ class CalcTierStats extends Action
             $offset = $offset + $limit;
             $count = $count + $sum;
         }
+
         Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects...');
+
         $pools
             ->get('console')
             ->reclaim();
