@@ -2,14 +2,14 @@
 
 ## Bugs
 
-- Fix minimum length for string attribute default values [#5606](https://github.com/appwrite/appwrite/pull/5606)
+- Fix minimum length for string attribute default values [#5606](https://github.com/appwrite/appwrite/pull/5606), [#5602](https://github.com/appwrite/appwrite/pull/5602)
 - Update framework to fix route mismatches [#5603](https://github.com/appwrite/appwrite/pull/5603)
 
 # Version 1.3.4
 
 ## Bugs
 
-- Update migration to properly migrate bucket permissiosn [#5497](https://github.com/appwrite/appwrite/pull/5497)
+- Update migration to properly migrate bucket permissions [#5497](https://github.com/appwrite/appwrite/pull/5497)
 
 # Version 1.3.3
 
@@ -22,6 +22,7 @@
 - Fixed auto-setting custom ID on nested documents [#5363](https://github.com/appwrite/appwrite/pull/5363)
 - Fixed listDocuments not returning all the documents [#5395](https://github.com/appwrite/appwrite/pull/5395)
 - Fixed deleting keys, webhooks, platforms and domains after deleting project [#5395](https://github.com/appwrite/appwrite/pull/5395)
+- Fixed empty team prefs returning as JSON object rather array [#5361](https://github.com/appwrite/appwrite/pull/5361)
 
 # Version 1.3.1
 
