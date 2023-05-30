@@ -121,7 +121,6 @@ class CalcTierStats extends Action
                     ///** Get Project Name */
                     //$stats['Project Name'] = $project->getAttribute('name');
 
-
                     /** Get Organization Name and Id */
                     //$teamId = $project->getAttribute('teamId', null);
                     //$teamName = null;
