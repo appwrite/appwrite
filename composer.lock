@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b8b1c976fb0a44257d3820fe87af179",
+    "content-hash": "169ab6e7dd540e45309d3c5093506fad",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2221,16 +2221,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-fix-route-mistmatch",
+            "version": "0.28.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "e8e12a880539679010b86576e843be9f4c7f3329"
+                "reference": "bc0144ff3983afa6724c43f2ce578fdbceec21f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e8e12a880539679010b86576e843be9f4c7f3329",
-                "reference": "e8e12a880539679010b86576e843be9f4c7f3329",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bc0144ff3983afa6724c43f2ce578fdbceec21f9",
+                "reference": "bc0144ff3983afa6724c43f2ce578fdbceec21f9",
                 "shasum": ""
             },
             "require": {
@@ -2260,9 +2260,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/fix-route-mistmatch"
+                "source": "https://github.com/utopia-php/framework/tree/0.28.2"
             },
-            "time": "2023-05-30T01:59:18+00:00"
+            "time": "2023-05-30T06:47:57+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5653,18 +5653,9 @@
             "time": "2023-02-08T07:49:20+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-fix-route-mistmatch",
-            "alias": "0.28.1",
-            "alias_normalized": "0.28.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
