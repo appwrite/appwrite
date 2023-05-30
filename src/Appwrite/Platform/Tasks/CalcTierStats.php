@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
+use League\Csv\CannotInsertRecord;
 use Utopia\App;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
@@ -20,17 +21,18 @@ class CalcTierStats extends Action
     private array $columns = [
         'Project ID',
         'Organization ID',
-        'Users',
+        'Organization Members',
         'Teams',
         'Requests',
         'Bandwidth',
         'Domains',
+        'Api keys',
         'Webhooks',
         'Platforms',
         'Buckets',
         'Files',
-        'Storage',
-        'Max file size',
+        'Storage (bytes)',
+        'Max File Size (bytes)',
         'Databases',
         'Functions',
         'Deployments',
@@ -66,6 +68,10 @@ class CalcTierStats extends Action
             });
     }
 
+    /**
+     * @throws \Utopia\Exception
+     * @throws CannotInsertRecord
+     */
     public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
     {
         //docker compose exec -t appwrite calc-tier-stats
@@ -129,12 +135,12 @@ class CalcTierStats extends Action
                         //$teamName = $team->getAttribute('name');
                    // }
 
-                    $stats['Organization ID']   = $project->getAttribute('teamInternalId', null);
+                    $stats['Organization ID']   = $project->getAttribute('teamId', null);
 
                     /** Get Total Members */
                     $teamInternalId = $project->getAttribute('teamInternalId', null);
                     if ($teamInternalId) {
-                        $stats['Users'] = $dbForConsole->count('memberships', [
+                        $stats['Organization Members'] = $dbForConsole->count('memberships', [
                             Query::equal('teamInternalId', [$teamInternalId])
                         ]);
                     } else {
@@ -190,6 +196,11 @@ class CalcTierStats extends Action
                     ]);
 
 
+                    /** Get Api keys */
+                    $stats['Api keys'] = $dbForConsole->count('keys', [
+                        Query::equal('projectInternalId', [$project->getInternalId()]),
+                    ]);
+
                     /** Get Webhooks */
                     $stats['Webhooks'] = $dbForConsole->count('webhooks', [
                         Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -217,8 +228,8 @@ class CalcTierStats extends Action
                     }
                     $stats['Buckets'] = $counter;
                     $stats['Files'] = $filesCount;
-                    $stats['Storage'] = $filesSum;
-                    $stats['Max file size'] = $maxFileSize;
+                    $stats['Storage (bytes)'] = $filesSum;
+                    $stats['Max File Size (bytes)'] = $maxFileSize;
 
                     /** Get Total Functions */
                     $stats['Databases'] = $dbForProject->count('databases', []);

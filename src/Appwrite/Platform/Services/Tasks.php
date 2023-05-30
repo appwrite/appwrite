@@ -45,7 +45,7 @@ class Tasks extends Service
             ->addAction(VolumeSync::getName(), new VolumeSync())
             ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcUsersStats::getName(), new CalcUsersStats())
-            ->addAction(CalctierStats::getName(), new CalcTierStats())
+            ->addAction(CalcTierStats::getName(), new CalcTierStats())
         ;
     }
 }
