@@ -1,8 +1,9 @@
-# Version 1.4.0
+# Version 1.3.5
 
 ## Bugs
 
-- Fix string attribute not allowing default with 0 length [#5602](https://github.com/appwrite/appwrite/pull/5602)
+- Fix minimum length for string attribute default values [#5606](https://github.com/appwrite/appwrite/pull/5606), [#5602](https://github.com/appwrite/appwrite/pull/5602)
+- Update framework to fix route mismatches [#5603](https://github.com/appwrite/appwrite/pull/5603)
 
 # Version 1.3.4
 
