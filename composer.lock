@@ -2221,23 +2221,24 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.28.1",
+            "version": "0.28.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "7f22c556fc5991e54e5811a68fb39809b21bda55"
+                "reference": "bc0144ff3983afa6724c43f2ce578fdbceec21f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/7f22c556fc5991e54e5811a68fb39809b21bda55",
-                "reference": "7f22c556fc5991e54e5811a68fb39809b21bda55",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/bc0144ff3983afa6724c43f2ce578fdbceec21f9",
+                "reference": "bc0144ff3983afa6724c43f2ce578fdbceec21f9",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0.0"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.5.25",
                 "vimeo/psalm": "4.27.0"
             },
@@ -2259,9 +2260,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.28.1"
+                "source": "https://github.com/utopia-php/framework/tree/0.28.2"
             },
-            "time": "2023-03-02T08:16:01+00:00"
+            "time": "2023-05-30T06:47:57+00:00"
         },
         {
             "name": "utopia-php/image",
