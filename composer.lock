@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "146a894efdd38248478ef09e28f31978",
+    "content-hash": "6b8b1c976fb0a44257d3820fe87af179",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2010,71 +2010,25 @@
             "time": "2020-02-23T07:40:02+00:00"
         },
         {
-            "name": "utopia-php/dsn",
-            "version": "0.1.0",
+            "name": "utopia-php/framework",
+            "version": "dev-fix-route-mistmatch",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/dsn.git",
-                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea"
+                "url": "https://github.com/utopia-php/framework.git",
+                "reference": "e8e12a880539679010b86576e843be9f4c7f3329"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
-                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e8e12a880539679010b86576e843be9f4c7f3329",
+                "reference": "e8e12a880539679010b86576e843be9f4c7f3329",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6",
-                "vimeo/psalm": "4.0.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\DSN\\": "src/DSN"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "A simple library for parsing and managing Data Source Names ( DSNs )",
-            "keywords": [
-                "dsn",
-                "framework",
-                "php",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/dsn/issues",
-                "source": "https://github.com/utopia-php/dsn/tree/0.1.0"
-            },
-            "time": "2022-10-26T10:06:20+00:00"
-        },
-        {
-            "name": "utopia-php/framework",
-            "version": "0.26.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/framework.git",
-                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e8da5576370366d3bf9c574ec855f8c96fe4f34e",
-                "reference": "e8da5576370366d3bf9c574ec855f8c96fe4f34e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0.0"
-            },
-            "require-dev": {
                 "laravel/pint": "^1.2",
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.5.25",
                 "vimeo/psalm": "4.27.0"
             },
@@ -2096,9 +2050,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.26.0"
+                "source": "https://github.com/utopia-php/framework/tree/fix-route-mistmatch"
             },
-            "time": "2023-01-13T08:14:43+00:00"
+            "time": "2023-05-30T01:59:18+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5516,9 +5470,18 @@
             "time": "2023-05-03T19:06:57+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-fix-route-mistmatch",
+            "alias": "0.28.1",
+            "alias_normalized": "0.28.1.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
