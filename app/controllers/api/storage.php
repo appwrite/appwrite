@@ -945,6 +945,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $data = $image->output($output, $quality);
 
+        unset($image);
+
         $contentType = (\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'];
 
         $response
@@ -952,8 +954,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             ->setContentType($contentType)
             ->file($data)
         ;
-
-        unset($image);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
