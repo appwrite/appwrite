@@ -207,7 +207,7 @@ App::init()
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data) && !empty($cacheLog)) {
+            if (!empty($data) && !$cacheLog->isEmpty()) {
                 $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
