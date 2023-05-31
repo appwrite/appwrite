@@ -120,7 +120,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
     chmod +x /usr/local/bin/clear-card-cache && \
     chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/maintenance && \
+    chmod +x /usr/local/bin/calc-tier-stats && \
+    chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
