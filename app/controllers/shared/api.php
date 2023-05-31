@@ -200,7 +200,7 @@ App::init()
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
             $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
-            $cacheLog  = $dbForProject->getDocument('cache', $key);
+            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
@@ -487,7 +487,7 @@ App::shutdown()
                 $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
 
                 $signature = md5($data['payload']);
-                $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
