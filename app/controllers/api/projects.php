@@ -130,7 +130,7 @@ App::post('/v1/projects')
         }
 
         /** @var array $collections */
-        $collections = Config::getParam('collections', []);
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
@@ -142,10 +142,6 @@ App::post('/v1/projects')
         $adapter->setup();
 
         foreach ($collections as $key => $collection) {
-            if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                continue;
-            }
-
             $attributes = [];
             $indexes = [];
 

@@ -79,7 +79,7 @@ App::post('/v1/storage/buckets')
         $permissions = Permission::aggregate($permissions);
 
         try {
-            $files = Config::getParam('collections', [])['files'] ?? [];
+            $files = (Config::getParam('collections', [])['buckets'] ?? [])['files'] ?? [];
             if (empty($files)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
             }
