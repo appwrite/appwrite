@@ -1281,7 +1281,7 @@ $commonCollections = [
 
 ];
 
-$bucketCollections =[
+$bucketCollections = [
     'files' => [
         '$collection' => ID::custom('buckets'),
         '$id' => ID::custom('files'),
