@@ -1658,8 +1658,7 @@ $dbCollections = [
     ]
 ];
 
-$consoleCollections = [
-    ...$commonCollections,
+$consoleCollections = array_merge([
     'projects' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('projects'),
@@ -2445,10 +2444,9 @@ $consoleCollections = [
             ],
         ],
     ],
-];
+], $commonCollections);
 
-$projectCollections = [
-    ...$commonCollections,
+$projectCollections = array_merge([
     'databases' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('databases'),
@@ -3605,13 +3603,13 @@ $projectCollections = [
             ],
         ],
     ],
-];
+], $commonCollections);
 
 $collections = [
     'projects' => $projectCollections,
     'console'  => $consoleCollections,
     'buckets' => $bucketCollections,
-    'databases' => $databaseCollections
+    'databases' => $dbCollections
 ];
 
 return $collections;
