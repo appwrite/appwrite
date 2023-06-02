@@ -18,7 +18,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\ID;
-use Utopia\Database\DateTime;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
@@ -90,7 +89,26 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+
+        $backups[0] = ['from' => '4:30', 'to' => '5:30'];
+        $backups[1] = ['from' => '11:30', 'to' => '12:30'];
+        $backups[2] = ['from' => '21:30', 'to' => '22:30'];
+
         $databases = Config::getParam('pools-database', []);
+        /**
+         * Extract db from list while backing
+         */
+        $now = new \DateTime();
+        foreach ($databases as $pos => $database) {
+            $backup =  $backups[$pos];
+            $from = DateTime::createFromFormat('H:i', $backup['from']);
+            $to   = DateTime::createFromFormat('H:i', $backup['to']);
+
+            if ($now >= $from && $now <= $to) {
+                unset($databases[$pos]);
+            }
+        }
+
         $database = $databases[array_rand($databases)];
 
         if ($projectId === 'console') {
