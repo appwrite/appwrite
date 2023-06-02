@@ -49,8 +49,8 @@ Server::setResource('execute', function () {
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
 
-        $log->addExtra('functionId', $functionId);
-        $log->addExtra('projectId', $project->getId());
+        $log->addTag('functionId', $functionId);
+        $log->addTag('projectId', $project->getId());
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
