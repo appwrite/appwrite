@@ -77,8 +77,8 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
         // 'Unknown path', but validation passed
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -87,7 +87,8 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // Check for too many path segments
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Cleanup
         $this->client->setEndpoint($previousEndpoint);
