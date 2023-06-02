@@ -98,17 +98,18 @@ App::post('/v1/projects')
         /**
          * Extract db from list while backing
          */
-        $now = new \DateTime();
-        foreach ($databases as $pos => $database) {
-            $backup =  $backups[$pos];
-            $from = DateTime::createFromFormat('H:i', $backup['from']);
-            $to   = DateTime::createFromFormat('H:i', $backup['to']);
+        if (count($databases) > 1) {
+            $now = new \DateTime();
+            foreach ($databases as $pos => $database) {
+                $backup = $backups[$pos];
+                $from = DateTime::createFromFormat('H:i', $backup['from']);
+                $to = DateTime::createFromFormat('H:i', $backup['to']);
 
-            if ($now >= $from && $now <= $to) {
-                unset($databases[$pos]);
+                if ($now >= $from && $now <= $to) {
+                    unset($databases[$pos]);
+                }
             }
         }
-
         $database = $databases[array_rand($databases)];
 
         if ($projectId === 'console') {
