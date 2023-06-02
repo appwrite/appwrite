@@ -45,7 +45,7 @@ class Event extends Validator
          * Identify all sections of the pattern.
          */
         $type = $parts[0] ?? false;
-            
+
         if ($type == 'functions') {
             $this->message = 'Triggering a function on a function event is not allowed.';
             return false;
