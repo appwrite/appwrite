@@ -95,7 +95,7 @@ App::post('/v1/projects')
         $backups['db_fra1_03'] = ['from' => '21:30', 'to' => '22:30'];
 
         $databases = Config::getParam('pools-database', []);
-
+        var_dump($databases);
         /**
          * Extract db from list while backing
          */
