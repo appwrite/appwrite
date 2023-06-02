@@ -149,37 +149,39 @@ class Migration
 
     protected function confirm()
     {
-        Console::success("The following attributed will be created");
-        $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
-        foreach ($attributesAdded as $attribute) {
-            Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
-        }
-
-        Console::success("The following attributed will be updated");
-        $attributesUpdated = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
-        foreach ($attributesUpdated as $attribute) {
-            Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
-        }
 
         if ($this->mode === self::MODE_AFTER) {
-            Console::success("The following attributed will be deleted");
+            Console::success("The following attributes will be deleted");
             $attributesRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
             foreach ($attributesRemoved as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
-        }
-        
 
-        Console::success("The following collections will be added");
-        $collectionsAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
-        foreach ($collectionsAdded as $collection) {
-            Console::log("  {$collection['collection']}");
+            Console::success("The following collections will be removed");
+            $collectionsRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_DELETED);
+            foreach ($collectionsRemoved as $collection) {
+                Console::log("  {$collection['collection']}");
+            }
         }
 
-        Console::success("The following collections will be removed");
-        $collectionsRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_DELETED);
-        foreach ($collectionsRemoved as $collection) {
-            Console::log("  {$collection['collection']}");
+        if ($this->mode == self::MODE_BEFORE) {
+            Console::success("The following attributes will be created");
+            $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
+            foreach ($attributesAdded as $attribute) {
+                Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
+            }
+
+            Console::success("The following attributes will be updated");
+            $attributesUpdated = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
+            foreach ($attributesUpdated as $attribute) {
+                Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
+            }
+
+            Console::success("The following collections will be added");
+            $collectionsAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
+            foreach ($collectionsAdded as $collection) {
+                Console::log("  {$collection['collection']}");
+            }
         }
 
         $response = Console::confirm("Are you sure you want to continue? (YES/NO)");
@@ -297,7 +299,7 @@ class Migration
     protected function updateAttribute(string $collection, array $oldAttribute, array $newAttribute): void
     {
 
-        // TODO consdier case when name of the attribute is changed.
+        // TODO consider case when name of the attribute is changed.
         try {
             if ($this->mode == self::MODE_BEFORE) {
                 $tempAttributeId = $oldAttribute['$id'] . '_temp';
@@ -411,3 +413,5 @@ class Migration
         } while (!is_null($nextDocument));
     }
 }
+
+// CSV data for the projects usage
