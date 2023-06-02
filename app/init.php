@@ -882,7 +882,7 @@ App::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
 App::setResource('queueForEvents', function (Connection $queue) {
-    return new Event('', '', $queue);
+    return new Event($queue);
 }, ['queue']);
 App::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);

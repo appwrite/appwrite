@@ -17,6 +17,9 @@ class Audits extends Action
         return 'audits';
     }
 
+    /**
+     * @throws Exception
+     */
     public function __construct()
     {
         $this
@@ -28,12 +31,14 @@ class Audits extends Action
     }
 
 
-
+    /**
+     * @throws Exception
+     */
     public function action(Message $message, $dbForProject): void
     {
 
         $payload = $message->getPayload() ?? [];
-
+        var_dump('audits worker');
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }

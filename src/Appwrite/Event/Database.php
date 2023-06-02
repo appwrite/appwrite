@@ -15,7 +15,11 @@ class Database extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME, $connection);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::DATABASE_QUEUE_NAME)
+            ->setClass(Event::DATABASE_CLASS_NAME);
     }
 
     /**

@@ -3,8 +3,9 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Event
 {
@@ -48,15 +49,10 @@ class Event
     protected ?Document $user = null;
 
     /**
-     * @param string $queue
-     * @param string $class
+     * @param Connection $connection
      * @return void
      */
-    public function __construct(string $queue, string $class)
-    {
-        $this->queue = $queue;
-        $this->class = $class;
-    }
+    public function __construct(protected Connection $connection){}
 
     /**
      * Set queue used for this event.
@@ -263,7 +259,10 @@ class Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,

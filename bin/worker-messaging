@@ -1,3 +1,3 @@
 #!/bin/sh
 
-QUEUE=v1-messaging php /usr/src/code/app/worker.php messaging $@
+php /usr/src/code/app/worker.php messaging $@

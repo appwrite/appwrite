@@ -17,7 +17,11 @@ class Mail extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::MAILS_QUEUE_NAME, Event::MAILS_CLASS_NAME, $connection);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::MAILS_QUEUE_NAME)
+            ->setClass(Event::MAILS_CLASS_NAME);
     }
 
     /**

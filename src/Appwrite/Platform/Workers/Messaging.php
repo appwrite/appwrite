@@ -28,6 +28,9 @@ class Messaging extends Action
         return 'messaging';
     }
 
+    /**
+     * @throws Exception
+     */
     public function __construct()
     {
         $this->provider  = App::getEnv('_APP_SMS_PROVIDER', '');
@@ -43,9 +46,11 @@ class Messaging extends Action
             ->callback(fn($message) => $this->action($message));
     }
 
+    /**
+     * @throws Exception
+     */
     public function action(Message $message): void
     {
-
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {

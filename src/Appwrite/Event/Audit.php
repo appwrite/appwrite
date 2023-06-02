@@ -14,7 +14,12 @@ class Audit extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::AUDITS_QUEUE_NAME, Event::AUDITS_CLASS_NAME, $connection);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::AUDITS_QUEUE_NAME)
+            ->setClass(Event::BUILDS_CLASS_NAME);
+
     }
 
     /**

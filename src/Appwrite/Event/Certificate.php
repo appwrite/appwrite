@@ -13,7 +13,11 @@ class Certificate extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::CERTIFICATES_QUEUE_NAME, Event::CERTIFICATES_CLASS_NAME, $connection);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::CERTIFICATES_QUEUE_NAME)
+            ->setClass(Event::CERTIFICATES_CLASS_NAME);
     }
 
     /**

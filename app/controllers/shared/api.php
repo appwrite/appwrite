@@ -428,9 +428,11 @@ App::shutdown()
         $responsePayload = $response->getPayload();
 
         if (!empty($queueForEvents->getEvent())) {
+
             if (empty($queueForEvents->getPayload())) {
                 $queueForEvents->setPayload($responsePayload);
             }
+
             /**
              * Trigger functions.
              */

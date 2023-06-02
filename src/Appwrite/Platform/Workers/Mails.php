@@ -19,6 +19,9 @@ class Mails extends Action
         return 'mails';
     }
 
+    /**
+     * @throws Exception
+     */
     public function __construct()
     {
         $this
@@ -28,11 +31,15 @@ class Mails extends Action
             ->callback(fn($message, $register) => $this->action($message, $register));
     }
 
+    /**
+     * @throws \PHPMailer\PHPMailer\Exception
+     * @throws Exception
+     */
     public function action(Message $message, $register): void
     {
 
         $payload = $message->getPayload() ?? [];
-
+        var_dump('mails worker');
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }

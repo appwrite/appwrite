@@ -17,7 +17,11 @@ class Delete extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME, $connection);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::DELETE_QUEUE_NAME)
+            ->setClass(Event::DELETE_CLASS_NAME);
     }
 
     /**

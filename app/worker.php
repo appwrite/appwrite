@@ -12,6 +12,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\App;
@@ -226,14 +227,18 @@ $args = $_SERVER['argv'];
 if (isset($args[0])) {
     $workerName = end($args);
 } else {
-    throw new Exception('Missing worker name');
+    Console::error('Missing worker name');
 }
 
-$platform->init(Service::TYPE_WORKER, [
-    'workersNumber' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
-    'connection' => $pools->get('queue')->pop()->getResource(),
-    'workerName' => $workerName,
-]);
+try {
+    $platform->init(Service::TYPE_WORKER, [
+        'workersNum' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
+        'connection' => $pools->get('queue')->pop()->getResource(),
+        'workerName' => $workerName ?? null,
+    ]);
+} catch (\Exception $e) {
+    Console::error($e->getMessage() . ', File: '.$e->getFile().  ', Line: '.$e->getLine());
+}
 
 $worker = $platform->getWorker();
 

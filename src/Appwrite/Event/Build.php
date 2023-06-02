@@ -14,7 +14,11 @@ class Build extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::BUILDS_QUEUE_NAME, Event::BUILDS_CLASS_NAME, $connection);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::BUILDS_QUEUE_NAME)
+            ->setClass(Event::BUILDS_CLASS_NAME);
     }
 
     /**
