@@ -1,3 +1,10 @@
+# Version 1.3.6
+
+## Bugs
+
+- Fix Console deep linking to result in a 404 [#5632](https://github.com/appwrite/appwrite/pull/5632)
+- Fix ACME HTTP Challenge [#5632](https://github.com/appwrite/appwrite/pull/5632)
+
 # Version 1.3.5
 
 ## Bugs
