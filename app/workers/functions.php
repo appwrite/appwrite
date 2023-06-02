@@ -265,8 +265,7 @@ $server->job()
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
                     Query::limit($limit),
-                    Query::offset($offset),
-                    Query::orderAsc('name'),
+                    Query::offset($offset)
                 ]);
 
                 $sum = \count($functions);
@@ -278,7 +277,15 @@ $server->job()
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+
+                    /** Skip if a function has been triggered by its own execution */
+                    $event = "functions.{$function->getId()}.executions.*";
+                    if (in_array($event, $events)) {
+                        Console::warning("Skipping function: {$function->getAttribute('name')} from project: {$project->getId()} triggered by self");
+                        continue;
+                    }
+
+                    Console::success("Iterating function: {$function->getAttribute('name')} from project: {$project->getId()}");
                     $execute(
                         log: $log,
                         statsd: $statsd,
