@@ -90,27 +90,33 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['cloud-fra1-prod-database-project-0'] = ['from' => '4:30', 'to' => '5:30'];
-        $backups['cloud-fra1-prod-database-project-1'] = ['from' => '11:30', 'to' => '12:30'];
-        $backups['cloud-fra1-prod-database-project-2'] = ['from' => '21:30', 'to' => '22:30'];
+        $backups['db_fra1_01'] = ['from' => '4:30', 'to' => '5:30'];
+        $backups['db_fra1_02'] = ['from' => '13:30', 'to' => '14:30'];
+        $backups['db_fra1_03'] = ['from' => '21:30', 'to' => '22:30'];
 
         $databases = Config::getParam('pools-database', []);
+
         /**
          * Extract db from list while backing
          */
         if (count($databases) > 1) {
             $now = new \DateTime();
-            foreach ($databases as $name => $database) {
-                $backup = $backups[$name];
+
+            foreach ($databases as $pos => $database) {
+                if (empty($backups[$database])) {
+                    continue;
+                }
+                $backup = $backups[$database];
                 $from = DateTime::createFromFormat('H:i', $backup['from']);
                 $to = DateTime::createFromFormat('H:i', $backup['to']);
-
                 if ($now >= $from && $now <= $to) {
-                    unset($databases[$name]);
+                    unset($databases[$pos]);
                     break;
                 }
             }
+            $databases = array_values($databases);
         }
+
         $database = $databases[array_rand($databases)];
 
         if ($projectId === 'console') {
