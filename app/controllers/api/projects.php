@@ -90,9 +90,9 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups[0] = ['from' => '4:30', 'to' => '5:30'];
-        $backups[1] = ['from' => '11:30', 'to' => '12:30'];
-        $backups[2] = ['from' => '21:30', 'to' => '22:30'];
+        $backups['cloud-fra1-prod-database-project-0'] = ['from' => '4:30', 'to' => '5:30'];
+        $backups['cloud-fra1-prod-database-project-1'] = ['from' => '11:30', 'to' => '12:30'];
+        $backups['cloud-fra1-prod-database-project-2'] = ['from' => '21:30', 'to' => '22:30'];
 
         $databases = Config::getParam('pools-database', []);
         /**
@@ -100,13 +100,14 @@ App::post('/v1/projects')
          */
         if (count($databases) > 1) {
             $now = new \DateTime();
-            foreach ($databases as $pos => $database) {
-                $backup = $backups[$pos];
+            foreach ($databases as $name => $database) {
+                $backup = $backups[$name];
                 $from = DateTime::createFromFormat('H:i', $backup['from']);
                 $to = DateTime::createFromFormat('H:i', $backup['to']);
 
                 if ($now >= $from && $now <= $to) {
-                    unset($databases[$pos]);
+                    unset($databases[$name]);
+                    break;
                 }
             }
         }
