@@ -159,4 +159,15 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-ruby']);
         $this->assertIsString($body['console-cli']);
     }
+
+    public function testDefaultOAuth2()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
 }
