@@ -1,3 +1,12 @@
+# Version 1.3.7
+
+- Fix the routing for the default OAuth2 pages [#5640](https://github.com/appwrite/appwrite/pull/5640) [#5648](https://github.com/appwrite/appwrite/pull/5648)
+- Add support for trailing slashes in Routes and URLs [#5647](https://github.com/appwrite/appwrite/pull/5647) [#5648](https://github.com/appwrite/appwrite/pull/5648)
+## Bugs
+
+- Fix Console deep linking to result in a 404 [#5632](https://github.com/appwrite/appwrite/pull/5632)
+- Fix ACME HTTP Challenge [#5632](https://github.com/appwrite/appwrite/pull/5632)
+
 # Version 1.3.6
 
 ## Bugs
