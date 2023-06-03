@@ -17,4 +17,5 @@ return [
     'visa' => __DIR__ . '/credit-cards/visa.png',
     'mir' => __DIR__ . '/credit-cards/mir.png',
     'maestro' => __DIR__ . '/credit-cards/maestro.png',
+    'rupay' => __DIR__ . '/credit-cards/rupay.png',
 ];
