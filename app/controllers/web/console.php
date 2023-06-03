@@ -5,10 +5,11 @@ use Utopia\App;
 
 App::get('/console/*')
     ->alias('/')
+    ->alias('auth/*')
     ->alias('/invite')
     ->alias('/login')
     ->alias('/recover')
-    ->alias('/register')
+    ->alias('/register/*')
     ->groups(['web'])
     ->label('permission', 'public')
     ->label('scope', 'home')
