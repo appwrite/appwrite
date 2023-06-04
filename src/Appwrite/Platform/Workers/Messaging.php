@@ -65,12 +65,6 @@ class Messaging extends Action
             throw new Exception('Missing message');
         }
 
-        $this->execute($payload['recipient'], $payload['message']);
-    }
-
-
-    private function execute(string $recipient, string $message)
-    {
         $sms =  match ($this->dsn->getHost()) {
             'mock' => new Mock($this->user, $this->secret), // used for tests
             'twilio' => new Twilio($this->user, $this->secret),
@@ -93,9 +87,10 @@ class Messaging extends Action
             return;
         }
 
+
         $message = new SMS(
-            to: [$recipient],
-            content: $message,
+            to: [$payload['recipient']],
+            content: $payload['message'],
             from: $from,
         );
 

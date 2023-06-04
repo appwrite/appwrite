@@ -52,7 +52,9 @@ class Event
      * @param Connection $connection
      * @return void
      */
-    public function __construct(protected Connection $connection){}
+    public function __construct(protected Connection $connection)
+    {
+    }
 
     /**
      * Set queue used for this event.

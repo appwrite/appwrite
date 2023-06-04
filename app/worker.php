@@ -237,7 +237,7 @@ try {
         'workerName' => $workerName ?? null,
     ]);
 } catch (\Exception $e) {
-    Console::error($e->getMessage() . ', File: '.$e->getFile().  ', Line: '.$e->getLine());
+    Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
 $worker = $platform->getWorker();
@@ -254,6 +254,11 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->action(function (Throwable $error, Logger|null $logger) {
+
+        if ($logger === null) {
+            return;
+        }
+
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -288,8 +293,6 @@ $worker
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
     });
-
-
 
 $worker->workerStart();
 $worker->start();

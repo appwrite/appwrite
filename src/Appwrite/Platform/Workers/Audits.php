@@ -26,8 +26,7 @@ class Audits extends Action
             ->desc('Audits worker')
             ->inject('message')
             ->inject('dbForProject')
-            ->inject('polls')
-            ->callback(fn ($message, $dbForProject, $pools) => $this->action($message, $dbForProject, $pools));
+            ->callback(fn ($message, $dbForProject) => $this->action($message, $dbForProject));
     }
 
 
@@ -38,7 +37,7 @@ class Audits extends Action
     {
 
         $payload = $message->getPayload() ?? [];
-        var_dump('audits worker');
+
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
@@ -50,13 +49,6 @@ class Audits extends Action
         $userAgent = $payload['userAgent'] ?? '';
         $ip = $payload['ip'] ?? '';
         $user = new Document($payload['user'] ?? []);
-
-
-        $this->execute($event, $auditPayload, $mode, $resource, $userAgent, $ip, $user, $dbForProject);
-    }
-
-    private function execute(string $event, array $payload, string $mode, string $resource, string $userAgent, string $ip, Document $user, Database $dbForProject): void
-    {
 
         $userName = $user->getAttribute('name', '');
         $userEmail = $user->getAttribute('email', '');
@@ -75,7 +67,7 @@ class Audits extends Action
             'userName' => $userName,
             'userEmail' => $userEmail,
             'mode' => $mode,
-            'data' => $payload,
+            'data' => $auditPayload,
             ]
         );
     }

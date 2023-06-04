@@ -31,10 +31,9 @@ class Webhooks extends Action
     public function action(Message $message): void
     {
         $payload = $message->getPayload() ?? [];
-        var_dump('webhooks action');
+
         if (empty($payload)) {
             throw new Exception('Missing payload');
-
 
             $events = $payload['events'];
             $webhookPayload = json_encode($payload['payload']);
