@@ -17,6 +17,9 @@ class Webhooks extends Action
         return 'webhooks';
     }
 
+    /**
+     * @throws Exception
+     */
     public function __construct()
     {
         $this
@@ -34,25 +37,26 @@ class Webhooks extends Action
 
         if (empty($payload)) {
             throw new Exception('Missing payload');
+        }
 
-            $events = $payload['events'];
-            $webhookPayload = json_encode($payload['payload']);
-            $project = new Document($payload['project']);
-            $user = new Document($payload['user'] ?? []);
+        $events = $payload['events'];
+        $webhookPayload = json_encode($payload['payload']);
+        $project = new Document($payload['project']);
+        $user = new Document($payload['user'] ?? []);
 
-            foreach ($project->getAttribute('webhooks', []) as $webhook) {
-                if (array_intersect($webhook->getAttribute('events', []), $events)) {
+        foreach ($project->getAttribute('webhooks', []) as $webhook) {
+            if (array_intersect($webhook->getAttribute('events', []), $events)) {
                     $this->execute($events, $webhookPayload, $webhook, $user, $project);
-                }
             }
+        }
 
-            if (!empty($errors)) {
-                throw new Exception(\implode(" / \n\n", $errors));
-            }
+        if (!empty($errors)) {
+            throw new Exception(\implode(" / \n\n", $errors));
+        }
 
             $this->errors = [];
-        }
     }
+
 
     private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
     {

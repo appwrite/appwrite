@@ -172,27 +172,6 @@ function getCache(): Cache
     return new Cache(new Sharding($adapters));
 }
 
-Server::setResource('getProjectDB', function (Registry $register, Database $dbForConsole) {
-    return function (Document $project) use ($register, $dbForConsole) {
-        /** @var Group $pools */
-        $pools = $register->get('pools');
-
-        if ($project->isEmpty() || $project->getId() === 'console') {
-            return $dbForConsole;
-        }
-
-        $dbAdapter = $pools
-            ->get($project->getAttribute('database'))
-            ->pop()
-            ->getResource();
-
-        $database = new Database($dbAdapter, getCache());
-        $database->setNamespace('_' . $project->getInternalId());
-
-        return $database;
-    };
-}, ['register']);
-
 /**
  * Get Functions Storage Device
  * @param string $projectId of the project
@@ -234,7 +213,7 @@ try {
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
         'connection' => $pools->get('queue')->pop()->getResource(),
-        'workerName' => $workerName ?? null,
+        'workerName' => strtolower($workerName) ?? null,
     ]);
 } catch (\Exception $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
@@ -255,17 +234,13 @@ $worker
     ->inject('logger')
     ->action(function (Throwable $error, Logger|null $logger) {
 
-        if ($logger === null) {
-            return;
-        }
-
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
         }
 
-        if ($error->getCode() >= 500 || $error->getCode() === 0) {
+        if (($error->getCode() >= 500 || $error->getCode() === 0) && !empty($logger)) {
             $log = new Log();
 
             $log->setNamespace("appwrite-worker");
@@ -294,5 +269,8 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-$worker->workerStart();
+$worker->workerStart()
+        ->action(function () use ($workerName) {
+            Console::info("Worker $workerName  started");
+        });
 $worker->start();
