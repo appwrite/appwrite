@@ -1646,7 +1646,7 @@ App::patch('/v1/projects/:projectId/smtp')
         $mail->SMTPAutoTLS = false;
         $valid = $mail->SmtpConnect();
 
-        if(!$valid) {
+        if (!$valid) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -1745,7 +1745,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
                 ->setParam('{{text-content}}', '#000000')
                 ->render();
 
-            $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));    
+            $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));
             $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from;
             $template = [
                 'message' => $message,
