@@ -9,6 +9,9 @@ use Appwrite\Platform\Workers\Mails;
 use Appwrite\Platform\Workers\Messaging;
 use Appwrite\Platform\Workers\Certificates;
 use Appwrite\Platform\Workers\Databases;
+use Appwrite\Platform\Workers\Functions;
+use Appwrite\Platform\Workers\Builds;
+use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Platform\Workers\Usage;
 
 class Workers extends Service
@@ -23,6 +26,9 @@ class Workers extends Service
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Certificates::getName(), new Certificates())
             ->addAction(Databases::getName(), new Databases())
+            ->addAction(Functions::getName(), new Functions())
+            ->addAction(Builds::getName(), new Builds())
+            ->addAction(Deletes::getName(), new Deletes())
             //->addAction(Usage::getName(), new Usage())
         ;
     }

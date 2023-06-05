@@ -235,6 +235,7 @@ services:
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
       - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
+      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
 
     depends_on:
       - redis
@@ -592,6 +593,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
+
     depends_on:
       - redis
     environment:
@@ -614,6 +617,7 @@ services:
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_CACHE
+      - _APP_CONNECTIONS_QUEUE
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE

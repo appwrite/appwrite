@@ -614,13 +614,13 @@ $register->set('pools', function () {
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
         $dsns = $connection['dsns'] ?? '';
-        $multipe = $connection['multiple'] ?? false;
+        $multiple = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
+            $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {

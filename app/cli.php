@@ -26,9 +26,12 @@ use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
+use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
+
+global $register;
 
 CLI::setResource('register', fn () => $register);
 
@@ -95,7 +98,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -121,8 +124,6 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-
-    return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
 CLI::setResource('queue', function (Group $pools) {
@@ -144,7 +145,7 @@ CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
 CLI::setResource('queueForEvents', function (Connection $queue) {
-    return new Event('', '', $queue);
+    return new Event($queue);
 }, ['queue']);
 CLI::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);

@@ -12,7 +12,6 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\App;
@@ -23,9 +22,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
 use Utopia\Platform\Service;
-use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
@@ -34,13 +31,6 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Device;
-use Utopia\Storage\Device\Backblaze;
-use Utopia\Storage\Device\DOSpaces;
-use Utopia\Storage\Device\Linode;
-use Utopia\Storage\Device\Local;
-use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\Wasabi;
-use Utopia\Storage\Storage;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -81,6 +71,37 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $databaseName = $project->getAttribute('database');
+
+        if (isset($databases[$databaseName])) {
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get($databaseName)
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
+
+        $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+}, ['pools', 'dbForConsole', 'cache']);
+
 Server::setResource('cache', function (Registry $register) {
     $pools = $register->get('pools');
     $list = Config::getParam('pools-cache', []);
@@ -95,20 +116,12 @@ Server::setResource('cache', function (Registry $register) {
 
     return new Cache(new Sharding($adapters));
 }, ['register']);
-
-Server::setResource('queueForDatabase', function (Registry $register) {
-    $pools = $register->get('pools');
-    return new EventDatabase(
-        $pools
-            ->get('queue')
-            ->pop()
-            ->getResource()
-    );
-}, ['register']);
-
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+Server::setResource('queueForDatabase', function (Connection $queue) {
+    return new EventDatabase($queue);
+}, ['queue']);
 Server::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
@@ -125,7 +138,7 @@ Server::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
 Server::setResource('queueForEvents', function (Connection $queue) {
-    return new Event('', '', $queue);
+    return new Event($queue);
 }, ['queue']);
 Server::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
