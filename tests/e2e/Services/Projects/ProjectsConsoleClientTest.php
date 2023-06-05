@@ -505,7 +505,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Account Verification', $response['body']['subject']);
-        $this->assertEquals('Appwrite', $response['body']['senderName']);
+        $this->assertEquals('Project Test 2 Team', $response['body']['senderName']);
         $this->assertEquals('team@appwrite.io', $response['body']['senderEmail']);
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en-us', $response['body']['locale']);
