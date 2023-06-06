@@ -61,11 +61,16 @@
         <tr>
             <td>
                 <p>{{hello}}</p>
+
                 <p>{{body}}</p>
+
                 <a href="{{redirect}}" target="_blank">{{redirect}}</a>
-                <p></br>{{footer}}</p>
+
+                <p><br />{{footer}}</p>
+                <br />
+
                 <p>{{thanks}}
-                </br>
+                <br />
                 {{signature}}
                 </p>
             </td>
