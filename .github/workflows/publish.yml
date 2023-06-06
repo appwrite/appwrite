@@ -35,7 +35,7 @@ jobs:
       with:
         images: appwrite/cloud
         tags: |
-          type=pep440,pattern={{version}},value=${{  github.ref_name }}
+          type=ref,event=tag
 
     - name: Build & Publish to DockerHub
       uses: docker/build-push-action@v4
@@ -46,4 +46,3 @@ jobs:
           VERSION=${{ steps.meta.outputs.version }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
