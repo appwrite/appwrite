@@ -90,9 +90,9 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_02'] = ['from' => '4:30', 'to' => '5:30'];
-        $backups['database_db_fra1_03'] = ['from' => '13:30', 'to' => '14:30'];
-        $backups['database_db_fra1_04'] = ['from' => '21:30', 'to' => '22:30'];
+        $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
+        $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
+        $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
 
         $databases = Config::getParam('pools-database', []);
 
