@@ -1015,7 +1015,7 @@ App::setResource('console', function () {
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
                 'type' => 'web',
-                'hostname' => 'matejbaco.loca.lt',
+                'hostname' => 'localhost',
             ], // Current host is added on app init
         ],
         'legalName' => '',
