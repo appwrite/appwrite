@@ -72,13 +72,16 @@ App::get('/v1/vcs/github/incominginstallation')
             $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
         }
 
-        $project = $dbForConsole->getDocument('projects', $projectId);
+        // TODO: User cant be used, because we dont know project. Fix it. Then remove skip
+        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
         if ($project->isEmpty()) {
-            $response->redirect($redirect);
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($redirect);
         }
 
-        $installationId = $installationId;
         $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
@@ -472,8 +475,9 @@ App::get('/v1/vcs/installations')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('project')
+    ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForConsole) {
+    ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForConsole) {
 
         $queries = Query::parseQueries($queries);
 
@@ -500,9 +504,27 @@ App::get('/v1/vcs/installations')
 
         $filterQueries = Query::groupByType($queries)['filters'];
 
+        $results = $dbForConsole->find('vcs_installations', $queries);
+        $total = $dbForConsole->count('vcs_installations', $filterQueries, APP_LIMIT_COUNT);
+
+        if (\count($results) > 0) {
+            $installationIds = \array_map(fn ($result) => $result->getId(), $results);
+
+            $functions = Authorization::skip(fn () => $dbForProject->find('functions', [
+                Query::equal('vcsInstallationId', \array_unique($installationIds)),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]));
+
+            foreach ($results as $result) {
+                $installationFunctions = \array_filter($functions, fn ($function) => $function->getAttribute('vcsInstallationId') === $result->getId());
+
+                $result->setAttribute('functions', $installationFunctions);
+            }
+        }
+
         $response->dynamic(new Document([
-            'installations' => $dbForConsole->find('vcs_installations', $queries),
-            'total' => $dbForConsole->count('vcs_installations', $filterQueries, APP_LIMIT_COUNT),
+            'installations' => $results,
+            'total' => $total,
         ]), Response::MODEL_INSTALLATION_LIST);
     });
 
