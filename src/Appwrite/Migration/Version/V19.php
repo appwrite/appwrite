@@ -28,7 +28,7 @@ class V19 extends Migration
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-        $this->alterPermissionIndex('_' . $this->project->getInternalId() . '__metadata');
+        $this->alterPermissionIndex('_metadata');
 
         Console::info('Migrating Databases');
         $this->migrateDatabases();
@@ -76,7 +76,6 @@ class V19 extends Migration
             Console::log("Migrating Collection \"{$id}\"");
 
             $this->alterPermissionIndex($id);
-
 
             usleep(50000);
         }
@@ -143,7 +142,7 @@ class V19 extends Migration
 
     protected function alterPermissionIndex($collectionName): void
     {
-        $collectionName = "`{$this->projectDB->getDefaultDatabase()}`.`{$collectionName}_perms`";
+        $collectionName = "`{$this->projectDB->getDefaultDatabase()}`.`'_{$this->project->getInternalId()}_{$collectionName}_perms`";
 
         try {
             $this->pdo->prepare("ALTER TABLE {$collectionName}
