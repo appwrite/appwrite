@@ -465,7 +465,7 @@ App::shutdown()
                 ]) ;
 
                 $signature = md5($data);
-                $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
