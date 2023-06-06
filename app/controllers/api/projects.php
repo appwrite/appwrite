@@ -102,7 +102,7 @@ App::post('/v1/projects')
         if (count($databases) > 1) {
             $now = new \DateTime();
 
-            foreach ($databases as $pos => $database) {
+            foreach ($databases as $index => $database) {
                 if (empty($backups[$database])) {
                     continue;
                 }
@@ -110,7 +110,7 @@ App::post('/v1/projects')
                 $from = DateTime::createFromFormat('H:i', $backup['from']);
                 $to = DateTime::createFromFormat('H:i', $backup['to']);
                 if ($now >= $from && $now <= $to) {
-                    unset($databases[$pos]);
+                    unset($databases[$index]);
                     break;
                 }
             }
