@@ -36,6 +36,9 @@ class V19 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
+        Console::info('Migrating Buckets');
+        $this->migrateBuckets();
+
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
     }
@@ -153,4 +156,20 @@ class V19 extends Migration
             Console::warning($th->getMessage());
         }
     }
+
+    /**
+     * Migrating all Bucket tables.
+     *
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
+    protected function migrateBuckets(): void
+    {
+        foreach ($this->documentsIterator('buckets') as $bucket) {
+            $id = "bucket_{$bucket->getInternalId()}";
+            $this->alterPermissionIndex($id);
+        }
+    }
+
 }
