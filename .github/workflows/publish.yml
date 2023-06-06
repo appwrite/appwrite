@@ -2,15 +2,14 @@ name: "Build and Publish"
 
 on:
   push:
-    branches:
-      - feat-db-pools-master
     tags:
+      - appwrite-*
 
 jobs:
   build-publish:
     name: Build and Publish
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: endsWith(github.ref, 'feat-db-pools-master')
 
     steps:
     - name: Checkout repository
