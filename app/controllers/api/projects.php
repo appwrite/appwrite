@@ -114,7 +114,6 @@ App::post('/v1/projects')
                     break;
                 }
             }
-            $databases = array_values($databases);
         }
 
         $database = $databases[array_rand($databases)];
