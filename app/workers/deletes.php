@@ -704,43 +704,6 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param string $collection collectionID
-     * @param Query[] $queries
-     * @param Database $database
-     * @param callable $callback
-     */
-    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
-    {
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $results = [];
-        $sum = $limit;
-
-        $executionStart = \microtime(true);
-
-        while ($sum === $limit) {
-            $chunk++;
-
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
-
-            $sum = count($results);
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-
-                $count++;
-            }
-        }
-
-        $executionEnd = \microtime(true);
-
-        Console::info("Listed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
-    }
-
-    /**
      * @param Document $document rule document
      * @param Document $project project document
      */
@@ -780,13 +743,13 @@ class DeletesV1 extends Worker
 
     protected function deleteInstallation(Document $document, Document $project)
     {
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project);
         $dbForConsole = $this->getConsoleDB();
 
         $this->listByGroup('functions', [
             Query::equal('vcsInstallationInternalId', [$document->getInternalId()])
         ], $dbForProject, function ($function) use ($dbForProject, $dbForConsole) {
-            $dbForConsole->deleteDocument('vcs_repos', $function->getAttribute('vcsRepositoryId'));
+            $dbForConsole->deleteDocument('vcsRepos', $function->getAttribute('vcsRepositoryId'));
 
             $function = $function
                 ->setAttribute('vcsInstallationId', '')

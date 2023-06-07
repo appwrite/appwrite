@@ -108,25 +108,30 @@ class BuildsV1 extends Worker
             $isVcsEnabled = $vcsRepoId ? true : false;
 
             if ($isVcsEnabled) {
-                $vcsRepos = Authorization::skip(fn () => $dbForConsole
-                    ->getDocument('vcs_repos', $vcsRepoId));
+                $vcsRepos = Authorization::skip(fn () => $dbForConsole->getDocument('vcsRepos', $vcsRepoId));
                 $repositoryId = $vcsRepos->getAttribute('repositoryId');
-                $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcs_installations', $vcsInstallationId));
+                $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId));
                 $installationId = $vcsInstallations->getAttribute('installationId');
 
                 $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
                 $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
 
+                $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
+                $rootDirectory = $function->getAttribute('vcsRootDirectory', '');
+                $rootDirectory = \rtrim($rootDirectory, '/');
+                $rootDirectory = \ltrim($rootDirectory, '.');
+                $rootDirectory = \ltrim($rootDirectory, '/');
+
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId);
                 $owner = $github->getOwnerName($installationId);
                 $repositoryName = $github->getRepositoryName($repositoryId);
-                $branchName = $deployment->getAttribute('branch');
-                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName);
+                $branchName = $deployment->getAttribute('vcsBranch');
+                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
-                Console::execute('mkdir /tmp/builds/' . $buildId, '', $stdout, $stderr);
-                Console::execute($gitCloneCommand . ' /tmp/builds/' . $buildId . '/code', '', $stdout, $stderr);
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code .', '', $stdout, $stderr);
+                Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                Console::execute($gitCloneCommand, '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
@@ -373,6 +378,10 @@ class BuildsV1 extends Worker
 
     protected function runGitAction(string $status, GitHub $github, string $SHA, string $owner, string $repositoryName, string $targetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject)
     {
+        if ($function->getAttribute('vcsSilentMode', false) === true) {
+            return;
+        }
+
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         $commentId = $deployment->getAttribute('vcsCommentId', '');
 

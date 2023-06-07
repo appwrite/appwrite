@@ -108,6 +108,7 @@ class Exception extends \Exception
 
     /** VCS */
     public const INSTALLATION_NOT_FOUND            = 'installation_not_found';
+    public const REPOSITORY_NOT_FOUND              = 'repository_not_found';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';

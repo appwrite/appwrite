@@ -117,17 +117,29 @@ class Func extends Model
                 'default' => '',
                 'example' => '644051bd6572792165cc',
             ])
-            ->addRule('repositoryId', [
+            ->addRule('vcsRepositoryId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Git Repository ID',
                 'default' => '',
                 'example' => 'appwrite',
             ])
-            ->addRule('branch', [
+            ->addRule('vcsBranch', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Git branch name',
                 'default' => '',
                 'example' => 'main',
+            ])
+            ->addRule('vcsRootDirectory', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Path to function in git repository',
+                'default' => '',
+                'example' => 'functions/helloWorld',
+            ])
+            ->addRule('vcsSilentMode', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is VCS connection is in silent mode?',
+                'default' => false,
+                'example' => false,
             ])
         ;
     }
