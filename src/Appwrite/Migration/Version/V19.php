@@ -174,5 +174,4 @@ class V19 extends Migration
             $this->alterPermissionIndex($id);
         }
     }
-
 }
