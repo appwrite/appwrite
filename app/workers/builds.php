@@ -276,7 +276,7 @@ class BuildsV1 extends Worker
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                 variables: $vars,
-                startCommands: [
+                commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
                 ],
