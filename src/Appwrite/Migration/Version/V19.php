@@ -148,10 +148,13 @@ class V19 extends Migration
         $collectionName = "`{$this->projectDB->getDefaultDatabase()}`.`'_{$this->project->getInternalId()}_{$collectionName}_perms`";
 
         try {
-            $this->pdo->prepare("ALTER TABLE {$collectionName}
-            DROP INDEX `_permission` ,
-            ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
-            ")->execute();
+            $this->pdo->prepare("ALTER TABLE {$collectionName} DROP INDEX `_permission`")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+
+        try {
+            $this->pdo->prepare("ALTER TABLE {$collectionName} ADD INDEX `_permission` (`_permission`, `_type`, `_document`)")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
