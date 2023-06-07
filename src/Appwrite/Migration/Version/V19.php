@@ -154,7 +154,7 @@ class V19 extends Migration
         }
 
         try {
-            $this->pdo->prepare("ALTER TABLE {$collectionName} ADD INDEX `_permission` (`_permission` ASC, `_type` ASC, `_document` ASC)")->execute();
+            $this->pdo->prepare("ALTER TABLE {$collectionName} ADD INDEX `_permission` (`_permission`, `_type`, `_document`)")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
