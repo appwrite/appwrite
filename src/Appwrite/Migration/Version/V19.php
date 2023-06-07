@@ -39,8 +39,8 @@ class V19 extends Migration
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
 
-        Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'fixDocument']);
+        //Console::info('Migrating Documents');
+       // $this->forEachDocument([$this, 'fixDocument']);
     }
 
     /**

@@ -131,10 +131,6 @@ abstract class Migration
      */
     public function forEachDocument(callable $callback): void
     {
-
-        return;
-
-
         foreach ($this->collections as $collection) {
             if ($collection['$collection'] !== Database::METADATA) {
                 continue;
