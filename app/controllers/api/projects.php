@@ -22,6 +22,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\DateTime;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Appwrite\Extend\Exception;
@@ -107,8 +108,8 @@ App::post('/v1/projects')
                     continue;
                 }
                 $backup = $backups[$database];
-                $from = DateTime::createFromFormat('H:i', $backup['from']);
-                $to = DateTime::createFromFormat('H:i', $backup['to']);
+                $from = \DateTime::createFromFormat('H:i', $backup['from']);
+                $to = \DateTime::createFromFormat('H:i', $backup['to']);
                 if ($now >= $from && $now <= $to) {
                     unset($databases[$index]);
                     break;
