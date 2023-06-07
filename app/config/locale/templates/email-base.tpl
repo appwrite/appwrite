@@ -47,7 +47,8 @@
 
 <body style="direction: {{direction}}">
 
-<div style="max-width:650px; margin:0 auto;">
+<div style="max-width:650px; word-wrap: break-wrod; overflow-wrap: break-word;
+  word-break: break-all; margin:0 auto;">
     <table style="margin-top: 32px">
         <tr>
             <td>
