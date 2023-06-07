@@ -2653,7 +2653,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
 
         if (isset($data['$id'])) {

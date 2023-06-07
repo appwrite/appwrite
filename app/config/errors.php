@@ -403,9 +403,14 @@ return [
         'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
         'code' => 400,
     ],
+    Exception::DOCUMENT_MISSING_DATA => [
+        'name' => Exception::DOCUMENT_MISSING_DATA,
+        'description' => 'The document data is missing.',
+        'code' => 400,
+    ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document payload is missing.',
+        'description' => 'The document data or permissions must be provided.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
