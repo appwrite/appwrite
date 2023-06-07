@@ -169,6 +169,8 @@ class V19 extends Migration
      */
     protected function migrateBuckets(): void
     {
+        $this->alterPermissionIndex('buckets');
+
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $id = "bucket_{$bucket->getInternalId()}";
             $this->alterPermissionIndex($id);
