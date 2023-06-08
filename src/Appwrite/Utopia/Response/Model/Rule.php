@@ -60,6 +60,13 @@ class Rule extends Model
                 'default' => '',
                 'example' => 'HTTP challegne failed.',
             ])
+            ->addRule('renewDate', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Certificate auto-renewal date in ISO 8601 format.',
+                'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'array' => false,
+            ])
         ;
     }
 

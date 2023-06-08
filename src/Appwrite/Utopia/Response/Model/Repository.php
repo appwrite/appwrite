@@ -21,6 +21,19 @@ class Repository extends Model
                 'description' => 'Repository Name.',
                 'default' => '',
                 'example' => 'appwrite',
+            ])
+            ->addRule('private', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is repository private?',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('pushedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Last commit date in ISO 8601 format.',
+                'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
+                'array' => false,
             ]);
     }
 

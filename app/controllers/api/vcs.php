@@ -59,21 +59,19 @@ App::get('/v1/vcs/github/incominginstallation')
     ->param('setup_action', '', new Text(256), 'GitHub setup actuon type')
     ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.')
     ->inject('gitHub')
+    ->inject('project')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $installationId, string $setupAction, string $state, GitHub $github, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (string $installationId, string $setupAction, string $state, GitHub $github, Document $project, Request $request, Response $response, Database $dbForConsole) {
         $state = \json_decode($state, true);
-
-        $projectId = $state['projectId'] ?? '';
         $redirect = $state['redirect'] ?? '';
+
+        $projectId = $project->getId();
 
         if (empty($redirect)) {
             $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
         }
-
-        // TODO: User cant be used, because we dont know project. Fix it. Then remove skip
-        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
         if ($project->isEmpty()) {
             $response
@@ -105,7 +103,7 @@ App::get('/v1/vcs/github/incominginstallation')
                 'installationId' => $installationId,
                 'projectId' => $projectId,
                 'projectInternalId' => $projectInternalId,
-                'provider' => 'GitHub',
+                'provider' => 'github',
                 'organization' => $owner,
                 'accessToken' => null
             ]);
@@ -184,6 +182,7 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
 
         $repos = \array_map(function ($repo) {
             $repo['id'] = \strval($repo['id']);
+            $repo['pushedAt'] = $repo['pushed_at'];
             return new Document($repo);
         }, $repos);
 
@@ -231,6 +230,9 @@ App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryI
         }
 
         $repository = $github->getRepository($owner, $repositoryName);
+
+        $repository['id'] = \strval($repository['id']);
+        $repository['pushedAt'] = $repository['pushed_at'];
 
         $response->dynamic(new Document($repository), Response::MODEL_REPOSITORY);
     });
@@ -342,7 +344,7 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
                 'vcsRepositoryId' => $vcsRepoId,
                 'vcsRepositoryInternalId' => $vcsRepoInternalId,
                 'vcsCommentId' => $latestCommentId,
-                'branch' => $branchName,
+                'vcsBranch' => $branchName,
                 'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
                 'activate' => $activate,
             ]));
@@ -461,7 +463,7 @@ App::post('/v1/vcs/github/incomingwebhook')
 
                             $deployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
                                 Query::equal('vcsRepositoryId', [$vcsRepoId]),
-                                Query::equal('branch', [$branchName]),
+                                Query::equal('vcsBranch', [$branchName]),
                                 Query::equal('resourceType', ['functions']),
                                 Query::orderDesc('$createdAt'),
                             ]));

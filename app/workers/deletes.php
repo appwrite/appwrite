@@ -754,10 +754,12 @@ class DeletesV1 extends Worker
             $function = $function
                 ->setAttribute('vcsInstallationId', '')
                 ->setAttribute('vcsInstallationInternalId', '')
-                ->setAttribute('repositoryId', '')
-                ->setAttribute('branch', '')
                 ->setAttribute('vcsRepositoryId', '')
-                ->setAttribute('vcsRepositoryInternalId', '');
+                ->setAttribute('vcsBranch', '')
+                ->setAttribute('vcsSilentMode', false)
+                ->setAttribute('vcsRootDirectory', '')
+                ->setAttribute('vcsRepositoryDocId', '')
+                ->setAttribute('vcsRepositoryDocInternalId', '');
             $dbForProject->updateDocument('functions', $function->getId(), $function);
         });
     }

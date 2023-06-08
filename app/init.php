@@ -988,7 +988,18 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectId = 'console';
+
+    if(!empty($request->getParam('project', ''))) {
+        $projectId = $request->getParam('project', '');
+    } else if(!empty($request->getHeader('x-appwrite-project', ''))) {
+        $projectId = $request->getHeader('x-appwrite-project', '');
+    } else if(!empty($request->getParam('state', ''))) {
+        $state = \json_decode($request->getParam('state', ''), true);
+        if(!empty($state['projectId'])) {
+            $projectId = $state['projectId'];
+        }
+    }
 
     if ($projectId === 'console') {
         return $console;

@@ -99,7 +99,7 @@ App::post('/v1/proxy/rules')
             'resourceInternalId' => $resourceInternalId,
             'status' => $status,
             'certificateId' => '',
-            'search' => implode(' ', [ $domain->get(), $ruleId, $resourceId, $resourceType ]),
+            'search' => implode(' ', [$domain->get(), $ruleId, $resourceId, $resourceType]),
         ]));
 
         $events->setParam('ruleId', $rule->getId());
@@ -158,6 +158,7 @@ App::get('/v1/proxy/rules')
         foreach ($rules as $rule) {
             $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
             $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+            $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
         }
 
         $response->dynamic(new Document([
@@ -190,6 +191,7 @@ App::get('/v1/proxy/rules/:ruleId')
 
         $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
+        $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
