@@ -52,15 +52,15 @@ class V19 extends Migration
     private function migrateDatabases(): void
     {
         foreach ($this->documentsIterator('databases') as $database) {
-            $databaseTable = "database_{$database->getInternalId()}";
+            Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
 
-            Console::info("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
+            $databaseTable = "database_{$database->getInternalId()}";
 
             $this->alterPermissionIndex($databaseTable);
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
-
+                Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
                 $this->alterPermissionIndex($collectionTable);
             }
         }
@@ -78,7 +78,9 @@ class V19 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->alterPermissionIndex($id);
+            if (!in_array($id, ['files', 'collections'])) {
+                $this->alterPermissionIndex($id);
+            }
 
             usleep(50000);
         }
@@ -171,6 +173,7 @@ class V19 extends Migration
     {
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $id = "bucket_{$bucket->getInternalId()}";
+            Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
             $this->alterPermissionIndex($id);
         }
     }
