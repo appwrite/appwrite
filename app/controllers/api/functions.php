@@ -568,7 +568,16 @@ App::put('/v1/functions/:functionId')
 
         // Git disconnect logic
         if ($isConnected && empty($vcsRepositoryId)) {
-            $dbForConsole->deleteDocument('vcsRepos', $function->getAttribute('vcsRepositoryId', ''));
+            $repoDocs = $dbForConsole->find('vcsRepos', [
+                Query::equal('projectId', [$project->getId()]),
+                Query::equal('resourceId', [$functionId]),
+                Query::equal('resourceType', ['function']),
+                Query::limit(100),
+            ]);
+
+            foreach ($repoDocs as $repoDoc) {
+                $dbForConsole->deleteDocument('vcsRepos', $repoDoc->getId());
+            }
 
             $vcsRepositoryId = '';
             $vcsInstallationId = '';
