@@ -405,12 +405,12 @@ return [
     ],
     Exception::DOCUMENT_MISSING_DATA => [
         'name' => Exception::DOCUMENT_MISSING_DATA,
-        'description' => 'The document data is missing.',
+        'description' => 'The document data is missing. You must provide the document data.',
         'code' => 400,
     ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document data or permissions must be provided.',
+        'description' => 'The document data and permissions are missing. You must provide either the document data or permissions to be updated.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
