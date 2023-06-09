@@ -289,12 +289,14 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
             $dbForProject = $getProjectDB($project);
 
             $functionId = $resource->getAttribute('resourceId');
+            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+
             $deploymentId = ID::unique();
             $vcsRepoId = $resource->getId();
             $vcsRepoInternalId = $resource->getInternalId();
             $vcsInstallationId = $resource->getAttribute('vcsInstallationId');
             $vcsInstallationInternalId = $resource->getAttribute('vcsInstallationInternalId');
-            $productionBranch = $resource->getAttribute('branch', 'main');
+            $productionBranch = $function->getAttribute('vcsBranch');
             $activate = false;
 
             if ($branchName == $productionBranch) {
@@ -303,7 +305,7 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
 
             $latestDeployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
                 Query::equal('vcsRepositoryId', [$vcsRepoId]),
-                Query::equal('branch', [$branchName]),
+                Query::equal('vcsBranch', [$branchName]),
                 Query::equal('resourceType', ['functions']),
                 Query::orderDesc('$createdAt'),
             ]));
@@ -323,8 +325,6 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
                     continue;
                 }
             }
-
-            $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
