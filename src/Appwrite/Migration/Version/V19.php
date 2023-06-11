@@ -6,8 +6,6 @@ use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 
 class V19 extends Migration
 {
@@ -39,8 +37,8 @@ class V19 extends Migration
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
 
-        //Console::info('Migrating Documents');
-       // $this->forEachDocument([$this, 'fixDocument']);
+        Console::info('Migrating Documents');
+        $this->forEachDocument([$this, 'fixDocument']);
     }
 
     /**
@@ -99,46 +97,7 @@ class V19 extends Migration
                 /**
                  * Bump version number.
                  */
-                $document->setAttribute('version', '1.3.0');
-
-                /**
-                 * Set default passwordHistory
-                 */
-                $document->setAttribute('auths', array_merge([
-                    'passwordHistory' => 0,
-                    'passwordDictionary' => false,
-                ], $document->getAttribute('auths', [])));
-                break;
-            case 'users':
-                /**
-                 * Default Password history
-                 */
-                $document->setAttribute('passwordHistory', $document->getAttribute('passwordHistory', []));
-                break;
-            case 'teams':
-                /**
-                 * Default prefs
-                 */
-                $document->setAttribute('prefs', $document->getAttribute('prefs', new \stdClass()));
-                break;
-            case 'attributes':
-                /**
-                 * Default options
-                 */
-                $document->setAttribute('options', $document->getAttribute('options', new \stdClass()));
-                break;
-            case 'buckets':
-                /**
-                 * Set the bucket permission in the metadata table
-                 */
-                try {
-                    $internalBucketId = "bucket_{$this->project->getInternalId()}";
-                    $permissions = $document->getPermissions();
-                    $fileSecurity = $document->getAttribute('fileSecurity', false);
-                    $this->projectDB->updateCollection($internalBucketId, $permissions, $fileSecurity);
-                } catch (\Throwable $th) {
-                    Console::warning($th->getMessage());
-                }
+                $document->setAttribute('version', '1.4.0');
                 break;
         }
 
@@ -147,16 +106,11 @@ class V19 extends Migration
 
     protected function alterPermissionIndex($collectionName): void
     {
-        $collectionName = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms`";
-
         try {
-            $this->pdo->prepare("ALTER TABLE {$collectionName} DROP INDEX `_permission`")->execute();
-        } catch (\Throwable $th) {
-            Console::warning($th->getMessage());
-        }
-
-        try {
-            $this->pdo->prepare("ALTER TABLE {$collectionName} ADD INDEX `_permission` (`_permission`, `_type`, `_document`)")->execute();
+            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms` 
+            DROP INDEX `_permission`, 
+            ADD INDEX `_permission` (`_permission`, `_type`, `_document`)
+            ")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
