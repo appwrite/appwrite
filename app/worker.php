@@ -161,37 +161,14 @@ Server::setResource('pools', function ($register) {
 }, ['register']);
 
 /**
- * Get Console DB
- *
- * @returns Cache
- */
-function getCache(): Cache
-{
-    global $register;
-
-    $pools = $register->get('pools');
-    /** @var Group $pools */
-
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = $pools
-            ->get($value)
-            ->pop()
-            ->getResource();
-    }
-
-    return new Cache(new Sharding($adapters));
-}
-
-/**
  * Get Functions Storage Device
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('getFunctionsDevice', function (string $projectId) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+Server::setResource('deviceFunctions', function () {
+    return function (string $projectId) {
+        return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
+    };
 });
 
 /**
@@ -199,8 +176,10 @@ Server::setResource('getFunctionsDevice', function (string $projectId) {
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('getFilesDevice', function (string $projectId) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+Server::setResource('deviceFiles', function () {
+    return function (string $projectId) {
+        return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
+    };
 });
 
 /**
@@ -208,8 +187,21 @@ Server::setResource('getFilesDevice', function (string $projectId) {
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('getBuildsDevice', function (string $projectId) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+Server::setResource('deviceBuilds', function () {
+    return function (string $projectId) {
+        return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
+    };
+});
+
+/**
+ * Get cache  Device
+ * @param string $projectId of the project
+ * @return Device
+ */
+Server::setResource('deviceCache', function () {
+    return function (string $projectId) {
+        return getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
+    };
 });
 
 $pools = $register->get('pools');

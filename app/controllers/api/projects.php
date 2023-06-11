@@ -207,7 +207,6 @@ App::get('/v1/projects')
         $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $projectId = $cursor->getValue();
             $cursorDocument = $dbForConsole->getDocument('projects', $projectId);
 
@@ -538,8 +537,6 @@ App::delete('/v1/projects/:projectId')
         $response->noContent();
     });
 
-// Webhooks
-
 App::post('/v1/projects/:projectId/webhooks')
     ->desc('Create Webhook')
     ->groups(['api', 'projects'])
@@ -792,8 +789,6 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         $response->noContent();
     });
 
-// Keys
-
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
     ->groups(['api', 'projects'])
@@ -993,8 +988,6 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $response->noContent();
     });
-
-// Platforms
 
 App::post('/v1/projects/:projectId/platforms')
     ->desc('Create Platform')
@@ -1196,8 +1189,6 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $response->noContent();
     });
-
-// Domains
 
 App::post('/v1/projects/:projectId/domains')
     ->desc('Create Domain')

@@ -40,14 +40,15 @@ class Functions extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForFunctions')
+            ->inject('queueForEvents')
             ->inject('queueForUsage')
-            ->callback(fn($message, $dbForProject, $queueForFunctions, $queueForUsage) => $this->action($message, $dbForProject, $queueForFunctions, $queueForUsage));
+            ->callback(fn($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage));
     }
 
     /**
      * @throws Exception|\Throwable
      */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage): void
+    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -100,6 +101,7 @@ class Functions extends Action
                     $this->execute(
                         dbForProject: $dbForProject,
                         queueForFunctions: $queueForFunctions,
+                        queueForEvents: $queueForEvents,
                         queueForUsage: $queueForUsage,
                         project: $project,
                         function: $function,
@@ -125,6 +127,7 @@ class Functions extends Action
                 $this->execute(
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
+                    queueForEvents: $queueForEvents,
                     queueForUsage: $queueForUsage,
                     project: $project,
                     function: $function,
@@ -156,6 +159,7 @@ class Functions extends Action
     private function execute(
         Database $dbForProject,
         Func $queueForFunctions,
+        Event $queueForEvents,
         Usage $queueForUsage,
         Document $project,
         Document $function,
@@ -299,8 +303,9 @@ class Functions extends Action
 
             /** Trigger Webhook */
             $executionModel = new Execution();
-            $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
-            $executionUpdate
+            $queueForEvents
+                ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setProject($project)
                 ->setUser($user)
                 ->setEvent('functions.[functionId].executions.[executionId].update')
@@ -311,7 +316,7 @@ class Functions extends Action
 
             /** Trigger Functions */
             $queueForFunctions
-                ->from($executionUpdate)
+                ->from($queueForEvents)
                 ->trigger();
 
             /** Trigger realtime event */

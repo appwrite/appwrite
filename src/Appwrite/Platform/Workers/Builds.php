@@ -38,17 +38,18 @@ class Builds extends Action
         $this
             ->desc('Builds worker')
             ->inject('message')
+            ->inject('dbForConsole')
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('queueForUsage')
-            ->callback(fn($message, Database $dbForProject, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage) => $this->action($message, $dbForProject, $queueForEvents, $queueForFunctions, $queueForUsage));
+            ->callback(fn($message, Database $dbForConsole, Database $dbForProject, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage) => $this->action($message, $dbForConsole, $dbForProject, $queueForEvents, $queueForFunctions, $queueForUsage));
     }
 
     /**
      * @throws Exception|\Throwable
      */
-    public function action(Message $message, Database $dbForProject, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage): void
+    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -66,6 +67,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $this->buildDeployment(
+                    dbForConsole: $dbForConsole,
                     dbForProject: $dbForProject,
                     queueForEvents: $queueForEvents,
                     queueForFunctions: $queueForFunctions,
@@ -86,7 +88,7 @@ class Builds extends Action
      * @throws \Throwable
      * @throws Structure
      */
-    private function buildDeployment(Database $dbForProject, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Document $deployment, Document $project, Document $function): void
+    private function buildDeployment(Database $dbForConsole, Database $dbForProject, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Document $deployment, Document $project, Document $function): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         $function = $dbForProject->getDocument('functions', $function->getId());
@@ -126,10 +128,10 @@ class Builds extends Action
                 '$id' => $buildId,
                 '$permissions' => [],
                 'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
                 'status' => 'processing',
-                'path' => '',
-                'size' => 0,
+                'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
                 'sourceType' => $device,
@@ -139,6 +141,7 @@ class Builds extends Action
             ]));
 
             $deployment->setAttribute('buildId', $buildId);
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
             $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
         } else {
             $build = $dbForProject->getDocument('builds', $buildId);
@@ -211,16 +214,18 @@ class Builds extends Action
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \
-                cd /usr/local/src/ && ./build.sh'
+                    cd /usr/local/src/ && ./build.sh'
                 ]
             );
 
+            $endTime = new \DateTime();
+            $endTime->setTimestamp($response['endTimeUnix']);
+
             /** Update the build document */
-            $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
+            $build->setAttribute('endTime', DateTime::format($endTime));
             $build->setAttribute('duration', \intval($response['duration']));
             $build->setAttribute('status', $response['status']);
-            $build->setAttribute('path', $response['path']);
-            $build->setAttribute('size', $response['size']);
+            $build->setAttribute('outputPath', $response['outputPath']);
             $build->setAttribute('stderr', $response['stderr']);
             $build->setAttribute('stdout', $response['stdout']);
 
@@ -229,18 +234,16 @@ class Builds extends Action
 
             Console::success("Build id: $buildId created");
 
-            $function->setAttribute('scheduleUpdatedAt', DateTime::now());
-
             /** Set auto deploy */
             if ($deployment->getAttribute('activate') === true) {
+                $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $function->setAttribute('deployment', $deployment->getId());
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
             /** Update function schedule */
-            $dbForConsole = getConsoleDB();
             $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule->setAttribute('resourceUpdatedAt', $function->getAttribute('scheduleUpdatedAt'));
+            $schedule->setAttribute('resourceUpdatedAt', DateTime::now());
 
             $schedule
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
@@ -251,6 +254,7 @@ class Builds extends Action
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $interval = (new \DateTime($endTime))->diff(new \DateTime($startTime));
+            $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', $interval->format('%s') + 0);
             $build->setAttribute('status', 'failed');
             $build->setAttribute('stderr', $th->getMessage());
