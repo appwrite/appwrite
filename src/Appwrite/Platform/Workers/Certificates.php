@@ -35,14 +35,14 @@ class Certificates extends Action
             ->desc('Certificates worker')
             ->inject('message')
             ->inject('dbForConsole')
-            ->inject('queueForMail')
-            ->callback(fn($message, $dbForConsole, $queueForMail) => $this->action($message, $dbForConsole, $queueForMail));
+            ->inject('queueForMails')
+            ->callback(fn($message, $dbForConsole, $queueForMails) => $this->action($message, $dbForConsole, $queueForMails));
     }
 
     /**
      * @throws Exception|Throwable
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMail): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -54,13 +54,13 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
 
-        $this->execute($domain, $dbForConsole, $queueForMail, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $skipRenewCheck);
     }
 
     /**
      * @throws Exception|Throwable
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMail, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -152,7 +152,7 @@ class Certificates extends Action
             $certificate->setAttribute('renewDate', DateTime::now());
 
             // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMail);
+            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails);
         } finally {
             // All actions result in new updatedAt date
             $certificate->setAttribute('updated', DateTime::now());
@@ -340,11 +340,11 @@ class Certificates extends Action
      * @param string $domain Domain that caused the error
      * @param string $errorMessage Verbose error message
      * @param int $attempt How many times it failed already
-     * @param Mail $queueForMail
+     * @param Mail $queueForMails
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMail): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, Mail $queueForMails): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -375,7 +375,7 @@ class Certificates extends Action
             ->setParam('{{bg-content}}', '#ffffff')
             ->setParam('{{text-content}}', '#000000');
 
-        $queueForMail
+        $queueForMails
             ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->setBody($body->render())
             ->setName('Appwrite Administrator')

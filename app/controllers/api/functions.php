@@ -895,6 +895,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         if ($function->getAttribute('deployment') === $deployment->getId()) { // Reset function deployment
             $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
                 'deployment' => '',
+                'deploymentInternalId' => '',
             ])));
         }
 

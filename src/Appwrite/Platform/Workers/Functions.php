@@ -142,6 +142,7 @@ class Functions extends Action
                 $this->execute(
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
+                    queueForEvents: $queueForEvents,
                     queueForUsage: $queueForUsage,
                     project: $project,
                     function: $function,

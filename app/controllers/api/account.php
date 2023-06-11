@@ -732,8 +732,8 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMail')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMail) {
+    ->inject('queueForMails')
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -837,13 +837,11 @@ App::post('/v1/account/sessions/magic-url')
 
         $body = $body->render();
 
-        $queueForMail
+        $queueForMails
             ->setSubject($subject)
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->trigger()
         ;
 
@@ -1624,6 +1622,8 @@ App::patch('/v1/account/password')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
     ->inject('response')
@@ -2055,9 +2055,9 @@ App::post('/v1/account/recovery')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('queueForMail')
+    ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMail, Event $queueForEvents) {
+    ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -2133,7 +2133,7 @@ App::post('/v1/account/recovery')
         $body = $body->render();
 
 
-        $queueForMail
+        $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name'))
             ->setBody($body)
@@ -2252,8 +2252,8 @@ App::post('/v1/account/verification')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->inject('queueForMail')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMail) {
+    ->inject('queueForMails')
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -2312,13 +2312,11 @@ App::post('/v1/account/verification')
 
         $body = $body->render();
 
-        $queueForMail
+        $queueForMails
             ->setSubject($subject)
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setUrl($url)
-            ->setLocale($locale->default)
             ->setName($user->getAttribute('name'))
             ->trigger()
         ;

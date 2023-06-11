@@ -60,13 +60,14 @@ class Webhooks extends Action
 
     private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
     {
+
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));
-
+        var_dump($url);
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         \curl_setopt($ch, CURLOPT_HEADER, 0);

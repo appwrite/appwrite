@@ -156,13 +156,13 @@ App::init()
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('queueForAudits')
-    ->inject('queueForMail')
+    ->inject('queueForMails')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Mail $queueForMail, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Mail $queueForMails, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -236,7 +236,7 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-        $queueForMail
+        $queueForMails
             ->setProject($project)
             ->setUser($user);
 

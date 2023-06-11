@@ -132,7 +132,7 @@ CLI::setResource('queue', function (Group $pools) {
 CLI::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
-CLI::setResource('queueForMail', function (Connection $queue) {
+CLI::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
 CLI::setResource('queueForBuilds', function (Connection $queue) {

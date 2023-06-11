@@ -383,17 +383,17 @@ Server::setResource('applyCertificateFiles', function () {
  * @param int $attempt How many times it failed already
  * @return void
  */
-Server::setResource('notifyError', function (Mail $queueForMail) {
+Server::setResource('notifyError', function (Mail $queueForMails) {
     return function (
         string $domain,
         string $errorMessage,
         int $attempt,
-    ) use ($queueForMail) {
+    ) use ($queueForMails) {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         // Send mail to administratore mail
-        $queueForMail
+        $queueForMails
             ->setType(MAIL_TYPE_CERTIFICATE)
             ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->setUrl('https://' . $domain)
@@ -406,7 +406,7 @@ Server::setResource('notifyError', function (Mail $queueForMail) {
             ])
             ->trigger();
     };
-}, ['queueForMail']);
+}, ['queueForMails']);
 
 /**
  * Update all existing domain documents so they have relation to correct certificate document.

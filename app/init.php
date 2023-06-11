@@ -869,7 +869,7 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
-App::setResource('queueForMail', function (Connection $queue) {
+App::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
 App::setResource('queueForBuilds', function (Connection $queue) {

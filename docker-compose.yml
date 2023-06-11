@@ -308,6 +308,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE

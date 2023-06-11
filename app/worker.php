@@ -125,7 +125,7 @@ Server::setResource('queueForDatabase', function (Connection $queue) {
 Server::setResource('queueForMessaging', function (Connection $queue) {
     return new Phone($queue);
 }, ['queue']);
-Server::setResource('queueForMail', function (Connection $queue) {
+Server::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
 Server::setResource('queueForBuilds', function (Connection $queue) {

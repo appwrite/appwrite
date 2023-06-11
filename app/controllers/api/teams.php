@@ -315,9 +315,9 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('queueForMail')
+    ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMail, Event $queueForEvents) {
+    ->action(function (string $teamId, string $email, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -461,7 +461,7 @@ App::post('/v1/teams/:teamId/memberships')
 
             $body = $body->render();
 
-            $queueForMail
+            $queueForMails
                 ->setSubject($subject)
                 ->setBody($body)
                 ->setFrom($from)

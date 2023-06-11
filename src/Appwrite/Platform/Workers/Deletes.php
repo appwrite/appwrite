@@ -59,7 +59,7 @@ class Deletes extends Action
         $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
         $resource = $payload['resource'] ?? null;
         $document = new Document($payload['document'] ?? []);
-        $project = new Document($payload['project'] ?? []);
+        $project  = new Document($payload['project'] ?? []);
 
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
@@ -186,6 +186,7 @@ class Deletes extends Action
     }
 
     /**
+     * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $resource
      * @throws Exception
@@ -618,7 +619,6 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
         $deploymentId = $document->getId();
-        $functionId = $document->getAttribute('resourceId');
 
         /**
          * Delete deployment files
