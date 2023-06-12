@@ -33,6 +33,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('enabled'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => true,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

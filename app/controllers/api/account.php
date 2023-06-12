@@ -1741,11 +1741,12 @@ App::patch('/v1/account/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->inject('requestTimestamp')
+    ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $user->setAttribute('status', false);
 
@@ -1758,6 +1759,12 @@ App::patch('/v1/account/status')
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
+
+        $protocol = $request->getProtocol();
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
