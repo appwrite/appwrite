@@ -618,9 +618,9 @@ class DeletesV1 extends Worker
 
         $executionStart = \microtime(true);
 
-        var_dump("Collection : ", $collection);
-        var_dump("Database : ", $database->getDefaultDatabase());
-        var_dump("Namespace : ", $database->getNamespace());
+        var_dump("Collection : $collection");
+        var_dump("Database : {$database->getDefaultDatabase()}");
+        var_dump("Namespace : {$database->getNamespace()}");
 
         while ($sum === $limit) {
             $chunk++;
