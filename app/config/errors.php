@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_USAGE_DISABLED => [
+        'name' => Exception::GENERAL_USAGE_DISABLED,
+        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -107,7 +112,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
+        'description' => 'The current user has been blocked.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -488,6 +493,11 @@ return [
         'name' => Exception::PROJECT_NOT_FOUND,
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
+    ],
+    Exception::PROJECT_ALREADY_EXISTS => [
+        'name' => Exception::PROJECT_ALREADY_EXISTS,
+        'description' => 'Project with the requested ID already exists.',
+        'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
