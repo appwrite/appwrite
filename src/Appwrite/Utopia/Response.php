@@ -87,6 +87,7 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Import;
 use Appwrite\Utopia\Response\Model\ImportValidationError;
+use Appwrite\Utopia\Response\Model\Migration;
 
 /**
  * @method int getStatusCode()
@@ -221,9 +222,9 @@ class Response extends SwooleResponse
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
 
-    // Imports
-    public const MODEL_IMPORT = 'import';
-    public const MODEL_IMPORT_LIST = 'importList';
+    // Migrations
+    public const MODEL_MIGRATION = 'migration';
+    public const MODEL_MIGRATION_LIST = 'migrationList';
     public const MODEL_IMPORT_VALIDATION_ERROR = 'importValidationError';
 
     // Deprecated
@@ -287,7 +288,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
-            ->setModel(new BaseList('Imports List', self::MODEL_IMPORT_LIST, 'imports', self::MODEL_IMPORT))
+            ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -357,7 +358,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new ConsoleVariables())
-            ->setModel(new Import())
+            ->setModel(new Migration())
             ->setModel(new ImportValidationError())
             // Verification
             // Recovery

@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Import extends Model
+class Migration extends Model
 {
     public function __construct()
     {
@@ -91,6 +91,6 @@ class Import extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_IMPORT;
+        return Response::MODEL_MIGRATION;
     }
 }

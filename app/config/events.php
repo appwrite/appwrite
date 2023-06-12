@@ -238,7 +238,7 @@ return [
         ]
     ],
     'imports' => [
-        '$model' => Response::MODEL_IMPORT,
+        '$model' => Response::MODEL_MIGRATION,
         '$resource' => true,
         '$description' => 'This event triggers on any imports event.',
         'create' => [

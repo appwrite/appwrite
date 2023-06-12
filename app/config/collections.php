@@ -3581,10 +3581,10 @@ $collections = [
         ],
     ],
 
-    'imports' => [
+    'migrations' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('imports'),
-        'name' => 'Imports',
+        '$id' => ID::custom('migrations'),
+        'name' => 'Migrations',
         'attributes' => [
             [
                 '$id' => ID::custom('status'),

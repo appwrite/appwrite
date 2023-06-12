@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-class Imports extends Base
+class Migrations extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'status',
@@ -20,6 +20,6 @@ class Imports extends Base
      */
     public function __construct()
     {
-        parent::__construct('imports', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('migrations', self::ALLOWED_ATTRIBUTES);
     }
 }

@@ -7,7 +7,7 @@ use Appwrite\Permission;
 use Appwrite\Query;
 use Appwrite\Resque\Worker;
 use Appwrite\Role;
-use Appwrite\Utopia\Response\Model\Import;
+use Appwrite\Utopia\Response\Model\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -23,10 +23,10 @@ use Utopia\Transfer\Transfer;
 
 require_once __DIR__ . '/../init.php';
 
-Console::title('Imports V1 Worker');
-Console::success(APP_NAME . ' Imports worker v1 has started');
+Console::title('Migrations V1 Worker');
+Console::success(APP_NAME . ' Migrations worker v1 has started');
 
-class ImportsV1 extends Worker
+class MigrationsV1 extends Worker
 {
     /**
      * Database connection shared across all methods of this file
@@ -37,7 +37,7 @@ class ImportsV1 extends Worker
 
     public function getName(): string
     {
-        return "imports";
+        return "migrations";
     }
 
     public function init(): void
@@ -49,7 +49,7 @@ class ImportsV1 extends Worker
         $this->dbForProject = $this->getProjectDB($this->args['project']['$id']);
 
         // Process
-        $this->processImport();
+        $this->processMigration();
     }
 
     /**
@@ -97,39 +97,39 @@ class ImportsV1 extends Worker
         }
     }
 
-    protected function updateImportDocument(Document $import, Document $project): Document
+    protected function updateMigrationDocument(Document $migration, Document $project): Document
     {
         // Trigger Webhook
-        $importModel = new Import();
+        $migrationModel = new Migration();
 
-        $importUpdate = new Event(Event::IMPORTS_QUEUE_NAME, Event::IMPORTS_CLASS_NAME);
-        $importUpdate
+        $migrationUpdate = new Event(Event::MIGRATIONS_QUEUE_NAME, Event::MIGRATIONS_CLASS_NAME);
+        $migrationUpdate
             ->setProject($project)
-            ->setEvent('imports.[importId].update')
-            ->setParam('importId', $import->getId())
-            ->setPayload($import->getArrayCopy(array_keys($importModel->getRules())))
+            ->setEvent('migrations.[migrationId].update')
+            ->setParam('migrationId', $migration->getId())
+            ->setPayload($migration->getArrayCopy(array_keys($migrationModel->getRules())))
             ->trigger();
 
         /** Trigger Realtime */
-        $allEvents = Event::generateEvents('imports.[importId].update', [
-            'importId' => $import->getId(),
+        $allEvents = Event::generateEvents('migrations.[migrationId].update', [
+            'migrationId' => $migration->getId(),
         ]);
 
         $target = Realtime::fromPayload(
             event: $allEvents[0],
-            payload: $import,
+            payload: $migration,
             project: $project
         );
 
         Realtime::send(
             projectId: 'console',
-            payload: $import->getArrayCopy(),
+            payload: $migration->getArrayCopy(),
             events: $allEvents,
             channels: $target['channels'],
             roles: $target['roles'],
         );
 
-        return $this->dbForProject->updateDocument('imports', $import->getId(), $import);
+        return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
     }
 
     protected function removeAPIKey(Document $apiKey)
@@ -191,23 +191,23 @@ class ImportsV1 extends Worker
      *
      * @return void
      */
-    protected function processImport(): void
+    protected function processMigration(): void
     {
         /**
-         * @var Document $importDocument
+         * @var Document $migrationDocument
          * @var Transfer $transfer
          */
-        $importDocument = null;
+        $migrationDocument = null;
         $transfer = null;
         $projectDocument = $this->dbForProject->getDocument('projects', $this->args['project']['$id']);
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         try {
-            $importDocument = $this->dbForProject->getDocument('imports', $this->args['import']['$id']);
-            $importDocument->setAttribute('status', 'processing');
-            $this->updateImportDocument($importDocument, $projectDocument);
+            $migrationDocument = $this->dbForProject->getDocument('migrations', $this->args['migration']['$id']);
+            $migrationDocument->setAttribute('status', 'processing');
+            $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
-            $source = $this->processSource(json_decode($importDocument->getAttribute('source'), true));
+            $source = $this->processSource(json_decode($migrationDocument->getAttribute('source'), true));
 
             $destination = new DestinationsAppwrite(
                 $projectDocument->getId(),
@@ -220,48 +220,48 @@ class ImportsV1 extends Worker
                 $destination
             );
 
-            $importDocument->setAttribute('status', 'source-check');
-            $this->updateImportDocument($importDocument, $projectDocument);
+            $migrationDocument->setAttribute('status', 'source-check');
+            $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $source->report();
 
-            $importDocument->setAttribute('status', 'destination-check');
-            $this->updateImportDocument($importDocument, $projectDocument);
+            $migrationDocument->setAttribute('status', 'destination-check');
+            $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $destination->report();
 
             /** Start Transfer */
-            $importDocument->setAttribute('status', 'importing');
-            $this->updateImportDocument($importDocument, $projectDocument);
-            $transfer->run($importDocument->getAttribute('resources'), function () use ($importDocument, $transfer, $projectDocument) {
-                $importDocument->setAttribute('resourceData', json_encode($transfer->getResourceCache()));
-                $importDocument->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+            $migrationDocument->setAttribute('status', 'migrating');
+            $this->updateMigrationDocument($migrationDocument, $projectDocument);
+            $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
+                $migrationDocument->setAttribute('resourceData', json_encode($transfer->getResourceCache()));
+                $migrationDocument->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
 
-                $this->updateImportDocument($importDocument, $projectDocument);
+                $this->updateMigrationDocument($migrationDocument, $projectDocument);
             });
 
             $errors = $transfer->getReport(Resource::STATUS_ERROR);
 
             if (count($errors) > 0) {
-                $importDocument->setAttribute('status', 'failed');
-                $importDocument->setAttribute('errorData', $errors);
-                $this->updateImportDocument($importDocument, $projectDocument);
+                $migrationDocument->setAttribute('status', 'failed');
+                $migrationDocument->setAttribute('errorData', $errors);
+                $this->updateMigrationDocument($migrationDocument, $projectDocument);
                 return;
             }
 
-            $importDocument->setAttribute('status', 'completed');
-            $importDocument->setAttribute('stage', 'finished');
+            $migrationDocument->setAttribute('status', 'completed');
+            $migrationDocument->setAttribute('stage', 'finished');
         } catch (\Throwable $th) {
             Console::error($th->getMessage());
 
-            if ($importDocument) {
+            if ($migrationDocument) {
                 Console::error($th->getMessage());
                 Console::error($th->getTraceAsString());
-                $importDocument->setAttribute('status', 'failed');
-                $importDocument->setAttribute('errorData', $th->getMessage());
+                $migrationDocument->setAttribute('status', 'failed');
+                $migrationDocument->setAttribute('errorData', $th->getMessage());
                 return;
             }
         } finally {
-            if ($importDocument) {
-                $this->updateImportDocument($importDocument, $projectDocument);
+            if ($migrationDocument) {
+                $this->updateMigrationDocument($migrationDocument, $projectDocument);
             }
             if ($tempAPIKey) {
                 $this->removeAPIKey($tempAPIKey);
