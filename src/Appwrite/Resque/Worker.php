@@ -179,8 +179,6 @@ abstract class Worker
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
-        Console::log("Getting project DB for {$project->getId()}");
-
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $this->getConsoleDB();
         }

@@ -625,7 +625,7 @@ class DeletesV1 extends Worker
 
             $sum = count($results);
 
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents in collection ' . '_' . $database->getNamespace() . '_' . $collection);
+            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents in collection ' . $database->getNamespace() . '_' . $collection);
 
             foreach ($results as $document) {
                 $this->deleteById($document, $database, $callback);
