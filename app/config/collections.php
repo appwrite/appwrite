@@ -3240,6 +3240,28 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => 'resourceType',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('mimeType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255, // https://tools.ietf.org/html/rfc4288#section-4.2
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => 'accessedAt',
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
