@@ -178,11 +178,15 @@ abstract class Worker
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
 
+        Console::log("Getting project DB for {$project->getId()}");
+
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $this->getConsoleDB();
         }
 
         $databaseName = $project->getAttribute('database');
+
+        var_dump(self::$databases);
 
         if (isset(self::$databases[$databaseName])) {
             $database = self::$databases[$databaseName];
