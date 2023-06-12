@@ -633,7 +633,6 @@ $register->set('db', function () {
     $dbPass = App::getEnv('_APP_DB_PASS', '');
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-    var_dump($dbHost, $dbPort, $dbUser, $dbPass, $dbScheme);
     $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::ATTR_TIMEOUT => 3, // Seconds
         PDO::ATTR_PERSISTENT => true,
