@@ -43,8 +43,8 @@ class PurgeCache extends Action
     {
         //docker compose exec -t appwrite purge-cache
 
-        Console::title('Cloud free tier  stats calculation V1');
-        Console::success(APP_NAME . ' cloud free tier  stats calculation has started');
+        Console::title('Cache purge V1');
+        Console::success(APP_NAME . ' cache purge has started');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
@@ -82,17 +82,18 @@ class PurgeCache extends Action
                     $dbForProject->setDefaultDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
                     $projectId = $project->getId();
-                    $cache = new Cache(
+
+                    $files = new Cache(
                         new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
                     );
 
                     $this->deleteByGroup(
                         [],
                         $dbForProject,
-                        function (Document $document) use ($cache, $projectId) {
+                        function (Document $document) use ($files, $projectId) {
                             $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
 
-                            if ($cache->purge($document->getId())) {
+                            if ($files->purge($document->getId())) {
                                 Console::success('Deleting cache file: ' . $path);
                             } else {
                                 Console::error('Failed to delete cache file: ' . $path);
@@ -166,5 +167,4 @@ class PurgeCache extends Action
         $executionEnd = \microtime(true);
         Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
-
 }
