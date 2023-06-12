@@ -186,7 +186,7 @@ abstract class Worker
 
         $databaseName = $project->getAttribute('database');
 
-        var_dump(self::$databases);
+        var_dump(array_keys(self::$databases));
 
         if (isset(self::$databases[$databaseName])) {
             $database = self::$databases[$databaseName];
