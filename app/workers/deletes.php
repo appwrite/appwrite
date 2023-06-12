@@ -618,19 +618,23 @@ class DeletesV1 extends Worker
 
         $executionStart = \microtime(true);
 
-        while ($sum === $limit) {
-            $chunk++;
-
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
-
-            $sum = count($results);
-
-            Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents in collection ' . $database->getNamespace() . '_' . $collection);
-
-            foreach ($results as $document) {
-                $this->deleteById($document, $database, $callback);
-                $count++;
+        try {
+            while ($sum === $limit) {
+                $chunk++;
+    
+                $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+    
+                $sum = count($results);
+    
+                Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents in collection ' . $database->getNamespace() . '_' . $collection);
+    
+                foreach ($results as $document) {
+                    $this->deleteById($document, $database, $callback);
+                    $count++;
+                }
             }
+        } catch (\Exception $e) {
+            Console::error($e->getMessage());
         }
 
         $executionEnd = \microtime(true);
