@@ -45,56 +45,58 @@ $cli
 
         $collections = Config::getParam('collections', []);
 
-        $stack = [];
+        $tables = [];
         foreach ($collections as $collection) {
-        //  var_dump($collection['$id']);
-
-            if (in_array($collection['$id'], ['files', 'collections', 'stats'])) {
+            if (in_array($collection['$id'], ['files', 'collections'])) {
                 continue;
             }
 
-            $name = "`" . $projectDB->getDefaultDatabase() . "`.`_" . $project->getInternalId() . "_" . $collection['$id'] . '`';
+//            $name = "`" . $projectDB->getDefaultDatabase() . "`.`_" . $project->getInternalId() . "_" . $collection['$id'] . '`';
+//            $name = "`_" . $project->getInternalId() . "_" . $collection['$id'] . '`';
+//            $name = $projectDB->getNamespace() . "_" . $collection['$id'];
 
-            $stack[] = $name;
+            $tables[] = $projectDB->getNamespace() . "_" . $collection['$id'];
 
             switch ($collection['$id']) {
                 case 'databases':
                     $databases = $projectDB->find('databases', []);
                     foreach ($databases as $database) {
-                        $name = "database_{$database->getInternalId()}";
-                        $stack[] = $name;
-                        $databaseCollections = $projectDB->find($name, []);
+                        $tables[] = $projectDB->getNamespace() . '_database_' . $database->getInternalId();
+                        $databaseCollections = $projectDB->find('database_' . $database->getInternalId(), []);
                         foreach ($databaseCollections as $databaseCollection) {
-                            $stack[] = $name . '_collection_' . $databaseCollection->getInternalId();
+                            $tables[] = $projectDB->getNamespace() . '_database_' . $database->getInternalId() . '_collection_' . $databaseCollection->getInternalId();
                         }
                     }
-                    var_dump($stack);
+
                     break;
                 case 'buckets':
-                    echo "buckets";
+                    var_dump('buckets');
                     break;
             }
         }
 
-        var_dump($stack);
-        die;
+        var_dump($tables);
 
         $schema = 'appwrite';
-       // var_dump($stack);
 
         $destination = './file.sql';
         $return = null;
         $output = null;
-        $command = "mysqldump -u user -h 127.0.0.1 " . $schema . " > " . $destination;
-       // $command = "which mysqldump ";
-        exec($command, $output, $return);
+        $singleTransaction = '--single-transaction';
+        $tables = implode(' ', $tables);
+        //$command = "mysqldump -u user -h bla " . $schema . " " . implode(' ', $tables) . "> " . $destination;
+        $command = "docker exec appwrite-mariadb /usr/bin/mysqldump -u root --password=rootsecretpassword " . $schema . " " . $tables . " " . $singleTransaction . " > backup.sql";
+
+        Console::error($command);
+        //exec($command, $output, $return);
 
         var_dump($output);
         var_dump($return);
 
+        $restore = "docker exec -i appwrite-mariadb mysql -u root --password=rootsecretpassword shmuel < backup.sql";
+        Console::error($restore);
+
         die;
-
-
 
         if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
             // todo: make sure not to backup console?
