@@ -17,8 +17,12 @@ class Base extends Queries
     /**
      * Expression constructor
      *
+     * Collections parameter is used to override the default collections we get from
+     * config, if not provided collections config is used
+     *
      * @param string $collection
      * @param string[] $allowedAttributes
+     * @param array $collections
      */
     public function __construct(string $collection, array $allowedAttributes, array $collections = [])
     {
