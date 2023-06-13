@@ -168,10 +168,9 @@ class DeletesV1 extends Worker
      */
     protected function deleteCacheByDate(string $datetime): void
     {
-        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
 
-            $projectId = $project->getId();
-            $dbForProject = $this->getProjectDB($project);
+            $dbForProject = $this->getProjectDB($projectId);
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
             );
