@@ -654,11 +654,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->setContext('bucket', $bucket)
         ;
 
-        $deletes
-            ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-            ->setResource('file/' . $file->getId())
-        ;
-
         $metadata = null; // was causing leaks as it was passed by reference
 
         $response
@@ -1340,6 +1335,11 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         } else {
             $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
         }
+
+        $deletes
+            ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+            ->setResource('file/' . $file->getId())
+        ;
 
         $events
             ->setParam('bucketId', $bucket->getId())
