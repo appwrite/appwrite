@@ -169,7 +169,7 @@ class DeletesV1 extends Worker
     protected function deleteCacheByResource(Document $project, string $resource): void
     {
         $projectId = $project->getId();
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project);
         $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
         if ($document) {
@@ -199,11 +199,11 @@ class DeletesV1 extends Worker
      */
     protected function deleteCacheByDate(string $datetime): void
     {
-        $this->deleteForProjectIds(function (Document $projectId) use ($datetime) {
+        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
 
-            $dbForProject = $this->getProjectDB($projectId);
+            $dbForProject = $this->getProjectDB($project);
             $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
 
             $query = [
@@ -214,8 +214,8 @@ class DeletesV1 extends Worker
                 'cache',
                 $query,
                 $dbForProject,
-                function (Document $document) use ($cache, $projectId) {
-                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+                function (Document $document) use ($cache, $project) {
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $document->getId();
 
                     if ($cache->purge($document->getId())) {
                         Console::success('Deleting cache file: ' . $path);
