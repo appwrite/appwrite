@@ -1,12 +1,10 @@
-> It's going to get cloudy! 🌩 ☂️
-> The Appwrite Cloud is coming soon! You can learn more about our upcoming hosted solution and signup for free credits at: https://appwrite.io/cloud
+> Great news! Appwrite Cloud is now in public beta! Sign up at [cloud.appwrite.io](https://cloud.appwrite.io) for a hassle-free, hosted experience. Join us in the Cloud today! ☁️🎉
 
 <br />
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
     <br />
-    <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
+    <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
     <br />
     <br />
 </p>
@@ -14,6 +12,7 @@
 
 <!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
 
+[![We're Hiring](https://img.shields.io/static/v1?label=We're&message=Hiring&color=blue&style=flat-square)](https://appwrite.io/company/careers)
 [![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=ready&color=191120&style=flat-square)](https://hacktoberfest.appwrite.io)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord?r=Github)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/appwrite/appwrite/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/appwrite/appwrite/actions)
@@ -25,7 +24,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Announcing Appwrite 1.2 with GraphQL support! Learn what's new!**](https://appwrite.io/graphql)
+[**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -50,6 +49,7 @@ Table of Contents:
     - [CMD](#cmd)
     - [PowerShell](#powershell)
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
+- [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
   - [Services](#services)
   - [SDKs](#sdks)
@@ -75,7 +75,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.3.7
 ```
 
 ### Windows
@@ -87,7 +87,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.3.7
 ```
 
 #### PowerShell
@@ -97,7 +97,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.3.7
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.

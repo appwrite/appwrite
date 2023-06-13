@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
 
@@ -225,6 +225,8 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', $response['headers']['set-cookie']);
+        $this->assertEquals('[]', $response['headers']['x-fallback-cookies']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',

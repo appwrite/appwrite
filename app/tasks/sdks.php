@@ -33,7 +33,7 @@ $cli
         $production = ($git) ? (Console::confirm('Type "Appwrite" to push code to production git repos') == 'Appwrite') : false;
         $message = ($git) ? Console::confirm('Please enter your commit message:') : '';
 
-        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', 'latest'])) {
+        if (!in_array($version, ['0.6.x', '0.7.x', '0.8.x', '0.9.x', '0.10.x', '0.11.x', '0.12.x', '0.13.x', '0.14.x', '0.15.x', '1.0.x', '1.1.x', '1.2.x', '1.3.x', 'latest'])) {
             throw new Exception('Unknown version given');
         }
 
@@ -86,8 +86,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        $config->setNPMPackage('appwrite');
-                        $config->setBowerPackage('appwrite');
+                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                            $config->setNPMPackage('@appwrite.io/console');
+                            $config->setBowerPackage('@appwrite.io/console');
+                        } else {
+                            $config->setNPMPackage('appwrite');
+                            $config->setBowerPackage('appwrite');
+                        }
                         break;
                     case 'cli':
                         $config = new CLI();
@@ -234,8 +239,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         cd ' . $target . ' && \
                         git init --initial-branch=' . $gitBranch . ' && \
                         git remote add origin ' . $gitUrl . ' && \
-                        git fetch && \
-                        git pull ' . $gitUrl . ' && \
+                        git fetch origin ' . $gitBranch . ' && \
+                        git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
                         cp -r ' . $result . '/* ' . $target . '/ && \
                         git add . && \
