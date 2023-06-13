@@ -111,10 +111,10 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_CACHE_BY_RESOURCE:
-                $this->deleteCacheByResource($this->args['resource']);
+                $this->deleteCacheByResource($project, $this->args['resource']);
                 break;
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
-                $this->deleteCacheByDate();
+                $this->deleteCacheByDate($this->args['datetime']);
                 break;
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($this->args['datetime']);
@@ -162,31 +162,54 @@ class DeletesV1 extends Worker
     }
 
     /**
+     * @param Document $project
      * @param string $resource
+     * @throws Exception
      */
-    protected function deleteCacheByResource(string $resource): void
+    protected function deleteCacheByResource(Document $project, string $resource): void
     {
-        $this->deleteCacheFiles([
-            Query::equal('resource', [$resource]),
-        ]);
+        $dbForProject = $this->getProjectDB($project);
+        $projectId = $project->getId();
+        $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
+
+        if ($document) {
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            );
+
+            $this->deleteById(
+                $document,
+                $dbForProject,
+                function ($document) use ($cache, $projectId) {
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                    if ($cache->purge($document->getId())) {
+                        Console::success('Deleting cache file: ' . $path);
+                    } else {
+                        Console::error('Failed to delete cache file: ' . $path);
+                    }
+                }
+            );
+        }
     }
 
-    protected function deleteCacheByDate(): void
+    /**
+     * @param string $datetime
+     * @throws Exception
+     */
+    protected function deleteCacheByDate(string $datetime): void
     {
-        $this->deleteCacheFiles([
-            Query::lessThan('accessedAt', $this->args['datetime']),
-        ]);
-    }
-
-    protected function deleteCacheFiles($query): void
-    {
-        $this->deleteForProjectIds(function (Document $project) use ($query) {
+        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
 
             $projectId = $project->getId();
             $dbForProject = $this->getProjectDB($project);
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
             );
+
+            $query = [
+                Query::lessThan('accessedAt', $datetime),
+            ];
 
             $this->deleteByGroup(
                 'cache',
@@ -205,9 +228,10 @@ class DeletesV1 extends Worker
         });
     }
 
+
     /**
      * @param Document $document database document
-     * @param Document $projectId
+     * @param Document $project
      */
     protected function deleteDatabase(Document $document, Document $project): void
     {
@@ -621,13 +645,13 @@ class DeletesV1 extends Worker
         try {
             while ($sum === $limit) {
                 $chunk++;
-    
+
                 $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
-    
+
                 $sum = count($results);
-    
+
                 Console::info('Deleting chunk #' . $chunk . '. Found ' . $sum . ' documents in collection ' . $database->getNamespace() . '_' . $collection);
-    
+
                 foreach ($results as $document) {
                     $this->deleteById($document, $database, $callback);
                     $count++;
