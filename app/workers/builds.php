@@ -273,16 +273,12 @@ class BuildsV1 extends Worker
 
             $command = \str_replace('"', '\\"', $command);
 
-            \var_dump("Before");
-
             $response = null;
-
-            Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
 
             Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject) {
                 Co::join([
                     Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject) {
-                        \var_dump("Get logs");
+                        \var_dump("Start 1");
                         $this->executor->getLogs(
                             projectId: $project->getId(),
                             deploymentId: $deployment->getId(),
@@ -295,9 +291,10 @@ class BuildsV1 extends Worker
                                 }
                             }
                         );
+                        \var_dump("End 1");
                     }),
                     Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command) {
-                        \var_dump("Create runtime start");
+                        \var_dump("Start 2");
                         $response = $this->executor->createRuntime(
                             projectId: $project->getId(),
                             deploymentId: $deployment->getId(),
@@ -310,12 +307,33 @@ class BuildsV1 extends Worker
                             variables: $vars,
                             command: 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
                         );
-                        \var_dump("Create runtime End");
+                        \var_dump("End 2");
+                    }),
+                    Co\go(function () {
+                        \var_dump("Start 3");
+                        $ch = curl_init();
+
+                        curl_setopt($ch, CURLOPT_URL, 'https://matejbaco2.loca.lt/');
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+                        curl_setopt($ch, CURLOPT_HEADER, 0);
+                        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+                        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+                    
+                        $headers = array();
+                        $headers[] = 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36';
+                    
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                    
+                        $output = curl_exec($ch);
+                        \var_dump($output);
+
+                        curl_close($ch);
+                        \var_dump("End 3");
                     })
                 ]);
             });
-
-            \var_dump("After");
 
             $endTime = DateTime::now();
 

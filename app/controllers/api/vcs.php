@@ -573,7 +573,7 @@ App::get('/v1/vcs/installations')
 
 App::get('/v1/vcs/installations/:installationId')
     ->groups(['api', 'vcs'])
-    ->desc('Get installations')
+    ->desc('Get installation')
     ->label('scope', 'public')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'vcs')
