@@ -96,6 +96,7 @@ COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app
+COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
@@ -117,7 +118,10 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/maintenance && \
+    chmod +x /usr/local/bin/clear-card-cache && \
+    chmod +x /usr/local/bin/calc-users-stats && \
+    chmod +x /usr/local/bin/calc-tier-stats && \
+    chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
