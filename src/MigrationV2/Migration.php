@@ -13,7 +13,6 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // TODO: Create seed project for testing
 // TODO: database filters for managing attributes between migration
-// 
 
 class Migration
 {
@@ -150,37 +149,37 @@ class Migration
     protected function confirm()
     {
 
-        if ($this->mode === self::MODE_AFTER) {
-            Console::success("The following attributes will be deleted");
+        if ($this->mode === self::MODE_BEFORE) {
             $attributesRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
+            if (count($attributesRemoved)) Console::success("The following attributes will be deleted");
             foreach ($attributesRemoved as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
-            Console::success("The following collections will be removed");
             $collectionsRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_DELETED);
+            if (count($collectionsRemoved)) Console::success("The following collections will be removed");
             foreach ($collectionsRemoved as $collection) {
                 Console::log("  {$collection['collection']}");
             }
         }
 
         if ($this->mode == self::MODE_BEFORE) {
-            Console::success("The following attributes will be created");
             $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
+            if (count($attributesAdded)) Console::success("The following attributes will be added");
             foreach ($attributesAdded as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
-            Console::success("The following attributes will be updated");
             $attributesUpdated = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
+            if (count($attributesUpdated)) Console::success("The following attributes will be updated");
             foreach ($attributesUpdated as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
-            Console::success("The following collections will be added");
             $collectionsAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
+            if (count($collectionsAdded)) Console::success("The following collections will be added");
             foreach ($collectionsAdded as $collection) {
-                Console::log("  {$collection['collection']}");
+                Console::log("  {$collection['collection']['name']}");
             }
         }
 
