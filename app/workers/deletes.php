@@ -138,7 +138,7 @@ class DeletesV1 extends Worker
     {
 
         $projectId = $project->getId();
-        $dbForProject = $this->getProjectDB($project->getId());
+        $dbForProject = $this->getProjectDB($projectId);
         $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
         if ($document) {
