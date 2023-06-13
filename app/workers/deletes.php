@@ -168,8 +168,8 @@ class DeletesV1 extends Worker
      */
     protected function deleteCacheByResource(Document $project, string $resource): void
     {
-        $dbForProject = $this->getProjectDB($project);
         $projectId = $project->getId();
+        $dbForProject = $this->getProjectDB($projectId);
         $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
         if ($document) {
@@ -199,10 +199,9 @@ class DeletesV1 extends Worker
      */
     protected function deleteCacheByDate(string $datetime): void
     {
-        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
+        $this->deleteForProjectIds(function (Document $projectId) use ($datetime) {
 
-            $projectId = $project->getId();
-            $dbForProject = $this->getProjectDB($project);
+            $dbForProject = $this->getProjectDB($projectId);
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
             );
