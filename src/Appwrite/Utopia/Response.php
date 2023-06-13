@@ -62,6 +62,7 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -186,6 +187,7 @@ class Response extends SwooleResponse
     public const MODEL_REPOSITORY_LIST = 'repositoryList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
+    public const MODEL_DETECTION = 'detection';
 
     // Functions
     public const MODEL_FUNCTION = 'function';
@@ -331,6 +333,7 @@ class Response extends SwooleResponse
             ->setModel(new Func())
             ->setModel(new Installation())
             ->setModel(new Repository())
+            ->setModel(new Detection())
             ->setModel(new Branch())
             ->setModel(new Runtime())
             ->setModel(new Deployment())
