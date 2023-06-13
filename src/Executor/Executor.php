@@ -57,7 +57,7 @@ class Executor
      * @param string $entrypoint
      * @param string $destination
      * @param array $variables
-     * @param array $commands
+     * @param string $command
      */
     public function createRuntime(
         string $deploymentId,
@@ -69,8 +69,7 @@ class Executor
         string $entrypoint = '',
         string $destination = '',
         array $variables = [],
-        array $commands = null,
-        array $startCommands = null,
+        string $command = null,
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
@@ -82,8 +81,7 @@ class Executor
             'entrypoint' => $entrypoint,
             'variables' => $variables,
             'remove' => $remove,
-            'commands' => $commands,
-            'startCommands' => $startCommands,
+            'command' => $command,
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
@@ -100,6 +98,31 @@ class Executor
         }
 
         return $response['body'];
+    }
+
+    /**
+     * 
+     *
+     * Listen to realtime logs stream of a runtime
+     *
+     * @param string $deploymentId
+     * @param string $projectId
+     * @param callable $callback
+     */
+    public function getLogs(
+        string $deploymentId,
+        string $projectId,
+        callable $callback
+    ) {
+        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+
+        $runtimeId = "$projectId-$deploymentId";
+        $route = "/runtimes/{$runtimeId}/logs";
+        $params = [
+            'timeout' => $timeout
+        ];
+
+        $this->call(self::METHOD_GET, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout, $callback);
     }
 
     /**
@@ -139,7 +162,7 @@ class Executor
      * @param string $image
      * @param string $source
      * @param string $entrypoint
-     * @param array $commands
+     * @param string $command
      *
      * @return array
      */
@@ -156,8 +179,7 @@ class Executor
         string $path,
         string $method,
         array $headers,
-        array $commands = null,
-        array $startCommands = null
+        string $command = null,
     ) {
         $headers['host'] = App::getEnv('_APP_DOMAIN', '');
 
@@ -178,8 +200,7 @@ class Executor
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
-            'commands' => $commands,
-            'startCommands' => $startCommands
+            'command' => $command,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
@@ -208,7 +229,7 @@ class Executor
      * @return array|string
      * @throws Exception
      */
-    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15)
+    public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -236,8 +257,20 @@ class Executor
             unset($headers[$i]);
         }
 
+        if (isset($callback)) {
+            $headers[] = 'accept: text/event-stream';
+
+            $handleEvent = function ($ch, $data) use ($callback) {
+                $callback($data);
+                return \strlen($data);
+            };
+
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, $handleEvent);
+        } else {
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        }
+
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
@@ -266,6 +299,12 @@ class Executor
         }
 
         $responseBody   = curl_exec($ch);
+
+        if (isset($callback)) {
+            curl_close($ch);
+            return [];
+        }
+
         $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 

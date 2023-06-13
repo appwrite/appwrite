@@ -1423,10 +1423,7 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
-                commands: [
-                    'sh', '-c',
-                    'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
-                ]
+                command: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
             );
 
             /** Update execution status */

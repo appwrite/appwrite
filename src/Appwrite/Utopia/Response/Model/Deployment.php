@@ -74,13 +74,13 @@ class Deployment extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The build stdout.',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'Compiling source files...',
             ])
             ->addRule('buildStderr', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The build stderr.',
                 'default' => '',
-                'example' => 'enabled',
+                'example' => 'File index.ts not found!',
             ])
             ->addRule('buildTime', [
                 'type' => self::TYPE_INTEGER,

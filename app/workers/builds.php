@@ -1,5 +1,6 @@
 <?php
 
+use Swoole\Coroutine as Co;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -8,6 +9,7 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Appwrite\Vcs\Comment;
+use Swoole\Runtime;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -271,21 +273,49 @@ class BuildsV1 extends Worker
 
             $command = \str_replace('"', '\\"', $command);
 
-            $response = $this->executor->createRuntime(
-                projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
-                source: $source,
-                version: $function->getAttribute('version'),
-                image: $runtime['image'],
-                remove: true,
-                entrypoint: $deployment->getAttribute('entrypoint'),
-                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                variables: $vars,
-                commands: [
-                    'sh', '-c',
-                    'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
-                ],
-            );
+            \var_dump("Before");
+
+            $response = null;
+
+            Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);
+
+            Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject) {
+                Co::join([
+                    Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject) {
+                        \var_dump("Get logs");
+                        $this->executor->getLogs(
+                            projectId: $project->getId(),
+                            deploymentId: $deployment->getId(),
+                            callback: function ($logs) use (&$response, &$build, $dbForProject) {
+                                \var_dump("Callback");
+                                if($response === null) {
+                                    $build = $build->setAttribute('stdout', $build->getAttribute('stdout', '') . $logs);
+                                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+                                    \var_dump("Writing" . $logs);
+                                }
+                            }
+                        );
+                    }),
+                    Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command) {
+                        \var_dump("Create runtime start");
+                        $response = $this->executor->createRuntime(
+                            projectId: $project->getId(),
+                            deploymentId: $deployment->getId(),
+                            source: $source,
+                            version: $function->getAttribute('version'),
+                            image: $runtime['image'],
+                            remove: true,
+                            entrypoint: $deployment->getAttribute('entrypoint'),
+                            destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                            variables: $vars,
+                            command: 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
+                        );
+                        \var_dump("Create runtime End");
+                    })
+                ]);
+            });
+
+            \var_dump("After");
 
             $endTime = DateTime::now();
 
@@ -385,10 +415,6 @@ class BuildsV1 extends Worker
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         $commentId = $deployment->getAttribute('vcsCommentId', '');
 
-        if (empty($commentId)) {
-            return;
-        }
-
         if (!empty($SHA)) {
             $message = match ($status) {
                 'ready' => 'Build succeeded.',
@@ -412,10 +438,13 @@ class BuildsV1 extends Worker
             $github->updateCommitStatus($repositoryName, $SHA, $owner, $state, $message, $targetUrl, $name);
         }
 
-        $comment = new Comment();
-        $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-        $comment->addBuild($project, $function, $status, $deployment->getId());
-        $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+
+        if (!empty($commentId)) {
+            $comment = new Comment();
+            $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+            $comment->addBuild($project, $function, $status, $deployment->getId());
+            $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+        }
     }
 
     public function shutdown(): void

@@ -182,10 +182,7 @@ Server::setResource('execute', function () {
                 path: $path,
                 method: $method,
                 headers: $headers,
-                commands: [
-                    'sh', '-c',
-                    'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
-                ]
+                command: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
