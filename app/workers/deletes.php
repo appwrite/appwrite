@@ -200,10 +200,10 @@ class DeletesV1 extends Worker
     protected function deleteCacheByDate(string $datetime): void
     {
         $this->deleteForProjectIds(function (Document $project) use ($datetime) {
-
+            $projectId = $project->getId();
             $dbForProject = $this->getProjectDB($project);
             $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
             );
 
             $query = [
@@ -214,8 +214,8 @@ class DeletesV1 extends Worker
                 'cache',
                 $query,
                 $dbForProject,
-                function (Document $document) use ($cache, $project) {
-                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId() . DIRECTORY_SEPARATOR . $document->getId();
+                function (Document $document) use ($cache, $projectId) {
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
 
                     if ($cache->purge($document->getId())) {
                         Console::success('Deleting cache file: ' . $path);
