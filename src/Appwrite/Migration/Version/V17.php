@@ -223,6 +223,28 @@ class V17 extends Migration
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
                     break;
+
+                case 'cache':
+                    try {
+                        /**
+                         * Create 'mimeType' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'mimeType');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        /**
+                         * Create 'resourceType' attribute
+                         */
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceType');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'resourceType' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 default:
                     break;
             }
