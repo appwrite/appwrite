@@ -359,8 +359,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->inject('deletes')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal, Delete $deletes) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1335,11 +1334,6 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         } else {
             $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
         }
-
-        $deletes
-            ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-            ->setResource('file/' . $file->getId())
-        ;
 
         $events
             ->setParam('bucketId', $bucket->getId())

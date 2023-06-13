@@ -136,8 +136,9 @@ class DeletesV1 extends Worker
      */
     protected function deleteCacheByResource(Document $project, string $resource): void
     {
-        $dbForProject = $this->getProjectDB($project);
+
         $projectId = $project->getId();
+        $dbForProject = $this->getProjectDB($project->getId());
         $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
         if ($document) {
