@@ -171,23 +171,26 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($project);
         $projectId = $project->getId();
         $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-        );
 
-        $this->deleteById(
-            $document,
-            $dbForProject,
-            function ($document) use ($cache, $projectId) {
-                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+        if ($document) {
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            );
 
-                if ($cache->purge($document->getId())) {
-                    Console::success('Deleting cache file: ' . $path);
-                } else {
-                    Console::error('Failed to delete cache file: ' . $path);
+            $this->deleteById(
+                $document,
+                $dbForProject,
+                function ($document) use ($cache, $projectId) {
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                    if ($cache->purge($document->getId())) {
+                        Console::success('Deleting cache file: ' . $path);
+                    } else {
+                        Console::error('Failed to delete cache file: ' . $path);
+                    }
                 }
-            }
-        );
+            );
+        }
     }
 
     /**

@@ -642,11 +642,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->setContext('bucket', $bucket)
         ;
 
-        $deletes
-            ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-            ->setResource('file/' . $file->getId())
-        ;
-
         $metadata = null; // was causing leaks as it was passed by reference
 
         $response
