@@ -108,6 +108,9 @@ App::post('/v1/teams')
                 'search' => implode(' ', [$membershipId, $user->getId()])
             ]);
 
+            $events->setContext('user', $user);
+            $events->setContext('team', $team);
+
             $membership = $dbForProject->createDocument('memberships', $membership);
             $dbForProject->deleteCachedDocument('users', $user->getId());
         }
@@ -412,6 +415,9 @@ App::post('/v1/teams/:teamId/memberships')
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $events->setContext('team', $team);
+
         if (!empty($userId)) {
             $invitee = $dbForProject->getDocument('users', $userId);
             if ($invitee->isEmpty()) {
@@ -485,6 +491,8 @@ App::post('/v1/teams/:teamId/memberships')
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
+
+        $events->setContext('user', $invitee);
 
         $isOwner = Authorization::isRole('team:' . $team->getId() . '/owner');
 
@@ -747,6 +755,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        $events->setContext('team', $team);
+
         $membership = $dbForProject->getDocument('memberships', $membershipId);
         if ($membership->isEmpty()) {
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
@@ -756,6 +766,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
+
+        $events->setContext('user', $profile);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -834,6 +846,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
+        $events->setContext('team', $team);
+
         if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
             throw new Exception(Exception::TEAM_INVALID_SECRET);
         }
@@ -849,6 +863,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         if ($membership->getAttribute('userId') !== $user->getId()) {
             throw new Exception(Exception::TEAM_INVITE_MISMATCH, 'Invite does not belong to current user (' . $user->getAttribute('email') . ')');
         }
+
+        $events->setContext('user', $user);
 
         if ($membership->getAttribute('confirm') === true) {
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
@@ -960,11 +976,15 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        $events->setContext('user', $user);
+
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $events->setContext('team', $team);
 
         try {
             $dbForProject->deleteDocument('memberships', $membership->getId());

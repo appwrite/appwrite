@@ -1114,6 +1114,8 @@ App::delete('/v1/users/:userId')
         // clone user object to send to workers
         $clone = clone $user;
 
+        $events->setContext('user', $clone);
+
         $dbForProject->deleteDocument('users', $userId);
 
         $deletes

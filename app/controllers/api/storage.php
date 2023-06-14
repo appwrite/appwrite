@@ -368,6 +368,8 @@ App::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $events->setContext('bucket', $bucket);
+
         $validator = new Authorization(Database::PERMISSION_CREATE);
         if (!$validator->isValid($bucket->getCreate())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -651,7 +653,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
         ;
 
         $deletes
@@ -1284,6 +1285,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
+        $events->setContext('bucket', $bucket);
+
         $fileSecurity = $bucket->getAttributes('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_UPDATE);
         $valid = $validator->isValid($bucket->getUpdate());
@@ -1349,7 +1352,6 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
         ;
 
         $response->dynamic($file, Response::MODEL_FILE);
@@ -1388,6 +1390,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
+
+        $events->setContext('bucket', $bucket);
 
         $fileSecurity = $bucket->getAttributes('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_DELETE);
@@ -1444,7 +1448,6 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $events
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
             ->setPayload($response->output($file, Response::MODEL_FILE))
         ;
 

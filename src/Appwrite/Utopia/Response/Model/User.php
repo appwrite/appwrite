@@ -119,7 +119,7 @@ class User extends Model
     /**
      * Get Collection
      *
-     * @return string
+     * @return Document
      */
     public function filter(Document $document): Document
     {

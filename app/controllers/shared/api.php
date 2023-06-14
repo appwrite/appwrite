@@ -101,8 +101,8 @@ App::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
-
+    ->inject('eventHandler')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, callable $eventHandler) use ($databaseListener) {
         $route = $utopia->match($request);
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
@@ -197,6 +197,10 @@ App::init()
         $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
 
         $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $eventHandler($event, $document));
+        $dbForProject->on(Database::EVENT_DOCUMENT_UPDATE, fn ($event, Document $document) => $eventHandler($event, $document));
+        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $eventHandler($event, $document));
 
         $useCache = $route->getLabel('cache', false);
 

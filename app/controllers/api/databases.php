@@ -79,11 +79,15 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::DATABASE_NOT_FOUND);
     }
 
+    $events->setContext('database', $db);
+
     $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
     if ($collection->isEmpty()) {
         throw new Exception(Exception::COLLECTION_NOT_FOUND);
     }
+
+    $events->setContext('collection', $collection);
 
     if (!empty($format)) {
         if (!Structure::hasFormat($format, $type)) {
@@ -197,8 +201,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     ;
 
     $events
-        ->setContext('collection', $collection)
-        ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
         ->setParam('attributeId', $attribute->getId())
@@ -230,11 +232,15 @@ function updateAttribute(
         throw new Exception(Exception::DATABASE_NOT_FOUND);
     }
 
+    $events->setContext('database', $db);
+
     $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
     if ($collection->isEmpty()) {
         throw new Exception(Exception::COLLECTION_NOT_FOUND);
     }
+
+    $events->setContext('collection', $collection);
 
     $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
@@ -359,8 +365,6 @@ function updateAttribute(
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collection->getId());
 
     $events
-        ->setContext('collection', $collection)
-        ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
         ->setParam('attributeId', $attribute->getId());
@@ -731,6 +735,8 @@ App::post('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $events->setContext('database', $database);
+
         $collectionId = $collectionId == 'unique()' ? ID::unique() : $collectionId;
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -757,7 +763,6 @@ App::post('/v1/databases/:databaseId/collections')
         }
 
         $events
-            ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
@@ -990,6 +995,8 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $events->setContext('database', $database);
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -1018,7 +1025,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         }
 
         $events
-            ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId());
 
@@ -1056,6 +1062,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $events->setContext('database', $database);
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -1073,7 +1081,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
             ->setDocument($collection);
 
         $events
-            ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setPayload($response->output($collection, Response::MODEL_COLLECTION));
@@ -2231,11 +2238,16 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
+        $events->setContext('database', $db);
+
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
+
+        $events->setContext('collection', $collection);
 
         $attribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
@@ -2346,11 +2358,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
+        $events->setContext('database', $db);
+
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
+
+        $events->setContext('collection', $collection);
 
         $count = $dbForProject->count('indexes', [
             Query::equal('collectionInternalId', [$collection->getInternalId()]),
@@ -2455,9 +2472,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
-            ->setParam('indexId', $index->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $db);
+            ->setParam('indexId', $index->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -2580,11 +2595,16 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
+        $events->setContext('database', $db);
+
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
+
+        $events->setContext('collection', $collection);
 
         $index = $dbForProject->getDocument('indexes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key);
 
@@ -2609,8 +2629,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('indexId', $index->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $db)
             ->setPayload($response->output($index, Response::MODEL_INDEX));
 
         $response->noContent();
@@ -2666,6 +2684,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $events->setContext('database', $database);
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -2673,6 +2693,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }
+
+        $events->setContext('collection', $collection);
 
         $allowedPermissions = [
             Database::PERMISSION_READ,
@@ -2847,9 +2869,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
+            ->setParam('documentId', $document->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3231,6 +3251,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $events->setContext('database', $database);
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -3238,6 +3260,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }
+
+        $events->setContext('collection', $collection);
 
         // Read permission should not be required for update
         /** @var Document $document */
@@ -3424,9 +3448,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $events
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
-            ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database);
+            ->setParam('documentId', $document->getId());
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
@@ -3469,6 +3491,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
+        $events->setContext('database', $database);
+
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
@@ -3476,6 +3500,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }
+
+        $events->setContext('collection', $collection);
 
         // Read permission should not be required for delete
         $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
@@ -3590,8 +3616,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
             ->setParam('documentId', $document->getId())
-            ->setContext('collection', $collection)
-            ->setContext('database', $database)
             ->setPayload($response->output($document, Response::MODEL_DOCUMENT));
 
         $response->noContent();

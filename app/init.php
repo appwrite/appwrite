@@ -23,6 +23,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\DSN\DSN;
 use Appwrite\Event\Audit;
+use Appwrite\Event\DatabaseListener;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -1180,3 +1181,10 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
+App::setResource('eventHandler', function (?Logger $logger, array $loggerBreadcrumbs, Document $project, Document $user, Event $events, Locale $locale) {
+    return function (string $databaseEvent, Document $document) use ($logger, $loggerBreadcrumbs, $project, $user, $events, $locale) {
+        $listener = new DatabaseListener($logger, $loggerBreadcrumbs, $project, $user, $events, $locale);
+        $listener->handle($databaseEvent, $document);
+    };
+}, ['logger', 'loggerBreadcrumbs', 'project', 'user', 'events', 'locale']);

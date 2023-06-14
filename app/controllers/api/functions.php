@@ -1041,6 +1041,8 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
+        $events->setContext('function', $function);
+
         $runtimes = Config::getParam('runtimes', []);
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
@@ -1115,8 +1117,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $events
             ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
-            ->setContext('function', $function);
+            ->setParam('executionId', $execution->getId());
 
         if ($async) {
             $event = new Func();
