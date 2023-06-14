@@ -60,8 +60,8 @@ class DeleteProjectCollections extends Action
 
         $projects = [$console];
         $count = 0;
-        $limit = 30;
-        $sum = 30;
+        $limit = 50;
+        $sum = 50;
         $offset = 0;
         while (!empty($projects)) {
             foreach ($projects as $project) {
@@ -73,7 +73,7 @@ class DeleteProjectCollections extends Action
                     continue;
                 }
 
-                Console::info("Getting stats for {$project->getId()}");
+                Console::info("Deleting collections for {$project->getId()}");
 
                 try {
                     $db = $project->getAttribute('database');
