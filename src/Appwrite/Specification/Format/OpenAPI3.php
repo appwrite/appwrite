@@ -411,6 +411,7 @@ class OpenAPI3 extends Format
                         /** @var \Utopia\Validator\WhiteList $validator */
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];
+                        $node['schema']['enum'] = $validator->getList();
 
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';

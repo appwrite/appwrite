@@ -413,6 +413,7 @@ class Swagger2 extends Format
                         /** @var \Utopia\Validator\WhiteList $validator */
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
+                        $node['enum'] = $validator->getList();
 
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
