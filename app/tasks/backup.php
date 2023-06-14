@@ -70,7 +70,10 @@ $cli
 
                     break;
                 case 'buckets':
-                    var_dump('buckets');
+                    $buckets = $projectDB->find('buckets', []);
+                    foreach ($buckets as $bucket) {
+                        $tables[] = $projectDB->getNamespace() . '_bucket_' . $bucket->getInternalId();
+                    }
                     break;
             }
         }
