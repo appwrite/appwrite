@@ -1141,9 +1141,13 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        if ($deviceFunctions->delete($deployment->getAttribute('path', ''))) {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+        if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+        }
+
+        if (!empty($deployment->getAttribute('path', ''))) {
+            if (!($deviceFunctions->delete($deployment->getAttribute('path', '')))) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
 
