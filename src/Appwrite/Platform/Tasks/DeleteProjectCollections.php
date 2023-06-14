@@ -47,8 +47,8 @@ class DeleteProjectCollections extends Action
     {
         //docker compose exec -t appwrite delete-project-collections
 
-        Console::title('Delete Project Tables V1');
-        Console::success(APP_NAME . ' delete Project Tables');
+        Console::title('Delete project collections V1');
+        Console::success(APP_NAME . ' delete project collections');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
