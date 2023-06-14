@@ -15,7 +15,6 @@ class DeleteProjectCollections extends Action
 {
     private array $names = [
         'webhooks',
-        'webhooks_perms',
         'platforms',
         'schedules',
         'projects',
