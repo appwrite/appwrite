@@ -93,12 +93,6 @@ class DeleteProjectCollections extends Action
                             } else {
                                 Console::error('Failed to delete ' . $name);
                             }
-
-                            if ($dbForProject->deleteCachedCollection($name)) {
-                                Console::log('Deleted (cached) ' . $name);
-                            } else {
-                                Console::error('Failed to delete (cached) ' . $name);
-                            }
                         }
                     }
                 } catch (\Throwable $th) {
