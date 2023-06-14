@@ -1,1 +1,1 @@
-Use this endpoint to log out the currently logged in user from all their account sessions across all of their different devices. When using the Session ID argument, only the unique session ID provided is deleted.
+Logout the current user. Use 'current' as the session ID to logout on this device, or provide a specific session ID to target a different session.
