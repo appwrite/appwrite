@@ -21,6 +21,7 @@ use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
 use Appwrite\Platform\Tasks\CalcUsersStats;
 use Appwrite\Platform\Tasks\CalcTierStats;
+use Appwrite\Platform\Tasks\DeleteProjectCollections;
 
 class Tasks extends Service
 {
@@ -46,6 +47,7 @@ class Tasks extends Service
             ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcUsersStats::getName(), new CalcUsersStats())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
+            ->addAction(DeleteProjectCollections::getName(), new DeleteProjectCollections())
         ;
     }
 }
