@@ -584,20 +584,20 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
-    // Imports
-    Exception::IMPORT_NOT_FOUND => [
-        'name' => Exception::IMPORT_NOT_FOUND,
-        'description' => 'Import with the requested ID could not be found.',
+    // Migrations
+    Exception::MIGRATION_NOT_FOUND => [
+        'name' => Exception::MIGRATION_NOT_FOUND,
+        'description' => 'Migration with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::IMPORT_ALREADY_EXISTS => [
-        'name' => Exception::IMPORT_ALREADY_EXISTS,
-        'description' => 'Import with the requested ID already exists.',
+    Exception::MIGRATION_ALREADY_EXISTS => [
+        'name' => Exception::MIGRATION_ALREADY_EXISTS,
+        'description' => 'Migration with the requested ID already exists.',
         'code' => 409,
     ],
-    Exception::IMPORT_IN_PROGRESS => [
-        'name' => Exception::IMPORT_IN_PROGRESS,
-        'description' => 'Import is already in progress.',
+    Exception::MIGRATION_IN_PROGRESS => [
+        'name' => Exception::MIGRATION_IN_PROGRESS,
+        'description' => 'Migration is already in progress.',
         'code' => 409,
     ],
 ];

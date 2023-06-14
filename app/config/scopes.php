@@ -76,10 +76,10 @@ return [ // List of publicly visible scopes
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
     ],
-    'imports.read' => [
-        'description' => 'Access to read your project\'s import logs',
+    'migrations.read' => [
+        'description' => 'Access to read your project\'s migration logs',
     ],
-    'imports.write' => [
-        'description' => 'Access to create, update, and delete your project\'s imports.',
+    'migrations.write' => [
+        'description' => 'Access to create, update, and delete your project\'s migrations.',
     ]
 ];

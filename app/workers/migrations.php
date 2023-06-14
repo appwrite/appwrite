@@ -187,7 +187,7 @@ class MigrationsV1 extends Worker
     }
 
     /**
-     * Process Import
+     * Process Migration
      *
      * @return void
      */

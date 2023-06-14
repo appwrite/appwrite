@@ -81,8 +81,8 @@ trait ProjectCustom
                 'locale.read',
                 'avatars.read',
                 'health.read',
-                'imports.read',
-                'imports.write'
+                'migrations.read',
+                'migrations.write'
             ],
         ]);
 

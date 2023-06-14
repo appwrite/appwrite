@@ -13,7 +13,7 @@ class ImportValidationError extends Any
      */
     public function getName(): string
     {
-        return 'Import Validiation Error';
+        return 'Migration Validiation Error';
     }
 
     /**
@@ -23,6 +23,6 @@ class ImportValidationError extends Any
      */
     public function getType(): string
     {
-        return Response::MODEL_MIGRATION_VALIDATION_ERROR;
+        return Response::MODEL_IMPORT_VALIDATION_ERROR;
     }
 }

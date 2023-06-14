@@ -2,11 +2,9 @@
 
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Import;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Helpers\ID;
-use Appwrite\Utopia\Database\Validator\Queries\Imports;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -55,7 +53,7 @@ App::get('/v1/migrations')
             $cursorDocument = $dbForProject->getDocument('migrations', $migrationId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Import '{$migrationId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Migration '{$migrationId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);
@@ -71,7 +69,7 @@ App::get('/v1/migrations')
 
 App::get('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Get Import')
+    ->desc('Get Migration')
     ->label('scope', 'migrations.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
@@ -80,14 +78,14 @@ App::get('/v1/migrations/:migrationId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
-    ->param('migrationId', '', new UID(), 'Import unique ID.')
+    ->param('migrationId', '', new UID(), 'Migration unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $migrationId, Response $response, Database $dbForProject) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
-            throw new Exception(Exception::IMPORT_NOT_FOUND, 'Import not found', 404);
+            throw new Exception(Exception::MIGRATION_NOT_FOUND, 'Migration not found', 404);
         }
 
         $response->dynamic($migration, Response::MODEL_MIGRATION);
@@ -95,7 +93,7 @@ App::get('/v1/migrations/:migrationId')
 
 App::post('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Retry Import')
+    ->desc('Retry Migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].retry')
     ->label('audits.event', 'migration.retry')
@@ -117,18 +115,18 @@ App::post('/v1/migrations/:migrationId')
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
-            throw new Exception(Exception::IMPORT_NOT_FOUND);
+            throw new Exception(Exception::MIGRATION_NOT_FOUND);
         }
 
         // if ($migration->getAttribute('status') !== 'failed') {
-        //     throw new Exception(Exception::IMPORT_IN_PROGRESS, 'Import not failed');
+        //     throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed');
         // }
 
         $migration
             ->setAttribute('status', 'pending')
             ->setAttribute('dateUpdated', \time());
 
-        // Trigger Import
+        // Trigger Migration
         $event = new Migration();
         $event
             ->setMigration($migration)
@@ -141,7 +139,7 @@ App::post('/v1/migrations/:migrationId')
 
 App::delete('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
-    ->desc('Delete Import')
+    ->desc('Delete Migration')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.[migrationId].delete')
     ->label('audits.event', 'migrationId.delete')
@@ -152,7 +150,7 @@ App::delete('/v1/migrations/:migrationId')
     ->label('sdk.description', '/docs/references/functions/delete-migration.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('migrationId', '', new UID(), 'Import ID.')
+    ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('deletes')
@@ -162,7 +160,7 @@ App::delete('/v1/migrations/:migrationId')
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
-            throw new Exception(Exception::IMPORT_NOT_FOUND, 'Import not found', 404);
+            throw new Exception(Exception::MIGRATION_NOT_FOUND, 'Migration not found', 404);
         }
 
         if (!$dbForProject->deleteDocument('migrations', $migration->getId())) {
@@ -180,7 +178,7 @@ App::delete('/v1/migrations/:migrationId')
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
-    ->desc('Import Appwrite Data')
+    ->desc('Migrate Appwrite Data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.create')
     ->label('audits.event', 'migration.create')
@@ -234,7 +232,7 @@ App::post('/v1/migrations/appwrite')
 
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
-    ->desc('Import Firebase Data')
+    ->desc('Migrate Firebase Data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.create')
     ->label('audits.event', 'migration.create')
@@ -284,7 +282,7 @@ App::post('/v1/migrations/firebase')
 
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
-    ->desc('Import Supabase Data')
+    ->desc('Migrate Supabase Data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.create')
     ->label('audits.event', 'migration.create')
@@ -344,7 +342,7 @@ App::post('/v1/migrations/supabase')
 
 App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
-    ->desc('Import NHost Data')
+    ->desc('Migrate NHost Data')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.create')
     ->label('audits.event', 'migration.create')

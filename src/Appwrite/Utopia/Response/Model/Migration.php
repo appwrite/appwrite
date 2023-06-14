@@ -12,7 +12,7 @@ class Migration extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Import ID.',
+                'description' => 'Migration ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
@@ -30,38 +30,38 @@ class Migration extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Import status.',
+                'description' => 'Migration status.',
                 'default' => '',
                 'example' => 'pending',
             ])
             ->addRule('stage', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Import stage.',
+                'description' => 'Migration stage.',
                 'default' => '',
                 'example' => 'init',
             ])
             ->addRule('source', [
                 'type' => self::TYPE_STRING,
-                'description' => 'An object containing the source of the import.',
+                'description' => 'An object containing the source of the migration.',
                 'default' => '',
                 'example' => '{"type": "Appwrite", "endpoint": "xxxxxxxx", ...}',
             ])
             ->addRule('resources', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Resources to import.',
+                'description' => 'Resources to migration.',
                 'default' => [],
                 'example' => ['user'],
                 'array' => true
             ])
             ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
-                'description' => 'A group of counters that represent the total progress of the import.',
+                'description' => 'A group of counters that represent the total progress of the migration.',
                 'default' => [],
                 'example' => '{"Database": {"PENDING": 0, "SUCCESS": 1, "ERROR": 0, "SKIP": 0, "PROCESSING": 0, "WARNING": 0}}',
             ])
             ->addRule('resourceData', [
                 'type' => self::TYPE_JSON,
-                'description' => 'An array of objects containing the report data of the resources that were imported.',
+                'description' => 'An array of objects containing the report data of the resources that were migrated.',
                 'default' => [],
                 'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
             ])
@@ -81,7 +81,7 @@ class Migration extends Model
      */
     public function getName(): string
     {
-        return 'Import';
+        return 'Migration';
     }
 
     /**

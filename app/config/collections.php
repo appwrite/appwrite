@@ -3698,13 +3698,6 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => '_key_statusCounters',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['statusCounters'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_fulltext_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
