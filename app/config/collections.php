@@ -3643,6 +3643,6 @@ $auth = Config::getParam('auth', []);
     'console'  => $consoleCollections,
     'buckets' => $bucketCollections,
     'databases' => $dbCollections
-];
+ ];
 
-return $collections;
+ return $collections;

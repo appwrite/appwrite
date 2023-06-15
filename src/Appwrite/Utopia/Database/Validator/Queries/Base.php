@@ -24,6 +24,7 @@ class Base extends Queries
     {
         $config = Config::getParam('collections', []);
         $collections = array_merge($config['console'], $config['projects'], $config['buckets'], $config['databases']);
+        $collection = $collections[$collection];
         // array for constant lookup time
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {
