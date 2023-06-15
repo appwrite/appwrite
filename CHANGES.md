@@ -1,3 +1,9 @@
+# Version 1.4.0
+
+## Features
+
+- Add error attribute to Collection Indexes and Attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
+
 # Version 1.3.7
 
 ## Bugs
@@ -116,6 +122,7 @@
 - Added support for the new Appwrite Console [#4655](https://github.com/appwrite/appwrite/pull/4655)
 - Added new property to projects configuration: `authDuration` which allows you to alter the duration of signed in sessions for your project. [#4618](https://github.com/appwrite/appwrite/pull/4618)
 
+# Version 1.1.0
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
 - Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
