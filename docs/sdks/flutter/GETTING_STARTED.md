@@ -18,7 +18,7 @@ In order to capture the Appwrite OAuth callback url, the following activity need
     <application ...>
         ....
         <!-- Add this inside the <application> tag, along side the existing <activity> tags -->
-        <activity android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
+        <activity android:exported="true" android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
             <intent-filter android:label="flutter_web_auth_2">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -58,7 +58,7 @@ For web in order to capture the OAuth2 callback URL and send it to the applicati
 close the window.
 <script>
   window.opener.postMessage({
-    flutter-web-auth-2: window.location.href
+    'flutter-web-auth-2': window.location.href
   }, window.location.origin);
   window.close();
 </script>

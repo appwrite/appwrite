@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * - GraphQL
      */
 
     /** General */
@@ -50,6 +51,7 @@ class Exception extends \Exception
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
+    public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -64,6 +66,7 @@ class Exception extends \Exception
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
+    public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
@@ -133,6 +136,8 @@ class Exception extends \Exception
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
     public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
     public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
+    public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
+    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
     /** Attribute */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
@@ -143,6 +148,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
@@ -154,6 +160,7 @@ class Exception extends \Exception
     public const PROJECT_UNKNOWN                   = 'project_unknown';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
+    public const PROJECT_ALREADY_EXISTS            = 'project_already_exists';
     public const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
@@ -176,6 +183,11 @@ class Exception extends \Exception
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
+    public const DOMAIN_TARGET_INVALID             = 'domain_target_invalid';
+
+    /** GraphqQL */
+    public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
+    public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     protected $type = '';
 

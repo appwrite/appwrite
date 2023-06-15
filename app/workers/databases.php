@@ -1,10 +1,13 @@
 <?php
 
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Exception;
 use Utopia\Database\Exception as DatabaseException;
 
@@ -91,12 +94,42 @@ class DatabaseV1 extends Worker
         $format = $attribute->getAttribute('format', '');
         $formatOptions = $attribute->getAttribute('formatOptions', []);
         $filters = $attribute->getAttribute('filters', []);
+        $options = $attribute->getAttribute('options', []);
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         try {
-            if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                throw new DatabaseException('Failed to create Attribute');
+            switch ($type) {
+                case Database::VAR_RELATIONSHIP:
+                    $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                    if ($relatedCollection->isEmpty()) {
+                        throw new Exception('Collection not found');
+                    }
+
+                    if (
+                        !$dbForProject->createRelationship(
+                            collection: 'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                            relatedCollection: 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
+                            type: $options['relationType'],
+                            twoWay: $options['twoWay'],
+                            id: $key,
+                            twoWayKey: $options['twoWayKey'],
+                            onDelete: $options['onDelete'],
+                        )
+                    ) {
+                        throw new Exception('Failed to create Attribute');
+                    }
+
+                    if ($options['twoWay']) {
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'available'));
+                    }
+                    break;
+                default:
+                    if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
+                        throw new Exception('Failed to create Attribute');
+                    }
             }
+
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (DatabaseException $e) {
             Console::error($e->getMessage());
@@ -107,14 +140,35 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'failed')
                 ->setAttribute('error', $e->getMessage())
             );
-        } catch (Exception $e) {
+
+            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+                $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
                 $dbForProject->updateDocument(
                     'attributes',
-                    $attribute->getId(),
-                    $attribute
+                    $relatedAttribute->getId(),
+                    $relatedAttribute
+                    ->setAttribute('status', 'failed')
+                    ->setAttribute('error', $e->getMessage());
+            }
+        } catch (Exception $e) {
+            $dbForProject->updateDocument(
+                'attributes',
+                $attribute->getId(),
+                $attribute
+                ->setAttribute('status', 'failed')
+                ->setAttribute('error', '')
+            );
+
+            if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+                $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                $dbForProject->updateDocument(
+                    'attributes',
+                    $relatedAttribute->getId(),
+                    $relatedAttribute
                     ->setAttribute('status', 'failed')
                     ->setAttribute('error', '')
                 );
+            }
         } finally {
             $target = Realtime::fromPayload(
                 // Pass first, most verbose event pattern
@@ -137,6 +191,10 @@ class DatabaseV1 extends Worker
             );
         }
 
+        if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
+            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+        }
+
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
@@ -145,6 +203,7 @@ class DatabaseV1 extends Worker
      * @param Document $collection
      * @param Document $attribute
      * @param string $projectId
+     * @throws Throwable
      */
     protected function deleteAttribute(Document $database, Document $collection, Document $attribute, string $projectId): void
     {
@@ -159,19 +218,43 @@ class DatabaseV1 extends Worker
         $collectionId = $collection->getId();
         $key = $attribute->getAttribute('key', '');
         $status = $attribute->getAttribute('status', '');
+        $type = $attribute->getAttribute('type', '');
         $project = $dbForConsole->getDocument('projects', $projectId);
-
+        $options = $attribute->getAttribute('options', []);
+        $relatedAttribute = new Document();
+        $relatedCollection = new Document();
         // possible states at this point:
         // - available: should not land in queue; controller flips these to 'deleting'
         // - processing: hasn't finished creating
         // - deleting: was available, in deletion queue for first time
         // - failed: attribute was never created
         // - stuck: attribute was available but cannot be removed
+
         try {
-            if ($status !== 'failed' && !$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
-                throw new DatabaseException('Failed to delete Attribute');
+            if ($status !== 'failed') {
+                if ($type ===  Database::VAR_RELATIONSHIP) {
+                    if ($options['twoWay']) {
+                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
+                        if ($relatedCollection->isEmpty()) {
+                            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+                        }
+                        $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+                    }
+
+                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                        $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
+                        throw new DatabaseException('Failed to delete Relationship');
+                    }
+                } elseif (!$dbForProject->deleteAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                    throw new Exception('Failed to delete Attribute');
+                }
             }
+
             $dbForProject->deleteDocument('attributes', $attribute->getId());
+
+            if (!$relatedAttribute->isEmpty()) {
+                $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
+            }
         } catch (DatabaseException $e) {
             Console::error($e->getMessage());
             $dbForProject->updateDocument(
@@ -181,11 +264,25 @@ class DatabaseV1 extends Worker
                 ->setAttribute('status', 'stuck')
                 ->setAttribute('error', $e->getMessage())
             );
+            $dbForProject->updateDocument(
+                'attributes',
+                $relatedAttribute->getId(),
+                $relatedAttribute
+                ->setAttribute('status', 'stuck')
+                ->setAttribute('error', $e->getMessage())
+            );
         } catch (Exception $e) {
             $dbForProject->updateDocument(
                 'attributes',
                 $attribute->getId(),
                 $attribute
+                ->setAttribute('status', 'stuck')
+                ->setAttribute('error', '')
+            );
+            $dbForProject->updateDocument(
+                'attributes',
+                $relatedAttribute->getId(),
+                $relatedAttribute
                 ->setAttribute('status', 'stuck')
                 ->setAttribute('error', '')
             );
@@ -229,8 +326,8 @@ class DatabaseV1 extends Worker
                 // array_values wraps array_diff to reindex array keys
                 // when found attribute is removed from array
                 $attributes = \array_values(\array_diff($attributes, [$attributes[$found]]));
-                $lengths = \array_values(\array_diff($lengths, [$lengths[$found]]));
-                $orders = \array_values(\array_diff($orders, [$orders[$found]]));
+                $lengths = \array_values(\array_diff($lengths, isset($lengths[$found]) ? [$lengths[$found]] : []));
+                $orders = \array_values(\array_diff($orders, isset($orders[$found]) ? [$orders[$found]] : []));
 
                 if (empty($attributes)) {
                     $dbForProject->deleteDocument('indexes', $index->getId());
@@ -265,6 +362,11 @@ class DatabaseV1 extends Worker
 
         $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
         $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+
+        if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
+            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+        }
     }
 
     /**

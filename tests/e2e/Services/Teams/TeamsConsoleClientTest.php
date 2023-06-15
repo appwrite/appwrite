@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class TeamsConsoleClientTest extends Scope
 {

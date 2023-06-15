@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -223,7 +223,9 @@ App::init()
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
             }
+        }
 
+        if ($request->getProtocol() === 'https') {
             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
         }
 
@@ -231,7 +233,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -382,7 +384,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -394,11 +396,10 @@ App::error()
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
-    ->inject('layout')
     ->inject('project')
     ->inject('logger')
     ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, View $layout, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
@@ -436,7 +437,7 @@ App::error()
                 $log->addExtra('line', $error->getLine());
                 $log->addExtra('trace', $error->getTraceAsString());
                 $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::$roles);
+                $log->addExtra('roles', Authorization::getRoles());
 
                 $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
                 $log->setAction($action);
@@ -484,6 +485,10 @@ App::error()
                     $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
                     break;
             }
+        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
+            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, null, null, $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
@@ -538,23 +543,16 @@ App::error()
         $template = ($route) ? $route->getLabel('error', null) : null;
 
         if ($template) {
-            $comp = new View($template);
+            $layout = new View($template);
 
-            $comp
+            $layout
+                ->setParam('title', $project->getAttribute('name') . ' - Error')
                 ->setParam('development', App::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
                 ->setParam('trace', $trace)
-            ;
-
-            $layout
-                ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('description', 'No Description')
-                ->setParam('body', $comp)
-                ->setParam('version', $version)
-                ->setParam('litespeed', false)
             ;
 
             $response->html($layout->render());
@@ -564,32 +562,6 @@ App::error()
             new Document($output),
             $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
-    });
-
-App::get('/manifest.json')
-    ->desc('Progressive app manifest file')
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->inject('response')
-    ->action(function (Response $response) {
-
-        $response->json([
-            'name' => APP_NAME,
-            'short_name' => APP_NAME,
-            'start_url' => '.',
-            'url' => 'https://appwrite.io/',
-            'display' => 'standalone',
-            'background_color' => '#fff',
-            'theme_color' => '#f02e65',
-            'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
-            'icons' => [
-                [
-                    'src' => 'images/favicon.png',
-                    'sizes' => '256x256',
-                    'type' => 'image/png',
-                ],
-            ],
-        ]);
     });
 
 App::get('/robots.txt')
@@ -612,7 +584,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -622,7 +594,7 @@ App::get('/.well-known/acme-challenge')
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
 
-        $validator = new Text(100, [
+        $validator = new Text(100, allowList: [
             ...Text::NUMBERS,
             ...Text::ALPHABET_LOWER,
             ...Text::ALPHABET_UPPER,
@@ -663,7 +635,6 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
-include_once __DIR__ . '/shared/web.php';
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];

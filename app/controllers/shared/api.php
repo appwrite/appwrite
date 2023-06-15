@@ -5,13 +5,12 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
-use Appwrite\Extend\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
@@ -47,6 +46,47 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
+$databaseListener = function (string $event, Document $document, Stats $usage) {
+    $multiplier = 1;
+    if ($event === Database::EVENT_DOCUMENT_DELETE) {
+        $multiplier = -1;
+    }
+
+    $collection = $document->getCollection();
+    switch ($collection) {
+        case 'users':
+            $usage->setParam('users.{scope}.count.total', 1 * $multiplier);
+            break;
+        case 'databases':
+            $usage->setParam('databases.{scope}.count.total', 1 * $multiplier);
+            break;
+        case 'buckets':
+            $usage->setParam('buckets.{scope}.count.total', 1 * $multiplier);
+            break;
+        case 'deployments':
+            $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size') * $multiplier);
+            break;
+        default:
+            if (strpos($collection, 'bucket_') === 0) {
+                $usage
+                    ->setParam('bucketId', $document->getAttribute('bucketId'))
+                    ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal') * $multiplier)
+                    ->setParam('files.{scope}.count.total', 1 * $multiplier);
+            } elseif (strpos($collection, 'database_') === 0) {
+                $usage
+                    ->setParam('databaseId', $document->getAttribute('databaseId'));
+                if (strpos($collection, '_collection_') !== false) {
+                    $usage
+                        ->setParam('collectionId', $document->getAttribute('$collectionId'))
+                        ->setParam('documents.{scope}.count.total', 1 * $multiplier);
+                } else {
+                    $usage->setParam('collections.{scope}.count.total', 1 * $multiplier);
+                }
+            }
+            break;
+    }
+};
+
 App::init()
     ->groups(['api'])
     ->inject('utopia')
@@ -56,13 +96,12 @@ App::init()
     ->inject('user')
     ->inject('events')
     ->inject('audits')
-    ->inject('mails')
     ->inject('usage')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -136,10 +175,6 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-        $mails
-            ->setProject($project)
-            ->setUser($user);
-
         $audits
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
@@ -149,6 +184,7 @@ App::init()
             ->setUser($user);
 
         $usage
+            ->setParam('projectInternalId', $project->getInternalId())
             ->setParam('projectId', $project->getId())
             ->setParam('project.{scope}.network.requests', 1)
             ->setParam('httpMethod', $request->getMethod())
@@ -158,22 +194,59 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+
+        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+
         $useCache = $route->getLabel('cache', false);
 
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()));
+            $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
+
             if (!empty($data)) {
                 $data = json_decode($data, true);
+                $parts = explode('/', $data['resourceType']);
+                $type = $parts[0] ?? null;
+
+                if ($type === 'bucket') {
+                    $bucketId = $parts[1] ?? null;
+
+                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    }
+
+                    $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+                    $validator = new Authorization(Database::PERMISSION_READ);
+                    $valid = $validator->isValid($bucket->getRead());
+                    if (!$fileSecurity && !$valid) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    }
+
+                    $parts = explode('/', $data['resource']);
+                    $fileId = $parts[1] ?? null;
+
+                    if ($fileSecurity && !$valid) {
+                        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                    } else {
+                        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                    }
+
+                    if ($file->isEmpty()) {
+                        throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                    }
+                }
 
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($data['content-type'])
+                    ->setContentType($data['contentType'])
                     ->send(base64_decode($data['payload']))
                 ;
 
@@ -236,6 +309,45 @@ App::init()
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
                 break;
         }
+    });
+
+/**
+ * Limit user session
+ *
+ * Delete older sessions if the number of sessions have crossed
+ * the session limit set for the project
+ */
+App::shutdown()
+    ->groups(['session'])
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+        $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
+        $session = $response->getPayload();
+        $userId = $session['userId'] ?? '';
+        if (empty($userId)) {
+            return;
+        }
+
+        $user = $dbForProject->getDocument('users', $userId);
+        if ($user->isEmpty()) {
+            return;
+        }
+
+        $sessions = $user->getAttribute('sessions', []);
+        $count = \count($sessions);
+        if ($count <= $sessionLimit) {
+            return;
+        }
+
+        for ($i = 0; $i < ($count - $sessionLimit); $i++) {
+            $session = array_shift($sessions);
+            $dbForProject->deleteDocument('sessions', $session->getId());
+        }
+        $dbForProject->deleteCachedDocument('users', $userId);
     });
 
 App::shutdown()
@@ -361,7 +473,7 @@ App::shutdown()
          */
         $useCache = $route->getLabel('cache', false);
         if ($useCache) {
-            $resource = null;
+            $resource = $resourceType = null;
             $data = $response->getPayload();
 
             if (!empty($data['payload'])) {
@@ -370,9 +482,16 @@ App::shutdown()
                     $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams()));
+                $pattern = $route->getLabel('cache.resourceType', null);
+                if (!empty($pattern)) {
+                    $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
+                }
+
+                $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
                 $data = json_encode([
-                'content-type' => $response->getContentType(),
+                'resourceType' => $resourceType,
+                'resource' => $resource,
+                'contentType' => $response->getContentType(),
                 'payload' => base64_encode($data['payload']),
                 ]) ;
 
@@ -404,7 +523,6 @@ App::shutdown()
         if (
             App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
-            && $mode !== APP_MODE_ADMIN // TODO: add check to make sure user is admin
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode
             $metric = $route->getLabel('usage.metric', '');
@@ -432,5 +550,13 @@ App::shutdown()
                 ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
                 ->setParam('project.{scope}.network.outbound', $response->getSize())
                 ->submit();
+        }
+    });
+
+App::init()
+    ->groups(['usage'])
+    ->action(function () {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

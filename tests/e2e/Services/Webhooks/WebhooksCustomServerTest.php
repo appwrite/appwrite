@@ -8,10 +8,10 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class WebhooksCustomServerTest extends Scope
 {
@@ -245,7 +245,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
-        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -336,7 +337,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
-        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], false);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -378,7 +380,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
-        $this->assertEquals(true, DateTime::isValid($webhook['data']['registration']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], false);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -481,16 +484,6 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
 
-        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Test Failure',
-            'execute' => [ 'not-valid-permission' ]
-        ]);
-
-        $this->assertEquals($function['headers']['status-code'], 400);
-
         return $data;
     }
 
@@ -513,7 +506,8 @@ class WebhooksCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', \basename($code))
+            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $id = $data['functionId'] ?? '';

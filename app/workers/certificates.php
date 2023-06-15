@@ -4,14 +4,16 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
+use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
+use Utopia\Locale\Locale;
 
 require_once __DIR__ . '/../init.php';
 
@@ -375,18 +377,38 @@ class CertificatesV1 extends Worker
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         // Send mail to administratore mail
+
+        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
+        if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
+            $locale->setDefault('en');
+        }
+
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+
+            $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+            $body->setParam('{{domain}}', $domain);
+            $body->setParam('{{error}}', $errorMessage);
+            $body->setParam('{{attempt}}', $attempt);
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
+            ->setParam('{{body}}', $locale->getText("emails.certificate.body"))
+            ->setParam('{{redirect}}', 'https://' . $domain)
+            ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"))
+            ->setParam('{{project}}', 'Console')
+            ->setParam('{{direction}}', $locale->getText('settings.direction'))
+            ->setParam('{{bg-body}}', '#f7f7f7')
+            ->setParam('{{bg-content}}', '#ffffff')
+            ->setParam('{{text-content}}', '#000000');
+
+        $body = $body->render();
         $mail = new Mail();
         $mail
-            ->setType(MAIL_TYPE_CERTIFICATE)
             ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
-            ->setUrl('https://' . $domain)
-            ->setLocale(App::getEnv('_APP_LOCALE', 'en'))
             ->setName('Appwrite Administrator')
-            ->setPayload([
-                'domain' => $domain,
-                'error' => $errorMessage,
-                'attempt' => $attempt
-            ])
             ->trigger();
     }
 

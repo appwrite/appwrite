@@ -15,7 +15,7 @@ class Limit extends Base
      *
      * @param int $maxLimit
      */
-    public function __construct(int $maxLimit = 100)
+    public function __construct(int $maxLimit = PHP_INT_MAX)
     {
         $this->maxLimit = $maxLimit;
     }

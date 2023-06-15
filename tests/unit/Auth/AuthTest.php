@@ -5,8 +5,8 @@ namespace Tests\Unit\Auth;
 use Appwrite\Auth\Auth;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Database;
@@ -204,46 +204,46 @@ class AuthTest extends TestCase
 
     public function testSessionVerify(): void
     {
+        $expireTime1 = 60 * 60 * 24;
+
         $secret = 'secret1';
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
                 '$id' => ID::custom('token1'),
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), 60 * 60 * 24)),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
         ];
+
+        $expireTime2 = -60 * 60 * 24;
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
                 '$id' => ID::custom('token1'),
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
-                'expire' => DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -60 * 60 * 24)),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
             ]),
         ];
 
-        $this->assertEquals(Auth::sessionVerify($tokens1, $secret), 'token1');
-        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret'), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, $secret), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
+        $this->assertEquals(Auth::sessionVerify($tokens1, $secret, $expireTime1), 'token1');
+        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret', $expireTime1), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, $secret, $expireTime2), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret', $expireTime2), false);
     }
 
     public function testTokenVerify(): void

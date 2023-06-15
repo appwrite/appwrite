@@ -6,9 +6,9 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class DatabasesConsoleClientTest extends Scope
 {
@@ -20,13 +20,13 @@ class DatabasesConsoleClientTest extends Scope
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ], $this->getHeaders()), [
             'databaseId' => ID::unique(),
             'name' => 'invalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
+        $this->assertTrue($database['body']['enabled']);
 
         $databaseId = $database['body']['$id'];
         /**
@@ -50,7 +50,129 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
 
-        return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId];
+        /**
+         * Test When database is disabled but can still create collections
+         */
+        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'invalidDocumentDatabase Updated',
+            'enabled' => false,
+        ]);
+
+        $this->assertFalse($database['body']['enabled']);
+
+        $tvShows = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'collectionId' => ID::unique(),
+            'name' => 'TvShows',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $tvShows['headers']['status-code']);
+        $this->assertEquals($tvShows['body']['name'], 'TvShows');
+
+        return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId, 'tvShowsId' => $tvShows['body']['$id']];
+    }
+
+    /**
+     * @depends testCreateCollection
+     * @param array $data
+     */
+    public function testListCollection(array $data)
+    {
+        /**
+         * Test When database is disabled but can still call list collections
+         */
+        $databaseId = $data['databaseId'];
+
+        $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $collections['headers']['status-code']);
+        $this->assertEquals(2, $collections['body']['total']);
+    }
+
+    /**
+     * @depends testCreateCollection
+     * @param array $data
+     */
+    public function testGetCollection(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $moviesCollectionId = $data['moviesId'];
+
+        /**
+         * Test When database is disabled but can still call get collection
+         */
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals('Movies', $collection['body']['name']);
+        $this->assertEquals($moviesCollectionId, $collection['body']['$id']);
+        $this->assertTrue($collection['body']['enabled']);
+    }
+
+    /**
+     * @depends testCreateCollection
+     * @param array $data
+     */
+    public function testUpdateCollection(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $moviesCollectionId = $data['moviesId'];
+
+        /**
+         * Test When database is disabled but can still call update collection
+         */
+        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Movies Updated',
+            'enabled' => false
+        ]);
+
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals('Movies Updated', $collection['body']['name']);
+        $this->assertEquals($moviesCollectionId, $collection['body']['$id']);
+        $this->assertFalse($collection['body']['enabled']);
+    }
+
+    /**
+     * @depends testCreateCollection
+     * @param array $data
+     */
+    public function testDeleteCollection(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $tvShowsId = $data['tvShowsId'];
+
+        /**
+         * Test When database is disabled but can still call Delete collection
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $tvShowsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals($response['body'], "");
     }
 
     /**
