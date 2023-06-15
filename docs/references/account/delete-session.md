@@ -1,1 +1,1 @@
-Logout the current user. Use 'current' as the session ID to logout on this device, or provide a specific session ID to target a different session.
+Logout the user. Use 'current' as the session ID to logout on this device, use a session ID to logout on another device. If you're looking to logout the user on all devices, use [Delete Sessions](/docs/client/account#accountDeleteSessions) instead.
