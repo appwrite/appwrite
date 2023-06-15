@@ -172,7 +172,7 @@ App::post('/v1/projects')
         $adapter->setup();
 
         /** @var array $collections */
-        $collections = Config::getParam('collections', []);
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
