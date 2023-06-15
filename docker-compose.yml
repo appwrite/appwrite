@@ -180,6 +180,7 @@ services:
       - VCS_GITHUB_APP_NAME
       - VCS_GITHUB_PRIVATE_KEY
       - VCS_GITHUB_APP_ID
+      - VCS_GITHUB_WEBHOOK_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
