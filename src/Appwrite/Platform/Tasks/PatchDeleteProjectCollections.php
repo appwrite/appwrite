@@ -83,14 +83,14 @@ class PatchDeleteProjectCollections extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     foreach ($this->names as $name) {
                         if (empty($name)) {
                             continue;
                         }
-                        if ($dbForProject->exists('appwrite', $name)) {
+                        if ($dbForProject->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
                             if ($dbForProject->deleteCollection($name)) {
                                 Console::log('Deleted ' . $name);
                             } else {
