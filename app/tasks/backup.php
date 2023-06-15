@@ -19,9 +19,6 @@ $cli
     ->task('backup')
     ->param('projectId', '', new UID(), 'Project id for backup', false)
     ->action(function ($projectId) use ($register) {
-
-
-
         Authorization::disable();
         $app = new App('UTC');
         Console::success('Starting Data Backup for project ' . $projectId);
