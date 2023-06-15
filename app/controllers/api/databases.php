@@ -118,7 +118,6 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
             'collectionId' => $collectionId,
             'type' => $type,
             'status' => 'processing', // processing, available, failed, deleting, stuck
-            'error' => '',
             'size' => $size,
             'required' => $required,
             'signed' => $signed,
@@ -2437,7 +2436,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 'collectionInternalId' => $collection->getInternalId(),
                 'collectionId' => $collectionId,
                 'type' => $type,
-                'error' => '',
                 'attributes' => $attributes,
                 'lengths' => $lengths,
                 'orders' => $orders,
