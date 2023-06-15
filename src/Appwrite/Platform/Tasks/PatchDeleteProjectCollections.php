@@ -34,16 +34,16 @@ class PatchDeleteProjectCollections extends Action
 
         $this
             ->desc('Delete unnecessary project collections')
-            ->param('pos', 0, new Numeric(), 'Resume deletion from param pos', true)
+            ->param('offset', 0, new Numeric(), 'Resume deletion from param pos', true)
             ->inject('pools')
             ->inject('cache')
             ->inject('dbForConsole')
-            ->callback(function (int $pos, Group $pools, Cache $cache, Database $dbForConsole) {
-                $this->action($pos, $pools, $cache, $dbForConsole);
+            ->callback(function (int $offset, Group $pools, Cache $cache, Database $dbForConsole) {
+                $this->action($offset, $pools, $cache, $dbForConsole);
             });
     }
 
-    public function action(int $pos, Group $pools, Cache $cache, Database $dbForConsole): void
+    public function action(int $offset, Group $pools, Cache $cache, Database $dbForConsole): void
     {
         //docker compose exec -t appwrite patch-delete-project-collections
 
@@ -62,7 +62,7 @@ class PatchDeleteProjectCollections extends Action
         $count = 0;
         $limit = 50;
         $sum = 50;
-        $offset = $pos;
+        $offset = $offset;
         while (!empty($projects)) {
             foreach ($projects as $project) {
 
