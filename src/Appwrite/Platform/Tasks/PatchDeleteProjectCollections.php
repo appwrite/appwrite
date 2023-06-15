@@ -11,7 +11,7 @@ use Utopia\Database\Query;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 
-class DeleteProjectCollections extends Action
+class PatchDeleteProjectCollections extends Action
 {
     private array $names = [
         'webhooks',
@@ -26,7 +26,7 @@ class DeleteProjectCollections extends Action
 
     public static function getName(): string
     {
-        return 'delete-project-collections';
+        return 'patch-delete-project-collections';
     }
 
     public function __construct()
@@ -45,10 +45,10 @@ class DeleteProjectCollections extends Action
 
     public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
     {
-        //docker compose exec -t appwrite delete-project-collections
+        //docker compose exec -t appwrite patch-delete-project-collections
 
         Console::title('Delete project collections V1');
-        Console::success(APP_NAME . ' delete project collections');
+        Console::success(APP_NAME . ' delete project collections has started');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
@@ -87,6 +87,9 @@ class DeleteProjectCollections extends Action
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     foreach ($this->names as $name) {
+                        if (empty($name)) {
+                            continue;
+                        }
                         if ($dbForProject->exists('appwrite', $name)) {
                             if ($dbForProject->deleteCollection($name)) {
                                 Console::log('Deleted ' . $name);
