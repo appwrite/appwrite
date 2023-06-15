@@ -101,7 +101,7 @@ class Executor
     }
 
     /**
-     * 
+     *
      *
      * Listen to realtime logs stream of a runtime
      *

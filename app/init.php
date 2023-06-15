@@ -990,13 +990,13 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
     $projectId = 'console';
 
-    if(!empty($request->getParam('project', ''))) {
+    if (!empty($request->getParam('project', ''))) {
         $projectId = $request->getParam('project', '');
-    } else if(!empty($request->getHeader('x-appwrite-project', ''))) {
+    } elseif (!empty($request->getHeader('x-appwrite-project', ''))) {
         $projectId = $request->getHeader('x-appwrite-project', '');
-    } else if(!empty($request->getParam('state', ''))) {
+    } elseif (!empty($request->getParam('state', ''))) {
         $state = \json_decode($request->getParam('state', ''), true);
-        if(!empty($state['projectId'])) {
+        if (!empty($state['projectId'])) {
             $projectId = $state['projectId'];
         }
     }

@@ -4,7 +4,7 @@
 // github must be all lowercased, but paypalSandbox should have uppercase S
 
 // Ordered by ABC.
-return [ 
+return [
     'amazon' => [
         'name' => 'Amazon',
         'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',

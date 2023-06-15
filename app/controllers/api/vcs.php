@@ -405,9 +405,9 @@ App::post('/v1/vcs/github/incomingwebhook')
             $payload = $request->getRawPayload();
 
             $signatureKey = App::getEnv('VCS_GITHUB_WEBHOOK_SECRET', '');
-            
+
             $valid = $github->validateWebhook($payload, $signature, $signatureKey);
-            if(!$valid) {
+            if (!$valid) {
                 throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook signature.");
             }
 
