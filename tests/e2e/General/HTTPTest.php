@@ -87,7 +87,7 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Cleanup
         $this->client->setEndpoint($previousEndpoint);

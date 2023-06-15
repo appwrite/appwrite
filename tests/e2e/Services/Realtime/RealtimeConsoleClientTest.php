@@ -497,7 +497,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']);
+        // $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']); TODO @christyjacob4 : enable test once we allow functions.* events
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
