@@ -93,6 +93,7 @@ $cli
 
         $tables = implode(' ', $tables);
         //$command = "mysqldump -u user -h bla " . $schema . " " . implode(' ', $tables) . "> " . $destination;
+        //https://phpsolved.com/backup-huge-mysql-database/
         $command = "docker exec appwrite-mariadb /usr/bin/mysqldump -u root --password=rootsecretpassword " . $schema . " " . $tables . " " . $singleTransaction . " | gzip > " . $destination;
 
         Console::error($command);
