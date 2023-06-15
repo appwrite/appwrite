@@ -9,7 +9,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Pools\Group;
-use Utopia\Registry\Registry;
+use Utopia\Validator\Numeric;
 
 class PatchDeleteProjectCollections extends Action
 {
@@ -34,16 +34,16 @@ class PatchDeleteProjectCollections extends Action
 
         $this
             ->desc('Delete unnecessary project collections')
+            ->param('pos', 0, new Numeric(), 'Resume deletion from param pos', true)
             ->inject('pools')
             ->inject('cache')
             ->inject('dbForConsole')
-            ->inject('register')
-            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole, Registry $register) {
-                $this->action($pools, $cache, $dbForConsole, $register);
+            ->callback(function (int $pos, Group $pools, Cache $cache, Database $dbForConsole) {
+                $this->action($pos, $pools, $cache, $dbForConsole);
             });
     }
 
-    public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
+    public function action(int $pos, Group $pools, Cache $cache, Database $dbForConsole): void
     {
         //docker compose exec -t appwrite patch-delete-project-collections
 
@@ -62,7 +62,7 @@ class PatchDeleteProjectCollections extends Action
         $count = 0;
         $limit = 50;
         $sum = 50;
-        $offset = 0;
+        $offset = $pos;
         while (!empty($projects)) {
             foreach ($projects as $project) {
 
@@ -113,6 +113,10 @@ class PatchDeleteProjectCollections extends Action
                 Query::limit($limit),
                 Query::offset($offset),
             ]);
+
+            if (!empty($projects)) {
+                Console::log('Querying..... offset=' . $offset . ' , limit=' . $limit  . ', count=' . $count);
+            }
 
             $offset = $offset + $limit;
             $count = $count + $sum;
