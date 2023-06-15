@@ -1,56 +1,57 @@
 <?php
 
-use Utopia\App;
+use Appwrite\Auth\Auth;
+use Appwrite\Detector\Detector;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Collections;
+use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Response;
+use MaxMind\Db\Reader;
+use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Helpers\ID;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\FloatValidator;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Text;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Key;
-use Utopia\Database\Validator\Permissions;
-use Utopia\Database\Validator\Structure;
-use Utopia\Database\Validator\UID;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Locale\Locale;
-use Appwrite\Auth\Auth;
-use Appwrite\Network\Validator\Email;
-use Utopia\Validator\IP;
-use Utopia\Validator\URL;
-use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Document as DocumentQueriesValidator;
+use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
-use Appwrite\Utopia\Response;
-use Appwrite\Detector\Detector;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
-use Utopia\Database\Validator\Queries;
-use Appwrite\Utopia\Database\Validator\Queries\Collections;
-use Appwrite\Utopia\Database\Validator\Queries\Databases;
-use Utopia\Database\Validator\Queries\Documents;
-use Utopia\Database\Validator\Queries\Document as DocumentQueriesValidator;
-use Utopia\Config\Config;
-use MaxMind\Db\Reader;
+use Utopia\Database\Validator\Structure;
+use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\FloatValidator;
+use Utopia\Validator\IP;
+use Utopia\Validator\Integer;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\URL;
+use Utopia\Validator\WhiteList;
 
 /**
  * Create attribute of varying type
@@ -434,7 +435,7 @@ App::post('/v1/databases')
                 ]);
             }
             $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
-        } catch (DuplicateException $th) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         }
 
@@ -637,7 +638,7 @@ App::put('/v1/databases/:databaseId')
                 ->setAttribute('name', $name)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$databaseId, $name])));
-        } catch (AuthorizationException $exception) {
+        } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
@@ -2345,6 +2346,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -2425,21 +2427,28 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $lengths[$i] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
+        $index = new Document([
+            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
+            'key' => $key,
+            'status' => 'processing', // processing, available, failed, deleting, stuck
+            'databaseInternalId' => $db->getInternalId(),
+            'databaseId' => $databaseId,
+            'collectionInternalId' => $collection->getInternalId(),
+            'collectionId' => $collectionId,
+            'type' => $type,
+            'attributes' => $attributes,
+            'lengths' => $lengths,
+            'orders' => $orders,
+        ]);
+
+        $validator = new IndexValidator($dbForProject->getAdapter()->getMaxIndexLength());
+        if (!$validator->isValid($collection->setAttribute('indexes', $index, Document::SET_TYPE_APPEND))) {
+            throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
+        }
+
         try {
-            $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
-                'key' => $key,
-                'status' => 'processing', // processing, available, failed, deleting, stuck
-                'databaseInternalId' => $db->getInternalId(),
-                'databaseId' => $databaseId,
-                'collectionInternalId' => $collection->getInternalId(),
-                'collectionId' => $collectionId,
-                'type' => $type,
-                'attributes' => $attributes,
-                'lengths' => $lengths,
-                'orders' => $orders,
-            ]));
-        } catch (DuplicateException $th) {
+            $index = $dbForProject->createDocument('indexes', $index);
+        } catch (DuplicateException) {
             throw new Exception(Exception::INDEX_ALREADY_EXISTS);
         }
 
