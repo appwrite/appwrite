@@ -515,6 +515,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+            $fileHash = $deviceFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
             // Compression
             $algorithm = $bucket->getAttribute('compression', COMPRESSION_TYPE_NONE);
@@ -548,7 +549,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $sizeActual = $deviceFiles->getFileSize($path);
-            $fileHash = $deviceFiles->getFileHash($path);
 
             $openSSLVersion = null;
             $openSSLCipher = null;
@@ -1269,13 +1269,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('name', null, new Text(255), 'Name of the file', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('events')
-    ->action(function (string $bucketId, string $fileId, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1330,6 +1331,10 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         $file->setAttribute('$permissions', $permissions);
+
+        if (!is_null($name)) {
+            $file->setAttribute('name', $name);
+        }
 
         if ($fileSecurity && !$valid) {
             try {
