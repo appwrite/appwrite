@@ -19,6 +19,9 @@ $cli
     ->task('backup')
     ->param('projectId', '', new UID(), 'Project id for backup', false)
     ->action(function ($projectId) use ($register) {
+
+
+
         Authorization::disable();
         $app = new App('UTC');
         Console::success('Starting Data Backup for project ' . $projectId);
@@ -31,9 +34,6 @@ $cli
         $cache = new Cache(new None());
 
         // todo: we want the adapter dynamic....
-        $projectDB = new Database(new MariaDB($db), $cache);
-        $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-        $projectDB->setNamespace('_1'); // todo get internal id from project id
 
         $consoleDB = new Database(new MariaDB($db), $cache);
         $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
@@ -42,24 +42,33 @@ $cli
         // $console = $app->getResource('console');
         //$project = $consoleDB->find('projects', [Query::equal('$uid', [$projectId])]);
         $project = $consoleDB->getDocument('projects', $projectId);
+        if ($project->isEmpty()) {
+            throw new Exception('Project ' . $projectId . ' not found');
+        }
+
+        if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
+            // How to detect "console"
+            // todo: make sure not to backup console!!!!
+        }
+
+        $projectDB = new Database(new MariaDB($db), $cache);
+        $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $projectDB->setNamespace('_' . $project->getInternalId());
 
         $collections = Config::getParam('collections', []);
-
         $tables = [];
+
         foreach ($collections as $collection) {
             if (in_array($collection['$id'], ['files', 'collections'])) {
                 continue;
             }
-
-//            $name = "`" . $projectDB->getDefaultDatabase() . "`.`_" . $project->getInternalId() . "_" . $collection['$id'] . '`';
-//            $name = "`_" . $project->getInternalId() . "_" . $collection['$id'] . '`';
-//            $name = $projectDB->getNamespace() . "_" . $collection['$id'];
 
             $tables[] = $projectDB->getNamespace() . "_" . $collection['$id'];
 
             switch ($collection['$id']) {
                 case 'databases':
                     $databases = $projectDB->find('databases', []);
+
                     foreach ($databases as $database) {
                         $tables[] = $projectDB->getNamespace() . '_database_' . $database->getInternalId();
                         $databaseCollections = $projectDB->find('database_' . $database->getInternalId(), []);
@@ -78,17 +87,16 @@ $cli
             }
         }
 
-        var_dump($tables);
-
         $schema = 'appwrite';
-
-        $destination = './file.sql';
+        $destination = 'backup.sql.gz'; // todo: do we want to output as gz?
         $return = null;
         $output = null;
-        $singleTransaction = '--single-transaction';
+        $singleTransaction = '--single-transaction --quick --skip-lock-tables'; //
+        //$singleTransaction = '';
+
         $tables = implode(' ', $tables);
         //$command = "mysqldump -u user -h bla " . $schema . " " . implode(' ', $tables) . "> " . $destination;
-        $command = "docker exec appwrite-mariadb /usr/bin/mysqldump -u root --password=rootsecretpassword " . $schema . " " . $tables . " " . $singleTransaction . " > backup.sql";
+        $command = "docker exec appwrite-mariadb /usr/bin/mysqldump -u root --password=rootsecretpassword " . $schema . " " . $tables . " " . $singleTransaction . " | gzip > " . $destination;
 
         Console::error($command);
         //exec($command, $output, $return);
@@ -96,14 +104,9 @@ $cli
         var_dump($output);
         var_dump($return);
 
-        $restore = "docker exec -i appwrite-mariadb mysql -u root --password=rootsecretpassword shmuel < backup.sql";
+        $restore = "docker exec -i appwrite-mariadb mysql -u root --password=rootsecretpassword shmuel < " . $destination;
+        $restore = "gzip -dc " . $destination . " | docker exec -i appwrite-mariadb mysql -u root --password=rootsecretpassword shmuel";
         Console::error($restore);
-
-        die;
-
-        if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
-            // todo: make sure not to backup console?
-        }
 
 //        $migration
 //            ->setProject($project, $projectDB, $consoleDB)
