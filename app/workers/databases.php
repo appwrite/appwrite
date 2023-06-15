@@ -7,8 +7,6 @@ use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Exception;
 use Utopia\Database\Exception as DatabaseException;
 
 require_once __DIR__ . '/../init.php';
@@ -217,7 +215,7 @@ class DatabaseV1 extends Worker
 
         try {
             if ($status !== 'failed') {
-                if ($type ===  Database::VAR_RELATIONSHIP) {
+                if ($type === Database::VAR_RELATIONSHIP) {
                     if ($options['twoWay']) {
                         $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
                         if ($relatedCollection->isEmpty()) {
@@ -310,8 +308,7 @@ class DatabaseV1 extends Worker
                     $index
                         ->setAttribute('attributes', $attributes, Document::SET_TYPE_ASSIGN)
                         ->setAttribute('lengths', $lengths, Document::SET_TYPE_ASSIGN)
-                        ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN)
-                    ;
+                        ->setAttribute('orders', $orders, Document::SET_TYPE_ASSIGN);
 
                     // Check if an index exists with the same attributes and orders
                     $exists = false;
