@@ -1172,56 +1172,6 @@ $commonCollections = [
         ],
     ],
 
-    'realtime' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('realtime'),
-        'name' => 'Realtime Connections',
-        'attributes' => [
-            [
-                '$id' => ID::custom('container'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('timestamp'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => ID::custom('value'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [], //TODO: use json filter
-            ]
-        ],
-        'indexes' => [
-            [
-                '$id' => ID::custom('_key_timestamp'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['timestamp'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_DESC],
-            ],
-        ]
-    ],
-
     'cache' => [
         '$collection' => Database::METADATA,
         '$id' => 'cache',
@@ -2443,6 +2393,56 @@ $consoleCollections = array_merge([
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
+    ],
+
+    'realtime' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('realtime'),
+        'name' => 'Realtime Connections',
+        'attributes' => [
+            [
+                '$id' => ID::custom('container'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('timestamp'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => ID::custom('value'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [], //TODO: use json filter
+            ]
+        ],
+        'indexes' => [
+            [
+                '$id' => ID::custom('_key_timestamp'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['timestamp'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_DESC],
+            ],
+        ]
     ],
 ], $commonCollections);
 
