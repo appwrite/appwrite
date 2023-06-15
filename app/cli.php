@@ -61,7 +61,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $dbForConsole->setNamespace('console');
 
             // Ensure tables exist
-            $collections = Config::getParam('collections', []);
+            $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
             if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
