@@ -129,7 +129,7 @@ class DatabaseV1 extends Worker
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -238,7 +238,7 @@ class DatabaseV1 extends Worker
             if (!$relatedAttribute->isEmpty()) {
                 $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -346,6 +346,7 @@ class DatabaseV1 extends Worker
      * @param Document $collection
      * @param Document $index
      * @param string $projectId
+     * @throws \Exception
      */
     protected function createIndex(Document $database, Document $collection, Document $index, string $projectId): void
     {
@@ -370,7 +371,7 @@ class DatabaseV1 extends Worker
                 throw new DatabaseException('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -411,7 +412,6 @@ class DatabaseV1 extends Worker
      * @param Document $collection
      * @param Document $index
      * @param string $projectId
-     * @throws Exception
      */
     protected function deleteIndex(Document $database, Document $collection, Document $index, string $projectId): void
     {
@@ -432,7 +432,7 @@ class DatabaseV1 extends Worker
                 throw new DatabaseException('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {

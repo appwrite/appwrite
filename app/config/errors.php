@@ -487,6 +487,11 @@ return [
         'description' => 'Index with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::INDEX_INVALID => [
+        'name' => Exception::INDEX_INVALID,
+        'description' => 'Index invalid.',
+        'code' => 400,
+    ],
 
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
