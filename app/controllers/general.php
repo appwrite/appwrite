@@ -425,6 +425,7 @@ App::error()
                 $log->setType(Log::TYPE_ERROR);
                 $log->setMessage($error->getMessage());
 
+                $log->addTag('database', $project->getAttribute('database', 'console'));
                 $log->addTag('method', $route->getMethod());
                 $log->addTag('url', $route->getPath());
                 $log->addTag('verboseType', get_class($error));
