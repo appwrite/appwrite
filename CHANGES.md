@@ -2,7 +2,21 @@
 
 ## Features
 
-- Add error attribute to Collection Indexes and Attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
+- Add error attribute to indexes and attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
+- Add new index validation rules [#5710](https://github.com/appwrite/appwrite/pull/5710)
+
+## Fixes
+
+- Fix cascading deletes across multiple levels [DB #269](https://github.com/utopia-php/database/pull/269)
+- Fix identical two-way keys not throwing duplicate exceptions [DB #273](https://github.com/utopia-php/database/pull/273)
+- Fix search wildcards [DB #279](https://github.com/utopia-php/database/pull/279)
+- Fix permissions returning as an object instead of list [DB #281](https://github.com/utopia-php/database/pull/281)
+- Fix missing collection not found error [DB #282](https://github.com/utopia-php/database/pull/282)
+
+## Changes
+
+- Improve permission indexes [DB #248](https://github.com/utopia-php/database/pull/248)
+- Validators back-ported to Utopia [#5439](https://github.com/appwrite/appwrite/pull/5439)
 
 # Version 1.3.7
 
