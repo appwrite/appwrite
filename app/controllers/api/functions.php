@@ -73,16 +73,57 @@ App::post('/v1/functions')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.', true)
     ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
     ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
+    ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('vcsRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
+    ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
+    ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
+    ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
-        // TODO: Add support to link to GitHub repos from createFunction as well
-
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if (!empty($vcsInstallationId) && $installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if (!empty($vcsRepositoryId) && (empty($vcsInstallationId) || empty($vcsBranch))) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS you need to provide all VCS parameters.');
+        }
+
+        $vcsRepositoryDocId = '';
+        $vcsRepositoryDocInternalId = '';
+
+        // Git connect logic
+        if (!empty($vcsRepositoryId)) {
+            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepos', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'vcsInstallationId' => $installation->getId(),
+                'vcsInstallationInternalId' => $installation->getInternalId(),
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'repositoryId' => $vcsRepositoryId,
+                'resourceId' => $functionId,
+                'resourceType' => 'function'
+            ]));
+
+            $vcsRepositoryDocId = $vcsRepoDoc->getId();
+            $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
+        }
+
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
@@ -98,6 +139,14 @@ App::post('/v1/functions')
             'entrypoint' => $entrypoint,
             'buildCommand' => $buildCommand,
             'installCommand' => $installCommand,
+            'vcsInstallationId' => $installation->getId(),
+            'vcsInstallationInternalId' => $installation->getInternalId(),
+            'vcsRepositoryId' => $vcsRepositoryId,
+            'vcsRepositoryDocId' => $vcsRepositoryDocId,
+            'vcsRepositoryDocInternalId' => $vcsRepositoryDocInternalId,
+            'vcsBranch' => $vcsBranch,
+            'vcsRootDirectory' => $vcsRootDirectory,
+            'vcsSilentMode' => $vcsSilentMode,
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v3'
         ]));
@@ -113,6 +162,41 @@ App::post('/v1/functions')
                 'active' => false,
             ]))
         );
+
+        // Redeploy vcs logic
+        if (!empty($vcsRepositoryId)) {
+            $deploymentId = ID::unique();
+            $deployment = $dbForProject->createDocument('deployments', new Document([
+                '$id' => $deploymentId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'resourceId' => $functionId,
+                'resourceType' => 'functions',
+                'entrypoint' => $entrypoint,
+                'buildCommand' => $buildCommand,
+                'installCommand' => $installCommand,
+                'type' => 'vcs',
+                'vcsInstallationId' => $installation->getId(),
+                'vcsInstallationInternalId' => $installation->getInternalId(),
+                'vcsRepositoryId' => $vcsRepositoryDocId,
+                'vcsRepositoryInternalId' => $vcsRepositoryDocInternalId,
+                'vcsBranch' => $vcsBranch,
+                'vcsRootDirectory' => $vcsRootDirectory,
+                'search' => implode(' ', [$deploymentId, $entrypoint]),
+                'activate' => true,
+            ]));
+
+            $buildEvent = new Build();
+            $buildEvent
+                ->setType(BUILD_TYPE_DEPLOYMENT)
+                ->setResource($function)
+                ->setDeployment($deployment)
+                ->setProject($project)
+                ->trigger();
+        }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
         if ($functionsDomain !== 'disabled') {
@@ -526,7 +610,7 @@ App::put('/v1/functions/:functionId')
     ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('vcsRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
-    ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection is in silent mode for the repo linked to the function?', true)
+    ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
     ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
     ->inject('response')
     ->inject('dbForProject')
