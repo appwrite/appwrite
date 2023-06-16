@@ -705,6 +705,7 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'name' => 'logo_updated.png',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
@@ -716,7 +717,7 @@ trait StorageBase
         $this->assertNotEmpty($file['body']['$id']);
         $dateValidator = new DatetimeValidator();
         $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
-        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('logo_updated.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
         //$this->assertEquals(54944, $file['body']['sizeActual']);
