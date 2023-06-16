@@ -575,10 +575,10 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-worker-imports:
-    entrypoint: worker-imports
+  appwrite-worker-migrations:
+    entrypoint: worker-migrations
     <<: *x-logging
-    container_name: appwrite-worker-imports
+    container_name: appwrite-worker-migrations
     restart: unless-stopped
     image: appwrite-dev
     networks:
