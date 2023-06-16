@@ -197,7 +197,7 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
         }
 
         // All 3 pages were full, we paginate more
-        if(\count($repos) === 3 * $perPage) {
+        if (\count($repos) === 3 * $perPage) {
             do {
                 $reposPage = $loadPage($page);
                 $repos = array_merge($repos, $reposPage);

@@ -47,6 +47,41 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
+$redeployVcsLogic = function (Document $function, Document $project, Document $installation, Database $dbForProject) {
+    $deploymentId = ID::unique();
+    $entrypoint = $function->getAttribute('entrypoint', '');
+    $deployment = $dbForProject->createDocument('deployments', new Document([
+        '$id' => $deploymentId,
+        '$permissions' => [
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ],
+        'resourceId' => $function->getId(),
+        'resourceType' => 'functions',
+        'entrypoint' => $entrypoint,
+        'buildCommand' => $function->getAttribute('buildCommand', ''),
+        'installCommand' => $function->getAttribute('installCommand', ''),
+        'type' => 'vcs',
+        'vcsInstallationId' => $installation->getId(),
+        'vcsInstallationInternalId' => $installation->getInternalId(),
+        'vcsRepositoryId' => $function->getAttribute('vcsRepositoryDocId', ''),
+        'vcsRepositoryInternalId' => $function->getAttribute('vcsRepositoryDocInternalId', ''),
+        'vcsBranch' => $function->getAttribute('vcsBranch', 'main'),
+        'vcsRootDirectory' => $function->getAttribute('vcsRootDirectory', ''),
+        'search' => implode(' ', [$deploymentId, $entrypoint]),
+        'activate' => true,
+    ]));
+
+    $buildEvent = new Build();
+    $buildEvent
+        ->setType(BUILD_TYPE_DEPLOYMENT)
+        ->setResource($function)
+        ->setDeployment($deployment)
+        ->setProject($project)
+        ->trigger();
+};
+
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
@@ -84,7 +119,7 @@ App::post('/v1/functions')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
@@ -165,37 +200,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($vcsRepositoryId)) {
-            $deploymentId = ID::unique();
-            $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$id' => $deploymentId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'resourceId' => $functionId,
-                'resourceType' => 'functions',
-                'entrypoint' => $entrypoint,
-                'buildCommand' => $buildCommand,
-                'installCommand' => $installCommand,
-                'type' => 'vcs',
-                'vcsInstallationId' => $installation->getId(),
-                'vcsInstallationInternalId' => $installation->getInternalId(),
-                'vcsRepositoryId' => $vcsRepositoryDocId,
-                'vcsRepositoryInternalId' => $vcsRepositoryDocInternalId,
-                'vcsBranch' => $vcsBranch,
-                'vcsRootDirectory' => $vcsRootDirectory,
-                'search' => implode(' ', [$deploymentId, $entrypoint]),
-                'activate' => true,
-            ]));
-
-            $buildEvent = new Build();
-            $buildEvent
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+            $redeployVcsLogic($function, $project, $installation, $dbForProject);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
@@ -618,7 +623,7 @@ App::put('/v1/functions/:functionId')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -694,41 +699,6 @@ App::put('/v1/functions/:functionId')
             $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
         }
 
-        // Redeploy logic
-        if (!$isConnected && !empty($vcsRepositoryId)) {
-            $deploymentId = ID::unique();
-            $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$id' => $deploymentId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'resourceId' => $function->getId(),
-                'resourceType' => 'functions',
-                'entrypoint' => $entrypoint,
-                'buildCommand' => $buildCommand,
-                'installCommand' => $installCommand,
-                'type' => 'vcs',
-                'vcsInstallationId' => $installation->getId(),
-                'vcsInstallationInternalId' => $installation->getInternalId(),
-                'vcsRepositoryId' => $vcsRepositoryDocId,
-                'vcsRepositoryInternalId' => $vcsRepositoryDocInternalId,
-                'vcsBranch' => $vcsBranch,
-                'vcsRootDirectory' => $vcsRootDirectory,
-                'search' => implode(' ', [$deploymentId, $entrypoint]),
-                'activate' => true,
-            ]));
-
-            $buildEvent = new Build();
-            $buildEvent
-                ->setType(BUILD_TYPE_DEPLOYMENT)
-                ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
-        }
-
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -750,6 +720,11 @@ App::put('/v1/functions/:functionId')
             'vcsSilentMode' => $vcsSilentMode,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
+
+        // Redeploy logic
+        if (!$isConnected && !empty($vcsRepositoryId)) {
+            $redeployVcsLogic($function, $project, $installation, $dbForProject);
+        }
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
 
