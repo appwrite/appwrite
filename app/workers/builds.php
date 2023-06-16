@@ -278,6 +278,7 @@ class BuildsV1 extends Worker
             Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject, $allEvents) {
                 Co::join([
                     Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject, $allEvents) {
+                        \var_dump("Start1");
                         $this->executor->getLogs(
                             projectId: $project->getId(),
                             deploymentId: $deployment->getId(),
@@ -307,6 +308,7 @@ class BuildsV1 extends Worker
                         );
                     }),
                     Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command) {
+                        \var_dump("Start2");
                         $response = $this->executor->createRuntime(
                             projectId: $project->getId(),
                             deploymentId: $deployment->getId(),

@@ -1,5 +1,6 @@
 <?php
 
+use Swoole\Coroutine as Co;
 use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
@@ -29,6 +30,8 @@ use Utopia\Detector\Adapter\Python;
 use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
+
+use function Swoole\Coroutine\batch;
 
 App::get('/v1/vcs/github/installations')
     ->desc('Install GitHub App')
@@ -148,6 +151,8 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $vcsInstallationId, string $search, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
+        $start = \microtime(true);
+
         if (empty($search)) {
             $search = "";
         }
@@ -166,36 +171,61 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
         $page = 1;
-        $per_page = 100; // max limit of GitHub API
-        $repos = []; // Array to store all repositories
+        $perPage = 100;
 
-        do {
-            $repositories = $github->listRepositoriesForGitHubApp($page, $per_page);
-            $repos = array_merge($repos, $repositories);
-            $page++;
-        } while (\count($repositories) === $per_page);
+        $loadPage = function ($page) use ($github, $perPage) {
+            $repos = $github->listRepositoriesForGitHubApp($page, $perPage);
+            return $repos;
+        };
+
+        $reposPages = batch([
+            function () use ($loadPage) {
+                return $loadPage(1);
+            },
+            function () use ($loadPage) {
+                return $loadPage(2);
+            },
+            function () use ($loadPage) {
+                return $loadPage(3);
+            }
+        ]);
+
+        $page += 3;
+        $repos = [];
+        foreach ($reposPages as $reposPage) {
+            $repos = \array_merge($repos, $reposPage);
+        }
+
+        // All 3 pages were full, we paginate more
+        if(\count($repos) === 3 * $perPage) {
+            do {
+                $reposPage = $loadPage($page);
+                $repos = array_merge($repos, $reposPage);
+                $page++;
+            } while (\count($reposPage) === $perPage);
+        }
 
         // Filter repositories based on search parameter
         if (!empty($search)) {
             $repos = array_filter($repos, function ($repo) use ($search) {
-                $repoName = strtolower($repo['name']);
-                $searchTerm = strtolower($search);
-                return strpos($repoName, $searchTerm) !== false;
+                return \str_contains(\strtolower($repo['name']), \strtolower($search));
             });
         }
         // Sort repositories by last modified date in descending order
         usort($repos, function ($repo1, $repo2) {
-            return strtotime($repo2['pushed_at']) - strtotime($repo1['pushed_at']);
+            return \strtotime($repo2['pushed_at']) - \strtotime($repo1['pushed_at']);
         });
 
         // Limit the maximum results to 5
-        $repos = array_slice($repos, 0, 5);
+        $repos = \array_slice($repos, 0, 5);
 
         $repos = \array_map(function ($repo) {
             $repo['id'] = \strval($repo['id']);
             $repo['pushedAt'] = $repo['pushed_at'];
             return new Document($repo);
         }, $repos);
+
+        \var_dump(\microtime(true) - $start);
 
         $response->dynamic(new Document([
             'repositories' => $repos,
