@@ -46,6 +46,24 @@ class MigrationsV1 extends Worker
 
     public function run(): void
     {
+        $type = $this->args['type'] ?? '';
+        $events = $this->args['events'] ?? [];
+        $project = new Document($this->args['project'] ?? []);
+        $user = new Document($this->args['user'] ?? []);
+        $payload = json_encode($this->args['payload'] ?? []);
+
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+
+        /**
+         * Handle Event execution.
+         */
+        if (!empty($events)) {
+            return;
+        }
+
         $this->dbForProject = $this->getProjectDB($this->args['project']['$id']);
 
         // Process
@@ -69,9 +87,9 @@ class MigrationsV1 extends Worker
             case 'supabase':
                 return new Supabase(
                     $source['endpoint'],
-                    $source['key'],
-                    $source['host'],
-                    $source['database'],
+                    $source['apiKey'],
+                    $source['databaseHost'],
+                    "postgres",
                     $source['username'],
                     $source['password'],
                     $source['port'],
@@ -155,25 +173,21 @@ class MigrationsV1 extends Worker
             'projectId' => $project->getId(),
             'name' => 'Transfer API Key',
             'scopes' => [
-                // Auth
                 'users.read',
                 'users.write',
                 'teams.read',
                 'teams.write',
-                // Database
                 'databases.read',
                 'databases.write',
                 'collections.read',
                 'collections.write',
                 'documents.read',
                 'documents.write',
-                // Storage
                 'buckets.read',
                 'buckets.write',
                 'files.read',
                 'files.write',
 
-                // Functions
                 'functions.read',
                 'functions.write',
             ],
@@ -183,7 +197,10 @@ class MigrationsV1 extends Worker
             'secret' => $generatedSecret,
         ]);
 
-        return $consoleDB->createDocument('keys', $key);
+        $consoleDB->createDocument('keys', $key);
+        $consoleDB->deleteCachedDocument('projects', $project->getId());
+
+        return $key;
     }
 
     /**
@@ -199,7 +216,7 @@ class MigrationsV1 extends Worker
          */
         $migrationDocument = null;
         $transfer = null;
-        $projectDocument = $this->dbForProject->getDocument('projects', $this->args['project']['$id']);
+        $projectDocument = $this->getConsoleDB()->getDocument('projects', $this->args['project']['$id']);
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         try {

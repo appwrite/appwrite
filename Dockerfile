@@ -29,12 +29,12 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.2.2 as final
+FROM ionic/base as final
 
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
-ARG DEBUG=false
+ARG DEBUG=true
 ENV DEBUG=$DEBUG
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
