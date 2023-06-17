@@ -9,7 +9,6 @@ use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Appwrite\Vcs\Comment;
-use Swoole\Runtime;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -106,12 +105,11 @@ class BuildsV1 extends Worker
             $buildId = ID::unique();
 
             $vcsInstallationId = $deployment->getAttribute('vcsInstallationId', '');
-            $vcsRepoId = $deployment->getAttribute('vcsRepositoryId', '');
-            $isVcsEnabled = $vcsRepoId ? true : false;
+            $repositoryId = $deployment->getAttribute('vcsRepositoryId', '');
+            $isVcsEnabled = $repositoryId ? true : false;
 
             if ($isVcsEnabled) {
-                $vcsRepos = Authorization::skip(fn () => $dbForConsole->getDocument('vcsRepos', $vcsRepoId));
-                $repositoryId = $vcsRepos->getAttribute('repositoryId');
+                \var_dump("Will clone");
                 $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId));
                 $installationId = $vcsInstallations->getAttribute('installationId');
 
@@ -129,6 +127,7 @@ class BuildsV1 extends Worker
                 $repositoryName = $github->getRepositoryName($repositoryId);
                 $branchName = $deployment->getAttribute('vcsBranch');
                 $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName, $tmpDirectory, $rootDirectory);
+                \var_dump($gitCloneCommand);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -251,6 +250,7 @@ class BuildsV1 extends Worker
         $source = $deployment->getAttribute('path');
 
         if ($isVcsEnabled) {
+            \var_dump("Changing source");
             $source = $path;
         }
 
@@ -275,6 +275,7 @@ class BuildsV1 extends Worker
 
             $response = null;
 
+            // TODO: Remove run() wrapper when switching to new utopia queue. That should be done on Swoole adapter in the libary
             Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject, $allEvents) {
                 Co::join([
                     Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject, $allEvents) {
@@ -444,10 +445,11 @@ class BuildsV1 extends Worker
             $github->updateCommitStatus($repositoryName, $SHA, $owner, $state, $message, $targetUrl, $name);
         }
 
-
+        // TODO: Fix race condition
         if (!empty($commentId)) {
             $comment = new Comment();
             $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+            \sleep(5);
             $comment->addBuild($project, $function, $status, $deployment->getId());
             $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
         }

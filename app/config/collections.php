@@ -2901,7 +2901,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsRepositoryInternalId'),
+                '$id' => ID::custom('vcsRepositoryDocId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -2909,6 +2909,17 @@ $collections = [
                 'filters' => [],
                 'required' => false,
                 'array' => false,
+            ],
+            [
+                '$id' => ID::custom('vcsRepositoryDocInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('vcsBranch'),
