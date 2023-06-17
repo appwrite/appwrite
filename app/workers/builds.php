@@ -47,6 +47,7 @@ class BuildsV1 extends Worker
         $project = new Document($this->args['project'] ?? []);
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
+        $template = new Document($this->args['template'] ?? []);
         $SHA = $this->args['SHA'] ?? '';
         $targetUrl = $this->args['targetUrl'] ?? '';
 
@@ -55,7 +56,7 @@ class BuildsV1 extends Worker
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($this->getCache());
-                $this->buildDeployment($github, $project, $resource, $deployment, $SHA, $targetUrl);
+                $this->buildDeployment($github, $project, $resource, $deployment, $template, $SHA, $targetUrl);
                 break;
 
             default:
@@ -64,8 +65,10 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, string $SHA = '', string $targetUrl = '')
+    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $SHA = '', string $targetUrl = '')
     {
+        $templateRepositoryNmae = $template->getAttribute('templateRepositoryName');
+        $templateOwnerName = $template->getAttribute('templateOwnerName');
         global $register;
 
         $dbForProject = $this->getProjectDB($project);

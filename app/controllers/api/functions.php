@@ -47,7 +47,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcsLogic = function (Document $function, Document $project, Document $installation, Database $dbForProject) {
+$redeployVcsLogic = function (Document $function, Document $project, Document $installation, Document $template, Database $dbForProject) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -79,6 +79,7 @@ $redeployVcsLogic = function (Document $function, Document $project, Document $i
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
+        ->setTemplate($template)
         ->setProject($project)
         ->trigger();
 };
@@ -114,14 +115,25 @@ App::post('/v1/functions')
     ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
     ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
     ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
+    ->param('templateRepositoryName', '', new Text(128), 'Repository name of the template', true)
+    ->param('templateOwnerName', '', new Text(128), 'Owner name of the template', true)
+    ->param('templateDirectory', '', new Text(128), 'Path to function code in the template repo', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, string $templateRepositoryName, string $templateOwnerName, string $templateDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        // build from template
+        $template = new Document([]);
+        if (!empty($templateRepositoryName) && !empty($templateOwnerName)) {
+            $template->setAttribute('templateRepositoryName', $templateRepositoryName)
+                ->setAttribute('templateOwnerName', $templateOwnerName)
+                ->setAttribute('templateDirectory', $templateDirectory);
+        }
 
         $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
@@ -201,7 +213,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($vcsRepositoryId)) {
-            $redeployVcsLogic($function, $project, $installation, $dbForProject);
+            $redeployVcsLogic($function, $project, $installation, $template, $dbForProject);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
