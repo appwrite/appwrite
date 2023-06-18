@@ -3279,7 +3279,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $permissions = $document->getPermissions() ?? [];
         }
 
-        $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
+        $data = $data + $document->getArrayCopy(); // Merge existing data with new data
+        
         $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
