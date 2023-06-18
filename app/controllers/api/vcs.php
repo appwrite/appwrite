@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Swoole\Coroutine as Co;
 use Utopia\App;
 use Appwrite\Event\Build;
@@ -14,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Vcs\Comment;
+use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\ID;
 use Utopia\Database\Permission;
@@ -30,6 +32,7 @@ use Utopia\Detector\Adapter\Python;
 use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
+use Utopia\Validator\Boolean;
 
 use function Swoole\Coroutine\batch;
 
@@ -65,23 +68,26 @@ App::get('/v1/vcs/github/installations')
             ]));
     });
 
-App::get('/v1/vcs/github/incominginstallation')
-    ->desc('Capture installation id and state after GitHub App Installation')
+App::get('/v1/vcs/github/redirect')
+    ->desc('Capture installation and authorization from GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->param('installation_id', '', new Text(256), 'GitHub installation ID')
     ->param('setup_action', '', new Text(256), 'GitHub setup actuon type')
     ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.')
+    ->param('code', '', new Text(2048), 'OAuth2 code.', true)
     ->inject('gitHub')
+    ->inject('user')
     ->inject('project')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $installationId, string $setupAction, string $state, GitHub $github, Document $project, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (string $installationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
         $state = \json_decode($state, true);
         $redirect = $state['redirect'] ?? '';
+        $projectId = $state['projectId'] ?? '';
 
-        $projectId = $project->getId();
+        $project = $dbForConsole->getDocument('projects', $projectId);
 
         if (empty($redirect)) {
             $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
@@ -94,38 +100,64 @@ App::get('/v1/vcs/github/incominginstallation')
                 ->redirect($redirect);
         }
 
-        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        $github->initialiseVariables($installationId, $privateKey, $githubAppId);
-        $owner = $github->getOwnerName($installationId);
+        $personalSlug = '';
 
-        $projectInternalId = $project->getInternalId();
+        // OAuth Authroization
+        if (!empty($code)) {
+            $oauth2 = new OAuth2Github(App::getEnv('VCS_GITHUB_CLIENT_ID', ''), App::getEnv('VCS_GITHUB_CLIENT_SECRET', ''), "");
+            $accessToken = $oauth2->getAccessToken($code);
+            $refreshToken = $oauth2->getRefreshToken($code);
+            $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
+            $personalSlug = $oauth2->getUserSlug($accessToken);
 
-        $vcsInstallation = $dbForConsole->findOne('vcsInstallations', [
-            Query::equal('installationId', [$installationId]),
-            Query::equal('projectInternalId', [$projectInternalId])
-        ]);
+            $user = $user
+                ->setAttribute('vcsGithubAccessToken', $accessToken)
+                ->setAttribute('vcsGithubRefreshToken', $refreshToken)
+                ->setAttribute('vcsGithubAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
 
-        if ($vcsInstallation === false || $vcsInstallation->isEmpty()) {
-            $vcsInstallation = new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'installationId' => $installationId,
-                'projectId' => $projectId,
-                'projectInternalId' => $projectInternalId,
-                'provider' => 'github',
-                'organization' => $owner,
-                'accessToken' => null
+            $dbForConsole->updateDocument('users', $user->getId(), $user);
+        }
+
+        // Create / Update installation
+        if (!empty($installationId)) {
+            $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+            $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+            $owner = $github->getOwnerName($installationId);
+
+            $projectInternalId = $project->getInternalId();
+
+            $vcsInstallation = $dbForConsole->findOne('vcsInstallations', [
+                Query::equal('installationId', [$installationId]),
+                Query::equal('projectInternalId', [$projectInternalId])
             ]);
 
-            $vcsInstallation = $dbForConsole->createDocument('vcsInstallations', $vcsInstallation);
-        } else {
-            $vcsInstallation = $vcsInstallation->setAttribute('organization', $owner);
-            $vcsInstallation = $dbForConsole->updateDocument('vcsInstallations', $vcsInstallation->getId(), $vcsInstallation);
+            if ($vcsInstallation === false || $vcsInstallation->isEmpty()) {
+                $teamId = $project->getAttribute('teamId', '');
+
+                $vcsInstallation = new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => [
+                        Permission::read(Role::team(ID::custom($teamId))),
+                        Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                        Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                        Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                        Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                    ],
+                    'installationId' => $installationId,
+                    'projectId' => $projectId,
+                    'projectInternalId' => $projectInternalId,
+                    'provider' => 'github',
+                    'organization' => $owner,
+                    'personal' => $personalSlug === $owner
+                ]);
+
+                $vcsInstallation = $dbForConsole->createDocument('vcsInstallations', $vcsInstallation);
+            } else {
+                $vcsInstallation = $vcsInstallation->setAttribute('organization', $owner);
+                $vcsInstallation = $vcsInstallation->setAttribute('personal', $personalSlug === $owner);
+                $vcsInstallation = $dbForConsole->updateDocument('vcsInstallations', $vcsInstallation->getId(), $vcsInstallation);
+            }
         }
 
         $response
@@ -151,8 +183,6 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $vcsInstallationId, string $search, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $start = \microtime(true);
-
         if (empty($search)) {
             $search = "";
         }
@@ -225,12 +255,82 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
             return new Document($repo);
         }, $repos);
 
-        \var_dump(\microtime(true) - $start);
-
         $response->dynamic(new Document([
             'repositories' => $repos,
             'total' => \count($repos),
         ]), Response::MODEL_REPOSITORY_LIST);
+    });
+
+App::post('/v1/vcs/github/installations/:installationId/repositories')
+    ->desc('Create repository')
+    ->groups(['api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.method', 'createRepository')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_REPOSITORY)
+    ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('name', '', new Text(256), 'Repository name (slug)')
+    ->param('private', '', new Boolean(false), 'Mark repository public or private')
+    ->inject('gitHub')
+    ->inject('user')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $vcsInstallationId, string $name, bool $private, GitHub $github, Document $user, Response $response, Document $project, Database $dbForConsole) {
+        $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('personal', false) === true) {
+            $oauth2 = new OAuth2Github(App::getEnv('VCS_GITHUB_CLIENT_ID', ''), App::getEnv('VCS_GITHUB_CLIENT_SECRET', ''), "");
+
+            $accessToken = $user->getAttribute('vcsGithubAccessToken');
+            $refreshToken = $user->getAttribute('vcsGithubRefreshToken');
+            $accessTokenExpiry = $user->getAttribute('vcsGithubAccessTokenExpiry');
+
+            $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
+            if ($isExpired) {
+                $oauth2->refreshTokens($refreshToken);
+
+                $accessToken = $oauth2->getAccessToken('');
+                $refreshToken = $oauth2->getRefreshToken('');
+
+                $verificationId = $oauth2->getUserID($accessToken);
+
+                if (empty($verificationId)) {
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
+                }
+
+                $user = $user
+                    ->setAttribute('vcsGithubAccessToken', $accessToken)
+                    ->setAttribute('vcsGithubRefreshToken', $refreshToken)
+                    ->setAttribute('vcsGithubAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+
+                $dbForConsole->updateDocument('users', $user->getId(), $user);
+            }
+
+            $repository = $oauth2->createRepository($accessToken, $name, $private);
+        } else {
+            $installationId = $installation->getAttribute('installationId');
+            $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+            $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+            $owner = $github->getOwnerName($installationId);
+
+            $repository = $github->createRepository($owner, $name, $private);
+        }
+
+        $repository['id'] = \strval($repository['id']);
+        $repository['pushedAt'] = $repository['pushed_at'];
+
+        $response->dynamic(new Document($repository), Response::MODEL_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
@@ -371,7 +471,7 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
             $repositoryName = $github->getRepositoryName($repositoryId);
 
             $comment = new Comment();
-            // TODO: Add all builds reeeeee
+            // TODO: Add all builds
             $comment->addBuild($project, $function, 'waiting', $deploymentId);
 
             if (empty($latestCommentId)) {

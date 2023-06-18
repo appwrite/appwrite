@@ -936,7 +936,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         if ($project->isEmpty()) {
             $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
-            $user = $dbForProject->getDocument('users', Auth::$unique);
+            if($project->getId() === 'console') {
+                $user = $dbForConsole->getDocument('users', Auth::$unique);
+            } else {
+                $user = $dbForProject->getDocument('users', Auth::$unique);
+            }
         }
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
@@ -994,11 +998,6 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
         $projectId = $request->getParam('project', '');
     } elseif (!empty($request->getHeader('x-appwrite-project', ''))) {
         $projectId = $request->getHeader('x-appwrite-project', '');
-    } elseif (!empty($request->getParam('state', ''))) {
-        $state = \json_decode($request->getParam('state', ''), true);
-        if (!empty($state['projectId'])) {
-            $projectId = $state['projectId'];
-        }
     }
 
     if ($projectId === 'console') {
