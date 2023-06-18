@@ -22,6 +22,19 @@ class Repository extends Model
                 'default' => '',
                 'example' => 'appwrite',
             ])
+            ->addRule('organization', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Installation organization.',
+                'default' => [],
+                'example' => 'appwrite',
+                'array' => false,
+            ])
+            ->addRule('provider', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Repository Installation Pame.',
+                'default' => '',
+                'example' => 'github',
+            ])
             ->addRule('private', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is repository private?',

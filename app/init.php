@@ -936,7 +936,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         if ($project->isEmpty()) {
             $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
         } else {
-            if($project->getId() === 'console') {
+            if ($project->getId() === 'console') {
                 $user = $dbForConsole->getDocument('users', Auth::$unique);
             } else {
                 $user = $dbForProject->getDocument('users', Auth::$unique);

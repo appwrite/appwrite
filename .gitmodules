@@ -1,4 +1,4 @@
 [submodule "app/console"]
 	path = app/console
 	url = https://github.com/appwrite/console
-	branch = feat-git-integration
+	branch = feat-g4

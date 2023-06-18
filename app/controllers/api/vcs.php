@@ -249,9 +249,11 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
         // Limit the maximum results to 5
         $repos = \array_slice($repos, 0, 5);
 
-        $repos = \array_map(function ($repo) {
+        $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id']);
             $repo['pushedAt'] = $repo['pushed_at'];
+            $repo['provider'] = $installation->getAttribute('provider', '');
+            $repo['organization'] = $installation->getAttribute('organization', '');
             return new Document($repo);
         }, $repos);
 
@@ -374,6 +376,8 @@ App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryI
 
         $repository['id'] = \strval($repository['id']);
         $repository['pushedAt'] = $repository['pushed_at'];
+        $repository['organization'] = $installation->getAttribute('organization', '');
+        $repository['provider'] = $installation->getAttribute('provider', '');
 
         $response->dynamic(new Document($repository), Response::MODEL_REPOSITORY);
     });
@@ -470,17 +474,20 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
             $owner = $github->getOwnerName($installationId);
             $repositoryName = $github->getRepositoryName($repositoryId);
 
-            $comment = new Comment();
-            // TODO: Add all builds
-            $comment->addBuild($project, $function, 'waiting', $deploymentId);
-
             if (empty($latestCommentId)) {
+                $comment = new Comment();
+                $comment->addBuild($project, $function, 'waiting', $deploymentId);
+
                 $pullRequest = $github->getBranchPullRequest($owner, $repositoryName, $branchName);
                 if (!empty($pullRequest)) {
                     $pullRequestNumber = \strval($pullRequest['number']);
                     $latestCommentId = $github->createComment($owner, $repositoryName, $pullRequestNumber, $comment->generateComment());
                 }
             } else {
+                $comment = new Comment();
+                $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
+                $comment->addBuild($project, $function, 'waiting', $deploymentId);
+
                 $latestCommentId = $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
             }
 
@@ -508,8 +515,7 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
                 'activate' => $activate,
             ]));
 
-            // TODO: Figure out port
-            $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . ":3000/console/project-$projectId/functions/function-$functionId";
+            $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
 
             if (!empty($SHA) && $function->getAttribute('vcsSilentMode', false) === false) {
                 $functionName = $function->getAttribute('name');

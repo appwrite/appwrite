@@ -47,7 +47,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcsLogic = function (Document $function, Document $project, Document $installation, Document $template, Database $dbForProject) {
+$redeployVcsLogic = function (Document $function, Document $project, Document $installation, Database $dbForProject, Document $template) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -213,7 +213,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($vcsRepositoryId)) {
-            $redeployVcsLogic($function, $project, $installation, $template, $dbForProject);
+            $redeployVcsLogic($function, $project, $installation, $dbForProject, $template);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
@@ -736,7 +736,7 @@ App::put('/v1/functions/:functionId')
 
         // Redeploy logic
         if (!$isConnected && !empty($vcsRepositoryId)) {
-            $redeployVcsLogic($function, $project, $installation, $dbForProject);
+            $redeployVcsLogic($function, $project, $installation, $dbForProject, new Document());
         }
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
