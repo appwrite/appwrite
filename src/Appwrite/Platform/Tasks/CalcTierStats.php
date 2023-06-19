@@ -104,10 +104,7 @@ class CalcTierStats extends Action
                 /**
                  * Skip user projects with id 'console'
                  */
-                if (
-                    $project->getId() === 'console' ||
-                    empty($project)
-                ) {
+                if ($project->getId() === 'console')
                     continue;
                 }
 
