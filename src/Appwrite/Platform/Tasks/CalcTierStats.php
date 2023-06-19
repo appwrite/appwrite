@@ -104,7 +104,10 @@ class CalcTierStats extends Action
                 /**
                  * Skip user projects with id 'console'
                  */
-                if ($project->getId() === 'console') {
+                if (
+                    $project->getId() === 'console' ||
+                    empty($project)
+                ) {
                     continue;
                 }
 
@@ -175,6 +178,10 @@ class CalcTierStats extends Action
 
                             $tmp[$metric] = [];
                             foreach ($requestDocs as $requestDoc) {
+                                if (empty($requestDoc)) {
+                                    continue;
+                                }
+
                                 $tmp[$metric][] = [
                                     'value' => $requestDoc->getAttribute('value'),
                                     'date' => $requestDoc->getAttribute('time'),
@@ -218,9 +225,12 @@ class CalcTierStats extends Action
                     $buckets = $dbForProject->find('buckets', []);
                     $counter = 0;
                     foreach ($buckets as $bucket) {
+                        $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
+                        if (empty($file)) {
+                            continue;
+                        }
                         $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
                         $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
-                        $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
                         if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
                             $maxFileSize = $file->getAttribute('sizeOriginal');
                         }
