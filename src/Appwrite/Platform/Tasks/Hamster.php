@@ -147,7 +147,7 @@ class Hamster extends Action
                 $statsPerProject['custom_domains'] = $dbForConsole->count('domains', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
                     Query::limit(APP_LIMIT_COUNT)
-                ]);                
+                ]);
 
                 /** Get Platforms */
                 $platforms = $dbForConsole->find('platforms', [
