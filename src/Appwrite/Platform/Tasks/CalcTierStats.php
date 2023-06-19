@@ -252,7 +252,7 @@ class CalcTierStats extends Action
 
                     $csv->insertOne(array_values($stats));
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error on line no: ' . $th->getline() . 'with message: ' . $th->getMessage());
+                    Console::error('Failed on project ("' . $project->getId() . '") version with error on line no: ' . $th->getline() . 'with message: ' . $th->getMessage());
                 } finally {
                     $pools
                         ->get($db)
