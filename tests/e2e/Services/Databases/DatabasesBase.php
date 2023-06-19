@@ -75,10 +75,27 @@ trait DatabasesBase
         $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertEquals($actors['body']['name'], 'Actors');
 
+        $test_numeric_key = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Numeric Keys',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $test_numeric_key['headers']['status-code']);
+        $this->assertEquals($test_numeric_key['body']['name'], 'Numeric Keys');
+
         return [
             'databaseId' => $databaseId,
             'moviesId' => $movies['body']['$id'],
             'actorsId' => $actors['body']['$id'],
+            'numericKeyId' => $test_numeric_key['body']['$id'],
         ];
     }
 
@@ -232,6 +249,17 @@ trait DatabasesBase
             'twoWayKey' => 'movie'
         ]);
 
+        $num_one = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => '1',
+            'size' => 256,
+            'required' => false,
+            'array' => false,
+        ]);
+
         $this->assertEquals(202, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -275,6 +303,12 @@ trait DatabasesBase
         $this->assertEquals($relationship['body']['twoWay'], true);
         $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
 
+        $this->assertEquals(202, $num_one['headers']['status-code']);
+        $this->assertEquals($num_one['body']['key'], '1');
+        $this->assertEquals($num_one['body']['type'], 'string');
+        $this->assertEquals($num_one['body']['size'], 256);
+        $this->assertEquals($num_one['body']['required'], false);
+
         // wait for database worker to create attributes
         sleep(2);
 
@@ -293,6 +327,16 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['attributes'][4]['key'], $actors['body']['key']);
         $this->assertEquals($movies['body']['attributes'][5]['key'], $datetime['body']['key']);
         $this->assertEquals($movies['body']['attributes'][6]['key'], $relationship['body']['key']);
+
+        $test_numeric_key = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []);
+
+        $this->assertIsArray($test_numeric_key['body']['attributes']);
+        $this->assertCount(1, $test_numeric_key['body']['attributes']);
+        $this->assertEquals($test_numeric_key['body']['attributes'][0]['key'], $num_one['body']['key']);
 
         return $data;
     }
@@ -1062,6 +1106,23 @@ trait DatabasesBase
             ]
         ]);
 
+        $document5 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                '1' => "one",
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+
+
         $this->assertEquals(201, $document1['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document1['body']['$collectionId']);
         $this->assertArrayNotHasKey('$collection', $document1['body']);
@@ -1105,6 +1166,14 @@ trait DatabasesBase
         $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
 
         $this->assertEquals(400, $document4['headers']['status-code']);
+
+        $this->assertEquals(201, $document5['headers']['status-code']);
+        $this->assertEquals($data['numericKeyId'], $document5['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document5['body']);
+        $this->assertEquals($databaseId, $document5['body']['$databaseId']);
+        $this->assertEquals($document5['body']['1'], 'one');
+        $this->assertIsArray($document5['body']['$permissions']);
+        $this->assertCount(3, $document5['body']['$permissions']);
 
         // Delete document 4 with incomplete path
         $this->assertEquals(404, $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/', array_merge([
@@ -1782,6 +1851,32 @@ trait DatabasesBase
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals('Remote document is newer than local.', $response['body']['message']);
         $this->assertEquals(Exception::DOCUMENT_UPDATE_CONFLICT, $response['body']['type']);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                '1' => "new one",
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $id = $document['body']['$id'];
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals($data['numericKeyId'], $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
+        $this->assertEquals($document['body']['1'], 'new one');
+        $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
 
         return [];
     }
