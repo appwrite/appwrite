@@ -175,6 +175,10 @@ class CalcTierStats extends Action
 
                             $tmp[$metric] = [];
                             foreach ($requestDocs as $requestDoc) {
+                                if (empty($requestDoc)) {
+                                    continue;
+                                }
+
                                 $tmp[$metric][] = [
                                     'value' => $requestDoc->getAttribute('value'),
                                     'date' => $requestDoc->getAttribute('time'),
@@ -218,9 +222,12 @@ class CalcTierStats extends Action
                     $buckets = $dbForProject->find('buckets', []);
                     $counter = 0;
                     foreach ($buckets as $bucket) {
+                        $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
+                        if (empty($file)) {
+                            continue;
+                        }
                         $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
                         $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
-                        $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
                         if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
                             $maxFileSize = $file->getAttribute('sizeOriginal');
                         }
@@ -245,7 +252,7 @@ class CalcTierStats extends Action
 
                     $csv->insertOne(array_values($stats));
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    Console::error('Failed on project ("' . $project->getId() . '") version with error on line no: ' . $th->getline() . 'with message: ' . $th->getMessage());
                 } finally {
                     $pools
                         ->get($db)
