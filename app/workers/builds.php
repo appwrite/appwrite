@@ -129,12 +129,32 @@ class BuildsV1 extends Worker
                 $owner = $github->getOwnerName($installationId);
                 $repositoryName = $github->getRepositoryName($repositoryId);
                 $branchName = $deployment->getAttribute('vcsBranch');
-                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryId, $branchName, $tmpDirectory, $rootDirectory);
+                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryName, $branchName, $tmpDirectory, $rootDirectory);
                 \var_dump($gitCloneCommand);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
                 Console::execute($gitCloneCommand, '', $stdout, $stderr);
+
+                // build from template
+                $templateRepositoryName = $template->getAttribute('templateRepositoryName');
+                $templateOwnerName = $template->getAttribute('templateOwnerName');
+
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName)) {
+                    // clone template repo
+                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
+                    $templateRootDirectory = $template->getAttribute('templateDirectory', '');
+                    var_dump($templateOwnerName . " " . $templateRepositoryName);
+                    $gitCloneCommandForTemplate = $github->generateGitCloneCommand($templateOwnerName, $templateRepositoryName, 'main', $tmpTemplateDirectory, $templateRootDirectory);
+                    var_dump("clone cmd for template " . $gitCloneCommandForTemplate);
+                    Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+
+                    // TODO: move template to code directory
+                    // Console::execute('mv FROM TO', '', $stdout, $stderr);
+
+                    // TODO: commit and push
+                }
+
                 Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
