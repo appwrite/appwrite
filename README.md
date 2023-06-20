@@ -17,6 +17,8 @@
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord?r=Github)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/appwrite/appwrite/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/appwrite/appwrite/actions)
 [![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
+<a href="https://github.com/appwrite/appwrite/stargazers"><img alt="GitHub issues" src="https://img.shields.io/github/stars/appwrite/appwrite?color=orange&label=Stars&style=flat-square"></a>
+    <a href="https://github.com/appwrite/appwrite/forks"><img alt="GitHub issues" src="https://img.shields.io/github/forks/appwrite/appwrite?label=Forks&style=flat-square"></a>
 
 <!-- [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite) -->
 <!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
