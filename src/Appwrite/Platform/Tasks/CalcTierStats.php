@@ -18,6 +18,9 @@ use Utopia\Registry\Registry;
 
 class CalcTierStats extends Action
 {
+    /*
+     * Csv cols headers
+     */
     private array $columns = [
         'Project ID',
         'Organization ID',
