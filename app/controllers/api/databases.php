@@ -1160,20 +1160,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
-
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1182,8 +1175,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
-            'filters' => $filters
+            'format' => APP_DATABASE_ATTRIBUTE_EMAIL
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1213,14 +1205,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE, min: 0), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, bool $encrypt, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // use length of longest string as attribute size
         $size = 0;
@@ -1236,12 +1227,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
         }
 
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
-
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
@@ -1250,8 +1235,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
-            'formatOptions' => ['elements' => $elements],
-            'filters' => $filters
+            'formatOptions' => ['elements' => $elements]
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1280,20 +1264,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
-
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1302,8 +1279,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => APP_DATABASE_ATTRIBUTE_IP,
-            'filters' => $filters,
+            'format' => APP_DATABASE_ATTRIBUTE_IP
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1332,20 +1308,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
-
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1355,7 +1324,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-            'filters' => $filters,
         ]), $response, $dbForProject, $database, $events);
 
         $response
