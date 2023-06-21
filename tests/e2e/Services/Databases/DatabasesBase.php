@@ -1230,9 +1230,6 @@ trait DatabasesBase
             ]
         ]);
 
-
-
-
         $this->assertEquals(201, $document1['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document1['body']['$collectionId']);
         $this->assertArrayNotHasKey('$collection', $document1['body']);
