@@ -1,3 +1,9 @@
+## 8.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
+
 ## 8.0.0
 
 * Added relationships support
