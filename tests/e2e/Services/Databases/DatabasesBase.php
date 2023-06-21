@@ -75,27 +75,10 @@ trait DatabasesBase
         $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertEquals($actors['body']['name'], 'Actors');
 
-        $test_numeric_key = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Numeric Keys',
-            'documentSecurity' => true,
-            'permissions' => [
-                Permission::create(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        $this->assertEquals(201, $test_numeric_key['headers']['status-code']);
-        $this->assertEquals($test_numeric_key['body']['name'], 'Numeric Keys');
-
         return [
             'databaseId' => $databaseId,
             'moviesId' => $movies['body']['$id'],
             'actorsId' => $actors['body']['$id'],
-            'numericKeyId' => $test_numeric_key['body']['$id'],
         ];
     }
 
@@ -249,17 +232,6 @@ trait DatabasesBase
             'twoWayKey' => 'movie'
         ]);
 
-        $num_one = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => '1',
-            'size' => 256,
-            'required' => false,
-            'array' => false,
-        ]);
-
         $this->assertEquals(202, $title['headers']['status-code']);
         $this->assertEquals($title['body']['key'], 'title');
         $this->assertEquals($title['body']['type'], 'string');
@@ -303,12 +275,6 @@ trait DatabasesBase
         $this->assertEquals($relationship['body']['twoWay'], true);
         $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
 
-        $this->assertEquals(202, $num_one['headers']['status-code']);
-        $this->assertEquals($num_one['body']['key'], '1');
-        $this->assertEquals($num_one['body']['type'], 'string');
-        $this->assertEquals($num_one['body']['size'], 256);
-        $this->assertEquals($num_one['body']['required'], false);
-
         // wait for database worker to create attributes
         sleep(2);
 
@@ -328,17 +294,175 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['attributes'][5]['key'], $datetime['body']['key']);
         $this->assertEquals($movies['body']['attributes'][6]['key'], $relationship['body']['key']);
 
-        $test_numeric_key = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'], array_merge([
+        return $data;
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testNumericOnlyAttributes(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $numeric_key_collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Numeric Keys',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $numeric_key_collection['headers']['status-code']);
+        $this->assertEquals($numeric_key_collection['body']['name'], 'Numeric Keys');
+
+        $numericKeyId = $numeric_key_collection['body']['$id'];
+
+        $num_one = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => '1',
+            'size' => 256,
+            'required' => false,
+            'array' => false,
+        ]);
+
+        $num_two_hundred = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => '200',
+            'size' => 256,
+            'required' => false,
+            'array' => false,
+        ]);
+
+        $num_million = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => '1000000',
+            'size' => 256,
+            'required' => false,
+            'array' => false,
+        ]);
+
+        $this->assertEquals(202, $num_one['headers']['status-code']);
+        $this->assertEquals($num_one['body']['key'], '1');
+        $this->assertEquals($num_one['body']['type'], 'string');
+        $this->assertEquals($num_one['body']['size'], 256);
+        $this->assertEquals($num_one['body']['required'], false);
+
+        $this->assertEquals(202, $num_two_hundred['headers']['status-code']);
+        $this->assertEquals($num_two_hundred['body']['key'], '200');
+        $this->assertEquals($num_two_hundred['body']['type'], 'string');
+        $this->assertEquals($num_two_hundred['body']['size'], 256);
+        $this->assertEquals($num_two_hundred['body']['required'], false);
+
+        $this->assertEquals(202, $num_million['headers']['status-code']);
+        $this->assertEquals($num_million['body']['key'], '1000000');
+        $this->assertEquals($num_million['body']['type'], 'string');
+        $this->assertEquals($num_million['body']['size'], 256);
+        $this->assertEquals($num_million['body']['required'], false);
+
+        // wait for database worker to create attributes
+        sleep(2);
+
+        $numeric_key_collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $numericKeyId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), []);
 
-        $this->assertIsArray($test_numeric_key['body']['attributes']);
-        $this->assertCount(1, $test_numeric_key['body']['attributes']);
-        $this->assertEquals($test_numeric_key['body']['attributes'][0]['key'], $num_one['body']['key']);
+        $this->assertIsArray($numeric_key_collection['body']['attributes']);
+        $this->assertCount(3, $numeric_key_collection['body']['attributes']);
+        $this->assertEquals($numeric_key_collection['body']['attributes'][0]['key'], $num_one['body']['key']);
+        $this->assertEquals($numeric_key_collection['body']['attributes'][1]['key'], $num_two_hundred['body']['key']);
+        $this->assertEquals($numeric_key_collection['body']['attributes'][2]['key'], $num_million['body']['key']);
 
-        return $data;
+        // Create document with numeric key
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                '1' => 'one',
+                '200' => 'two hundred',
+                '1000000' => 'one million'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $id = $document['body']['$id'];
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals($numericKeyId, $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
+        $this->assertEquals($document['body']['1'], 'one');
+        $this->assertEquals($document['body']['200'], 'two hundred');
+        $this->assertEquals($document['body']['1000000'], 'one million');
+        $this->assertIsArray($document['body']['$permissions']);
+        $this->assertCount(3, $document['body']['$permissions']);
+
+        // Update document
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                '1' => 'one updated',
+                '200' => 'two hundred updated',
+                '1000000' => 'one million updated'
+            ],
+            'permissions' => [
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals($document['body']['$id'], $id);
+        $this->assertEquals($numericKeyId, $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
+        $this->assertEquals($document['body']['1'], 'one updated');
+        $this->assertEquals($document['body']['200'], 'two hundred updated');
+        $this->assertEquals($document['body']['1000000'], 'one million updated');
+        $this->assertContains(Permission::read(Role::users()), $document['body']['$permissions']);
+        $this->assertContains(Permission::update(Role::users()), $document['body']['$permissions']);
+        $this->assertContains(Permission::delete(Role::users()), $document['body']['$permissions']);
+
+        sleep(2);
+
+        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/documents/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $id = $document['body']['$id'];
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals($numericKeyId, $document['body']['$collectionId']);
+        $this->assertArrayNotHasKey('$collection', $document['body']);
+        $this->assertEquals($databaseId, $document['body']['$databaseId']);
+        $this->assertEquals($document['body']['1'], 'one updated');
+        $this->assertEquals($document['body']['200'], 'two hundred updated');
+        $this->assertEquals($document['body']['1000000'], 'one million updated');
     }
 
     /**
@@ -1106,20 +1230,6 @@ trait DatabasesBase
             ]
         ]);
 
-        $document5 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                '1' => "one",
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
-            ]
-        ]);
 
 
 
@@ -1166,14 +1276,6 @@ trait DatabasesBase
         $this->assertEquals($document3['body']['birthDay'], '1975-06-12T18:12:55.000+00:00'); // UTC for NY
 
         $this->assertEquals(400, $document4['headers']['status-code']);
-
-        $this->assertEquals(201, $document5['headers']['status-code']);
-        $this->assertEquals($data['numericKeyId'], $document5['body']['$collectionId']);
-        $this->assertArrayNotHasKey('$collection', $document5['body']);
-        $this->assertEquals($databaseId, $document5['body']['$databaseId']);
-        $this->assertEquals($document5['body']['1'], 'one');
-        $this->assertIsArray($document5['body']['$permissions']);
-        $this->assertCount(3, $document5['body']['$permissions']);
 
         // Delete document 4 with incomplete path
         $this->assertEquals(404, $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents/', array_merge([
@@ -1851,32 +1953,6 @@ trait DatabasesBase
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals('Remote document is newer than local.', $response['body']['message']);
         $this->assertEquals(Exception::DOCUMENT_UPDATE_CONFLICT, $response['body']['type']);
-
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['numericKeyId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                '1' => "new one",
-            ],
-            'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
-                Permission::update(Role::user($this->getUser()['$id'])),
-                Permission::delete(Role::user($this->getUser()['$id'])),
-            ],
-        ]);
-
-        $id = $document['body']['$id'];
-
-        $this->assertEquals(201, $document['headers']['status-code']);
-        $this->assertEquals($data['numericKeyId'], $document['body']['$collectionId']);
-        $this->assertArrayNotHasKey('$collection', $document['body']);
-        $this->assertEquals($databaseId, $document['body']['$databaseId']);
-        $this->assertEquals($document['body']['1'], 'new one');
-        $this->assertContains(Permission::read(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
-        $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
-        $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document['body']['$permissions']);
 
         return [];
     }
