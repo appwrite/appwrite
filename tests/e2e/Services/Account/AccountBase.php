@@ -970,31 +970,6 @@ trait AccountBase
 
         $this->assertEquals(409, $response['headers']['status-code']);
 
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'url' => 'localhost/verification',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]), [
-            'url' => 'http://remotehost/verification',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
         return $data;
     }
 

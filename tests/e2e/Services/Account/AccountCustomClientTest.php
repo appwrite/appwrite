@@ -1090,6 +1090,6 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(409, $response['headers']['status-code']);
 
-        return \array_merge($data);
+        return $data;
     }
 }
