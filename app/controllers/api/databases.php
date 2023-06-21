@@ -1103,8 +1103,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
-    ->param('default', null, new Text(0,0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
+    ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1160,7 +1160,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
+    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new Email(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -1213,7 +1213,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE, min: 0), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
+    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -1280,7 +1280,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
+    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new IP(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -1332,7 +1332,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
+    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new URL(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
@@ -1384,7 +1384,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('min', null, new Integer(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new Integer(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new Integer(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -1393,7 +1392,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1411,12 +1410,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
 
         $size = $max > 2147483647 ? 8 : 4; // Automatically create BigInt depending on max value
 
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
-
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_INTEGER,
@@ -1429,7 +1422,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
                 'min' => $min,
                 'max' => $max,
             ],
-            'filters' => $filters,
         ]), $response, $dbForProject, $database, $events);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
@@ -1465,7 +1457,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('min', null, new FloatValidator(), 'Minimum value to enforce on new documents', true)
     ->param('max', null, new FloatValidator(), 'Maximum value to enforce on new documents', true)
     ->param('default', null, new FloatValidator(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
@@ -1474,7 +1465,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1495,12 +1486,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
         }
 
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
-
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_FLOAT,
@@ -1513,7 +1498,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
                 'min' => $min,
                 'max' => $max,
             ],
-            'filters' => $filters,
         ]), $response, $dbForProject, $database, $events);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
@@ -1549,20 +1533,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new Boolean(), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
-
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1571,7 +1548,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'filters' => $filters
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1600,20 +1576,13 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribue? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new DatetimeValidator(), 'Default value for the attribute in ISO 8601 format. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, bool $encrypt, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
-
-        $filters = [];
-
-        if ($encrypt) {
-            $filters[] = 'encrypt';
-        }
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         $filters[] = 'datetime';
 
