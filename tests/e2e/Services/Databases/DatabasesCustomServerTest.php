@@ -594,7 +594,7 @@ class DatabasesCustomServerTest extends Scope
     }
 
     /**
-    * @depends testGetDatabase
+    * @depends testListCollections
      */
     public function testCreateEncryptedAttribute(array $data): array
     {
