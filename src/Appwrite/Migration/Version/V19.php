@@ -107,9 +107,11 @@ class V19 extends Migration
     protected function alterPermissionIndex($collectionName): void
     {
         try {
-            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms` 
-            DROP INDEX `_permission`, 
-            ADD INDEX `_permission` (`_permission`, `_type`, `_document`)
+            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms";
+            $this->pdo->prepare("
+                ALTER TABLE {$table}
+                DROP INDEX `_permission`, 
+                ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
             ")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
