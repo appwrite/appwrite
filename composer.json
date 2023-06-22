@@ -70,7 +70,8 @@
         "chillerlan/php-qrcode": "4.3.3",
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0",
-        "webonyx/graphql-php": "14.11.*"
+        "webonyx/graphql-php": "14.11.*",
+        "spomky-labs/otphp": "^10.0"
     },
     "repositories": [
         {

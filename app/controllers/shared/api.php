@@ -167,9 +167,9 @@ App::init()
             }
         }
 
-    /*
-     * Background Jobs
-     */
+        /*
+        * Background Jobs
+        */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)

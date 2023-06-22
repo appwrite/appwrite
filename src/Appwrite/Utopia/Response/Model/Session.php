@@ -160,6 +160,12 @@ class Session extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('factors', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Returns true if this the current user session.',
+                'default' => 1,
+                'example' => 1,
+            ])
         ;
     }
 

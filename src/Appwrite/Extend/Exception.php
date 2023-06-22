@@ -74,7 +74,12 @@ class Exception extends \Exception
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
+    public const USER_PHONE_NOT_VERIFIED           = 'user_phone_not_verified';
+    public const USER_EMAIL_NOT_FOUND              = 'user_email_not_found';
+    public const USER_EMAIL_NOT_VERIFIED           = 'user_email_not_verified';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_MORE_FACTORS_REQUIRED        = 'user_more_factors_required';
+    public const USER_INVALID_CHALLENGE            = 'user_invalid_challenge';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -188,7 +193,9 @@ class Exception extends \Exception
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
-    protected $type = '';
+    protected array $errors;
+    protected string $type;
+
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {

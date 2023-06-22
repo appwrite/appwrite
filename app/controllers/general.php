@@ -51,7 +51,9 @@ App::init()
     ->inject('locale')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
+    ->inject('session')
+    ->inject('mode')
+    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, ?Document $session, string $mode) {
         /*
         * Request format
         */
@@ -371,6 +373,15 @@ App::init()
 
         if ($user->getAttribute('reset')) {
             throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
+        }
+
+        if ($mode !== APP_MODE_ADMIN) {
+            $minFactors = $project->getAttribute('minFactors') ?? 1;
+            if (!in_array('mfa', $route->getGroups())) {
+                if ($session && \count($session->getAttribute('factors')) < $minFactors) {
+                    throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
+                }
+            }
         }
     });
 

@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia;
 
 use Exception;
-use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -58,11 +57,9 @@ use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -72,6 +69,9 @@ use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
+use Appwrite\Utopia\Response\Model\MFAChallenge;
+use Appwrite\Utopia\Response\Model\MFAProvider;
+use Appwrite\Utopia\Response\Model\MFAProviders;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
@@ -145,6 +145,12 @@ class Response extends SwooleResponse
     public const MODEL_TOKEN = 'token';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
+
+    // MFA
+    public const MODEL_MFA_PROVIDER = 'mfaProvider';
+    public const MODEL_MFA_PROVIDERS = 'mfaProviders';
+    public const MODEL_MFA_OTP = 'mfaTotp';
+    public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -349,6 +355,9 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new ConsoleVariables())
+            ->setModel(new MFAChallenge())
+            ->setModel(new MFAProvider())
+            ->setModel(new MFAProviders())
             // Verification
             // Recovery
             // Tests (keep last)
@@ -565,7 +574,7 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(yaml_emit($data, YAML_UTF8_ENCODING));
+            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
     }
 
     /**

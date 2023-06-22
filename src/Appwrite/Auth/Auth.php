@@ -9,6 +9,8 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
+use OTPHP\HOTP;
+use OTPHP\TOTP;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
@@ -303,8 +305,8 @@ class Auth
     /**
      * Verify token and check that its not expired.
      *
-     * @param array  $tokens
-     * @param int    $type
+     * @param array<Document> $tokens
+     * @param int $type
      * @param string $secret
      *
      * @return bool|string
@@ -312,7 +314,6 @@ class Auth
     public static function tokenVerify(array $tokens, int $type, string $secret)
     {
         foreach ($tokens as $token) {
-            /** @var Document $token */
             if (
                 $token->isSet('type') &&
                 $token->isSet('secret') &&
@@ -328,10 +329,16 @@ class Auth
         return false;
     }
 
+    /**
+     * Verify phone token and check that its not expired.
+     *
+     * @param array<Document> $tokens
+     * @param string $secret
+     * @return string|false
+     */
     public static function phoneTokenVerify(array $tokens, string $secret)
     {
         foreach ($tokens as $token) {
-            /** @var Document $token */
             if (
                 $token->isSet('type') &&
                 $token->isSet('secret') &&
@@ -350,7 +357,7 @@ class Auth
     /**
      * Verify session and check that its not expired.
      *
-     * @param array  $sessions
+     * @param array<Document> $sessions
      * @param string $secret
      * @param string $expires
      *
@@ -359,7 +366,6 @@ class Auth
     public static function sessionVerify(array $sessions, string $secret, int $expires)
     {
         foreach ($sessions as $session) {
-            /** @var Document $session */
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
@@ -376,7 +382,7 @@ class Auth
     /**
      * Is Privileged User?
      *
-     * @param array $roles
+     * @param array<string> $roles
      *
      * @return bool
      */
@@ -396,7 +402,7 @@ class Auth
     /**
      * Is App User?
      *
-     * @param array $roles
+     * @param array<string> $roles
      *
      * @return bool
      */
@@ -413,7 +419,7 @@ class Auth
      * Returns all roles for a user.
      *
      * @param Document $user
-     * @return array
+     * @return array<string>
      */
     public static function getRoles(Document $user): array
     {
@@ -459,6 +465,12 @@ class Auth
         return $roles;
     }
 
+    /**
+     * Check if user is anonymous.
+     *
+     * @param Document $user
+     * @return bool
+     */
     public static function isAnonymousUser(Document $user): bool
     {
         return (is_null($user->getAttribute('email'))

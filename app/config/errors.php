@@ -195,6 +195,11 @@ return [
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
+    Exception::USER_MORE_FACTORS_REQUIRED => [
+        'name' => Exception::USER_MORE_FACTORS_REQUIRED,
+        'description' => null,
+        'code' => 400,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
