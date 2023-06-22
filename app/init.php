@@ -1085,7 +1085,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
-        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
         $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
         return $complexity * $limit;
