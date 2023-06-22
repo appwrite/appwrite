@@ -163,13 +163,15 @@ App::post('/v1/project/variables')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('projects', $project->getId());
+        $functions = $dbForProject->find('functions', [
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
 
-        // Stop all running runtimes with this variable
-        (new Delete())
-            ->setType(DELETE_TYPE_RUNTIMES)
-            ->setProject($project)
-            ->trigger();
+        foreach ($functions as $function) {
+            $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        }
+
+        $dbForProject->deleteCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -258,8 +260,7 @@ App::put('/v1/project/variables/:variableId')
         $variable
             ->setAttribute('key', $key)
             ->setAttribute('value', $value ?? $variable->getAttribute('value'))
-            ->setAttribute('search', implode(' ', [$variableId, $key, 'project']))
-        ;
+            ->setAttribute('search', implode(' ', [$variableId, $key, 'project']));
 
         try {
             $dbForProject->updateDocument('variables', $variable->getId(), $variable);
@@ -267,13 +268,15 @@ App::put('/v1/project/variables/:variableId')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('projects', $project->getId());
+        $functions = $dbForProject->find('functions', [
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
 
-        // Stop all running runtimes with this variable
-        (new Delete())
-            ->setType(DELETE_TYPE_RUNTIMES)
-            ->setProject($project)
-            ->trigger();
+        foreach ($functions as $function) {
+            $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        }
+
+        $dbForProject->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -302,14 +305,16 @@ App::delete('/v1/project/variables/:variableId')
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
+        $functions = $dbForProject->find('functions', [
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        foreach ($functions as $function) {
+            $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        }
+
         $dbForProject->deleteDocument('variables', $variable->getId());
         $dbForProject->deleteCachedDocument('projects', $project->getId());
-
-        // Stop all running runtimes with this variable
-        (new Delete())
-            ->setType(DELETE_TYPE_RUNTIMES)
-            ->setProject($project)
-            ->trigger();
 
         $response->noContent();
     });

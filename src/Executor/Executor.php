@@ -156,7 +156,7 @@ class Executor
      *
      * @param string $projectId
      * @param string $deploymentId
-     * @param string $payload
+     * @param string $body
      * @param array $variables
      * @param int $timeout
      * @param string $image
@@ -169,7 +169,7 @@ class Executor
     public function createExecution(
         string $projectId,
         string $deploymentId,
-        string $body,
+        ?string $body,
         array $variables,
         int $timeout,
         string $image,

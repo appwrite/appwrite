@@ -72,9 +72,10 @@ App::get('/v1/vcs/github/redirect')
     ->desc('Capture installation and authorization from GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
-    ->param('installation_id', '', new Text(256), 'GitHub installation ID')
-    ->param('setup_action', '', new Text(256), 'GitHub setup actuon type')
-    ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->param('installation_id', '', new Text(256), 'GitHub installation ID', true)
+    ->param('setup_action', '', new Text(256), 'GitHub setup actuon type', true)
+    ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
     ->param('code', '', new Text(2048), 'OAuth2 code.', true)
     ->inject('gitHub')
     ->inject('user')
@@ -83,6 +84,10 @@ App::get('/v1/vcs/github/redirect')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+        if(empty($state)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.');
+        }
+        
         $state = \json_decode($state, true);
         $redirect = $state['redirect'] ?? '';
         $projectId = $state['projectId'] ?? '';
@@ -98,6 +103,7 @@ App::get('/v1/vcs/github/redirect')
                 ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                 ->addHeader('Pragma', 'no-cache')
                 ->redirect($redirect);
+            return;
         }
 
         $personalSlug = '';
@@ -158,6 +164,8 @@ App::get('/v1/vcs/github/redirect')
                 $vcsInstallation = $vcsInstallation->setAttribute('personal', $personalSlug === $owner);
                 $vcsInstallation = $dbForConsole->updateDocument('vcsInstallations', $vcsInstallation->getId(), $vcsInstallation);
             }
+        } else {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.');
         }
 
         $response
@@ -331,6 +339,8 @@ App::post('/v1/vcs/github/installations/:installationId/repositories')
 
         $repository['id'] = \strval($repository['id']);
         $repository['pushedAt'] = $repository['pushed_at'];
+        $repository['organization'] = $installation->getAttribute('organization', '');
+        $repository['provider'] = $installation->getAttribute('provider', '');
 
         $response->dynamic(new Document($repository), Response::MODEL_REPOSITORY);
     });

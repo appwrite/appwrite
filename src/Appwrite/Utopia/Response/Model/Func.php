@@ -49,6 +49,12 @@ class Func extends Model
                 'default' => true,
                 'example' => false,
             ])
+            ->addRule('live', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is function live (deployed with latest config)?',
+                'default' => true,
+                'example' => false,
+            ])
             ->addRule('logging', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Function logging.',

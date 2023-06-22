@@ -44,10 +44,11 @@ use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use MaxMind\Db\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcsLogic = function (Document $function, Document $project, Document $installation, Database $dbForProject, Document $template) {
+$redeployVcsLogic = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -74,11 +75,17 @@ $redeployVcsLogic = function (Document $function, Document $project, Document $i
         'activate' => true,
     ]));
 
+    $projectId = $project->getId();
+    $functionId = $function->getId();
+
+    $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+
     $buildEvent = new Build();
     $buildEvent
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
+        ->setTargetUrl($targetUrl)
         ->setTemplate($template)
         ->setProject($project)
         ->trigger();
@@ -107,7 +114,7 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
-    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.', true)
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
     ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
     ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
@@ -117,22 +124,25 @@ App::post('/v1/functions')
     ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
     ->param('templateRepositoryName', '', new Text(128), 'Repository name of the template', true)
     ->param('templateOwnerName', '', new Text(128), 'Owner name of the template', true)
-    ->param('templateDirectory', '', new Text(128), 'Path to function code in the template repo', true)
+    ->param('templateRootDirectory', '', new Text(128), 'Path to function code in the template repo', true)
+    ->param('templateBranch', '', new Text(128), 'Branch of template repo with the code', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, string $templateRepositoryName, string $templateOwnerName, string $templateDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, string $templateRepositoryName, string $templateOwnerName, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
         $template = new Document([]);
         if (!empty($templateRepositoryName) && !empty($templateOwnerName)) {
-            $template->setAttribute('templateRepositoryName', $templateRepositoryName)
-                ->setAttribute('templateOwnerName', $templateOwnerName)
-                ->setAttribute('templateDirectory', $templateDirectory);
+            $template->setAttribute('repositoryName', $templateRepositoryName)
+                ->setAttribute('ownerName', $templateOwnerName)
+                ->setAttribute('rootDirectory', $templateRootDirectory)
+                ->setAttribute('branch', $templateBranch);
         }
 
         $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
@@ -176,6 +186,7 @@ App::post('/v1/functions')
             '$id' => $functionId,
             'execute' => $execute,
             'enabled' => $enabled,
+            'live' => true,
             'logging' => $logging,
             'name' => $name,
             'runtime' => $runtime,
@@ -213,7 +224,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($vcsRepositoryId)) {
-            $redeployVcsLogic($function, $project, $installation, $dbForProject, $template);
+            $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, $template);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
@@ -622,7 +633,7 @@ App::put('/v1/functions/:functionId')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
-    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.', true)
+    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
     ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
     ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
@@ -630,13 +641,14 @@ App::put('/v1/functions/:functionId')
     ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
     ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
     ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -712,6 +724,17 @@ App::put('/v1/functions/:functionId')
             $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
         }
 
+        $live = true;
+
+        if (
+            $function->getAttribute('entrypoint') !== $entrypoint ||
+            $function->getAttribute('buildCommand') !== $buildCommand ||
+            $function->getAttribute('installCommand') !== $installCommand ||
+            $function->getAttribute('vcsRootDirectory') !== $vcsRootDirectory
+        ) {
+            $live = false;
+        }
+
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
@@ -719,6 +742,7 @@ App::put('/v1/functions/:functionId')
             'schedule' => $schedule,
             'timeout' => $timeout,
             'enabled' => $enabled,
+            'live' => $live,
             'logging' => $logging,
             'entrypoint' => $entrypoint,
             'buildCommand' => $buildCommand,
@@ -736,7 +760,7 @@ App::put('/v1/functions/:functionId')
 
         // Redeploy logic
         if (!$isConnected && !empty($vcsRepositoryId)) {
-            $redeployVcsLogic($function, $project, $installation, $dbForProject, new Document());
+            $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, new Document());
         }
 
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
@@ -1128,6 +1152,7 @@ App::get('/v1/functions/:functionId/deployments')
             $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
             $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
+            $result->setAttribute('size', $result->getAttribute('size', 0) + $build->getAttribute('size', 0));
         }
 
         $response->dynamic(new Document([
@@ -1173,6 +1198,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
         $deployment->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
         $deployment->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+        $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
+        $deployment->setAttribute('size', $deployment->getAttribute('size', 0) + $build->getAttribute('size', 0));
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
@@ -1257,11 +1284,13 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Event $events) use ($redeployVcsLogic) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1280,22 +1309,11 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
-        if ($build->getAttribute('status') !== 'failed') {
-            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
-        }
+        // TODO: Somehow set commit SHA for git deployments, and file path for manual. Redeploy should use exact same source code
 
-        $events
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
+        $installation = $dbForConsole->getDocument('vcsInstallations', $deployment->getAttribute('vcsInstallationId', ''));
 
-        // Retry the build
-        $buildEvent = new Build();
-        $buildEvent
-            ->setType(BUILD_TYPE_RETRY)
-            ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
+        $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, new Document([]));
 
         $response->noContent();
     });
@@ -1326,7 +1344,8 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('usage')
     ->inject('mode')
     ->inject('queueForFunctions')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions) {
+    ->inject('geodb')
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1403,7 +1422,6 @@ App::post('/v1/functions/:functionId/executions')
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
-
         $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
             $sessions = $user->getAttribute('sessions', []);
@@ -1422,6 +1440,27 @@ App::post('/v1/functions/:functionId/executions')
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
+            }
+        }
+
+        $headers['x-appwrite-trigger'] = 'http';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+
+        $headers['x-appwrite-country-code'] = '';
+        $headers['x-appwrite-continent-code'] = '';
+        $headers['x-appwrite-continent-eu'] = 'false';
+
+        $ip = $headers['x-real-ip'] ?? '';
+        if (!empty($ip)) {
+            $record = $geodb->get($ip);
+
+            if ($record) {
+                $eu = Config::getParam('locale-eu');
+
+                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';;
+                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
+                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
             }
         }
 
@@ -1470,16 +1509,12 @@ App::post('/v1/functions/:functionId/executions')
 
         // Appwrite vars
         $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_ID' => $function->getId(),
+            'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_TRIGGER' => 'http',
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_DATA' => $data ?? '',
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
-            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
@@ -1490,7 +1525,7 @@ App::post('/v1/functions/:functionId/executions')
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
                 version: $function->getAttribute('version'),
-                body: $body,
+                body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
@@ -1720,6 +1755,8 @@ App::post('/v1/functions/:functionId/variables')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
+        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -1728,13 +1765,6 @@ App::post('/v1/functions/:functionId/variables')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
-
-        // Stop all running runtimes with this variable
-        (new Delete())
-            ->setType(DELETE_TYPE_RUNTIMES)
-            ->setFunction($function)
-            ->setProject($project)
-            ->trigger();
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1853,6 +1883,8 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
+        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -1861,13 +1893,6 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
-
-        // Stop all running runtimes with this variable
-        (new Delete())
-            ->setType(DELETE_TYPE_RUNTIMES)
-            ->setFunction($function)
-            ->setProject($project)
-            ->trigger();
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -1909,6 +1934,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 
         $dbForProject->deleteDocument('variables', $variable->getId());
 
+        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -1917,13 +1944,6 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $dbForProject->deleteCachedDocument('functions', $function->getId());
-
-        // Stop all running runtimes with this variable
-        (new Delete())
-            ->setType(DELETE_TYPE_RUNTIMES)
-            ->setFunction($function)
-            ->setProject($project)
-            ->trigger();
 
         $response->noContent();
     });

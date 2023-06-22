@@ -17,6 +17,7 @@ use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Storage\Storage;
 use Utopia\Database\Validator\Authorization;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -67,8 +68,6 @@ class BuildsV1 extends Worker
 
     protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $SHA = '', string $targetUrl = '')
     {
-        $templateRepositoryNmae = $template->getAttribute('templateRepositoryName');
-        $templateOwnerName = $template->getAttribute('templateOwnerName');
         global $register;
 
         $dbForProject = $this->getProjectDB($project);
@@ -101,116 +100,39 @@ class BuildsV1 extends Worker
             Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
-        $buildId = $deployment->getAttribute('buildId', '');
+        // Realtime preparation
+        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
+            'functionId' => $function->getId(),
+            'deploymentId' => $deployment->getId()
+        ]);
+
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
+
+        $buildId = $deployment->getAttribute('buildId', '');
+        $build = null;
+
+        $isNewBuild = empty($buildId);
+
         if (empty($buildId)) {
             $buildId = ID::unique();
-
-            $vcsInstallationId = $deployment->getAttribute('vcsInstallationId', '');
-            $repositoryId = $deployment->getAttribute('vcsRepositoryId', '');
-            $isVcsEnabled = $repositoryId ? true : false;
-
-            if ($isVcsEnabled) {
-                \var_dump("Will clone");
-                $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId));
-                $installationId = $vcsInstallations->getAttribute('installationId');
-
-                $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
-                $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-
-                $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
-                $rootDirectory = $function->getAttribute('vcsRootDirectory', '');
-                $rootDirectory = \rtrim($rootDirectory, '/');
-                $rootDirectory = \ltrim($rootDirectory, '.');
-                $rootDirectory = \ltrim($rootDirectory, '/');
-
-                $github->initialiseVariables($installationId, $privateKey, $githubAppId);
-                $owner = $github->getOwnerName($installationId);
-                $repositoryName = $github->getRepositoryName($repositoryId);
-                $branchName = $deployment->getAttribute('vcsBranch');
-                $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryName, $branchName, $tmpDirectory, $rootDirectory);
-                \var_dump($gitCloneCommand);
-                $stdout = '';
-                $stderr = '';
-                Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
-                Console::execute($gitCloneCommand, '', $stdout, $stderr);
-
-                // build from template
-                $templateRepositoryName = $template->getAttribute('templateRepositoryName');
-                $templateOwnerName = $template->getAttribute('templateOwnerName');
-
-                if (!empty($templateRepositoryName) && !empty($templateOwnerName)) {
-                    // clone template repo
-                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
-                    $templateRootDirectory = $template->getAttribute('templateDirectory', '');
-                    var_dump($templateOwnerName . " " . $templateRepositoryName);
-                    $gitCloneCommandForTemplate = $github->generateGitCloneCommand($templateOwnerName, $templateRepositoryName, 'main', $tmpTemplateDirectory, $templateRootDirectory);
-                    var_dump("clone cmd for template " . $gitCloneCommandForTemplate);
-                    Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
-
-                    // TODO: move template to code directory
-                    // Console::execute('mv FROM TO', '', $stdout, $stderr);
-
-                    // TODO: commit and push
-                }
-
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
-
-                $deviceFunctions = $this->getFunctionsDevice($project->getId());
-
-                $fileName = 'code.tar.gz';
-                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
-
-                $deploymentId = $deployment->getId();
-                $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-
-                $result = $deviceFunctions->move($fileTmpName, $path);
-
-                if (!$result) {
-                    throw new \Exception("Unable to move file");
-                }
-
-                Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
-
-                $build = $dbForProject->createDocument('builds', new Document([
-                    '$id' => $buildId,
-                    '$permissions' => [],
-                    'startTime' => $startTime,
-                    'deploymentId' => $deployment->getId(),
-                    'status' => 'processing',
-                    'path' => '',
-                    'runtime' => $function->getAttribute('runtime'),
-                    'source' => $path,
-                    'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
-                    'stdout' => '',
-                    'stderr' => '',
-                    'endTime' => null,
-                    'duration' => 0
-                ]));
-
-                if ($isVcsEnabled) {
-                    $this->runGitAction('processing', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
-                }
-            } else {
-                $build = $dbForProject->createDocument('builds', new Document([
-                    '$id' => $buildId,
-                    '$permissions' => [],
-                    'startTime' => $startTime,
-                    'deploymentInternalId' => $deployment->getInternalId(),
-                    'deploymentId' => $deployment->getId(),
-                    'status' => 'processing',
-                    'path' => '',
-                    'runtime' => $function->getAttribute('runtime'),
-                    'source' => $deployment->getAttribute('path'),
-                    'sourceType' => $device,
-                    'stdout' => '',
-                    'stderr' => '',
-                    'endTime' => null,
-                    'duration' => 0,
-                    'size' => 0
-                ]));
-            }
+            $build = $dbForProject->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$permissions' => [],
+                'startTime' => $startTime,
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentId' => $deployment->getId(),
+                'status' => 'processing',
+                'path' => '',
+                'runtime' => $function->getAttribute('runtime'),
+                'source' => $deployment->getAttribute('path', ''),
+                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'stdout' => '',
+                'stderr' => '',
+                'endTime' => null,
+                'duration' => 0,
+                'size' => 0
+            ]));
 
             $deployment->setAttribute('buildId', $build->getId());
             $deployment->setAttribute('buildInternalId', $build->getInternalId());
@@ -219,70 +141,187 @@ class BuildsV1 extends Worker
             $build = $dbForProject->getDocument('builds', $buildId);
         }
 
-        /** Request the executor to build the code... */
-        $build->setAttribute('status', 'building');
-        $build = $dbForProject->updateDocument('builds', $buildId, $build);
-
-        if ($isVcsEnabled) {
-            $this->runGitAction('building', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
-        }
-
-        /** Trigger Webhook */
-        $deploymentModel = new Deployment();
-
-        $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
-        $deploymentUpdate
-            ->setProject($project)
-            ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId())
-            ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
-            ->trigger();
-
-        /** Trigger Functions */
-        $pools = $register->get('pools');
-        $connection = $pools->get('queue')->pop();
-
-        $functions = new Func($connection->getResource());
-        $functions
-            ->from($deploymentUpdate)
-            ->trigger();
-
-        $connection->reclaim();
-
-        /** Trigger Realtime */
-        $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
-            'functionId' => $function->getId(),
-            'deploymentId' => $deployment->getId()
-        ]);
-        $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
-            event: $allEvents[0],
-            payload: $build,
-            project: $project
-        );
-
-        Realtime::send(
-            projectId: 'console',
-            payload: $build->getArrayCopy(),
-            events: $allEvents,
-            channels: $target['channels'],
-            roles: $target['roles']
-        );
-
-        $source = $deployment->getAttribute('path');
-
-        if ($isVcsEnabled) {
-            \var_dump("Changing source");
-            $source = $path;
-        }
-
-        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-            return $carry;
-        }, []);
+        $source = $deployment->getAttribute('path', '');
+        $vcsInstallationId = $deployment->getAttribute('vcsInstallationId', '');
+        $repositoryId = $deployment->getAttribute('vcsRepositoryId', '');
+        $isVcsEnabled = $repositoryId ? true : false;
+        $owner = '';
+        $repositoryName = '';
+        $branchName = '';
 
         try {
+            if ($isNewBuild) {
+                if ($isVcsEnabled) {
+                    $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId));
+                    $installationId = $vcsInstallations->getAttribute('installationId');
+
+                    $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+                    $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+
+                    $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
+                    $rootDirectory = $function->getAttribute('vcsRootDirectory', '');
+                    $rootDirectory = \rtrim($rootDirectory, '/');
+                    $rootDirectory = \ltrim($rootDirectory, '.');
+                    $rootDirectory = \ltrim($rootDirectory, '/');
+
+                    $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+                    $owner = $github->getOwnerName($installationId);
+                    $repositoryName = $github->getRepositoryName($repositoryId);
+                    $branchName = $deployment->getAttribute('vcsBranch');
+                    $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryName, $branchName, $tmpDirectory, $rootDirectory);
+                    $stdout = '';
+                    $stderr = '';
+                    Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                    $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
+
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to clone code repository: ' . $stderr);
+                    }
+
+                    // Build from template
+                    $templateRepositoryName = $template->getAttribute('repositoryName', '');
+                    $templateOwnerName = $template->getAttribute('ownerName', '');
+                    $templateBranch = $template->getAttribute('branch', '');
+
+                    $templateRootDirectory =  $template->getAttribute('rootDirectory', '');
+                    $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+                    $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+                    $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+
+                    if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                        // Clone template repo
+                        $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
+                        $gitCloneCommandForTemplate = $github->generateGitCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+                        $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+
+                        if ($exit !== 0) {
+                            throw new \Exception('Unable to clone template repository: ' . $stderr);
+                        }
+
+                        // Ensure directories
+                        Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
+                        Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+
+                        // Merge template into user repo
+                        Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
+
+                        // Commit and push
+                        $exit = Console::execute('git config --global user.email "security@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . $function->getAttribute('name', '') .  '\' function" && git push origin ' . $branchName, '', $stdout, $stderr);
+
+                        if ($exit !== 0) {
+                            throw new \Exception('Unable to push code repository: ' . $stderr);
+                        }
+
+                        $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
+
+                        if ($exit !== 0) {
+                            throw new \Exception('Unable to get commit SHA: ' . $stderr);
+                        }
+
+                        $SHA = \trim($stdout);
+                    }
+
+                    Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+
+                    $deviceFunctions = $this->getFunctionsDevice($project->getId());
+
+                    $fileName = 'code.tar.gz';
+                    $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+
+                    $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+
+                    $result = $deviceFunctions->move($fileTmpName, $path);
+
+                    if (!$result) {
+                        throw new \Exception("Unable to move file");
+                    }
+
+                    Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
+
+                    $source = $path;
+
+                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+
+                    if ($isVcsEnabled) {
+                        $this->runGitAction('processing', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                    }
+                }
+            }
+
+            /** Request the executor to build the code... */
+            $build->setAttribute('status', 'building');
+            $build = $dbForProject->updateDocument('builds', $buildId, $build);
+
+            if ($isVcsEnabled) {
+                $this->runGitAction('building', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+            }
+
+            /** Trigger Webhook */
+            $deploymentModel = new Deployment();
+
+            $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $deploymentUpdate
+                ->setProject($project)
+                ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+                ->setParam('functionId', $function->getId())
+                ->setParam('deploymentId', $deployment->getId())
+                ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
+                ->trigger();
+
+            /** Trigger Functions */
+            $pools = $register->get('pools');
+            $connection = $pools->get('queue')->pop();
+
+            $functions = new Func($connection->getResource());
+            $functions
+                ->from($deploymentUpdate)
+                ->trigger();
+
+            $connection->reclaim();
+
+            /** Trigger Realtime */
+            $target = Realtime::fromPayload(
+                // Pass first, most verbose event pattern
+                event: $allEvents[0],
+                payload: $build,
+                project: $project
+            );
+
+            Realtime::send(
+                projectId: 'console',
+                payload: $build->getArrayCopy(),
+                events: $allEvents,
+                channels: $target['channels'],
+                roles: $target['roles']
+            );
+
+            $vars = [];
+
+            // global vars
+            $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
+                Query::equal('resourceType', ['project']),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]), function (array $carry, Document $var) {
+                $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
+                return $carry;
+            }, []));
+
+            // Function vars
+            $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
+                $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+                return $carry;
+            }, []));
+
+            // Appwrite vars
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_ID' => $function->getId(),
+                'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
+                'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
+                'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
+                'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+                'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            ]);
+
             $command = '';
 
             if (!empty($deployment->getAttribute('installCommand', ''))) {
@@ -298,61 +337,79 @@ class BuildsV1 extends Worker
 
             $response = null;
 
-            // TODO: Remove run() wrapper when switching to new utopia queue. That should be done on Swoole adapter in the libary
-            Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject, $allEvents) {
-                Co::join([
-                    Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject, $allEvents) {
-                        $this->executor->getLogs(
-                            projectId: $project->getId(),
-                            deploymentId: $deployment->getId(),
-                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                if ($response === null) {
-                                    $build = $build->setAttribute('stdout', $build->getAttribute('stdout', '') . $logs);
-                                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+            $err = null;
 
-                                    /**
-                                     * Send realtime Event
-                                     */
-                                    $target = Realtime::fromPayload(
-                                        // Pass first, most verbose event pattern
-                                        event: $allEvents[0],
-                                        payload: $build,
-                                        project: $project
-                                    );
-                                    Realtime::send(
-                                        projectId: 'console',
-                                        payload: $build->getArrayCopy(),
-                                        events: $allEvents,
-                                        channels: $target['channels'],
-                                        roles: $target['roles']
-                                    );
-                                }
-                            }
-                        );
+            // TODO: Remove run() wrapper when switching to new utopia queue. That should be done on Swoole adapter in the libary
+            Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject, $allEvents, &$err) {
+                Co::join([
+                    Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
+                        try {
+                            $response = $this->executor->createRuntime(
+                                projectId: $project->getId(),
+                                deploymentId: $deployment->getId(),
+                                source: $source,
+                                version: $function->getAttribute('version'),
+                                image: $runtime['image'],
+                                remove: true,
+                                entrypoint: $deployment->getAttribute('entrypoint'),
+                                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                                variables: $vars,
+                                command: 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
+                            );
+                        } catch (Exception $error) {
+                            $err = $error;
+                        }
                     }),
-                    Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command) {
-                        $response = $this->executor->createRuntime(
-                            projectId: $project->getId(),
-                            deploymentId: $deployment->getId(),
-                            source: $source,
-                            version: $function->getAttribute('version'),
-                            image: $runtime['image'],
-                            remove: true,
-                            entrypoint: $deployment->getAttribute('entrypoint'),
-                            destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                            variables: $vars,
-                            command: 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
-                        );
+                    Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                        try {
+                            $this->executor->getLogs(
+                                projectId: $project->getId(),
+                                deploymentId: $deployment->getId(),
+                                callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
+                                    \var_dump("Got logs");
+                                    if ($response === null) {
+                                        $build = $build->setAttribute('stdout', $build->getAttribute('stdout', '') . $logs);
+                                        $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+
+                                        /**
+                                         * Send realtime Event
+                                         */
+                                        $target = Realtime::fromPayload(
+                                            // Pass first, most verbose event pattern
+                                            event: $allEvents[0],
+                                            payload: $build,
+                                            project: $project
+                                        );
+                                        Realtime::send(
+                                            projectId: 'console',
+                                            payload: $build->getArrayCopy(),
+                                            events: $allEvents,
+                                            channels: $target['channels'],
+                                            roles: $target['roles']
+                                        );
+                                    }
+                                }
+                            );
+                        } catch (Exception $error) {
+                            if (empty($err)) {
+                                $err = $error;
+                            }
+                        }
                     }),
                 ]);
             });
 
+            if ($err) {
+                throw $err;
+            }
+
             $endTime = DateTime::now();
+            $durationEnd = \microtime(true);
 
             /** Update the build document */
             $build->setAttribute('startTime', DateTime::format((new \DateTime())->setTimestamp($response['startTime'])));
             $build->setAttribute('endTime', $endTime);
-            $build->setAttribute('duration', \intval(\ceil($response['duration'])));
+            $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
@@ -360,11 +417,8 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['stdout']);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
+                $this->runGitAction('ready', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
-
-            /* Also update the deployment buildTime */
-            $deployment->setAttribute('buildTime', $response['duration']);
 
             Console::success("Build id: $buildId created");
 
@@ -372,6 +426,7 @@ class BuildsV1 extends Worker
             if ($deployment->getAttribute('activate') === true) {
                 $function->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 $function->setAttribute('deployment', $deployment->getId());
+                $function->setAttribute('live', true);
                 $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
             }
 
@@ -384,7 +439,6 @@ class BuildsV1 extends Worker
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
 
-
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
@@ -396,7 +450,7 @@ class BuildsV1 extends Worker
             Console::error($th->getMessage());
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject);
+                $this->runGitAction('failed', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -436,7 +490,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function runGitAction(string $status, GitHub $github, string $SHA, string $owner, string $repositoryName, string $targetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject)
+    protected function runGitAction(string $status, GitHub $github, string $SHA, string $owner, string $repositoryName, string $targetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
     {
         if ($function->getAttribute('vcsSilentMode', false) === true) {
             return;
@@ -470,11 +524,31 @@ class BuildsV1 extends Worker
 
         // TODO: Fix race condition
         if (!empty($commentId)) {
+            $retries = 0;
+
+            while ($retries < 10) {
+                $retries++;
+
+                try {
+                    $dbForConsole->createDocument('vcsCommentLocks', new Document([
+                        '$id' => $commentId
+                    ]));
+                    break;
+                } catch (Exception $err) {
+                    if ($retries >= 9) {
+                        throw $err;
+                    }
+                }
+
+                \sleep(1);
+            }
+
             $comment = new Comment();
             $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-            \sleep(5);
             $comment->addBuild($project, $function, $status, $deployment->getId());
             $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+
+            $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
         }
     }
 

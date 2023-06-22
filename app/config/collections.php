@@ -2453,6 +2453,16 @@ $collections = [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('live'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('vcsInstallationId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
@@ -4320,6 +4330,14 @@ $collections = [
             ],
         ],
     ],
+
+    'vcsCommentLocks' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('vcsCommentLocks'),
+        'name' => 'vcsCommentLocks',
+        'attributes' => [],
+        'indexes' => []
+    ]
 ];
 
 return $collections;

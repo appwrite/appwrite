@@ -149,20 +149,19 @@ Server::setResource('execute', function () {
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
-            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_EVENT' => $event ?? '',
-            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData ?? '',
-            'APPWRITE_FUNCTION_DATA' => $data ?? '',
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
-            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
-        $body = $vars['APPWRITE_FUNCTION_EVENT_DATA'] ?? '';
+        $headers['x-appwrite-trigger'] = $trigger;
+        $headers['x-appwrite-event'] = $event ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+
+        $body = $eventData ?? '';
         if (empty($body)) {
-            $body = $vars['APPWRITE_FUNCTION_DATA'] ?? '';
+            $body = $data ?? '';
         }
 
         /** Execute function */
@@ -173,7 +172,7 @@ Server::setResource('execute', function () {
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
                 version: $function->getAttribute('version'),
-                body: $body,
+                body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
