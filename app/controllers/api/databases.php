@@ -1235,7 +1235,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
-            'formatOptions' => ['elements' => $elements]
+            'formatOptions' => ['elements' => $elements],
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1279,7 +1279,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => APP_DATABASE_ATTRIBUTE_IP
+            'format' => APP_DATABASE_ATTRIBUTE_IP,
         ]), $response, $dbForProject, $database, $events);
 
         $response
