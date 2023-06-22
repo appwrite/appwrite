@@ -10,52 +10,52 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occured. Please check the logs for more information.',
+        'description' => 'An unknown error has occured. Please submit a support ticket at []() with reproduction steps for further assistance.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
         'name' => Exception::GENERAL_MOCK,
-        'description' => 'General errors thrown by the mock controller used for testing.',
+        'description' => 'General errors thrown by the mock controller used for testing. If you\'re seeing this on a production build if Appwrite, please raise an issue at ()[]',
         'code' => 400,
     ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
         'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
-        'description' => 'Access to this API is forbidden.',
+        'description' => 'Access to this API is forbidden. Please [action to get access]',
         'code' => 401,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
-        'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
+        'description' => 'The request originated from an unknown origin. If you trust this domain, please add it as a trusted platform in the Appwrite console.',
         'code' => 403,
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
-        'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
+        'description' => 'The requested service is disabled. You can enable the service in the settings of your Appwrite project.',
         'code' => 503,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
-        'description' => 'The current user or API key does not have the required scopes to access the requested resource.',
+        'description' => 'The current user or API key does not have the required scopes to access the requested resource. Update the permissions of the requested resource or add appropriate scopes to your API key.',
         'code' => 401,
     ],
     Exception::GENERAL_RATE_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_RATE_LIMIT_EXCEEDED,
-        'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
+        'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time. Learn more about rate-limits here https://appwrite.io/docs/rate-limits.',
         'code' => 429,
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
-        'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
+        'description' => 'Email delivery is not possible because SMTP is disabled on your Appwrite instance. You can learn more about setting up SMTP here: https://appwrite.io/docs/email-delivery.',
         'code' => 503,
     ],
     Exception::GENERAL_PHONE_DISABLED => [
         'name' => Exception::GENERAL_PHONE_DISABLED,
-        'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
+        'description' => 'SMS delivery is not possible because a phone provider is not configured. You can learn more about setting up SMS delivery here: https://appwrite.io/docs/sms-delivery.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
-        'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
+        'description' => 'The argument {argument} is invalid. Please refer to the endpoint documentation {docs}.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
