@@ -1103,14 +1103,14 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, bool $required, bool $encrypt, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size, 0);
@@ -1175,7 +1175,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'format' => APP_DATABASE_ATTRIBUTE_EMAIL
+            'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
         ]), $response, $dbForProject, $database, $events);
 
         $response

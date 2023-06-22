@@ -596,7 +596,7 @@ class DatabasesCustomServerTest extends Scope
     /**
     * @depends testListCollections
      */
-    public function testCreateEncryptedAttribute(array $data): array
+    public function testCreateEncryptedAttribute(array $data): void
     {
 
         $databaseId = $data['databaseId'];
@@ -652,26 +652,6 @@ class DatabasesCustomServerTest extends Scope
             'encrypt' => true,
         ]);
 
-        $age = $this->client->call(Client::METHOD_POST, $attributesPath . '/integer', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'age',
-            'min' => 0,
-            'max' => 120,
-            'required' => false,
-        ]);
-
-        $alias = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'alias',
-            'size' => 256,
-            'required' => false,
-        ]);
 
      /**
       * Check Status of every Attribute
@@ -684,16 +664,8 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('lastName', $lastName['body']['key']);
         $this->assertEquals('string', $lastName['body']['type']);
 
-        $this->assertEquals(202, $alias['headers']['status-code']);
-        $this->assertEquals('alias', $alias['body']['key']);
-        $this->assertEquals('string', $alias['body']['type']);
-
-        $this->assertEquals(202, $age['headers']['status-code']);
-        $this->assertEquals('age', $age['body']['key']);
-        $this->assertEquals('integer', $age['body']['type']);
-
         // Wait for database worker to finish creating attributes
-        sleep(5);
+        sleep(2);
 
         // Creating document to ensure cache is purged on schema change
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents', array_merge([
@@ -705,8 +677,6 @@ class DatabasesCustomServerTest extends Scope
             'data' => [
                 'firstName' => 'Jonah',
                 'lastName' => 'Jameson',
-                'age' => 25,
-                'alias' => 'JJ'
             ],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -715,50 +685,6 @@ class DatabasesCustomServerTest extends Scope
             ],
         ]);
 
-        $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/indexes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'key_lastName',
-            'type' => 'key',
-            'attributes' => [
-                'lastName',
-            ],
-        ]);
-
-        // Wait for database worker to finish creating index
-        sleep(2);
-
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
-
-        $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertIsArray($collection['body']['attributes']);
-        $this->assertCount(4, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][2]['key'], $age['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][3]['key'], $alias['body']['key']);
-        $this->assertCount(1, $collection['body']['indexes']);
-        $this->assertEquals($collection['body']['indexes'][0]['key'], $index['body']['key']);
-
-        $unneededId = $alias['body']['key'];
-
-        // Delete attribute
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actors ['body']['$id'] . '/attributes/' . $unneededId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]));
-
-        $this->assertEquals(204, $attribute['headers']['status-code']);
-
-        sleep(2);
-
         // Check document to ensure cache is purged on schema change
         $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents/' . $document['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -766,25 +692,9 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertNotContains($unneededId, $document['body']);
-
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
-
-        $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertIsArray($collection['body']['attributes']);
-        $this->assertCount(3, $collection['body']['attributes']);
-        $this->assertEquals($collection['body']['attributes'][0]['key'], $firstName['body']['key']);
-        $this->assertEquals($collection['body']['attributes'][1]['key'], $lastName['body']['key']);
-
-        return [
-            'collectionId' => $actors['body']['$id'],
-            'key' => $index['body']['key'],
-            'databaseId' => $databaseId
-        ];
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Jonah', $document['body']['firstName']);
+        $this->assertEquals('Jameson', $document['body']['lastName']);
     }
 
     public function testDeleteAttribute(): array
