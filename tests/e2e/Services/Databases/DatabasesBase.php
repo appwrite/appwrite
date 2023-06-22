@@ -351,11 +351,6 @@ trait DatabasesBase
 
         $id = $document['body']['$id'];
 
-        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/documents/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
         $this->assertEquals($document['body']['1'], 'one');
 
         // Update document
@@ -372,13 +367,6 @@ trait DatabasesBase
                 Permission::delete(Role::users()),
             ],
         ]);
-
-        sleep(2);
-
-        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $numericKeyId . '/documents/' . $id, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
 
         $this->assertEquals($document['body']['1'], 'one updated');
     }
