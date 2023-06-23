@@ -653,9 +653,9 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
 
-     /**
-      * Check Status of every Attribute
-      */
+        /**
+         * Check status of every attribute
+         */
         $this->assertEquals(202, $firstName['headers']['status-code']);
         $this->assertEquals('firstName', $firstName['body']['key']);
         $this->assertEquals('string', $firstName['body']['type']);
