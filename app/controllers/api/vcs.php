@@ -84,10 +84,10 @@ App::get('/v1/vcs/github/redirect')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
-        if(empty($state)) {
+        if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.');
         }
-        
+
         $state = \json_decode($state, true);
         $redirect = $state['redirect'] ?? '';
         $projectId = $state['projectId'] ?? '';

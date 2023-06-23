@@ -1458,7 +1458,8 @@ App::post('/v1/functions/:functionId/executions')
             if ($record) {
                 $eu = Config::getParam('locale-eu');
 
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';;
+                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
+                ;
                 $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
                 $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
             }
