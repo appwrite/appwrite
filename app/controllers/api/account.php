@@ -2438,7 +2438,6 @@ App::post('/v1/account/verification/phone')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $verificationSecret = Auth::tokenGenerator();
         $secret = Auth::codeGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
@@ -2474,13 +2473,13 @@ App::post('/v1/account/verification/phone')
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output(
-                $verification->setAttribute('secret', $verificationSecret),
+                $verification->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
         ;
 
         // Hide secret for clients
-        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
+        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
