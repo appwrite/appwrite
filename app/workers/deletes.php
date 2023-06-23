@@ -237,6 +237,7 @@ class DeletesV1 extends Worker
     protected function deleteCollection(Document $document, Document $project): void
     {
         $collectionId = $document->getId();
+        $collectionInternalId = $document->getInternalId();
         $databaseId = $document->getAttribute('databaseId');
         $databaseInternalId = $document->getAttribute('databaseInternalId');
 
@@ -245,13 +246,13 @@ class DeletesV1 extends Worker
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
-            Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$collectionId])
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
         ], $dbForProject);
 
         $this->deleteByGroup('indexes', [
-            Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$collectionId])
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
         ], $dbForProject);
 
         $this->deleteAuditLogsByResource('database/' . $databaseId . '/collection/' . $collectionId, $project);
@@ -278,11 +279,11 @@ class DeletesV1 extends Worker
      */
     protected function deleteMemberships(Document $document, Document $project): void
     {
-        $teamId = $document->getAttribute('teamId', '');
+        $teamInternalId = $document->getInternalId();
 
         // Delete Memberships
         $this->deleteByGroup('memberships', [
-            Query::equal('teamId', [$teamId])
+            Query::equal('teamInternalId', [$teamInternalId])
         ], $this->getProjectDB($project));
     }
 
@@ -311,19 +312,20 @@ class DeletesV1 extends Worker
     protected function deleteUser(Document $document, Document $project): void
     {
         $userId = $document->getId();
+        $userInternalId = $document->getInternalId();
 
         $dbForProject = $this->getProjectDB($project);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
-            Query::equal('userId', [$userId])
+            Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
 
         $dbForProject->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
-            Query::equal('userId', [$userId])
+            Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject, function (Document $document) use ($dbForProject) {
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
@@ -341,7 +343,7 @@ class DeletesV1 extends Worker
 
         // Delete tokens
         $this->deleteByGroup('tokens', [
-            Query::equal('userId', [$userId])
+            Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
     }
 
@@ -457,6 +459,7 @@ class DeletesV1 extends Worker
         $dbForProject = $this->getProjectDB($project);
         $dbForConsole = $this->getConsoleDB();
         $functionId = $document->getId();
+        $functionInternalId = $document->getInternalId();
 
         /**
          * Delete routes
@@ -464,7 +467,7 @@ class DeletesV1 extends Worker
         Console::info("Deleting routes for function " . $functionId);
         $this->deleteByGroup('rules', [
             Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$document->getInternalId()]),
+            Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('projectInternalId', [$project->getInternalId()])
         ], $dbForConsole, function (Document $document) use ($project) {
             $this->deleteRule($document, $project);
@@ -476,7 +479,7 @@ class DeletesV1 extends Worker
         Console::info("Deleting variables for function " . $functionId);
         $this->deleteByGroup('variables', [
             Query::equal('resourceType', ['function']),
-            Query::equal('resourceInternalId', [$document->getInternalId()])
+            Query::equal('resourceInternalId', [$functionInternalId])
         ], $dbForProject);
 
         /**
@@ -484,11 +487,11 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting deployments for function " . $functionId);
         $storageFunctions = $this->getFunctionsDevice($projectId);
-        $deploymentIds = [];
+        $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
-            Query::equal('resourceId', [$functionId])
-        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
-            $deploymentIds[] = $document->getId();
+            Query::equal('resourceInternalId', [$functionInternalId])
+        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentInternalIds) {
+            $deploymentInternalIds[] = $document->getInternalId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
                 Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
             } else {
@@ -501,10 +504,10 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting builds for function " . $functionId);
         $storageBuilds = $this->getBuildsDevice($projectId);
-        foreach ($deploymentIds as $deploymentId) {
+        foreach ($deploymentInternalIds as $deploymentInternalId) {
             $this->deleteByGroup('builds', [
-                Query::equal('deploymentId', [$deploymentId])
-            ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
+                Query::equal('deploymentInternalId', [$deploymentInternalId])
+            ], $dbForProject, function (Document $document) use ($storageBuilds) {
                 if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
                     Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
                 } else {
@@ -518,7 +521,7 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            Query::equal('functionId', [$functionId])
+            Query::equal('functionInternalId', [$functionInternalId])
         ], $dbForProject);
 
         /**
@@ -537,7 +540,7 @@ class DeletesV1 extends Worker
         $projectId = $project->getId();
         $dbForProject = $this->getProjectDB($project);
         $deploymentId = $document->getId();
-        $functionId = $document->getAttribute('resourceId');
+        $deploymentInternalId = $document->getInternalId();
 
         /**
          * Delete deployment files
@@ -556,7 +559,7 @@ class DeletesV1 extends Worker
         Console::info("Deleting builds for deployment " . $deploymentId);
         $storageBuilds = $this->getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
-            Query::equal('deploymentId', [$deploymentId])
+            Query::equal('deploymentInternalId', [$deploymentInternalId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
             if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
                 Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
