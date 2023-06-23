@@ -82,7 +82,6 @@ services:
       - traefik.http.routers.appwrite_api_https.tls.domains[0].main=$_APP_DOMAIN_FUNCTIONS
       - traefik.http.routers.appwrite_api_https.tls.domains[0].sans=*.$_APP_DOMAIN_FUNCTIONS
     volumes:
-      - ./vendor/utopia-php/vcs:/usr/src/code/vendor/utopia-php/vcs
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
