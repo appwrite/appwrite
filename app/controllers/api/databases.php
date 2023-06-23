@@ -2623,7 +2623,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('audits.event', 'document.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
     ->label('usage.metric', 'documents.{scope}.requests.create')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -2653,7 +2653,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
 
         if (isset($data['$id'])) {

@@ -77,8 +77,8 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
         // 'Unknown path', but validation passed
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -87,7 +87,8 @@ class HTTPTest extends Scope
             'origin' => 'http://localhost',
         ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // Check for too many path segments
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Cleanup
         $this->client->setEndpoint($previousEndpoint);
@@ -158,5 +159,16 @@ class HTTPTest extends Scope
         $this->assertIsString($body['server-python']);
         $this->assertIsString($body['server-ruby']);
         $this->assertIsString($body['console-cli']);
+    }
+
+    public function testDefaultOAuth2()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 }
