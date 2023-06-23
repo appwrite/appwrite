@@ -85,6 +85,10 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\Video;
+use Appwrite\Utopia\Response\Model\VideoProfile;
+use Appwrite\Utopia\Response\Model\VideoRendition;
+use Appwrite\Utopia\Response\Model\VideoSubtitle;
 
 /**
  * @method int getStatusCode()
@@ -160,6 +164,16 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
+
+    //video
+    public const MODEL_VIDEO = 'video';
+    public const MODEL_VIDEO_LIST = 'videoList';
+    public const MODEL_PROFILE = 'profile';
+    public const MODEL_PROFILE_LIST = 'profileList';
+    public const MODEL_RENDITION = 'rendition';
+    public const MODEL_RENDITION_LIST = 'renditionList';
+    public const MODEL_SUBTITLE = 'subtitle';
+    public const MODEL_SUBTITLE_LIST = 'subtitleList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
@@ -280,6 +294,10 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
+            ->setModel(new BaseList('Profile List', self::MODEL_PROFILE_LIST, 'profiles', self::MODEL_PROFILE))
+            ->setModel(new BaseList('Rendition List', self::MODEL_RENDITION_LIST, 'renditions', self::MODEL_RENDITION))
+            ->setModel(new BaseList('Subtitle List', self::MODEL_SUBTITLE_LIST, 'subtitles', self::MODEL_SUBTITLE))
+            ->setModel(new BaseList('Video List', self::MODEL_VIDEO_LIST, 'videos', self::MODEL_VIDEO))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -349,6 +367,11 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
             ->setModel(new ConsoleVariables())
+            ->setModel(new Video())
+            ->setModel(new VideoProfile())
+            ->setModel(new VideoRendition())
+            ->setModel(new VideoSubtitle())
+
             // Verification
             // Recovery
             // Tests (keep last)

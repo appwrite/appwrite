@@ -262,7 +262,6 @@ App::init()
         $role = ($user->isEmpty())
             ? Role::guests()->toString()
             : Role::users()->toString();
-
         // Add user roles
         $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
 

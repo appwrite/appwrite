@@ -81,6 +81,8 @@ trait ProjectCustom
                 'locale.read',
                 'avatars.read',
                 'health.read',
+                'videos.write',
+                'videos.read',
             ],
         ]);
 

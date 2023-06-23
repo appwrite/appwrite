@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * * Video
      * - GraphQL
      */
 
@@ -185,6 +186,21 @@ class Exception extends \Exception
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
     public const DOMAIN_TARGET_INVALID             = 'domain_target_invalid';
+
+    /** Video */
+    public const VIDEO_PROFILE_NOT_FOUND            = 'video_profile_not_found';
+    public const VIDEO_NOT_VALID                    = 'video_not_valid';
+    public const VIDEO_SECOND_OUT_OF_RANGE          = 'video_second_out_of_range';
+    public const VIDEO_TIMELINE_NOT_FOUND           = 'video_timeline_not_found';
+    public const VIDEO_PREVIEW_NOT_FOUND            = 'video_preview_not_found';
+    public const VIDEO_RENDITION_NOT_FOUND          = 'video_rendition_not_found';
+    public const VIDEO_SUBTITLE_NOT_FOUND           = 'video_subtitle_not_found';
+    public const VIDEO_NOT_FOUND                    = 'video_not_found';
+    public const VIDEO_RENDITION_SEGMENT_NOT_FOUND  = 'video_rendition_segment_not_found';
+    public const VIDEO_LANGUAGE_CODE_NOT_VALID      =  'video_language_code_not_valid';
+    public const VIDEO_SUBTITLE_SEGMENT_NOT_FOUND   = 'video_subtitle_segment_not_found';
+    public const VIDEO_SUBTITLE_NOT_VALID           = 'video_subtitle_not_valid';
+
 
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';

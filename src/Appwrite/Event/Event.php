@@ -32,6 +32,9 @@ class Event
     public const BUILDS_QUEUE_NAME = 'v1-builds';
     public const BUILDS_CLASS_NAME = 'BuildsV1';
 
+    public const VIDEO_QUEUE_NAME = 'v1-videos';
+    public const VIDEO_CLASS_NAME = 'VideosV1';
+
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 

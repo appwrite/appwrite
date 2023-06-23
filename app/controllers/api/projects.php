@@ -175,9 +175,22 @@ App::post('/v1/projects')
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($project, Response::MODEL_PROJECT);
+        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), 'videos_profiles')) {
+            foreach (Config::getParam('videos-profiles', []) as $profile) {
+                Authorization::skip(function () use ($project, $profile, $dbForProject) {
+                    return $dbForProject->createDocument('videos_profiles', new Document([
+                        'name' => $profile['name'],
+                        'videoBitRate' => $profile['videoBitRate'],
+                        'audioBitRate' => $profile['audioBitRate'],
+                        'width'  => $profile['width'],
+                        'height' => $profile['height']
+                    ]));
+                });
+            }
+        }
+
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
 App::get('/v1/projects')

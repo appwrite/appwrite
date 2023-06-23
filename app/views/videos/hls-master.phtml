@@ -1,0 +1,12 @@
+#EXTM3U
+#EXT-X-VERSION:4
+<?php foreach ($this->getParam('audios', []) as $audio):?>
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="group_audio"<?php if($audio['name'] !== null):?>,NAME="<?php echo $audio['name'];?>"<?php endif;?>,AUTOSELECT=YES<?php if($audio['language'] !== null):?>,LANGUAGE="<?php echo $audio['language'];?>"<?php endif;?><?php if($audio['uri'] !== null):?>,URI="<?php echo $audio['uri'];?>"<?php endif;?><?php echo PHP_EOL?>
+<?php endforeach;?><?php echo PHP_EOL?>
+<?php foreach ($this->getParam('subtitles', []) as $subtitle):?>
+#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="<?php echo $this->escape($subtitle['name']); ?>",DEFAULT=<?php echo $subtitle['default']; ?>,AUTOSELECT=YES,FORCED=NO,LANGUAGE="<?php echo $this->escape($subtitle['code']); ?>",URI="<?php echo $subtitle['uri']; ?>"<?php echo PHP_EOL?>
+<?php endforeach;?><?php echo PHP_EOL?>
+<?php foreach ($this->getParam('renditions', []) as $rendition):?>
+#EXT-X-STREAM-INF:BANDWIDTH="<?php echo $rendition['bandwidth']; ?>",RESOLUTION="<?php echo $rendition['resolution']; ?>",NAME="<?php echo $rendition['name']; ?>"<?php if($rendition['codecs'] !== null):?>,CODECS="<?php echo $rendition['codecs']; ?>"<?php endif;?><?php if($rendition['subs'] !== null):?>,SUBTITLES="<?php echo $rendition['subs'];?>"<?php endif;?><?php if($rendition['audio'] !== null):?>,AUDIO="<?php echo $rendition['audio'];?>"<?php endif;?> <?php echo PHP_EOL?>
+<?php echo $rendition['uri'];?><?php echo PHP_EOL?>
+<?php endforeach;?>

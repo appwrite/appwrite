@@ -579,6 +579,66 @@ return [
         'description' => 'Domain verification for the requested domain has failed.',
         'code' => 401,
     ],
+    Exception::VIDEO_PROFILE_NOT_FOUND => [
+        'name' => Exception::VIDEO_PROFILE_NOT_FOUND,
+        'description' => 'Video profile not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_NOT_VALID => [
+        'name' => Exception::VIDEO_NOT_VALID,
+        'description' => 'Video not valid.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_RENDITION_NOT_FOUND => [
+        'name' => Exception::VIDEO_RENDITION_NOT_FOUND,
+        'description' => 'Video rendition not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_SUBTITLE_NOT_FOUND => [
+        'name' => Exception::VIDEO_SUBTITLE_NOT_FOUND,
+        'description' => 'Video subtitle not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_LANGUAGE_CODE_NOT_VALID => [
+        'name' => Exception::VIDEO_LANGUAGE_CODE_NOT_VALID,
+        'description' => 'Video language code not valid.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_SUBTITLE_NOT_VALID => [
+        'name' => Exception::VIDEO_SUBTITLE_NOT_VALID,
+        'description' => 'Video subtitle not valid.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_SECOND_OUT_OF_RANGE => [
+        'name' => Exception::VIDEO_SECOND_OUT_OF_RANGE,
+        'description' => 'Video second out of duration range.',
+        'code' => 400,
+    ],
+    Exception::VIDEO_NOT_FOUND => [
+        'name' => Exception::VIDEO_NOT_FOUND,
+        'description' => 'Video not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_PREVIEW_NOT_FOUND => [
+        'name' => Exception::VIDEO_PREVIEW_NOT_FOUND,
+        'description' => 'Video preview not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_TIMELINE_NOT_FOUND => [
+        'name' => Exception::VIDEO_TIMELINE_NOT_FOUND,
+        'description' => 'Video timeline not found.',
+        'code' => 404,
+    ],
+    Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_RENDITION_SEGMENT_NOT_FOUND,
+        'description' => 'Video rendition segment not found',
+        'code' => 404,
+    ],
+    Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND => [
+        'name' => Exception::VIDEO_SUBTITLE_SEGMENT_NOT_FOUND,
+        'description' => 'Video subtitle segment not found',
+        'code' => 404,
+    ],
     Exception::DOMAIN_TARGET_INVALID => [
         'name' => Exception::DOMAIN_TARGET_INVALID,
         'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',

@@ -73,6 +73,7 @@ services:
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-videos:/storage/videos:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -84,6 +85,9 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
+      - ./dev:/usr/local/dev
+      - ./tests/tmp:/tmp
+      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
     depends_on:
       - mariadb
       - redis
@@ -225,6 +229,65 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
+  appwrite-worker-videos:
+    entrypoint: worker-videos
+    <<: *x-logging
+    container_name: appwrite-worker-videos
+    build:
+      context: .
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-videos:/storage/videos:rw
+      #- ./tests:/usr/src/code/tests #TODO remove when done!!
+      - ./vendor/aminyazdanpanah/php-ffmpeg-video-streaming:/usr/src/code/vendor/aminyazdanpanah/php-ffmpeg-video-streaming #TODO remove when done!!
+      - ./vendor/php-ffmpeg/php-ffmpeg:/usr/src/code/vendor/php-ffmpeg/php-ffmpeg #TODO remove when done!!
+      - ./vendor/alchemy/binary-driver:/usr/src/code/vendor/alchemy/binary-driver
+      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
+      #- ./vendor/symfony/process:/usr/src/code/vendor/symfony/process
+
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_OPENSSL_KEY_V1
+      - _APP_STORAGE_DEVICE
+      - _APP_STORAGE_S3_ACCESS_KEY
+      - _APP_STORAGE_S3_SECRET
+      - _APP_STORAGE_S3_REGION
+      - _APP_STORAGE_S3_BUCKET
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+
   appwrite-worker-audits:
     entrypoint: worker-audits
     <<: *x-logging
@@ -290,6 +353,7 @@ services:
       - mariadb
     volumes: 
       - appwrite-uploads:/storage/uploads:rw
+      - appwrite-videos:/storage/videos:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
@@ -846,6 +910,7 @@ volumes:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-videos:
   appwrite-certificates:
   appwrite-functions:
   appwrite-builds:

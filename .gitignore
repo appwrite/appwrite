@@ -13,3 +13,7 @@ debug/
 app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
+/tests/tmp/
+/tests/resources/disk-a/very-large-file-1.mov
+/tests/resources/disk-a/very-big-file-2.mov
+/tests/resources/disk-a/video-srt.*

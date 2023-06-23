@@ -1,0 +1,10 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-MEDIA-SEQUENCE:1
+#EXT-X-PLAYLIST-TYPE:VOD
+#EXT-X-TARGETDURATION:<?php echo $this->getParam('targetDuration', 0)?><?php echo PHP_EOL?>
+#EXT-X-MEDIA-SEQUENCE:0
+<?php foreach ($this->getParam('segments', []) as $segment): ?>
+#EXTINF:<?php echo $segment['duration']; ?><?php echo PHP_EOL?>
+<?php echo $segment['url']; ?><?php echo PHP_EOL?>
+<?php endforeach; ?>

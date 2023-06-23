@@ -299,6 +299,7 @@ class Realtime extends Adapter
                     if ($bucket->isEmpty()) {
                         throw new \Exception('Bucket needs to be passed to Realtime for File events in the Storage.');
                     }
+
                     $channels[] = 'files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
                     $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
@@ -323,6 +324,18 @@ class Realtime extends Adapter
                     $channels[] = 'console';
                     $projectId = 'console';
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                }
+
+                break;
+
+            case 'videos':
+                if ($parts[2] === 'renditions') {
+                        $projectId  = 'console';
+                        $channels[] = 'console';
+                        $channels[] = 'renditions';
+                        $channels[] = 'renditions.' . $payload->getId();
+                        $channels[] = 'videos.' . $payload->getAttribute('videoId');
+                        $roles = $payload->getRead();
                 }
 
                 break;

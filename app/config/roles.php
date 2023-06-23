@@ -20,6 +20,8 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'videos.read',
+    'videos.write',
 ];
 
 $admins = [
@@ -51,6 +53,8 @@ $admins = [
     'functions.write',
     'execution.read',
     'execution.write',
+    'videos.read',
+    'videos.write',
 ];
 
 return [
@@ -68,6 +72,7 @@ return [
             'locale.read',
             'avatars.read',
             'execution.write',
+            'videos.read',
         ],
     ],
     Auth::USER_ROLE_USERS => [

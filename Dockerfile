@@ -125,6 +125,13 @@ ENV _APP_SERVER=swoole \
     _APP_LOGGING_CONFIG=
 
 RUN \
+  apk update \
+  && apk add --no-cache\
+  mediainfo \
+  ffmpeg \
+  && rm -rf /var/cache/apk/*
+
+RUN \
   if [ "$DEBUG" == "true" ]; then \
     apk add boost boost-dev; \
   fi
@@ -142,12 +149,14 @@ COPY ./src /usr/src/code/src
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
+    mkdir -p /storage/videos && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
     mkdir -p /storage/functions && \
     mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
+    chown -Rf www-data.www-data /storage/videos && chmod -Rf 0755 /storage/videos && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
@@ -176,6 +185,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
+    chmod +x /usr/local/bin/worker-videos && \
     chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions

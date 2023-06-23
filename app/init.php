@@ -114,6 +114,7 @@ const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
@@ -162,6 +163,7 @@ const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
+const DELETE_TYPE_VIDEOS = 'videos';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -175,7 +177,7 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
-
+const TMP_HOST = 'http://127.0.0.1/';
 $register = new Registry();
 
 App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
@@ -209,6 +211,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('videos-profiles', __DIR__ . '/config/videos-profiles.php');
 
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');
@@ -514,7 +517,7 @@ $register->set('logger', function () {
     return new Logger($adapter);
 });
 $register->set('dbPool', function () {
- // Register DB connection
+    // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
@@ -523,20 +526,20 @@ $register->set('dbPool', function () {
 
     $pool = new PDOPool(
         (new PDOConfig())
-        ->withHost($dbHost)
-        ->withPort($dbPort)
-        ->withDbName($dbScheme)
-        ->withCharset('utf8mb4')
-        ->withUsername($dbUser)
-        ->withPassword($dbPass)
-        ->withOptions([
-            PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-            PDO::ATTR_TIMEOUT => 3, // Seconds
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::ATTR_STRINGIFY_FETCHES => true,
-        ]),
+            ->withHost($dbHost)
+            ->withPort($dbPort)
+            ->withDbName($dbScheme)
+            ->withCharset('utf8mb4')
+            ->withUsername($dbUser)
+            ->withPassword($dbPass)
+            ->withOptions([
+                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                PDO::ATTR_TIMEOUT => 3, // Seconds
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => true,
+                PDO::ATTR_STRINGIFY_FETCHES => true,
+            ]),
         64
     );
 
@@ -555,17 +558,17 @@ $register->set('redisPool', function () {
 
     $pool = new RedisPool(
         (new RedisConfig())
-        ->withHost($redisHost)
-        ->withPort($redisPort)
-        ->withAuth($redisAuth)
-        ->withDbIndex(0),
+            ->withHost($redisHost)
+            ->withPort($redisPort)
+            ->withAuth($redisAuth)
+            ->withDbIndex(0),
         64
     );
 
     return $pool;
 });
 $register->set('influxdb', function () {
- // Register DB connection
+    // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
     $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
@@ -579,7 +582,7 @@ $register->set('influxdb', function () {
     return $client;
 });
 $register->set('statsd', function () {
- // Register DB connection
+    // Register DB connection
     $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
     $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
@@ -626,7 +629,7 @@ $register->set('passwordsDictionary', function () {
     return $content;
 });
 $register->set('db', function () {
- // This is usually for our workers or CLI commands scope
+    // This is usually for our workers or CLI commands scope
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbPort = App::getEnv('_APP_DB_PORT', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
@@ -645,7 +648,7 @@ $register->set('db', function () {
     return $pdo;
 });
 $register->set('cache', function () {
- // This is usually for our workers or CLI commands scope
+    // This is usually for our workers or CLI commands scope
     $redis = new Redis();
     $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
     $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
@@ -904,6 +907,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    //$projectId = '64635cdd5f809d98d3ad';
 
     if ($projectId === 'console') {
         return $console;
@@ -950,7 +954,6 @@ App::setResource('console', function () {
 
 App::setResource('dbForProject', function ($db, $cache, Document $project) {
     $cache = new Cache(new RedisCache($cache));
-
     $database = new Database(new MariaDB($db), $cache);
     $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
     $database->setNamespace("_{$project->getInternalId()}");
@@ -975,6 +978,10 @@ App::setResource('deviceLocal', function () {
 
 App::setResource('deviceFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
+
+App::setResource('deviceVideos', function ($project) {
+    return getDevice(APP_STORAGE_VIDEOS . '/app-' . $project->getId());
 }, ['project']);
 
 App::setResource('deviceFunctions', function ($project) {

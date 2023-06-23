@@ -32,6 +32,7 @@
             <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Users</directory>
             <directory>./tests/e2e/Services/Webhooks</directory>
+            <directory>./tests/e2e/Services/Videos</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
