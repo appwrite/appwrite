@@ -1110,19 +1110,30 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
         }
 
-        $attribute = createAttribute($databaseId, $collectionId, new Document([
-            'key' => $key,
-            'type' => Database::VAR_STRING,
-            'size' => $size,
-            'required' => $required,
-            'default' => $default,
-            'array' => $array,
-            'format' => APP_DATABASE_ATTRIBUTE_STRING_MIN_LENGTH,
-            'formatOptions' => [
-                'min' => $minSize,
-                'max' => $size,
-            ],
-        ]), $response, $dbForProject, $database, $events);
+        if ($size == null || $minSize == null) {
+            $attribute = createAttribute($databaseId, $collectionId, new Document([
+                'key' => $key,
+                'type' => Database::VAR_STRING,
+                'size' => $size,
+                'required' => $required,
+                'default' => $default,
+                'array' => $array,
+            ]), $response, $dbForProject, $database, $events);
+        } else {
+            $attribute = createAttribute($databaseId, $collectionId, new Document([
+                'key' => $key,
+                'type' => Database::VAR_STRING,
+                'size' => $size,
+                'required' => $required,
+                'default' => $default,
+                'array' => $array,
+                'format' => APP_DATABASE_ATTRIBUTE_STRING_MIN_LENGTH,
+                'formatOptions' => [
+                    'min' => $minSize,
+                    'max' => $size,
+                ],
+            ]), $response, $dbForProject, $database, $events);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

@@ -1,5 +1,4 @@
 <?php
-use Utopia\Validator\Text;
 
 /**
  * Init
@@ -74,6 +73,7 @@ use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Range;
 use Utopia\Validator\IP;
+use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
