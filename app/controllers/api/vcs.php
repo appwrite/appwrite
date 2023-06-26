@@ -476,9 +476,12 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
             $owner = $github->getOwnerName($installationId);
             $repositoryName = $github->getRepositoryName($repositoryId);
 
+            $isAuthorized = false;
+            $commentStatus = $isAuthorized ? 'waiting' : 'failed';
+
             if (empty($latestCommentId)) {
                 $comment = new Comment();
-                $comment->addBuild($project, $function, 'waiting', $deploymentId);
+                $comment->addBuild($project, $function, $commentStatus, $deploymentId);
 
                 $pullRequest = $github->getBranchPullRequest($owner, $repositoryName, $branchName);
                 if (!empty($pullRequest)) {
@@ -488,9 +491,24 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
             } else {
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                $comment->addBuild($project, $function, 'waiting', $deploymentId);
+                $comment->addBuild($project, $function, $commentStatus, $deploymentId);
 
                 $latestCommentId = $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
+            }
+
+            $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+
+            if(!$isAuthorized) {
+                $functionName = $function->getAttribute('name');
+                $projectName = $project->getAttribute('name');
+                $name = "{$functionName} ({$projectName})";
+                $message = 'Unauthorized. Must have write permissions on repository.';
+
+                $repositoryId = $resource->getAttribute('repositoryId');
+                $repositoryName = $github->getRepositoryName($repositoryId);
+                $owner = $github->getOwnerName($installationId);
+                $github->updateCommitStatus($repositoryName, $SHA, $owner, 'failed', $message, $targetUrl, $name);
+                continue;
             }
 
             $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -516,8 +534,6 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
                 'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
                 'activate' => $activate,
             ]));
-
-            $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
 
             if (!empty($SHA) && $function->getAttribute('vcsSilentMode', false) === false) {
                 $functionName = $function->getAttribute('name');
