@@ -434,7 +434,7 @@ App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryI
         ]), Response::MODEL_BRANCH_LIST);
     });
 
-$createGitDeployments = function (GitHub $github, string $installationId, string $repositoryId, array $vcsRepos, string $branchName, string $SHA, string $commentId, Database $dbForConsole, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $installationId, string $repositoryId, array $vcsRepos, string $branchName, string $SHA, Database $dbForConsole, callable $getProjectDB, Request $request) {
     foreach ($vcsRepos as $resource) {
         $resourceType = $resource->getAttribute('resourceType');
 
@@ -458,26 +458,18 @@ $createGitDeployments = function (GitHub $github, string $installationId, string
                 $activate = true;
             }
 
-            $latestDeployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
-                Query::equal('vcsRepositoryId', [$repositoryId]),
-                Query::equal('vcsBranch', [$branchName]),
-                Query::equal('resourceType', ['functions']),
-                Query::orderDesc('$createdAt'),
-            ]));
-
-            $latestCommentId = $commentId ?? '';
+            $latestCommentId = '';
 
             if (empty($latestCommentId)) {
-                // Empty comment ID is push event. We try to take ID from last deplyoment
+                $latestDeployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
+                    Query::equal('vcsRepositoryId', [$repositoryId]),
+                    Query::equal('vcsBranch', [$branchName]),
+                    Query::equal('resourceType', ['functions']),
+                    Query::orderDesc('$createdAt'),
+                ]));
+
                 if ($latestDeployment !== false && !$latestDeployment->isEmpty()) {
                     $latestCommentId = $latestDeployment->getAttribute('vcsCommentId', '');
-                }
-            } else {
-                // Known comment ID is pull request event. If deployment exists already, we skip
-                if ($latestDeployment !== false && !$latestDeployment->isEmpty()) {
-                    $latestDeployment->setAttribute('vcsCommentId', $latestCommentId);
-                    Authorization::skip(fn () =>  $dbForProject->updateDocument('deployments', $latestDeployment->getId(), $latestDeployment));
-                    continue;
                 }
             }
 
@@ -595,7 +587,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                     Query::limit(100),
                 ]);
 
-                $createGitDeployments($github, $installationId, $repositoryId, $vcsRepos, $branchName, $SHA, '', $dbForConsole, $getProjectDB, $request);
+                $createGitDeployments($github, $installationId, $repositoryId, $vcsRepos, $branchName, $SHA, $dbForConsole, $getProjectDB, $request);
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead (update function as well)
@@ -627,6 +619,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                     $pullRequestNumber = $parsedPayload["pullRequestNumber"];
                     $repositoryName = $parsedPayload["repositoryName"];
                     $owner = $parsedPayload["owner"];
+                    $SHA = $parsedPayload["SHA"];
 
                     $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
@@ -635,51 +628,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    if (\count($vcsRepos) !== 0) {
-                        $comment = new Comment();
-
-                        foreach ($vcsRepos as $vcsRepo) {
-                            $projectId = $vcsRepo->getAttribute('projectId');
-                            $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-                            $dbForProject = $getProjectDB($project);
-
-                            $vcsRepoId = $vcsRepo->getId();
-
-                            $deployment = Authorization::skip(fn () => $dbForProject->findOne('deployments', [
-                                Query::equal('vcsRepositoryDocId', [$vcsRepoId]),
-                                Query::equal('vcsBranch', [$branchName]),
-                                Query::equal('resourceType', ['functions']),
-                                Query::orderDesc('$createdAt'),
-                            ]));
-
-                            if (!$deployment || $deployment->isEmpty()) {
-                                $function = Authorization::skip(fn () => $dbForProject->findOne('functions', [
-                                    Query::equal('vcsRepositoryDocId', [$vcsRepoId]),
-                                    Query::orderDesc('$createdAt'),
-                                ]));
-                                $build = new Document([]);
-                            } else {
-                                $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $deployment->getAttribute('resourceId', '')));
-                                $build = Authorization::skip(fn () =>  $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
-                            }
-
-                            if (!$function || $function->isEmpty()) {
-                                continue;
-                            }
-
-                            $status = !$build || $build->isEmpty() ? 'waiting' : $build->getAttribute('status', 'waiting');
-                            $deploymentId = !$build || $build->isEmpty() ? '' : $build->getAttribute('deploymentId', '');
-
-                            $comment->addBuild($project, $function, $status, $deploymentId);
-                        }
-
-                        $commentId = '';
-                        if (!$comment->isEmpty() && $function->getAttribute('vcsSilentMode', false) === false) {
-                            $commentId = $github->createComment($owner, $repositoryName, $pullRequestNumber, $comment->generateComment());
-                        }
-
-                        $createGitDeployments($github, $installationId, $repositoryId, $vcsRepos, $branchName, '', $commentId, $dbForConsole, $getProjectDB, $request);
-                    }
+                    $createGitDeployments($github, $installationId, $repositoryId, $vcsRepos, $branchName, $SHA, $dbForConsole, $getProjectDB, $request);
                 }
             }
 
