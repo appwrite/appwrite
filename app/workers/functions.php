@@ -166,7 +166,7 @@ Server::setResource('execute', function () {
 
         /** Execute function */
         try {
-            $command = 'npm start'; // TODO: Custom for each runtime
+            $command = 'node src/server.js'; // TODO: Custom for each runtime
             $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
             $executionResponse = $client->createExecution(
                 projectId: $project->getId(),
@@ -181,7 +181,7 @@ Server::setResource('execute', function () {
                 path: $path,
                 method: $method,
                 headers: $headers,
-                command: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
+                runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';

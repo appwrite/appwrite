@@ -162,7 +162,7 @@ class Executor
      * @param string $image
      * @param string $source
      * @param string $entrypoint
-     * @param string $command
+     * @param string $runtimeEntrypoint
      *
      * @return array
      */
@@ -179,7 +179,7 @@ class Executor
         string $path,
         string $method,
         array $headers,
-        string $command = null,
+        string $runtimeEntrypoint = null,
     ) {
         $headers['host'] = App::getEnv('_APP_DOMAIN', '');
 
@@ -200,7 +200,7 @@ class Executor
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
-            'command' => $command,
+            'runtimeEntrypoint' => $runtimeEntrypoint,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);

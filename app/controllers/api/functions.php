@@ -1521,7 +1521,7 @@ App::post('/v1/functions/:functionId/executions')
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
-            $command = 'npm start'; // TODO: Custom for each runtime
+            $command = 'node src/server.js'; // TODO: Custom for each runtime
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -1535,7 +1535,7 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
-                command: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '" &>/dev/null &'
+                runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
             );
 
             /** Update execution status */
