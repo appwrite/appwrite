@@ -175,7 +175,8 @@ App::post('/v1/functions')
                 'projectInternalId' => $project->getInternalId(),
                 'repositoryId' => $vcsRepositoryId,
                 'resourceId' => $functionId,
-                'resourceType' => 'function'
+                'resourceType' => 'function',
+                'pullRequests' => []
             ]));
 
             $vcsRepositoryDocId = $vcsRepoDoc->getId();
@@ -717,7 +718,8 @@ App::put('/v1/functions/:functionId')
                 'projectInternalId' => $project->getInternalId(),
                 'repositoryId' => $vcsRepositoryId,
                 'resourceId' => $functionId,
-                'resourceType' => 'function'
+                'resourceType' => 'function',
+                'pullRequests' => []
             ]));
 
             $vcsRepositoryDocId = $vcsRepoDoc->getId();

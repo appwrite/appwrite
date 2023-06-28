@@ -335,6 +335,16 @@ return [
         'description' => 'Repository with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::VCS_REPOSITORY_NOT_FOUND => [
+        'name' => Exception::VCS_REPOSITORY_NOT_FOUND,
+        'description' => 'VCS Repository with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::VCS_CONTRIBUTION_ALREADY_AUTHORIZED => [
+        'name' => Exception::VCS_CONTRIBUTION_ALREADY_AUTHORIZED,
+        'description' => 'External ontribution is already authorized.',
+        'code' => 409,
+    ],
 
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [

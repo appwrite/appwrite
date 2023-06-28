@@ -107,8 +107,10 @@ class Exception extends \Exception
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
 
     /** VCS */
-    public const INSTALLATION_NOT_FOUND            = 'installation_not_found';
-    public const REPOSITORY_NOT_FOUND              = 'repository_not_found';
+    public const INSTALLATION_NOT_FOUND              = 'installation_not_found';
+    public const REPOSITORY_NOT_FOUND                = 'repository_not_found';
+    public const VCS_REPOSITORY_NOT_FOUND            = 'vcs_repository_not_found';
+    public const VCS_CONTRIBUTION_ALREADY_AUTHORIZED = 'vcs_contribution_already_authorized';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
