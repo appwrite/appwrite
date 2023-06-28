@@ -51,13 +51,14 @@ class BuildsV1 extends Worker
         $template = new Document($this->args['template'] ?? []);
         $SHA = $this->args['SHA'] ?? '';
         $targetUrl = $this->args['targetUrl'] ?? '';
+        $vcsContribution = new Document($this->args['vcsContribution'] ?? []);
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($this->getCache());
-                $this->buildDeployment($github, $project, $resource, $deployment, $template, $SHA, $targetUrl);
+                $this->buildDeployment($github, $project, $resource, $deployment, $template, $SHA, $targetUrl, $vcsContribution);
                 break;
 
             default:
@@ -66,7 +67,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $SHA = '', string $targetUrl = '')
+    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $SHA = '', string $targetUrl = '', Document $vcsContribution = null)
     {
         global $register;
 
@@ -165,10 +166,15 @@ class BuildsV1 extends Worker
                     $rootDirectory = \ltrim($rootDirectory, '/');
 
                     $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+
                     $owner = $github->getOwnerName($installationId);
                     $repositoryName = $github->getRepositoryName($repositoryId);
+
+                    $cloneOwner = !empty($vcsContribution) ?  $vcsContribution->getAttribute('ownerName', $owner) : $owner;
+                    $cloneRepository = !empty($vcsContribution) ?  $vcsContribution->getAttribute('repositoryName', $repositoryName) : $repositoryName;
+
                     $branchName = $deployment->getAttribute('vcsBranch');
-                    $gitCloneCommand = $github->generateGitCloneCommand($owner, $repositoryName, $branchName, $tmpDirectory, $rootDirectory);
+                    $gitCloneCommand = $github->generateGitCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
                     $stdout = '';
                     $stderr = '';
                     Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -522,7 +528,6 @@ class BuildsV1 extends Worker
             $github->updateCommitStatus($repositoryName, $SHA, $owner, $state, $message, $targetUrl, $name);
         }
 
-        // TODO: Fix race condition
         if (!empty($commentId)) {
             $retries = 0;
 
@@ -543,12 +548,23 @@ class BuildsV1 extends Worker
                 \sleep(1);
             }
 
-            $comment = new Comment();
-            $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-            $comment->addBuild($project, $function, $status, $deployment->getId());
-            $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+            // Wrap in try/catch to ensure lock file gets deleted
+            $error = null;
+            try {
+                $comment = new Comment();
+                $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
+                $comment->addBuild($project, $function, $status, $deployment->getId());
+                $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
+            } catch (\Exception $e) {
+                $error = $e;
+            } finally {
 
-            $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
+                $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
+            }
+
+            if (!empty($error)) {
+                throw $error;
+            }
         }
     }
 

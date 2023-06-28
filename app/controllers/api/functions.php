@@ -1311,7 +1311,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
-        // TODO: Somehow set commit SHA for git deployments, and file path for manual. Redeploy should use exact same source code
+        // TODO: Somehow set commit SHA & ownerName & repoName for git deployments, and file path for manual. Redeploy should use exact same source code
 
         $installation = $dbForConsole->getDocument('vcsInstallations', $deployment->getAttribute('vcsInstallationId', ''));
 

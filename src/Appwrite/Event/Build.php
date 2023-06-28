@@ -13,6 +13,7 @@ class Build extends Event
     protected ?Document $template = null;
     protected string $SHA = '';
     protected string $targetUrl = '';
+    protected ?Document $vcsContribution = null;
 
     public function __construct()
     {
@@ -67,6 +68,19 @@ class Build extends Event
     public function setResource(Document $resource): self
     {
         $this->resource = $resource;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom owner and repository for VCS clone command during build
+     *
+     * @param Document $owner
+     * @return self
+     */
+    public function setVcsContribution(Document $vcsContribution): self
+    {
+        $this->vcsContribution = $vcsContribution;
 
         return $this;
     }
@@ -142,7 +156,8 @@ class Build extends Event
             'type' => $this->type,
             'template' => $this->template,
             'SHA' => $this->SHA,
-            'targetUrl' => $this->targetUrl
+            'targetUrl' => $this->targetUrl,
+            'vcsContribution' => $this->vcsContribution
         ]);
     }
 }

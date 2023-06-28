@@ -508,9 +508,9 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $pullRequest, $comment->generateComment()));
                 } elseif (!empty($branchName)) {
                     $gitPullRequest = $github->getBranchPullRequest($owner, $repositoryName, $branchName);
-                    $pullRequestId = \strval($gitPullRequest['number'] ?? '');
-                    if (!empty($pullRequestId)) {
-                        $latestCommentId = \strval($github->createComment($owner, $repositoryName, $pullRequestId, $comment->generateComment()));
+                    $pullRequest = \strval($gitPullRequest['number'] ?? '');
+                    if (!empty($pullRequest)) {
+                        $latestCommentId = \strval($github->createComment($owner, $repositoryName, $pullRequest, $comment->generateComment()));
                     }
                 }
 
@@ -596,10 +596,19 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
                 $github->updateCommitStatus($repositoryName, $SHA, $owner, 'pending', $message, $targetUrl, $name);
             }
 
+            $contribution = new Document([]);
+            if($external) {
+                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $pullRequest);
+
+                $contribution->setAttribute('ownerName', $pullRequestResponse['head']['repo']['owner']['login']);
+                $contribution->setAttribute('repositoryName', $pullRequestResponse['head']['repo']['name']);
+            }
+
             $buildEvent = new Build();
             $buildEvent
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
+                ->setVcsContribution($contribution)
                 ->setDeployment($deployment)
                 ->setTargetUrl($targetUrl)
                 ->setSHA($SHA)
@@ -642,7 +651,6 @@ App::post('/v1/vcs/github/incomingwebhook')
                 $repositoryId = $parsedPayload["repositoryId"];
                 $installationId = $parsedPayload["installationId"];
                 $SHA = $parsedPayload["SHA"];
-                $owner = $parsedPayload["owner"];
 
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
@@ -684,6 +692,11 @@ App::post('/v1/vcs/github/incomingwebhook')
                     $pullRequestNumber = $parsedPayload["pullRequestNumber"];
                     $SHA = $parsedPayload["SHA"];
                     $external = $parsedPayload["external"];
+
+                    // Ignore sync for non-external. We handle it in push webhook
+                    if(!$external && $parsedPayload["action"] == "synchronize") {
+                        return $response->json($parsedPayload);
+                    }
 
                     $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
