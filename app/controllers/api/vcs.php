@@ -597,7 +597,7 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
             }
 
             $contribution = new Document([]);
-            if($external) {
+            if ($external) {
                 $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $pullRequest);
 
                 $contribution->setAttribute('ownerName', $pullRequestResponse['head']['repo']['owner']['login']);
@@ -673,7 +673,7 @@ App::post('/v1/vcs/github/incomingwebhook')
 
                     foreach ($vcsInstallations as $installation) {
                         $vcsRepos = $dbForConsole->find('vcsRepos', [
-                            Query::equal('vcsInstallationId', [$installation->getId()]),
+                            Query::equal('vcsInstallationInternalId', [$installation->getInternalId()]),
                             Query::limit(1000)
                         ]);
 
@@ -694,7 +694,7 @@ App::post('/v1/vcs/github/incomingwebhook')
                     $external = $parsedPayload["external"];
 
                     // Ignore sync for non-external. We handle it in push webhook
-                    if(!$external && $parsedPayload["action"] == "synchronize") {
+                    if (!$external && $parsedPayload["action"] == "synchronize") {
                         return $response->json($parsedPayload);
                     }
 
@@ -785,15 +785,15 @@ App::get('/v1/vcs/installations')
         $total = $dbForConsole->count('vcsInstallations', $filterQueries, APP_LIMIT_COUNT);
 
         if (\count($results) > 0) {
-            $installationIds = \array_map(fn ($result) => $result->getId(), $results);
+            $installationIds = \array_map(fn ($result) => $result->getInternalId(), $results);
 
             $functions = Authorization::skip(fn () => $dbForProject->find('functions', [
-                Query::equal('vcsInstallationId', \array_unique($installationIds)),
+                Query::equal('vcsInstallationInternalId', \array_unique($installationIds)),
                 Query::limit(APP_LIMIT_SUBQUERY)
             ]));
 
             foreach ($results as $result) {
-                $installationFunctions = \array_filter($functions, fn ($function) => $function->getAttribute('vcsInstallationId') === $result->getId());
+                $installationFunctions = \array_filter($functions, fn ($function) => $function->getAttribute('vcsInstallationInternalId') === $result->getInternalId());
 
                 $result->setAttribute('functions', $installationFunctions);
             }
@@ -833,7 +833,7 @@ App::get('/v1/vcs/installations/:installationId')
         }
 
         $functions = Authorization::skip(fn () => $dbForProject->find('functions', [
-            Query::equal('vcsInstallationId', [$installation->getId()]),
+            Query::equal('vcsInstallationInternalId', [$installation->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY)
         ]));
 

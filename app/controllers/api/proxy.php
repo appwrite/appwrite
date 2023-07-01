@@ -99,7 +99,6 @@ App::post('/v1/proxy/rules')
             'resourceInternalId' => $resourceInternalId,
             'status' => $status,
             'certificateId' => '',
-            'search' => implode(' ', [$domain->get(), $ruleId, $resourceId, $resourceType]),
         ]));
 
         $events->setParam('ruleId', $rule->getId());

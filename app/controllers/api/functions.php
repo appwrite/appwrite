@@ -245,7 +245,6 @@ App::post('/v1/functions')
                     'resourceInternalId' => $function->getInternalId(),
                     'status' => 'verified',
                     'certificateId' => '',
-                    'search' => implode(' ', [$domain, $ruleId, $function->getId(), 'function']),
                 ]))
             );
 
@@ -684,7 +683,7 @@ App::put('/v1/functions/:functionId')
         // Git disconnect logic
         if ($isConnected && empty($vcsRepositoryId)) {
             $repoDocs = $dbForConsole->find('vcsRepos', [
-                Query::equal('projectId', [$project->getId()]),
+                Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceId', [$functionId]),
                 Query::equal('resourceType', ['function']),
                 Query::limit(100),
@@ -1336,7 +1335,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('body', '', new Text(8192), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
-    ->param('method', 'GET', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
+    ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
     ->param('headers', [], new Assoc(), 'HTP headers of execution. Defaults to empty.', true)
     ->inject('response')
     ->inject('project')
