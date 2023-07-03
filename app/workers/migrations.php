@@ -239,17 +239,15 @@ class MigrationsV1 extends Worker
 
             $migrationDocument->setAttribute('status', 'source-check');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
-            $source->report();
 
             $migrationDocument->setAttribute('status', 'destination-check');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
-            $destination->report();
 
             /** Start Transfer */
             $migrationDocument->setAttribute('status', 'migrating');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
-                $migrationDocument->setAttribute('resourceData', json_encode($transfer->getResourceCache()));
+                $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
                 $migrationDocument->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
 
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);

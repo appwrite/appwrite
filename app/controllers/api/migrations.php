@@ -12,6 +12,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Transfer\Sources\Appwrite;
+use Utopia\Transfer\Sources\Firebase;
+use Utopia\Transfer\Sources\NHost;
+use Utopia\Transfer\Sources\Supabase;
 use Utopia\Transfer\Transfer;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
@@ -189,7 +193,7 @@ App::post('/v1/migrations/appwrite')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
-    ->param('resources', [], new ArrayList(new WhiteList(Transfer::ALL_PUBLIC_RESOURCES)), 'List of resources to migration')
+    ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
     ->param('projectId', '', new UID(), "Source's Project ID")
     ->param('apiKey', '', new Text(512), "Source's API Key")
@@ -243,7 +247,7 @@ App::post('/v1/migrations/firebase')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
-    ->param('resources', [], new ArrayList(new WhiteList(Transfer::ALL_PUBLIC_RESOURCES)), 'List of resources to migration')
+    ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
     ->param('serviceAccount', '', new Text(512), "Source's Service Account")
     ->inject('response')
     ->inject('dbForProject')
@@ -293,7 +297,7 @@ App::post('/v1/migrations/supabase')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
-    ->param('resources', [], new ArrayList(new WhiteList(Transfer::ALL_PUBLIC_RESOURCES)), 'List of resources to migration')
+    ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), "Source's Supabase Endpoint")
     ->param('apiKey', '', new Text(512), "Source's API Key")
     ->param('databaseHost', '', new Text(512), "Source's Database Host")
@@ -353,7 +357,7 @@ App::post('/v1/migrations/nhost')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
-    ->param('resources', [], new ArrayList(new WhiteList(Transfer::ALL_PUBLIC_RESOURCES)), 'List of resources to migration')
+    ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
     ->param('subdomain', '', new URL(), "Source's Subdomain")
     ->param('region', '', new Text(512), "Source's Region")
     ->param('adminSecret', '', new Text(512), "Source's Admin Secret")
