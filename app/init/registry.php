@@ -253,7 +253,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '../assets/dbip/dbip-country-lite-2023-01.mmdb');
+    return new Reader(__DIR__ . '/../assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
 $register->set('promiseAdapter', function () {
     return new Swoole();
