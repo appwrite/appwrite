@@ -17,6 +17,7 @@ use Utopia\Validator\WhiteList;
 /**
  * New DB Filters
  */
+
 Database::addFilter(
     'casting',
     function (mixed $value) {

@@ -2,7 +2,6 @@
 
 use Utopia\Config\Config;
 
-
 /*
  * ENV vars
  */

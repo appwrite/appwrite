@@ -2,7 +2,6 @@
 
 use Utopia\Locale\Locale;
 
-
 /*
  * Localization
  */

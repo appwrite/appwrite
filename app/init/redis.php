@@ -1,4 +1,5 @@
 <?php
+
 use Utopia\App;
 
 $user = App::getEnv('_APP_REDIS_USER', '');

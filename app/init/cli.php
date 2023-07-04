@@ -1,4 +1,5 @@
 <?php
+
 use Appwrite\Event\Func;
 use Utopia\CLI\CLI;
 use Utopia\App;
