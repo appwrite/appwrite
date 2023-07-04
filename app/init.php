@@ -18,13 +18,13 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . 'init/constants.php';
-require_once __DIR__ . 'init/config.php';
-require_once __DIR__ . 'init/database.php';
-require_once __DIR__ . 'init/redis.php';
-require_once __DIR__ . 'init/registry.php';
-require_once __DIR__ . 'init/locales.php';
-require_once __DIR__ . 'init/app.php';
+require_once __DIR__ . '/init/constants.php';
+require_once __DIR__ . '/init/config.php';
+require_once __DIR__ . '/init/database.php';
+require_once __DIR__ . '/init/redis.php';
+require_once __DIR__ . '/init/registry.php';
+require_once __DIR__ . '/init/locales.php';
+require_once __DIR__ . '/init/app.php';
 
 use Utopia\App;
 
