@@ -14,9 +14,6 @@ use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-/**
- * New DB Filters
- */
 Database::addFilter(
     'casting',
     function (mixed $value) {
