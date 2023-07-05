@@ -1529,11 +1529,9 @@ App::patch('/v1/account/name')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('prepareUserSearch')
-    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events, callable $prepareUserSearch) {
+    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $user->setAttribute('name', $name);
-        $user->setAttribute('search', $prepareUserSearch($user));
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
@@ -1628,8 +1626,7 @@ App::patch('/v1/account/email')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('prepareUserSearch')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events, callable $prepareUserSearch) {
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -1646,7 +1643,6 @@ App::patch('/v1/account/email')
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
         ;
-        $user->setAttribute('search', $prepareUserSearch($user));
 
         if (empty($passwordUpdate)) {
             $user
@@ -1692,8 +1688,7 @@ App::patch('/v1/account/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->inject('prepareUserSearch')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events, callable $prepareUserSearch) {
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -1708,7 +1703,6 @@ App::patch('/v1/account/phone')
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
         ;
-        $user->setAttribute('search', $prepareUserSearch($user));
 
         if (empty($passwordUpdate)) {
             $user

@@ -87,25 +87,6 @@ $databaseListener = function (string $event, Document $document, Stats $usage) {
     }
 };
 
-App::setResource('prepareUserSearch', function () {
-    return function (Document $user): string {
-        $searchValues = [
-            $user->getId(),
-            $user->getAttribute('email', ''),
-            $user->getAttribute('name', ''),
-            $user->getAttribute('phone', '')
-        ];
-
-        foreach ($user->getAttribute('labels', []) as $label) {
-            $searchValues[] = 'label:' . $label;
-        }
-
-        $search = implode(' ', \array_filter($searchValues));
-
-        return $search;
-    };
-});
-
 App::init()
     ->groups(['api'])
     ->inject('utopia')
