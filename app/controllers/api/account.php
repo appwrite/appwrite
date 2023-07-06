@@ -40,6 +40,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Boolean;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 
@@ -278,10 +279,11 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('ssr', false, new Boolean(), 'Adds session data to success URL as query params', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $success, string $failure, array $scopes, boolean $ssr, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -317,7 +319,8 @@ App::get('/v1/account/sessions/oauth2/:provider')
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
-        $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
+        $state = ['success' => $success, 'failure' => $failure, 'ssr' => $ssr];
+        $oauth2 = new $className($appId, $appSecret, $callback, $state , $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -402,7 +405,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
-        $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
+        $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => '', 'ssr' => false];
         $validateURL = new URL();
         $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
         $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
@@ -605,7 +608,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
-        if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
+        if ($state['ssr'] || parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
             $state['success'] = URLParser::parse($state['success']);
             $query = URLParser::parseQuery($state['success']['query']);
             $query['project'] = $project->getId();
