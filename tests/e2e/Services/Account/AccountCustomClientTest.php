@@ -496,6 +496,18 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,            
+        ]), [
+            'url' => 'http://localhost'
+        ]);
+
+        
+        $this->assertEquals($response['headers']['status-code'], 201);
+
         return [];
     }
 
