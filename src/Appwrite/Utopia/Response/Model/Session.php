@@ -160,6 +160,12 @@ class Session extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('encodedSecret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Encoded secret used to sign the user in via cookie.',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
         ;
     }
 
