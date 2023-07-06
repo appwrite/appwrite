@@ -68,6 +68,13 @@ class MigrateNew extends Action
 
         $migration = new Migration($from, $to);
 
+        if(!$migration->confirm()) {
+            Console::error('Migration aborted ... Exiting ... ');
+            return;
+        }
+
+        Console::success("Starting Migration...");
+
         while (!empty($projects)) {
             foreach ($projects as $project) {
                 /**
@@ -79,6 +86,7 @@ class MigrateNew extends Action
 
                 try {
                     // TODO: Iterate through all project DBs
+                    Console::success("Migrating project {$project->getId()}");
                     $projectDB = $getProjectDB($project);
                     $migration->setProject($project, $projectDB, $dbForConsole);
                     $migration->execute();

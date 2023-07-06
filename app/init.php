@@ -70,6 +70,7 @@ use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Event\Func;
+use Appwrite\MigrationV2\Migration;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -77,6 +78,9 @@ use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
+
+$migration = new Migration('1.1.x', '1.2.x');
+$migration->createFilters();
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';

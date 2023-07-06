@@ -9,10 +9,12 @@ use Utopia\CLI\Console;
 use Exception;
 use Utopia\Database\Query;
 
+
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 // TODO: Create seed project for testing
 // TODO: database filters for managing attributes between migration
+/// TODO: If update attribute only contains change in required, no need to create temporary table
 
 class Migration
 {
@@ -41,8 +43,8 @@ class Migration
 
     public function __construct(string $from, string $to)
     {
-        $schema1 = $this->loadSchema(__DIR__ . "/../../app/config/collections/{$from}.php");
-        $schema2 = $this->loadSchema(__DIR__ . "/../../app/config/collections/{$to}.php");
+        $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$from}.php");
+        $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$to}.php");
 
         $this->differences = $this->compareSchemas($schema1, $schema2);
     }
@@ -134,6 +136,10 @@ class Migration
             }
         }
 
+        usort($differences, function ($a, $b) {
+            return $a['type'] < $b['type'] ? -1 : 1;
+        });
+
         return $differences;
     }
 
@@ -146,10 +152,9 @@ class Migration
         return $this;
     }
 
-    protected function confirm()
+    public function confirm(): bool
     {
-
-        if ($this->mode === self::MODE_BEFORE) {
+        if ($this->mode === self::MODE_AFTER) {
             $attributesRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
             if (count($attributesRemoved)) Console::success("The following attributes will be deleted");
             foreach ($attributesRemoved as $attribute) {
@@ -190,16 +195,11 @@ class Migration
         }
         return true;
     }
+
     public function execute()
     {
-        if (!$this->confirm()) {
-            return;
-        }
-
-        Console::success("Starting Migration...");
         try {
             foreach ($this->differences as $difference) {
-                Console::log("Performing {$difference['type']} for " . $difference['attribute'] ?? '' .  "in collection {$difference['collection']} ");
                 switch ($difference['type']) {
                     case self::TYPE_ATTRIBUTE_CREATED:
                         $this->createAttribute($difference['collection'], $difference['new']);
@@ -220,6 +220,21 @@ class Migration
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
+        }
+    }
+
+    public function createFilters()
+    {
+        $attributesUpdated = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
+        foreach ($attributesUpdated as $attribute) {
+            $oldAttribute = $attribute['old'];
+            $tempAttributeId = $oldAttribute['$id'] . '_temp';
+            $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
+            Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
+                return $document->getAttribute($oldAttribute['$id']);
+            }, function (mixed $value) {
+                return null;
+            });
         }
     }
 
@@ -245,6 +260,7 @@ class Migration
 
     protected function deleteCollection(array $collection): void
     {
+        Console::log("Deleting collection: " . $collection);
         try {
             if ($this->mode == self::MODE_AFTER) {
                 $this->projectDB->deleteCollection($collection['$id']);
@@ -265,6 +281,8 @@ class Migration
 
     protected function createAttribute(string $collection, array $attribute): void
     {
+        Console::log("Adding attribute: " . $attribute['$id'] . " in collection: " . $collection);
+
         try {
             if ($this->mode == self::MODE_BEFORE) {
                 $this->projectDB->createAttribute(
@@ -272,7 +290,7 @@ class Migration
                     $attribute['$id'],
                     $attribute['type'],
                     $attribute['size'],
-                    $attribute['required'],
+                    false, // Required attributes need to be marked false. After migration this will be updated if required
                     $attribute['default'],
                     $attribute['signed'],
                     $attribute['array'],
@@ -297,7 +315,7 @@ class Migration
 
     protected function updateAttribute(string $collection, array $oldAttribute, array $newAttribute): void
     {
-
+        Console::log("Updating attribute: " . $oldAttribute['$id'] . " in collection: " . $collection);
         // TODO consider case when name of the attribute is changed.
         try {
             if ($this->mode == self::MODE_BEFORE) {
@@ -308,7 +326,7 @@ class Migration
                     $tempAttributeId,
                     $newAttribute['type'],
                     $newAttribute['size'],
-                    $newAttribute['required'],
+                    false, // Required attributes need to be marked false. After migration this will be updated to true
                     $newAttribute['default'],
                     $newAttribute['signed'],
                     $newAttribute['array'],
@@ -317,11 +335,26 @@ class Migration
                     $newAttribute['filters'] ?? [],
                 );
 
+                /** Update existing documents */
                 foreach ($this->documentsIterator($collection) as $document) {
-                    $this->projectDB->updateDocument($collection, $document['$id'], array_merge($document, [
-                        $tempAttributeId => $document[$oldAttribute['$id']]
-                    ]));
+                    $document->setAttribute($tempAttributeId, $document->getAttribute($oldAttribute['$id']));
+                    $this->projectDB->updateDocument($collection, $document['$id'], $document);
                 }
+
+                /** Apply a filter for all future documents */
+                $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
+
+                // Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
+                //     return $document->getAttribute($oldAttribute['$id']);
+                // }, function (mixed $value) {
+                //     return null;
+                // });
+
+                $this->projectDB->updateAttributeFilters(
+                    $collection,
+                    $tempAttributeId,
+                    array_merge($newAttribute['filters'] ?? [], [$filter])
+                );
 
                 $this->executedActions[] = [
                     'type' => 'temp_attribute_added',
@@ -358,6 +391,8 @@ class Migration
 
     protected function deleteAttribute(string $collection, array $attribute): void
     {
+        Console::log("Deleting attribute: " . $attribute['$id'] . " in collection: " . $collection);
+
         try {
             if ($this->mode === self::MODE_AFTER) {
                 /** Perform  deletion of the column only after the application upgrade */
@@ -412,5 +447,3 @@ class Migration
         } while (!is_null($nextDocument));
     }
 }
-
-// CSV data for the projects usage
