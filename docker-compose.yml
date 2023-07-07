@@ -168,6 +168,7 @@ services:
       - _APP_REGION
       - _APP_CONSOLE_GITHUB_APP_ID
       - _APP_CONSOLE_GITHUB_SECRET
+      - _APP_CONSOLE_ROOT_SESSION
 
   appwrite-realtime:
     entrypoint: realtime
