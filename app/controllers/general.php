@@ -173,13 +173,19 @@ App::init()
             $endDomain->getRegisterable() !== ''
         );
 
-        Config::setParam('cookieDomain', (
-            $request->getHostname() === 'localhost' ||
+        if (($request->getHostname() === 'localhost' ||
             $request->getHostname() === 'localhost:' . $request->getPort() ||
             (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-        )
-            ? null
-            : '.' . $request->getHostname());
+        )) {
+            Config::setParam('cookieDomain', null);
+        } else {
+            Config::setParam(
+                'cookieDomain', 
+                App::getEnv('_APP_ROOT_COOKIE_DOMAIN', 'disabled') === 'enabled'
+                    ? '.' . $selfDomain->getRegisterable()
+                    : '.' . $request->getHostname()
+            );
+        }
 
         /*
         * Response format

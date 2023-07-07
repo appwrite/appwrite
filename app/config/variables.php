@@ -62,6 +62,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_ROOT_COOKIE_DOMAIN',
+                'description' => 'If enabled, your Appwrite session cookies will be set to your root domain. This is useful when you want to share your session cookies between multiple subdomains. The default value is \'disabled\'.',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
                 'description' => 'A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',
