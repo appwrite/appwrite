@@ -179,13 +179,6 @@ App::init()
         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
         $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
 
-        Console::info('_APP_CONSOLE_ROOT_SESSION: ' . App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled'));
-
-        Console::info('isLocalHost: ' . $isLocalHost);
-        Console::info('isIpAddress: ' . $isIpAddress);
-        Console::info('isConsoleProject: ' . $isConsoleProject);
-        Console::info('isConsoleRootSession: ' . $isConsoleRootSession);
-
         Config::setParam(
             'cookieDomain',
             $isLocalHost || $isIpAddress
@@ -195,8 +188,6 @@ App::init()
                     : '.' . $request->getHostname()
                 )
         );
-
-        Console::info('cookieDomain: ' . Config::getParam('cookieDomain'));
 
         /*
         * Response format
