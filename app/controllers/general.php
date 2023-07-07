@@ -173,19 +173,18 @@ App::init()
             $endDomain->getRegisterable() !== ''
         );
 
-        if (($request->getHostname() === 'localhost' ||
-            $request->getHostname() === 'localhost:' . $request->getPort() ||
-            (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-        )) {
-            Config::setParam('cookieDomain', null);
-        } else {
-            Config::setParam(
-                'cookieDomain', 
-                App::getEnv('_APP_ROOT_COOKIE_DOMAIN', 'disabled') === 'enabled'
-                    ? '.' . $selfDomain->getRegisterable()
-                    : '.' . $request->getHostname()
-            );
-        }
+        $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
+        $isValidIp = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
+
+        Config::setParam(
+            'cookieDomain',
+            $isLocalHost || $isValidIp
+                ? null
+                : 
+            (App::getEnv('_APP_ROOT_COOKIE_DOMAIN', 'disabled') === 'enabled'
+                ? '.' . $selfDomain->getRegisterable()
+                : '.' . $request->getHostname())
+        );
 
         /*
         * Response format
