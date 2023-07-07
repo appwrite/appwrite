@@ -62,8 +62,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_ROOT_COOKIE_DOMAIN',
-                'description' => 'If enabled, your Appwrite session cookies will be set to your root domain. This is useful when you want to share your session cookies between multiple subdomains. The default value is \'disabled\'.',
+                'name' => '_APP_CONSOLE_ROOT_SESSION',
+                'description' => 'Domain policy for the Appwrite console session cookie. By default, set to \'disabled\', meaning the session cookie will be set to the domain of the Appwrite console (e.g. cloud.appwrite.io). When set to \'enabled\', the session cookie will be set to the registerable domain of the Appwrite server (e.g. appwrite.io).',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
