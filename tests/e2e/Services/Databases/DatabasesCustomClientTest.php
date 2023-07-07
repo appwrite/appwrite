@@ -302,7 +302,7 @@ class DatabasesCustomClientTest extends Scope
             'onDelete' => 'restrict',
         ]);
 
-        //fetching attributes after updating relation to compare 
+        //fetching attributes after updating relation to compare
         $collection1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
