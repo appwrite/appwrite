@@ -70,10 +70,11 @@ App::post('/v1/account')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -102,7 +103,7 @@ App::post('/v1/account')
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
         try {
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
-            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+            $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -124,8 +125,10 @@ App::post('/v1/account')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
-            ])));
+                'search' => implode(' ', [$userId, $email, $name]),
+                'accessedAt' => DateTime::now(), // Add this here to make sure it's returned in the response
+            ]);
+            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -166,12 +169,13 @@ App::post('/v1/account/sessions/email')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -188,6 +192,8 @@ App::post('/v1/account/sessions/email')
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
         }
 
+        $user->setAttributes($profile->getArrayCopy());
+
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -197,8 +203,8 @@ App::post('/v1/account/sessions/email')
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
-                'userId' => $profile->getId(),
-                'userInternalId' => $profile->getInternalId(),
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => $email,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
@@ -211,35 +217,35 @@ App::post('/v1/account/sessions/email')
             $detector->getDevice()
         ));
 
-        Authorization::setRole(Role::user($profile->getId())->toString());
+        Authorization::setRole(Role::user($user->getId())->toString());
 
         // Re-hash if not using recommended algo
-        if ($profile->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
-            $profile
+        if ($user->getAttribute('hash') !== Auth::DEFAULT_ALGO) {
+            $user
                 ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
-            $dbForProject->updateDocument('users', $profile->getId(), $profile);
+            $dbForProject->updateDocument('users', $user->getId(), $user);
         }
 
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-            Permission::read(Role::user($profile->getId())),
-            Permission::update(Role::user($profile->getId())),
-            Permission::delete(Role::user($profile->getId())),
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
         ]));
 
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
             ;
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -252,7 +258,7 @@ App::post('/v1/account/sessions/email')
         ;
 
         $events
-            ->setParam('userId', $profile->getId())
+            ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
         ;
 
@@ -476,10 +482,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        $user = ($user->isEmpty()) ? $dbForProject->findOne('sessions', [ // Get user by provider id
-            Query::equal('provider', [$provider]),
-            Query::equal('providerUid', [$oauth2ID]),
-        ]) : $user;
+        if ($user->isEmpty()) {
+            $session = $dbForProject->findOne('sessions', [ // Get user by provider id
+                Query::equal('provider', [$provider]),
+                Query::equal('providerUid', [$oauth2ID]),
+            ]);
+            if ($session !== false && !$session->isEmpty()) {
+                $user->setAttributes($dbForProject->getDocument('users', $session->getAttribute('userId'))->getArrayCopy());
+            }
+        }
 
         if ($user === false || $user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
             $name = $oauth2->getUserName($accessToken);
@@ -490,9 +501,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
-            $user = $dbForProject->findOne('users', [
+            $userWithEmail = $dbForProject->findOne('users', [
                 Query::equal('email', [$email]),
             ]);
+            if ($userWithEmail !== false && !$userWithEmail->isEmpty()) {
+                $user->setAttributes($userWithEmail->getArrayCopy());
+            }
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user, generate random password
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
@@ -510,7 +524,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 try {
                     $userId = ID::unique();
                     $password = Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
-                    $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                    $user->setAttributes([
                         '$id' => $userId,
                         '$permissions' => [
                             Permission::read(Role::any()),
@@ -533,7 +547,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'tokens' => null,
                         'memberships' => null,
                         'search' => implode(' ', [$userId, $email, $name])
-                    ])));
+                    ]);
+                    Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                 } catch (Duplicate $th) {
                     throw new Exception(Exception::USER_ALREADY_EXISTS);
                 }
@@ -645,12 +660,13 @@ App::post('/v1/account/sessions/magic-url')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('events')
     ->inject('mails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -660,9 +676,10 @@ App::post('/v1/account/sessions/magic-url')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
-
-        if (!$user) {
+        $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
+        if ($result !== false && !$result->isEmpty()) {
+            $user->setAttributes($result->getArrayCopy());
+        } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
@@ -675,7 +692,7 @@ App::post('/v1/account/sessions/magic-url')
 
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
 
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
+            $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -696,7 +713,9 @@ App::post('/v1/account/sessions/magic-url')
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email])
-            ])));
+            ]);
+
+            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $loginSecret = Auth::tokenGenerator();
@@ -808,26 +827,29 @@ App::put('/v1/account/sessions/magic-url')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
 
         /** @var Utopia\Database\Document $user */
 
-        $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
-        if ($user->isEmpty()) {
+        if ($userFromRequest->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $token = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
+        $token = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
         if (!$token) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
+
+        $user->setAttributes($userFromRequest->getArrayCopy());
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -873,9 +895,9 @@ App::put('/v1/account/sessions/magic-url')
 
         $user->setAttribute('emailVerification', true);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-
-        if (false === $user) {
+        try {
+            $dbForProject->updateDocument('users', $user->getId(), $user);
+        } catch (\Throwable $th) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
         }
 
@@ -928,12 +950,13 @@ App::post('/v1/account/sessions/phone')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
     ->inject('messaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Locale $locale) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Locale $locale) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -943,9 +966,10 @@ App::post('/v1/account/sessions/phone')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
 
-        $user = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-
-        if (!$user) {
+        $result = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
+        if ($result !== false && !$result->isEmpty()) {
+            $user->setAttributes($result->getArrayCopy());
+        } else {
             $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
             if ($limit !== 0) {
@@ -957,8 +981,7 @@ App::post('/v1/account/sessions/phone')
             }
 
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
-
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
+            $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -979,7 +1002,9 @@ App::post('/v1/account/sessions/phone')
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $phone])
-            ])));
+            ]);
+
+            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $secret = Auth::codeGenerator();
@@ -1058,24 +1083,27 @@ App::put('/v1/account/sessions/phone')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
 
-        $user = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
-        if ($user->isEmpty()) {
+        if ($userFromRequest->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $token = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
+        $token = Auth::phoneTokenVerify($userFromRequest->getAttribute('tokens', []), $secret);
 
         if (!$token) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
+
+        $user->setAttributes($userFromRequest->getArrayCopy());
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
@@ -1119,7 +1147,7 @@ App::put('/v1/account/sessions/phone')
 
         $user->setAttribute('phoneVerification', true);
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
 
         if (false === $user) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
@@ -1204,7 +1232,7 @@ App::post('/v1/account/sessions/anonymous')
         }
 
         $userId = ID::unique();
-        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+        $user->setAttributes([
             '$id' => $userId,
             '$permissions' => [
                 Permission::read(Role::any()),
@@ -1225,8 +1253,9 @@ App::post('/v1/account/sessions/anonymous')
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
-            'search' => $userId
-        ])));
+            'search' => $userId,
+        ]);
+        Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -2068,12 +2097,13 @@ App::post('/v1/account/recovery')
     ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->inject('request')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
     ->inject('mails')
     ->inject('events')
-    ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Event $events) {
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Event $events) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -2092,6 +2122,8 @@ App::post('/v1/account/recovery')
         if (!$profile) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
+
+        $user->setAttributes($profile->getArrayCopy());
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED);
@@ -2207,9 +2239,10 @@ App::put('/v1/account/recovery')
     ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
     ->param('passwordAgain', '', new Password(), 'Repeat new user password. Must be at least 8 chars.')
     ->inject('response')
+    ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Event $events) {
         if ($password !== $passwordAgain) {
             throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
@@ -2235,6 +2268,8 @@ App::put('/v1/account/recovery')
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('emailVerification', true));
+
+        $user->setAttributes($profile->getArrayCopy());
 
         $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);
 
@@ -2417,6 +2452,8 @@ App::put('/v1/account/verification')
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
+        $user->setAttributes($profile->getArrayCopy());
+
         $verificationDocument = $dbForProject->getDocument('tokens', $verification);
 
         /**
@@ -2572,6 +2609,8 @@ App::put('/v1/account/verification/phone')
         Authorization::setRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
+
+        $user->setAttributes($profile->getArrayCopy());
 
         $verificationDocument = $dbForProject->getDocument('tokens', $verification);
 
