@@ -5,6 +5,8 @@ Once you have installed the package, it is extremely easy to get started with th
 
 ```csharp
 using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
 
 var client = new Client()
   .SetEndpoint("http://cloud.appwrite.io/v1")  // Make sure your endpoint is accessible
@@ -29,13 +31,16 @@ The Appwrite .NET SDK raises an `AppwriteException` object with `message`, `code
 ```csharp
 var users = new Users(client);
 
-try {
+try
+{
     var user = await users.Create(
         userId: ID.Unique(),
         email: "email@example.com",
         password: "password",
         name: "name");
-} catch (AppwriteException e) {
+} 
+catch (AppwriteException e)
+{
     Console.WriteLine(e.Message);
 }
 ```
@@ -45,4 +50,4 @@ You can use the following resources to learn more and get help
 - 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Dart Playground](https://github.com/appwrite/playground-for-dotnet)
+- 🚂 [Appwrite .NET Playground](https://github.com/appwrite/playground-for-dotnet)
