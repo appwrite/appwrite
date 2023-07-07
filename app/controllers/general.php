@@ -170,14 +170,21 @@ App::init()
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-                $endDomain->getRegisterable() !== ''
+            $endDomain->getRegisterable() !== ''
         );
 
         $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
         $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
-        
+
         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
         $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+        Console::info('_APP_CONSOLE_ROOT_SESSION: ' . App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled'));
+
+        Console::info('isLocalHost: ' . $isLocalHost);
+        Console::info('isIpAddress: ' . $isIpAddress);
+        Console::info('isConsoleProject: ' . $isConsoleProject);
+        Console::info('isConsoleRootSession: ' . $isConsoleRootSession);
 
         Config::setParam(
             'cookieDomain',
@@ -188,6 +195,8 @@ App::init()
                     : '.' . $request->getHostname()
                 )
         );
+
+        Console::info('cookieDomain: ' . Config::getParam('cookieDomain'));
 
         /*
         * Response format
@@ -244,7 +253,8 @@ App::init()
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
-            ->addHeader('Access-Control-Allow-Credentials', 'true');
+            ->addHeader('Access-Control-Allow-Credentials', 'true')
+        ;
 
         /*
         * Validate Client Domain - Check to avoid CSRF attack
@@ -317,7 +327,7 @@ App::init()
 
                 $expire = $key->getAttribute('expire');
                 if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new AppwriteException(AppwriteException::PROJECT_KEY_EXPIRED);
+                    throw new AppwriteException(AppwriteException:: PROJECT_KEY_EXPIRED);
                 }
 
                 Authorization::setRole(Auth::USER_ROLE_APPS);
@@ -541,7 +551,8 @@ App::error()
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->addHeader('Expires', '0')
             ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code);
+            ->setStatusCode($code)
+        ;
 
         $template = ($route) ? $route->getLabel('error', null) : null;
 
@@ -555,7 +566,8 @@ App::error()
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
-                ->setParam('trace', $trace);
+                ->setParam('trace', $trace)
+            ;
 
             $response->html($layout->render());
         }
