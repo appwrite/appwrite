@@ -180,7 +180,7 @@ App::init()
             'cookieDomain',
             $isLocalHost || $isValidIp
                 ? null
-                : 
+                :
             (App::getEnv('_APP_ROOT_COOKIE_DOMAIN', 'disabled') === 'enabled'
                 ? '.' . $selfDomain->getRegisterable()
                 : '.' . $request->getHostname())
