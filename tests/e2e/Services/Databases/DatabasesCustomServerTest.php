@@ -695,6 +695,37 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $document['headers']['status-code']);
         $this->assertEquals('Jonah', $document['body']['firstName']);
         $this->assertEquals('Jameson', $document['body']['lastName']);
+
+        /**
+         * Update Attribute
+         */
+        $updatedFirstname = $this->client->call(Client::METHOD_PATCH, $attributesPath . '/string/' . $firstName['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'required' => false,
+            'encrypt' => true,
+            'default' => ''
+        ]);
+
+        $this->assertEquals(200, $updatedFirstname['headers']['status-code']);
+        $this->assertEquals('firstName', $updatedFirstname['body']['key']);
+        $this->assertEquals('string', $updatedFirstname['body']['type']);
+
+        $updatedLastName = $this->client->call(Client::METHOD_PATCH, $attributesPath . '/string/' . $lastName['body']['key'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'required' => false,
+            'encrypt' => false,
+            'default' => ''
+        ]);
+
+        $this->assertEquals(200, $updatedLastName['headers']['status-code']);
+        $this->assertEquals('lastName', $updatedLastName['body']['key']);
+        $this->assertEquals('string', $updatedLastName['body']['type']);
     }
 
     public function testDeleteAttribute(): array
