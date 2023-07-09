@@ -30,8 +30,8 @@ class Workers extends Service
             ->addAction(Functions::getName(), new Functions())
             ->addAction(Builds::getName(), new Builds())
             ->addAction(Deletes::getName(), new Deletes())
-            ->addAction(Usage::getName(), new Usage())
             ->addAction(UsageHook::getName(), new UsageHook())
+            ->addAction(Usage::getName(), new Usage())
         ;
     }
 }

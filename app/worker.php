@@ -277,6 +277,7 @@ $worker
 // We need to add `getWorkerStartHook` in `utopia-php/queue` so that we can check if 
 // we have already added workerStart hook, if not we can add this default worker start hook here
 
+
 // $worker->workerStart()
 //         ->action(function () use ($workerName) {
 //             Console::info("Worker $workerName  started");

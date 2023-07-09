@@ -4,13 +4,14 @@ namespace Appwrite\Platform\Workers;
 
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
+use Swoole\Timer;
 
 class UsageHook extends Usage {
 
     public function __construct()
     {
         $this
-            ->setType(Action::TYPE_WORKER_INIT)
+            ->setType(Action::TYPE_WORKER_START)
             ->inject('register')
             ->inject('cache')
             ->inject('pools')
@@ -27,8 +28,9 @@ class UsageHook extends Usage {
 
     public function action($register, $cache, $pools): void
     {
+        Console::info('Usage worker, worker start loop');
         Timer::tick(30000, function () use ($register, $cache, $pools) {
-            Console::info('Usage worker, worker start loop');
+            Console::info('Inside usage worker start loop');
         });
     }
 }
