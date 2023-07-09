@@ -11,11 +11,11 @@ use Utopia\Queue\Message;
 
 class Usage extends Action
 {
-    private $stats = [];
-    private array $periods = [
-    '1h' => 'Y-m-d H:00',
-    '1d' => 'Y-m-d 00:00',
-    'inf' => '0000-00-00 00:00'
+    protected $stats = [];
+    protected array $periods = [
+        '1h' => 'Y-m-d H:00',
+        '1d' => 'Y-m-d 00:00',
+        'inf' => '0000-00-00 00:00'
     ];
 
 

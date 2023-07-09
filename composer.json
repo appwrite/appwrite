@@ -52,7 +52,7 @@
         "utopia-php/database": "0.30.*",
         "utopia-php/queue": "0.5.*",
         "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "dev-integrate-workers as 0.3.3",
+        "utopia-php/platform": "dev-integrate-workers-dl as 0.3.3",
         "utopia-php/pools": "0.4.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/domains": "1.1.*",
