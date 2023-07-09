@@ -22,7 +22,7 @@ class UsageHook extends Usage {
 
     public static function getName(): string
     {
-        return 'usage';
+        return 'usageHook';
     }
 
     public function action($register, $cache, $pools): void

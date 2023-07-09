@@ -1,3 +1,3 @@
 #!/bin/sh
 
-QUEUE=v1-usage php /usr/src/code/app/workers/usage.php $@
+php /usr/src/code/app/worker.php usage $@

@@ -1950,12 +1950,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "fa29008a786800821f35579c043e29072bcd614a"
+                "reference": "e770add70a6fcdd4757dd5b0e58470ff67aaf0e2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/fa29008a786800821f35579c043e29072bcd614a",
-                "reference": "fa29008a786800821f35579c043e29072bcd614a",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/e770add70a6fcdd4757dd5b0e58470ff67aaf0e2",
+                "reference": "e770add70a6fcdd4757dd5b0e58470ff67aaf0e2",
                 "shasum": ""
             },
             "require": {
@@ -1992,7 +1992,7 @@
                 "issues": "https://github.com/utopia-php/platform/issues",
                 "source": "https://github.com/utopia-php/platform/tree/integrate-workers-dl"
             },
-            "time": "2023-07-09T09:26:28+00:00"
+            "time": "2023-07-09T09:39:11+00:00"
         },
         {
             "name": "utopia-php/pools",

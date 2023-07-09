@@ -13,6 +13,7 @@ use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Platform\Workers\Usage;
+use Appwrite\Platform\Workers\UsageHook;
 
 class Workers extends Service
 {
@@ -29,7 +30,8 @@ class Workers extends Service
             ->addAction(Functions::getName(), new Functions())
             ->addAction(Builds::getName(), new Builds())
             ->addAction(Deletes::getName(), new Deletes())
-            //->addAction(Usage::getName(), new Usage())
+            ->addAction(Usage::getName(), new Usage())
+            ->addAction(UsageHook::getName(), new UsageHook())
         ;
     }
 }
