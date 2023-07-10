@@ -10,12 +10,12 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occured. Please submit a support ticket at []() with reproduction steps for further assistance.',
+        'description' => 'An unknown error has occured. Please submit a support ticket at [TODO: Where do people get help?]() with reproduction steps for further assistance.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
         'name' => Exception::GENERAL_MOCK,
-        'description' => 'General errors thrown by the mock controller used for testing. If you\'re seeing this on a production build if Appwrite, please raise an issue at ()[]',
+        'description' => 'General errors thrown by the mock controller used for testing. If you\'re not building Appwrite from source, please raise an issue at [TODO: Where do people get help?]()',
         'code' => 400,
     ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
@@ -25,12 +25,12 @@ return [
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
-        'description' => 'The request originated from an unknown origin. If you trust this domain, please add it as a trusted platform in the Appwrite console.',
+        'description' => 'The request originated from an unknown origin. If you trust this domain, please add it as a platform in the Overview page of your Appwrite Console.',
         'code' => 403,
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
-        'description' => 'The requested service is disabled. You can enable the service in the settings of your Appwrite project.',
+        'description' => 'The requested service is disabled. You can enable the service in the settings of your Appwrite project, under the Services section.',
         'code' => 503,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
@@ -55,16 +55,19 @@ return [
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
+        // TODO: This is used by the DB, can we make this more specific instead of a generic error or add some kind of templating into the message?
         'description' => 'The argument {argument} is invalid. Please refer to the endpoint documentation {docs}.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
+        // TODO: Would it be possible to indicate which attribute? It is really hard to debug when it just says "current attribute"
         'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [
         'name' => Exception::GENERAL_QUERY_INVALID,
+        // TODO: Can we provide more detailed feedback about which part of the query is invalid? 
         'description' => 'The query\'s syntax is invalid. Please check the query and try again.',
         'code' => 400,
     ],
@@ -75,17 +78,19 @@ return [
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
         'name' => Exception::GENERAL_CURSOR_NOT_FOUND,
-        'description' => 'The cursor is invalid. This can happen if the item represented by the cursor has been deleted.',
+        'description' => 'The cursor used in pagination is invalid. This can happen if the item represented by the cursor has been deleted. Retry this request using another item from the previous as the cursor.',
         'code' => 400,
     ],
     Exception::GENERAL_SERVER_ERROR => [
+        // TODO: This is used often. Can we take a look at the usage here and make sure it's not abused?
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'An internal server error occurred.',
         'code' => 500,
     ],
     Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
+        // 
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
-        'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
+        'description' => 'The request cannot be fulfilled with the current protocol. This could happen because you have enabled the force HTTPS option and are using HTTP. Please use HTTPS or check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
     Exception::GENERAL_USAGE_DISABLED => [
