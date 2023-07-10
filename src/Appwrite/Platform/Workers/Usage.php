@@ -11,16 +11,14 @@ use Utopia\Queue\Message;
 
 class Usage extends Action
 {
-    private $stats = [];
-    private array $periods = [
-    '1h' => 'Y-m-d H:00',
-    '1d' => 'Y-m-d 00:00',
-    'inf' => '0000-00-00 00:00'
+    protected static array $stats = [];
+    protected array $periods = [
+        '1h' => 'Y-m-d H:00',
+        '1d' => 'Y-m-d 00:00',
+        'inf' => '0000-00-00 00:00'
     ];
 
-
     const INFINITY_PERIOD = '_inf_';
-
 
     public static function getName(): string
     {
@@ -32,12 +30,13 @@ class Usage extends Action
      */
     public function __construct()
     {
+
         $this
             ->desc('Usage worker')
             ->inject('message')
             ->inject('pools')
             ->inject('cache')
-            ->callback(function ($message, $pools, $cache) use (&$stats) {
+            ->callback(function ($message, $pools, $cache) {
                  $this->action($message, $pools, $cache);
             });
     }
@@ -71,13 +70,13 @@ class Usage extends Action
             );
         }
 
-        $stats[$projectId]['database'] = $project->getAttribute('database');
+        self::$stats[$projectId]['database'] = $project->getAttribute('database');
         foreach ($payload['metrics'] ?? [] as $metric) {
-            if (!isset($stats[$projectId]['keys'][$metric['key']])) {
-                $stats[$projectId]['keys'][$metric['key']] = $metric['value'];
+            if (!isset(self::$stats[$projectId]['keys'][$metric['key']])) {
+                self::$stats[$projectId]['keys'][$metric['key']] = $metric['value'];
                 continue;
             }
-            $stats[$projectId]['keys'][$metric['key']] += $metric['value'];
+            self::$stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
     }
 
