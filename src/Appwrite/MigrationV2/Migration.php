@@ -7,6 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\CLI\Console;
 use Exception;
+use Utopia\Database\ID;
 use Utopia\Database\Query;
 
 
@@ -166,9 +167,7 @@ class Migration
             foreach ($collectionsRemoved as $collection) {
                 Console::log("  {$collection['collection']}");
             }
-        }
-
-        if ($this->mode == self::MODE_BEFORE) {
+        } else if ($this->mode == self::MODE_BEFORE) {
             $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
             if (count($attributesAdded)) Console::success("The following attributes will be added");
             foreach ($attributesAdded as $attribute) {
@@ -229,7 +228,10 @@ class Migration
         foreach ($attributesUpdated as $attribute) {
             $oldAttribute = $attribute['old'];
             $tempAttributeId = $oldAttribute['$id'] . '_temp';
+
             $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
+            var_dump("Creating filter $filter");
+
             Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
                 return $document->getAttribute($oldAttribute['$id']);
             }, function (mixed $value) {
@@ -240,22 +242,48 @@ class Migration
 
     protected function createCollection(array $collection): void
     {
-        // try {
-        //     if ($this->mode == self::MODE_BEFORE) {
-        //         $this->projectDB->createCollection($collection);
+        try {
+            if ($this->mode == self::MODE_BEFORE) {
+                $id = $collection['$id'];
 
-        //         $this->executedActions[] = [
-        //             'type' => 'collection_added',
-        //             'collection' => $collection
-        //         ];
+                foreach ($collection['attributes'] as $attribute) {
+                    $attributes[] = new Document([
+                        '$id' => ID::custom($attribute['$id']),
+                        'type' => $attribute['type'],
+                        'size' => $attribute['size'],
+                        'required' => $attribute['required'],
+                        'signed' => $attribute['signed'],
+                        'array' => $attribute['array'],
+                        'filters' => $attribute['filters'],
+                        'default' => $attribute['default'] ?? null,
+                        'format' => $attribute['format'] ?? ''
+                    ]);
+                }
 
-        //         Console::success("Added collection: " . $collection);
-        //     } else {
-        //         Console::warning("Skipping addition of collection: '{$collection}' in migrate mode: '{$this->mode}'");
-        //     }
-        // } catch (Exception $e) {
-        //     Console::error($e->getMessage());
-        // }
+                foreach ($collection['indexes'] as $index) {
+                    $indexes[] = new Document([
+                        '$id' => ID::custom($index['$id']),
+                        'type' => $index['type'],
+                        'attributes' => $index['attributes'],
+                        'lengths' => $index['lengths'],
+                        'orders' => $index['orders'],
+                    ]);
+                }
+
+                $this->projectDB->createCollection($id, $attributes, $indexes);
+
+                $this->executedActions[] = [
+                    'type' => 'collection_added',
+                    'collection' => $collection
+                ];
+
+                Console::success("Added collection: " . $id);
+            } else {
+                Console::warning("Skipping addition of collection: '{$collection}' in migrate mode: '{$this->mode}'");
+            }
+        } catch (Exception $e) {
+            Console::error($e->getMessage());
+        }
     }
 
     protected function deleteCollection(array $collection): void
@@ -290,7 +318,7 @@ class Migration
                     $attribute['$id'],
                     $attribute['type'],
                     $attribute['size'],
-                    false, // Required attributes need to be marked false. After migration this will be updated if required
+                    false, // Required attributes need to be marked false since the old application is unaware of them. After application upgrade this will be updated if required
                     $attribute['default'],
                     $attribute['signed'],
                     $attribute['array'],
@@ -307,6 +335,15 @@ class Migration
                 Console::success("Added attribute: " . $attribute['$id']);
             } else {
                 Console::warning("Skipping addition of attribute: '{$attribute['$id']}' in migrate mode: '{$this->mode}'");
+
+                // Update the required property of the attribute to true if it was originally supposed to be required
+                if ($attribute['required']) {
+                    $this->projectDB->updateAttributeRequired(
+                        $collection,
+                        $attribute['$id'],
+                        true
+                    );
+                }
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
@@ -343,12 +380,6 @@ class Migration
 
                 /** Apply a filter for all future documents */
                 $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
-
-                // Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
-                //     return $document->getAttribute($oldAttribute['$id']);
-                // }, function (mixed $value) {
-                //     return null;
-                // });
 
                 $this->projectDB->updateAttributeFilters(
                     $collection,

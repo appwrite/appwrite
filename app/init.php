@@ -79,9 +79,6 @@ use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 
-$migration = new Migration('1.1.x', '1.2.x');
-$migration->createFilters();
-
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
@@ -220,6 +217,12 @@ if (!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
 }
+
+
+/** Migration DB filters */
+$migration = new Migration('1.1.x', '1.2.x');
+$migration->createFilters();
+
 
 /**
  * New DB Filters
@@ -505,6 +508,7 @@ $register->set('logger', function () {
     $adapter = new $classname($providerConfig);
     return new Logger($adapter);
 });
+
 $register->set('pools', function () {
     $group = new Group();
 

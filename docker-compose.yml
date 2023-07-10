@@ -85,6 +85,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
 
     depends_on:
       - mariadb
@@ -844,14 +845,14 @@ services:
   #   #   - /nfs/config:/data/src 
   #   #   - /storage/config:/data/dest
 
-  # redis-commander:
-  #   image: rediscommander/redis-commander:latest
-  #   networks:
-  #   - appwrite
-  #   environment:
-  #   - REDIS_HOSTS=redis
-  #   ports:
-  #   - "8081:8081"
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    networks:
+    - appwrite
+    environment:
+    - REDIS_HOSTS=redis
+    ports:
+    - "8081:8081"
 
   # resque:
   #   image: appwrite/resque-web:1.1.0
