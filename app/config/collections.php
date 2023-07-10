@@ -3653,7 +3653,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('errorData'),
+                '$id' => ID::custom('reason'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 65535,
@@ -3661,7 +3661,7 @@ $collections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('search'),

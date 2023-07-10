@@ -66,7 +66,6 @@ class MigrationsV1 extends Worker
 
         $this->dbForProject = $this->getProjectDB($this->args['project']['$id']);
 
-        // Process
         $this->processMigration();
     }
 
@@ -221,7 +220,7 @@ class MigrationsV1 extends Worker
 
         try {
             $migrationDocument = $this->dbForProject->getDocument('migrations', $this->args['migration']['$id']);
-            $migrationDocument->setAttribute('status', 'processing');
+            $migrationDocument->setAttribute('stage', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
             $source = $this->processSource(json_decode($migrationDocument->getAttribute('source'), true));
@@ -237,14 +236,14 @@ class MigrationsV1 extends Worker
                 $destination
             );
 
-            $migrationDocument->setAttribute('status', 'source-check');
+            $migrationDocument->setAttribute('stage', 'source-check');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
-            $migrationDocument->setAttribute('status', 'destination-check');
+            $migrationDocument->setAttribute('stage', 'destination-check');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
             /** Start Transfer */
-            $migrationDocument->setAttribute('status', 'migrating');
+            $migrationDocument->setAttribute('stage', 'migrating');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
             $transfer->run($migrationDocument->getAttribute('resources'), function () use ($migrationDocument, $transfer, $projectDocument) {
                 $migrationDocument->setAttribute('resourceData', json_encode($transfer->getCache()));
@@ -257,7 +256,8 @@ class MigrationsV1 extends Worker
 
             if (count($errors) > 0) {
                 $migrationDocument->setAttribute('status', 'failed');
-                $migrationDocument->setAttribute('errorData', $errors);
+                $migrationDocument->setAttribute('stage', 'finished');
+                $migrationDocument->setAttribute('reason', $errors[0]['message']);
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
                 return;
             }
@@ -271,7 +271,8 @@ class MigrationsV1 extends Worker
                 Console::error($th->getMessage());
                 Console::error($th->getTraceAsString());
                 $migrationDocument->setAttribute('status', 'failed');
-                $migrationDocument->setAttribute('errorData', $th->getMessage());
+                $migrationDocument->setAttribute('stage', 'finished');
+                $migrationDocument->setAttribute('reason', $th->getMessage());
                 return;
             }
         } finally {

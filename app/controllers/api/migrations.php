@@ -188,7 +188,7 @@ App::post('/v1/migrations/appwrite')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'migrationAppwrite')
+    ->label('sdk.method', 'migrateAppwrite')
     ->label('sdk.description', '/docs/references/migrations/migration-appwrite.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -216,7 +216,7 @@ App::post('/v1/migrations/appwrite')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'errorData' => ""
+            'reason' => ''
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -234,6 +234,35 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+App::post('/v1/migrations/appwrite/report')
+    ->groups(['api', 'migrations'])
+    ->desc('Generate a report on Appwrite Data')
+    ->label('scope', 'migrations.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'generateAppwriteReport')
+    ->label('sdk.description', '/docs/references/migrations/migration-appwrite-report.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
+    ->param('endpoint', '', new URL(), "Source's Appwrite Endpoint")
+    ->param('projectID', '', new Text(512), "Source's Project ID")
+    ->param('key', '', new Text(512), "Source's API Key")
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
+
+        $appwrite = new Appwrite($projectID, $endpoint, $key);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document($appwrite->report($resources)), Response::MODEL_MIGRATION_REPORT);
+    });
+
+
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data')
@@ -242,7 +271,7 @@ App::post('/v1/migrations/firebase')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'migrationFirebase')
+    ->label('sdk.method', 'migrateFirebase')
     ->label('sdk.description', '/docs/references/migrations/migration-firebase.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -266,7 +295,7 @@ App::post('/v1/migrations/firebase')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'errorData' => ""
+            'reason' => ''
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -284,6 +313,36 @@ App::post('/v1/migrations/firebase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+App::post('/v1/migrations/firebase/report')
+    ->groups(['api', 'migrations'])
+    ->desc('Generate a report on Firebase Data')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.report')
+    ->label('audits.event', 'migration.report')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'generateFirebaseReport')
+    ->label('sdk.description', '/docs/references/migrations/migration-firebase-report.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
+    ->param('serviceAccount', '', new Text(512), "Source's Service Account")
+    ->param('databaseURL', '', new URL(), "Source's Database URL")
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('events')
+    ->action(function (array $resources, string $serviceAccount, string $databaseURL, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        $firebase = new Firebase(json_decode($serviceAccount, true), $databaseURL);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document($firebase->report($resources)), Response::MODEL_MIGRATION_REPORT);
+    });
+
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Supabase Data')
@@ -292,7 +351,7 @@ App::post('/v1/migrations/supabase')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'migrationSupabase')
+    ->label('sdk.method', 'migrateSupabase')
     ->label('sdk.description', '/docs/references/migrations/migration-supabase.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -326,7 +385,7 @@ App::post('/v1/migrations/supabase')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'errorData' => ""
+            'reason' => ''
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -344,6 +403,40 @@ App::post('/v1/migrations/supabase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+App::post('/v1/migrations/supabase/report')
+    ->groups(['api', 'migrations'])
+    ->desc('Generate a report on Supabase Data')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.report')
+    ->label('audits.event', 'migration.report')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'generateSupabaseReport')
+    ->label('sdk.description', '/docs/references/migrations/migration-supabase-report.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
+    ->param('endpoint', '', new URL(), "Source's Supabase Endpoint")
+    ->param('apiKey', '', new Text(512), "Source's API Key")
+    ->param('databaseHost', '', new Text(512), "Source's Database Host")
+    ->param('username', '', new Text(512), "Source's Database Username")
+    ->param('password', '', new Text(512), "Source's Database Password")
+    ->param('port', 5432, new Integer(), "Source's Database Port", true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('events')
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        $supabase = new Supabase($endpoint, $apiKey, $databaseHost, $username, $password, $port);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
+    });
+
 App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
     ->desc('Migrate NHost Data')
@@ -352,7 +445,7 @@ App::post('/v1/migrations/nhost')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'migrationNhost')
+    ->label('sdk.method', 'migrateNHost')
     ->label('sdk.description', '/docs/references/migrations/migration-nhost.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -388,7 +481,7 @@ App::post('/v1/migrations/nhost')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'errorData' => ""
+            'reason' => ''
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -404,4 +497,39 @@ App::post('/v1/migrations/nhost')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/nhost/report')
+    ->groups(['api', 'migrations'])
+    ->desc('Generate a report on NHost Data')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.report')
+    ->label('audits.event', 'migration.report')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'generateNHostReport')
+    ->label('sdk.description', '/docs/references/migrations/migration-nhost-report.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
+    ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
+    ->param('subdomain', '', new URL(), "Source's Subdomain")
+    ->param('region', '', new Text(512), "Source's Region")
+    ->param('adminSecret', '', new Text(512), "Source's Admin Secret")
+    ->param('database', '', new Text(512), "Source's Database Name")
+    ->param('username', '', new Text(512), "Source's Database Username")
+    ->param('password', '', new Text(512), "Source's Database Password")
+    ->param('port', 5432, new Integer(), "Source's Database Port", true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('events')
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
     });

@@ -11,7 +11,7 @@ class Migrations extends Base
         'resources',
         'statusCounters',
         'resourceData',
-        'errorData'
+        'reason'
     ];
 
     /**

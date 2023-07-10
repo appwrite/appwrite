@@ -85,8 +85,8 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
-use Appwrite\Utopia\Response\Model\ImportValidationError;
 use Appwrite\Utopia\Response\Model\Migration;
+use Appwrite\Utopia\Response\Model\MigrationReport;
 
 /**
  * @method int getStatusCode()
@@ -224,7 +224,7 @@ class Response extends SwooleResponse
     // Migrations
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
-    public const MODEL_IMPORT_VALIDATION_ERROR = 'importValidationError';
+    public const MODEL_MIGRATION_REPORT = 'migrationReport';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -358,7 +358,7 @@ class Response extends SwooleResponse
             ->setModel(new UsageProject())
             ->setModel(new ConsoleVariables())
             ->setModel(new Migration())
-            ->setModel(new ImportValidationError())
+            ->setModel(new MigrationReport())
             // Verification
             // Recovery
             // Tests (keep last)
