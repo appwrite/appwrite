@@ -241,7 +241,7 @@ class DatabasesCustomClientTest extends Scope
         $databaseId = $database['body']['$id'];
 
 
-        //creating collection 1
+        // Creating collection 1
         $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -258,7 +258,7 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        //creating collection 2
+        // Creating collection 2
         $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -277,7 +277,7 @@ class DatabasesCustomClientTest extends Scope
 
         \sleep(2);
 
-        //creating two way relationship between collection 1 and collection 2 from collection 1
+        // Creating two way relationship between collection 1 and collection 2 from collection 1
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -293,7 +293,7 @@ class DatabasesCustomClientTest extends Scope
 
         \sleep(3);
 
-        //update relation from collection 2 to on delete restrict
+        // Update relation from collection 2 to on delete restrict
         $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/attributes/' . $collection1['body']['$id'] . '/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -302,7 +302,7 @@ class DatabasesCustomClientTest extends Scope
             'onDelete' => 'restrict',
         ]);
 
-        //fetching attributes after updating relation to compare
+        // Fetching attributes after updating relation to compare
         $collection1Attributes =  $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
