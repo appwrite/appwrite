@@ -327,22 +327,22 @@ function updateAttribute(
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $options = \array_merge($attribute->getAttribute('options', []), $options);
-        $attribute->setAttribute('options', $options);
+        $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
+        $attribute->setAttribute('options', $primaryDocumentOptions);
 
         $dbForProject->updateRelationship(
             collection: $collectionId,
             id: $key,
-            onDelete: $options['onDelete'],
+            onDelete: $primaryDocumentOptions['onDelete'],
         );
 
-        if ($options['twoWay']) {
-            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
-            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+        if ($primaryDocumentOptions['twoWay']) {
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
+
+            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
             $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
             $relatedAttribute->setAttribute('options', $relatedOptions);
-
-            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey'], $relatedAttribute);
+            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
             $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
