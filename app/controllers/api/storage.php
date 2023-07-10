@@ -515,6 +515,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+            $fileHash = $deviceFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
             // Compression
             $algorithm = $bucket->getAttribute('compression', COMPRESSION_TYPE_NONE);
@@ -548,7 +549,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $sizeActual = $deviceFiles->getFileSize($path);
-            $fileHash = $deviceFiles->getFileHash($path);
 
             $openSSLVersion = null;
             $openSSLCipher = null;
