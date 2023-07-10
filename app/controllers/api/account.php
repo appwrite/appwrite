@@ -231,24 +231,22 @@ App::post('/v1/account/sessions/email')
             Permission::delete(Role::user($profile->getId())),
         ]));
 
-        $encodedSecret = Auth::encodeSession($profile->getId(), $secret);
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => $encodedSecret]))
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
             ;
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
-            ->setAttribute('encodedSecret', $encodedSecret)
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire);
@@ -882,24 +880,21 @@ App::put('/v1/account/sessions/magic-url')
             ->setParam('sessionId', $session->getId())
         ;
 
-        $encodedSecret = Auth::encodeSession($user->getId(), $secret);
-
         if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => $encodedSecret]));
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
-            ->setAttribute('encodedSecret', $encodedSecret)
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
@@ -1120,24 +1115,21 @@ App::put('/v1/account/sessions/phone')
             ->setParam('sessionId', $session->getId())
         ;
 
-        $encodedSecret = Auth::encodeSession($user->getId(), $secret);
-
         if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => $encodedSecret]));
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
-            ->setAttribute('encodedSecret', $encodedSecret)
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
@@ -1259,22 +1251,19 @@ App::post('/v1/account/sessions/anonymous')
             ->setParam('sessionId', $session->getId())
         ;
 
-        $encodedSecret = Auth::encodeSession($user->getId(), $secret);
-
         if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => $encodedSecret]));
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, $encodedSecret, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
-            ->setAttribute('encodedSecret', $encodedSecret)
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
