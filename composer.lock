@@ -3031,16 +3031,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.33.6",
+            "version": "0.33.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "237fe97b68090a244382c36f96482c352880a38c"
+                "reference": "4e9dc898f8b52b1057abe1295c2ae44ca0501633"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/237fe97b68090a244382c36f96482c352880a38c",
-                "reference": "237fe97b68090a244382c36f96482c352880a38c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/4e9dc898f8b52b1057abe1295c2ae44ca0501633",
+                "reference": "4e9dc898f8b52b1057abe1295c2ae44ca0501633",
                 "shasum": ""
             },
             "require": {
@@ -3076,9 +3076,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.5"
             },
-            "time": "2023-07-10T16:27:53+00:00"
+            "time": "2023-07-06T20:26:40+00:00"
         },
         {
             "name": "doctrine/deprecations",
