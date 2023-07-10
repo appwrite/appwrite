@@ -33,7 +33,7 @@ class Audits extends Action
     /**
      * @throws Exception
      */
-    public function action(Message $message, $dbForProject): void
+    public function action(Message $message, Database $dbForProject): void
     {
 
         $payload = $message->getPayload() ?? [];
