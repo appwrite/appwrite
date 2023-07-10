@@ -85,10 +85,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         Console::success('[Setup] - Server database init started...');
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-
         try {
+            $cache = $app->getResource('cache'); /** @var Utopia\Cache\Cache $cache */
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
         } catch (\Exception $e) {
@@ -105,7 +103,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $adapter->setup();
         }
 
-        foreach ($collections as $key => $collection) {
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
+        $consoleCollections = $collections['console'];
+        foreach ($consoleCollections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
@@ -177,7 +178,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $bucket = $dbForConsole->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
-            $files = $collections['files'] ?? [];
+            $files = $collections['buckets']['files'] ?? [];
             if (empty($files)) {
                 throw new Exception('Files collection is not configured.');
             }

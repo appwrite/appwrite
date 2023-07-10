@@ -425,6 +425,7 @@ App::error()
                 $log->setType(Log::TYPE_ERROR);
                 $log->setMessage($error->getMessage());
 
+                $log->addTag('database', $project->getAttribute('database', 'console'));
                 $log->addTag('method', $route->getMethod());
                 $log->addTag('url', $route->getPath());
                 $log->addTag('verboseType', get_class($error));
@@ -437,7 +438,7 @@ App::error()
                 $log->addExtra('line', $error->getLine());
                 $log->addExtra('trace', $error->getTraceAsString());
                 $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::$roles);
+                $log->addExtra('roles', Authorization::getRoles());
 
                 $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
                 $log->setAction($action);
@@ -580,7 +581,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)

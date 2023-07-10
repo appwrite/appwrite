@@ -112,7 +112,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
+        'description' => 'The current user has been blocked.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -484,6 +484,11 @@ return [
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
+    Exception::PROJECT_ALREADY_EXISTS => [
+        'name' => Exception::PROJECT_ALREADY_EXISTS,
+        'description' => 'Project with the requested ID already exists.',
+        'code' => 409,
+    ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
         'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
@@ -541,8 +546,13 @@ return [
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
+        'description' => 'The requested domain is currently in use by a project.',
         'code' => 409,
+    ],
+    Exception::DOMAIN_FORBIDDEN => [
+        'name' => Exception::DOMAIN_FORBIDDEN,
+        'description' => 'The requested domain cannot be used as a custom domain.',
+        'code' => 403,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
