@@ -34,6 +34,12 @@ class Database extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Database enabled.',
+                'default' => true,
+                'example' => false,
+            ])
         ;
     }
 

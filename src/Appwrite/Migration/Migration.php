@@ -37,6 +37,9 @@ abstract class Migration
      */
     protected Database $consoleDB;
 
+    /**
+     * @var \PDO
+     */
     protected \PDO $pdo;
 
     /**
@@ -54,6 +57,12 @@ abstract class Migration
         '1.2.1' => 'V17',
         '1.3.0' => 'V18',
         '1.3.1' => 'V18',
+        '1.3.2' => 'V18',
+        '1.3.3' => 'V18',
+        '1.3.4' => 'V18',
+        '1.3.5' => 'V18',
+        '1.3.6' => 'V18',
+        '1.3.7' => 'V18',
         '1.4.0' => 'V19',
     ];
 
@@ -103,6 +112,12 @@ abstract class Migration
         return $this;
     }
 
+    /**
+     * Set PDO for Migration.
+     *
+     * @param \PDO $pdo
+     * @return \Appwrite\Migration\Migration
+     */
     public function setPDO(\PDO $pdo): self
     {
         $this->pdo = $pdo;

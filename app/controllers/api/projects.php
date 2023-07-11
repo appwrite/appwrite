@@ -29,6 +29,7 @@ use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -91,38 +92,43 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'name' => $name,
-            'teamInternalId' => $team->getInternalId(),
-            'teamId' => $team->getId(),
-            'region' => $region,
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'version' => APP_VERSION_STABLE,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => ID::custom($legalTaxId),
-            'services' => new stdClass(),
-            'platforms' => null,
-            'authProviders' => [],
-            'webhooks' => null,
-            'keys' => null,
-            'domains' => null,
-            'auths' => $auths,
-            'search' => implode(' ', [$projectId, $name]),
-        ]));
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId,
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'name' => $name,
+                'teamInternalId' => $team->getInternalId(),
+                'teamId' => $team->getId(),
+                'region' => $region,
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => ID::custom($legalTaxId),
+                'services' => new stdClass(),
+                'platforms' => null,
+                'authProviders' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'domains' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
+
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
@@ -197,7 +203,7 @@ App::get('/v1/projects')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -245,7 +251,7 @@ App::get('/v1/projects/:projectId')
 
 App::get('/v1/projects/:projectId/usage')
     ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects'])
+    ->groups(['api', 'projects', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -404,6 +410,46 @@ App::patch('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/team')
+    ->desc('Update Project Team')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateTeam')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $teamId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+        $team = $dbForConsole->getDocument('teams', $teamId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
+                ->setAttribute('teamId', $teamId)
+                ->setAttribute('$permissions', [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ]));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
@@ -429,6 +475,40 @@ App::patch('/v1/projects/:projectId/service')
 
         $services = $project->getAttribute('services', []);
         $services[$service] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/service/all')
+    ->desc('Update all service status')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateServiceStatusAll')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('status', null, new Boolean(), 'Service status.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $status, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
+
+        $services = [];
+        foreach ($allServices as $service) {
+            $services[$service] = $status;
+        }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
@@ -851,7 +931,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -893,7 +973,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -939,7 +1019,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -977,7 +1057,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1099,7 +1179,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1136,7 +1216,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1179,7 +1259,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1268,7 +1348,7 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            Query::equal('projectId', [$project->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);
 
@@ -1301,7 +1381,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1338,7 +1418,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1382,7 +1462,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1519,7 +1599,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
+            Query::equal('$id', [$domainId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1553,7 +1633,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
+            Query::equal('$id', [$domainId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1613,7 +1693,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         }
 
         $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
+            Query::equal('$id', [$domainId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 

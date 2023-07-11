@@ -28,6 +28,12 @@ class Index extends Model
                 'default' => '',
                 'example' => 'available',
             ])
+            ->addRule('error', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Error message. Displays error generated on failure of creating or deleting an index.',
+                'default' => '',
+                'example' => 'string',
+            ])
             ->addRule('attributes', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Index attributes.',

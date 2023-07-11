@@ -16,9 +16,9 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\Queries;
-use Appwrite\Utopia\Database\Validator\Query\Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -188,7 +188,7 @@ App::post('/v1/account/sessions/email')
             Query::equal('email', [$email]),
         ]);
 
-        if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
+        if (!$profile || empty($profile->getAttribute('passwordUpdate')) || !Auth::passwordVerify($password, $profile->getAttribute('password'), $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'))) {
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
@@ -1419,7 +1419,7 @@ App::get('/v1/account/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
@@ -1644,10 +1644,11 @@ App::patch('/v1/account/email')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
-        $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
+        // passwordUpdate will be empty if the user has never set a password
+        $passwordUpdate = $user->getAttribute('passwordUpdate');
 
         if (
-            !$isAnonymousUser &&
+            !empty($passwordUpdate) &&
             !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -1656,16 +1657,21 @@ App::patch('/v1/account/email')
         $email = \strtolower($email);
 
         $user
-            ->setAttribute('password', $isAnonymousUser ? Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS) : $user->getAttribute('password', ''))
-            ->setAttribute('hash', $isAnonymousUser ? Auth::DEFAULT_ALGO : $user->getAttribute('hash', ''))
-            ->setAttribute('hashOptions', $isAnonymousUser ? Auth::DEFAULT_ALGO_OPTIONS : $user->getAttribute('hashOptions', ''))
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $email, $user->getAttribute('phone', '')]));
 
+        if (empty($passwordUpdate)) {
+            $user
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('passwordUpdate', DateTime::now());
+        }
+
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
-        } catch (Duplicate $th) {
+        } catch (Duplicate) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
@@ -1700,11 +1706,11 @@ App::patch('/v1/account/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
-
-        $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
+        // passwordUpdate will be empty if the user has never set a password
+        $passwordUpdate = $user->getAttribute('passwordUpdate');
 
         if (
-            !$isAnonymousUser &&
+            !empty($passwordUpdate) &&
             !Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
@@ -1714,6 +1720,14 @@ App::patch('/v1/account/phone')
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $phone]));
+
+        if (empty($passwordUpdate)) {
+            $user
+                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('hash', Auth::DEFAULT_ALGO)
+                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+                ->setAttribute('passwordUpdate', DateTime::now());
+        }
 
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
@@ -1778,11 +1792,12 @@ App::patch('/v1/account/status')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->inject('requestTimestamp')
+    ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $user->setAttribute('status', false);
 
@@ -1795,6 +1810,12 @@ App::patch('/v1/account/status')
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
+
+        $protocol = $request->getProtocol();
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });

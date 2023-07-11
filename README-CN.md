@@ -1,5 +1,4 @@
-> 准备好迎接狂风暴'云'了吗? 🌩 ☂️
-> Appwrite Cloud即将到来!你能够通过https://appwrite.io/cloud了解更多的资讯, 注册即可领取试用额度哦
+> 好消息！Appwrite 云现已进入公开测试版！立即访问 cloud.appwrite.io 注册，体验无忧的托管服务。今天就加入我们的云端吧！☁️🎉
 
 <br />
 <p align="center">
@@ -24,7 +23,7 @@
 
 [English](README.md) | 简体中文
 
-[**宣布带有数据库关系的 Appwrite 1.3！了解最新消息！**](https://dev.to/appwrite/join-celebrations-appwrite-13-ships-relationships-57fc)
+[**Appwrite 云公开测试版！立即注册！**](https://cloud.appwrite.io)
 
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
@@ -67,7 +66,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.3.1
+    appwrite/appwrite:1.3.7
 ```
 
 ### Windows
@@ -79,7 +78,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.3.1
+    appwrite/appwrite:1.3.7
 ```
 
 #### PowerShell
@@ -89,7 +88,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.3.1
+    appwrite/appwrite:1.3.7
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
