@@ -500,12 +500,12 @@ class AccountCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,            
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
             'url' => 'http://localhost'
         ]);
 
-        
+
         $this->assertEquals($response['headers']['status-code'], 201);
 
         return [];
