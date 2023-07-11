@@ -1106,7 +1106,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
-    ->param('encrypt', false, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
+    ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
