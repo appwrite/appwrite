@@ -129,29 +129,9 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-CLI::setResource('queueForMessaging', function (Connection $queue) {
-    return new Phone($queue);
-}, ['queue']);
-CLI::setResource('queueForMails', function (Connection $queue) {
-    return new Mail($queue);
-}, ['queue']);
-CLI::setResource('queueForBuilds', function (Connection $queue) {
-    return new Build($queue);
-}, ['queue']);
-CLI::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
+
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
-}, ['queue']);
-CLI::setResource('queueForEvents', function (Connection $queue) {
-    return new Event($queue);
-}, ['queue']);
-CLI::setResource('queueForAudits', function (Connection $queue) {
-    return new Audit($queue);
-}, ['queue']);
-CLI::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
 }, ['queue']);
 CLI::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
