@@ -96,6 +96,8 @@ Server::setResource('queueForUsage', function (Registry $register) {
     );
 }, ['register']);
 
+Server::setResource('log', fn() => new Log());
+
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
