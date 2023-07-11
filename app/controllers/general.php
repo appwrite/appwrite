@@ -43,8 +43,10 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $response)
+function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Response $response)
 {
+    $utopia->getRoute()->label('error', __DIR__ . '/../views/general/error.phtml');
+
     $host = $swooleRequest->header['host'] ?? '';
 
     $route = Authorization::skip(
@@ -118,14 +120,12 @@ function router(Database $dbForConsole, SwooleRequest $swooleRequest, Response $
         \curl_close($ch);
 
         if ($errNo !== 0) {
-            $response->setStatusCode(500)->send("Internal error: " . $error);
-            return true;
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Internal error: " . $error);
         }
 
         if ($statusCode >= 400) {
             $error = \json_decode($executionResponse, true)['message'];
-            $response->setStatusCode(500)->send("Execution error: " . $error);
-            return true;
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Execution error: " . $error);
         }
 
         $execution = \json_decode($executionResponse, true);
@@ -173,7 +173,7 @@ App::init()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain && $host !== 'localhost') {
-            if (router($dbForConsole, $swooleRequest, $response)) {
+            if (router($utopia, $dbForConsole, $swooleRequest, $response)) {
                 return;
             }
         }
@@ -451,11 +451,12 @@ App::init()
     });
 
 App::options()
+    ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole) {
         /*
         * Appwrite Router
         */
@@ -463,7 +464,7 @@ App::options()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain && $host !== 'localhost') {
-            if (router($dbForConsole, $swooleRequest, $response)) {
+            if (router($utopia, $dbForConsole, $swooleRequest, $response)) {
                 return;
             }
         }
@@ -492,6 +493,8 @@ App::error()
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
+
+        \var_dump($route->getPath());
 
         if ($logger) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {

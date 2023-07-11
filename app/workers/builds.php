@@ -558,7 +558,6 @@ class BuildsV1 extends Worker
             } catch (\Exception $e) {
                 $error = $e;
             } finally {
-
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
             }
 
