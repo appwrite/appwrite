@@ -48,6 +48,7 @@ use Utopia\Validator\IP;
 use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Numeric;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -3435,6 +3436,282 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             ->setParam('documentId', $document->getId())
             ->setContext('collection', $collection)
             ->setContext('database', $database);
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/incrementAttribute/:key')
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId/incrementAttribute', ['databaseId' => 'default'])
+    ->desc('Increment Document Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+    ->label('scope', 'documents.write')
+    ->label('audits.event', 'document.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('usage.metric', 'documents.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'incrementDocumentAttribute')
+    ->label('sdk.description', '/docs/references/databases/increment-document-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('value', null, new Numeric(), 'Value to increment attribute by')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->inject('mode')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string $key, int|float $value, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events, string $mode) {
+        if ($value <= 0) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Value must be greater than 0');
+        }
+
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            }
+        }
+
+        // Validate attribute type
+        $attribute = $collection->find('key', $key, 'attributes');
+        if (!$attribute) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, "Attribute '$key' not found");
+        }
+
+        $validator = match ($attribute->getAttribute('type')) {
+            Database::VAR_INTEGER => new Integer(),
+            Database::VAR_FLOAT => new FloatValidator(),
+            default => throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, "Only numeric attributes can be incremented"),
+        };
+
+    if (!$validator->isValid($value)) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $validator->getDescription());
+    }
+
+        // Read permission should not be required for update
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+
+    if ($document->isEmpty()) {
+        throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+    }
+
+    try {
+        $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn() => $dbForProject->increaseDocumentAttribute(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $document->getId(),
+                $key,
+                $value,
+            )
+        );
+    } catch (AuthorizationException) {
+        throw new Exception(Exception::USER_UNAUTHORIZED);
+    } catch (StructureException $exception) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+    }
+
+        $document->setAttribute($key, $document->getAttribute($key) + $value);
+
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
+
+        $events
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('documentId', $document->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database)
+            ->setPayload($response->output($document, Response::MODEL_DOCUMENT));
+
+        $response->dynamic($document, Response::MODEL_DOCUMENT);
+    });
+
+App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/decrementAttribute/:key')
+    ->alias('/v1/database/collections/:collectionId/documents/:documentId/decrementAttribute', ['databaseId' => 'default'])
+    ->desc('Decrement Document Attribute')
+    ->groups(['api', 'database'])
+    ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+    ->label('scope', 'documents.write')
+    ->label('audits.event', 'document.update')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
+    ->label('usage.metric', 'documents.{scope}.requests.update')
+    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'decrementDocumentAttribute')
+    ->label('sdk.description', '/docs/references/databases/decrement-document-attribute.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.offline.model', '/databases/{databaseId}/collections/{collectionId}/documents')
+    ->label('sdk.offline.key', '{documentId}')
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('collectionId', '', new UID(), 'Collection ID.')
+    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('key', '', new Key(), 'Attribute Key.')
+    ->param('value', null, new Numeric(), 'Value to decrement attribute by')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->inject('mode')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string $key, int|float $value, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events, string $mode) {
+        if ($value <= 0) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Value must be greater than 0');
+        }
+
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            }
+        }
+
+        // Validate attribute type
+        $attribute = $collection->find('key', $key, 'attributes');
+        if (!$attribute) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, "Attribute '$key' not found");
+        }
+
+        $validator = match ($attribute->getAttribute('type')) {
+            Database::VAR_INTEGER => new Integer(),
+            Database::VAR_FLOAT => new FloatValidator(),
+            default => throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, "Only numeric attributes can be incremented"),
+        };
+
+    if (!$validator->isValid($value)) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $validator->getDescription());
+    }
+
+        // Read permission should not be required for update
+        $document = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+
+    if ($document->isEmpty()) {
+        throw new Exception(Exception::DOCUMENT_NOT_FOUND);
+    }
+
+    try {
+        $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn() => $dbForProject->decreaseDocumentAttribute(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $document->getId(),
+                $key,
+                $value,
+            )
+        );
+    } catch (AuthorizationException) {
+        throw new Exception(Exception::USER_UNAUTHORIZED);
+    } catch (StructureException $exception) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+    }
+
+        $document->setAttribute($key, $document->getAttribute($key) - $value);
+
+        // Add $collectionId and $databaseId for all documents
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+            $document->setAttribute('$databaseId', $database->getId());
+            $document->setAttribute('$collectionId', $collection->getId());
+
+            $relationships = \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            );
+
+            foreach ($relationships as $relationship) {
+                $related = $document->getAttribute($relationship->getAttribute('key'));
+
+                if (empty($related)) {
+                    continue;
+                }
+                if (!\is_array($related)) {
+                    $related = [$related];
+                }
+
+                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
+                $relatedCollection = Authorization::skip(
+                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
+                );
+
+                foreach ($related as $relation) {
+                    if ($relation instanceof Document) {
+                        $processDocument($relatedCollection, $relation);
+                    }
+                }
+            }
+        };
+
+        $processDocument($collection, $document);
+
+        $events
+            ->setParam('databaseId', $databaseId)
+            ->setParam('collectionId', $collection->getId())
+            ->setParam('documentId', $document->getId())
+            ->setContext('collection', $collection)
+            ->setContext('database', $database)
+            ->setPayload($response->output($document, Response::MODEL_DOCUMENT));
 
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });

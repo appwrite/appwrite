@@ -337,6 +337,7 @@ trait DatabasesBase
         $this->assertEquals($collection['body']['name'], 'Response Models');
 
         $collectionId = $collection['body']['$id'];
+        $data['collectionId'] = $collectionId;
 
         $attributesPath = "/databases/" . $databaseId . "/collections/{$collectionId}/attributes";
 
@@ -1856,6 +1857,308 @@ trait DatabasesBase
         $this->assertEquals(Exception::DOCUMENT_UPDATE_CONFLICT, $response['body']['type']);
 
         return [];
+    }
+
+    /**
+     * @depends testAttributeResponseModels
+     */
+    public function testIncrementDocumentAttribute(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'integer' => 3,
+                'float' => 3.5,
+                'relationship' => [
+                    [
+                        'movie' => [
+                            'title' => 'Increment',
+                            'releaseYear' => 2017,
+                        ],
+                    ],
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $document = $response['body'];
+        $documentId = $document['$id'];
+        $relatedId = $document['relationship'][0]['$id'];
+
+        /**
+         * Test for success
+         */
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 1,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(4, $response['body']['integer']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/float', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 0.25,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(3.75, $response['body']['float']);
+        $this->assertEquals($relatedId, $response['body']['relationship'][0]['$id']);
+
+        /**
+         * Test for failure
+         */
+
+        // No permissions
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'value' => 1,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Incorrect attribute key
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/doesNotExist', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid type
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 1.5,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 'string',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // 0
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 0,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Negative
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => -1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Missing value
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/incrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'notValue' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testAttributeResponseModels
+     */
+    public function testDecrementDocumentAttribute(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $collectionId = $data['collectionId'];
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'integer' => 3,
+                'float' => 3.5,
+                'relationship' => [
+                    [
+                        'movie' => [
+                            'title' => 'Decrement',
+                            'releaseYear' => 2017,
+                        ],
+                    ],
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $document = $response['body'];
+        $documentId = $document['$id'];
+        $relatedId = $document['relationship'][0]['$id'];
+
+        /**
+         * Test for success
+         */
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 1,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['integer']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/float', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 0.25,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(3.25, $response['body']['float']);
+        $this->assertEquals($relatedId, $response['body']['relationship'][0]['$id']);
+
+        /**
+         * Test for failure
+         */
+
+        // No permissions
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'value' => 1,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Incorrect attribute key
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/doesNotExist', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid type
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 1.5,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 'string',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // 0
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => 0,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Negative
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'value' => -1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Missing value
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId . '/decrementAttribute/integer', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'notValue' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     /**
