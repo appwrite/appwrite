@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Services;
 
+use Appwrite\Platform\Tasks\Backup;
+use Appwrite\Platform\Tasks\DbBackup;
+use Appwrite\Platform\Tasks\DbRestore;
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
@@ -48,6 +51,8 @@ class Tasks extends Service
             ->addAction(CalcUsersStats::getName(), new CalcUsersStats())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
             ->addAction(PatchDeleteProjectCollections::getName(), new PatchDeleteProjectCollections())
+            ->addAction(DbBackup::getName(), new DbBackup())
+            ->addAction(DbRestore::getName(), new DbRestore())
         ;
     }
 }

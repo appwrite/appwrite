@@ -622,6 +622,25 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
+  appwrite-backup:
+    entrypoint: db-backup
+    <<: *x-logging
+    container_name: appwrite-backup
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - appwrite-mariadb:/var/lib/mysql:rw
+      - ./backups:/backups:rw
+     # - ./extracts:/extracts:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - redis
+    environment:
+      - _APP_CONNECTIONS_DB_PROJECT
+
   appwrite-usage:
     entrypoint: usage
     <<: *x-logging
