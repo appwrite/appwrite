@@ -152,11 +152,11 @@ Server::setResource('queueForCertificates', function (Connection $queue) {
 Server::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
 }, ['queue']);
-Server::setResource('logger', function ($register) {
+Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
 
-Server::setResource('pools', function ($register) {
+Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
@@ -274,12 +274,13 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-// We need to add `getWorkerStartHook` in `utopia-php/queue` so that we can check if
-// we have already added workerStart hook, if not we can add this default worker start hook here
+try {
+    $workerStart = $worker->getWorkerStart();
+} catch (\Throwable $error) {
+     $worker->workerStart()
+         ->action(function () use ($workerName) {
+             Console::info("Worker $workerName  started");
+         });
+}
 
-
-// $worker->workerStart()
-//         ->action(function () use ($workerName) {
-//             Console::info("Worker $workerName  started");
-//         });
 $worker->start();

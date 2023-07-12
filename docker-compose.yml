@@ -379,6 +379,8 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
+      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
     depends_on:
       - redis
       - mariadb
@@ -637,6 +639,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
+      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
 
     depends_on:
       - redis

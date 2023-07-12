@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "185f3be3c459767318599669f63145af",
+    "content-hash": "2cf09045bf1484d009c4af490ea4adba",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2100,16 +2100,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.5.3",
+            "version": "dev-feat-get-worker-start",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "8e8b6cb27172713fe5d8b7b092ce68516caf129a"
+                "reference": "2a2eee58dace58e75142d9e2e26d2f5104d7f3f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/8e8b6cb27172713fe5d8b7b092ce68516caf129a",
-                "reference": "8e8b6cb27172713fe5d8b7b092ce68516caf129a",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/2a2eee58dace58e75142d9e2e26d2f5104d7f3f7",
+                "reference": "2a2eee58dace58e75142d9e2e26d2f5104d7f3f7",
                 "shasum": ""
             },
             "require": {
@@ -2155,9 +2155,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.5.3"
+                "source": "https://github.com/utopia-php/queue/tree/feat-get-worker-start"
             },
-            "time": "2023-05-24T19:06:04+00:00"
+            "time": "2023-07-12T07:55:31+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5182,10 +5182,17 @@
             "version": "dev-integrate-workers",
             "alias": "0.3.3",
             "alias_normalized": "0.3.3.0"
+        },
+        {
+            "package": "utopia-php/queue",
+            "version": "dev-feat-get-worker-start",
+            "alias": "0.5.3",
+            "alias_normalized": "0.5.3.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/queue": 20,
         "utopia-php/platform": 20
     },
     "prefer-stable": false,

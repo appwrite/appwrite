@@ -50,7 +50,7 @@
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.30.*",
-        "utopia-php/queue": "0.5.*",
+        "utopia-php/queue": "dev-feat-get-worker-start as 0.5.3",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "dev-integrate-workers as 0.3.3",
         "utopia-php/pools": "0.4.*",

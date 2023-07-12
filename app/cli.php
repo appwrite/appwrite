@@ -5,13 +5,6 @@ require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Func;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
-use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Phone;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -26,7 +19,6 @@ use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
-use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
