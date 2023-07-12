@@ -67,7 +67,7 @@ App::post('/v1/teams')
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
-        
+
         try {
             $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
                 '$id' => $teamId,
@@ -82,7 +82,7 @@ App::post('/v1/teams')
                 'search' => implode(' ', [$teamId, $name]),
             ])));
         } catch (Duplicate $th) {
-            throw new Exception(Exception::TEAM_ID_CONFLICT);
+            throw new Exception(Exception::TEAM_ALREADY_EXISTS);
         }
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
