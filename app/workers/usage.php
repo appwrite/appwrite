@@ -277,7 +277,8 @@ $server
                         ]));
                     }
                 } catch (\Exception $e) {
-                    console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
+                    $now = DateTime::now();
+                    console::error("[Error] " . " Time: {$now} " .  " projectInternalId: {$projectInternalId}" . " File: {$e->getFile()}" . " Line: {$e->getLine()} " . " message: {$e->getMessage()}");
                 } finally {
                     $pools->reclaim();
                 }
