@@ -1426,7 +1426,7 @@ App::get('/v1/account/logs')
 
         $audit = new EventAudit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 
         $output = [];
 
