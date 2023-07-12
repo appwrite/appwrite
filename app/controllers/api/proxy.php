@@ -82,14 +82,7 @@ App::post('/v1/proxy/rules')
         $domain = new Domain($domain);
 
         $ruleId = ID::unique();
-
-        $status = 'created';
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
-        if ($functionsDomain !== 'disabled' && \str_ends_with($domain->get(), $functionsDomain)) {
-            $status = 'verified';
-        }
-
-        $rule = $dbForConsole->createDocument('rules', new Document([
+        $rule = new Document([
             '$id' => $ruleId,
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getInternalId(),
@@ -97,9 +90,33 @@ App::post('/v1/proxy/rules')
             'resourceType' => $resourceType,
             'resourceId' => $resourceId,
             'resourceInternalId' => $resourceInternalId,
-            'status' => $status,
             'certificateId' => '',
-        ]));
+        ]);
+
+        $status = 'created';
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
+        if ($functionsDomain !== 'disabled' && \str_ends_with($domain->get(), $functionsDomain)) {
+            $status = 'verified';
+        }
+
+        if ($status === 'created') {
+            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $validator = new CNAME($target->get()); // Verify Domain with DNS records
+
+            if ($validator->isValid($domain->get())) {
+                $status = 'verifying';
+
+                $event = new Certificate();
+                $event
+                    ->setDomain(new Document([
+                        'domain' => $rule->getAttribute('domain')
+                    ]))
+                    ->trigger();
+            }
+        }
+
+        $rule->setAttribute('status', $status);
+        $rule = $dbForConsole->createDocument('rules', $rule);
 
         $events->setParam('ruleId', $rule->getId());
 
