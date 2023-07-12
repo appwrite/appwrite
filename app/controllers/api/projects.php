@@ -94,6 +94,7 @@ App::post('/v1/projects')
         $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
         $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
         $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
+        $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
 
         $databases = Config::getParam('pools-database', []);
 
@@ -117,7 +118,11 @@ App::post('/v1/projects')
             }
         }
 
-        $database = $databases[array_rand($databases)];
+        if ($index = array_search('database_db_fra1_05', $databases)) {
+            $database = $databases[$index];
+        } else {
+            $database = $databases[array_rand($databases)];
+        }
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -172,7 +177,7 @@ App::post('/v1/projects')
         $adapter->setup();
 
         /** @var array $collections */
-        $collections = Config::getParam('collections', []);
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {

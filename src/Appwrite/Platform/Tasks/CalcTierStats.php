@@ -18,11 +18,15 @@ use Utopia\Registry\Registry;
 
 class CalcTierStats extends Action
 {
+    /*
+     * Csv cols headers
+     */
     private array $columns = [
         'Project ID',
         'Organization ID',
         'Organization Members',
         'Teams',
+        'Users',
         'Requests',
         'Bandwidth',
         'Domains',
@@ -124,17 +128,6 @@ class CalcTierStats extends Action
                     /** Get Project ID */
                     $stats['Project ID'] = $project->getId();
 
-                    ///** Get Project Name */
-                    //$stats['Project Name'] = $project->getAttribute('name');
-
-                    /** Get Organization Name and Id */
-                    //$teamId = $project->getAttribute('teamId', null);
-                    //$teamName = null;
-                    //if ($teamId) {
-                        //$team = $dbForConsole->getDocument('teams', $teamId);
-                        //$teamName = $team->getAttribute('name');
-                   // }
-
                     $stats['Organization ID']   = $project->getAttribute('teamId', null);
 
                     /** Get Total Members */
@@ -144,11 +137,22 @@ class CalcTierStats extends Action
                             Query::equal('teamInternalId', [$teamInternalId])
                         ]);
                     } else {
-                        $stats['Users'] = 0;
+                        $stats['Organization Members'] = 0;
                     }
 
                     /** Get Total internal Teams */
-                    $stats['Teams'] = $dbForProject->count('teams', []);
+                    try {
+                        $stats['Teams'] = $dbForProject->count('teams', []);
+                    } catch (\Throwable) {
+                        $stats['Teams'] = 0;
+                    }
+
+                    /** Get Total users */
+                    try {
+                        $stats['Users'] = $dbForProject->count('users', []);
+                    } catch (\Throwable) {
+                        $stats['Users'] = 0;
+                    }
 
                     /** Get Usage stats */
                     $range = '90d';
@@ -175,6 +179,10 @@ class CalcTierStats extends Action
 
                             $tmp[$metric] = [];
                             foreach ($requestDocs as $requestDoc) {
+                                if (empty($requestDoc)) {
+                                    continue;
+                                }
+
                                 $tmp[$metric][] = [
                                     'value' => $requestDoc->getAttribute('value'),
                                     'date' => $requestDoc->getAttribute('time'),
@@ -190,62 +198,101 @@ class CalcTierStats extends Action
                         $stats[$metrics[$key]]  = $value;
                     }
 
-                    /** Get Domains */
-                    $stats['Domains'] = $dbForConsole->count('domains', [
-                        Query::equal('projectInternalId', [$project->getInternalId()]),
-                    ]);
+                    try {
+                        /** Get Domains */
+                        $stats['Domains'] = $dbForConsole->count('domains', [
+                            Query::equal('projectInternalId', [$project->getInternalId()]),
+                        ]);
+                    } catch (\Throwable) {
+                        $stats['Domains'] = 0;
+                    }
 
-
+                    try {
                     /** Get Api keys */
-                    $stats['Api keys'] = $dbForConsole->count('keys', [
+                        $stats['Api keys'] = $dbForConsole->count('keys', [
                         Query::equal('projectInternalId', [$project->getInternalId()]),
-                    ]);
+                        ]);
+                    } catch (\Throwable) {
+                        $stats['Api keys'] = 0;
+                    }
 
+                    try {
                     /** Get Webhooks */
-                    $stats['Webhooks'] = $dbForConsole->count('webhooks', [
+                        $stats['Webhooks'] = $dbForConsole->count('webhooks', [
                         Query::equal('projectInternalId', [$project->getInternalId()]),
-                    ]);
+                        ]);
+                    } catch (\Throwable) {
+                        $stats['Webhooks'] = 0;
+                    }
 
+                    try {
                     /** Get Platforms */
-                    $stats['Platforms'] = $dbForConsole->count('platforms', [
+                        $stats['Platforms'] = $dbForConsole->count('platforms', [
                         Query::equal('projectInternalId', [$project->getInternalId()]),
-                    ]);
+                        ]);
+                    } catch (\Throwable) {
+                        $stats['Platforms'] = 0;
+                    }
 
                     /** Get Files & Buckets */
                     $filesCount = 0;
                     $filesSum = 0;
                     $maxFileSize = 0;
-                    $buckets = $dbForProject->find('buckets', []);
                     $counter = 0;
-                    foreach ($buckets as $bucket) {
-                        $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
-                        $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
-                        $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
-                        if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
-                            $maxFileSize = $file->getAttribute('sizeOriginal');
+                    try {
+                        $buckets = $dbForProject->find('buckets', []);
+                        foreach ($buckets as $bucket) {
+                            $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
+                            if (empty($file)) {
+                                continue;
+                            }
+                            $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
+                            $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
+                            if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
+                                $maxFileSize = $file->getAttribute('sizeOriginal');
+                            }
+                            $counter++;
                         }
-                        $counter++;
+                    } catch (\Throwable) {
+                        ;
                     }
                     $stats['Buckets'] = $counter;
                     $stats['Files'] = $filesCount;
                     $stats['Storage (bytes)'] = $filesSum;
                     $stats['Max File Size (bytes)'] = $maxFileSize;
 
+
+                    try {
                     /** Get Total Functions */
-                    $stats['Databases'] = $dbForProject->count('databases', []);
+                        $stats['Databases'] = $dbForProject->count('databases', []);
+                    } catch (\Throwable) {
+                        $stats['Databases'] = 0;
+                    }
 
                     /** Get Total Functions */
-                    $stats['Functions'] = $dbForProject->count('functions', []);
+                    try {
+                        $stats['Functions'] = $dbForProject->count('functions', []);
+                    } catch (\Throwable) {
+                        $stats['Functions'] = 0;
+                    }
 
                     /** Get Total Deployments */
-                    $stats['Deployments'] = $dbForProject->count('deployments', []);
+                    try {
+                        $stats['Deployments'] = $dbForProject->count('deployments', []);
+                    } catch (\Throwable) {
+                        $stats['Deployments'] = 0;
+                    }
 
                     /** Get Total Executions */
-                    $stats['Executions'] = $dbForProject->count('executions', []);
+                    try {
+                        $stats['Executions'] = $dbForProject->count('executions', []);
+                    } catch (\Throwable) {
+                        $stats['Executions'] = 0;
+                    }
 
                     $csv->insertOne(array_values($stats));
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    Console::error('Failed on project ("' . $project->getId() . '") version with error on File: ' . $th->getFile() . '  line no: ' . $th->getline() . ' with message: ' . $th->getMessage());
                 } finally {
                     $pools
                         ->get($db)

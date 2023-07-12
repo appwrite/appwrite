@@ -5521,14 +5521,6 @@
             "time": "2023-06-08T12:52:13+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-fix-database-filters",
-            "alias": "0.28.0",
-            "alias_normalized": "0.28.0.0"
-        }
-    ],
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/database": 20

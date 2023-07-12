@@ -179,7 +179,7 @@ App::post('/v1/databases')
             ]));
             $database = $dbForProject->getDocument('databases', $databaseId);
 
-            $collections = Config::getParam('collections', [])['collections'] ?? [];
+            $collections = (Config::getParam('collections', [])['databases'] ?? [])['collections'] ?? [];
             if (empty($collections)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The "collections" collection is not configured.');
             }
