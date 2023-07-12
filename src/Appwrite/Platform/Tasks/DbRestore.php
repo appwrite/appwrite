@@ -3,13 +3,14 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\Platform\Action;
-use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Validator\Hostname;
+use Utopia\Validator\Text;
+
+//  docker compose exec appwrite-backup db-restore --file=2023-07-12_12:10:22.tar.gz
 
 class DbRestore extends Action
 {
-    public string $extract = '/extracts';
+    protected string $extract = '/extracts';
 
     public static function getName(): string
     {
@@ -18,47 +19,47 @@ class DbRestore extends Action
 
     public function __construct()
     {
-        //docker compose exec appwrite backup
         $this
             ->desc('Restore a DB')
-            ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain.', true)
-            ->callback(fn ($domain) => $this->action($domain));
+            ->param('file', '', new Text(100), 'Backup file name')
+            ->callback(fn ($file) => $this->action($file));
     }
 
     /**
      * @throws \Exception
      */
-    public function action(string $domain): void
+    public function action(string $file): void
     {
-        $filename = '2023-07-12_09:37:47.tar.gz';
+        // $file = '2023-07-12_09:37:47.tar.gz';
 
-        Console::log('Restoring backup' . $filename);
+        Console::log('Restoring backup' . $file);
 
-        $file = DbBackup::$backups . '/' . $filename;
+        $file = DbBackup::$backups . '/' . $file;
 
-        if (!file_exists($file)) {
+        if (!file_exists($file) || empty($file)) {
             Console::error('File not found: ' . $file);
             Console::exit();
         }
 
         // Todo: shut down target container
 
-        if (!file_exists($this->extract) && !mkdir($this->extract, 0755, true)) {
-            Console::error('Error creating directory: ' . $this->extract);
+        $extract = $this->extract . '/' . time();
+        if (!file_exists($extract) && !mkdir($extract, 0755, true)) {
+            Console::error('Error creating directory: ' . $extract);
             Console::exit();
         }
 
         $stdout = '';
         $stderr = '';
 
-        $start = microtime(true);
-        Console::log($start);
+//        $start = microtime(true);
+//        Console::log($start);
 
         $cmd = 'tar -xzf ' . $file . ' -C ' . $this->extract;
         Console::log($cmd);
         $code = Console::execute($cmd, '', $stdout, $stderr);
 
-        Console::log('time end ' . (microtime(true) - $start));
+//        Console::log('time end ' . (microtime(true) - $start));
 
         if (!empty($stderr)) {
             Console::error($stderr);
