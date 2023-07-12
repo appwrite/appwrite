@@ -3650,7 +3650,7 @@ $collections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('reason'),

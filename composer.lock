@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1333033ea575e83037bd5b14cf98e98",
+    "content-hash": "a44fe2d1e439a697ba716c11ca48c232",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2938,16 +2938,16 @@
         },
         {
             "name": "utopia-php/transfer",
-            "version": "dev-fix-incorrect-imports",
+            "version": "dev-feat-improve-features",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/transfer.git",
-                "reference": "3c12302c2bd2ba474183b132f86d31a63762ff01"
+                "reference": "e19cf3734af195e000211c50e7eae7fec1d89e97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/3c12302c2bd2ba474183b132f86d31a63762ff01",
-                "reference": "3c12302c2bd2ba474183b132f86d31a63762ff01",
+                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/e19cf3734af195e000211c50e7eae7fec1d89e97",
+                "reference": "e19cf3734af195e000211c50e7eae7fec1d89e97",
                 "shasum": ""
             },
             "require": {
@@ -2993,10 +2993,10 @@
                 "utopia"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/transfer/tree/fix-incorrect-imports",
+                "source": "https://github.com/utopia-php/transfer/tree/feat-improve-features",
                 "issues": "https://github.com/utopia-php/transfer/issues"
             },
-            "time": "2023-07-10T12:29:05+00:00"
+            "time": "2023-07-12T10:35:19+00:00"
         },
         {
             "name": "utopia-php/websocket",
