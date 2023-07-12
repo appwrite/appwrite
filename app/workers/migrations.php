@@ -116,16 +116,16 @@ class MigrationsV1 extends Worker
 
     protected function updateMigrationDocument(Document $migration, Document $project): Document
     {
-        // Trigger Webhook
-        $migrationModel = new Migration();
+        // // Trigger Webhook
+        // $migrationModel = new Migration();
 
-        $migrationUpdate = new Event(Event::MIGRATIONS_QUEUE_NAME, Event::MIGRATIONS_CLASS_NAME);
-        $migrationUpdate
-            ->setProject($project)
-            ->setEvent('migrations.[migrationId].update')
-            ->setParam('migrationId', $migration->getId())
-            ->setPayload($migration->getArrayCopy(array_keys($migrationModel->getRules())))
-            ->trigger();
+        // $migrationUpdate = new Event(Event::MIGRATIONS_QUEUE_NAME, Event::MIGRATIONS_CLASS_NAME);
+        // $migrationUpdate
+        //     ->setProject($project)
+        //     ->setEvent('migrations.[migrationId].update')
+        //     ->setParam('migrationId', $migration->getId())
+        //     ->setPayload($migration->getArrayCopy(array_keys($migrationModel->getRules())))
+        //     ->trigger();
 
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('migrations.[migrationId].update', [
@@ -140,6 +140,14 @@ class MigrationsV1 extends Worker
 
         Realtime::send(
             projectId: 'console',
+            payload: $migration->getArrayCopy(),
+            events: $allEvents,
+            channels: $target['channels'],
+            roles: $target['roles'],
+        );
+
+        Realtime::send(
+            projectId: $project->getId(),
             payload: $migration->getArrayCopy(),
             events: $allEvents,
             channels: $target['channels'],

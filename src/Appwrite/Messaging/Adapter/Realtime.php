@@ -326,6 +326,12 @@ class Realtime extends Adapter
                 }
 
                 break;
+
+            case 'migrations':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
         }
 
         return [
