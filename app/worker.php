@@ -96,6 +96,8 @@ Server::setResource('queueForUsage', function (Registry $register) {
     );
 }, ['register']);
 
+Server::setResource('log', fn() => new Log());
+
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -126,16 +128,15 @@ $server
     ->error()
     ->inject('error')
     ->inject('logger')
-    ->action(function (Throwable $error, Logger $logger) {
+    ->inject('log')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
         }
 
-        if ($error->getCode() >= 500 || $error->getCode() === 0) {
-            $log = new Log();
-
+        if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
@@ -153,7 +154,8 @@ $server
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $logger->addLog($log);
+            $responseCode = $logger->addLog($log);
+            Console::info('Usage stats log pushed with status code: ' . $responseCode);
         }
 
         Console::error('[Error] Type: ' . get_class($error));

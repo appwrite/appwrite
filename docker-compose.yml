@@ -134,6 +134,7 @@ services:
       - _APP_SMTP_SECURE
       - _APP_SMTP_USERNAME
       - _APP_SMTP_PASSWORD
+      - _APP_USERS_STATS_RECIPIENTS
       - _APP_USAGE_STATS
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
@@ -163,6 +164,8 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
+      - _APP_CONSOLE_GITHUB_APP_ID
+      - _APP_CONSOLE_GITHUB_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
@@ -478,6 +481,8 @@ services:
       - _APP_USAGE_STATS
       - _APP_DOCKER_HUB_USERNAME
       - _APP_DOCKER_HUB_PASSWORD
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_PROVIDER
 
   appwrite-worker-mails:
     entrypoint: worker-mails

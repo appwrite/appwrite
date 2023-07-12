@@ -54,7 +54,7 @@ class FunctionsConsoleClientTest extends Scope
     /**
      * @depends testCreateFunction
      */
-    public function testGetCollectionUsage(array $data)
+    public function testGetFunctionUsage(array $data)
     {
         /**
          * Test for FAILURE

@@ -18,6 +18,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
 use Utopia\Queue\Server;
 use Utopia\Database\Helpers\Role;
 
@@ -26,6 +27,7 @@ Authorization::setDefaultStatus(false);
 
 Server::setResource('execute', function () {
     return function (
+        Log $log,
         Func $queueForFunctions,
         Database $dbForProject,
         Usage $queueForUsage,
@@ -39,11 +41,13 @@ Server::setResource('execute', function () {
         string $eventData = null,
         string $executionId = null,
     ) {
-
         $user ??= new Document();
         $functionId = $function->getId();
         $functionInternalId = $function->getInternalId();
         $deploymentId = $function->getAttribute('deployment', '');
+
+        $log->addTag('functionId', $functionId);
+        $log->addTag('projectId', $project->getId());
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -165,10 +169,8 @@ Server::setResource('execute', function () {
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
 
-            Console::error($th->getTraceAsString());
-            Console::error($th->getFile());
-            Console::error($th->getLine());
-            Console::error($th->getMessage());
+            $error = $th->getMessage();
+            $errorCode = $th->getCode();
         }
 
         $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
@@ -231,7 +233,8 @@ $server->job()
     ->inject('queueForFunctions')
     ->inject('queueForUsage')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute) {
+    ->inject('log')
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute, Log $log) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -259,8 +262,7 @@ $server->job()
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
                     Query::limit($limit),
-                    Query::offset($offset),
-                    Query::orderAsc('name'),
+                    Query::offset($offset)
                 ]);
 
                 $sum = \count($functions);
@@ -303,6 +305,7 @@ $server->job()
                 $execution = new Document($payload['execution'] ?? []);
                 $user = new Document($payload['user'] ?? []);
                 $execute(
+                    log: $log,
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,
@@ -319,6 +322,7 @@ $server->job()
                 break;
             case 'schedule':
                 $execute(
+                    log: $log,
                     project: $project,
                     function: $function,
                     dbForProject: $dbForProject,

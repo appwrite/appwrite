@@ -18,17 +18,18 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\DateTime;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Cache\Cache;
 use Utopia\Pools\Group;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -88,46 +89,81 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+
+        $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
+        $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
+        $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
+        $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
+
         $databases = Config::getParam('pools-database', []);
-        $database = $databases[array_rand($databases)];
+
+        /**
+         * Extract db from list while backing
+         */
+        if (count($databases) > 1) {
+            $now = new \DateTime();
+
+            foreach ($databases as $index => $database) {
+                if (empty($backups[$database])) {
+                    continue;
+                }
+                $backup = $backups[$database];
+                $from = \DateTime::createFromFormat('H:i', $backup['from']);
+                $to = \DateTime::createFromFormat('H:i', $backup['to']);
+                if ($now >= $from && $now <= $to) {
+                    unset($databases[$index]);
+                    break;
+                }
+            }
+        }
+
+        if ($index = array_search('database_db_fra1_05', $databases)) {
+            $database = $databases[$index];
+        } else {
+            $database = $databases[array_rand($databases)];
+        }
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'name' => $name,
-            'teamInternalId' => $team->getInternalId(),
-            'teamId' => $team->getId(),
-            'region' => $region,
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'version' => APP_VERSION_STABLE,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => ID::custom($legalTaxId),
-            'services' => new stdClass(),
-            'platforms' => null,
-            'authProviders' => [],
-            'webhooks' => null,
-            'keys' => null,
-            'domains' => null,
-            'auths' => $auths,
-            'search' => implode(' ', [$projectId, $name]),
-            'database' => $database,
-        ]));
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId,
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'name' => $name,
+                'teamInternalId' => $team->getInternalId(),
+                'teamId' => $team->getId(),
+                'region' => $region,
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => ID::custom($legalTaxId),
+                'services' => new stdClass(),
+                'platforms' => null,
+                'authProviders' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'domains' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+                'database' => $database
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
@@ -140,7 +176,7 @@ App::post('/v1/projects')
         $adapter->setup();
 
         /** @var array $collections */
-        $collections = Config::getParam('collections', []);
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
@@ -1221,9 +1257,12 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if ($domain === App::getEnv('_APP_DOMAIN', '') || $domain === App::getEnv('_APP_DOMAIN_TARGET', '')) {
+            throw new Exception(Exception::DOMAIN_FORBIDDEN);
+        }
+
         $document = $dbForConsole->findOne('domains', [
-            Query::equal('domain', [$domain]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('domain', [$domain])
         ]);
 
         if ($document && !$document->isEmpty()) {
@@ -1419,6 +1458,10 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         if ($domain === false || $domain->isEmpty()) {
             throw new Exception(Exception::DOMAIN_NOT_FOUND);
+        }
+
+        if ($domain->getAttribute('domain') === App::getEnv('_APP_DOMAIN', '') || $domain->getAttribute('domain') === App::getEnv('_APP_DOMAIN_TARGET', '')) {
+            throw new Exception(Exception::DOMAIN_FORBIDDEN);
         }
 
         $dbForConsole->deleteDocument('domains', $domain->getId());
