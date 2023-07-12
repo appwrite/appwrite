@@ -233,7 +233,8 @@ $server->job()
     ->inject('queueForFunctions')
     ->inject('queueForUsage')
     ->inject('execute')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute) {
+    ->inject('log')
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute, Log $log) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
