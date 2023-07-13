@@ -3285,8 +3285,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
+        $oldDocumentToBeUpdated = $document;
 
-        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database, $newDocument, $oldDocumentToBeUpdated) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -3302,9 +3303,31 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 }
             }
 
-            $relationships = \array_filter(
+            $relationships = array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                function (Document $attribute) use ($oldDocumentToBeUpdated, $newDocument) {
+                    if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                        $relationKey = $attribute->getAttribute('key');
+
+                        $oldRelationDocument = $oldDocumentToBeUpdated[$relationKey] ?? [];
+                        $newRelationDocuemntFromRequestData = $newDocument[$relationKey] ?? [];
+
+                        if (count($oldRelationDocument) !== count($newRelationDocuemntFromRequestData)) {
+                                // Return true if a difference is found in the relationships
+                                return true;
+                        }
+
+                        foreach ($oldRelationDocument as $key => $obj1) {
+                            $obj2 = $newRelationDocuemntFromRequestData[$key] ?? null;
+                            if (($obj1 instanceof Document && $obj2 instanceof Document && $obj1->getArrayCopy() !== $obj2->getArrayCopy())  || !($obj2 instanceof Document)) {
+                                // Return true if a difference is found in the relationships
+                                return true;
+                            }
+                        }
+                    }
+
+                    return false;
+                }
             );
 
             foreach ($relationships as $relationship) {
