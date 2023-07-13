@@ -136,30 +136,31 @@ class DeletesV1 extends Worker
      */
     protected function deleteCacheByResource(Document $project, string $resource): void
     {
-
         $projectId = $project->getId();
-        $dbForProject = $this->getProjectDB($projectId);
-        $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
+        $dbForProject = $this->getProjectDB($project);
 
-        if ($document) {
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-            );
+        $cache = new Cache(
+            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+        );
 
-            $this->deleteById(
-                $document,
-                $dbForProject,
-                function ($document) use ($cache, $projectId) {
-                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+        $query = [
+            Query::equal('resource', [$resource])
+        ];
 
-                    if ($cache->purge($document->getId())) {
-                        Console::success('Deleting cache file: ' . $path);
-                    } else {
-                        Console::error('Failed to delete cache file: ' . $path);
-                    }
+        $this->deleteByGroup(
+            'cache',
+            $query,
+            $dbForProject,
+            function (Document $document) use ($cache, $projectId) {
+                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                if ($cache->purge($document->getId())) {
+                    Console::success('Deleting cache file: ' . $path);
+                } else {
+                    Console::error('Failed to delete cache file: ' . $path);
                 }
-            );
-        }
+            }
+        );
     }
 
     /**
