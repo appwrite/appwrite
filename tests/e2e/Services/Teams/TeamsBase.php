@@ -88,7 +88,7 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('team_id_conflict', $response['body']['type']);
+        $this->assertEquals('team_already_exists', $response['body']['type']);
 
         return ['teamUid' => $teamUid, 'teamName' => $teamName];
     }
