@@ -404,13 +404,13 @@ class DatabasesCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+         ]), [
             'key' => "Rating",
             'size' => 100,
             'required' => false,
             'array' => false,
             'default' => null,
-        ]);
+         ]);
 
         \sleep(3);
 
@@ -448,7 +448,7 @@ class DatabasesCustomClientTest extends Scope
 
         // Update document
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' .$collection1['body']['$id']. '/documents/' .$parentDocument['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $parentDocument['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -458,6 +458,5 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-
     }
 }
