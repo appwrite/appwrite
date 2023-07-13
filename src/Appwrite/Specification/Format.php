@@ -97,4 +97,26 @@ abstract class Format
     {
         return $this->params[$key] ?? $default;
     }
+
+    protected function getEnumName(string $service, string $method): ?string
+    {
+        switch ($service) {
+            case 'account':
+                switch ($method) {
+                    case 'createOAuth2Session':
+                        return 'Provider';
+                }
+                break;
+            case 'avatars':
+                switch ($method) {
+                    case 'getBrowser':
+                        return 'Browser';
+                    case 'getCreditCard':
+                        return 'CreditCard';
+                    case 'getFlag':
+                        return  'Flag';
+                }
+        }
+        return null;
+    }
 }
