@@ -2,15 +2,18 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Extend\Exception;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Storage;
 use Utopia\Validator\Hostname;
 
 class DbBackup extends Action
 {
     protected string $directory = '/var/lib/mysql';
-    public static string $backups = '/backups';
+    public static string $backups = '/backups'; // This is the mounted volume
     protected string $containerName = 'appwrite-mariadb';
 
     public static function getName(): string
@@ -32,14 +35,33 @@ class DbBackup extends Action
      */
     public function action(string $domain): void
     {
+        if (empty(App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))) {
+            Console::error('Can\'t read _APP_CONNECTIONS_DB_PROJECT');
+            Console::exit();
+        }
 
-        if (empty(App::getEnv('_APP_CONNECTIONS_DB_PROJECT', ''))) {
-            Console::error('Can\'t read .env variables');
+        if (empty(App::getEnv('_DO_SPACES_BUCKET_NAME'))) {
+            Console::error('Can\'t read _DO_SPACES_BUCKET_NAME');
+            Console::exit();
+        }
+
+        if (empty(App::getEnv('_DO_SPACES_ACCESS_KEY'))) {
+            Console::error('Can\'t read _DO_SPACES_ACCESS_KEY');
+            Console::exit();
+        }
+
+        if (empty(App::getEnv('_DO_SPACES_SECRET_KEY'))) {
+            Console::error('Can\'t read _DO_SPACES_SECRET_KEY');
+            Console::exit();
+        }
+
+        if (empty(App::getEnv('_DO_SPACES_REGION'))) {
+            Console::error('Can\'t read _DO_SPACES_REGION');
             Console::exit();
         }
 
         $time = date('Y-m-d_H:i:s');
-        Console::log('Backup started:' . $time);
+        Console::log('--- Backup Start --- ' . $time);
 
 //        Console::log('creating directory:' . $this->backups);
 //        if (!file_exists($this->backups) && !mkdir($this->backups, 0755, true)) {
@@ -73,7 +95,7 @@ class DbBackup extends Action
         $stdout = '';
         $stderr = '';
         $cmd = 'cd ' . $this->directory . ' && tar zcf ' . $file . ' .';
-        $code = Console::execute($cmd, '', $stdout, $stderr);
+        Console::execute($cmd, '', $stdout, $stderr);
         Console::log($cmd);
         Console::log($stdout);
         if (!empty($stderr)) {
@@ -84,18 +106,28 @@ class DbBackup extends Action
         $stdout = '';
         $stderr = '';
         $cmd = 'docker start ' . $this->containerName;
-
-        $code = Console::execute($cmd, '', $stdout, $stderr);
-
+        Console::execute($cmd, '', $stdout, $stderr);
         Console::log($stdout);
         if (!empty($stderr)) {
             Console::error($stderr);
             Console::exit();
         }
 
-        Console::loop(function () {
-            Console::log('Hello');
-        }, 1);
+        $dsn = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
 
+        Storage::setDevice('files', new DOSpaces('backups', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION')));
+        $device = Storage::getDevice('files');
+        try {
+            $result = $device->upload($file, '/' . $dsn . '/daily/' . $filename);
+        } catch (\Exception $e) {
+            Console::error($e->getMessage());
+            Console::exit();
+        }
+
+        Console::log('-- Backup End -- ');
+
+//        Console::loop(function () {
+//            Console::log('Hello');
+//        }, 100);
     }
 }

@@ -640,6 +640,10 @@ services:
       - redis
     environment:
       - _APP_CONNECTIONS_DB_PROJECT
+      - _DO_SPACES_BUCKET_NAME
+      - _DO_SPACES_ACCESS_KEY
+      - _DO_SPACES_SECRET_KEY
+      - _DO_SPACES_REGION
 
   appwrite-usage:
     entrypoint: usage
