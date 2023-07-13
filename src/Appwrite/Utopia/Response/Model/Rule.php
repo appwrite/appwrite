@@ -14,19 +14,19 @@ class Rule extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
+                'description' => 'Rule ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function creation date in ISO 8601 format.',
+                'description' => 'Rule creation date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('$updatedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Function update date in ISO 8601 format.',
+                'description' => 'Rule update date in ISO 8601 format.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
