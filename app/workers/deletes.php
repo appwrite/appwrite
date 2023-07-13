@@ -137,7 +137,7 @@ class DeletesV1 extends Worker
     protected function deleteCacheByResource(Document $project, string $resource): void
     {
         $projectId = $project->getId();
-        $dbForProject = $this->getProjectDB($project);
+        $dbForProject = $this->getProjectDB($projectId);
 
         $cache = new Cache(
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
