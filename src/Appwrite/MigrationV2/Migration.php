@@ -19,7 +19,6 @@ Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 class Migration
 {
-
     protected const TYPE_ATTRIBUTE_CREATED = 'attribute_created';
     protected const TYPE_ATTRIBUTE_UPDATED = 'attribute_updated';
     protected const TYPE_ATTRIBUTE_DELETED = 'attribute_deleted';
@@ -30,7 +29,7 @@ class Migration
     protected const MODE_BEFORE = 'before';
     protected const MODE_AFTER = 'after';
 
-    protected array $differences = [];
+    protected array $diff = [];
 
     protected array $executedActions = [];
 
@@ -42,12 +41,34 @@ class Migration
     protected Database $projectDB;
     protected Database $consoleDB;
 
+    protected string $from;
+    protected string $to;
+
     public function __construct(string $from, string $to)
     {
-        $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$from}.php");
-        $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$to}.php");
+        $this->from = $from;
+        $this->to = $to;
 
-        $this->differences = $this->compareSchemas($schema1, $schema2);
+        $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$this->from}.php");
+        $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$this->to}.php");
+
+        $projectDiff = $this->compareSchemas($schema1, $schema2);
+        $consoleDiff = $this->compareSchemas($schema1, $schema2, 'console');
+
+        $this->diff = array_merge($projectDiff, $consoleDiff);
+
+        usort($this->diff, function ($a, $b) {
+            if ($a['type'] === $b['type']) {
+                if (isset($a['attribute']) && isset($b['attribute'])) {
+                    return $a['attribute'] < $b['attribute'] ? -1 : 1;
+                } elseif (isset($a['attribute'])) {
+                    return -1;
+                } elseif (isset($b['attribute'])) {
+                    return 1;
+                }
+            }
+            return $a['type'] < $b['type'] ? -1 : 1;
+        });
     }
 
 
@@ -60,14 +81,22 @@ class Migration
         return include $path;
     }
 
-    protected function compareSchemas(array $schema1, array $schema2): array
+    protected function compareSchemas(array $sc1, array $sc2, string $scope = 'projects'): array
     {
         $differences = [];
+
+        $schema1 = array_merge($sc1[$scope], $sc1['buckets']);
+        $schema2 = array_merge($sc2[$scope], $sc2['buckets']);
+
+        if ($scope === 'projects') {
+            $schema1 = array_merge($schema1, $sc1['databases']);
+            $schema2 = array_merge($schema2, $sc2['databases']);
+        }
 
         // Compare collections
         foreach ($schema1 as $key => $collection) {
             if (!isset($schema2[$key])) {
-                $differences[] = [
+                $differences[$key] = [
                     'type' => self::TYPE_COLLECTION_DELETED,
                     'collection' => $key
                 ];
@@ -84,7 +113,7 @@ class Migration
                     if ($attribute2['$id'] === $id) {
                         $found = true;
                         if ($attribute != $attribute2) {
-                            $differences[] = [
+                            $differences["$key\_$id"] = [
                                 'type' => self::TYPE_ATTRIBUTE_UPDATED,
                                 'collection' => $key,
                                 'attribute' => $id,
@@ -97,7 +126,7 @@ class Migration
                 }
 
                 if (!$found) {
-                    $differences[] = [
+                    $differences["$key\_$id"] = [
                         'type' => self::TYPE_ATTRIBUTE_DELETED,
                         'collection' => $key,
                         'attribute' => $id,
@@ -117,7 +146,7 @@ class Migration
                 }
 
                 if (!$found) {
-                    $differences[] = [
+                    $differences["$key\_$id"] = [
                         'type' => self::TYPE_ATTRIBUTE_CREATED,
                         'collection' => $key,
                         'attribute' => $id,
@@ -130,16 +159,12 @@ class Migration
         // Check for added collections
         foreach ($schema2 as $key => $collection) {
             if (!isset($schema1[$key])) {
-                $differences[] = [
+                $differences[$key] = [
                     'type' => self::TYPE_COLLECTION_CREATED,
                     'collection' => $collection,
                 ];
             }
         }
-
-        usort($differences, function ($a, $b) {
-            return $a['type'] < $b['type'] ? -1 : 1;
-        });
 
         return $differences;
     }
@@ -156,31 +181,31 @@ class Migration
     public function confirm(): bool
     {
         if ($this->mode === self::MODE_AFTER) {
-            $attributesRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
+            $attributesRemoved = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
             if (count($attributesRemoved)) Console::success("The following attributes will be deleted");
             foreach ($attributesRemoved as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
-            $collectionsRemoved = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_DELETED);
+            $collectionsRemoved = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_DELETED);
             if (count($collectionsRemoved)) Console::success("The following collections will be removed");
             foreach ($collectionsRemoved as $collection) {
                 Console::log("  {$collection['collection']}");
             }
         } else if ($this->mode == self::MODE_BEFORE) {
-            $attributesAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
+            $attributesAdded = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
             if (count($attributesAdded)) Console::success("The following attributes will be added");
             foreach ($attributesAdded as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
-            $attributesUpdated = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
+            $attributesUpdated = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
             if (count($attributesUpdated)) Console::success("The following attributes will be updated");
             foreach ($attributesUpdated as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
-            $collectionsAdded = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
+            $collectionsAdded = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
             if (count($collectionsAdded)) Console::success("The following collections will be added");
             foreach ($collectionsAdded as $collection) {
                 Console::log("  {$collection['collection']['name']}");
@@ -198,7 +223,7 @@ class Migration
     public function execute()
     {
         try {
-            foreach ($this->differences as $difference) {
+            foreach ($this->diff as $difference) {
                 switch ($difference['type']) {
                     case self::TYPE_ATTRIBUTE_CREATED:
                         $this->createAttribute($difference['collection'], $difference['new']);
@@ -224,7 +249,7 @@ class Migration
 
     public function createFilters()
     {
-        $attributesUpdated = array_filter($this->differences, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
+        $attributesUpdated = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
         foreach ($attributesUpdated as $attribute) {
             $oldAttribute = $attribute['old'];
             $tempAttributeId = $oldAttribute['$id'] . '_temp';

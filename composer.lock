@@ -1907,12 +1907,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "786d16f2a4f3decc4a01bd750fefb81ede925660"
+                "reference": "a2dbf60de98868b885ce23c0370f2f484d15c272"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/786d16f2a4f3decc4a01bd750fefb81ede925660",
-                "reference": "786d16f2a4f3decc4a01bd750fefb81ede925660",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a2dbf60de98868b885ce23c0370f2f484d15c272",
+                "reference": "a2dbf60de98868b885ce23c0370f2f484d15c272",
                 "shasum": ""
             },
             "require": {
@@ -1953,7 +1953,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/fix-database-filters"
             },
-            "time": "2023-07-07T16:31:03+00:00"
+            "time": "2023-07-07T17:40:54+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5519,6 +5519,14 @@
                 }
             ],
             "time": "2023-06-08T12:52:13+00:00"
+        }
+    ],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix-database-filters",
+            "alias": "0.28.0",
+            "alias_normalized": "0.28.0.0"
         }
     ],
     "minimum-stability": "stable",
