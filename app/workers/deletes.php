@@ -366,6 +366,7 @@ class DeletesV1 extends Worker
     protected function deleteUser(Document $document, string $projectId): void
     {
         $userId = $document->getId();
+        $userInternalId = $document->getInternalId();
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
@@ -398,6 +399,11 @@ class DeletesV1 extends Worker
         // Delete tokens
         $this->deleteByGroup('tokens', [
             Query::equal('userId', [$userId])
+        ], $this->getProjectDB($projectId));
+
+        // Delete identities
+        $this->deleteByGroup('identities', [
+            Query::equal('userInternalId', [$userInternalId])
         ], $this->getProjectDB($projectId));
     }
 
