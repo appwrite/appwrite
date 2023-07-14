@@ -403,12 +403,11 @@ App::post('/v1/migrations/supabase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+
 App::post('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Supabase Data')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.report')
-    ->label('audits.event', 'migration.report')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
     ->label('sdk.method', 'generateSupabaseReport')
@@ -416,7 +415,7 @@ App::post('/v1/migrations/supabase/report')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
-    ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
+    ->param('resources', [], new ArrayList(new Text(100)), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), "Source's Supabase Endpoint")
     ->param('apiKey', '', new Text(512), "Source's API Key")
     ->param('databaseHost', '', new Text(512), "Source's Database Host")
@@ -429,12 +428,22 @@ App::post('/v1/migrations/supabase/report')
     ->inject('user')
     ->inject('events')
     ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+        try {
+            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
 
-        $supabase = new Supabase($endpoint, $apiKey, $databaseHost, $username, $password, $port);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
+                ->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ]);
+        }
     });
 
 App::post('/v1/migrations/nhost')
@@ -503,8 +512,8 @@ App::post('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on NHost Data')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.report')
-    ->label('audits.event', 'migration.report')
+    // ->label('event', 'migrations.report')
+    // ->label('audits.event', 'migration.report')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
     ->label('sdk.method', 'generateNHostReport')
@@ -512,7 +521,8 @@ App::post('/v1/migrations/nhost/report')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
-    ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
+    // ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
+    ->param('resources', [], new ArrayList(new Text(256)), 'List of resources to migrate')
     ->param('subdomain', '', new URL(), "Source's Subdomain")
     ->param('region', '', new Text(512), "Source's Region")
     ->param('adminSecret', '', new Text(512), "Source's Admin Secret")
@@ -526,10 +536,20 @@ App::post('/v1/migrations/nhost/report')
     ->inject('user')
     ->inject('events')
     ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+        try {
+            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
 
-        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
+        } catch (\Exception $e) {
+            var_dump($e->getMessage());
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
+                ->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ]);
+        }
     });

@@ -116,17 +116,6 @@ class MigrationsV1 extends Worker
 
     protected function updateMigrationDocument(Document $migration, Document $project): Document
     {
-        // // Trigger Webhook
-        // $migrationModel = new Migration();
-
-        // $migrationUpdate = new Event(Event::MIGRATIONS_QUEUE_NAME, Event::MIGRATIONS_CLASS_NAME);
-        // $migrationUpdate
-        //     ->setProject($project)
-        //     ->setEvent('migrations.[migrationId].update')
-        //     ->setParam('migrationId', $migration->getId())
-        //     ->setPayload($migration->getArrayCopy(array_keys($migrationModel->getRules())))
-        //     ->trigger();
-
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('migrations.[migrationId].update', [
             'migrationId' => $migration->getId(),
@@ -263,6 +252,7 @@ class MigrationsV1 extends Worker
             $errors = $transfer->getReport(Resource::STATUS_ERROR);
 
             if (count($errors) > 0) {
+                var_dump($errors);
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
                 $migrationDocument->setAttribute('reason', $errors[0]['message']);
@@ -282,6 +272,17 @@ class MigrationsV1 extends Worker
                 $migrationDocument->setAttribute('stage', 'finished');
                 $migrationDocument->setAttribute('reason', $th->getMessage());
                 return;
+            }
+
+            if ($transfer) {
+                $errors = $transfer->getReport(Resource::STATUS_ERROR);
+
+                if (count($errors) > 0) {
+                    var_dump($errors);
+                    $migrationDocument->setAttribute('status', 'failed');
+                    $migrationDocument->setAttribute('stage', 'finished');
+                    $migrationDocument->setAttribute('reason', $errors[0]['message']);
+                }
             }
         } finally {
             if ($migrationDocument) {
