@@ -130,7 +130,7 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @throws Exception
+     * @throws Exception|Throwable
      */
     protected function deleteSchedules(string $datetime): void
     {
