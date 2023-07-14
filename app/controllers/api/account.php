@@ -644,7 +644,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
+                        'password' => null,
                         'hash' => Auth::DEFAULT_ALGO,
                         'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                         'passwordUpdate' => null,
