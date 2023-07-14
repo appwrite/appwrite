@@ -915,7 +915,9 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+        $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
+        
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
