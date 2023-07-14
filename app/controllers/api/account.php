@@ -565,7 +565,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
                 try {
                     $userId = ID::unique();
-                    $password = Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
                     $user->setAttributes([
                         '$id' => $userId,
                         '$permissions' => [
@@ -576,8 +575,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'email' => $email,
                         'emailVerification' => true,
                         'status' => true, // Email should already be authenticated by OAuth2 provider
-                        'passwordHistory' => $passwordHistory > 0 ? [$password] : null,
-                        'password' => $password,
+                        'password' => null,
                         'hash' => Auth::DEFAULT_ALGO,
                         'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
                         'passwordUpdate' => null,
