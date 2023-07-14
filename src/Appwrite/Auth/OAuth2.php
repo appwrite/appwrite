@@ -75,6 +75,13 @@ abstract class OAuth2
 
     /**
      * @param string $accessToken
+     * 
+     * @return string
+     */
+    abstract public function getUserID(string $accessToken): string;
+
+    /**
+     * @param string $accessToken
      *
      * @return string
      */
@@ -148,11 +155,11 @@ abstract class OAuth2
      *
      * @return string
      */
-    public function getAccessTokenExpiry(string $code): string
+    public function getAccessTokenExpiry(string $code): int
     {
         $tokens = $this->getTokens($code);
 
-        return $tokens['expires_in'] ?? '';
+        return $tokens['expires_in'] ?? 0;
     }
 
     // The parseState function was designed specifically for Amazon OAuth2 Adapter to override.
