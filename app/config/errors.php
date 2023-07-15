@@ -200,6 +200,16 @@ return [
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
+    Exception::USER_OAUTH2_BAD_REQUEST => [
+        'name' => Exception::USER_OAUTH2_BAD_REQUEST,
+        'description' => 'OAuth2 provider rejected the bad request.',
+        'code' => 400,
+    ],
+    Exception::USER_OAUTH2_UNAUTHORIZED => [
+        'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
+        'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
