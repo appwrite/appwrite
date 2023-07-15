@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -422,21 +423,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
         $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
 
-        if (!$providerEnabled) {
-            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
-        }
-
-        if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
-        }
-
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
         if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
+        /** @var Appwrite\Auth\OAuth2 $oauth2 */
         $oauth2 = new $className($appId, $appSecret, $callback);
 
         if (!empty($state)) {
@@ -456,28 +449,54 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
             throw new Exception(Exception::PROJECT_INVALID_FAILURE_URL);
         }
-
-        $accessToken = $oauth2->getAccessToken($code);
-        $refreshToken = $oauth2->getRefreshToken($code);
-        $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
-
-        if (empty($accessToken)) {
-            if (!empty($state['failure'])) {
-                $response->redirect($state['failure'], 301, 0);
+        $failure = [];
+        if (!empty($state['failure'])) {
+            $failure = URLParser::parse($state['failure']);
+        }
+        $failureRedirect = (function (string $type, ?string $message = null, ?int $code = null) use ($failure, $response) {
+            $exception = new Exception($type, $message, $code);
+            if (!empty($failure)) {
+                $query = URLParser::parseQuery($failure['query']);
+                $query['error'] = json_encode([
+                    'message' => $exception->getMessage(),
+                    'type' => $exception->getType(),
+                    'code' => !\is_null($code) ? $code : $exception->getCode(),
+                ]);
+                $failure['query'] = URLParser::unparseQuery($query);
+                $response->redirect(URLParser::unparse($failure), 301);
             }
 
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to obtain access token');
+            throw $exception;
+        });
+
+        if (!$providerEnabled) {
+            $failureRedirect(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        }
+
+        if (!empty($appSecret) && isset($appSecret['version'])) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+        }
+
+        $accessToken = '';
+        $refreshToken = '';
+        $accessTokenExpiry = 0;
+
+        try {
+            $accessToken = $oauth2->getAccessToken($code);
+            $refreshToken = $oauth2->getRefreshToken($code);
+            $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
+        } catch (OAuth2Exception $ex) {
+            $failureRedirect(
+                $ex->getType(),
+                'Failed to obtain access token: ' . $ex->getMessage(),
+                $ex->getCode(),
+            );
         }
 
         $oauth2ID = $oauth2->getUserID($accessToken);
-        
-
         if (empty($oauth2ID)) {
-            if (!empty($state['failure'])) {
-                $response->redirect($state['failure'], 301, 0);
-            }
-
-            throw new Exception(Exception::USER_MISSING_ID);
+            $failureRedirect(Exception::USER_MISSING_ID);
         }
 
         $name = $oauth2->getUserName($accessToken);
@@ -492,7 +511,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userId', $userId),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         }
 
@@ -551,7 +570,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
 
                     if ($total >= $limit) {
-                        throw new Exception(Exception::USER_COUNT_EXCEEDED);
+                        $failureRedirect(Exception::USER_COUNT_EXCEEDED);
                     }
                 }
 
@@ -590,7 +609,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     ]);
                     Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                 } catch (Duplicate $th) {
-                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
             }
         }
@@ -599,7 +618,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         Authorization::setRole(Role::users()->toString());
 
         if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
+            $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
         }
 
         $identity = $dbForProject->findOne('identities', [
