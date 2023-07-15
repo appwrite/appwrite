@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth;
 
+use Appwrite\Auth\OAuth2\Exception;
+
 abstract class OAuth2
 {
     /**
@@ -75,7 +77,7 @@ abstract class OAuth2
 
     /**
      * @param string $accessToken
-     * 
+     *
      * @return string
      */
     abstract public function getUserID(string $accessToken): string;
@@ -202,7 +204,13 @@ abstract class OAuth2
         // Send the request & save response to $response
         $response = \curl_exec($ch);
 
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
         \curl_close($ch);
+
+        if ($code != 200) {
+            throw new Exception($response, $code);
+        }
 
         return (string)$response;
     }
