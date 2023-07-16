@@ -63,5 +63,5 @@ jobs:
     #   make release
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+ build from analysis : a function web using all the advantages of apps in appwrite
  echo: apple import resource 
