@@ -3639,7 +3639,7 @@ $collections = [
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('resourceData'),
@@ -3653,14 +3653,14 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('reason'),
+                '$id' => ID::custom('errors'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 65535,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
-                'array' => false,
+                'array' => true,
                 'filters' => [],
             ],
             [

@@ -58,6 +58,12 @@ class MigrationReport extends Model
                 'description' => 'Size of files to be migrated in mb.',
                 'default' => 0,
                 'example' => 30000,
+            ])
+            ->addRule('version', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Version of the Appwrite instance to be migrated.',
+                'default' => '',
+                'example' => '1.4.0',
             ]);
     }
 

@@ -216,7 +216,7 @@ App::post('/v1/migrations/appwrite')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'reason' => ''
+            'errors' => []
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -295,7 +295,7 @@ App::post('/v1/migrations/firebase')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'reason' => ''
+            'errors' => []
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -385,7 +385,7 @@ App::post('/v1/migrations/supabase')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'reason' => ''
+            'errors' => []
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());
@@ -490,7 +490,7 @@ App::post('/v1/migrations/nhost')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
-            'reason' => ''
+            'errors' => []
         ]));
 
         $eventsInstance->setParam('migrationId', $migration->getId());

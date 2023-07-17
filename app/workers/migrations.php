@@ -218,6 +218,7 @@ class MigrationsV1 extends Worker
         try {
             $migrationDocument = $this->dbForProject->getDocument('migrations', $this->args['migration']['$id']);
             $migrationDocument->setAttribute('stage', 'processing');
+            $migrationDocument->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
             $source = $this->processSource(json_decode($migrationDocument->getAttribute('source'), true));
@@ -252,10 +253,15 @@ class MigrationsV1 extends Worker
             $errors = $transfer->getReport(Resource::STATUS_ERROR);
 
             if (count($errors) > 0) {
-                var_dump($errors);
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
-                $migrationDocument->setAttribute('reason', $errors[0]['message']);
+
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = "Failed to transfer resource '{$error['id']}:{$error['resource']}' with message '{$error['message']}'";
+                }
+
+                $migrationDocument->setAttribute('errors', $errorMessages);
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
                 return;
             }
@@ -270,7 +276,7 @@ class MigrationsV1 extends Worker
                 Console::error($th->getTraceAsString());
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
-                $migrationDocument->setAttribute('reason', $th->getMessage());
+                $migrationDocument->setAttribute('errors', [$th->getMessage()]);
                 return;
             }
 
@@ -278,10 +284,9 @@ class MigrationsV1 extends Worker
                 $errors = $transfer->getReport(Resource::STATUS_ERROR);
 
                 if (count($errors) > 0) {
-                    var_dump($errors);
                     $migrationDocument->setAttribute('status', 'failed');
                     $migrationDocument->setAttribute('stage', 'finished');
-                    $migrationDocument->setAttribute('reason', $errors[0]['message']);
+                    $migrationDocument->setAttribute('errors', $errors);
                 }
             }
         } finally {

@@ -2942,12 +2942,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/transfer.git",
-                "reference": "e19cf3734af195e000211c50e7eae7fec1d89e97"
+                "reference": "d22c31a6fe5dd4fa51b1d487bff3f6f438269bc3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/e19cf3734af195e000211c50e7eae7fec1d89e97",
-                "reference": "e19cf3734af195e000211c50e7eae7fec1d89e97",
+                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/d22c31a6fe5dd4fa51b1d487bff3f6f438269bc3",
+                "reference": "d22c31a6fe5dd4fa51b1d487bff3f6f438269bc3",
                 "shasum": ""
             },
             "require": {
@@ -2996,7 +2996,7 @@
                 "source": "https://github.com/utopia-php/transfer/tree/feat-improve-features",
                 "issues": "https://github.com/utopia-php/transfer/issues"
             },
-            "time": "2023-07-12T10:35:19+00:00"
+            "time": "2023-07-17T12:37:12+00:00"
         },
         {
             "name": "utopia-php/websocket",

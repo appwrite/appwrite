@@ -65,11 +65,11 @@ class Migration extends Model
                 'default' => [],
                 'example' => '[{"resource":"Database","id":"public","status":"SUCCESS","message":""}]',
             ])
-            ->addRule('reason', [
+            ->addRule('errors', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The reason for a migration failure if any.',
-                'default' => '',
-                'example' => '',
+                'description' => 'All errors that occurred during the migration process.',
+                'default' => [],
+                'example' => [],
             ])
         ;
     }
