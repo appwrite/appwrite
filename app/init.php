@@ -210,6 +210,11 @@ Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
 
+/** Migration DB filters */
+$migration = new Migration('1.1.x', '1.2.x');
+$migration->createFilters();
+
+
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');
 if (!empty($user) || !empty($pass)) {
@@ -217,12 +222,6 @@ if (!empty($user) || !empty($pass)) {
 } else {
     Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
 }
-
-
-/** Migration DB filters */
-$migration = new Migration('1.1.x', '1.2.x');
-$migration->createFilters();
-
 
 /**
  * New DB Filters

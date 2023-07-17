@@ -26,12 +26,10 @@ class Migration
     protected const TYPE_COLLECTION_CREATED = 'collection_created';
     protected const TYPE_COLLECTION_DELETED = 'collection_deleted';
 
-    protected const MODE_BEFORE = 'before';
-    protected const MODE_AFTER = 'after';
+    public const MODE_BEFORE = 'before';
+    public const MODE_AFTER = 'after';
 
     protected array $diff = [];
-
-    protected array $executedActions = [];
 
     protected string $mode = self::MODE_BEFORE;
 
@@ -49,8 +47,8 @@ class Migration
         $this->from = $from;
         $this->to = $to;
 
-        $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$this->from}.php");
-        $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$this->to}.php");
+        $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$from}.php");
+        $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$to}.php");
 
         $projectDiff = $this->compareSchemas($schema1, $schema2);
         $consoleDiff = $this->compareSchemas($schema1, $schema2, 'console');
@@ -71,6 +69,15 @@ class Migration
         });
     }
 
+    public function getMode(): string 
+    {
+        return $this->mode;
+    }
+
+    public function setMode(string $mode)
+    {
+        $this->mode = $mode;
+    }
 
     protected function loadSchema(string $path): array
     {
@@ -180,6 +187,8 @@ class Migration
 
     public function confirm(): bool
     {
+        Console::info("Migration Mode : " . strtoupper($this->mode));
+
         if ($this->mode === self::MODE_AFTER) {
             $attributesRemoved = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
             if (count($attributesRemoved)) Console::success("The following attributes will be deleted");
@@ -255,7 +264,6 @@ class Migration
             $tempAttributeId = $oldAttribute['$id'] . '_temp';
 
             $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
-            var_dump("Creating filter $filter");
 
             Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
                 return $document->getAttribute($oldAttribute['$id']);
@@ -267,6 +275,7 @@ class Migration
 
     protected function createCollection(array $collection): void
     {
+        Console::success("Creating Collection: " . $collection['$id']);
         try {
             if ($this->mode == self::MODE_BEFORE) {
                 $id = $collection['$id'];
@@ -297,35 +306,9 @@ class Migration
 
                 $this->projectDB->createCollection($id, $attributes, $indexes);
 
-                $this->executedActions[] = [
-                    'type' => 'collection_added',
-                    'collection' => $collection
-                ];
-
-                Console::success("Added collection: " . $id);
-            } else {
-                Console::warning("Skipping addition of collection: '{$collection}' in migrate mode: '{$this->mode}'");
-            }
-        } catch (Exception $e) {
-            Console::error($e->getMessage());
-        }
-    }
-
-    protected function deleteCollection(array $collection): void
-    {
-        Console::log("Deleting collection: " . $collection);
-        try {
-            if ($this->mode == self::MODE_AFTER) {
-                $this->projectDB->deleteCollection($collection['$id']);
-
-                $this->executedActions[] = [
-                    'type' => 'collection_deleted',
-                    'collection' => $collection
-                ];
-
-                Console::success("Deleted collection: " . $collection);
-            } else {
-                Console::warning("Skipping deletion of collection: '{$collection}' in migrate mode: '{$this->mode}'");
+                Console::log("Added collection: " . $id);
+            } else if ($this->mode == self::MODE_AFTER) {
+                Console::log("Skipping addition of collection: '{$collection}' in migrate mode: '{$this->mode}'");
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
@@ -334,8 +317,7 @@ class Migration
 
     protected function createAttribute(string $collection, array $attribute): void
     {
-        Console::log("Adding attribute: " . $attribute['$id'] . " in collection: " . $collection);
-
+        Console::success("Adding attribute: " . $attribute['$id'] . " in collection: " . $collection);
         try {
             if ($this->mode == self::MODE_BEFORE) {
                 $this->projectDB->createAttribute(
@@ -351,23 +333,18 @@ class Migration
                     $attribute['format_options'] ?? []
                 );
 
-                $this->executedActions[] = [
-                    'type' => 'attribute_added',
-                    'collection' => $collection,
-                    'attribute' => $attribute
-                ];
-
-                Console::success("Added attribute: " . $attribute['$id']);
-            } else {
-                Console::warning("Skipping addition of attribute: '{$attribute['$id']}' in migrate mode: '{$this->mode}'");
-
+                Console::log("Added attribute: " . $attribute['$id']);
+            } else if ($this->mode == self::MODE_AFTER) {
                 // Update the required property of the attribute to true if it was originally supposed to be required
-                if ($attribute['required']) {
+                if ($attribute['required'] === true) {
                     $this->projectDB->updateAttributeRequired(
                         $collection,
                         $attribute['$id'],
                         true
                     );
+                    Console::log("Updated required property of attribute: '{$attribute['$id']}' to true");
+                } else {
+                    Console::log("Skipping addition of attribute: '{$attribute['$id']}' in migrate mode: '{$this->mode}'");
                 }
             }
         } catch (Exception $e) {
@@ -377,12 +354,12 @@ class Migration
 
     protected function updateAttribute(string $collection, array $oldAttribute, array $newAttribute): void
     {
-        Console::log("Updating attribute: " . $oldAttribute['$id'] . " in collection: " . $collection);
+        Console::success("Updating attribute: " . $oldAttribute['$id'] . " in collection: " . $collection);
         // TODO consider case when name of the attribute is changed.
         try {
-            if ($this->mode == self::MODE_BEFORE) {
-                $tempAttributeId = $oldAttribute['$id'] . '_temp';
+            $tempAttributeId = $oldAttribute['$id'] . '_temp';
 
+            if ($this->mode == self::MODE_BEFORE) {
                 $this->projectDB->createAttribute(
                     $collection,
                     $tempAttributeId,
@@ -412,15 +389,16 @@ class Migration
                     array_merge($newAttribute['filters'] ?? [], [$filter])
                 );
 
-                $this->executedActions[] = [
-                    'type' => 'temp_attribute_added',
-                    'collection' => $collection,
-                    'attribute' => $tempAttributeId
-                ];
+                Console::log("Added temp attribute: $tempAttributeId");
+            } else if ($this->mode == self::MODE_AFTER) {
 
-                Console::success("Added temp attribute: $tempAttributeId");
-            } else {
-                $tempAttributeId = $oldAttribute['$id'] . '_temp';
+                $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
+
+                Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
+                    return $document->getAttribute($oldAttribute['$id']);
+                }, function (mixed $value) {
+                    return null;
+                });
 
                 $this->projectDB->deleteAttribute(
                     $collection,
@@ -433,12 +411,6 @@ class Migration
                     $oldAttribute['$id']
                 );
 
-                $this->executedActions[] = [
-                    'type' => 'attribute_updated',
-                    'collection' => $collection,
-                    'oldAttribute' => $oldAttribute,
-                    'newAttribute' => $newAttribute
-                ];
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
@@ -447,21 +419,32 @@ class Migration
 
     protected function deleteAttribute(string $collection, array $attribute): void
     {
-        Console::log("Deleting attribute: " . $attribute['$id'] . " in collection: " . $collection);
+        Console::warning("Deleting attribute: " . $attribute['$id'] . " in collection: " . $collection);
 
         try {
-            if ($this->mode === self::MODE_AFTER) {
-                /** Perform  deletion of the column only after the application upgrade */
+            /** Perform  deletion of the column only after the application upgrade */
+            if ($this->mode === self::MODE_BEFORE) {
+                Console::log("Skipping deletion of attribute: '{$attribute['$id']}' in migrate mode: '{$this->mode}'");
+            } else if ($this->mode === self::MODE_AFTER) {
                 $this->projectDB->deleteAttribute($collection, $attribute['$id']);
 
-                $this->executedActions[] = [
-                    'type' => 'attribute_removed',
-                    'collectionId' => $collection,
-                    'attribute' => $attribute
-                ];
-                Console::success("Deleted attribute: {$attribute['$id']} from collection: $collection");
-            } else {
-                Console::warning("Skipping deletion of attribute: '{$attribute['$id']}' in migrate mode: '{$this->mode}'");
+                Console::log("Deleted attribute: {$attribute['$id']} from collection: $collection");
+            }
+        } catch (Exception $e) {
+            Console::error($e->getMessage());
+        }
+    }
+
+    protected function deleteCollection(array $collection): void
+    {
+        Console::warning("Deleting collection: " . $collection);
+        try {
+            if ($this->mode == self::MODE_BEFORE) {
+                Console::log("Skipping deletion of collection: '{$collection}' in migrate mode: '{$this->mode}'");
+            } else if ($this->mode == self::MODE_AFTER) {
+                $this->projectDB->deleteCollection($collection['$id']);
+
+                Console::log("Deleted collection: " . $collection);
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());

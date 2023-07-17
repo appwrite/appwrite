@@ -68,6 +68,18 @@ class MigrateNew extends Action
 
         $migration = new Migration($from, $to);
 
+        $fromBaseVersion = str_replace('.x', '', $from);
+        $toBaseVersion = str_replace('.x', '', $to);
+        $appBaseVersion = substr(APP_VERSION_STABLE, 0, strrpos(APP_VERSION_STABLE, '.'));
+        
+        if (version_compare($appBaseVersion, $fromBaseVersion, '==')) {
+            $migration->setMode(Migration::MODE_BEFORE);
+        } elseif (version_compare($appBaseVersion, $toBaseVersion, '==')) {
+            $migration->setMode(Migration::MODE_AFTER);
+        } else {
+            throw new \Exception('Invalid version specified');
+        }
+
         if(!$migration->confirm()) {
             Console::error('Migration aborted ... Exiting ... ');
             return;
