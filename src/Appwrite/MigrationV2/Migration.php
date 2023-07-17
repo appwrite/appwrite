@@ -275,11 +275,10 @@ class Migration
 
     protected function createCollection(array $collection): void
     {
-        Console::success("Creating Collection: " . $collection['$id']);
+        $id = $collection['$id'];
+        Console::success("Creating Collection: " . $id);
         try {
             if ($this->mode == self::MODE_BEFORE) {
-                $id = $collection['$id'];
-
                 foreach ($collection['attributes'] as $attribute) {
                     $attributes[] = new Document([
                         '$id' => ID::custom($attribute['$id']),
@@ -308,7 +307,7 @@ class Migration
 
                 Console::log("Added collection: " . $id);
             } else if ($this->mode == self::MODE_AFTER) {
-                Console::log("Skipping addition of collection: '{$collection}' in migrate mode: '{$this->mode}'");
+                Console::log("Skipping addition of collection: '{$id}' in migrate mode: '{$this->mode}'");
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
