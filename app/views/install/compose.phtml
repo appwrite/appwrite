@@ -86,6 +86,7 @@ services:
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_LIMIT_COUNT
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_REDIS_HOST
@@ -258,7 +259,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -367,7 +368,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
@@ -659,7 +660,7 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    environment: 
+    environment:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
 

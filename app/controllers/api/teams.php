@@ -165,7 +165,7 @@ App::get('/v1/teams')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('teams', $filterQueries, (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT));
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -653,7 +653,7 @@ App::get('/v1/teams/:teamId/memberships')
         $total = $dbForProject->count(
             collection: 'memberships',
             queries: $filterQueries,
-            max: APP_LIMIT_COUNT
+            max: (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT)
         );
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
@@ -1017,7 +1017,7 @@ App::get('/v1/teams/:teamId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT);
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);

@@ -185,7 +185,7 @@ App::get('/v1/storage/buckets')
 
         $response->dynamic(new Document([
             'buckets' => $dbForProject->find('buckets', $queries),
-            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('buckets', $filterQueries, (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT)),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -731,10 +731,10 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         if ($fileSecurity && !$valid) {
             $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries);
-            $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT));
         } else {
             $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries));
-            $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+            $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT)));
         }
 
         $response->dynamic(new Document([

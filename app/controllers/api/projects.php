@@ -221,7 +221,7 @@ App::get('/v1/projects')
 
         $response->dynamic(new Document([
             'projects' => $dbForConsole->find('projects', $queries),
-            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForConsole->count('projects', $filterQueries, (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT)),
         ]), Response::MODEL_PROJECT_LIST);
     });
 
