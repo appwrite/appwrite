@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Extend\Exception;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -10,15 +9,15 @@ use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Hostname;
 
-class DbBackup extends Action
+class Backup extends Action
 {
     protected string $directory = '/var/lib/mysql';
-    public static string $backups = '/backups'; // This is the mounted volume
+    public static string $backups = '/backups'; // Mounted volume
     protected string $containerName = 'appwrite-mariadb';
 
     public static function getName(): string
     {
-        return 'db-backup';
+        return 'backup';
     }
 
     public function __construct()
@@ -27,7 +26,7 @@ class DbBackup extends Action
         $this
             ->desc('Backup a DB')
             ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain.', true)
-            ->callback(fn ($domain) => $this->action($domain));
+            ->callback(fn($domain) => $this->action($domain));
     }
 
     /**
@@ -35,6 +34,10 @@ class DbBackup extends Action
      */
     public function action(string $domain): void
     {
+        $start = microtime(true);
+        $time = date('Y-m-d_H:i:s');
+        $this->log('--- Backup Start --- ');
+
         if (empty(App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))) {
             Console::error('Can\'t read _APP_CONNECTIONS_DB_PROJECT');
             Console::exit();
@@ -60,29 +63,42 @@ class DbBackup extends Action
             Console::exit();
         }
 
-        $time = date('Y-m-d_H:i:s');
-        Console::log('--- Backup Start --- ' . $time);
+        Storage::setDevice('files', new DOSpaces('backups', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION')));
+        $device = Storage::getDevice('files');
 
-//        Console::log('creating directory:' . $this->backups);
-//        if (!file_exists($this->backups) && !mkdir($this->backups, 0755, true)) {
-//            Console::error('Error creating directory: ' . $this->backups);
-//            Console::exit();
-//        }
+        // Todo: do we want to have the backup ready on the mounted dir? or to abort?
+        if (!$device->exists('/')) {
+            Console::error('Can\'t read from DO aborting');
+            Console::exit();
+        }
+
+        $dsn = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
+
+        if (!file_exists(self::$backups)) {
+            Console::error('Mount directory does not exist');
+            Console::exit();
+        }
+
+        $backups = self::$backups . '/' . $dsn;
+
+        if (!file_exists($backups) && !mkdir($backups, 0755, true)) {
+            Console::error('Error creating directory: ' . $backups);
+            Console::exit();
+        }
 
         $stdout = '';
         $stderr = '';
         $cmd = 'docker stop ' . $this->containerName;
-        Console::log($cmd);
-        $code = Console::execute($cmd, '', $stdout, $stderr);
+        $this->log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        $this->log($stdout);
         if (!empty($stderr)) {
             Console::error($stderr);
             Console::exit();
         }
 
-        Console::log($stdout);
-
         $filename = $time . '.tar.gz';
-        $file = self::$backups . '/' . $filename;
+        $file = $backups . '/' . $filename;
 
         //        $cmd = 'tar czf ' . $file . ' --absolute-names ' . $this->directory;
         //
@@ -95,9 +111,9 @@ class DbBackup extends Action
         $stdout = '';
         $stderr = '';
         $cmd = 'cd ' . $this->directory . ' && tar zcf ' . $file . ' .';
+        $this->log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
-        Console::log($cmd);
-        Console::log($stdout);
+        $this->log($stdout);
         if (!empty($stderr)) {
             Console::error($stderr);
             Console::exit();
@@ -106,28 +122,50 @@ class DbBackup extends Action
         $stdout = '';
         $stderr = '';
         $cmd = 'docker start ' . $this->containerName;
+        $this->log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
-        Console::log($stdout);
+        $this->log($stdout);
         if (!empty($stderr)) {
             Console::error($stderr);
             Console::exit();
         }
 
-        $dsn = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
-
-        Storage::setDevice('files', new DOSpaces('backups', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION')));
-        $device = Storage::getDevice('files');
         try {
-            $result = $device->upload($file, '/' . $dsn . '/daily/' . $filename);
+            $folder = App::getEnv('_APP_BACKUP_FOLDER', 'hourly');
+
+            $path = '/' . $dsn . '/' . $folder . '/' . $filename;
+            $this->log('Uploading ' . $path);
+            if (!$device->upload($file, $path)) {
+                Console::error('Error uploading to ' . $path);
+                Console::exit();
+            }
+
+//            $isDaily = true;
+//
+//            if ($isDaily) {
+//                $dailyPath = '/' . $dsn . '/daily/' . $filename;
+//                $this->log('Moving ' . $dailyPath);
+//                if (!$device->move($hourlyPath, $dailyPath)) {
+//                    Console::error('Error moving to hourly to ' . $dailyPath);
+//                    Console::exit();
+//                }
+//            }
         } catch (\Exception $e) {
             Console::error($e->getMessage());
             Console::exit();
         }
 
-        Console::log('-- Backup End -- ');
+        $this->log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
 
-//        Console::loop(function () {
-//            Console::log('Hello');
-//        }, 100);
+        Console::loop(function () {
+            Console::log('Hello');
+        }, 100);
+    }
+
+    public function log(string $message): void
+    {
+        if (!empty($message)) {
+            Console::log(date('Y-m-d H:i:s') . ' ' . $message);
+        }
     }
 }

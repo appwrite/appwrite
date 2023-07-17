@@ -634,7 +634,7 @@ services:
       - ./src:/usr/src/code/src
       - appwrite-mariadb:/var/lib/mysql:rw
       - ./backups:/backups:rw
-     # - ./extracts:/extracts:rw
+      - ./extracts:/extracts:rw
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - redis
