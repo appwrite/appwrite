@@ -30,6 +30,8 @@ class Migration
     public const MODE_AFTER = 'after';
 
     protected array $diff = [];
+    protected array $consoleDiff = [];
+    protected array $projectDiff = [];
 
     protected string $mode = self::MODE_BEFORE;
 
@@ -50,10 +52,10 @@ class Migration
         $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$from}.php");
         $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$to}.php");
 
-        $projectDiff = $this->compareSchemas($schema1, $schema2);
-        $consoleDiff = $this->compareSchemas($schema1, $schema2, 'console');
+        $this->projectDiff = $this->compareSchemas($schema1, $schema2);
+        $this->consoleDiff = $this->compareSchemas($schema1, $schema2, 'console');
 
-        $this->diff = array_merge($projectDiff, $consoleDiff);
+        $this->diff = array_merge($this->projectDiff, $this->consoleDiff);
 
         usort($this->diff, function ($a, $b) {
             if ($a['type'] === $b['type']) {
@@ -181,6 +183,12 @@ class Migration
         $this->project = $project;
         $this->projectDB = $projectDB;
         $this->consoleDB = $consoleDB;
+
+        if($project->getId() === 'console') {
+            $this->diff = $this->consoleDiff;
+        } else {
+            $this->diff = $this->projectDiff;
+        }
 
         return $this;
     }
