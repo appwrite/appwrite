@@ -121,6 +121,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/migratenew && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
