@@ -8,7 +8,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Appwrite\Resque\Worker;
-use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -296,12 +295,21 @@ class DeletesV1 extends Worker
      */
     protected function deleteMemberships(Document $document, Document $project): void
     {
-        $teamId = $document->getAttribute('teamId', '');
+        $dbForProject = $this->getProjectDB($project);
+        $teamInternalId = $document->getInternalId();
 
         // Delete Memberships
-        $this->deleteByGroup('memberships', [
-            Query::equal('teamId', [$teamId])
-        ], $this->getProjectDB($project));
+        $this->deleteByGroup(
+            'memberships',
+            [
+                Query::equal('teamInternalId', [$teamInternalId])
+            ],
+            $dbForProject,
+            function (Document $membership) use ($dbForProject) {
+                $userId = $membership->getAttribute('userId');
+                $dbForProject->deleteCachedDocument('users', $userId);
+            }
+        );
     }
 
     /**
