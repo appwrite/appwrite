@@ -21,6 +21,7 @@ use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
 use Appwrite\Platform\Tasks\CalcUsersStats;
 use Appwrite\Platform\Tasks\CalcTierStats;
+use Appwrite\Platform\Tasks\MigrateNew;
 use Appwrite\Platform\Tasks\PatchDeleteProjectCollections;
 
 class Tasks extends Service
@@ -41,6 +42,7 @@ class Tasks extends Service
             ->addAction(PatchDeleteScheduleUpdatedAtAttribute::getName(), new PatchDeleteScheduleUpdatedAtAttribute())
             ->addAction(Schedule::getName(), new Schedule())
             ->addAction(Migrate::getName(), new Migrate())
+            ->addAction(MigrateNew::getName(), new MigrateNew())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(VolumeSync::getName(), new VolumeSync())
             ->addAction(Specs::getName(), new Specs())
