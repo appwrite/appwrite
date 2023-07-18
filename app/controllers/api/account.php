@@ -701,7 +701,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $loginSecret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -827,7 +827,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
