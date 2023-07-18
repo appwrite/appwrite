@@ -75,7 +75,7 @@ class Mapper
     }
 
     public static function route(
-        App $utopia,
+        Http $http,
         Route $route,
         callable $complexity
     ): iterable {
@@ -101,7 +101,7 @@ class Mapper
                     $list = true;
                 }
                 $parameterType = Mapper::param(
-                    $utopia,
+                    $http,
                     $parameter['validator'],
                     !$parameter['optional'],
                     $parameter['injections']
@@ -116,7 +116,7 @@ class Mapper
                 'type' => $type,
                 'description' => $description,
                 'args' => $params,
-                'resolve' => Resolvers::api($utopia, $route)
+                'resolve' => Resolvers::api($http, $route)
             ];
 
             if ($list) {
@@ -205,7 +205,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
+     * @param Http $http
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -213,13 +213,13 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        App $utopia,
+        Http $http,
         Validator|callable $validator,
         bool $required,
         array $injections
     ): Type {
         $validator = \is_callable($validator)
-            ? \call_user_func_array($validator, $utopia->getResources($injections))
+            ? \call_user_func_array($validator, $http->getResources($injections))
             : $validator;
 
         $isNullable = $validator instanceof Nullable;
@@ -273,7 +273,7 @@ class Mapper
                 break;
             case 'Utopia\Validator\ArrayList':
                 $type = Type::listOf(self::param(
-                    $utopia,
+                    $http,
                     $validator->getValidator(),
                     $required,
                     $injections

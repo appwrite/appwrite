@@ -35,6 +35,7 @@ use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Registry\Registry;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -52,11 +53,11 @@ Http::init()
     ->inject('locale')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
+    ->action(function (Http $http, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers) {
         /*
         * Request format
         */
-        $route = $utopia->match($request);
+        $route = $http->match($request);
         Request::setRoute($route);
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -400,16 +401,17 @@ Http::error()
     ->inject('project')
     ->inject('logger')
     ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+    ->inject('register')
+    ->action(function (Throwable $error, Http $http, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs, Registry $register) {
 
         $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
-        $route = $utopia->match($request);
+        $route = $http->match($request);
 
         if ($logger) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
                 try {
                     /** @var Utopia\Database\Document $user */
-                    $user = $utopia->getResource('user');
+                    $user = $http->getResource('user');
                 } catch (\Throwable $th) {
                     // All good, user is optional information for logger
                 }
@@ -476,7 +478,7 @@ Http::error()
         }
 
         /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Exception) {
+        if ($error instanceof Utopia\Http\Exception) {
             $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
             switch ($code) {
                 case 400:
@@ -561,8 +563,18 @@ Http::error()
 
         $response->dynamic(
             new Document($output),
-            $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
+            $http->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_ERROR
         );
+
+        /** @var PDOPool $dbPool */
+        $dbPool = $register->get('dbPool');
+        $db = $http->getResource('db');
+        $dbPool->put($db);
+
+        /** @var RedisPool $redisPool */
+        $redisPool = $register->get('redisPool');
+        $redis = $http->getResource('redis');
+        $redisPool->put($redis);
     });
 
 Http::get('/robots.txt')

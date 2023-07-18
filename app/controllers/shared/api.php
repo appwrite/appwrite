@@ -101,9 +101,9 @@ Http::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (Http $http, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
 
-        $route = $utopia->match($request);
+        $route = $http->match($request);
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
             throw new Exception(Exception::PROJECT_UNKNOWN);
@@ -262,9 +262,9 @@ Http::init()
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->action(function (Http $http, Request $request, Document $project) {
 
-        $route = $utopia->match($request);
+        $route = $http->match($request);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -324,7 +324,7 @@ Http::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Http $http, Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -363,7 +363,7 @@ Http::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
+    ->action(function (Http $http, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -422,7 +422,7 @@ Http::shutdown()
             }
         }
 
-        $route = $utopia->match($request);
+        $route = $http->match($request);
         $requestParams = $route->getParamsValues();
         $user = $audits->getUser();
 

@@ -1081,7 +1081,7 @@ Http::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-Http::setResource('schema', function ($utopia, $dbForProject) {
+Http::setResource('schema', function ($http, $dbForProject) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
@@ -1159,7 +1159,7 @@ Http::setResource('schema', function ($utopia, $dbForProject) {
     ];
 
     return Schema::build(
-        $utopia,
+        $http,
         $complexity,
         $attributes,
         $urls,

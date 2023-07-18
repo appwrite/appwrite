@@ -601,8 +601,8 @@ Http::error()
     ->inject('error')
     ->inject('request')
     ->inject('response')
-    ->action(function (App $utopia, throwable $error, Request $request, Response $response) {
-        $route = $utopia->match($request);
+    ->action(function (Http $http, throwable $error, Request $request, Response $response) {
+        $route = $http->match($request);
         logError($error, "httpError", $route);
 
         switch ($error->getCode()) {

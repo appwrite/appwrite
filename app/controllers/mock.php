@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response;
+global $http, $request, $response;
 
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
@@ -641,10 +641,10 @@ Http::shutdown()
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->action(function (Http $http, Response $response, Request $request) {
 
         $result = [];
-        $route  = $utopia->match($request);
+        $route  = $http->match($request);
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

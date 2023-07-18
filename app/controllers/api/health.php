@@ -59,12 +59,12 @@ Http::get('/v1/health/db')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('utopia')
-    ->action(function (Response $response, App $utopia) {
+    ->action(function (Response $response, Http $http) {
 
         $checkStart = \microtime(true);
 
         try {
-            $db = $utopia->getResource('db'); /* @var $db PDO */
+            $db = $http->getResource('db'); /* @var $db PDO */
 
             // Run a small test to check the connection
             $statement = $db->prepare("SELECT 1;");
@@ -97,11 +97,11 @@ Http::get('/v1/health/cache')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('utopia')
-    ->action(function (Response $response, App $utopia) {
+    ->action(function (Response $response, Http $http) {
 
         $checkStart = \microtime(true);
 
-        $redis = $utopia->getResource('cache');
+        $redis = $http->getResource('cache');
 
         if (!$redis->ping(true)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Cache is not available');

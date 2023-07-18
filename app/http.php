@@ -4,7 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Utopia\Response;
 use Swoole\Process;
-use Swoole\Http\Server;
+use Utopia\Http\Adapter\Swoole\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Http\Http;
@@ -23,13 +23,13 @@ use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 
-$http = new Server("0.0.0.0", Http::getEnv('PORT', 80));
+$server = new Server("0.0.0.0", Http::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
 
-$http
-    ->set([
+$server
+    ->setConfig([
         'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
         // 'document_root' => __DIR__.'/../public',
@@ -40,24 +40,27 @@ $http
         'buffer_output_size' => $payloadSize,
     ]);
 
-$http->on('WorkerStart', function ($server, $workerId) {
-    Console::success('Worker ' . ++$workerId . ' started successfully');
-});
 
-$http->on('BeforeReload', function ($server, $workerId) {
+$server->onBeforeReload(function ($server, $workerId) {
     Console::success('Starting reload...');
 });
 
-$http->on('AfterReload', function ($server, $workerId) {
+$server->onAfterReload(function ($server, $workerId) {
     Console::success('Reload completed...');
 });
+    
+Http::onWorkerStart(function($server, $workerId) {
+    Console::success('Worker ' . ++$workerId . ' started successfully');
+});
 
-Files::load(__DIR__ . '/../console');
 
 include __DIR__ . '/controllers/general.php';
 
-$http->on('start', function (Server $http) use ($payloadSize, $register) {
-    $app = new Http('UTC');
+Http::onStart()
+    ->inject('register')
+    ->inject('utopia')
+    ->inject('server')
+    ->action(function() use ($payloadSize, $register, $app, $http) {
 
     go(function () use ($register, $app) {
         // wait for database to be ready
@@ -221,120 +224,20 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     });
 });
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
-    $request = new Request($swooleRequest);
-    $response = new Response($swooleResponse);
+Http::onRequest()
+    ->inject('register')
+    ->action(function ($register) {
 
-    if (Files::isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
+        $db = $register->get('dbPool')->get();
+        $redis = $register->get('redisPool')->get();
 
-        $response
-            ->setContentType(Files::getFileMimeType($request->getURI()))
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send(Files::getFileContents($request->getURI()));
-
-        return;
-    }
-
-    $app = new Http('UTC');
-
-    $db = $register->get('dbPool')->get();
-    $redis = $register->get('redisPool')->get();
-
-    Http::setResource('db', fn () => $db);
-    Http::setResource('cache', fn () => $redis);
-
-    try {
+        Http::setResource('db', fn () => $db);
+        Http::setResource('cache', fn () => $redis);
         Authorization::cleanRoles();
         Authorization::setRole(Role::any()->toString());
+    });
 
-        $app->run($request, $response);
-    } catch (\Throwable $th) {
-        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
+$app = new Http($server, 'UTC');
+$app->loadFiles(__DIR__ . '/../console');
 
-        $logger = $app->getResource("logger");
-        if ($logger) {
-            try {
-                /** @var Utopia\Database\Document $user */
-                $user = $app->getResource('user');
-            } catch (\Throwable $_th) {
-                // All good, user is optional information for logger
-            }
-
-            $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
-            $route = $app->match($request);
-
-            $log = new Utopia\Logger\Log();
-
-            if (isset($user) && !$user->isEmpty()) {
-                $log->setUser(new User($user->getId()));
-            }
-
-            $log->setNamespace("http");
-            $log->setServer(\gethostname());
-            $log->setVersion($version);
-            $log->setType(Log::TYPE_ERROR);
-            $log->setMessage($th->getMessage());
-
-            $log->addTag('method', $route->getMethod());
-            $log->addTag('url', $route->getPath());
-            $log->addTag('verboseType', get_class($th));
-            $log->addTag('code', $th->getCode());
-            // $log->addTag('projectId', $project->getId()); // TODO: Figure out how to get ProjectID, if it becomes relevant
-            $log->addTag('hostname', $request->getHostname());
-            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-            $log->addExtra('file', $th->getFile());
-            $log->addExtra('line', $th->getLine());
-            $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('detailedTrace', $th->getTrace());
-            $log->addExtra('roles', Authorization::getRoles());
-
-            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
-            $log->setAction($action);
-
-            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
-            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
-                $log->addBreadcrumb($loggerBreadcrumb);
-            }
-
-            $responseCode = $logger->addLog($log);
-            Console::info('Log pushed with status code: ' . $responseCode);
-        }
-
-        Console::error('[Error] Type: ' . get_class($th));
-        Console::error('[Error] Message: ' . $th->getMessage());
-        Console::error('[Error] File: ' . $th->getFile());
-        Console::error('[Error] Line: ' . $th->getLine());
-
-        $swooleResponse->setStatusCode(500);
-
-        $output = ((Http::isDevelopment())) ? [
-            'message' => 'Error: ' . $th->getMessage(),
-            'code' => 500,
-            'file' => $th->getFile(),
-            'line' => $th->getLine(),
-            'trace' => $th->getTrace(),
-            'version' => $version,
-        ] : [
-            'message' => 'Error: Server Error',
-            'code' => 500,
-            'version' => $version,
-        ];
-
-        $swooleResponse->end(\json_encode($output));
-    } finally {
-        /** @var PDOPool $dbPool */
-        $dbPool = $register->get('dbPool');
-        $dbPool->put($db);
-
-        /** @var RedisPool $redisPool */
-        $redisPool = $register->get('redisPool');
-        $redisPool->put($redis);
-    }
-});
-
-$http->start();
+$app->start();
