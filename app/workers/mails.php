@@ -27,7 +27,7 @@ class MailsV1 extends Worker
 
         $smtp = $this->args['smtp'];
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty($smtp) && empty(App::getEnv('_APP_SMTP_HOST'))) {
             Console::info('Skipped mail processing. No SMTP configuration has been set.');
             return;
         }
