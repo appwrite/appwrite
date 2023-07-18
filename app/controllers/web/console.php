@@ -16,13 +16,13 @@ App::init()
         ;
     });
 
-App::get('/console/*')
-    ->alias('/')
-    ->alias('auth/*')
+App::get('/')
+    ->alias('/console/*')
+    ->alias('/auth/*')
+    ->alias('/register/*')
     ->alias('/invite')
     ->alias('/login')
     ->alias('/recover')
-    ->alias('/register/*')
     ->groups(['web'])
     ->label('permission', 'public')
     ->label('scope', 'home')

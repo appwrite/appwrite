@@ -2222,12 +2222,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "1f1051041971abeb143fa2eee3dac8135859bb29"
+                "reference": "557afb898f9cab0331513e567564db4e987f4e0f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1f1051041971abeb143fa2eee3dac8135859bb29",
-                "reference": "1f1051041971abeb143fa2eee3dac8135859bb29",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/557afb898f9cab0331513e567564db4e987f4e0f",
+                "reference": "557afb898f9cab0331513e567564db4e987f4e0f",
                 "shasum": ""
             },
             "require": {
@@ -2259,7 +2259,7 @@
                 "issues": "https://github.com/utopia-php/framework/issues",
                 "source": "https://github.com/utopia-php/framework/tree/feat-routing-v2"
             },
-            "time": "2023-07-06T06:34:15+00:00"
+            "time": "2023-07-18T12:50:36+00:00"
         },
         {
             "name": "utopia-php/image",
