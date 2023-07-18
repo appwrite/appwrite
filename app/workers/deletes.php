@@ -147,7 +147,8 @@ class DeletesV1 extends Worker
                 $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
-                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
+                    $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
 
@@ -155,7 +156,7 @@ class DeletesV1 extends Worker
 
                 if ($function->isEmpty()) {
                     $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                    Console::success('Deleted schedule for function ' . $document->getAttribute('resourceId'));
                 }
             }
         );
