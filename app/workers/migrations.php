@@ -106,7 +106,7 @@ class MigrationsV1 extends Worker
                 );
                 break;
             case 'appwrite':
-                return new Appwrite($source['projectId'], $source['endpoint'], $source['apiKey']);
+                return new Appwrite($source['projectId'], str_starts_with($source['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $source['endpoint'], $source['apiKey']);
                 break;
             default:
                 throw new \Exception('Invalid source type');
