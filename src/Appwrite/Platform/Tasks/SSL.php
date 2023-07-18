@@ -21,14 +21,15 @@ class SSL extends Action
         $this
             ->desc('Validate server certificates')
             ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
-            ->callback(fn ($domain) => $this->action($domain));
+            ->inject('queueForCertificates')
+            ->callback(fn (string $domain, Certificate $queueForCertificates) => $this->action($domain, $queueForCertificates));
     }
 
-    public function action(string $domain): void
+    public function action(string $domain, Certificate $queueForCertificates): void
     {
         Console::success('Scheduling a job to issue a TLS certificate for domain: ' . $domain);
 
-        (new Certificate())
+        $queueForCertificates
             ->setDomain(new Document([
                 'domain' => $domain
             ]))
