@@ -73,7 +73,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
     $options = $attribute->getAttribute('options', []);
 
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -193,16 +193,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
         ->setCollection($collection)
-        ->setDocument($attribute)
-    ;
+        ->setDocument($attribute);
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId())
-    ;
+        ->setParam('attributeId', $attribute->getId());
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
@@ -224,7 +222,7 @@ function updateAttribute(
     array $elements = null,
     array $options = []
 ): Document {
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -685,13 +683,11 @@ App::delete('/v1/databases/:databaseId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($database)
-        ;
+            ->setDocument($database);
 
         $events
             ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, Response::MODEL_DATABASE))
-        ;
+            ->setPayload($response->output($database, Response::MODEL_DATABASE));
 
         $response->noContent();
     });
@@ -2364,7 +2360,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         // Convert Document[] to array of attribute metadata
-        $oldAttributes = \array_map(fn($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
         $oldAttributes[] = [
             'key' => '$id',
@@ -2538,7 +2534,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $indexes = $collection->getAttribute('indexes');
 
         // Search for index
-        $indexIndex = array_search($key, array_map(fn($idx) => $idx['key'], $indexes));
+        $indexIndex = array_search($key, array_map(fn ($idx) => $idx['key'], $indexes));
 
         if ($indexIndex === false) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
@@ -2737,7 +2733,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2816,7 +2812,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2941,7 +2937,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3053,7 +3049,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3280,14 +3276,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
-        $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
-        $oldDocumentToBeUpdated = $document;
 
-        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database, $newDocument, $oldDocumentToBeUpdated) {
+        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -3303,30 +3297,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 }
             }
 
-            $relationships = array_filter(
+            $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                function (Document $attribute) use ($oldDocumentToBeUpdated, $newDocument) {
-                    if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
-                        $relationKey = $attribute->getAttribute('key');
-
-                        $oldRelationDocument = $oldDocumentToBeUpdated[$relationKey] ?? [];
-                        $newRelationDocuemntFromRequestData = $newDocument[$relationKey] ?? [];
-
-                        if (count($oldRelationDocument) !== count($newRelationDocuemntFromRequestData)) {
-                                // Return true if a difference is found in the relationships
-                                return true;
-                        }
-
-                        foreach ($oldRelationDocument as $key => $obj1) {
-                            $obj2 = $newRelationDocuemntFromRequestData[$key] ?? null;
-                            if (($obj1 instanceof Document && $obj2 instanceof Document && $obj1->getArrayCopy() !== $obj2->getArrayCopy())  || !($obj2 instanceof Document)) {
-                                // Return true if a difference is found in the relationships
-                                return true;
-                            }
-                        }
-                    }
-
-                    return false;
+                function (Document $attribute) {
+                    return $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP;
                 }
             );
 
@@ -3351,6 +3325,8 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($relations as &$relation) {
+                    $skipCheckingPermission = false;
+                    // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
@@ -3360,25 +3336,44 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $oldDocument = Authorization::skip(fn() => $dbForProject->getDocument(
+                        $relatedDocumentOldVersion = Authorization::skip(fn() => $dbForProject->getDocument(
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
 
-                        if ($oldDocument->isEmpty()) {
+                        // If the child document has to be created it will need checking permissions.
+                        if ($relatedDocumentOldVersion->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
 
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
-                            $relation->setAttribute('$collection', $relatedCollection->getId());
                             $type = Database::PERMISSION_UPDATE;
-                        }
+                            $skipCheckingPermission = true;
 
-                        $checkPermissions($relatedCollection, $relation, $oldDocument, $type);
+                            foreach ($relation as $key => $value) {
+                                //No need to compare values of relations as for each relation we are recursively checking permission.
+                                if ($relatedDocumentOldVersion->getAttribute($key) instanceof Document) {
+                                    continue;
+                                }
+                                //If any of the values are different, we need to check permission.
+                                if ($relatedDocumentOldVersion->getAttribute($key) !== $value) {
+                                    $skipCheckingPermission = false;
+                                    $relation->removeAttribute('$collectionId');
+                                    $relation->removeAttribute('$databaseId');
+                                    $relation->setAttribute('$collection', $relatedCollection->getId());
+                                    break;
+                                }
+                            }
+                        }
+                        if ($skipCheckingPermission) {
+                            Authorization::skip(
+                                fn() => $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type)
+                            );
+                        } else {
+                            $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type);
+                        }
                     }
                 }
 
@@ -3389,8 +3384,29 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 }
             }
         };
-
+        $skipCheckingPermission = true;
+    foreach ($newDocument as $key => $value) {
+        if ($document->getAttribute($key) instanceof Document) {
+            continue;
+        }
+        //If any of the values are different, we need to check permission.
+        if ($newDocument->getAttribute($key) !== $value) {
+            $skipCheckingPermission = false;
+            $newDocument->removeAttribute('$collectionId');
+            $newDocument->removeAttribute('$databaseId');
+            $newDocument->setAttribute('$collection', $collection->getId());
+            break;
+        }
+    }
+    if ($skipCheckingPermission) {
+        Authorization::skip(
+            fn() => $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE)
+        );
+    } else {
         $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+        ;
+    }
+
 
     try {
         $document = $dbForProject->withRequestTimestamp(
