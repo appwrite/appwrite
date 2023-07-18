@@ -12,6 +12,12 @@ class HTTPTest extends Scope
     use ProjectNone;
     use SideNone;
 
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->client->setEndpoint('http://localhost');
+    }
+
     public function testOptions()
     {
         /**
@@ -30,24 +36,6 @@ class HTTPTest extends Scope
         $this->assertEquals('http://localhost', $response['headers']['access-control-allow-origin']);
         $this->assertEquals('true', $response['headers']['access-control-allow-credentials']);
         $this->assertEmpty($response['body']);
-    }
-
-    public function testError()
-    {
-        /**
-         * Test for SUCCESS
-         */
-        $this->markTestIncomplete('This test needs to be updated for the new console.');
-        // $response = $this->client->call(Client::METHOD_GET, '/error', \array_merge([
-        //     'origin' => 'http://localhost',
-        //     'content-type' => 'application/json',
-        // ]), []);
-
-        // $this->assertEquals(404, $response['headers']['status-code']);
-        // $this->assertEquals('Not Found', $response['body']['message']);
-        // $this->assertEquals(Exception::GENERAL_ROUTE_NOT_FOUND, $response['body']['type']);
-        // $this->assertEquals(404, $response['body']['code']);
-        // $this->assertEquals('dev', $response['body']['version']);
     }
 
     public function testHumans()
@@ -73,7 +61,7 @@ class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/robots.txt', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('# robotstxt.org/', $response['body']);
@@ -91,17 +79,17 @@ class HTTPTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/8DdIKX257k6Dih5s_saeVMpTnjPJdKO5Ase0OCiJrIg', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
         // 'Unknown path', but validation passed
+        $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/.well-known/acme-challenge/../../../../../../../etc/passwd', \array_merge([
             'origin' => 'http://localhost',
-        ]), []);
+        ]));
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
@@ -179,5 +167,16 @@ class HTTPTest extends Scope
         $this->assertIsString($body['console-cli']);
 
         $this->client->setEndpoint($previousEndpoint);
+    }
+
+    public function testDefaultOAuth2()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/success', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/auth/oauth2/failure', $this->getHeaders());
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 }

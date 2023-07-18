@@ -211,7 +211,7 @@ App::get('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -321,7 +321,7 @@ App::get('/v1/functions/:functionId/usage')
 
 App::get('/v1/functions/usage')
     ->desc('Get Functions Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -650,11 +650,13 @@ App::post('/v1/functions/:functionId/deployments')
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
-            if (is_null($start) || is_null($end) || is_null($fileSize)) {
+            // TODO make `end >= $fileSize` in next breaking version
+            if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            if ($end === $fileSize) {
+            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
+            if ($end === $fileSize - 1 || $end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
