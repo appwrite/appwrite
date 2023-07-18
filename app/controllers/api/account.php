@@ -1495,7 +1495,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration))
+                    ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -1939,7 +1939,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
-                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration));
+                $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
                 $events
                     ->setParam('userId', $user->getId())
