@@ -457,6 +457,29 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'userSearch',
+    function (mixed $value, Document $user) {
+        $searchValues = [
+            $user->getId(),
+            $user->getAttribute('email', ''),
+            $user->getAttribute('name', ''),
+            $user->getAttribute('phone', '')
+        ];
+
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $searchValues[] = 'label:' . $label;
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
 /**
  * DB Formats
  */

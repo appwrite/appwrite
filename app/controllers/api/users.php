@@ -28,6 +28,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -65,6 +66,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'phone' => $phone,
             'phoneVerification' => false,
             'status' => true,
+            'labels' => [],
             'password' => $password,
             'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
             'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
@@ -663,6 +665,45 @@ App::patch('/v1/users/:userId/status')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
+App::put('/v1/users/:userId/labels')
+    ->desc('Update User Labels')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.labels')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateLabels')
+    ->label('sdk.description', '/docs/references/users/update-user-labels.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), 5), 'Array of user labels. Replaces the previous labels. Maximum of 5 labels are allowed, each up to 36 alphanumeric characters long.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user->setAttribute('labels', (array) \array_values(\array_unique($labels)));
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $events
+            ->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
 App::patch('/v1/users/:userId/verification')
     ->desc('Update Email Verification')
     ->groups(['api', 'users'])
@@ -764,10 +805,7 @@ App::patch('/v1/users/:userId/name')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $user
-            ->setAttribute('name', $name)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $user->getAttribute('email', ''), $name, $user->getAttribute('phone', '')]));
-        ;
+        $user->setAttribute('name', $name);
 
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
@@ -869,7 +907,8 @@ App::patch('/v1/users/:userId/email')
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
-            ->setAttribute('search', \implode(' ', [$user->getId(), $email, $user->getAttribute('name', ''), $user->getAttribute('phone', '')]));
+        ;
+
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -913,7 +952,6 @@ App::patch('/v1/users/:userId/phone')
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $number]));
         ;
 
         try {
