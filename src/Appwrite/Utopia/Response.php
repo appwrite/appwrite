@@ -3,8 +3,8 @@
 namespace Appwrite\Utopia;
 
 use Exception;
-use Swoole\Http\Request as SwooleRequest;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Request as SwooleRequest;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Appwrite\Utopia\Response\Filter;

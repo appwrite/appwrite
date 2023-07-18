@@ -11,7 +11,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -28,6 +27,8 @@ use Utopia\Registry\Registry;
 use Appwrite\Utopia\Request;
 use Utopia\WebSocket\Server;
 use Utopia\WebSocket\Adapter;
+use Utopia\Http\Adapter\FPM\Server as FPMServer;
+use Utopia\Http\Http;
 
 require_once __DIR__ . '/init.php';
 
@@ -355,7 +356,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
-    $app = new Http('UTC');
+    $app = new Http(new FPMServer(), 'UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
@@ -484,7 +485,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
-        $app = new Http('UTC');
+        $app = new Http(new FPMServer(), 'UTC');
         $response = new Response(new SwooleResponse());
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
