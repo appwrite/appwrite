@@ -3,6 +3,7 @@
 namespace Appwrite\Specification;
 
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Route;
 use Appwrite\Utopia\Response\Model;
 
@@ -98,7 +99,7 @@ abstract class Format
         return $this->params[$key] ?? $default;
     }
 
-    protected function getEnumName(string $service, string $method): ?string
+    protected function getEnumName(string $service, string $method, string $param): ?string
     {
         switch ($service) {
             case 'account':
@@ -120,10 +121,81 @@ abstract class Format
             case 'storage':
                 switch ($method) {
                     case 'getFilePreview':
-                        return 'ImageGravity';
+                        switch ($param) {
+                            case 'gravity':
+                                return 'ImageGravity';
+                            case 'output':
+                                return  'ImageFormat';
+                        }
+                        break;
                 }
                 break;
         }
         return null;
+    }
+    public function getEnumKeys(string $service, string $method): array
+    {
+        $values = [];
+        switch ($service) {
+            case 'avatars':
+                switch ($method) {
+                    case 'getBrowser':
+                        $codes = Config::getParam('avatar-browsers');
+                        foreach ($codes as $code => $value) {
+                            $values[] = $value['name'];
+                        }
+                        return $values;
+                    case 'getCreditCard':
+                        $codes = Config::getParam('avatar-credit-cards');
+                        foreach ($codes as $code => $value) {
+                            $values[] = $value['name'];
+                        }
+                        return $values;
+                    case 'getFlag':
+                        $codes = Config::getParam('avatar-flags');
+                        foreach ($codes as $code => $value) {
+                            $values[] = $value['name'];
+                        }
+                        return $values;
+                }
+                break;
+            case 'databases':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getCollectionUsage':
+                    case 'getDatabaseUsage':
+                        // Range Enum Keys
+                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
+                }
+                break;
+            case 'function':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getFunctionUsage':
+                        // Range Enum Keys
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
+                }
+                break;
+            case 'users':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getUserUsage':
+                        // Range Enum Keys
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
+                }
+                break;
+            case 'storage':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getBucketUsage':
+                        // Range Enum Keys
+                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                        return $values;
+                }
+        }
+        return $values;
     }
 }

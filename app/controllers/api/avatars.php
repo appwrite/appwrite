@@ -35,7 +35,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     }
 
     $output = 'png';
-    $path = $set[$code];
+    $path = $set[$code]['path'];
     $type = 'png';
 
     if (!\is_readable($path)) {
