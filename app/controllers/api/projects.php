@@ -6,13 +6,13 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Network\Validator\CNAME;
-use Utopia\Validator\Domain as DomainValidator;
+use Utopia\Http\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
-use Utopia\Validator\URL;
+use Utopia\Http\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -30,12 +30,12 @@ use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Hostname;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
 App::init()
     ->groups(['projects'])

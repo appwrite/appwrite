@@ -4,7 +4,7 @@ global $cli, $register;
 
 use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Database\Adapter\MariaDB;
@@ -12,7 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 
 function clearProjectsCache(Redis $redis, Document $project)
 {

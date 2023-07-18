@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3eadbfe5543aafdf8682ea0465159e3c",
+    "content-hash": "8ff07180a61668adc736157fbeb02ee8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2218,31 +2218,33 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.28.4",
+            "version": "dev-feat-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "98c5469efe195aeecc63745dbf8e2f357f8cedac"
+                "reference": "4eb05830afaf20e8a3a597945a91e34cd09d6cfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/98c5469efe195aeecc63745dbf8e2f357f8cedac",
-                "reference": "98c5469efe195aeecc63745dbf8e2f357f8cedac",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/4eb05830afaf20e8a3a597945a91e34cd09d6cfb",
+                "reference": "4eb05830afaf20e8a3a597945a91e34cd09d6cfb",
                 "shasum": ""
             },
             "require": {
+                "ext-swoole": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpstan/phpstan": "1.9.x-dev",
+                "phpbench/phpbench": "^1.2",
+                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.5.25",
-                "vimeo/psalm": "4.27.0"
+                "swoole/ide-helper": "4.8.3"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/"
+                    "Utopia\\Http\\": "src/Http"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -2257,9 +2259,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.28.4"
+                "source": "https://github.com/utopia-php/framework/tree/feat-v2"
             },
-            "time": "2023-06-03T14:09:22+00:00"
+            "time": "2023-07-16T09:07:01+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3031,16 +3033,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.33.6",
+            "version": "0.33.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "237fe97b68090a244382c36f96482c352880a38c"
+                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/237fe97b68090a244382c36f96482c352880a38c",
-                "reference": "237fe97b68090a244382c36f96482c352880a38c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9f5db4a637b23879ceacea9ed2d33b0486771ffc",
+                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc",
                 "shasum": ""
             },
             "require": {
@@ -3076,9 +3078,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.6"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.7"
             },
-            "time": "2023-07-10T16:27:53+00:00"
+            "time": "2023-07-12T12:15:43+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -5650,9 +5652,18 @@
             "time": "2023-06-08T12:52:13+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-feat-v2",
+            "alias": "0.28.4",
+            "alias_normalized": "0.28.4.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

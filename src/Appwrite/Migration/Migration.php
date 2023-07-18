@@ -9,7 +9,7 @@ use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 

@@ -1,6 +1,6 @@
 <?php
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
@@ -8,14 +8,14 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Helpers\ID;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\FloatValidator;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Text;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\FloatValidator;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\WhiteList;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\JSON;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
@@ -34,8 +34,8 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Network\Validator\Email;
-use Utopia\Validator\IP;
-use Utopia\Validator\URL;
+use Utopia\Http\Validator\IP;
+use Utopia\Http\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Query\Limit;
 use Appwrite\Utopia\Database\Validator\Query\Offset;
@@ -50,7 +50,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Document as DocumentValidator;
 use Appwrite\Utopia\Database\Validator\Queries\Documents;
 use Utopia\Config\Config;
 use MaxMind\Db\Reader;
-use Utopia\Validator\Nullable;
+use Utopia\Http\Validator\Nullable;
 
 /**
  * Create attribute of varying type

@@ -6,7 +6,7 @@ use Appwrite\ClamAV\Network;
 use Utopia\Logger\Logger;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;
 

@@ -7,7 +7,7 @@ use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;

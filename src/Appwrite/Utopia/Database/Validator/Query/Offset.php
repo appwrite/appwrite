@@ -3,7 +3,7 @@
 namespace Appwrite\Utopia\Database\Validator\Query;
 
 use Utopia\Database\Query;
-use Utopia\Validator\Range;
+use Utopia\Http\Validator\Range;
 
 class Offset extends Base
 {

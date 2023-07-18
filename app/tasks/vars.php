@@ -2,7 +2,7 @@
 
 global $cli;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 

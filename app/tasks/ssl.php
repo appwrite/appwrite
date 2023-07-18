@@ -3,10 +3,10 @@
 global $cli;
 
 use Appwrite\Event\Certificate;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Validator\Hostname;
+use Utopia\Http\Validator\Hostname;
 
 $cli
     ->task('ssl')

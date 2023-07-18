@@ -4,7 +4,7 @@ global $cli, $register;
 
 use Appwrite\Usage\Calculators\TimeSeries;
 use InfluxDB\Database as InfluxDatabase;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -13,7 +13,7 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 use Utopia\Logger\Log;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\WhiteList;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);

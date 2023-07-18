@@ -10,7 +10,7 @@ use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Runtime;
 use Swoole\Timer;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Logger\Log;
@@ -27,11 +27,11 @@ use Utopia\Storage\Device\S3;
 use Utopia\Storage\Storage;
 use Utopia\Swoole\Request;
 use Utopia\Swoole\Response;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Assoc;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
 
 
 Runtime::enableCoroutine(true, SWOOLE_HOOK_ALL);

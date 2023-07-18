@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Resque\Worker;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 
 require_once __DIR__ . '/../init.php';

@@ -7,7 +7,7 @@ use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -35,12 +35,12 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\HexColor;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Swoole\Request;
 
 App::post('/v1/storage/buckets')

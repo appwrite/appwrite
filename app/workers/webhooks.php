@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Resque\Worker;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 

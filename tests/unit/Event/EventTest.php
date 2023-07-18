@@ -5,7 +5,7 @@ namespace Tests\Unit\Event;
 use Appwrite\Event\Event;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\App;
+use Utopia\Http\Http;
 
 class EventTest extends TestCase
 {

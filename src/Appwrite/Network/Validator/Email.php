@@ -2,7 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
-use Utopia\Validator;
+use Utopia\Http\Validator;
 
 /**
  * Email

@@ -6,7 +6,7 @@ global $register;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Adapter\MariaDB;

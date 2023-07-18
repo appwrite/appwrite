@@ -9,7 +9,7 @@ use Appwrite\Utopia\View;
 use Utopia\Analytics\GoogleAnalytics;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 
 $cli
     ->task('install')

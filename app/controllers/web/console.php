@@ -2,7 +2,7 @@
 
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 
 App::init()
     ->groups(['web'])

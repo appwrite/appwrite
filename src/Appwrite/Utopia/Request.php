@@ -4,7 +4,7 @@ namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Route;
+use Utopia\Http\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest

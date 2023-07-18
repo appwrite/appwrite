@@ -7,8 +7,8 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Validator;
-use Utopia\Validator\Nullable;
+use Utopia\Http\Validator;
+use Utopia\Http\Validator\Nullable;
 
 class OpenAPI3 extends Format
 {

@@ -8,10 +8,10 @@ use Exception;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
-use Utopia\App;
-use Utopia\Route;
-use Utopia\Validator;
-use Utopia\Validator\Nullable;
+use Utopia\Http\Http;
+use Utopia\Http\Route;
+use Utopia\Http\Validator;
+use Utopia\Http\Validator\Nullable;
 
 class Mapper
 {

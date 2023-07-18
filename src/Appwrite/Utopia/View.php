@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia;
 
-use Utopia\View as OldView;
+use Utopia\Http\View as OldView;
 
 class View extends OldView
 {

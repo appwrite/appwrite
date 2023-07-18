@@ -4,18 +4,18 @@ global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
-use Utopia\Validator\Host;
+use Utopia\Http\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\App;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Text;
 use Utopia\Storage\Validator\File;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
-use Utopia\Validator\Nullable;
+use Utopia\Http\Validator\Nullable;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')

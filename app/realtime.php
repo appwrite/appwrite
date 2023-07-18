@@ -11,7 +11,7 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;

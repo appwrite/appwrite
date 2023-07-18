@@ -2,7 +2,7 @@
 
 use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Adapters\SMS\Mock;

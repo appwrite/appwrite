@@ -6,9 +6,9 @@ use Appwrite\GraphQL\Types\Mapper;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Exception;
+use Utopia\Http\Route;
 
 class Schema
 {

@@ -8,7 +8,7 @@ use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Cron\CronExpression;
 use Executor\Executor;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;

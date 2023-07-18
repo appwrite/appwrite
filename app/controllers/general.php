@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../init.php';
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
@@ -28,13 +28,13 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\Hostname;
+use Utopia\Http\Validator\Hostname;
 use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');

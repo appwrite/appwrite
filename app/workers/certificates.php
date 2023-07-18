@@ -5,7 +5,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
 use Appwrite\Template\Template;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

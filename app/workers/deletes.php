@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;

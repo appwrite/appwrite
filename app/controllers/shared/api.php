@@ -10,7 +10,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;

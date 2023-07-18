@@ -3,7 +3,7 @@
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Locale\Locale;

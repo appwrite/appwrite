@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Database\Validator\Query;
 
 use Appwrite\Utopia\Database\Validator\Query\Base;
 use Utopia\Database\Query;
-use Utopia\Validator;
+use Utopia\Http\Validator;
 
 class Order extends Base
 {

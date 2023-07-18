@@ -4,7 +4,7 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Document;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;

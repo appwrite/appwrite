@@ -6,9 +6,9 @@ use Appwrite\GraphQL\Exception as GQLException;
 use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Exception;
+use Utopia\Http\Route;
 
 class Resolvers
 {

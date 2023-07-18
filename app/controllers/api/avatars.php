@@ -1,20 +1,20 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Utopia\Validator\URL;
+use Utopia\Http\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\HexColor;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 

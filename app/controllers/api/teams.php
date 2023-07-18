@@ -9,7 +9,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
-use Utopia\Validator\Host;
+use Utopia\Http\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries;
@@ -20,7 +20,7 @@ use Appwrite\Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -36,9 +36,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Assoc;
+use Utopia\Http\Validator\Text;
 
 App::post('/v1/teams')
     ->desc('Create Team')

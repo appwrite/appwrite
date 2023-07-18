@@ -3,7 +3,7 @@
 namespace Appwrite\Resque;
 
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;

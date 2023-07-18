@@ -9,7 +9,7 @@ use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Storage\Storage;

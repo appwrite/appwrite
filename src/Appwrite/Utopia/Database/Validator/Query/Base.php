@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Query;
 
-use Utopia\Validator;
+use Utopia\Http\Validator;
 use Utopia\Database\Query;
 
 abstract class Base extends Validator

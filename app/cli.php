@@ -3,7 +3,7 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Authorization;

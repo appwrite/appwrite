@@ -2,17 +2,17 @@
 
 global $cli;
 
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Swoole\Http\Response as HttpResponse;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Request;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Request;
+use Utopia\Http\Validator\WhiteList;
 
 $cli
     ->task('specs')
