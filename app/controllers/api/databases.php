@@ -73,7 +73,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
     $options = $attribute->getAttribute('options', []);
 
-    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -222,7 +222,7 @@ function updateAttribute(
     array $elements = null,
     array $options = []
 ): Document {
-    $db = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2360,7 +2360,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         // Convert Document[] to array of attribute metadata
-        $oldAttributes = \array_map(fn ($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
+        $oldAttributes = \array_map(fn($a) => $a->getArrayCopy(), $collection->getAttribute('attributes'));
 
         $oldAttributes[] = [
             'key' => '$id',
@@ -2534,7 +2534,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $indexes = $collection->getAttribute('indexes');
 
         // Search for index
-        $indexIndex = array_search($key, array_map(fn ($idx) => $idx['key'], $indexes));
+        $indexIndex = array_search($key, array_map(fn($idx) => $idx['key'], $indexes));
 
         if ($indexIndex === false) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
@@ -2733,7 +2733,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2812,7 +2812,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -2937,7 +2937,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3049,7 +3049,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
@@ -3299,9 +3299,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
-                function (Document $attribute) {
-                    return $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP;
-                }
+                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
             );
 
             foreach ($relationships as $relationship) {
