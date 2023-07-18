@@ -12,6 +12,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Validator\Text;
 
 function clearProjectsCache(Redis $redis, Document $project)
@@ -34,7 +35,7 @@ $cli
             return;
         }
 
-        $app = new Http('UTC');
+        $app = new Http(new Server(), 'UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
 

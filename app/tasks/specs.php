@@ -11,6 +11,7 @@ use Swoole\Http\Response as HttpResponse;
 use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Http\Request;
 use Utopia\Http\Validator\WhiteList;
 
@@ -204,7 +205,7 @@ $cli
                 }
             }
             // var_dump($models);
-            $arguments = [new Http('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new Http(new Server(), 'UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
