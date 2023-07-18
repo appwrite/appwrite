@@ -308,6 +308,7 @@ trait AccountBase
 
         $this->assertEquals(true, $response['body']['sessions'][0]['current']);
 
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['sessions'][0]['expire']));
         /**
          * Test for FAILURE
          */
