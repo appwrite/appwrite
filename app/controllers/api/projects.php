@@ -37,7 +37,7 @@ use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 
-App::init()
+Http::init()
     ->groups(['projects'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -46,7 +46,7 @@ App::init()
         }
     });
 
-App::post('/v1/projects')
+Http::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -59,7 +59,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.', true)
+    ->param('region', Http::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -180,7 +180,7 @@ App::post('/v1/projects')
             ->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/projects')
+Http::get('/v1/projects')
     ->desc('List Projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -225,7 +225,7 @@ App::get('/v1/projects')
         ]), Response::MODEL_PROJECT_LIST);
     });
 
-App::get('/v1/projects/:projectId')
+Http::get('/v1/projects/:projectId')
     ->desc('Get Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -249,7 +249,7 @@ App::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::get('/v1/projects/:projectId/usage')
+Http::get('/v1/projects/:projectId/usage')
     ->desc('Get usage stats for a project')
     ->groups(['api', 'projects', 'usage'])
     ->label('scope', 'projects.read')
@@ -274,7 +274,7 @@ App::get('/v1/projects/:projectId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -363,7 +363,7 @@ App::get('/v1/projects/:projectId/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId')
+Http::patch('/v1/projects/:projectId')
     ->desc('Update Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -410,7 +410,7 @@ App::patch('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service')
+Http::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -441,7 +441,7 @@ App::patch('/v1/projects/:projectId/service')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/oauth2')
+Http::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -485,7 +485,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/limit')
+Http::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update Project users limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -516,7 +516,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/duration')
+Http::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update Project Authentication Duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -547,7 +547,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/:method')
+Http::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -581,7 +581,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-history')
+Http::patch('/v1/projects/:projectId/auth/password-history')
     ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -612,7 +612,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-dictionary')
+Http::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password disctionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -643,7 +643,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/max-sessions')
+Http::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update Project user sessions limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -674,7 +674,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::delete('/v1/projects/:projectId')
+Http::delete('/v1/projects/:projectId')
     ->desc('Delete Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -709,7 +709,7 @@ App::delete('/v1/projects/:projectId')
 
 // Webhooks
 
-App::post('/v1/projects/:projectId/webhooks')
+Http::post('/v1/projects/:projectId/webhooks')
     ->desc('Create Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -765,7 +765,7 @@ App::post('/v1/projects/:projectId/webhooks')
             ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::get('/v1/projects/:projectId/webhooks')
+Http::get('/v1/projects/:projectId/webhooks')
     ->desc('List Webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -797,7 +797,7 @@ App::get('/v1/projects/:projectId/webhooks')
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
-App::get('/v1/projects/:projectId/webhooks/:webhookId')
+Http::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -831,7 +831,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::put('/v1/projects/:projectId/webhooks/:webhookId')
+Http::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -885,7 +885,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
+Http::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->desc('Update Webhook Signature Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -924,7 +924,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::delete('/v1/projects/:projectId/webhooks/:webhookId')
+Http::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -963,7 +963,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-App::post('/v1/projects/:projectId/keys')
+Http::post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1013,7 +1013,7 @@ App::post('/v1/projects/:projectId/keys')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/projects/:projectId/keys')
+Http::get('/v1/projects/:projectId/keys')
     ->desc('List Keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1045,7 +1045,7 @@ App::get('/v1/projects/:projectId/keys')
         ]), Response::MODEL_KEY_LIST);
     });
 
-App::get('/v1/projects/:projectId/keys/:keyId')
+Http::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1079,7 +1079,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::put('/v1/projects/:projectId/keys/:keyId')
+Http::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1126,7 +1126,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::delete('/v1/projects/:projectId/keys/:keyId')
+Http::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1165,7 +1165,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
 // Platforms
 
-App::post('/v1/projects/:projectId/platforms')
+Http::post('/v1/projects/:projectId/platforms')
     ->desc('Create Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1215,7 +1215,7 @@ App::post('/v1/projects/:projectId/platforms')
             ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::get('/v1/projects/:projectId/platforms')
+Http::get('/v1/projects/:projectId/platforms')
     ->desc('List Platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1247,7 +1247,7 @@ App::get('/v1/projects/:projectId/platforms')
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
-App::get('/v1/projects/:projectId/platforms/:platformId')
+Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1281,7 +1281,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::put('/v1/projects/:projectId/platforms/:platformId')
+Http::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1329,7 +1329,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::delete('/v1/projects/:projectId/platforms/:platformId')
+Http::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1368,7 +1368,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 // Domains
 
-App::post('/v1/projects/:projectId/domains')
+Http::post('/v1/projects/:projectId/domains')
     ->desc('Create Domain')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1399,7 +1399,7 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+        $target = new Domain(Http::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
             throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
@@ -1433,7 +1433,7 @@ App::post('/v1/projects/:projectId/domains')
             ->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-App::get('/v1/projects/:projectId/domains')
+Http::get('/v1/projects/:projectId/domains')
     ->desc('List Domains')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1465,7 +1465,7 @@ App::get('/v1/projects/:projectId/domains')
         ]), Response::MODEL_DOMAIN_LIST);
     });
 
-App::get('/v1/projects/:projectId/domains/:domainId')
+Http::get('/v1/projects/:projectId/domains/:domainId')
     ->desc('Get Domain')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1499,7 +1499,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-App::patch('/v1/projects/:projectId/domains/:domainId/verification')
+Http::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1530,7 +1530,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             throw new Exception(Exception::DOMAIN_NOT_FOUND);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+        $target = new Domain(Http::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
@@ -1559,7 +1559,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         $response->dynamic($domain, Response::MODEL_DOMAIN);
     });
 
-App::delete('/v1/projects/:projectId/domains/:domainId')
+Http::delete('/v1/projects/:projectId/domains/:domainId')
     ->desc('Delete Domain')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')

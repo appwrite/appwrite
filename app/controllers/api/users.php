@@ -88,7 +88,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
     return $user;
 }
 
-App::post('/v1/users')
+Http::post('/v1/users')
     ->desc('Create User')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -121,7 +121,7 @@ App::post('/v1/users')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/bcrypt')
+Http::post('/v1/users/bcrypt')
     ->desc('Create User with Bcrypt Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -152,7 +152,7 @@ App::post('/v1/users/bcrypt')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/md5')
+Http::post('/v1/users/md5')
     ->desc('Create User with MD5 Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -183,7 +183,7 @@ App::post('/v1/users/md5')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/argon2')
+Http::post('/v1/users/argon2')
     ->desc('Create User with Argon2 Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -214,7 +214,7 @@ App::post('/v1/users/argon2')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/sha')
+Http::post('/v1/users/sha')
     ->desc('Create User with SHA Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -252,7 +252,7 @@ App::post('/v1/users/sha')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/phpass')
+Http::post('/v1/users/phpass')
     ->desc('Create User with PHPass Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -283,7 +283,7 @@ App::post('/v1/users/phpass')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/scrypt')
+Http::post('/v1/users/scrypt')
     ->desc('Create User with Scrypt Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -327,7 +327,7 @@ App::post('/v1/users/scrypt')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::post('/v1/users/scrypt-modified')
+Http::post('/v1/users/scrypt-modified')
     ->desc('Create User with Scrypt Modified Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
@@ -361,7 +361,7 @@ App::post('/v1/users/scrypt-modified')
             ->dynamic($user, Response::MODEL_USER);
     });
 
-App::get('/v1/users')
+Http::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -408,7 +408,7 @@ App::get('/v1/users')
         ]), Response::MODEL_USER_LIST);
     });
 
-App::get('/v1/users/:userId')
+Http::get('/v1/users/:userId')
     ->desc('Get User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -434,7 +434,7 @@ App::get('/v1/users/:userId')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::get('/v1/users/:userId/prefs')
+Http::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -462,7 +462,7 @@ App::get('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::get('/v1/users/:userId/sessions')
+Http::get('/v1/users/:userId/sessions')
     ->desc('List User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -504,7 +504,7 @@ App::get('/v1/users/:userId/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::get('/v1/users/:userId/memberships')
+Http::get('/v1/users/:userId/memberships')
     ->desc('List User Memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -544,7 +544,7 @@ App::get('/v1/users/:userId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::get('/v1/users/:userId/logs')
+Http::get('/v1/users/:userId/logs')
     ->desc('List User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -626,7 +626,7 @@ App::get('/v1/users/:userId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/users/:userId/status')
+Http::patch('/v1/users/:userId/status')
     ->desc('Update User Status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
@@ -663,7 +663,7 @@ App::patch('/v1/users/:userId/status')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification')
+Http::patch('/v1/users/:userId/verification')
     ->desc('Update Email Verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
@@ -699,7 +699,7 @@ App::patch('/v1/users/:userId/verification')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification/phone')
+Http::patch('/v1/users/:userId/verification/phone')
     ->desc('Update Phone Verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
@@ -735,7 +735,7 @@ App::patch('/v1/users/:userId/verification/phone')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/name')
+Http::patch('/v1/users/:userId/name')
     ->desc('Update Name')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.name')
@@ -776,7 +776,7 @@ App::patch('/v1/users/:userId/name')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/password')
+Http::patch('/v1/users/:userId/password')
     ->desc('Update Password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.password')
@@ -835,7 +835,7 @@ App::patch('/v1/users/:userId/password')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/email')
+Http::patch('/v1/users/:userId/email')
     ->desc('Update Email')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.email')
@@ -882,7 +882,7 @@ App::patch('/v1/users/:userId/email')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/phone')
+Http::patch('/v1/users/:userId/phone')
     ->desc('Update Phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.phone')
@@ -927,7 +927,7 @@ App::patch('/v1/users/:userId/phone')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/verification')
+Http::patch('/v1/users/:userId/verification')
     ->desc('Update Email Verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
@@ -963,7 +963,7 @@ App::patch('/v1/users/:userId/verification')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::patch('/v1/users/:userId/prefs')
+Http::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
@@ -997,7 +997,7 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::delete('/v1/users/:userId/sessions/:sessionId')
+Http::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -1041,7 +1041,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         $response->noContent();
     });
 
-App::delete('/v1/users/:userId/sessions')
+Http::delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -1084,7 +1084,7 @@ App::delete('/v1/users/:userId/sessions')
         $response->noContent();
     });
 
-App::delete('/v1/users/:userId')
+Http::delete('/v1/users/:userId')
     ->desc('Delete User')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete')
@@ -1127,7 +1127,7 @@ App::delete('/v1/users/:userId')
         $response->noContent();
     });
 
-App::get('/v1/users/usage')
+Http::get('/v1/users/usage')
     ->desc('Get usage stats for the users API')
     ->groups(['api', 'users', 'usage'])
     ->label('scope', 'users.read')
@@ -1145,7 +1145,7 @@ App::get('/v1/users/usage')
     ->action(function (string $range, string $provider, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',

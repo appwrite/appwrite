@@ -54,7 +54,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     unset($image);
 };
 
-App::get('/v1/avatars/credit-cards/:code')
+Http::get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -74,7 +74,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
-App::get('/v1/avatars/browsers/:code')
+Http::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -94,7 +94,7 @@ App::get('/v1/avatars/browsers/:code')
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
-App::get('/v1/avatars/flags/:code')
+Http::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -114,7 +114,7 @@ App::get('/v1/avatars/flags/:code')
     ->inject('response')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
-App::get('/v1/avatars/image')
+Http::get('/v1/avatars/image')
     ->desc('Get Image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -165,7 +165,7 @@ App::get('/v1/avatars/image')
         unset($image);
     });
 
-App::get('/v1/avatars/favicon')
+Http::get('/v1/avatars/favicon')
     ->desc('Get Favicon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -201,8 +201,8 @@ App::get('/v1/avatars/favicon')
             CURLOPT_URL => $url,
             CURLOPT_USERAGENT => \sprintf(
                 APP_USERAGENT,
-                App::getEnv('_APP_VERSION', 'UNKNOWN'),
-                App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                Http::getEnv('_APP_VERSION', 'UNKNOWN'),
+                Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ),
         ]);
 
@@ -297,7 +297,7 @@ App::get('/v1/avatars/favicon')
         unset($image);
     });
 
-App::get('/v1/avatars/qr')
+Http::get('/v1/avatars/qr')
     ->desc('Get QR Code')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
@@ -338,7 +338,7 @@ App::get('/v1/avatars/qr')
         ;
     });
 
-App::get('/v1/avatars/initials')
+Http::get('/v1/avatars/initials')
     ->desc('Get User Initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')

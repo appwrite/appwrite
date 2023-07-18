@@ -4,7 +4,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Http\Http;
 use Utopia\Config\Config;
 
-App::get('/versions')
+Http::get('/versions')
     ->desc('Get Version')
     ->groups(['home'])
     ->label('scope', 'public')

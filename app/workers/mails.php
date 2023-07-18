@@ -24,7 +24,7 @@ class MailsV1 extends Worker
     {
         global $register;
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             Console::info('Skipped mail processing. No SMTP server hostname has been set.');
             return;
         }
@@ -42,9 +42,9 @@ class MailsV1 extends Worker
         // Set project mail
         /*$register->get('smtp')
             ->setFrom(
-                App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+                Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
                 ($project->getId() === 'console')
-                    ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+                    ? \urldecode(Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
                     : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
                 )
             );*/
@@ -56,7 +56,7 @@ class MailsV1 extends Worker
         $mail->clearBCCs();
         $mail->clearCCs();
 
-        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
+        $mail->setFrom(Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;

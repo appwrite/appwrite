@@ -302,7 +302,7 @@ class Resolvers
 
     private static function escapePayload(array $payload, int $depth)
     {
-        if ($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+        if ($depth > Http::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return;
         }
 

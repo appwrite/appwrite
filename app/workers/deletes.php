@@ -568,7 +568,7 @@ class DeletesV1 extends Worker
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
         foreach ($deploymentIds as $deploymentId) {
             try {
                 $executor->deleteRuntime($projectId, $deploymentId);
@@ -620,7 +620,7 @@ class DeletesV1 extends Worker
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         try {
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
             $executor->deleteRuntime($projectId, $deploymentId);
         } catch (Throwable $th) {
             Console::error($th->getMessage());
@@ -739,7 +739,7 @@ class DeletesV1 extends Worker
             ]);
 
             if (!$domainUsingCertificate) {
-                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
+                $mainDomain = Http::getEnv('_APP_DOMAIN_TARGET', '');
                 if ($mainDomain === $document->getAttribute('domain')) {
                     $domainUsingCertificate = $mainDomain;
                 }

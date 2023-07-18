@@ -40,7 +40,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -59,7 +59,7 @@ App::init()
         $route = $utopia->match($request);
         Request::setRoute($route);
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             switch ($requestFormat) {
                 case version_compare($requestFormat, '0.12.0', '<'):
@@ -94,7 +94,7 @@ App::init()
             } else {
                 Authorization::disable();
 
-                $envDomain = App::getEnv('_APP_DOMAIN', '');
+                $envDomain = Http::getEnv('_APP_DOMAIN', '');
                 $mainDomain = null;
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
@@ -185,7 +185,7 @@ App::init()
         /*
         * Response format
         */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $responseFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             switch ($responseFormat) {
                 case version_compare($responseFormat, '0.11.2', '<='):
@@ -216,7 +216,7 @@ App::init()
         * As recommended at:
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
-        if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (Http::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
@@ -375,7 +375,7 @@ App::init()
         }
     });
 
-App::options()
+Http::options()
     ->inject('request')
     ->inject('response')
     ->action(function (Request $request, Response $response) {
@@ -392,7 +392,7 @@ App::options()
             ->noContent();
     });
 
-App::error()
+Http::error()
     ->inject('error')
     ->inject('utopia')
     ->inject('request')
@@ -402,7 +402,7 @@ App::error()
     ->inject('loggerBreadcrumbs')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->match($request);
 
         if ($logger) {
@@ -443,7 +443,7 @@ App::error()
                 $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
                 $log->setAction($action);
 
-                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+                $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
                 $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
                 foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
@@ -519,7 +519,7 @@ App::error()
 
         $type = $error->getType();
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((Http::isDevelopment())) ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -548,7 +548,7 @@ App::error()
 
             $layout
                 ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('development', App::isDevelopment())
+                ->setParam('development', Http::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
@@ -565,7 +565,7 @@ App::error()
         );
     });
 
-App::get('/robots.txt')
+Http::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -575,7 +575,7 @@ App::get('/robots.txt')
         $response->text($template->render(false));
     });
 
-App::get('/humans.txt')
+Http::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -585,7 +585,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge/*')
+Http::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)

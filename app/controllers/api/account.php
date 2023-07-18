@@ -46,7 +46,7 @@ use Appwrite\Auth\Validator\PasswordDictionary;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-App::post('/v1/account')
+Http::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
@@ -141,7 +141,7 @@ App::post('/v1/account')
             ->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::post('/v1/account/sessions/email')
+Http::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
     ->desc('Create Email Session')
     ->groups(['api', 'account', 'auth', 'session'])
@@ -259,7 +259,7 @@ App::post('/v1/account/sessions/email')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::get('/v1/account/sessions/oauth2/:provider')
+Http::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 Session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -294,7 +294,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = Http::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -324,7 +324,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -348,7 +348,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
-App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -373,7 +373,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
     });
 
-App::get('/v1/account/sessions/oauth2/:provider/redirect')
+Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -412,7 +412,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = Http::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -624,7 +624,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
-App::post('/v1/account/sessions/magic-url')
+Http::post('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -653,7 +653,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('mails')
     ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -779,7 +779,7 @@ App::post('/v1/account/sessions/magic-url')
         ;
     });
 
-App::put('/v1/account/sessions/magic-url')
+Http::put('/v1/account/sessions/magic-url')
     ->desc('Create Magic URL session (confirmation)')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
@@ -901,7 +901,7 @@ App::put('/v1/account/sessions/magic-url')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/phone')
+Http::post('/v1/account/sessions/phone')
     ->desc('Create Phone session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -928,7 +928,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('messaging')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $events, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -1021,7 +1021,7 @@ App::post('/v1/account/sessions/phone')
         ;
     });
 
-App::put('/v1/account/sessions/phone')
+Http::put('/v1/account/sessions/phone')
     ->desc('Create Phone Session (confirmation)')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
@@ -1136,7 +1136,7 @@ App::put('/v1/account/sessions/phone')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/anonymous')
+Http::post('/v1/account/sessions/anonymous')
     ->desc('Create Anonymous Session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1270,7 +1270,7 @@ App::post('/v1/account/sessions/anonymous')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/jwt')
+Http::post('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
@@ -1303,7 +1303,7 @@ App::post('/v1/account/jwt')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(Http::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1317,7 +1317,7 @@ App::post('/v1/account/jwt')
         ])]), Response::MODEL_JWT);
     });
 
-App::get('/v1/account')
+Http::get('/v1/account')
     ->desc('Get Account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1338,7 +1338,7 @@ App::get('/v1/account')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::get('/v1/account/prefs')
+Http::get('/v1/account/prefs')
     ->desc('Get Account Preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1361,7 +1361,7 @@ App::get('/v1/account/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::get('/v1/account/sessions')
+Http::get('/v1/account/sessions')
     ->desc('List Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1399,7 +1399,7 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::get('/v1/account/logs')
+Http::get('/v1/account/logs')
     ->desc('List Logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1460,7 +1460,7 @@ App::get('/v1/account/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/account/sessions/:sessionId')
+Http::get('/v1/account/sessions/:sessionId')
     ->desc('Get Session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1505,7 +1505,7 @@ App::get('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::patch('/v1/account/name')
+Http::patch('/v1/account/name')
     ->desc('Update Name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
@@ -1542,7 +1542,7 @@ App::patch('/v1/account/name')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/password')
+Http::patch('/v1/account/password')
     ->desc('Update Password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
@@ -1603,7 +1603,7 @@ App::patch('/v1/account/password')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/email')
+Http::patch('/v1/account/email')
     ->desc('Update Email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
@@ -1659,7 +1659,7 @@ App::patch('/v1/account/email')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/phone')
+Http::patch('/v1/account/phone')
     ->desc('Update Phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
@@ -1711,7 +1711,7 @@ App::patch('/v1/account/phone')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/prefs')
+Http::patch('/v1/account/prefs')
     ->desc('Update Preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
@@ -1746,7 +1746,7 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/status')
+Http::patch('/v1/account/status')
     ->desc('Update Status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
@@ -1791,7 +1791,7 @@ App::patch('/v1/account/status')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account/sessions/:sessionId')
+Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1868,7 +1868,7 @@ App::delete('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::patch('/v1/account/sessions/:sessionId')
+Http::patch('/v1/account/sessions/:sessionId')
     ->desc('Update OAuth Session (Refresh Tokens)')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1954,7 +1954,7 @@ App::patch('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::delete('/v1/account/sessions')
+Http::delete('/v1/account/sessions')
     ->desc('Delete Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2016,7 +2016,7 @@ App::delete('/v1/account/sessions')
         $response->noContent();
     });
 
-App::post('/v1/account/recovery')
+Http::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -2045,7 +2045,7 @@ App::post('/v1/account/recovery')
     ->inject('events')
     ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Event $events) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -2146,7 +2146,7 @@ App::post('/v1/account/recovery')
             ->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/recovery')
+Http::put('/v1/account/recovery')
     ->desc('Create Password Recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -2215,7 +2215,7 @@ App::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification')
+Http::post('/v1/account/verification')
     ->desc('Create Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2244,7 +2244,7 @@ App::post('/v1/account/verification')
     ->inject('mails')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -2327,7 +2327,7 @@ App::post('/v1/account/verification')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification')
+Http::put('/v1/account/verification')
     ->desc('Create Email Verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -2387,7 +2387,7 @@ App::put('/v1/account/verification')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification/phone')
+Http::post('/v1/account/verification/phone')
     ->desc('Create Phone Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2413,7 +2413,7 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging) {
 
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
 
@@ -2473,7 +2473,7 @@ App::post('/v1/account/verification/phone')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification/phone')
+Http::put('/v1/account/verification/phone')
     ->desc('Create Phone Verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')

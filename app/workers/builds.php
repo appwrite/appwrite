@@ -34,7 +34,7 @@ class BuildsV1 extends Worker
 
     public function init(): void
     {
-        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $this->executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
     }
 
     public function run(): void
@@ -91,7 +91,7 @@ class BuildsV1 extends Worker
                 'outputPath' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path'),
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'sourceType' => strtolower(Http::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,
@@ -228,7 +228,7 @@ class BuildsV1 extends Worker
 
             /** Update usage stats */
             global $register;
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+            if (Http::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
                 $statsd = $register->get('statsd');
                 $usage = new Stats($statsd);
                 $usage

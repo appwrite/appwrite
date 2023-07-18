@@ -31,7 +31,7 @@ function getDatabase(Registry &$register, string $namespace): UtopiaDatabase
 
             $cache = new Cache(new RedisCache($redis));
             $database = new UtopiaDatabase(new MariaDB($db), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 
             if (!$database->exists($database->getDefaultDatabase(), 'projects')) {
@@ -80,7 +80,7 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
     $logger = $register->get('logger');
 
     if ($logger) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
         $log->setNamespace("usage");
@@ -99,7 +99,7 @@ $logError = function (Throwable $error, string $action = 'syncUsageStats') use (
 
         $log->setAction($action);
 
-        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
         $responseCode = $logger->addLog($log);
@@ -120,8 +120,8 @@ $cli
         $database = getDatabase($register, '_console');
         $influxDB = getInfluxDB($register);
 
-        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
-        $region = App::getEnv('region', 'default');
+        $interval = (int) Http::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
+        $region = Http::getEnv('region', 'default');
         $usage = new TimeSeries($region, $database, $influxDB, $logError);
 
         Console::loop(function () use ($interval, $usage) {

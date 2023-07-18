@@ -83,7 +83,7 @@ class Stats
     {
         $projectId = $this->params['projectId'] ?? '';
         $projectInternalId = $this->params['projectInternalId'];
-        $tags = ",projectInternalId={$projectInternalId},projectId={$projectId},version=" . App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $tags = ",projectInternalId={$projectInternalId},projectId={$projectId},version=" . Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         // the global namespace is prepended to every key (optional)
         $this->statsd->setNamespace($this->namespace);

@@ -19,11 +19,11 @@ $cli
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
 \_/\_/(__)  (__)  (_/\_)(__\_)(__) (__) (____)(_)(__)\__/ ");
 
-        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . App::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
+        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . Http::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
 
         Console::log('Checking for production best practices...');
 
-        $domain = new Domain(App::getEnv('_APP_DOMAIN'));
+        $domain = new Domain(Http::getEnv('_APP_DOMAIN'));
 
         if (!$domain->isKnown() || $domain->isTest()) {
             Console::log('🔴 Hostname has no public suffix (' . $domain->get() . ')');
@@ -31,7 +31,7 @@ $cli
             Console::log('🟢 Hostname has a public suffix (' . $domain->get() . ')');
         }
 
-        $domain = new Domain(App::getEnv('_APP_DOMAIN_TARGET'));
+        $domain = new Domain(Http::getEnv('_APP_DOMAIN_TARGET'));
 
         if (!$domain->isKnown() || $domain->isTest()) {
             Console::log('🔴 CNAME target has no public suffix (' . $domain->get() . ')');
@@ -39,27 +39,27 @@ $cli
             Console::log('🟢 CNAME target has a public suffix (' . $domain->get() . ')');
         }
 
-        if (App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
+        if (Http::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(Http::getEnv('_APP_OPENSSL_KEY_V1'))) {
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');
         }
 
-        if (App::getEnv('_APP_ENV', 'development') !== 'production') {
+        if (Http::getEnv('_APP_ENV', 'development') !== 'production') {
             Console::log('🔴 App environment is set for development');
         } else {
             Console::log('🟢 App environment is set for production');
         }
 
-        if ('enabled' !== App::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
+        if ('enabled' !== Http::getEnv('_APP_OPTIONS_ABUSE', 'disabled')) {
             Console::log('🔴 Abuse protection is disabled');
         } else {
             Console::log('🟢 Abuse protection is enabled');
         }
 
-        $authWhitelistRoot = App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', null);
-        $authWhitelistEmails = App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
-        $authWhitelistIPs = App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
+        $authWhitelistRoot = Http::getEnv('_APP_CONSOLE_WHITELIST_ROOT', null);
+        $authWhitelistEmails = Http::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null);
+        $authWhitelistIPs = Http::getEnv('_APP_CONSOLE_WHITELIST_IPS', null);
 
         if (
             empty($authWhitelistRoot)
@@ -71,15 +71,15 @@ $cli
             Console::log('🟢 Console access limits are enabled');
         }
 
-        if ('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
+        if ('enabled' !== Http::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled')) {
             Console::log('🔴 HTTPS force option is disabled');
         } else {
             Console::log('🟢 HTTPS force option is enabled');
         }
 
 
-        $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
-        $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+        $providerName = Http::getEnv('_APP_LOGGING_PROVIDER', '');
+        $providerConfig = Http::getEnv('_APP_LOGGING_CONFIG', '');
 
         if (empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
             Console::log('🔴 Logging adapter is disabled');
@@ -116,11 +116,11 @@ $cli
             Console::error('Cache............disconnected 👎');
         }
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+        if (Http::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
             try {
                 $antivirus = new Network(
-                    App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                    Http::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                    (int) Http::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                 );
 
                 if ((@$antivirus->ping())) {
@@ -147,8 +147,8 @@ $cli
             Console::error('SMTP.............disconnected 👎');
         }
 
-        $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-        $port = App::getEnv('_APP_STATSD_PORT', 8125);
+        $host = Http::getEnv('_APP_STATSD_HOST', 'telegraf');
+        $port = Http::getEnv('_APP_STATSD_PORT', 8125);
 
         if ($fp = @\fsockopen('udp://' . $host, $port, $errCode, $errStr, 2)) {
             Console::success('StatsD..............connected 👍');
@@ -157,8 +157,8 @@ $cli
             Console::error('StatsD...........disconnected 👎');
         }
 
-        $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-        $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+        $host = Http::getEnv('_APP_INFLUXDB_HOST', '');
+        $port = Http::getEnv('_APP_INFLUXDB_PORT', '');
 
         if ($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)) {
             Console::success('InfluxDB............connected 👍');
@@ -223,12 +223,12 @@ $cli
         }
 
         try {
-            if (App::isProduction()) {
+            if (Http::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/v1/health/version'), true);
+                $version = \json_decode(@\file_get_contents(Http::getEnv('_APP_HOME', 'http://localhost') . '/v1/health/version'), true);
 
                 if ($version && isset($version['version'])) {
-                    if (\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
+                    if (\version_compare($version['version'], Http::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
                         Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     } else {
                         Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");

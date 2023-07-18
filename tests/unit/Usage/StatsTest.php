@@ -15,8 +15,8 @@ class StatsTest extends TestCase
 
     public function setUp(): void
     {
-        $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-        $port = App::getEnv('_APP_STATSD_PORT', 8125);
+        $host = Http::getEnv('_APP_STATSD_HOST', 'telegraf');
+        $port = Http::getEnv('_APP_STATSD_PORT', 8125);
 
         $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
         $statsd = new \Domnikl\Statsd\Client($connection);

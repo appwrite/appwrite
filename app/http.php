@@ -23,10 +23,10 @@ use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 
-$http = new Server("0.0.0.0", App::getEnv('PORT', 80));
+$http = new Server("0.0.0.0", Http::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
@@ -57,7 +57,7 @@ Files::load(__DIR__ . '/../console');
 include __DIR__ . '/controllers/general.php';
 
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
-    $app = new App('UTC');
+    $app = new Http('UTC');
 
     go(function () use ($register, $app) {
         // wait for database to be ready
@@ -80,8 +80,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
         } while ($attempts < $max);
 
-        App::setResource('db', fn () => $db);
-        App::setResource('cache', fn () => $redis);
+        Http::setResource('db', fn () => $db);
+        Http::setResource('cache', fn () => $redis);
 
         /** @var Utopia\Database\Database $dbForConsole */
         $dbForConsole = $app->getResource('dbForConsole');
@@ -148,13 +148,13 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
                 '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
-                'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                'maximumFileSize' => (int) Http::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
                 'compression' => 'gzip',
@@ -237,13 +237,13 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
-    $app = new App('UTC');
+    $app = new Http('UTC');
 
     $db = $register->get('dbPool')->get();
     $redis = $register->get('redisPool')->get();
 
-    App::setResource('db', fn () => $db);
-    App::setResource('cache', fn () => $redis);
+    Http::setResource('db', fn () => $db);
+    Http::setResource('cache', fn () => $redis);
 
     try {
         Authorization::cleanRoles();
@@ -251,7 +251,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $logger = $app->getResource("logger");
         if ($logger) {
@@ -294,7 +294,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
@@ -312,7 +312,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->setStatusCode(500);
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((Http::isDevelopment())) ? [
             'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
             'file' => $th->getFile(),

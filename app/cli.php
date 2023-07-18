@@ -26,7 +26,7 @@ $cli
     ->task('version')
     ->desc('Get the server version')
     ->action(function () {
-        Console::log(App::getEnv('_APP_VERSION', 'UNKNOWN'));
+        Console::log(Http::getEnv('_APP_VERSION', 'UNKNOWN'));
     });
 
 $cli->run();

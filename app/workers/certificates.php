@@ -87,7 +87,7 @@ class CertificatesV1 extends Worker
 
         try {
             // Email for alerts is required by LetsEncrypt
-            $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+            $email = Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
             if (empty($email)) {
                 throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
             }
@@ -182,7 +182,7 @@ class CertificatesV1 extends Worker
      */
     private function getMainDomain(): ?string
     {
-        $envDomain = App::getEnv('_APP_DOMAIN', '');
+        $envDomain = Http::getEnv('_APP_DOMAIN', '');
         if (!empty($envDomain) && $envDomain !== 'localhost') {
             return $envDomain;
         } else {
@@ -219,7 +219,7 @@ class CertificatesV1 extends Worker
             // TODO: Would be awesome to also support A/AAAA records here. Maybe dry run?
 
             // Validate if domain target is properly configured
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(Http::getEnv('_APP_DOMAIN_TARGET', ''));
 
             if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
@@ -279,7 +279,7 @@ class CertificatesV1 extends Worker
         $stdout = '';
         $stderr = '';
 
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
@@ -378,7 +378,7 @@ class CertificatesV1 extends Worker
 
         // Send mail to administratore mail
 
-        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
+        $locale = new Locale(Http::getEnv('_APP_LOCALE', 'en'));
         if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
             $locale->setDefault('en');
         }
@@ -407,7 +407,7 @@ class CertificatesV1 extends Worker
         $body = $body->render();
         $mail = new Mail();
         $mail
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
+            ->setRecipient(Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->setName('Appwrite Administrator')
             ->trigger();
     }

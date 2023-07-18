@@ -45,7 +45,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 
 include_once __DIR__ . '/../shared/api.php';
 
-App::post('/v1/functions')
+Http::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create Function')
     ->label('scope', 'functions.write')
@@ -65,7 +65,7 @@ App::post('/v1/functions')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) Http::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -112,7 +112,7 @@ App::post('/v1/functions')
             ->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/functions')
+Http::get('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('List Functions')
     ->label('scope', 'functions.read')
@@ -158,7 +158,7 @@ App::get('/v1/functions')
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
-App::get('/v1/functions/runtimes')
+Http::get('/v1/functions/runtimes')
     ->groups(['api', 'functions'])
     ->desc('List runtimes')
     ->label('scope', 'functions.read')
@@ -185,7 +185,7 @@ App::get('/v1/functions/runtimes')
         ]), Response::MODEL_RUNTIME_LIST);
     });
 
-App::get('/v1/functions/:functionId')
+Http::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Get Function')
     ->label('scope', 'functions.read')
@@ -209,7 +209,7 @@ App::get('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/functions/:functionId/usage')
+Http::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
@@ -232,7 +232,7 @@ App::get('/v1/functions/:functionId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -319,7 +319,7 @@ App::get('/v1/functions/:functionId/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_FUNCTION);
     });
 
-App::get('/v1/functions/usage')
+Http::get('/v1/functions/usage')
     ->desc('Get Functions Usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
@@ -335,7 +335,7 @@ App::get('/v1/functions/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -422,7 +422,7 @@ App::get('/v1/functions/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_FUNCTIONS);
     });
 
-App::put('/v1/functions/:functionId')
+Http::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update Function')
     ->label('scope', 'functions.write')
@@ -441,7 +441,7 @@ App::put('/v1/functions/:functionId')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) Http::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -489,7 +489,7 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::patch('/v1/functions/:functionId/deployments/:deploymentId')
+Http::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update Function Deployment')
     ->label('scope', 'functions.write')
@@ -542,7 +542,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::delete('/v1/functions/:functionId')
+Http::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
@@ -581,7 +581,7 @@ App::delete('/v1/functions/:functionId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/deployments')
+Http::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create Deployment')
     ->label('scope', 'functions.write')
@@ -628,7 +628,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(Http::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -777,7 +777,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::get('/v1/functions/:functionId/deployments')
+Http::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List Deployments')
     ->label('scope', 'functions.read')
@@ -845,7 +845,7 @@ App::get('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
-App::get('/v1/functions/:functionId/deployments/:deploymentId')
+Http::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Get Deployment')
     ->label('scope', 'functions.read')
@@ -886,7 +886,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::delete('/v1/functions/:functionId/deployments/:deploymentId')
+Http::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete Deployment')
     ->label('scope', 'functions.write')
@@ -945,7 +945,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+Http::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Create Build')
     ->label('scope', 'functions.write')
@@ -1006,7 +1006,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 
 
-App::post('/v1/functions/:functionId/executions')
+Http::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'execution.write')
@@ -1105,7 +1105,7 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwtObj = new JWT(Http::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
@@ -1155,7 +1155,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -1209,7 +1209,7 @@ App::post('/v1/functions/:functionId/executions')
             ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::get('/v1/functions/:functionId/executions')
+Http::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List Executions')
     ->label('scope', 'execution.read')
@@ -1282,7 +1282,7 @@ App::get('/v1/functions/:functionId/executions')
         ]), Response::MODEL_EXECUTION_LIST);
     });
 
-App::get('/v1/functions/:functionId/executions/:executionId')
+Http::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get Execution')
     ->label('scope', 'execution.read')
@@ -1331,7 +1331,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
 // Variables
 
-App::post('/v1/functions/:functionId/variables')
+Http::post('/v1/functions/:functionId/variables')
     ->desc('Create Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1385,7 +1385,7 @@ App::post('/v1/functions/:functionId/variables')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::get('/v1/functions/:functionId/variables')
+Http::get('/v1/functions/:functionId/variables')
     ->desc('List Variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1412,7 +1412,7 @@ App::get('/v1/functions/:functionId/variables')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-App::get('/v1/functions/:functionId/variables/:variableId')
+Http::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1446,7 +1446,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::put('/v1/functions/:functionId/variables/:variableId')
+Http::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1499,7 +1499,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::delete('/v1/functions/:functionId/variables/:variableId')
+Http::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')

@@ -8,7 +8,7 @@ Setting an alias allows the route to be also accessible from the alias URL.
 The first parameter specifies the alias URL, the second parameter specifies default values for route parameters.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
 ```
 
@@ -17,7 +17,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 Used as an abstract description of the route.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->desc('Create File')
 ```
 
@@ -26,14 +26,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
 Groups array is used to group one or more routes with one or more hooks functionality.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->groups(['api'])
 ```
 
 In the above example groups() is used to define the current route as part of the routes that shares a common init middleware hook.
 
 ```php
-App::init()
+Http::init()
     ->groups(['api'])
     ->action(
   some code.....
@@ -52,7 +52,7 @@ Appwrite uses different labels to achieve different things, for example:
 - scope - Defines the route permissions scope.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->label('scope', 'files.write')
 ```
 
@@ -66,7 +66,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 - audits.resource - Signals the extraction part of the resource.
 
 ```php
-App::post('/v1/account/create')
+Http::post('/v1/account/create')
     ->label('audits.event', 'account.create')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
@@ -84,7 +84,7 @@ App::post('/v1/account/create')
 * sdk.offline.response.key - JSON property name that has the ID. Defaults to $id
 
 ```php
-App::post('/v1/account/jwt')
+Http::post('/v1/account/jwt')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createJWT')
@@ -100,7 +100,7 @@ App::post('/v1/account/jwt')
 - cache.resource - Identifies the cached resource.
 
 ```php
-App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
+Http::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('cache', true)
     ->label('cache.resource', 'file/{request.fileId}')
 ```
@@ -115,7 +115,7 @@ When using the example below, we configure the abuse mechanism to allow this key
 constructed from the combination of the ip, http method, url, userId to hit the route maximum 60 times in 1 hour (60 seconds \* 60 minutes).
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', 60)
     ->label('abuse-time', 3600)
@@ -127,7 +127,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
   Placeholders marked as `[]` are parsed and replaced with their real values.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
 ```
 
@@ -137,7 +137,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 - usage.params - Additional parameters the metrics can have.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->label('usage.metric', 'files.{scope}.requests.create')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
 ```
@@ -156,7 +156,7 @@ As the name implies, `param()` is used to define a request parameter.
 - An array of injections
 
 ```php
-App::get('/v1/account/logs')
+Http::get('/v1/account/logs')
     ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
 ```
 
@@ -165,14 +165,14 @@ App::get('/v1/account/logs')
 inject is used to inject dependencies pre-bounded to the app.
 
 ```php
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->inject('user')
 ```
 
-In the example above, the user object is injected into the route pre-bounded using `App::setResource()`.
+In the example above, the user object is injected into the route pre-bounded using `Http::setResource()`.
 
 ```php
-App::setResource('user', function() {
+Http::setResource('user', function() {
 some code...
 });
 ```
@@ -181,7 +181,7 @@ some code...
 Action populates the actual route code and has to be very clear and understandable. A good route stays simple and doesn't contain complex logic. An action is where we describe our business needs in code, and combine different libraries to work together and tell our story.
 
 ```php
-App::post('/v1/account/sessions/anonymous')
+Http::post('/v1/account/sessions/anonymous')
     ->action(function (Request $request) {
     some code...
 });

@@ -48,9 +48,9 @@ $stats->create();
 
 $containerId = uniqid();
 $statsDocument = null;
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
 
-$adapter = new Adapter\Swoole(port: App::getEnv('PORT', 80));
+$adapter = new Adapter\Swoole(port: Http::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
     ->setWorkerNumber($workerNumber);
@@ -61,7 +61,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
     $logger = $register->get('logger');
 
     if ($logger) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
         $log->setNamespace("realtime");
@@ -80,7 +80,7 @@ $logError = function (Throwable $error, string $action) use ($register) {
 
         $log->setAction($action);
 
-        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
         $responseCode = $logger->addLog($log);
@@ -108,7 +108,7 @@ function getDatabase(Registry &$register, string $namespace)
 
             $cache = new Cache(new RedisCache($redis));
             $database = new Database(new MariaDB($db), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace($namespace);
 
             if (!$database->exists($database->getDefaultDatabase(), 'realtime')) {
@@ -322,7 +322,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event);
 
-                if (App::isDevelopment() && !empty($receivers)) {
+                if (Http::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
@@ -355,7 +355,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
-    $app = new App('UTC');
+    $app = new Http('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
@@ -366,10 +366,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('db', fn () => $db);
-    App::setResource('cache', fn () => $redis);
-    App::setResource('request', fn () => $request);
-    App::setResource('response', fn () => $response);
+    Http::setResource('db', fn () => $db);
+    Http::setResource('cache', fn () => $redis);
+    Http::setResource('request', fn () => $request);
+    Http::setResource('response', fn () => $response);
 
     try {
         /** @var \Utopia\Database\Document $user */
@@ -383,7 +383,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_{$project->getInternalId()}");
 
         /*
@@ -405,7 +405,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         $abuse = new Abuse($timeLimit);
 
-        if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
+        if (Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled' && $abuse->check()) {
             throw new Exception('Too many requests', 1013);
         }
 
@@ -464,7 +464,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode($response));
         $server->close($connection, $th->getCode());
 
-        if (App::isDevelopment()) {
+        if (Http::isDevelopment()) {
             Console::error('[Error] Connection Error');
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
@@ -484,14 +484,14 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
 $server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
     try {
-        $app = new App('UTC');
+        $app = new Http('UTC');
         $response = new Response(new SwooleResponse());
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
 
         $cache = new Cache(new RedisCache($redis));
         $database = new Database(new MariaDB($db), $cache);
-        $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $database->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $database->setNamespace("_console");
         $projectId = $realtime->connections[$connection]['projectId'];
         $project = $projectId === 'console' ? $app->getResource('console') : Authorization::skip(fn () => $database->getDocument('projects', $projectId));
@@ -509,7 +509,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         $abuse = new Abuse($timeLimit);
 
-        if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
+        if ($abuse->check() && Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
             throw new Exception('Too many messages', 1013);
         }
 

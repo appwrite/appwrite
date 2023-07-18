@@ -27,7 +27,7 @@ function getConsoleDB(): Database
             $attempts++;
             $cache = new Cache(new RedisCache($register->get('cache')));
             $database = new Database(new MariaDB($register->get('db')), $cache);
-            $database->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+            $database->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
             $database->setNamespace('_console'); // Main DB
 
             if (!$database->exists($database->getDefaultDatabase(), 'certificates')) {
@@ -138,13 +138,13 @@ $cli
         }
 
         // # of days in seconds (1 day = 86400s)
-        $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
-        $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
-        $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
-        $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
+        $interval = (int) Http::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
+        $executionLogsRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
+        $auditLogRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
+        $abuseLogsRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
+        $usageStatsRetentionHourly = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
 
-        $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $cacheRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
 
         Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $usageStatsRetentionHourly, $cacheRetention) {
             $database = getConsoleDB();

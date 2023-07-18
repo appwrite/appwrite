@@ -4,9 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Runtimes\Runtimes;
 use Swoole\ConnectionPool;
-use Swoole\Http\Request as SwooleRequest;
-use Swoole\Http\Response as SwooleResponse;
-use Swoole\Http\Server;
+use Utopia\Http\Adapter\Swoole\Server;
 use Swoole\Process;
 use Swoole\Runtime;
 use Swoole\Timer;
@@ -55,8 +53,8 @@ $activeRuntimes->create();
  * Create orchestration pool
  */
 $orchestrationPool = new ConnectionPool(function () {
-    $dockerUser = App::getEnv('DOCKERHUB_PULL_USERNAME', null);
-    $dockerPass = App::getEnv('DOCKERHUB_PULL_PASSWORD', null);
+    $dockerUser = Http::getEnv('DOCKERHUB_PULL_USERNAME', null);
+    $dockerPass = Http::getEnv('DOCKERHUB_PULL_PASSWORD', null);
     $orchestration = new Orchestration(new DockerCLI($dockerUser, $dockerPass));
     return $orchestration;
 }, 10);
@@ -65,8 +63,8 @@ $orchestrationPool = new ConnectionPool(function () {
 /**
  * Create logger instance
  */
-$providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
-$providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
+$providerName = Http::getEnv('_APP_LOGGING_PROVIDER', '');
+$providerConfig = Http::getEnv('_APP_LOGGING_CONFIG', '');
 $logger = null;
 
 if (!empty($providerName) && !empty($providerConfig) && Logger::hasProvider($providerName)) {
@@ -75,12 +73,12 @@ if (!empty($providerName) && !empty($providerConfig) && Logger::hasProvider($pro
     $logger = new Logger($adapter);
 }
 
-function logError(Throwable $error, string $action, Utopia\Route $route = null)
+function logError(Throwable $error, string $action, Utopia\Http\Route $route = null)
 {
     global $logger;
 
     if ($logger) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $log = new Log();
         $log->setNamespace("executor");
@@ -104,7 +102,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
         $log->setAction($action);
 
-        $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+        $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
         $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
         $responseCode = $logger->addLog($log);
@@ -119,49 +117,49 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 function getStorageDevice($root): Device
 {
-    switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
+    switch (strtolower(Http::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
         case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
         case Storage::DEVICE_S3:
-            $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
-            $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
-            $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
-            $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+            $s3AccessKey = Http::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+            $s3SecretKey = Http::getEnv('_APP_STORAGE_S3_SECRET', '');
+            $s3Region = Http::getEnv('_APP_STORAGE_S3_REGION', '');
+            $s3Bucket = Http::getEnv('_APP_STORAGE_S3_BUCKET', '');
             $s3Acl = 'private';
             return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
         case Storage::DEVICE_DO_SPACES:
-            $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
-            $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
-            $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
-            $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+            $doSpacesAccessKey = Http::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+            $doSpacesSecretKey = Http::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+            $doSpacesRegion = Http::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+            $doSpacesBucket = Http::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
             $doSpacesAcl = 'private';
             return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
         case Storage::DEVICE_BACKBLAZE:
-            $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
-            $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
-            $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
-            $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+            $backblazeAccessKey = Http::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+            $backblazeSecretKey = Http::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+            $backblazeRegion = Http::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+            $backblazeBucket = Http::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
             $backblazeAcl = 'private';
             return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
         case Storage::DEVICE_LINODE:
-            $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
-            $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
-            $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
-            $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+            $linodeAccessKey = Http::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+            $linodeSecretKey = Http::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+            $linodeRegion = Http::getEnv('_APP_STORAGE_LINODE_REGION', '');
+            $linodeBucket = Http::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
             $linodeAcl = 'private';
             return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
         case Storage::DEVICE_WASABI:
-            $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
-            $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
-            $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
-            $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+            $wasabiAccessKey = Http::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+            $wasabiSecretKey = Http::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+            $wasabiRegion = Http::getEnv('_APP_STORAGE_WASABI_REGION', '');
+            $wasabiBucket = Http::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
             $wasabiAcl = 'private';
             return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
     }
 }
 
-App::post('/v1/runtimes')
+Http::post('/v1/runtimes')
     ->desc("Create a new runtime server")
     ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
@@ -244,9 +242,9 @@ App::post('/v1/runtimes')
             ]);
             $vars = array_map(fn ($v) => strval($v), $vars);
             $orchestration
-                ->setCpus((int) App::getEnv('_APP_FUNCTIONS_CPUS', 0))
-                ->setMemory((int) App::getEnv('_APP_FUNCTIONS_MEMORY', 0))
-                ->setSwap((int) App::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 0));
+                ->setCpus((int) Http::getEnv('_APP_FUNCTIONS_CPUS', 0))
+                ->setMemory((int) Http::getEnv('_APP_FUNCTIONS_MEMORY', 0))
+                ->setSwap((int) Http::getEnv('_APP_FUNCTIONS_MEMORY_SWAP', 0));
 
             /** Keep the container alive if we have commands to be executed */
             $entrypoint = !empty($commands) ? [
@@ -278,7 +276,7 @@ App::post('/v1/runtimes')
                 throw new Exception('Failed to create build container', 500);
             }
 
-            $orchestration->networkConnect($runtimeId, App::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite_runtimes'));
+            $orchestration->networkConnect($runtimeId, Http::getEnv('OPEN_RUNTIMES_NETWORK', 'appwrite_runtimes'));
 
             /**
              * Execute any commands if they were provided
@@ -289,7 +287,7 @@ App::post('/v1/runtimes')
                     command: $commands,
                     stdout: $stdout,
                     stderr: $stderr,
-                    timeout: App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
+                    timeout: Http::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900)
                 );
 
                 if (!$status) {
@@ -381,7 +379,7 @@ App::post('/v1/runtimes')
     });
 
 
-App::get('/v1/runtimes')
+Http::get('/v1/runtimes')
     ->desc("List currently active runtimes")
     ->inject('activeRuntimes')
     ->inject('response')
@@ -397,7 +395,7 @@ App::get('/v1/runtimes')
             ->json($runtimes);
     });
 
-App::get('/v1/runtimes/:runtimeId')
+Http::get('/v1/runtimes/:runtimeId')
     ->desc("Get a runtime by its ID")
     ->param('runtimeId', '', new Text(64), 'Runtime unique ID.')
     ->inject('activeRuntimes')
@@ -415,7 +413,7 @@ App::get('/v1/runtimes/:runtimeId')
             ->json($runtime);
     });
 
-App::delete('/v1/runtimes/:runtimeId')
+Http::delete('/v1/runtimes/:runtimeId')
     ->desc('Delete a runtime')
     ->param('runtimeId', '', new Text(64), 'Runtime unique ID.', false)
     ->inject('orchestrationPool')
@@ -455,12 +453,12 @@ App::delete('/v1/runtimes/:runtimeId')
     });
 
 
-App::post('/v1/execution')
+Http::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
     ->param('vars', [], new Assoc(), 'Environment variables required for the build.')
     ->param('data', '', new Text(8192, 0), 'Data to be forwarded to the function, this is user specified.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
+    ->param('timeout', 15, new Range(1, (int) Http::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
     ->action(
@@ -499,7 +497,7 @@ App::post('/v1/execution')
             $errNo = -1;
             $executorResponse = '';
 
-            $timeout ??= (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
+            $timeout ??= (int) Http::getEnv('_APP_FUNCTIONS_TIMEOUT', 900);
 
             $ch = \curl_init();
             $body = \json_encode([
@@ -591,16 +589,14 @@ App::post('/v1/execution')
         }
     );
 
-App::setMode(App::MODE_TYPE_PRODUCTION); // Define Mode
-
-$http = new Server("0.0.0.0", 80);
+Http::setMode(Http::MODE_TYPE_PRODUCTION); // Define Mode
 
 /** Set Resources */
-App::setResource('orchestrationPool', fn() => $orchestrationPool);
-App::setResource('activeRuntimes', fn() => $activeRuntimes);
+Http::setResource('orchestrationPool', fn() => $orchestrationPool);
+Http::setResource('activeRuntimes', fn() => $activeRuntimes);
 
 /** Set callbacks */
-App::error()
+Http::error()
     ->inject('utopia')
     ->inject('error')
     ->inject('request')
@@ -634,7 +630,7 @@ App::error()
             'file' => $error->getFile(),
             'line' => $error->getLine(),
             'trace' => $error->getTrace(),
-            'version' => App::getEnv('_APP_VERSION', 'UNKNOWN')
+            'version' => Http::getEnv('_APP_VERSION', 'UNKNOWN')
         ];
 
         $response
@@ -646,7 +642,7 @@ App::error()
         $response->json($output);
     });
 
-App::init()
+Http::init()
     ->inject('request')
     ->action(function (Request $request) {
         $secretKey = $request->getHeader('x-appwrite-executor-key', '');
@@ -654,13 +650,14 @@ App::init()
             throw new Exception('Missing executor key', 401);
         }
 
-        if ($secretKey !== App::getEnv('_APP_EXECUTOR_SECRET', '')) {
+        if ($secretKey !== Http::getEnv('_APP_EXECUTOR_SECRET', '')) {
             throw new Exception('Missing executor key', 401);
         }
     });
 
 
-$http->on('start', function ($http) {
+
+    $http->on('start', function ($http) {
     global $orchestrationPool;
     global $activeRuntimes;
 
@@ -668,7 +665,7 @@ $http->on('start', function ($http) {
      * Warmup: make sure images are ready to run fast 🚀
      */
     $runtimes = new Runtimes('v2');
-    $allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
+    $allowList = empty(Http::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', Http::getEnv('_APP_FUNCTIONS_RUNTIMES'));
     $runtimes = $runtimes->getAll(true, $allowList);
     foreach ($runtimes as $runtime) {
         go(function () use ($runtime, $orchestrationPool) {
@@ -738,7 +735,7 @@ $http->on('start', function ($http) {
     Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
         Console::warning("Running maintenance task ...");
         foreach ($activeRuntimes as $runtime) {
-            $inactiveThreshold = \time() - App::getEnv('_APP_FUNCTIONS_INACTIVE_THRESHOLD', 60);
+            $inactiveThreshold = \time() - Http::getEnv('_APP_FUNCTIONS_INACTIVE_THRESHOLD', 60);
             if ($runtime['updated'] < $inactiveThreshold) {
                 go(function () use ($runtime, $orchestrationPool, $activeRuntimes) {
                     try {
@@ -757,8 +754,9 @@ $http->on('start', function ($http) {
     });
 });
 
+$server = new Server("0.0.0.0", 80);
 
-$http->on('beforeShutdown', function () {
+$server->onBeforeShutdown(function () {
     global $orchestrationPool;
     Console::info('Cleaning up containers before shutdown...');
 
@@ -781,26 +779,6 @@ $http->on('beforeShutdown', function () {
     }
 });
 
-
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
-    $request = new Request($swooleRequest);
-    $response = new Response($swooleResponse);
-    $app = new App('UTC');
-
-    try {
-        $app->run($request, $response);
-    } catch (\Throwable $th) {
-        logError($th, "serverError");
-        $swooleResponse->setStatusCode(500);
-        $output = [
-            'message' => 'Error: ' . $th->getMessage(),
-            'code' => 500,
-            'file' => $th->getFile(),
-            'line' => $th->getLine(),
-            'trace' => $th->getTrace()
-        ];
-        $swooleResponse->end(\json_encode($output));
-    }
-});
-
+$http = new Http($server, 'UTC');
 $http->start();
+

@@ -237,7 +237,7 @@ abstract class Migration
     {
         $name ??= $id;
 
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+        if (!$this->projectDB->exists(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
             $attributes = [];
             $indexes = [];
             $collection = $this->collections[$id];

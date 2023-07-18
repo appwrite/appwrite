@@ -17,7 +17,7 @@ use Utopia\Database\Document;
 use Utopia\Http\Validator\JSON;
 use Utopia\Http\Validator\Text;
 
-App::get('/v1/graphql')
+Http::get('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -57,7 +57,7 @@ App::get('/v1/graphql')
             ->json($output);
     });
 
-App::post('/v1/graphql/mutation')
+Http::post('/v1/graphql/mutation')
     ->desc('GraphQL Endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -102,7 +102,7 @@ App::post('/v1/graphql/mutation')
             ->json($output);
     });
 
-App::post('/v1/graphql')
+Http::post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -161,9 +161,9 @@ function execute(
     Adapter $promiseAdapter,
     array $query
 ): array {
-    $maxBatchSize = App::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
-    $maxComplexity = App::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
-    $maxDepth = App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
+    $maxBatchSize = Http::getEnv('_APP_GRAPHQL_MAX_BATCH_SIZE', 10);
+    $maxComplexity = Http::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250);
+    $maxDepth = Http::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3);
 
     if (!empty($query) && !isset($query[0])) {
         $query = [$query];
@@ -183,12 +183,12 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new DisableIntrospection();
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
+    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 
@@ -289,7 +289,7 @@ function processResult($result, $debugFlags): array
     );
 }
 
-App::shutdown()
+Http::shutdown()
     ->groups(['schema'])
     ->inject('project')
     ->action(function (Document $project) {

@@ -37,7 +37,7 @@ class FunctionsV1 extends Worker
 
     public function init(): void
     {
-        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $this->executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
     }
 
     public function run(): void
@@ -367,7 +367,7 @@ class FunctionsV1 extends Worker
 
         /** Update usage stats */
         global $register;
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $statsd = $register->get('statsd');
             $usage = new Stats($statsd);
             $usage

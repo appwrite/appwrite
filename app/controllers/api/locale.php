@@ -8,7 +8,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 
-App::get('/v1/locale')
+Http::get('/v1/locale')
     ->desc('Get User Locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -68,7 +68,7 @@ App::get('/v1/locale')
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     });
 
-App::get('/v1/locale/countries')
+Http::get('/v1/locale/countries')
     ->desc('List Countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -101,7 +101,7 @@ App::get('/v1/locale/countries')
         $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-App::get('/v1/locale/countries/eu')
+Http::get('/v1/locale/countries/eu')
     ->desc('List EU Countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -136,7 +136,7 @@ App::get('/v1/locale/countries/eu')
         $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     });
 
-App::get('/v1/locale/countries/phones')
+Http::get('/v1/locale/countries/phones')
     ->desc('List Countries Phone Codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -170,7 +170,7 @@ App::get('/v1/locale/countries/phones')
         $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
     });
 
-App::get('/v1/locale/continents')
+Http::get('/v1/locale/continents')
     ->desc('List Continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -202,7 +202,7 @@ App::get('/v1/locale/continents')
         $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     });
 
-App::get('/v1/locale/currencies')
+Http::get('/v1/locale/currencies')
     ->desc('List Currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -225,7 +225,7 @@ App::get('/v1/locale/currencies')
     });
 
 
-App::get('/v1/locale/languages')
+Http::get('/v1/locale/languages')
     ->desc('List Languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')

@@ -5,7 +5,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Http\Http;
 use Utopia\Database\Document;
 
-App::init()
+Http::init()
     ->groups(['console'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -15,7 +15,7 @@ App::init()
     });
 
 
-App::get('/v1/console/variables')
+Http::get('/v1/console/variables')
     ->desc('Get Variables')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -30,10 +30,10 @@ App::get('/v1/console/variables')
     ->action(function (Response $response) {
 
         $variables = new Document([
-            '_APP_DOMAIN_TARGET' => App::getEnv('_APP_DOMAIN_TARGET'),
-            '_APP_STORAGE_LIMIT' => +App::getEnv('_APP_STORAGE_LIMIT'),
-            '_APP_FUNCTIONS_SIZE_LIMIT' => +App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
-            '_APP_USAGE_STATS' => App::getEnv('_APP_USAGE_STATS'),
+            '_APP_DOMAIN_TARGET' => Http::getEnv('_APP_DOMAIN_TARGET'),
+            '_APP_STORAGE_LIMIT' => +Http::getEnv('_APP_STORAGE_LIMIT'),
+            '_APP_FUNCTIONS_SIZE_LIMIT' => +Http::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
+            '_APP_USAGE_STATS' => Http::getEnv('_APP_USAGE_STATS'),
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);

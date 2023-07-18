@@ -21,14 +21,14 @@ $cli
     ->action(function ($version, $mode) use ($register) {
         $db = $register->get('db');
         $redis = $register->get('cache');
-        $appRoutes = App::getRoutes();
+        $appRoutes = Http::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
 
-        App::setResource('request', fn () => new Request());
-        App::setResource('response', fn () => $response);
-        App::setResource('db', fn () => $db);
-        App::setResource('cache', fn () => $redis);
+        Http::setResource('request', fn () => new Request());
+        Http::setResource('response', fn () => $response);
+        Http::setResource('db', fn () => $db);
+        Http::setResource('cache', fn () => $redis);
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
@@ -204,7 +204,7 @@ $cli
                 }
             }
             // var_dump($models);
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new Http('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
@@ -213,8 +213,8 @@ $cli
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = Http::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)

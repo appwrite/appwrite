@@ -34,7 +34,7 @@ $cli
             return;
         }
 
-        $app = new App('UTC');
+        $app = new Http('UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
 
@@ -44,10 +44,10 @@ $cli
         $cache = new Cache(new RedisCache($redis));
 
         $projectDB = new Database(new MariaDB($db), $cache);
-        $projectDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $projectDB->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
 
         $consoleDB = new Database(new MariaDB($db), $cache);
-        $consoleDB->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $consoleDB->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
         $consoleDB->setNamespace('_project_console');
 
         $console = $app->getResource('console');
