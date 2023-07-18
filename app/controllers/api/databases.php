@@ -327,22 +327,22 @@ function updateAttribute(
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $options = \array_merge($attribute->getAttribute('options', []), $options);
-        $attribute->setAttribute('options', $options);
+        $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
+        $attribute->setAttribute('options', $primaryDocumentOptions);
 
         $dbForProject->updateRelationship(
             collection: $collectionId,
             id: $key,
-            onDelete: $options['onDelete'],
+            onDelete: $primaryDocumentOptions['onDelete'],
         );
 
-        if ($options['twoWay']) {
-            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
-            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+        if ($primaryDocumentOptions['twoWay']) {
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
+
+            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
             $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
             $relatedAttribute->setAttribute('options', $relatedOptions);
-
-            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey'], $relatedAttribute);
+            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
             $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
@@ -1103,7 +1103,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('size', null, new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Range::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
+    ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1112,7 +1112,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within required size
-        $validator = new Text($size);
+        $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
         }
@@ -1777,7 +1777,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
-    ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
+    ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
@@ -2623,7 +2623,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('audits.event', 'document.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
     ->label('usage.metric', 'documents.{scope}.requests.create')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -2653,7 +2653,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
 
         if (isset($data['$id'])) {

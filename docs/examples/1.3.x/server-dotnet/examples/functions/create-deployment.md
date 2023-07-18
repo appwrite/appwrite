@@ -1,4 +1,5 @@
 using Appwrite;
+using Appwrite.Services;
 using Appwrite.Models;
 
 var client = new Client()
@@ -11,5 +12,5 @@ var functions = new Functions(client);
 Deployment result = await functions.CreateDeployment(
     functionId: "[FUNCTION_ID]",
     entrypoint: "[ENTRYPOINT]",
-    code: new File("./path-to-files/image.jpg"),
+    code: InputFile.FromPath("./path-to-files/image.jpg"),
     activate: false);

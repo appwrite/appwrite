@@ -814,11 +814,11 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 501);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/anonymous', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-        ]), []);
+        ]));
 
         $this->assertEquals($response['headers']['status-code'], 501);
 
@@ -874,6 +874,19 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
+        $email = uniqid() . 'user@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
         $this->assertEquals($response['headers']['status-code'], 501);
 
         /**
@@ -888,6 +901,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+
+        $email = uniqid() . 'user@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -2997,15 +3012,13 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $project['headers']['status-code']);
 
-        // Delete team
-        $team = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+        // Delete Project
+        $project = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password'
-        ]);
+        ], $this->getHeaders()));
 
-        $this->assertEquals(204, $team['headers']['status-code']);
+        $this->assertEquals(204, $project['headers']['status-code']);
 
         // Ensure I can get team but not a project
         $team = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId, array_merge([
