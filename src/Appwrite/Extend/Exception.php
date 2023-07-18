@@ -32,7 +32,7 @@ class Exception extends \Exception
      * - Platform
      * - Domain
      * - GraphQL
-     * - Imports
+     * - Migrations
      */
 
     /** General */
