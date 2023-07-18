@@ -133,7 +133,7 @@ abstract class Format
         }
         return null;
     }
-    public function getEnumKeys(string $service, string $method): array
+    public function getEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
         switch ($service) {
@@ -183,8 +183,10 @@ abstract class Format
                     case 'getUsage':
                     case 'getUserUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        if ($param == 'range') {
+                            $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
+                            return $values;
+                        }
                 }
                 break;
             case 'storage':
