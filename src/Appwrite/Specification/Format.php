@@ -116,6 +116,13 @@ abstract class Format
                     case 'getFlag':
                         return  'Flag';
                 }
+                break;
+            case 'storage':
+                switch ($method) {
+                    case 'getFilePreview':
+                        return 'ImageGravity';
+                }
+                break;
         }
         return null;
     }
