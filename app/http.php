@@ -60,7 +60,7 @@ Http::onStart()
     ->inject('register')
     ->inject('utopia')
     ->inject('server')
-    ->action(function() use ($payloadSize, $register, $app, $http) {
+    ->action(function($register, $app,  $http) use ($payloadSize) {
 
     go(function () use ($register, $app) {
         // wait for database to be ready

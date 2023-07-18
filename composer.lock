@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b8360648c69a1c768813b50110ff43e0",
+    "content-hash": "1dda97a2619f621b8645f3e8a06b78c7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2002,21 +2002,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "dev-master",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
+                "reference": "a46b0d46213bd17e9e9a59f0a1d0eba32aa0da5e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/a46b0d46213bd17e9e9a59f0a1d0eba32aa0da5e",
+                "reference": "a46b0d46213bd17e9e9a59f0a1d0eba32aa0da5e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "dev-feat-v2"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2024,7 +2024,6 @@
                 "squizlabs/php_codesniffer": "^3.6",
                 "vimeo/psalm": "4.0.1"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2046,9 +2045,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
+                "source": "https://github.com/utopia-php/cli/tree/feat-framework-v2"
             },
-            "time": "2023-03-01T05:55:14+00:00"
+            "time": "2023-07-18T06:08:08+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2103,28 +2102,26 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.36.1",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f6ab65e59a199da5155c114564077b1ab8c4daef"
+                "reference": "bf740e222f1e2c89a80876733be427eec5dfac29"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f6ab65e59a199da5155c114564077b1ab8c4daef",
-                "reference": "f6ab65e59a199da5155c114564077b1ab8c4daef",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/bf740e222f1e2c89a80876733be427eec5dfac29",
+                "reference": "bf740e222f1e2c89a80876733be427eec5dfac29",
                 "shasum": ""
             },
             "require": {
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
-                "utopia-php/framework": "0.*.*",
+                "utopia-php/framework": "dev-feat-v2 as 0.28.4",
                 "utopia-php/mongo": "0.2.*"
             },
             "require-dev": {
-                "ext-mongodb": "*",
-                "ext-redis": "*",
                 "fakerphp/faker": "^1.14",
                 "laravel/pint": "1.4.*",
                 "mongodb/mongodb": "1.8.0",
@@ -2155,9 +2152,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.36.1"
+                "source": "https://github.com/utopia-php/database/tree/feat-framework-v2"
             },
-            "time": "2023-04-27T08:39:55+00:00"
+            "time": "2023-07-18T02:58:40+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2686,16 +2683,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.14.0",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c"
+                "reference": "601de2f9346ad2a082632ddf94876ade16a6ad9d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/eda6651ac16884dc2a79ecb984ea591ba1ed498c",
-                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/601de2f9346ad2a082632ddf94876ade16a6ad9d",
+                "reference": "601de2f9346ad2a082632ddf94876ade16a6ad9d",
                 "shasum": ""
             },
             "require": {
@@ -2703,10 +2700,11 @@
                 "ext-fileinfo": "*",
                 "ext-lz4": "*",
                 "ext-snappy": "*",
+                "ext-xz": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "dev-feat-v2 as 0.28.4"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2733,9 +2731,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.14.0"
+                "source": "https://github.com/utopia-php/storage/tree/feat-framework-v2"
             },
-            "time": "2023-03-15T00:16:34+00:00"
+            "time": "2023-07-18T03:13:57+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5601,9 +5599,15 @@
     "aliases": [
         {
             "package": "utopia-php/cli",
-            "version": "9999999-dev",
+            "version": "dev-feat-framework-v2",
             "alias": "0.13.0",
             "alias_normalized": "0.13.0.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-framework-v2",
+            "alias": "0.36.1",
+            "alias_normalized": "0.36.1.0"
         },
         {
             "package": "utopia-php/framework",
@@ -5615,7 +5619,9 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "utopia-php/cli": 20,
-        "utopia-php/framework": 20
+        "utopia-php/database": 20,
+        "utopia-php/framework": 20,
+        "utopia-php/storage": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

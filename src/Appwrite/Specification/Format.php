@@ -8,7 +8,7 @@ use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
-    protected App $app;
+    protected Http $app;
 
     /**
      * @var Route[]
@@ -38,7 +38,7 @@ abstract class Format
         'license.url' => '',
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount)
     {
         $this->app = $app;
         $this->services = $services;

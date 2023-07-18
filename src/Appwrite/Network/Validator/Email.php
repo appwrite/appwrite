@@ -9,7 +9,7 @@ use Utopia\Http\Validator;
  *
  * Validate that an variable is a valid email address
  *
- * @package Utopia\Validator
+ * @package Utopia\Http\Validator
  */
 class Email extends Validator
 {

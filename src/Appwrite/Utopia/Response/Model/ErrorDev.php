@@ -20,7 +20,7 @@ class ErrorDev extends Error
                 'type' => self::TYPE_STRING,
                 'description' => 'File path.',
                 'default' => '',
-                'example' => '/usr/code/vendor/utopia-php/framework/src/App.php',
+                'example' => '/usr/code/vendor/utopia-php/framework/src/Http/Http.php',
             ])
             ->addRule('line', [
                 'type' => self::TYPE_INTEGER,
