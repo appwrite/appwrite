@@ -2307,7 +2307,7 @@ App::post('/v1/account/verification')
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name'))
+            ->setName($user->getAttribute('name') ?? '')
             ->trigger()
         ;
 
