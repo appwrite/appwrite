@@ -740,9 +740,9 @@ App::post('/v1/account/sessions/magic-url')
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = $customTemplate['message'];
-            $subject = $customTemplate['subject'];
-            $from = $customTemplate['senderName'];
+            $body = $customTemplate['message'] ?? $body;
+            $subject = $customTemplate['subject'] ?? $subject;
+            $from = $customTemplate['senderName'] ?? $from;
         }
 
         $body
@@ -1012,7 +1012,7 @@ App::post('/v1/account/sessions/phone')
 
         $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
         if (!empty($customTemplate)) {
-            $message = $customTemplate['message'];
+            $message = $customTemplate['message'] ?? $message;
         }
 
         $message = $message->setParam('{{token}}', $secret);
@@ -2115,9 +2115,9 @@ App::post('/v1/account/recovery')
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = $customTemplate['message'];
-            $subject = $customTemplate['subject'];
-            $from = $customTemplate['senderName'];
+            $body = $customTemplate['message'] ?? $body;
+            $subject = $customTemplate['subject'] ?? $subject;
+            $from = $customTemplate['senderName'] ?? $from;
         }
 
         $body
@@ -2307,9 +2307,9 @@ App::post('/v1/account/verification')
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = $customTemplate['message'];
-            $subject = $customTemplate['subject'];
-            $from = $customTemplate['senderName'];
+            $body = $customTemplate['message'] ?? $body;
+            $subject = $customTemplate['subject'] ?? $subject;
+            $from = $customTemplate['senderName'] ?? $from;
         }
 
         $body
@@ -2484,7 +2484,7 @@ App::post('/v1/account/verification/phone')
 
         $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
         if (!empty($customTemplate)) {
-            $message = $customTemplate['message'];
+            $message = $customTemplate['message'] ?? $message;
         }
 
         $message = $message->setParam('{{token}}', $secret);
