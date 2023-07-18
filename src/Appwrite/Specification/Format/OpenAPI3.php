@@ -413,7 +413,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = $validator->getList()[0];
                         $node['schema']['enum'] = $validator->getList();
                         $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-                        $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''));
+                        $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
 
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
