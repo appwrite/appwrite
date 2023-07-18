@@ -34,7 +34,7 @@ FROM appwrite/base:0.3.1 as final
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
-ARG DEBUG=true
+ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
 ENV DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
