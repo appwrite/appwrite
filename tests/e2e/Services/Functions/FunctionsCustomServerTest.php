@@ -119,11 +119,11 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
+            'queries' => [ 'limit(1)' ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertCount(0, $response['body']['functions']);
+        $this->assertCount(1, $response['body']['functions']);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
             'content-type' => 'application/json',
@@ -675,11 +675,11 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
+            'queries' => [ 'limit(1)' ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['executions']);
+        $this->assertCount(1, $response['body']['executions']);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',

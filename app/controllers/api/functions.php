@@ -136,7 +136,7 @@ App::get('/v1/functions')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -211,7 +211,7 @@ App::get('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -321,7 +321,7 @@ App::get('/v1/functions/:functionId/usage')
 
 App::get('/v1/functions/usage')
     ->desc('Get Functions Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -812,7 +812,7 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1246,7 +1246,7 @@ App::get('/v1/functions/:functionId/executions')
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

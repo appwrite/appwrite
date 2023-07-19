@@ -101,8 +101,8 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 503;
-const APP_VERSION_STABLE = '1.3.2';
+const APP_CACHE_BUSTER = 506;
+const APP_VERSION_STABLE = '1.3.7';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -456,6 +456,29 @@ Database::addFilter(
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+Database::addFilter(
+    'userSearch',
+    function (mixed $value, Document $user) {
+        $searchValues = [
+            $user->getId(),
+            $user->getAttribute('email', ''),
+            $user->getAttribute('name', ''),
+            $user->getAttribute('phone', '')
+        ];
+
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $searchValues[] = 'label:' . $label;
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
     }
 );
 
@@ -1037,7 +1060,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
-        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
         $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
         return $complexity * $limit;

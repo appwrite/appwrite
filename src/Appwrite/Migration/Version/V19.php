@@ -3,9 +3,9 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Auth\Auth;
+use Utopia\Config\Config;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 
@@ -13,10 +13,11 @@ class V19 extends Migration
 {
     public function execute(): void
     {
+
         /**
          * Disable SubQueries for Performance.
          */
-        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subqueryVariables'] as $name) {
+        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables'] as $name) {
             Database::addFilter(
                 $name,
                 fn () => null,
@@ -25,12 +26,44 @@ class V19 extends Migration
         }
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+
+        $this->alterPermissionIndex('_metadata');
+
+        Console::info('Migrating Databases');
+        $this->migrateDatabases();
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
+        Console::info('Migrating Buckets');
+        $this->migrateBuckets();
+
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
+    }
+
+    /**
+     * Migrate all Databases.
+     *
+     * @return void
+     * @throws \Exception
+     */
+    private function migrateDatabases(): void
+    {
+        foreach ($this->documentsIterator('databases') as $database) {
+            Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
+
+            $databaseTable = "database_{$database->getInternalId()}";
+
+            $this->alterPermissionIndex($databaseTable);
+
+            foreach ($this->documentsIterator($databaseTable) as $collection) {
+                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
+                Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
+                $this->alterPermissionIndex($collectionTable);
+            }
+        }
     }
 
     /**
@@ -38,7 +71,7 @@ class V19 extends Migration
      *
      * @return void
      */
-    protected function migrateCollections(): void
+    private function migrateCollections(): void
     {
         foreach ($this->collections as $collection) {
             $id = $collection['$id'];
@@ -63,6 +96,9 @@ class V19 extends Migration
                 default:
                     break;
             }
+            if (!in_array($id, ['files', 'collections'])) {
+                $this->alterPermissionIndex($id);
+            }
 
             usleep(50000);
         }
@@ -71,10 +107,10 @@ class V19 extends Migration
     /**
      * Fix run on each document
      *
-     * @param \Utopia\Database\Document $document
-     * @return \Utopia\Database\Document
+     * @param Document $document
+     * @return Document
      */
-    protected function fixDocument(Document $document)
+    protected function fixDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
             case 'projects':
@@ -90,5 +126,35 @@ class V19 extends Migration
         }
 
         return $document;
+    }
+
+    protected function alterPermissionIndex($collectionName): void
+    {
+        try {
+            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms";
+            $this->pdo->prepare("
+                ALTER TABLE {$table}
+                DROP INDEX `_permission`, 
+                ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
+            ")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+    }
+
+    /**
+     * Migrating all Bucket tables.
+     *
+     * @return void
+     * @throws \Exception
+     * @throws \PDOException
+     */
+    protected function migrateBuckets(): void
+    {
+        foreach ($this->documentsIterator('buckets') as $bucket) {
+            $id = "bucket_{$bucket->getInternalId()}";
+            Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
+            $this->alterPermissionIndex($id);
+        }
     }
 }
