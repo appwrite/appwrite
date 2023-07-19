@@ -4,7 +4,6 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Provider;
-use Appwrite\Auth\MFA\Provider\HOTP;
 use Appwrite\Auth\MFA\Provider\TOTP;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
@@ -2585,7 +2584,6 @@ App::get('/v1/account/mfa/providers')
 
         $providers = new Document([
             'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
-            'hotp' => $user->getAttribute('hotp', false) && $user->getAttribute('hotpVerification', false),
             'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
@@ -2611,7 +2609,7 @@ App::post('/v1/account/mfa/:provider')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('provider', null, new WhiteList(['totp', 'hotp']), 'Provider.')
+    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('project')
@@ -2622,7 +2620,6 @@ App::post('/v1/account/mfa/:provider')
 
         $otp = match ($provider) {
             'totp' => new TOTP(),
-            'hotp' => new HOTP(),
             default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown provider.')
         };
 
@@ -2632,16 +2629,6 @@ App::post('/v1/account/mfa/:provider')
         $backups = Provider::generateBackupCodes();
 
     switch ($provider) {
-        case 'hotp':
-            if ($user->getAttribute('hotp') && $user->getAttribute('hotpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'HOTP already exists.');
-            }
-            $user
-                ->setAttribute('hotp', true)
-                ->setAttribute('hotpVerification', false)
-                ->setAttribute('hotpBackup', $backups)
-                ->setAttribute('hotpSecret', $otp->getSecret());
-            break;
         case 'totp':
             if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
                 throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
@@ -2685,7 +2672,7 @@ App::put('/v1/account/mfa/:provider')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('provider', null, new WhiteList(['totp', 'hotp']), 'Provider.')
+    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -2697,32 +2684,23 @@ App::put('/v1/account/mfa/:provider')
 
         $success = match ($provider) {
             'totp' => Challenge\TOTP::verify($user, $otp),
-            'hotp' => Challenge\HOTP::verify($user, $otp),
             default => false
         };
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-    switch ($provider) {
-        case 'hotp':
-            if (!$user->getAttribute('hotp')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'HOTP not added.');
-            } elseif ($user->getAttribute('hotpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'HOTP already verified.');
-            }
-            $user->setAttribute('hotpVerification', true);
-            break;
-        case 'totp':
-            if (!$user->getAttribute('totp')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-            } elseif ($user->getAttribute('totpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
-            }
-            $user->setAttribute('totpVerification', true);
-            break;
-    }
+        switch ($provider) {
+            case 'totp':
+                if (!$user->getAttribute('totp')) {
+                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+                } elseif ($user->getAttribute('totpVerification')) {
+                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+                }
+                $user->setAttribute('totpVerification', true);
+                break;
+        }
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
@@ -2749,7 +2727,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},token:{param-token}')
-    ->param('provider', '', new WhiteList(['totp', 'hotp', 'phone', 'email']), 'provider.')
+    ->param('provider', '', new WhiteList(['totp', 'phone', 'email']), 'provider.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -2860,7 +2838,6 @@ App::put('/v1/account/mfa/challenge')
 
         $success = match ($challenge->getAttribute('provider')) {
             'totp' => Challenge\TOTP::challenge($challenge, $user, $otp),
-            'hotp' => Challenge\HOTP::challenge($challenge, $user, $otp),
             'phone' => Challenge\Phone::challenge($challenge, $user, $otp),
             'email' => Challenge\Email::challenge($challenge, $user, $otp),
             default => false

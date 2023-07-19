@@ -16,12 +16,6 @@ class MFAProviders extends Model
                 'default' => false,
                 'example' => true
             ])
-            ->addRule('hotp', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'HOTP',
-                'default' => false,
-                'example' => true
-            ])
             ->addRule('phone', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Phone',
