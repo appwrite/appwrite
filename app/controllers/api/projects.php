@@ -121,7 +121,7 @@ App::post('/v1/projects')
             'keys' => null,
             'domains' => null,
             'auths' => $auths,
-            'minFactors' => 2,
+            'minFactors' => 1,
             'search' => implode(' ', [$projectId, $name]),
         ]));
         /** @var array $collections */
