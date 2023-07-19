@@ -89,13 +89,6 @@ class MigrateNew extends Action
 
         while (!empty($projects)) {
             foreach ($projects as $project) {
-                /**
-                 * Skip user projects with id 'console'
-                 */
-                if ($project->getId() === 'console' && $project->getInternalId() !== 'console') {
-                    continue;
-                }
-
                 try {
                     // TODO: Iterate through all project DBs
                     Console::success("Migrating project {$project->getId()}");

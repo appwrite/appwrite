@@ -30,6 +30,8 @@ class Migration
     public const MODE_AFTER = 'after';
 
     protected array $diff = [];
+    protected array $consoleDiff = [];
+    protected array $projectDiff = [];
 
     protected string $mode = self::MODE_BEFORE;
 
@@ -50,10 +52,10 @@ class Migration
         $schema1 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$from}.php");
         $schema2 = $this->loadSchema(__DIR__ . "/../../../app/config/collections/{$to}.php");
 
-        $projectDiff = $this->compareSchemas($schema1, $schema2);
-        $consoleDiff = $this->compareSchemas($schema1, $schema2, 'console');
+        $this->projectDiff = $this->compareSchemas($schema1, $schema2);
+        $this->consoleDiff = $this->compareSchemas($schema1, $schema2, 'console');
 
-        $this->diff = array_merge($projectDiff, $consoleDiff);
+        $this->diff = array_merge($this->projectDiff, $this->consoleDiff);
 
         usort($this->diff, function ($a, $b) {
             if ($a['type'] === $b['type']) {
@@ -182,6 +184,12 @@ class Migration
         $this->projectDB = $projectDB;
         $this->consoleDB = $consoleDB;
 
+        if($project->getId() === 'console') {
+            $this->diff = $this->consoleDiff;
+        } else {
+            $this->diff = $this->projectDiff;
+        }
+
         return $this;
     }
 
@@ -190,6 +198,18 @@ class Migration
         Console::info("Migration Mode : " . strtoupper($this->mode));
 
         if ($this->mode === self::MODE_AFTER) {
+            $attributesAdded = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
+            if (count($attributesAdded)) Console::success("The following attributes were added before the migration. Their required attribute will be updated to true.");
+            foreach ($attributesAdded as $attribute) {
+                Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
+            }
+
+            $attributesUpdated = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
+            if (count($attributesUpdated)) Console::success("Temporary attributes will be renamed and filters will be removed.");
+            foreach ($attributesUpdated as $attribute) {
+                Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
+            }
+
             $attributesRemoved = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_DELETED);
             if (count($attributesRemoved)) Console::success("The following attributes will be deleted");
             foreach ($attributesRemoved as $attribute) {
@@ -203,19 +223,19 @@ class Migration
             }
         } else if ($this->mode == self::MODE_BEFORE) {
             $attributesAdded = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_CREATED);
-            if (count($attributesAdded)) Console::success("The following attributes will be added");
+            if (count($attributesAdded)) Console::success("The following attributes will be added with required set to false");
             foreach ($attributesAdded as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
             $attributesUpdated = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_ATTRIBUTE_UPDATED);
-            if (count($attributesUpdated)) Console::success("The following attributes will be updated");
+            if (count($attributesUpdated)) Console::success("Temporary attributes & filters will be created for the following attributes");
             foreach ($attributesUpdated as $attribute) {
                 Console::log("  {$attribute['attribute']} in collection {$attribute['collection']}");
             }
 
             $collectionsAdded = array_filter($this->diff, fn ($difference) => $difference['type'] === self::TYPE_COLLECTION_CREATED);
-            if (count($collectionsAdded)) Console::success("The following collections will be added");
+            if (count($collectionsAdded)) Console::success("The following collections will be created");
             foreach ($collectionsAdded as $collection) {
                 Console::log("  {$collection['collection']['name']}");
             }
@@ -391,24 +411,28 @@ class Migration
                 Console::log("Added temp attribute: $tempAttributeId");
             } else if ($this->mode == self::MODE_AFTER) {
 
-                $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
+                // $filter = "sync-{$oldAttribute['$id']}-{$tempAttributeId}";
 
-                Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
-                    return $document->getAttribute($oldAttribute['$id']);
-                }, function (mixed $value) {
-                    return null;
-                });
+                // Database::addFilter($filter, function (mixed $value, Document $document) use ($oldAttribute) {
+                //     return $document->getAttribute($oldAttribute['$id']);
+                // }, function (mixed $value) {
+                //     return null;
+                // });
+
+                Console::log("Deleting old attribute: '{$oldAttribute['$id']}'");
 
                 $this->projectDB->deleteAttribute(
                     $collection,
                     $oldAttribute['$id']
                 );
 
-                $this->projectDB->renameAttribute(
-                    $collection,
-                    $tempAttributeId,
-                    $oldAttribute['$id']
-                );
+                // Console::log("Renaming temp attribute: '{$tempAttributeId}' to '{$oldAttribute['$id']}'");
+
+                // $this->projectDB->renameAttribute(
+                //     $collection,
+                //     $tempAttributeId,
+                //     $oldAttribute['$id']
+                // );
 
             }
         } catch (Exception $e) {

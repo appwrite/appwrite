@@ -819,14 +819,14 @@ services:
   #   #   - /nfs/config:/data/src 
   #   #   - /storage/config:/data/dest
 
-  # redis-commander:
-  #   image: rediscommander/redis-commander:latest
-  #   networks:
-  #   - appwrite
-  #   environment:
-  #   - REDIS_HOSTS=redis
-  #   ports:
-  #   - "8081:8081"
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    networks:
+    - appwrite
+    environment:
+    - REDIS_HOSTS=redis
+    ports:
+    - "8081:8081"
 
   # resque:
   #   image: appwrite/resque-web:1.1.0
