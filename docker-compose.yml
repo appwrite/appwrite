@@ -634,7 +634,6 @@ services:
       - ./src:/usr/src/code/src
       - appwrite-mariadb:/var/lib/mysql:rw
       - ./backups:/backups:rw
-      - ./extracts:/extracts:rw
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - redis
@@ -644,6 +643,7 @@ services:
       - _DO_SPACES_ACCESS_KEY
       - _DO_SPACES_SECRET_KEY
       - _DO_SPACES_REGION
+      - _APP_BACKUP_FOLDER
 
   appwrite-usage:
     entrypoint: usage
