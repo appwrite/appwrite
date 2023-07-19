@@ -557,7 +557,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge([
             '$id' => ID::unique(),
@@ -574,13 +574,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
-        $isAnonymousUser = Auth::isAnonymousUser($user);
+        if (empty($user->getAttribute('email'))) {
+            $user->setAttribute('email', $oauth2->getUserEmail($accessToken));
+        }
 
-        if ($isAnonymousUser) {
-            $user
-                ->setAttribute('name', $oauth2->getUserName($accessToken))
-                ->setAttribute('email', $oauth2->getUserEmail($accessToken))
-            ;
+        if (empty($user->getAttribute('name'))) {
+            $user->setAttribute('name', $oauth2->getUserName($accessToken));
         }
 
         $user
@@ -709,7 +708,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $loginSecret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -835,7 +834,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -984,7 +983,7 @@ App::post('/v1/account/sessions/phone')
         }
 
         $secret = Auth::codeGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -1072,7 +1071,7 @@ App::put('/v1/account/sessions/phone')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -1224,7 +1223,7 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -1397,6 +1396,7 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
             $sessions[$key] = $session;
         }
@@ -1503,7 +1503,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration))
+                    ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -1539,9 +1539,7 @@ App::patch('/v1/account/name')
     ->inject('events')
     ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
 
-        $user
-            ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')]));
+        $user->setAttribute('name', $name);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
@@ -1658,7 +1656,7 @@ App::patch('/v1/account/email')
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $email, $user->getAttribute('phone', '')]));
+        ;
 
         if (empty($passwordUpdate)) {
             $user
@@ -1718,7 +1716,7 @@ App::patch('/v1/account/phone')
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
-            ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $phone]));
+        ;
 
         if (empty($passwordUpdate)) {
             $user
@@ -1967,7 +1965,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
-                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration));
+                $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
                 $events
                     ->setParam('userId', $user->getId())
@@ -2350,7 +2348,7 @@ App::post('/v1/account/verification')
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name'))
+            ->setName($user->getAttribute('name') ?? '')
             ->trigger()
         ;
 
@@ -2424,7 +2422,7 @@ App::put('/v1/account/verification')
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
-            ->setParam('userId', $user->getId())
+            ->setParam('userId', $userId)
             ->setParam('tokenId', $verificationDocument->getId())
         ;
 
@@ -2468,7 +2466,6 @@ App::post('/v1/account/verification/phone')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $verificationSecret = Auth::tokenGenerator();
         $secret = Auth::codeGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
@@ -2504,13 +2501,13 @@ App::post('/v1/account/verification/phone')
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output(
-                $verification->setAttribute('secret', $verificationSecret),
+                $verification->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
             ))
         ;
 
         // Hide secret for clients
-        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
+        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

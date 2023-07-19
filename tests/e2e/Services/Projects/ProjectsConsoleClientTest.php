@@ -3201,15 +3201,13 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $project['headers']['status-code']);
 
-        // Delete team
-        $team = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+        // Delete Project
+        $project = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password'
-        ]);
+        ], $this->getHeaders()));
 
-        $this->assertEquals(204, $team['headers']['status-code']);
+        $this->assertEquals(204, $project['headers']['status-code']);
 
         // Ensure I can get team but not a project
         $team = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId, array_merge([

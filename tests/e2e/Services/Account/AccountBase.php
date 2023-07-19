@@ -39,6 +39,7 @@ trait AccountBase
         $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
+        $this->assertEquals($response['body']['labels'], []);
 
         /**
          * Test for FAILURE
@@ -308,6 +309,7 @@ trait AccountBase
 
         $this->assertEquals(true, $response['body']['sessions'][0]['current']);
 
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['sessions'][0]['expire']));
         /**
          * Test for FAILURE
          */
@@ -1295,7 +1297,7 @@ trait AccountBase
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::formatTz($response['body']['expire'])), 0);
 
         $this->assertNotFalse($expireTime);
 

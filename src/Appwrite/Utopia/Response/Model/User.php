@@ -77,6 +77,13 @@ class User extends Model
                 'default' => true,
                 'example' => true,
             ])
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the user.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
+            ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Password update time in ISO 8601 format.',

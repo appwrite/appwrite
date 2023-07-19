@@ -80,7 +80,7 @@ class Membership extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'User list of roles',
                 'default' => [],
-                'example' => 'admin',
+                'example' => ['owner'],
                 'array' => true,
             ])
         ;

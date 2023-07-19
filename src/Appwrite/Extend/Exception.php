@@ -84,6 +84,7 @@ class Exception extends \Exception
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
+    public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -135,6 +136,7 @@ class Exception extends \Exception
     /** Documents */
     public const DOCUMENT_NOT_FOUND                = 'document_not_found';
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
+    public const DOCUMENT_MISSING_DATA             = 'document_missing_data';
     public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
     public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
     public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';

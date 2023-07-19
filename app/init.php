@@ -457,6 +457,29 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'userSearch',
+    function (mixed $value, Document $user) {
+        $searchValues = [
+            $user->getId(),
+            $user->getAttribute('email', ''),
+            $user->getAttribute('name', ''),
+            $user->getAttribute('phone', '')
+        ];
+
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $searchValues[] = 'label:' . $label;
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
 /**
  * DB Formats
  */
@@ -903,7 +926,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
     if ($projectId === 'console') {
         return $console;
