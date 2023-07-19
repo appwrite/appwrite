@@ -169,12 +169,23 @@ class Client
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
         $responseHeaders    = [];
 
-        $query = match ($headers['content-type']) {
-            'application/json' => json_encode($params),
-            'multipart/form-data' => $this->flatten($params),
-            'application/graphql' => $params[0],
-            default => http_build_query($params),
-        };
+        switch ($headers['content-type']) {
+            case 'application/json':
+                $query = json_encode($params);
+                break;
+
+            case 'multipart/form-data':
+                $query = $this->flatten($params);
+                break;
+
+            case 'application/graphql':
+                $query = $params[0];
+                break;
+
+            default:
+                $query = http_build_query($params);
+                break;
+        }
 
         foreach ($headers as $i => $header) {
             $headers[] = $i . ':' . $header;

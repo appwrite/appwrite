@@ -13,8 +13,8 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 use Utopia\Logger\Log;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -261,7 +261,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'data' => [
                         'events' => ['stats.connections'],
                         'channels' => ['project'],
-                        'timestamp' => DateTime::now(),
+                        'timestamp' => DateTime::formatTz(DateTime::now()),
                         'payload' => [
                             $projectId => $payload[$projectId]
                         ]
@@ -288,7 +288,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 'data' => [
                     'events' => ['test.event'],
                     'channels' => ['tests'],
-                    'timestamp' => DateTime::now(),
+                    'timestamp' => DateTime::formatTz(DateTime::now()),
                     'payload' => $payload
                 ]
             ];

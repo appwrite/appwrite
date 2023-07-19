@@ -18,47 +18,46 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\SMS\Adapter\Mock;
-use Appwrite\SMS\Adapter\Telesign;
-use Appwrite\SMS\Adapter\TextMagic;
-use Appwrite\SMS\Adapter\Twilio;
-use Appwrite\SMS\Adapter\Msg91;
-use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Delete;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
-use Appwrite\Network\Validator\URL;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
-use Utopia\Database\Document;
+use Utopia\Logger\Logger;
+use Utopia\Config\Config;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\Structure;
-use Utopia\Logger\Logger;
-use Utopia\Config\Config;
 use Utopia\Locale\Locale;
+use Utopia\DSN\DSN;
+use Utopia\Messaging\Adapters\SMS\Mock;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
+use Utopia\Messaging\Adapters\SMS\Msg91;
+use Utopia\Messaging\Adapters\SMS\Telesign;
+use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Twilio;
+use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
-use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
@@ -77,6 +76,10 @@ use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
+use Utopia\Validator\Range;
+use Utopia\Validator\IP;
+use Utopia\Validator\URL;
+use Utopia\Validator\WhiteList;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -88,6 +91,8 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_SESSIONS_MAX = 100;
+const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
@@ -96,10 +101,11 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
+const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.1.2';
+const APP_VERSION_STABLE = '1.2.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -174,6 +180,39 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Usage metrics
+const METRIC_TEAMS = 'teams';
+const METRIC_USERS = 'users';
+const METRIC_SESSIONS  = 'sessions';
+const METRIC_DATABASES = 'databases';
+const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DOCUMENTS = 'documents';
+const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_BUCKETS = 'buckets';
+const METRIC_FILES  = 'files';
+const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
+const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_STORAGE  = 'builds.storage';
+const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_EXECUTIONS  = 'executions';
+const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
+const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_NETWORK_REQUESTS  = 'network.requests';
+const METRIC_NETWORK_INBOUND  = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 
@@ -189,6 +228,7 @@ Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -576,13 +616,11 @@ $register->set('pools', function () {
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
-
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
-
             if (empty($dsn)) {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
@@ -607,7 +645,6 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
@@ -645,7 +682,6 @@ $register->set('pools', function () {
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
-
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -689,30 +725,6 @@ $register->set('pools', function () {
     return $group;
 });
 
-$register->set('influxdb', function () {
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
-});
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -742,9 +754,11 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
-
+$register->set('promiseAdapter', function () {
+    return new Swoole();
+});
 /*
  * Localization
  */
@@ -844,7 +858,6 @@ App::setResource('loggerBreadcrumbs', function () {
 });
 
 App::setResource('register', fn() => $register);
-
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 // Queues
@@ -860,14 +873,14 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => 'web',
+        'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -879,7 +892,7 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
         )
     );
 
@@ -890,7 +903,7 @@ App::setResource('clients', function ($request, $console, $project) {
                 fn ($node) => $node['hostname'],
                 \array_filter(
                     $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
                 )
             )
         )
@@ -1023,7 +1036,7 @@ App::setResource('console', function () {
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'localhost',
             ], // Current host is added on app init
         ],
@@ -1187,10 +1200,100 @@ App::setResource('servers', function () {
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);
-    }, $server['languages']);
+    }, $server['sdks']);
 
     return $languages;
 });
+
+App::setResource('promiseAdapter', function ($register) {
+    return $register->get('promiseAdapter');
+}, ['register']);
+
+App::setResource('schema', function ($utopia, $dbForProject) {
+
+    $complexity = function (int $complexity, array $args) {
+        $queries = Query::parseQueries($args['queries'] ?? []);
+        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+        return $complexity * $limit;
+    };
+
+    $attributes = function (int $limit, int $offset) use ($dbForProject) {
+        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+            Query::limit($limit),
+            Query::offset($offset),
+        ]));
+
+        return \array_map(function ($attr) {
+            return $attr->getArrayCopy();
+        }, $attrs);
+    };
+
+    $urls = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'read' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'delete' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+    ];
+
+    $params = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return [ 'queries' => $args['queries']];
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            $id = $args['id'] ?? 'unique()';
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'documentId' => $id,
+                'collectionId' => $collectionId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            $documentId = $args['id'];
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'documentId' => $documentId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+    ];
+
+    return Schema::build(
+        $utopia,
+        $complexity,
+        $attributes,
+        $urls,
+        $params,
+    );
+}, ['utopia', 'dbForProject']);
 
 App::setResource('contributors', function () {
     $path = 'app/config/cloud/contributors.json';

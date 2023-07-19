@@ -1,10 +1,75 @@
-# TBD
+# Version TBD
 - Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
 - Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+- Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
+- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+- Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
+
+# Version 1.2.1
+## Changes
+- Upgrade Console to [2.2.0](https://github.com/appwrite/console/releases/tag/2.2.0)
+- Update DBIP Database [#5049](https://github.com/appwrite/appwrite/pull/5049)
+
+## Bugs
+- Fix a few null safety warnings [#4654](https://github.com/appwrite/appwrite/pull/4654)
+- Fix timestamp format in Realtime response [#4515](https://github.com/appwrite/appwrite/pull/4515)
+- Add flutter-web as a platform type [#4992](https://github.com/appwrite/appwrite/pull/4992)
+- Fix typo in Model/Locale.php [#4669](https://github.com/appwrite/appwrite/pull/4669)
+- Fix deletes worker not deleting project database tables [#4984](https://github.com/appwrite/appwrite/pull/4984)
+- Fix deletes worker not deleting database collections [#4983](https://github.com/appwrite/appwrite/pull/4983)
+- Fix restart policy for worker-messaging container [#4994](https://github.com/appwrite/appwrite/pull/4994)
+- Fix validating origin for apple platforms [#5089](https://github.com/appwrite/appwrite/pull/5089)
+
+# Version 1.2.0
+## Features
+- Added GraphQL API [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added GraphQL Explorer [#974](https://github.com/appwrite/appwrite/pull/974)
+- Added ability to set max sessions per user per project [#4831](https://github.com/appwrite/appwrite/pull/4831)
+
+## Changes
+- Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
+- Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
+- New usage metrics collection flow [#4770](https://github.com/appwrite/appwrite/pull/4770)
+  - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
+  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
+  - Removed usage labels dependency.
+  - Dropped type attribute from stats collection.
+  - Usage metrics are processed via new usage worker.
+  - Metrics changes: 
+    - Storage
+      - deprecated
+        - filesCreate, filesRead, filesUpdate, filesDelete, bucketsCreate, bucketsRead, bucketsUpdate, bucketsDelete.
+      - renamed
+        - filesCount to filesTotal, storage to filesStorage, bucketsCount to bucketsTotal.
+    - Auth 
+        - deprecated
+          - usersCreate, usersRead, usersUpdate, usersDelete, sessionsCreate sessionsProviderCreate, sessionsDelete.
+        - renamed
+          - usersCount to usersTotal.
+        - added
+          - sessionsTotal.
+    - Databases
+      - deprecated
+        - databasesCreate, databasesRead, databasesDelete, documentsCreate, documentsRead, documentsUpdate, documentsDelete, collectionsCreate, collectionsRead, collectionsUpdate, collectionsDelete.
+      - renamed
+        - databasesCount to databasesTotal, collectionsCount to collectionsTotal, documentsCount to documentsTotal.
+    - Functions
+      - deprecated 
+        - executionsFailure, executionsSuccess, buildsFailure, buildsSuccess, executionsFailure, executionsSuccess.
+      - renamed
+        - executionsTime to executionsCompute, buildsTime to buildsCompute, documentsCount to documentsTotal.
+      - added
+        - functionsTotal, buildsStorage, deploymentsTotal, deploymentsStorage.
+    - Project
+      - renamed
+        - executions to executionsTotal, builds to buildsTotal, requests to requestsTotal, storage to filesStorage, buckets to bucketsTotal, users to usersTotal, documents to documentsTotal, collections to collectionsTotal, databases to databasesTotal.
+
+## Bugs
+- Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 
 # Version 1.1.2
 ## Changes
@@ -32,13 +97,11 @@
 
 ## Bugs
 - Fix license detection for Flutter and Dart SDKs [#4435](https://github.com/appwrite/appwrite/pull/4435)
+- Fix missing realtime event for create function deployment [#4574](https://github.com/appwrite/appwrite/pull/4574)
 - Fix missing `status`, `buildStderr` and `buildStderr` from get deployment response [#4611](https://github.com/appwrite/appwrite/pull/4611)
 - Fix project pagination in DB usage aggregation [#4517](https://github.com/appwrite/appwrite/pull/4517)
 - Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
 - Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
-
-# Features
-- Added Auth Duration API to allow users to set the duration of their sessions. [#4618](https://github.com/appwrite/appwrite/pull/4618)
 
 # Version 1.0.3
 ## Bugs

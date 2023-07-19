@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class StorageConsoleClientTest extends Scope
 {
@@ -39,10 +39,11 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(12, count($response['body']));
+        $this->assertEquals(4, count($response['body']));
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['storage']);
-        $this->assertIsArray($response['body']['filesCount']);
+        $this->assertIsArray($response['body']['bucketsTotal']);
+        $this->assertIsArray($response['body']['filesTotal']);
+        $this->assertIsArray($response['body']['filesStorage']);
     }
 
     public function testGetStorageBucketUsage()
@@ -94,13 +95,9 @@ class StorageConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 7);
+        $this->assertEquals(count($response['body']), 3);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['filesCount']);
-        $this->assertIsArray($response['body']['filesCreate']);
-        $this->assertIsArray($response['body']['filesRead']);
-        $this->assertIsArray($response['body']['filesUpdate']);
-        $this->assertIsArray($response['body']['filesDelete']);
+        $this->assertIsArray($response['body']['filesTotal']);
         $this->assertIsArray($response['body']['filesStorage']);
     }
 }

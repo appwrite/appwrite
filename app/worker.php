@@ -3,6 +3,7 @@
 require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -85,14 +86,20 @@ Server::setResource('queueForFunctions', function (Registry $register) {
     );
 }, ['register']);
 
+Server::setResource('queueForUsage', function (Registry $register) {
+    $pools = $register->get('pools');
+    return new Usage(
+        $pools
+            ->get('queue')
+            ->pop()
+            ->getResource()
+    );
+}, ['register']);
+
 Server::setResource('log', fn() => new Log());
 
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
-}, ['register']);
-
-Server::setResource('statsd', function ($register) {
-    return $register->get('statsd');
 }, ['register']);
 
 Server::setResource('pools', function ($register) {
@@ -122,7 +129,7 @@ $server
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, Logger $logger, Log $log) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {

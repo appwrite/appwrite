@@ -42,7 +42,7 @@ class Locale extends Model
             ])
             ->addRule('eu', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'True if country is part of the Europian Union.',
+                'description' => 'True if country is part of the European Union.',
                 'default' => false,
                 'example' => false,
             ])
