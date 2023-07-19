@@ -172,7 +172,7 @@ return [
     ],
     Exception::USER_PASSWORD_PERSONAL_DATA => [
         'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
-        'description' => 'The password you are trying to use contains references to personal data like your name, email, phone or userID. Please choose a different password.',
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. Please choose a different password and try again.',
         'code' => 400,
     ],
     Exception::USER_SESSION_NOT_FOUND => [

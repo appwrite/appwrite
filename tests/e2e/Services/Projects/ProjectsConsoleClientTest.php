@@ -1456,7 +1456,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Reset
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-dictionary', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/disallow-personal-data', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1464,7 +1464,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(false, $response['body']['authPasswordDictionary']);
+        $this->assertEquals(false, $response['body']['authDisallowPersonalData']);
     }
 
 
