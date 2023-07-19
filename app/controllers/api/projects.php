@@ -1890,7 +1890,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::DELETE('/v1/projects/:projectId/templates/email/:type/:locale')
+App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Reset custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
