@@ -824,16 +824,15 @@ App::patch('/v1/users/:userId/password')
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $history = [];
+        $history = $user->getAttribute('passwordHistory', []);
         if ($historyLimit > 0) {
-            $history = $user->getAttribute('passwordHistory', []);
             $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
             if (!$validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
             $history[] = $newPassword;
-            array_slice($history, (count($history) - $historyLimit), $historyLimit);
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
         $user
