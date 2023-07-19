@@ -42,6 +42,9 @@ class PersonalDataTest extends TestCase
         $this->assertEquals($this->object->isValid('something.email'), false);
         $this->assertEquals($this->object->isValid('email.something'), false);
         $this->assertEquals($this->object->isValid('something.email.something'), false);
+
+        /** Test for success */
+        $this->assertEquals($this->object->isValid('893pu5egerfsv3rgersvd'), true);
     }
 
     public function testNotStrict(): void
@@ -74,12 +77,5 @@ class PersonalDataTest extends TestCase
         $this->assertEquals($this->object->isValid('something.EMAIL'), false);
         $this->assertEquals($this->object->isValid('EMAIL.something'), false);
         $this->assertEquals($this->object->isValid('something.EMAIL.something'), false);
-    }
-
-    public function testSuccess(): void
-    {
-        $this->object = new PersonalData('userId', 'email@example.com', 'name', '+129492323', false);
-        $this->assertEquals($this->object->isValid('foo'), true);
-        $this->assertEquals($this->object->isValid('bar'), true);
     }
 }

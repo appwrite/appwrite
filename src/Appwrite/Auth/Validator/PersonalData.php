@@ -37,6 +37,10 @@ class PersonalData extends Password
      */
     public function isValid($password): bool
     {
+        if (!parent::isValid($password)) {
+            return false;
+        }
+
         if (!$this->strict) {
             $password = strtolower($password);
             $this->userId = strtolower($this->userId);
