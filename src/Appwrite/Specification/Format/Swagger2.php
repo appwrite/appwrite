@@ -413,10 +413,11 @@ class Swagger2 extends Format
                         /** @var \Utopia\Validator\WhiteList $validator */
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
-                        $node['enum'] = $validator->getList();
-                        $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-                        $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-
+                        if (!($route->getLabel('sdk.namespace', '') == 'users' && $route->getLabel('sdk.method', '') == 'getUsage' && $name == 'provider')) {
+                            $node['enum'] = $validator->getList();
+                            $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                            $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                        }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }

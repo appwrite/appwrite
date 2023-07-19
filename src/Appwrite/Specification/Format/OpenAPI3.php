@@ -411,10 +411,11 @@ class OpenAPI3 extends Format
                         /** @var \Utopia\Validator\WhiteList $validator */
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];
-                        $node['schema']['enum'] = $validator->getList();
-                        $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-                        $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-
+                        if (!($route->getLabel('sdk.namespace', '') == 'users' && $route->getLabel('sdk.method', '') == 'getUsage' && $name == 'provider')) {
+                                $node['schema']['enum'] = $validator->getList();
+                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                        }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
