@@ -1297,7 +1297,7 @@ trait AccountBase
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
-        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::format(new \DateTime($response['body']['expire']))), 0);
+        $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode(DateTime::formatTz($response['body']['expire'])), 0);
 
         $this->assertNotFalse($expireTime);
 
