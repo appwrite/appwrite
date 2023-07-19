@@ -132,7 +132,7 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('authDisallowPersonalData', [
+            ->addRule('authPersonalDataCheck', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
                 'default' => false,
@@ -260,7 +260,7 @@ class Project extends Model
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
-        $document->setAttribute('authDisallowPersonalData', $authValues['disallowPersonalData'] ?? false);
+        $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

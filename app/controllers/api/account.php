@@ -99,7 +99,7 @@ App::post('/v1/account')
             }
         }
 
-        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
@@ -1594,7 +1594,7 @@ App::patch('/v1/account/password')
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
-        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);

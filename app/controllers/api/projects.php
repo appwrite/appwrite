@@ -81,7 +81,7 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'disallowPersonalData' => false];
+        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
@@ -717,7 +717,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/disallow-personal-data')
+App::patch('/v1/projects/:projectId/auth/personal-data')
     ->desc('Enable or disable checking user passwords for similarity with their personal data.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -740,7 +740,7 @@ App::patch('/v1/projects/:projectId/auth/disallow-personal-data')
         }
 
         $auths = $project->getAttribute('auths', []);
-        $auths['disallowPersonalData'] = $enabled;
+        $auths['personalDataCheck'] = $enabled;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));

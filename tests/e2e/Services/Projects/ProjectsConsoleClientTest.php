@@ -1365,7 +1365,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(true, $response['body']['authDisallowPersonalData']);
+        $this->assertEquals(true, $response['body']['authPersonalDataCheck']);
 
         /**
          * Test for failure
@@ -1464,7 +1464,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(false, $response['body']['authDisallowPersonalData']);
+        $this->assertEquals(false, $response['body']['authPersonalDataCheck']);
     }
 
 

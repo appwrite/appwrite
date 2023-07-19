@@ -54,7 +54,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             ? ID::unique()
             : ID::custom($userId);
 
-        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
@@ -852,7 +852,7 @@ App::patch('/v1/users/:userId/password')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if ($project->getAttribute('auths', [])['disallowPersonalData'] ?? false) {
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
