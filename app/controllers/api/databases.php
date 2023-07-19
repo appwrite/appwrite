@@ -2536,9 +2536,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         }
 
         $index = $dbForProject->findOne('indexes', [
-            Query::equal('$id',[$database->getInternalId().'_'.$collection->getInternalId().'_'.$key])
+            Query::equal('$id', [$database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key])
         ]);
-        
+
         if ($index->isEmpty()) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
@@ -2546,7 +2546,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $index->setAttribute('collectionId', $database->getInternalId() . '_' . $collectionId);
 
         $response->dynamic($index, Response::MODEL_INDEX);
-    });;
+    });
+;
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
