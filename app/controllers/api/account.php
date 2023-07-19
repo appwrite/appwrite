@@ -2687,20 +2687,20 @@ App::put('/v1/account/mfa/:provider')
             default => false
         };
 
-        if (!$success) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
 
-        switch ($provider) {
-            case 'totp':
-                if (!$user->getAttribute('totp')) {
-                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-                } elseif ($user->getAttribute('totpVerification')) {
-                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
-                }
-                $user->setAttribute('totpVerification', true);
-                break;
-        }
+    switch ($provider) {
+        case 'totp':
+            if (!$user->getAttribute('totp')) {
+                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+            } elseif ($user->getAttribute('totpVerification')) {
+                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+            }
+            $user->setAttribute('totpVerification', true);
+            break;
+    }
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
