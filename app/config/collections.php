@@ -699,6 +699,28 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
+                '$id' => ID::custom('smtp'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json', 'encrypt'],
+            ],
+            [
+                '$id' => ID::custom('templates'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1000000, // TODO make sure size fits
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('auths'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1441,7 +1463,18 @@ $collections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['userSearch'],
-            ]
+            ],
+            [
+                '$id' => ID::custom('accessedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
         ],
         'indexes' => [
             [
@@ -1506,7 +1539,14 @@ $collections = [
                 'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
-            ]
+            ],
+            [
+                '$id' => '_key_accessedAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 

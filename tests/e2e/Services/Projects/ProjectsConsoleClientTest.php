@@ -19,7 +19,9 @@ class ProjectsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
-    /** @group projectsCRUD */
+    /**
+     * @group smtpAndTemplates
+     * @group projectsCRUD */
     public function testCreateProject(): array
     {
         /**
@@ -527,6 +529,156 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return ['projectId' => $projectId];
+    }
+
+    /**
+     * @group smtpAndTemplates
+     * @depends testCreateProject
+     */
+    public function testUpdateProjectSMTP($data): array
+    {
+        $id = $data['projectId'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => true,
+            'sender' => 'mailer@appwrite.io',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['smtpEnabled']);
+        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSender']);
+        $this->assertEquals('maildev', $response['body']['smtpHost']);
+        $this->assertEquals(1025, $response['body']['smtpPort']);
+        $this->assertEquals('user', $response['body']['smtpUsername']);
+        $this->assertEquals('password', $response['body']['smtpPassword']);
+        $this->assertEquals('', $response['body']['smtpSecure']);
+
+        /** Test Reading Project */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['smtpEnabled']);
+        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSender']);
+        $this->assertEquals('maildev', $response['body']['smtpHost']);
+        $this->assertEquals(1025, $response['body']['smtpPort']);
+        $this->assertEquals('user', $response['body']['smtpUsername']);
+        $this->assertEquals('password', $response['body']['smtpPassword']);
+        $this->assertEquals('', $response['body']['smtpSecure']);
+
+        /** Reset */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/smtp', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'enabled' => false,
+            'sender' => 'mailer@appwrite.io',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
+        ]);
+        return $data;
+    }
+
+    /**
+     * @group smtpAndTemplates
+     * @depends testCreateProject */
+    public function testUpdateTemplates($data): array
+    {
+        $id = $data['projectId'];
+
+        /** Get Default Email Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Account Verification', $response['body']['subject']);
+        $this->assertEquals('Project Test 2 Team', $response['body']['senderName']);
+        $this->assertEquals('team@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en-us', $response['body']['locale']);
+        $this->assertMatchesRegularExpression('/<!doctype html>/', $response['body']['message']);
+
+        /** Update Email template */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subject' => 'Please verify your email',
+            'message' => 'Please verify your email {{url}}',
+            'senderName' => 'Appwrite Custom',
+            'senderEmail' => 'custom@appwrite.io',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Please verify your email', $response['body']['subject']);
+        $this->assertEquals('Appwrite Custom', $response['body']['senderName']);
+        $this->assertEquals('custom@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en-us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
+
+        /** Get Updated Email Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/email/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Please verify your email', $response['body']['subject']);
+        $this->assertEquals('Appwrite Custom', $response['body']['senderName']);
+        $this->assertEquals('custom@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en-us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
+
+        /** Get Default SMS Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en-us', $response['body']['locale']);
+        $this->assertEquals('{{token}}', $response['body']['message']);
+
+        /** Update SMS template */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'message' => 'Please verify your email {{token}}',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en-us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
+
+        /** Get Updated SMS Template */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('verification', $response['body']['type']);
+        $this->assertEquals('en-us', $response['body']['locale']);
+        $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
+
+        return $data;
     }
 
     /** @depends testGetProjectUsage */
