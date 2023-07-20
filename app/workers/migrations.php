@@ -183,7 +183,6 @@ class MigrationsV1 extends Worker
                 'buckets.write',
                 'files.read',
                 'files.write',
-
                 'functions.read',
                 'functions.write',
             ],
