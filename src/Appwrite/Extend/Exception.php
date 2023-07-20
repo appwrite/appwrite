@@ -169,6 +169,10 @@ class Exception extends \Exception
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
+    public const PROJECT_SMTP_CONFIG_INVALID       = 'project_smtp_config_invalid';
+
+    public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
+
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
 

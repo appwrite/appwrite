@@ -699,6 +699,28 @@ $collections = [
                 'filters' => ['json'],
             ],
             [
+                '$id' => ID::custom('smtp'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json', 'encrypt'],
+            ],
+            [
+                '$id' => ID::custom('templates'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1000000, // TODO make sure size fits
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('auths'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
