@@ -300,6 +300,23 @@ trait DatabasesBase
     /**
      * @depends testCreateAttributes
      */
+    public function testListAttributes(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $attributes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => ['equal("type", "string")'],
+        ]);
+        $this->assertEquals(200, $attributes['headers']['status-code']);
+        $this->assertEquals(3, $attributes['body']['total']);
+    }
+
+    /**
+     * @depends testCreateAttributes
+     */
     public function testAttributeResponseModels(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -679,7 +696,6 @@ trait DatabasesBase
         $this->assertEquals(10, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
-
         $this->assertIsArray($attributes);
         $this->assertCount(10, $attributes);
 
