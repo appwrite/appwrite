@@ -230,8 +230,6 @@ Http::onRequest()
         $response = new Response($response);
         Http::setResource('request', fn()=>$request);
         Http::setResource('response', fn()=>$response);
-
-        var_dump($request->getURI());
         
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
