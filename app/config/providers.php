@@ -201,6 +201,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'oidc' => [
+        'name' => 'OpenID Connect',
+        'developers' => 'https://openid.net/connect/faq/',
+        'icon' => 'icon-oidc',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'oidc.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
     'okta' => [
         'name' => 'Okta',
         'developers' => 'https://developer.okta.com/',
