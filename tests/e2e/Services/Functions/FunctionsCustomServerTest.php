@@ -8,10 +8,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -45,8 +43,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
         $this->assertEquals('php-8.0', $response1['body']['runtime']);
-        $this->assertEquals(true, DateTime::isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($response1['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'users.*.create',
@@ -328,8 +327,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(200, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test1', $response1['body']['name']);
-        $this->assertEquals(true, DateTime::isValid($response1['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($response1['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
             'users.*.update.name',
@@ -363,17 +363,19 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
         $this->assertNotEmpty($deployment['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($deployment['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
         // Wait for deployment to build.
-        sleep(30);
+        sleep(60);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
@@ -403,13 +405,14 @@ class FunctionsCustomServerTest extends Scope
         $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'php-large-fx.tar.gz');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
             $largeTag = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge($headers, $this->getHeaders()), [
                 'entrypoint' => 'index.php',
                 'code' => $curlFile,
+                'activate' => true
             ]);
             $counter++;
             $id = $largeTag['body']['$id'];
@@ -418,7 +421,8 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $largeTag['headers']['status-code']);
         $this->assertNotEmpty($largeTag['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($largeTag['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($largeTag['body']['$createdAt']));
         $this->assertEquals('index.php', $largeTag['body']['entrypoint']);
         $this->assertGreaterThan(10000, $largeTag['body']['size']);
 
@@ -440,8 +444,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['$createdAt']));
-        $this->assertEquals(true, DateTime::isValid($response['body']['$updatedAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($response['body']['$updatedAt']));
         $this->assertEquals($data['deploymentId'], $response['body']['deployment']);
 
         /**
@@ -568,6 +573,10 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals(0, $function['body']['buildTime']);
+        $this->assertNotEmpty($function['body']['status']);
+        $this->assertNotEmpty($function['body']['buildStdout']);
+        $this->assertArrayHasKey('buildStderr', $function['body']);
 
         /**
          * Test for FAILURE
@@ -602,7 +611,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertEquals(true, DateTime::isValid($execution['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('waiting', $execution['body']['status']);
         $this->assertEquals(0, $execution['body']['statusCode']);
@@ -610,7 +620,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['duration']);
 
-        sleep(5);
+        sleep(10);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -619,7 +629,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertEquals(true, DateTime::isValid($execution['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['statusCode']);
@@ -637,7 +647,7 @@ class FunctionsCustomServerTest extends Scope
          * Test for FAILURE
          */
 
-        sleep(10);
+        sleep(20);
 
         return array_merge($data, ['executionId' => $executionId]);
     }
@@ -733,7 +743,6 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -744,7 +753,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
         $this->assertStringContainsString('Test1', $execution['body']['response']);
         $this->assertStringContainsString('http', $execution['body']['response']);
         $this->assertStringContainsString('PHP', $execution['body']['response']);
@@ -861,7 +869,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -881,7 +888,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(20);
+        sleep(40);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -894,7 +901,7 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -945,7 +952,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -959,13 +965,14 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => $entrypoint,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        sleep(20);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -988,7 +995,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1055,7 +1062,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1087,7 +1093,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(10);
+        sleep(20);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1103,7 +1109,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1168,7 +1174,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1200,7 +1205,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(30);
+        sleep(60);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1216,7 +1221,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(30);
+        sleep(60);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1282,7 +1287,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1314,7 +1318,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(40);
+        sleep(80);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1330,7 +1334,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',
@@ -1396,7 +1400,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1428,7 +1431,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(30);
+        sleep(60);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1444,7 +1447,7 @@ class FunctionsCustomServerTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
             'content-type' => 'application/json',

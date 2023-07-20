@@ -8,12 +8,10 @@ use Utopia\Database\Document;
 class Mail extends Event
 {
     protected string $recipient = '';
-    protected string $url = '';
-    protected string $code = '';
-    protected string $type = '';
+    protected string $from = '';
     protected string $name = '';
-    protected string $locale = '';
-    protected ?Document $team = null;
+    protected string $subject = '';
+    protected string $body = '';
 
     public function __construct()
     {
@@ -21,14 +19,14 @@ class Mail extends Event
     }
 
     /**
-     * Sets team for the mail event.
+     * Sets subject for the mail event.
      *
-     * @param Document $team
+     * @param string $subject
      * @return self
      */
-    public function setTeam(Document $team): self
+    public function setSubject(string $subject): self
     {
-        $this->team = $team;
+        $this->subject = $subject;
 
         return $this;
     }
@@ -36,11 +34,11 @@ class Mail extends Event
     /**
      * Returns set team for the mail event.
      *
-     * @return null|Document
+     * @return string
      */
-    public function getTeam(): ?Document
+    public function getSubject(): string
     {
-        return $this->team;
+        return $this->subject;
     }
 
     /**
@@ -67,72 +65,49 @@ class Mail extends Event
     }
 
     /**
-     * Sets url for the mail event.
+     * Sets from for the mail event.
      *
-     * @param string $url
+     * @param string $from
      * @return self
      */
-    public function setUrl(string $url): self
+    public function setFrom(string $from): self
     {
-        $this->url = $url;
+        $this->from = $from;
 
         return $this;
     }
 
     /**
-     * Returns set url for the mail event.
+     * Returns from for mail event.
      *
      * @return string
      */
-    public function getURL(): string
+    public function getFrom(): string
     {
-        return $this->url;
+        return $this->from;
     }
 
     /**
-     * Sets code for the mail event.
+     * Sets body for the mail event.
      *
-     * @param string $code
+     * @param string $body
      * @return self
      */
-    public function setCode(string $code): self
+    public function setBody(string $body): self
     {
-        $this->code = $code;
+        $this->body = $body;
 
         return $this;
     }
 
     /**
-     * Returns set code for the mail event.
+     * Returns body for the mail event.
      *
      * @return string
      */
-    public function getCode(): string
+    public function getBody(): string
     {
-        return $this->code;
-    }
-
-    /**
-     * Sets type for the mail event (use the constants starting with MAIL_TYPE_*).
-     *
-     * @param string $type
-     * @return self
-     */
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-
-        return $this;
-    }
-
-    /**
-     * Returns set type for the mail event.
-     *
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
+        return $this->body;
     }
 
     /**
@@ -159,29 +134,6 @@ class Mail extends Event
     }
 
     /**
-     * Sets locale for the mail event.
-     *
-     * @param string $locale
-     * @return self
-     */
-    public function setLocale(string $locale): self
-    {
-        $this->locale = $locale;
-
-        return $this;
-    }
-
-    /**
-     * Returns set locale for the mail event.
-     *
-     * @return string
-     */
-    public function getLocale(): string
-    {
-        return $this->locale;
-    }
-
-    /**
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
@@ -190,16 +142,11 @@ class Mail extends Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'payload' => $this->payload,
+            'from' => $this->from,
             'recipient' => $this->recipient,
-            'url' => $this->url,
-            'code' => $this->code,
-            'locale' => $this->locale,
-            'type' => $this->type,
             'name' => $this->name,
-            'team' => $this->team,
+            'subject' => $this->subject,
+            'body' => $this->body,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }

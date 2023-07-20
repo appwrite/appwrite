@@ -14,10 +14,10 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 
 require_once __DIR__ . '/../init.php';
 
@@ -82,18 +82,22 @@ class FunctionsV1 extends Worker
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
-                    $this->execute(
-                        project: $project,
-                        function: $function,
-                        dbForProject: $database,
-                        trigger: 'event',
-                        // Pass first, most verbose event pattern
-                        event: $events[0],
-                        eventData: $payload,
-                        user: $user
-                    );
+                    try {
+                        $this->execute(
+                            project: $project,
+                            function: $function,
+                            dbForProject: $database,
+                            trigger: 'event',
+                            // Pass first, most verbose event pattern
+                            event: $events[0],
+                            eventData: $payload,
+                            user: $user
+                        );
 
-                    Console::success('Triggered function: ' . $events[0]);
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        Console::error("Failed to execute " . $function->getId() . " with error: " . $th->getMessage());
+                    }
                 }
             }
 
@@ -271,17 +275,17 @@ class FunctionsV1 extends Worker
         /** Collect environment variables */
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
             'APPWRITE_FUNCTION_TRIGGER' => $trigger,
-            'APPWRITE_FUNCTION_EVENT' => $event,
-            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData,
-            'APPWRITE_FUNCTION_DATA' => $data,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
-            'APPWRITE_FUNCTION_JWT' => $jwt,
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_EVENT' => $event ?? '',
+            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData ?? '',
+            'APPWRITE_FUNCTION_DATA' => $data ?? '',
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
+            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
@@ -368,6 +372,7 @@ class FunctionsV1 extends Worker
             $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())
+                ->setParam('projectInternalId', $project->getInternalId())
                 ->setParam('functionId', $function->getId())
                 ->setParam('executions.{scope}.compute', 1)
                 ->setParam('executionStatus', $execution->getAttribute('status', ''))

@@ -6,9 +6,9 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Network\Validator\CNAME;
-use Appwrite\Network\Validator\Domain as DomainValidator;
+use Utopia\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Network\Validator\URL;
+use Utopia\Validator\URL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -17,18 +17,19 @@ use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -55,9 +56,10 @@ App::post('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('projectId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -70,7 +72,7 @@ App::post('/v1/projects')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -79,7 +81,7 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0];
+        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
@@ -90,42 +92,48 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'name' => $name,
-            'teamInternalId' => $team->getInternalId(),
-            'teamId' => $team->getId(),
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'version' => APP_VERSION_STABLE,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => ID::custom($legalTaxId),
-            'services' => new stdClass(),
-            'platforms' => null,
-            'authProviders' => [],
-            'webhooks' => null,
-            'keys' => null,
-            'domains' => null,
-            'auths' => $auths,
-            'search' => implode(' ', [$projectId, $name]),
-        ]));
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId,
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'name' => $name,
+                'teamInternalId' => $team->getInternalId(),
+                'teamId' => $team->getId(),
+                'region' => $region,
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => ID::custom($legalTaxId),
+                'services' => new stdClass(),
+                'platforms' => null,
+                'authProviders' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'domains' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
+
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
         $dbForProject->setNamespace("_{$project->getInternalId()}");
-        $dbForProject->create(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+        $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
@@ -182,7 +190,7 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -243,7 +251,7 @@ App::get('/v1/projects/:projectId')
 
 App::get('/v1/projects/:projectId/usage')
     ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects'])
+    ->groups(['api', 'projects', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -269,8 +277,8 @@ App::get('/v1/projects/:projectId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -293,9 +301,10 @@ App::get('/v1/projects/:projectId/usage')
                 'project.$all.network.bandwidth',
                 'project.$all.storage.size',
                 'users.$all.count.total',
-                'collections.$all.count.total',
+                'databases.$all.count.total',
                 'documents.$all.count.total',
                 'executions.$all.compute.total',
+                'buckets.$all.count.total'
             ];
 
             $stats = [];
@@ -325,12 +334,12 @@ App::get('/v1/projects/:projectId/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -344,9 +353,10 @@ App::get('/v1/projects/:projectId/usage')
                 'network' => $stats[$metrics[1]] ?? [],
                 'storage' => $stats[$metrics[2]] ?? [],
                 'users' => $stats[$metrics[3]] ?? [],
-                'collections' => $stats[$metrics[4]] ?? [],
+                'databases' => $stats[$metrics[4]] ?? [],
                 'documents' => $stats[$metrics[5]] ?? [],
                 'executions' => $stats[$metrics[6]] ?? [],
+                'buckets' => $stats[$metrics[7]] ?? [],
             ]);
         }
 
@@ -442,12 +452,13 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name', false)
-    ->param('appId', '', new Text(256), 'Provider app ID. Max length: 256 chars.', true)
-    ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name')
+    ->param('appId', null, new Text(256), 'Provider app ID. Max length: 256 chars.', true)
+    ->param('secret', null, new text(512), 'Provider secret key. Max length: 512 chars.', true)
+    ->param('enabled', null, new Boolean(), 'Provider status. Set to \'false\' to disable new session creation.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $provider, string $appId, string $secret, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -456,8 +467,18 @@ App::patch('/v1/projects/:projectId/oauth2')
         }
 
         $providers = $project->getAttribute('authProviders', []);
-        $providers[$provider . 'Appid'] = $appId;
-        $providers[$provider . 'Secret'] = $secret;
+
+        if ($appId !== null) {
+            $providers[$provider . 'Appid'] = $appId;
+        }
+
+        if ($secret !== null) {
+            $providers[$provider . 'Secret'] = $secret;
+        }
+
+        if ($enabled !== null) {
+            $providers[$provider . 'Enabled'] = $enabled;
+        }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
 
@@ -488,6 +509,37 @@ App::patch('/v1/projects/:projectId/auth/limit')
 
         $auths = $project->getAttribute('auths', []);
         $auths['limit'] = $limit;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/duration')
+    ->desc('Update Project Authentication Duration')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthDuration')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('duration', 31536000, new Range(0, 31536000), 'Project session length in seconds. Max length: 31536000 seconds.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, int $duration, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['duration'] = $duration;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
@@ -529,6 +581,99 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/auth/password-history')
+    ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthPasswordHistory')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default value is 0')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordHistory'] = $limit;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/password-dictionary')
+    ->desc('Update authentication password disctionary status. Use this endpoint to enable or disable the dicitonary check for user password')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthPasswordDictionary')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(false), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['passwordDictionary'] = $enabled;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/max-sessions')
+    ->desc('Update Project user sessions limit')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateAuthSessionsLimit')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-' . APP_LIMIT_USER_SESSIONS_MAX . '. Default is ' . APP_LIMIT_USER_SESSIONS_DEFAULT)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['maxSessions'] = $limit;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::delete('/v1/projects/:projectId')
     ->desc('Delete Project')
     ->groups(['api', 'projects'])
@@ -539,17 +684,11 @@ App::delete('/v1/projects/:projectId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('password', '', new Password(), 'Your user password for confirmation. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
-
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
-        }
-
+    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -560,10 +699,6 @@ App::delete('/v1/projects/:projectId')
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project)
         ;
-
-        if (!$dbForConsole->deleteDocument('teams', $project->getAttribute('teamId', null))) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project team from DB');
-        }
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
@@ -584,7 +719,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
@@ -672,8 +807,8 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
@@ -706,8 +841,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
@@ -760,8 +895,8 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
@@ -798,8 +933,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('sdk.method', 'deleteWebhook')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
@@ -838,7 +973,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_KEY)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
@@ -888,7 +1023,7 @@ App::get('/v1/projects/:projectId/keys')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_KEY_LIST)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
@@ -920,8 +1055,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_KEY)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('keyId', '', new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
@@ -954,8 +1089,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_KEY)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('keyId', '', new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
@@ -1000,8 +1135,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->label('sdk.method', 'deleteKey')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('keyId', '', new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
@@ -1040,8 +1175,8 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', null, new WhiteList([Origin::CLIENT_TYPE_WEB, Origin::CLIENT_TYPE_FLUTTER_WEB, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_LINUX, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_APPLE_IOS, Origin::CLIENT_TYPE_APPLE_MACOS,  Origin::CLIENT_TYPE_APPLE_WATCHOS, Origin::CLIENT_TYPE_APPLE_TVOS, Origin::CLIENT_TYPE_ANDROID, Origin::CLIENT_TYPE_UNITY], true), 'Platform type.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1102,7 +1237,7 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            Query::equal('projectId', [$project->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);
 
@@ -1122,8 +1257,8 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
@@ -1156,8 +1291,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PLATFORM)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1203,8 +1338,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('sdk.method', 'deletePlatform')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
@@ -1243,7 +1378,7 @@ App::post('/v1/projects/:projectId/domains')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('domain', null, new DomainValidator(), 'Domain name.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -1267,7 +1402,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
         }
 
         $domain = new Domain($domain);
@@ -1340,8 +1475,8 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('domainId', null, new UID(), 'Domain unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
@@ -1374,8 +1509,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('domainId', null, new UID(), 'Domain unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
@@ -1433,8 +1568,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->label('sdk.method', 'deleteDomain')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('projectId', null, new UID(), 'Project unique ID.')
-    ->param('domainId', null, new UID(), 'Domain unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('domainId', '', new UID(), 'Domain unique ID.')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('deletes')

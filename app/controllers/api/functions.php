@@ -9,9 +9,9 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Validator\Event as ValidatorEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
 use Appwrite\Usage\Stats;
 use Utopia\Storage\Device;
@@ -25,7 +25,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Appwrite\Utopia\Database\Validator\Queries\Variables;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -33,7 +32,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -61,9 +59,9 @@ App::post('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
-    ->param('functionId', '', new CustomId(), 'Function ID. Choose your own unique ID or pass the string "unique()" to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('functionId', '', new CustomId(), 'Function ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -71,8 +69,13 @@ App::post('/v1/functions')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->inject('response')
     ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
     ->inject('events')
-    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Event $eventsInstance) {
+    ->action(function (string $functionId, string $name, array $execute, string $runtime, array $events, string $schedule, int $timeout, bool $enabled, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+
+        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
+        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
         $function = $dbForProject->createDocument('functions', new Document([
@@ -86,10 +89,21 @@ App::post('/v1/functions')
             'schedule' => $schedule,
             'scheduleUpdatedAt' => DateTime::now(),
             'schedulePrevious' => null,
-            'scheduleNext' => null,
+            'scheduleNext' => $next,
             'timeout' => $timeout,
             'search' => implode(' ', [$functionId, $name, $runtime])
         ]));
+
+        if ($next) {
+            // Async task reschedule
+            $functionEvent = new Func();
+            $functionEvent
+                ->setFunction($function)
+                ->setType('schedule')
+                ->setUser($user)
+                ->setProject($project)
+                ->schedule(new \DateTime($next));
+        }
 
         $eventsInstance->setParam('functionId', $function->getId());
 
@@ -109,7 +123,7 @@ App::get('/v1/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FUNCTION_LIST)
-    ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Functions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Functions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -197,7 +211,7 @@ App::get('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -221,8 +235,8 @@ App::get('/v1/functions/:functionId/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -276,12 +290,12 @@ App::get('/v1/functions/:functionId/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -307,7 +321,7 @@ App::get('/v1/functions/:functionId/usage')
 
 App::get('/v1/functions/usage')
     ->desc('Get Functions Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -324,8 +338,8 @@ App::get('/v1/functions/usage')
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
-                    'period' => '30m',
-                    'limit' => 48,
+                    'period' => '1h',
+                    'limit' => 24,
                 ],
                 '7d' => [
                     'period' => '1d',
@@ -379,12 +393,12 @@ App::get('/v1/functions/usage')
                     while ($backfill > 0) {
                         $last = $limit - $backfill - 1; // array index of last added metric
                         $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '30m' => 1800,
+                            '1h' => 3600,
                             '1d' => 86400,
                         };
                         $stats[$metric][] = [
                             'value' => 0,
-                            'date' => DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff),
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
                         ];
                         $backfill--;
                     }
@@ -424,7 +438,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.')
+    ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
@@ -442,11 +456,9 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $original = $function->getAttribute('schedule', '');
-        $cron = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (!empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
+        $cron = !empty($schedule) ? new CronExpression($schedule) : null;
+        $next = !empty($schedule) ? DateTime::format($cron->getNextRunDate()) : null;
 
-        $scheduleUpdatedAt = $schedule !== $original ? DateTime::now() : $function->getAttribute('scheduleUpdatedAt');
         $enabled ??= $function->getAttribute('enabled', true);
 
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
@@ -454,14 +466,14 @@ App::put('/v1/functions/:functionId')
             'name' => $name,
             'events' => $events,
             'schedule' => $schedule,
-            'scheduleUpdatedAt' => $scheduleUpdatedAt,
+            'scheduleUpdatedAt' => DateTime::now(),
             'scheduleNext' => $next,
             'timeout' => $timeout,
             'enabled' => $enabled,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
-        if ($next && $schedule !== $original) {
+        if ($next) {
             // Async task reschedule
             $functionEvent = new Func();
             $functionEvent
@@ -519,23 +531,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $schedule = $function->getAttribute('schedule', '');
-        $cron = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? new CronExpression($schedule) : null;
-        $next = (empty($function->getAttribute('deployment')) && !empty($schedule)) ? DateTime::format($cron->getNextRunDate()) : null;
-
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
-            'deployment' => $deployment->getId(),
-            'scheduleNext' => $next,
+            'deployment' => $deployment->getId()
         ])));
-
-        if ($next) { // Init first schedule
-            $functionEvent = new Func();
-            $functionEvent
-                ->setType('schedule')
-                ->setFunction($function)
-                ->setProject($project)
-                ->schedule(new \DateTime($next));
-        }
 
         $events
             ->setParam('functionId', $function->getId())
@@ -601,8 +599,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', false)
-    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.', false)
+    ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
+    ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -619,13 +617,19 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $file = $request->getFiles('code');
-        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
-        $upload = new Upload();
+
+        // GraphQL multipart spec adds files with index keys
+        if (empty($file)) {
+            $file = $request->getFiles(0);
+        }
 
         if (empty($file)) {
             throw new Exception(Exception::STORAGE_FILE_EMPTY, 'No file sent');
         }
+
+        $fileExt = new FileExt([FileExt::TYPE_GZIP]);
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
         $fileName = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
@@ -646,11 +650,13 @@ App::post('/v1/functions/:functionId/deployments')
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
-            if (is_null($start) || is_null($end) || is_null($fileSize)) {
+            // TODO make `end >= $fileSize` in next breaking version
+            if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            if ($end === $fileSize) {
+            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
+            if ($end === $fileSize - 1 || $end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
@@ -785,7 +791,7 @@ App::get('/v1/functions/:functionId/deployments')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Deployments(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Deployments::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -832,6 +838,7 @@ App::get('/v1/functions/:functionId/deployments')
             $result->setAttribute('status', $build->getAttribute('status', 'processing'));
             $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
             $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+            $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
         }
 
         $response->dynamic(new Document([
@@ -872,6 +879,11 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
+
+        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+        $deployment->setAttribute('status', $build->getAttribute('status', 'processing'));
+        $deployment->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
+        $deployment->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
 
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
@@ -934,6 +946,67 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
         $response->noContent();
     });
+
+App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Create Build')
+    ->label('scope', 'functions.write')
+    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
+    ->label('audits.event', 'deployment.update')
+    ->label('audits.resource', 'function/{request.functionId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'createBuild')
+    ->label('sdk.description', '/docs/references/functions/create-build.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('events')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+
+        if ($build->isEmpty()) {
+            throw new Exception(Exception::BUILD_NOT_FOUND);
+        }
+
+        if ($build->getAttribute('status') !== 'failed') {
+            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
+        }
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        // Retry the build
+        $buildEvent = new Build();
+        $buildEvent
+            ->setType(BUILD_TYPE_RETRY)
+            ->setResource($function)
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
+
+        $response->noContent();
+    });
+
+
 
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
@@ -1013,7 +1086,7 @@ App::post('/v1/functions/:functionId/executions')
             'functionId' => $function->getId(),
             'deploymentId' => $deployment->getId(),
             'trigger' => 'http', // http / schedule / event
-            'status' => 'waiting', // waiting / processing / completed / failed
+            'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
             'statusCode' => 0,
             'response' => '',
             'stderr' => '',
@@ -1066,21 +1139,21 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $vars = array_reduce($function['vars'] ?? [], function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
+            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []);
 
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_TRIGGER' => 'http',
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'],
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'],
-            'APPWRITE_FUNCTION_DATA' => $data,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId(),
-            'APPWRITE_FUNCTION_JWT' => $jwt,
+            'APPWRITE_FUNCTION_TRIGGER' => 'http',
+            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
+            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
+            'APPWRITE_FUNCTION_DATA' => $data ?? '',
+            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
+            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
@@ -1150,7 +1223,7 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION_LIST)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -1258,65 +1331,6 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $response->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-    ->groups(['api', 'functions'])
-    ->desc('Retry Build')
-    ->label('scope', 'functions.write')
-    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
-    ->label('audits.event', 'deployment.update')
-    ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'retryBuild')
-    ->label('sdk.description', '/docs/references/functions/retry-build.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $events) {
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        if ($deployment->isEmpty()) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
-
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-
-        if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'failed') {
-            throw new Exception(Exception::BUILD_IN_PROGRESS, 'Build not failed');
-        }
-
-        $events
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
-
-        // Retry the build
-        $buildEvent = new Build();
-        $buildEvent
-            ->setType(BUILD_TYPE_RETRY)
-            ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
-
-        $response->noContent();
-    });
-
 // Variables
 
 App::post('/v1/functions/:functionId/variables')
@@ -1332,9 +1346,9 @@ App::post('/v1/functions/:functionId/variables')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
-    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject) {
@@ -1384,7 +1398,7 @@ App::get('/v1/functions/:functionId/variables')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, Response $response, Database $dbForProject) {
@@ -1411,8 +1425,8 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {
@@ -1447,10 +1461,10 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject) {
@@ -1499,8 +1513,8 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.description', '/docs/references/functions/delete-variable.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', null, new UID(), 'Function unique ID.', false)
-    ->param('variableId', null, new UID(), 'Variable unique ID.', false)
+    ->param('functionId', '', new UID(), 'Function unique ID.', false)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject) {

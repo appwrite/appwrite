@@ -9,8 +9,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -109,6 +109,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -116,7 +117,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -223,12 +224,13 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
@@ -252,7 +254,7 @@ class FunctionsCustomClientTest extends Scope
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        sleep(10);
+        sleep(20);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
             'content-type' => 'application/json',
@@ -321,12 +323,13 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
@@ -395,7 +398,7 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(202, $execution['headers']['status-code']);
 
-        sleep(10);
+        sleep(20);
 
         $base = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
@@ -549,6 +552,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -556,7 +560,7 @@ class FunctionsCustomClientTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Wait for deployment to be built.
-        sleep(10);
+        sleep(20);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',

@@ -4,10 +4,10 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\DateTime;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
@@ -52,12 +52,12 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
-
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
         /**
          * Test for Large File above 20MB
          * This should also validate the test for when Bucket encryption
@@ -100,7 +100,7 @@ trait StorageBase
         $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
@@ -120,7 +120,7 @@ trait StorageBase
 
         $this->assertEquals(201, $largeFile['headers']['status-code']);
         $this->assertNotEmpty($largeFile['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($largeFile['body']['$createdAt']));
+        $this->assertEquals(true, $dateValidator->isValid($largeFile['body']['$createdAt']));
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
@@ -144,7 +144,7 @@ trait StorageBase
         ];
         $id = '';
         $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', $this->getHeaders(), [
             'fileId' => $fileId,
             'file' => $curlFile,
@@ -283,11 +283,12 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
 
         return ['bucketId' => $bucketId];
     }
@@ -373,7 +374,8 @@ trait StorageBase
 
         $this->assertEquals(200, $file1['headers']['status-code']);
         $this->assertNotEmpty($file1['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($file1['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($file1['body']['$createdAt']));
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -712,7 +714,8 @@ trait StorageBase
 
         $this->assertEquals(200, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($file['body']['$createdAt']));
+        $dateValidator = new DatetimeValidator();
+        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);

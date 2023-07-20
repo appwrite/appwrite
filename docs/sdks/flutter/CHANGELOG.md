@@ -1,7 +1,39 @@
-## 8.0.0-dev.2 Latest
+## 9.0.0
+
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
+* Added update attribute support
+* Added team prefs support
+* Changed function create/update `execute` parameter to optional
+* Changed team `update` to `updateName`
+* Changed `Account` service to use the `User` model instead of `Account`
+
+## 8.3.0
+
+* Fix: back navigation bringing back web browser after OAuth session creation
+* Update: Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+
+## 8.2.2
+
+* Fix: notify callback when websocket closes [#604](https://github.com/appwrite/sdk-generator/pull/604)
+
+## 8.2.1
+
+* Fix OAuth on web
+* Improve helper classes
+
+## 8.2.0
+
+* Support for GraphQL
+
+## 8.1.0
+
+* Role helper update
+
+## 8.0.0
 
 ### NEW
-* Support for Appwrite 1.0.0-RC1
+* Support for Appwrite 1.0.0
 * More verbose headers have been included in the Clients - `x-sdk-name`, `x-sdk-platform`, `x-sdk-language`, `x-sdk-version`
 * Helper classes and methods for Permissions, Roles and IDs
 * Helper methods to suport new queries
@@ -21,7 +53,7 @@
     4.  `greaterEqual` renamed to `greaterThanEqual`
 * `User` response model is now renamed to `Account`
 
-**Full Changelog for Appwrite 1.0.0-RC1 can be found here**: 
+**Full Changelog for Appwrite 1.0.0 can be found here**: 
 https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 7.0.0

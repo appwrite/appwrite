@@ -119,7 +119,7 @@ function logError(Throwable $error, string $action, Utopia\Route $route = null)
 
 function getStorageDevice($root): Device
 {
-    switch (App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) {
+    switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
         case Storage::DEVICE_LOCAL:
         default:
             return new Local($root);
@@ -165,14 +165,14 @@ App::post('/v1/runtimes')
     ->desc("Create a new runtime server")
     ->param('runtimeId', '', new Text(64), 'Unique runtime ID.')
     ->param('source', '', new Text(0), 'Path to source files.')
-    ->param('destination', '', new Text(0), 'Destination folder to store build files into.', true)
+    ->param('destination', '', new Text(0, 0), 'Destination folder to store build files into.', true)
     ->param('vars', [], new Assoc(), 'Environment Variables required for the build.')
     ->param('commands', [], new ArrayList(new Text(1024), 100), 'Commands required to build the container. Maximum of 100 commands are allowed, each 1024 characters long.')
     ->param('runtime', '', new Text(128), 'Runtime for the cloud function.')
     ->param('baseImage', '', new Text(128), 'Base image name of the runtime.')
     ->param('entrypoint', '', new Text(256), 'Entrypoint of the code file.', true)
     ->param('remove', false, new Boolean(), 'Remove a runtime after execution.')
-    ->param('workdir', '', new Text(256), 'Working directory.', true)
+    ->param('workdir', '', new Text(256, 0), 'Working directory.', true)
     ->inject('orchestrationPool')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -459,7 +459,7 @@ App::post('/v1/execution')
     ->desc('Create an execution')
     ->param('runtimeId', '', new Text(64), 'The runtimeID to execute.')
     ->param('vars', [], new Assoc(), 'Environment variables required for the build.')
-    ->param('data', '', new Text(8192), 'Data to be forwarded to the function, this is user specified.', true)
+    ->param('data', '', new Text(8192, 0), 'Data to be forwarded to the function, this is user specified.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.')
     ->inject('activeRuntimes')
     ->inject('response')
@@ -548,6 +548,10 @@ App::post('/v1/execution')
                 case $statusCode >= 500:
                     $stderr = ($executorResponse ?? [])['stderr'] ?? 'Internal Runtime error.';
                     $stdout = ($executorResponse ?? [])['stdout'] ?? 'Internal Runtime error.';
+                    $res = ($executorResponse ?? [])['response'] ?? '';
+                    if (is_array($res)) {
+                        $res = json_encode($res, JSON_UNESCAPED_UNICODE);
+                    }
                     break;
                 case $statusCode >= 100:
                     $stdout = $executorResponse['stdout'];

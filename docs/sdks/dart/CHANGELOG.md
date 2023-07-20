@@ -1,6 +1,30 @@
-## 7.0.0-dev.2
+## 8.0.0
+
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
+* Added update attribute support
+* Added team prefs support
+* Changed function create/update `execute` parameter to optional
+* Changed team `update` to `updateName`
+* Changed `Account` service to use the `User` model instead of `Account`
+
+## 7.3.0
+
+* Improve helper classes
+* Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+
+## 7.2.0
+
+* Support for GraphQL
+
+## 7.1.0
+
+* Role helper update
+
+## 7.0.0
+
 ### NEW
-* Support for Appwrite 1.0.0-RC1
+* Support for Appwrite 1.0.0
 * More verbose headers have been included in the Clients - `x-sdk-name`, `x-sdk-platform`, `x-sdk-language`, `x-sdk-version`
 * Helper classes and methods for Permissions, Roles and IDs
 * Helper methods to suport new queries
@@ -26,7 +50,7 @@
     3.  `greater` renamed to `greaterThan`
     4.  `greaterEqual` renamed to `greaterThanEqual`
 
-**Full Changelog for Appwrite 1.0.0-RC1 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md
+**Full Changelog for Appwrite 1.0.0 can be found here**: https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 
 ## 6.0.1
 * Dependency upgrades
