@@ -2705,7 +2705,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "580474fcbc5a88a908a1df3e124e47ebad2c014f"
+                "reference": "c836cb55c2d3e0e28506228c55a6c6efcb16ddbd"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
@@ -2715,6 +2715,7 @@
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
                 "phpunit/phpunit": "^9.4"
             },
             "type": "library",
@@ -2731,13 +2732,16 @@
             },
             "scripts": {
                 "lint": [
-                    "./vendor/bin/pint --test"
+                    "./vendor/bin/pint --test --config pint.json"
                 ],
                 "format": [
-                    "./vendor/bin/pint"
+                    "./vendor/bin/pint --config pint.json"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
                 ],
                 "test": [
-                    "vendor/bin/phpunit --configuration phpunit.xml"
+                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
                 ]
             },
             "license": [
@@ -2750,7 +2754,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-06-28T10:54:07+00:00"
+            "time": "2023-07-20T12:42:56+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -3626,16 +3630,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.22.0",
+            "version": "1.22.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "ec58baf7b3c7f1c81b3b00617c953249fb8cf30c"
+                "reference": "65c39594fbd8c67abfc68bb323f86447bab79cc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/ec58baf7b3c7f1c81b3b00617c953249fb8cf30c",
-                "reference": "ec58baf7b3c7f1c81b3b00617c953249fb8cf30c",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/65c39594fbd8c67abfc68bb323f86447bab79cc0",
+                "reference": "65c39594fbd8c67abfc68bb323f86447bab79cc0",
                 "shasum": ""
             },
             "require": {
@@ -3667,9 +3671,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.22.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.22.1"
             },
-            "time": "2023-06-01T12:35:21+00:00"
+            "time": "2023-06-29T20:46:06+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

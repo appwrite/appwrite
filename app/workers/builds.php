@@ -174,7 +174,9 @@ class BuildsV1 extends Worker
                     $cloneRepository = !empty($vcsContribution) ?  $vcsContribution->getAttribute('repositoryName', $repositoryName) : $repositoryName;
 
                     $branchName = $deployment->getAttribute('vcsBranch');
-                    $gitCloneCommand = $github->generateGitCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
+                    var_dump("root " . $rootDirectory);
+                    $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
+                    var_dump($gitCloneCommand);
                     $stdout = '';
                     $stderr = '';
                     Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -197,7 +199,7 @@ class BuildsV1 extends Worker
                     if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
                         // Clone template repo
                         $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
-                        $gitCloneCommandForTemplate = $github->generateGitCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+                        $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
                         $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                         if ($exit !== 0) {

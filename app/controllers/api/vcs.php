@@ -21,6 +21,7 @@ use Utopia\Database\ID;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
 use Utopia\Detector\Adapter\Deno;
@@ -49,23 +50,27 @@ App::get('/v1/vcs/github/installations')
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
     ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Git authorization. Only console hostnames are allowed.', true, ['clients'])
+    ->param('projectId', '', new UID(), 'Project ID')
     ->inject('response')
-    ->inject('project')
-    ->action(function (string $redirect, Response $response, Document $project) {
-        $projectId = $project->getId();
-
+    ->inject('user')
+    ->inject('dbForConsole')
+    ->action(function (string $redirect, string $projectId, Response $response, Document $user, Database $dbForConsole) {
         $state = \json_encode([
             'projectId' => $projectId,
             'redirect' => $redirect
         ]);
 
+        // replace github url state with vcsState in user prefs attribute
+        $prefs = $user->getAttribute('prefs', []);
+        $prefs['vcsState'] = $state;
+        $user->setAttribute('prefs', $prefs);
+        $dbForConsole->updateDocument('users', $user->getId(), $user);
+        
         $appName = App::getEnv('VCS_GITHUB_APP_NAME');
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect("https://github.com/apps/$appName/installations/new?" . \http_build_query([
-                'state' => $state
-            ]));
+            ->redirect("https://github.com/apps/$appName/installations/new");
     });
 
 App::get('/v1/vcs/github/redirect')
@@ -75,7 +80,7 @@ App::get('/v1/vcs/github/redirect')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->param('installation_id', '', new Text(256), 'GitHub installation ID', true)
     ->param('setup_action', '', new Text(256), 'GitHub setup actuon type', true)
-    ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
+    // ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
     ->param('code', '', new Text(2048), 'OAuth2 code.', true)
     ->inject('gitHub')
     ->inject('user')
@@ -83,7 +88,14 @@ App::get('/v1/vcs/github/redirect')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $installationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (string $installationId, string $setupAction, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+        // replace github url state with vcsState in user prefs attribute
+        $prefs = $user->getAttribute('prefs', []);
+        $state = $prefs['vcsState'] ?? '{}';
+        $prefs['vcsState'] = '';
+        $user->setAttribute('prefs', $prefs);
+        $dbForConsole->updateDocument('users', $user->getId(), $user);
+
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.');
         }
@@ -212,7 +224,7 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
         $perPage = 100;
 
         $loadPage = function ($page) use ($github, $perPage) {
-            $repos = $github->listRepositoriesForGitHubApp($page, $perPage);
+            $repos = $github->listRepositoriesForVCSApp($page, $perPage);
             return $repos;
         };
 
@@ -636,7 +648,7 @@ App::post('/v1/vcs/github/incomingwebhook')
 
             $signatureKey = App::getEnv('VCS_GITHUB_WEBHOOK_SECRET', '');
 
-            $valid = $github->validateWebhook($payload, $signature, $signatureKey);
+            $valid = $github->validateWebhookEvent($payload, $signature, $signatureKey);
             if (!$valid) {
                 throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook signature.");
             }
@@ -644,7 +656,7 @@ App::post('/v1/vcs/github/incomingwebhook')
             $event = $request->getHeader('x-github-event', '');
             $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-            $parsedPayload = $github->parseWebhookEventPayload($event, $payload);
+            $parsedPayload = $github->parseWebhookEvent($event, $payload);
 
             if ($event == $github::EVENT_PUSH) {
                 $branchName = $parsedPayload["branch"];
