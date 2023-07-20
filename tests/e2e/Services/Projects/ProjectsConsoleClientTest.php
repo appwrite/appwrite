@@ -544,19 +544,19 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'enabled' => true,
             'sender' => 'mailer@appwrite.io',
-            'host' => 'mail.appwrite.io',
-            'port' => 25,
-            'username' => 'emailuser',
-            'password' => 'securepassword',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled']);
         $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSender']);
-        $this->assertEquals('mail.appwrite.io', $response['body']['smtpHost']);
-        $this->assertEquals(25, $response['body']['smtpPort']);
-        $this->assertEquals('emailuser', $response['body']['smtpUsername']);
-        $this->assertEquals('securepassword', $response['body']['smtpPassword']);
+        $this->assertEquals('maildev', $response['body']['smtpHost']);
+        $this->assertEquals(1025, $response['body']['smtpPort']);
+        $this->assertEquals('user', $response['body']['smtpUsername']);
+        $this->assertEquals('password', $response['body']['smtpPassword']);
         $this->assertEquals('', $response['body']['smtpSecure']);
 
         /** Test Reading Project */
