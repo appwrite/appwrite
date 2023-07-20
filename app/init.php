@@ -697,7 +697,7 @@ foreach ($locales as $locale) {
     if (!\file_exists($path)) {
         $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
         if (!\file_exists($path)) {
-            var_dump('Unable to find tralsnations for ' . $locale['code'] . ' so using en.json');
+            // var_dump('Unable to find translations for ' . $locale['code'] . ' so using en.json');
             $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
         }
     }

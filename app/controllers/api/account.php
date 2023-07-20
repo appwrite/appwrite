@@ -2257,7 +2257,7 @@ App::put('/v1/account/recovery')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('events')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $events) {
         if ($password !== $passwordAgain) {
             throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
