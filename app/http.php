@@ -226,7 +226,6 @@ Http::onRequest()
     ->inject('request')
     ->inject('response')
     ->action(function ($register, $request, $response,) {
-        var_dump($request->getURI());
         $request = new Request($request);
         $response = new Response($response);
         Http::setResource('request', fn()=>$request);
