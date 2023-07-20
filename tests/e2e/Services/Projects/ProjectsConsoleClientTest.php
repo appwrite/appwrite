@@ -581,10 +581,10 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'enabled' => false,
             'sender' => 'mailer@appwrite.io',
-            'host' => 'mail.appwrite.io',
-            'port' => 25,
-            'username' => 'emailuser',
-            'password' => 'securepassword',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => 'user',
+            'password' => 'password',
         ]);
         return $data;
     }
