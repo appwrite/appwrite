@@ -429,7 +429,7 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $output = $this->output($document, $model);
+        $output = $this->output(new Document($document->getArrayCopy()), $model);
 
         // If filter is set, parse the output
         if (self::hasFilter()) {
@@ -470,14 +470,14 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = $document;
+        $data       = new Document($document->getArrayCopy());
         $model      = $this->getModel($model);
         $output     = [];
 
-        $document = $model->filter($document);
+        $data = $model->filter($document);
 
         if ($model->isAny()) {
-            $this->payload = $document->getArrayCopy();
+            $this->payload = $data->getArrayCopy();
 
             return $this->payload;
         }
@@ -485,18 +485,18 @@ class Response extends SwooleResponse
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
                 if (\array_key_exists('default', $rule)) {
-                    $document->setAttribute($key, $rule['default']);
+                    $data->setAttribute($key, $rule['default']);
                 } else {
                     throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
                 }
             }
 
             if ($rule['array']) {
-                if (!is_array($data[$key])) {
+                if (!is_array($document[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
-                foreach ($data[$key] as $index => $item) {
+                foreach ($document[$key] as $index => $item) {
                     if ($item instanceof Document) {
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
@@ -524,7 +524,7 @@ class Response extends SwooleResponse
                     }
                 }
             } else {
-                if ($data[$key] instanceof Document) {
+                if ($document[$key] instanceof Document) {
                     $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }
