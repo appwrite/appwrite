@@ -573,7 +573,7 @@ Http::error()
 
         /** @var RedisPool $redisPool */
         $redisPool = $register->get('redisPool');
-        $redis = $http->getResource('redis');
+        $redis = $http->getResource('cache');
         $redisPool->put($redis);
     });
 

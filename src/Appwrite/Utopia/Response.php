@@ -242,7 +242,7 @@ class Response extends SwooleResponse
      *
      * @param float $time
      */
-    public function __construct(SwooleHTTPResponse $response)
+    public function __construct(SwooleResponse $response)
     {
         $this
             // General
@@ -354,7 +354,7 @@ class Response extends SwooleResponse
             // Tests (keep last)
             ->setModel(new Mock());
 
-        parent::__construct($response);
+        parent::__construct($response->getSwooleResponse());
     }
 
     /**

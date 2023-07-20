@@ -2,11 +2,10 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Utopia\Http\Adapter\Swoole\Server;
-use Swoole\Http\Request as SwooleRequest;
-use Swoole\Http\Response as SwooleResponse;
 use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -18,10 +17,6 @@ use Utopia\Audit\Audit;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Swoole\Files;
-use Appwrite\Utopia\Request;
-use Utopia\Logger\Log;
-use Utopia\Logger\Log\User;
 
 $server = new Server("0.0.0.0", Http::getEnv('PORT', 80));
 
@@ -49,7 +44,9 @@ $server->onAfterReload(function ($server, $workerId) {
     Console::success('Reload completed...');
 });
     
-Http::onWorkerStart(function($server, $workerId) {
+Http::onWorkerStart()
+    ->inject('workerId')
+    ->action(function($workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
@@ -226,8 +223,17 @@ Http::onStart()
 
 Http::onRequest()
     ->inject('register')
-    ->action(function ($register) {
+    ->inject('request')
+    ->inject('response')
+    ->action(function ($register, $request, $response,) {
+        var_dump($request->getURI());
+        $request = new Request($request);
+        $response = new Response($response);
+        Http::setResource('request', fn()=>$request);
+        Http::setResource('response', fn()=>$response);
 
+        var_dump($request->getURI());
+        
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
 
