@@ -11,6 +11,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -1664,11 +1665,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
         $queries = Query::parseQueries($queries);
+        foreach ($queries as $query) {
+            if ($query->getMethod() ===  Query::TYPE_SELECT) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, "Select queries are not valid.");
+            }
+        }
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
 
          // Get cursor document if there was a cursor query
          $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
@@ -2514,26 +2517,38 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        $queries = Query::parseQueries($queries);
+        foreach ($queries as $query) {
+            if ($query->getMethod() ===  Query::TYPE_SEARCH) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, "Select queries are not valid.");
+            }
         }
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
-        if ($collection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+         // Get cursor document if there was a cursor query
+         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = reset($cursor);
+
+        if ($cursor) {
+            $indexId = $cursor->getValue();
+
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]), Query::equal('key', [$indexId]), Query::limit(1)]));
+
+            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Index '{$indexId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument[0]);
         }
-
-        $indexes = $collection->getAttribute('indexes');
-
+        $filterQueries = Query::groupByType($queries)['filters'];
         $response->dynamic(new Document([
-            'total' => \count($indexes),
-            'indexes' => $indexes,
+            'total' => $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT),
+            'indexes' => $dbForProject->find('indexes', $queries),
         ]), Response::MODEL_INDEX_LIST);
     });
 
