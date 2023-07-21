@@ -122,7 +122,7 @@ class User extends Model
             ])
             ->addRule('accessedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Most recent access date in ISO 8601 format.',
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_USER_ACCCESS / 60 / 60 . ' hours.',
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
