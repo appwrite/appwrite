@@ -1663,18 +1663,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
-
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
-        }
-
-        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
-
-        if ($collection->isEmpty()) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        }
-
         $queries = Query::parseQueries($queries);
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
@@ -1689,13 +1677,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         if ($cursor) {
             $attributeId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $collection->getInternalId() . '_' . $attributeId));
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]), Query::equal('key', [$attributeId]), Query::limit(1)]));
 
-            if ($cursorDocument->isEmpty()) {
+            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$attributeId}' for the 'cursor' value not found.");
             }
 
-            $cursor->setValue($cursorDocument);
+            $cursor->setValue($cursorDocument[0]);
         }
 
          $attributes = $dbForProject->find('attributes', $queries);
