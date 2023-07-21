@@ -376,7 +376,7 @@ App::post('/v1/migrations/supabase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => json_encode([
-                'type' => Supabase::getName(),,
+                'type' => Supabase::getName(),
                 'endpoint' => $endpoint,
                 'apiKey' => $apiKey,
                 'databaseHost' => $databaseHost,
