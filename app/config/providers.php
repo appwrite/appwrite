@@ -232,7 +232,7 @@ return [ // Ordered by ABC.
         'mock' => false
     ],
     'paypalSandbox' => [
-        'name' => 'PayPal',
+        'name' => 'PayPal Sandbox',
         'developers' => 'https://developer.paypal.com/docs/api/overview/',
         'icon' => 'icon-paypal',
         'enabled' => true,
@@ -302,7 +302,7 @@ return [ // Ordered by ABC.
         'mock' => false,
     ],
     'tradeshiftBox' => [
-        'name' => 'Tradeshift',
+        'name' => 'Tradeshift Sandbox',
         'developers' => 'https://developers.tradeshift.com/docs/api',
         'icon' => 'icon-tradeshiftbox',
         'enabled' => true,
