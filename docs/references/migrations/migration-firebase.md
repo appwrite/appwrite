@@ -1,0 +1,1 @@
+Initialize a migration to transfer data from an Firebase project over to your current Appwrite instance. The migration will be queued and processed by the Appwrite server. To learn more about the migration process, please check out our [migration guide](/docs/migrations).

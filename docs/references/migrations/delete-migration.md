@@ -1,0 +1,1 @@
+Delete a migration by its unique ID.

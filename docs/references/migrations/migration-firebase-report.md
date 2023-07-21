@@ -1,0 +1,1 @@
+Perform permission checks against a Firebase project to make sure migration is possible with the supplied credentials. This API does not return any data. It only checks the permissions.
