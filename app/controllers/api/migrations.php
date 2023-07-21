@@ -226,7 +226,7 @@ App::post('/v1/migrations/appwrite')
             ->trigger();
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
@@ -308,7 +308,7 @@ App::post('/v1/migrations/firebase')
             ->trigger();
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
@@ -401,7 +401,7 @@ App::post('/v1/migrations/supabase')
             ->trigger();
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
@@ -499,7 +499,7 @@ App::post('/v1/migrations/nhost')
             ->trigger();
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
