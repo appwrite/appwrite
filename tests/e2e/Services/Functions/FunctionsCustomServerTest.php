@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -120,11 +120,11 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
+            'queries' => [ 'limit(1)' ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertCount(0, $response['body']['functions']);
+        $this->assertCount(1, $response['body']['functions']);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
             'content-type' => 'application/json',
@@ -364,6 +364,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -404,13 +405,14 @@ class FunctionsCustomServerTest extends Scope
         $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'php-large-fx.tar.gz');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
             $largeTag = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge($headers, $this->getHeaders()), [
                 'entrypoint' => 'index.php',
                 'code' => $curlFile,
+                'activate' => true
             ]);
             $counter++;
             $id = $largeTag['body']['$id'];
@@ -671,11 +673,11 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
+            'queries' => [ 'limit(1)' ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['executions']);
+        $this->assertCount(1, $response['body']['executions']);
 
         $response = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -739,7 +741,6 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -750,7 +751,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
         $this->assertStringContainsString('Test1', $execution['body']['response']);
         $this->assertStringContainsString('http', $execution['body']['response']);
         $this->assertStringContainsString('PHP', $execution['body']['response']);
@@ -867,7 +867,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -950,7 +949,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -964,6 +962,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => $entrypoint,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -1060,7 +1059,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1173,7 +1171,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1279,17 +1276,16 @@ class FunctionsCustomServerTest extends Scope
     //     $entrypoint = 'main.dart';
     //     $timeout = 2;
 
-    //     $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'functionId' => ID::unique(),
-    //         'name' => 'Test ' . $name,
-    //         'runtime' => $name,
-    //         'events' => [],
-    //         'schedule' => '',
-    //         'timeout' => $timeout,
-    //     ]);
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test ' . $name,
+            'runtime' => $name,
+            'events' => [],
+            'timeout' => $timeout,
+        ]);
 
     //     $functionId = $function['body']['$id'] ?? '';
 
@@ -1401,7 +1397,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 

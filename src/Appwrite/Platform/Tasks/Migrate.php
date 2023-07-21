@@ -96,11 +96,12 @@ class Migrate extends Action
                     // TODO: Iterate through all project DBs
                     $projectDB = $dbPool->getDB($project->getId(), $cache);
                     $migration
-                        ->setProject($project, $projectDB, $dbForConsole)
+                        ->setProject($project, $projectDB, $consoleDB)
+                        ->setPDO($register->get('db'))
                         ->execute();
                 } catch (\Throwable $th) {
-                    throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    throw $th;
                 }
 
                 $this->clearProjectsCache($redis, $project);

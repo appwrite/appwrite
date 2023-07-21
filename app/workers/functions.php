@@ -25,12 +25,181 @@ use Utopia\Database\Helpers\Role;
 Authorization::disable();
 Authorization::setDefaultStatus(false);
 
-Server::setResource('execute', function () {
-    return function (
-        Log $log,
-        Func $queueForFunctions,
-        Database $dbForProject,
-        Usage $queueForUsage,
+Console::title('Functions V1 Worker');
+Console::success(APP_NAME . ' functions worker v1 has started');
+
+class FunctionsV1 extends Worker
+{
+    private ?Executor $executor = null;
+    public array $args = [];
+    public array $allowed = [];
+
+    public function getName(): string
+    {
+        return "functions";
+    }
+
+    public function init(): void
+    {
+        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+    }
+
+    public function run(): void
+    {
+        $type = $this->args['type'] ?? '';
+        $events = $this->args['events'] ?? [];
+        $project = new Document($this->args['project'] ?? []);
+        $user = new Document($this->args['user'] ?? []);
+        $payload = json_encode($this->args['payload'] ?? []);
+
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        $database = $this->getProjectDB($project->getId());
+
+        /**
+         * Handle Event execution.
+         */
+        if (!empty($events)) {
+            $limit = 30;
+            $sum = 30;
+            $offset = 0;
+            $functions = [];
+            /** @var Document[] $functions */
+
+            while ($sum >= $limit) {
+                $functions = $database->find('functions', [
+                    Query::limit($limit),
+                    Query::offset($offset),
+                    Query::orderAsc('name'),
+                ]);
+                $sum = \count($functions);
+                $offset = $offset + $limit;
+
+                Console::log('Fetched ' . $sum . ' functions...');
+
+                foreach ($functions as $function) {
+                    if (!array_intersect($events, $function->getAttribute('events', []))) {
+                        continue;
+                    }
+
+                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+
+                    try {
+                        $this->execute(
+                            project: $project,
+                            function: $function,
+                            dbForProject: $database,
+                            trigger: 'event',
+                            // Pass first, most verbose event pattern
+                            event: $events[0],
+                            eventData: $payload,
+                            user: $user
+                        );
+
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        Console::error("Failed to execute " . $function->getId() . " with error: " . $th->getMessage());
+                    }
+                }
+            }
+
+            return;
+        }
+
+        /**
+         * Handle Schedule and HTTP execution.
+         */
+        $user = new Document($this->args['user'] ?? []);
+        $project = new Document($this->args['project'] ?? []);
+        $execution = new Document($this->args['execution'] ?? []);
+        $function = new Document($this->args['function'] ?? []);
+
+        switch ($type) {
+            case 'http':
+                $jwt = $this->args['jwt'] ?? '';
+                $data = $this->args['data'] ?? '';
+
+                $function = $database->getDocument('functions', $execution->getAttribute('functionId'));
+
+                $this->execute(
+                    project: $project,
+                    function: $function,
+                    dbForProject: $database,
+                    executionId: $execution->getId(),
+                    trigger: 'http',
+                    data: $data,
+                    user: $user,
+                    jwt: $jwt
+                );
+
+                break;
+
+            case 'schedule':
+                $functionOriginal = $function;
+                /*
+                 * 1. Get Original Task
+                 * 2. Check for updates
+                 *  If has updates skip task and don't reschedule
+                 *  If status not equal to play skip task
+                 * 3. Check next run date, update task and add new job at the given date
+                 * 4. Execute task (set optional timeout)
+                 * 5. Update task response to log
+                 *      On success reset error count
+                 *      On failure add error count
+                 *      If error count bigger than allowed change status to pause
+                 */
+
+                // Reschedule
+                $function = $database->getDocument('functions', $function->getId());
+
+                if (empty($function->getId())) {
+                    throw new Exception('Function not found (' . $function->getId() . ')');
+                }
+
+                if ($functionOriginal->getAttribute('schedule') !== $function->getAttribute('schedule')) { // Schedule has changed from previous run, ignore this run.
+                    return;
+                }
+
+                if ($functionOriginal->getAttribute('scheduleUpdatedAt') !== $function->getAttribute('scheduleUpdatedAt')) { // Double execution due to rapid cron changes, ignore this run.
+                    return;
+                }
+
+                $cron = new CronExpression($function->getAttribute('schedule'));
+                $next = DateTime::format($cron->getNextRunDate());
+
+                $function = $function
+                    ->setAttribute('scheduleNext', $next)
+                    ->setAttribute('schedulePrevious', DateTime::now());
+
+                $function = $database->updateDocument(
+                    'functions',
+                    $function->getId(),
+                    $function
+                );
+
+                $reschedule = new Func();
+                $reschedule
+                    ->setFunction($function)
+                    ->setType('schedule')
+                    ->setUser($user)
+                    ->setProject($project)
+                    ->schedule(new \DateTime($next));
+                ;
+
+                $this->execute(
+                    project: $project,
+                    function: $function,
+                    dbForProject: $database,
+                    trigger: 'schedule'
+                );
+
+                break;
+        }
+    }
+
+    private function execute(
         Document $project,
         Document $function,
         string $trigger,

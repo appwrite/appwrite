@@ -11,6 +11,7 @@ use GraphQL\Type\Definition\UnionType;
 use Utopia\App;
 use Utopia\Route;
 use Utopia\Validator;
+use Utopia\Validator\Nullable;
 
 class Mapper
 {
@@ -109,9 +110,6 @@ class Mapper
                     'type' => $parameterType,
                     'description' => $parameter['description'],
                 ];
-                if ($parameter['optional']) {
-                    $params[$name]['defaultValue'] = $parameter['default'];
-                }
             }
 
             $field = [
@@ -224,6 +222,12 @@ class Mapper
             ? \call_user_func_array($validator, $utopia->getResources($injections))
             : $validator;
 
+        $isNullable = $validator instanceof Nullable;
+
+        if ($isNullable) {
+            $validator = $validator->getValidator();
+        }
+
         switch ((!empty($validator)) ? $validator::class : '') {
             case 'Appwrite\Network\Validator\CNAME':
             case 'Appwrite\Task\Validator\Cron':
@@ -250,14 +254,14 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-            case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
+            case 'Utopia\Database\Validator\Queries\Documents':
             case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Files':
             case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
             case 'Utopia\Database\Validator\Permissions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
-            case 'Appwrite\Utopia\Database\Validator\Queries':
+            case 'Utopia\Database\Validator\Queries':
             case 'Utopia\Database\Validator\Roles':
             case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
             case 'Appwrite\Utopia\Database\Validator\Queries\Users':
@@ -294,7 +298,7 @@ class Mapper
                 break;
         }
 
-        if ($required) {
+        if ($required && !$isNullable) {
             $type = Type::nonNull($type);
         }
 
@@ -404,6 +408,8 @@ class Mapper
                 return static::model('AttributeBoolean');
             case 'datetime':
                 return static::model('AttributeDatetime');
+            case 'relationship':
+                return static::model('AttributeRelationship');
         }
 
         throw new Exception('Unknown attribute implementation');

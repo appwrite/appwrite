@@ -63,7 +63,7 @@ App::post('/v1/storage/buckets')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, no user is granted with any permissions. [Learn more about permissions](/docs/permissions).', true)
     ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](/docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('compression', COMPRESSION_TYPE_NONE, new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ',  [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
@@ -128,7 +128,7 @@ App::post('/v1/storage/buckets')
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
-            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
+            $dbForProject->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes, permissions: $permissions ?? [], documentSecurity: $fileSecurity);
         } catch (Duplicate) {
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
@@ -153,7 +153,7 @@ App::get('/v1/storage/buckets')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_BUCKET_LIST)
-    ->param('queries', [], new Buckets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Buckets::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Buckets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Buckets::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -166,7 +166,7 @@ App::get('/v1/storage/buckets')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -232,7 +232,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](docs/environment-variables#storage)', true)
+    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](/docs/environment-variables#storage)', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('compression', COMPRESSION_TYPE_NONE, new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
@@ -271,6 +271,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('encryption', $encryption)
                 ->setAttribute('compression', $compression)
                 ->setAttribute('antivirus', $antivirus));
+        $dbForProject->updateCollection('bucket_' . $bucket->getInternalId(), $permissions, $fileSecurity);
 
         $events
             ->setParam('bucketId', $bucket->getId())
@@ -342,7 +343,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('file', [], new File(), 'Binary file.', false)
+    ->param('file', [], new File(), 'Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](/docs/storage#file-input).', skipValidation: true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](/docs/permissions).', true)
     ->inject('request')
     ->inject('response')
@@ -437,11 +438,13 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
             $fileId = $request->getHeader('x-appwrite-id', $fileId);
-            if (is_null($start) || is_null($end) || is_null($fileSize)) {
+            // TODO make `end >= $fileSize` in next breaking version
+            if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            if ($end === $fileSize) {
+            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
+            if ($end === $fileSize - 1 || $end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to -1 notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
@@ -507,6 +510,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $mimeType = $deviceFiles->getFileMimeType($path); // Get mime-type before compression and encryption
+            $fileHash = $deviceFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
             // Compression
             $algorithm = $bucket->getAttribute('compression', COMPRESSION_TYPE_NONE);
@@ -540,7 +544,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $sizeActual = $deviceFiles->getFileSize($path);
-            $fileHash = $deviceFiles->getFileHash($path);
 
             $openSSLVersion = null;
             $openSSLCipher = null;
@@ -668,7 +671,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_LIST)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
-    ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Files(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Files::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -695,7 +698,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1246,13 +1249,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('name', null, new Text(255), 'Name of the file', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('events')
-    ->action(function (string $bucketId, string $fileId, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1307,6 +1311,10 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         $file->setAttribute('$permissions', $permissions);
+
+        if (!is_null($name)) {
+            $file->setAttribute('name', $name);
+        }
 
         if ($fileSecurity && !$valid) {
             try {
@@ -1421,9 +1429,119 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->noContent();
     });
 
+App::get('/v1/storage/usage')
+    ->desc('Get usage stats for storage')
+    ->groups(['api', 'storage', 'usage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
+
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '1h',
+                    'limit' => 24,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $metrics = [
+                'project.$all.storage.size',
+                'buckets.$all.count.total',
+                'buckets.$all.requests.create',
+                'buckets.$all.requests.read',
+                'buckets.$all.requests.update',
+                'buckets.$all.requests.delete',
+                'files.$all.storage.size',
+                'files.$all.count.total',
+                'files.$all.requests.create',
+                'files.$all.requests.read',
+                'files.$all.requests.update',
+                'files.$all.requests.delete',
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
+                    $requestDocs = $dbForProject->find('stats', [
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
+
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
+                            '1h' => 3600,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'bucketsCount' => $stats['buckets.$all.count.total'],
+                'bucketsCreate' => $stats['buckets.$all.requests.create'],
+                'bucketsRead' => $stats['buckets.$all.requests.read'],
+                'bucketsUpdate' => $stats['buckets.$all.requests.update'],
+                'bucketsDelete' => $stats['buckets.$all.requests.delete'],
+                'storage' => $stats['project.$all.storage.size'],
+                'filesCount' => $stats['files.$all.count.total'],
+                'filesCreate' => $stats['files.$all.requests.create'],
+                'filesRead' => $stats['files.$all.requests.read'],
+                'filesUpdate' => $stats['files.$all.requests.update'],
+                'filesDelete' => $stats['files.$all.requests.delete'],
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_STORAGE);
+    });
+
 App::get('/v1/storage/:bucketId/usage')
-    ->desc('Get usage stats for storage bucket')
-    ->groups(['api', 'storage'])
+    ->desc('Get usage stats for a storage bucket')
+    ->groups(['api', 'storage', 'usage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')

@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Teams;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseClient
 {
@@ -40,11 +40,11 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
+            'queries' => [ 'limit(1)' ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['memberships']);
+        $this->assertCount(1, $response['body']['memberships']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -218,6 +218,69 @@ trait TeamsBaseClient
         $userUid = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 20);
 
         /**
+         * Test with UserId
+         * Create user
+         */
+        $secondEmail = uniqid() . 'foe@localhost.test';
+        $secondName = 'Another Foe';
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'unique()',
+            'email' => $secondEmail,
+            'password' => 'password',
+            'name' => $secondName
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        /**
+         * Test for UserID
+         * Failure
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => 'abcdefdg',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for UserID
+         * SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => $userId,
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEquals($secondName, $response['body']['userName']);
+        $this->assertEquals($secondEmail, $response['body']['userEmail']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertNotEmpty($response['body']['teamName']);
+        $this->assertCount(2, $response['body']['roles']);
+        $this->assertEquals(false, (new DateTimeValidator())->isValid($response['body']['joined'])); // is null in DB
+        $this->assertEquals(false, $response['body']['confirm']);
+
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($secondEmail, $lastEmail['to'][0]['address']);
+        $this->assertEquals($secondName, $lastEmail['to'][0]['name']);
+        $this->assertEquals('Invitation to ' . $teamName . ' Team at ' . $this->getProject()['name'], $lastEmail['subject']);
+
+        /**
          * Test for FAILURE
          */
 
@@ -293,7 +356,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $memberships['headers']['status-code']);
         $this->assertIsInt($memberships['body']['total']);
         $this->assertNotEmpty($memberships['body']['memberships']);
-        $this->assertCount(2, $memberships['body']['memberships']);
+        $this->assertCount(3, $memberships['body']['memberships']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
             'content-type' => 'application/json',
@@ -305,7 +368,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships']);
-        $this->assertCount(1, $response['body']['memberships']);
+        $this->assertCount(2, $response['body']['memberships']);
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
     }
 
@@ -452,10 +515,21 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => ID::custom(''),
+            'userId' => ID::custom('$notallowed'),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid . '/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'secret' => $secret,
+            'userId' => ID::custom(''),
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $membershipUid . '/status', array_merge([
             'origin' => 'http://localhost',
@@ -561,7 +635,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
+        $this->assertEquals(3, $response['body']['total']);
 
         $ownerMembershipUid = $response['body']['memberships'][0]['$id'];
 
@@ -616,7 +690,7 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
 
         /**
          * Test for when the owner tries to delete their membership

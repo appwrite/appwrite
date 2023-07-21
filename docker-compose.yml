@@ -84,7 +84,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./dev:/usr/local/dev
+      - ./dev:/usr/src/code/dev
     depends_on:
       - mariadb
       - redis
@@ -480,8 +480,46 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
-      - _APP_DOCKER_HUB_USERNAME
-      - _APP_DOCKER_HUB_PASSWORD
+      - DOCKERHUB_PULL_USERNAME
+      - DOCKERHUB_PULL_PASSWORD
+
+  appwrite-executor:
+    container_name: appwrite-executor
+    <<: *x-logging
+    entrypoint: executor
+    stop_signal: SIGINT
+    image: appwrite-dev
+    networks:
+      appwrite:
+      runtimes:
+    ports:
+      - 9519:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./dev:/usr/src/code/dev
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-builds:/storage/builds:rw
+      - /tmp:/tmp:rw
+    depends_on:
+      - redis
+      - mariadb
+      - appwrite
+    environment:
+      - _APP_ENV
+      - _APP_VERSION
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_BUILD_TIMEOUT
+      - _APP_FUNCTIONS_CONTAINERS
+      - _APP_FUNCTIONS_RUNTIMES
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_MEMORY_SWAP
+      - _APP_FUNCTIONS_INACTIVE_THRESHOLD
+      - _APP_EXECUTOR_SECRET
+      - OPEN_RUNTIMES_NETWORK
+      - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_PROVIDER
 

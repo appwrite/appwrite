@@ -160,7 +160,8 @@ App::init()
     ->inject('dbForProject')
     ->inject('queueForUsage')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Delete $deletes, EventDatabase $database, Database $dbForProject, Usage $queueForUsage, string $mode) use ($databaseListener) {
+    ->inject('mails')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -241,6 +242,25 @@ App::init()
             ->setEvent($route->getLabel('audits.event', ''))
             ->setProject($project)
             ->setUser($user);
+
+        $usage
+            ->setParam('projectInternalId', $project->getInternalId())
+            ->setParam('projectId', $project->getId())
+            ->setParam('project.{scope}.network.requests', 1)
+            ->setParam('httpMethod', $request->getMethod())
+            ->setParam('project.{scope}.network.inbound', 0)
+            ->setParam('project.{scope}.network.outbound', 0);
+
+        $smtp = $project->getAttribute('smtp', []);
+        if (!empty($smtp) && ($smtp['enabled'] ?? false)) {
+            $mails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? 25)
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSenderEmail($smtp['sender'] ?? '')
+                ->setSmtpReplyTo($smtp['replyTo'] ?? '');
+        }
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -408,16 +428,14 @@ App::shutdown()
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('user')
     ->inject('events')
     ->inject('audits')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
-    ->inject('queueForFunctions')
-    ->inject('queueForUsage')
-    ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, string $mode) use ($parseLabel) {
-
+    ->inject('dbForConsole')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Database $dbForConsole) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
@@ -477,7 +495,6 @@ App::shutdown()
 
         $route = $utopia->match($request);
         $requestParams = $route->getParamsValues();
-        $user = $audits->getUser();
 
         /**
          * Audit labels
@@ -490,10 +507,7 @@ App::shutdown()
             }
         }
 
-        $pattern = $route->getLabel('audits.userId', null);
-        if (!empty($pattern)) {
-            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-            $user = $dbForProject->getDocument('users', $userId);
+        if (!$user->isEmpty()) {
             $audits->setUser($user);
         }
 
@@ -592,5 +606,29 @@ App::shutdown()
             $queueForUsage
                 ->setProject($project)
                 ->trigger();
+        }
+
+        /**
+         * Update user last activity
+         */
+        if (!$user->isEmpty()) {
+            $accessedAt = $user->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if (APP_MODE_ADMIN !== $mode) {
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                } else {
+                    $dbForConsole->updateDocument('users', $user->getId(), $user);
+                }
+            }
+        }
+    });
+
+App::init()
+    ->groups(['usage'])
+    ->action(function () {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

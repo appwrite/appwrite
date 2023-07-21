@@ -14,6 +14,7 @@ use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
+use Utopia\Validator\Nullable;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -266,7 +267,7 @@ App::post('/v1/mock/tests/general/upload')
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
-    ->param('file', [], new File(), 'Sample file param', false)
+    ->param('file', [], new File(), 'Sample file param', skipValidation: true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $x, int $y, array $z, mixed $file, Request $request, Response $response) {
@@ -284,7 +285,7 @@ App::post('/v1/mock/tests/general/upload')
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
-            if (is_null($start) || is_null($end) || is_null($size)) {
+            if (is_null($start) || is_null($end) || is_null($size) || $end >= $size) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid content-range header');
             }
 
@@ -300,11 +301,11 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'All chunked request must have id header (except first)');
             }
 
-            if ($end !== $size && $end - $start + 1 !== $chunkSize) {
+            if ($end !== $size - 1 && $end - $start + 1 !== $chunkSize) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Chunk size must be 5MB (except last chunk)');
             }
 
-            if ($end !== $size && $file['size'] !== $chunkSize) {
+            if ($end !== $size - 1 && $file['size'] !== $chunkSize) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Wrong chunk size');
             }
 
@@ -312,11 +313,11 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'Chunk size must be 5MB or less');
             }
 
-            if ($end !== $size) {
+            if ($end !== $size - 1) {
                 $response->json([
                     '$id' => ID::custom('newfileid'),
-                    'chunksTotal' => $file['size'] / $chunkSize,
-                    'chunksUploaded' => $start / $chunkSize
+                    'chunksTotal' => (int) ceil($size / ($end + 1 - $start)),
+                    'chunksUploaded' => ceil($start / $chunkSize) + 1
                 ]);
             }
         } else {
@@ -425,6 +426,21 @@ App::get('/v1/mock/tests/general/empty')
     ->action(function (Response $response) {
 
         $response->noContent();
+    });
+
+App::post('/v1/mock/tests/general/nullable')
+    ->desc('Nullable Test')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'nullable')
+    ->label('sdk.description', 'Mock a nullable parameter.')
+    ->label('sdk.mock', true)
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('nullable', '', new Nullable(new Text(100)), 'Sample string param')
+    ->param('optional', '', new Text(100), 'Sample string param', true)
+    ->action(function (string $required, string $nullable, ?string $optional) {
     });
 
 /** Endpoint to test if required headers are sent from the SDK */

@@ -11,7 +11,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class UsageTest extends Scope
 {

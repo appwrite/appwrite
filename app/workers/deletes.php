@@ -8,6 +8,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Appwrite\Resque\Worker;
+use Executor\Executor;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\CLI\Console;
@@ -58,7 +59,10 @@ class DeletesV1 extends Worker
                         $this->deleteUser($document, $project);
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $project);
+                        $this->deleteMemberships($document, $project->getId());
+                        if ($project->getId() === 'console') {
+                            $this->deleteProjectsByTeam($document);
+                        }
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project);
@@ -262,6 +266,21 @@ class DeletesV1 extends Worker
 
         $dbForProject = $this->getProjectDB($project);
 
+        $relationships = \array_filter(
+            $document->getAttribute('attributes'),
+            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            if (!$relationship['twoWay']) {
+                continue;
+            }
+            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
+            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
+            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+        }
+
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
@@ -308,18 +327,37 @@ class DeletesV1 extends Worker
     }
 
     /**
+     * @param \Utopia\Database\Document $document
+     * @return void
+     * @throws \Exception
+     */
+    protected function deleteProjectsByTeam(Document $document): void
+    {
+        $dbForConsole = $this->getConsoleDB();
+
+        $projects = $dbForConsole->find('projects', [
+            Query::equal('teamInternalId', [$document->getInternalId()])
+        ]);
+
+        foreach ($projects as $project) {
+            $this->deleteProject($project);
+        }
+    }
+
+    /**
      * @param Document $document project document
      * @throws Exception
      */
     protected function deleteProject(Document $document): void
     {
         $projectId = $document->getId();
+        $projectInternalId = $document->getInternalId();
 
-        // Delete project domains and certificates
+        // Delete project certificates
         $dbForConsole = $this->getConsoleDB();
 
         $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$document->getInternalId()])
+            Query::equal('projectInternalId', [$projectInternalId])
         ]);
 
         foreach ($domains as $domain) {
@@ -340,6 +378,26 @@ class DeletesV1 extends Worker
                 $dbForProject->deleteCollection($collection->getId());
             }
         }
+
+        // Delete Platforms
+        $this->deleteByGroup('platforms', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete Domains
+        $this->deleteByGroup('domains', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete Keys
+        $this->deleteByGroup('keys', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete Webhooks
+        $this->deleteByGroup('webhooks', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
 
         // Delete metadata tables
         try {
