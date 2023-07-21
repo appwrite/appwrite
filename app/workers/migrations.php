@@ -78,12 +78,12 @@ class MigrationsV1 extends Worker
     protected function processSource(array $source): Source
     {
         switch ($source['type']) {
-            case 'firebase':
+            case Firebase::getName():
                 return new Firebase(
                     json_decode($source['serviceAccount'], true),
                 );
                 break;
-            case 'supabase':
+            case Supabase::getName():
                 return new Supabase(
                     $source['endpoint'],
                     $source['apiKey'],
@@ -94,7 +94,7 @@ class MigrationsV1 extends Worker
                     $source['port'],
                 );
                 break;
-            case 'nhost':
+            case NHost::getName():
                 return new NHost(
                     $source['subdomain'],
                     $source['region'],
@@ -105,7 +105,7 @@ class MigrationsV1 extends Worker
                     $source['port'],
                 );
                 break;
-            case 'appwrite':
+            case Appwrite::getName():
                 return new Appwrite($source['projectId'], str_starts_with($source['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $source['endpoint'], $source['apiKey']);
                 break;
             default:

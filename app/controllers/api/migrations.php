@@ -204,7 +204,7 @@ App::post('/v1/migrations/appwrite')
             'status' => 'pending',
             'stage' => 'init',
             'source' => json_encode([
-                'type' => 'appwrite',
+                'type' => Appwrite::getName(),
                 'endpoint' => $endpoint,
                 'projectId' => $projectId,
                 'apiKey' => $apiKey,
@@ -288,7 +288,7 @@ App::post('/v1/migrations/firebase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => json_encode([
-                'type' => 'firebase',
+                'type' => Firebase::getName(),
                 'serviceAccount' => $serviceAccount,
             ]),
             'resources' => $resources,
@@ -376,7 +376,7 @@ App::post('/v1/migrations/supabase')
             'status' => 'pending',
             'stage' => 'init',
             'source' => json_encode([
-                'type' => 'supabase',
+                'type' => Supabase::getName(),,
                 'endpoint' => $endpoint,
                 'apiKey' => $apiKey,
                 'databaseHost' => $databaseHost,
@@ -473,7 +473,7 @@ App::post('/v1/migrations/nhost')
             'status' => 'pending',
             'stage' => 'init',
             'source' => json_encode([
-                'type' => 'nhost',
+                'type' => NHost::getName(),,
                 'subdomain' => $subdomain,
                 'region' => $region,
                 'adminSecret' => $adminSecret,
