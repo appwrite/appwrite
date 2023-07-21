@@ -2287,20 +2287,20 @@ App::post('/v1/account/verification')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        if ($code === true) {
-            $mails
-                ->setType(MAIL_TYPE_VERIFICATION_CODE)
-                ->setCode($verificationSecret)
-            ;
-        } else {
-            $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
-            $url = Template::unParseURL($url);
-            $mails
-                ->setType(MAIL_TYPE_VERIFICATION_URL)
-                ->setUrl($url)
-            ;
-        }
+        // if ($code === true) {
+        //     $mails
+        //         ->setType(MAIL_TYPE_VERIFICATION_CODE)
+        //         ->setCode($verificationSecret)
+        //     ;
+        // } else {
+        //     $url = Template::parseURL($url);
+        //     $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
+        //     $url = Template::unParseURL($url);
+        //     $mails
+        //         ->setType(MAIL_TYPE_VERIFICATION_URL)
+        //         ->setUrl($url)
+        //     ;
+        // }
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
