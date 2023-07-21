@@ -995,6 +995,23 @@ trait DatabasesBase
     /**
      * @depends testCreateIndexes
      */
+    public function testListIndexes(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $indexes = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => ['equal("type", "key")'],
+        ]);
+        $this->assertEquals(200, $indexes['headers']['status-code']);
+        $this->assertEquals(3, $indexes['body']['total']);
+    }
+
+    /**
+     * @depends testCreateIndexes
+     */
     public function testCreateDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
