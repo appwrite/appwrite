@@ -71,8 +71,7 @@
         "chillerlan/php-qrcode": "4.3.3",
         "adhocore/jwt": "1.1.2",
         "slickdeals/statsd": "3.1.0",
-        "webonyx/graphql-php": "14.11.*",
-        "psr/cache": "^1.0||^2.0"
+        "webonyx/graphql-php": "14.11.*"
     },
     "repositories": [
         {
