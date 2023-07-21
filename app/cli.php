@@ -20,6 +20,7 @@ include 'tasks/sdks.php';
 include 'tasks/specs.php';
 include 'tasks/ssl.php';
 include 'tasks/vars.php';
+include 'tasks/upgrade.php';
 include 'tasks/usage.php';
 
 $cli
