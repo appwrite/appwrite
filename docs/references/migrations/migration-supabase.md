@@ -1,1 +1,1 @@
-Initialize a migration to transfer data from an Supabase instance over to your current Appwrite instance. The migration will be queued and processed by the Appwrite server. To learn more about the migration process, please check out our [migration guide](/docs/migrations).
+Initialize a migration to transfer data from a Supabase instance over to your current Appwrite instance. The migration will be queued and processed by the Appwrite server. To learn more about the migration process, please check out our [migration guide](/docs/migrations).

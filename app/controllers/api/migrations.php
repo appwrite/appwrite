@@ -338,7 +338,7 @@ App::get('/v1/migrations/firebase/report')
             $firebase = new Firebase(json_decode($serviceAccount, true), $databaseURL);
 
             $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($firebase->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
@@ -434,7 +434,7 @@ App::get('/v1/migrations/supabase/report')
             $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
 
             $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
@@ -534,7 +534,7 @@ App::get('/v1/migrations/nhost/report')
             $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
 
             $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());

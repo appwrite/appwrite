@@ -1,1 +1,1 @@
-Perform permission checks and generate a report total data contained within a Supabase instance
+Perform permission checks and generate a report of the total data contained within a Supabase instance
