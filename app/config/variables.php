@@ -106,6 +106,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_ROOT_SESSION',
+                'description' => 'Domain policy for the Appwrite console session cookie. By default, set to \'disabled\', meaning the session cookie will be set to the domain of the Appwrite console (e.g. cloud.appwrite.io). When set to \'enabled\', the session cookie will be set to the registerable domain of the Appwrite server (e.g. appwrite.io).',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
                 'description' => 'This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: \'Appwrite\'. You can use url encoded strings for spaces and special chars.',
                 'introduction' => '0.7.0',

@@ -175,13 +175,21 @@ App::init()
             $endDomain->getRegisterable() !== ''
         );
 
-        Config::setParam('cookieDomain', (
-            $request->getHostname() === 'localhost' ||
-            $request->getHostname() === 'localhost:' . $request->getPort() ||
-            (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-        )
-            ? null
-            : '.' . $request->getHostname());
+        $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
+        $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
+
+        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+        $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+        Config::setParam(
+            'cookieDomain',
+            $isLocalHost || $isIpAddress
+                ? null
+                : ($isConsoleProject && $isConsoleRootSession
+                    ? '.' . $selfDomain->getRegisterable()
+                    : '.' . $request->getHostname()
+                )
+        );
 
         /*
         * Response format
