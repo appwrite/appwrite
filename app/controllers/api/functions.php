@@ -61,8 +61,7 @@ $redeployVcsLogic = function (Request $request, Document $function, Document $pr
         'resourceId' => $function->getId(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
-        'buildCommand' => $function->getAttribute('buildCommand', ''),
-        'installCommand' => $function->getAttribute('installCommand', ''),
+        'commands' => $function->getAttribute('commands', ''),
         'type' => 'vcs',
         'vcsInstallationId' => $installation->getId(),
         'vcsInstallationInternalId' => $installation->getInternalId(),
@@ -115,8 +114,7 @@ App::post('/v1/functions')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
-    ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
+    ->param('commands', '', new Text('1028'), 'Build Commands.', true)
     ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('vcsRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
@@ -133,7 +131,7 @@ App::post('/v1/functions')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, string $templateRepositoryName, string $templateOwnerName, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, string $templateRepositoryName, string $templateOwnerName, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
@@ -197,8 +195,7 @@ App::post('/v1/functions')
             'schedule' => $schedule,
             'timeout' => $timeout,
             'entrypoint' => $entrypoint,
-            'buildCommand' => $buildCommand,
-            'installCommand' => $installCommand,
+            'commands' => $commands,
             'vcsInstallationId' => $installation->getId(),
             'vcsInstallationInternalId' => $installation->getInternalId(),
             'vcsRepositoryId' => $vcsRepositoryId,
@@ -634,8 +631,7 @@ App::put('/v1/functions/:functionId')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('buildCommand', '', new Text('1028'), 'Build Command.', true)
-    ->param('installCommand', '', new Text('1028'), 'Install Command.', true)
+    ->param('commands', '', new Text('1028'), 'Build Commands.', true)
     ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('vcsRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
     ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
@@ -648,7 +644,7 @@ App::put('/v1/functions/:functionId')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $buildCommand, string $installCommand, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -729,8 +725,7 @@ App::put('/v1/functions/:functionId')
 
         if (
             $function->getAttribute('entrypoint') !== $entrypoint ||
-            $function->getAttribute('buildCommand') !== $buildCommand ||
-            $function->getAttribute('installCommand') !== $installCommand ||
+            $function->getAttribute('commands') !== $commands ||
             $function->getAttribute('vcsRootDirectory') !== $vcsRootDirectory
         ) {
             $live = false;
@@ -746,8 +741,7 @@ App::put('/v1/functions/:functionId')
             'live' => $live,
             'logging' => $logging,
             'entrypoint' => $entrypoint,
-            'buildCommand' => $buildCommand,
-            'installCommand' => $installCommand,
+            'commands' => $commands,
             'vcsInstallationId' => $installation->getId(),
             'vcsInstallationInternalId' => $installation->getInternalId(),
             'vcsRepositoryId' => $vcsRepositoryId,
@@ -925,8 +919,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $entrypoint = $function->getAttribute('entrypoint', '');
-        $buildCommand = $function->getAttribute('buildCommand', '');
-        $installCommand = $function->getAttribute('installCommand', '');
+        $commands = $function->getAttribute('commands', '');
 
         if (empty($entrypoint)) {
             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
@@ -1034,8 +1027,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
-                    'buildCommand' => $buildCommand,
-                    'installCommand' => $installCommand,
+                    'commands' => $commands,
                     'path' => $path,
                     'size' => $fileSize,
                     'search' => implode(' ', [$deploymentId, $entrypoint]),
@@ -1068,8 +1060,7 @@ App::post('/v1/functions/:functionId/deployments')
                     'resourceId' => $function->getId(),
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
-                    'buildCommand' => $buildCommand,
-                    'installCommand' => $installCommand,
+                    'commands' => $commands,
                     'path' => $path,
                     'size' => $fileSize,
                     'chunksTotal' => $chunks,

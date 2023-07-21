@@ -2910,7 +2910,7 @@ $collections = [
             ],
             [
                 'array' => false,
-                '$id' => ID::custom('buildCommand'),
+                '$id' => ID::custom('commands'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
@@ -2918,18 +2918,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'filters' => [],
-            ],
-            [
-                'array' => false,
-                '$id' => ID::custom('installCommand'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -3078,18 +3067,7 @@ $collections = [
             ],
             [
                 'array' => false,
-                '$id' => ID::custom('buildCommand'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 2048,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'filters' => [],
-            ],
-            [
-                'array' => false,
-                '$id' => ID::custom('installCommand'),
+                '$id' => ID::custom('commands'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 2048,
@@ -3289,27 +3267,6 @@ $collections = [
                 'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
-            ],
-            [
-                '$id' => ID::custom('_key_entrypoint'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['entrypoint'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_build_command'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['buildCommand'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_install_command'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['installCommand'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => ID::custom('_key_size'),

@@ -14,8 +14,7 @@ class Functions extends Base
         'schedulePrevious',
         'timeout',
         'entrypoint',
-        'buildCommand',
-        'installCommand'
+        'commands'
     ];
 
     /**

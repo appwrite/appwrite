@@ -330,17 +330,7 @@ class BuildsV1 extends Worker
                 'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
             ]);
 
-            $command = '';
-
-            if (!empty($deployment->getAttribute('installCommand', ''))) {
-                $command .= $deployment->getAttribute('installCommand', '');
-            }
-
-            if (!empty($deployment->getAttribute('buildCommand', ''))) {
-                $separator = empty($command) ? '' : ' && ';
-                $command .= $separator . $deployment->getAttribute('buildCommand', '');
-            }
-
+            $command = $deployment->getAttribute('commands', '');
             $command = \str_replace('"', '\\"', $command);
 
             $response = null;

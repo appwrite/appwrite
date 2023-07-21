@@ -9,8 +9,7 @@ class Deployments extends Base
         'buildId',
         'activate',
         'entrypoint',
-        'buildCommand',
-        'installCommand'
+        'commands'
     ];
 
     /**

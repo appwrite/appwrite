@@ -580,8 +580,7 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
                 'resourceId' => $functionId,
                 'resourceType' => 'functions',
                 'entrypoint' => $function->getAttribute('entrypoint'),
-                'installCommand' => $function->getAttribute('installCommand'),
-                'buildCommand' => $function->getAttribute('buildCommand'),
+                'commands' => $function->getAttribute('commands'),
                 'type' => 'vcs',
                 'vcsInstallationId' => $vcsInstallationId,
                 'vcsInstallationInternalId' => $vcsInstallationInternalId,
@@ -891,7 +890,7 @@ App::delete('/v1/vcs/installations/:installationId')
     });
 
 App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryId/detection')
-    ->desc('Detect function settings like runtime for specified root directory')
+    ->desc('Detect runtime settings from source code')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('sdk.namespace', 'vcs')

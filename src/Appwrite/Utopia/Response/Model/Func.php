@@ -105,15 +105,9 @@ class Func extends Model
                 'default' => '',
                 'example' => 'index.js',
             ])
-            ->addRule('buildCommand', [
+            ->addRule('commands', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The build command used to build the deployment.',
-                'default' => '',
-                'example' => 'npm run build',
-            ])
-            ->addRule('installCommand', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The install command used to build the deployment.',
                 'default' => '',
                 'example' => 'npm install',
             ])
