@@ -473,7 +473,7 @@ App::post('/v1/migrations/nhost')
             'status' => 'pending',
             'stage' => 'init',
             'source' => json_encode([
-                'type' => NHost::getName(),,
+                'type' => NHost::getName(),
                 'subdomain' => $subdomain,
                 'region' => $region,
                 'adminSecret' => $adminSecret,
