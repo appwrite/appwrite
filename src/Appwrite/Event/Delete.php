@@ -140,6 +140,7 @@ class Delete extends Event
             'type' => $this->type,
             'document' => $this->document,
             'resource' => $this->resource,
+            'resourceType' => $this->resourceType,
             'datetime' => $this->datetime,
             'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime,
         ]);
