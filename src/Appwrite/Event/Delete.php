@@ -9,6 +9,7 @@ class Delete extends Event
 {
     protected string $type = '';
     protected ?Document $document = null;
+    protected ?string $resourceType = null;
     protected ?string $resource = null;
     protected ?string $datetime = null;
     protected ?string $hourlyUsageRetentionDatetime = null;
@@ -98,6 +99,19 @@ class Delete extends Event
     public function setResource(string $resource): self
     {
         $this->resource = $resource;
+
+        return $this;
+    }
+
+    /**
+     * Sets the resource type for the delete event.
+     *
+     * @param string $resourceType
+     * @return self
+     */
+    public function setResourceType(string $resourceType): self
+    {
+        $this->resourceType = $resourceType;
 
         return $this;
     }

@@ -359,8 +359,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->inject('deletes')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal, Delete $deletes) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -652,11 +651,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
             ->setContext('bucket', $bucket)
-        ;
-
-        $deletes
-            ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-            ->setResource('file/' . $file->getId())
         ;
 
         $metadata = null; // was causing leaks as it was passed by reference
@@ -1416,6 +1410,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($deviceDeleted) {
             $deletes
                 ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResourceType('bucket/' . $bucket->getId())
                 ->setResource('file/' . $fileId)
             ;
 
