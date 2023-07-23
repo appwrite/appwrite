@@ -119,7 +119,7 @@ class Func extends Model
             ])
             ->addRule('vcsRepositoryId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Git Repository ID',
+                'description' => 'VCS (Version Control System) Repository ID',
                 'default' => '',
                 'example' => 'appwrite',
             ])
