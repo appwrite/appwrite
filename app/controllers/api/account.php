@@ -2236,7 +2236,7 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
-    ->param('code', false, new Boolean(true), 'Whether the email verification email must contain a URL or a secret code.', true)
+    ->param('type', 'link', new WhiteList(['link', 'code']), 'The type of verification email to be sent. ', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -2287,6 +2287,10 @@ App::post('/v1/account/verification')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
+        $url = Template::parseURL($url);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
+        $url = Template::unParseURL($url);
+        
         // if ($code === true) {
         //     $mails
         //         ->setType(MAIL_TYPE_VERIFICATION_CODE)
