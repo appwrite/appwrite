@@ -6,6 +6,7 @@ use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
 class Backup extends Action
@@ -31,34 +32,41 @@ class Backup extends Action
      */
     public function action(): void
     {
+        self::log('--- Backup Start --- ');
         $this->checkEnvVariables();
 
-        $folder = App::getEnv('_APP_BACKUP_FOLDER');
-
         $start = microtime(true);
-        $time = date('Y-m-d_H:i:s');
-        self::log('--- Backup Start --- ');
+        $filename = date('Ymd_His') . '.tar.gz';
+        $folder = App::getEnv('_APP_BACKUP_FOLDER');
+        $project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
+        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $local = new Local(self::$backups . '/' . $project . '/' . $folder);
+        $source = $local->getRoot() . '/' . $filename;
 
-        Storage::setDevice('files', new DOSpaces('backups', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION')));
-        $device = Storage::getDevice('files');
+        $local->setTransferChunkSize(10  * 1024 * 1024); // > 5MB
 
-        // Todo: do we want to have the backup ready on the mounted dir? or to abort?
-        if (!$device->exists('/')) {
+//        $source = '/backups/shmuel.tar.gz'; // 1452521974
+//        $destination = '/shmuel/' . $time . '.tar.gz';
+//
+//        $local->transfer($source, $destination, $s3);
+//
+//        if ($s3->exists($destination)) {
+//            Console::success('Uploaded successfully !!! ' . $destination);
+//            Console::exit();
+//        }
+
+        if (!$s3->exists('/')) {
             Console::error('Can\'t read from DO ');
             Console::exit();
         }
-
-        $dsn = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
 
         if (!file_exists(self::$backups)) {
             Console::error('Mount directory does not exist');
             Console::exit();
         }
 
-        $backups = self::$backups . '/' . $dsn . '/' . $folder;
-
-        if (!file_exists($backups) && !mkdir($backups, 0755, true)) {
-            Console::error('Error creating directory: ' . $backups);
+        if (!file_exists($local->getRoot()) && !mkdir($local->getRoot(), 0755, true)) {
+            Console::error('Error creating directory: ' . $local->getRoot());
             Console::exit();
         }
 
@@ -73,9 +81,6 @@ class Backup extends Action
             Console::exit();
         }
 
-        $filename = $time . '.tar.gz';
-        $file = $backups . '/' . $filename;
-
         //        $cmd = 'tar czf ' . $file . ' --absolute-names ' . $this->directory;
         //
         //        $cmd = '
@@ -86,12 +91,25 @@ class Backup extends Action
 
         $stdout = '';
         $stderr = '';
-        $cmd = 'cd ' . self::$mysqlDirectory . ' && tar zcf ' . $file . ' .';
+        $cmd = 'cd ' . self::$mysqlDirectory . ' && tar zcf ' . $source . ' .';
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         self::log($stdout);
         if (!empty($stderr)) {
             Console::error($stderr);
+            Console::exit();
+        }
+
+
+        if (!file_exists($source)) {
+            Console::error("Can't find tar file: " . $source);
+            Console::exit();
+        }
+
+        $filesize = \filesize($source);
+        self::log("Tar file size is :" . ceil($filesize / 1024 / 1024) . 'MB');
+        if ($filesize < (2 * 1024)) {
+            Console::error("File size is very small: " . $source);
             Console::exit();
         }
 
@@ -107,10 +125,17 @@ class Backup extends Action
         }
 
         try {
-            $path = '/' . $dsn . '/' . $folder . '/' . $filename;
-            self::log('Uploading ' . $path);
-            if (!$device->upload($file, $path)) {
-                Console::error('Error uploading to ' . $path);
+            self::log('Start transferring ' . $source);
+
+            $destination = $s3->getRoot() . '/' . $filename;
+
+            if (!$local->transfer($source, $destination, $s3)) {
+                Console::error('Error transferring to ' . $destination);
+                Console::exit();
+            }
+
+            if (!$s3->exists($destination)) {
+                Console::error('File not found on s3 ' . $destination);
                 Console::exit();
             }
         } catch (\Exception $e) {
@@ -150,5 +175,4 @@ class Backup extends Action
             }
         }
     }
-    
 }

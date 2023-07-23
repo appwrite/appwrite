@@ -63,7 +63,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.5.*",
         "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "0.13.*",
+        "utopia-php/storage": "dev-feat-transfer as 0.13.3",
         "utopia-php/swoole": "0.5.*",
         "utopia-php/websocket": "0.1.0",
         "resque/php-resque": "1.3.6",

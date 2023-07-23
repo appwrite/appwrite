@@ -635,6 +635,8 @@ services:
       - appwrite-mariadb:/var/lib/mysql:rw
       - ./backups:/backups:rw
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./dev:/usr/local/dev
+      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
     depends_on:
       - redis
     environment:
@@ -744,7 +746,7 @@ services:
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mysql:8.0.30 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:

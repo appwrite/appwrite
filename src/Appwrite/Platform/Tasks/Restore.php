@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
@@ -11,11 +12,10 @@ use Utopia\Storage\Storage;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-//  docker compose exec appwrite-backup db-restore --cloud=false --filename=2023-07-18_12:39:59.tar.gz
-
 class Restore extends Action
 {
-    // todo: double check this is not a production value!!!!!!!!!!!!!!!
+    //  docker compose exec appwrite-backup db-restore --cloud=false --filename=2023-07-19_09:25:11.tar.gz --project=db_fra1_02 --folder=daily
+    // todo: Carefully double check this is not a production value!!!!!!!!!!!!!!!
     // todo: it will be erased!!!!
     protected string $containerName = 'appwrite-mariadb';
 
@@ -36,7 +36,7 @@ class Restore extends Action
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function action(string $filename, string $cloud, string $project, string $folder): void
     {
@@ -49,6 +49,8 @@ class Restore extends Action
         $file = Backup::$backups . '/' . $project . '/' . $folder . '/' . $filename;
         $extract = Backup::$backups . '/extract';
         $original = $extract . '/original-' . time();
+        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $download = new Local(Backup::$backups . '/downloads');
 
         Backup::log('Creating directory ' . $original);
         if (!file_exists($original) && !mkdir($original, 0755, true)) {
@@ -56,37 +58,28 @@ class Restore extends Action
             Console::exit();
         }
 
-//        $tarDirectory = $extract . '/' . str_replace(['.', '-', '_', ':', 'tar', 'gz'], '', $filename);
-//        Backup::log('Creating directory ' . $tarDirectory);
-//        if (!file_exists($tarDirectory) && !mkdir($tarDirectory, 0755, true)) {
-//            Console::error('Error creating directory: ' . $tarDirectory);
-//            Console::exit();
-//        }
+        if (!file_exists($download->getRoot()) && !mkdir($download->getRoot(), 0755, true)) {
+            Console::error('Error creating directory: ' . $download->getRoot());
+            Console::exit();
+        }
 
         if ($cloud) {
-            Storage::setDevice('s3', new DOSpaces('backups', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION')));
-            Storage::setDevice('mount', new Local(Backup::$backups));
-
-            $device = Storage::getDevice('s3');
-            $mount = Storage::getDevice('mount');
-
             try {
-                $folder = App::getEnv('_APP_BACKUP_FOLDER', 'hourly');
-                $path = '/' . $project . '/' . $folder . '/' . $filename;
+                $path = $s3->getPath($filename);
 
-                if (!$device->exists($path)) {
+                if (!$s3->exists($path)) {
                     Console::error('File: ' . $path . ' does not exist on cloud');
                     Console::exit();
                 }
 
-                while ($data = $device->read($path)) {
-                    $mount->write('file-' . $file, $data);
-                }
+                $file = $download->getPath($filename);
+                Backup::log('Transferring ' . $path . ' => ' . $file);
 
-                Backup::log('Downloading from s3 ' . $path);
-                $mount->write('file-' . $file, $device->read($path));
-               // $mount->get('file-' . $file, $device->read($path));
-            } catch (\Exception $e) {
+                if (!$s3->transfer($path, $file, $download)) {
+                    Console::error('Error transferring ' . $file);
+                    Console::exit();
+                }
+            } catch (Exception $e) {
                 Console::error($e->getMessage());
                 Console::exit();
             }
@@ -112,6 +105,8 @@ class Restore extends Action
         $stdout = '';
         $stderr = '';
         $cmd = 'mv ' . Backup::$mysqlDirectory . '/* ' . ' ' . $original . '/';
+        // todo: do we care about original?
+        $cmd = 'rm -r ' . Backup::$mysqlDirectory . '/*';
         Backup::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         Backup::log($stdout);
@@ -120,12 +115,9 @@ class Restore extends Action
             Console::exit();
         }
 
-
         $stdout = '';
         $stderr = '';
-       // $cmd = 'tar -xzf ' . $file . ' -C ' . $tarDirectory;
         $cmd = 'tar -xzf ' . $file . ' -C ' . Backup::$mysqlDirectory;
-
         Backup::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         if (!empty($stderr)) {
@@ -134,24 +126,13 @@ class Restore extends Action
             Console::exit();
         }
 
-//        $stdout = '';
-//        $stderr = '';
-//        $cmd = 'mv ' . $tarDirectory . ' ' . Backup::$mysqlDirectory;
-//        Backup::log($cmd);
-//        Console::execute($cmd, '', $stdout, $stderr);
-//        Backup::log($stdout);
-//        if (!empty($stderr)) {
-//            Console::error($stderr);
-//            Console::exit();
-//        }
-
         $stdout = '';
         $stderr = '';
         $cmd = 'docker start ' . $this->containerName;
         Backup::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
-        Backup::log($stdout);
         if (!empty($stderr)) {
+            Backup::log($stdout);
             Console::error($stderr);
             Console::exit();
         }
