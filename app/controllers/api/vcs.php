@@ -187,7 +187,7 @@ App::get('/v1/vcs/github/redirect')
     });
 
 App::get('/v1/vcs/github/installations/:installationId/repositories')
-    ->desc('List repositories')
+    ->desc('List Repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('sdk.namespace', 'vcs')
