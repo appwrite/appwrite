@@ -6,7 +6,8 @@ use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
-use Utopia\Analytics\GoogleAnalytics;
+use Utopia\Analytics\Adapter\GoogleAnalytics;
+use Utopia\Analytics\Event;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Validator\Text;
@@ -215,14 +216,22 @@ class Install extends Action
 
         if (!file_put_contents($path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::error($message);
             Console::exit(1);
         }
 
         if (!file_put_contents($path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::error($message);
             Console::exit(1);
         }
@@ -243,13 +252,21 @@ class Install extends Action
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::success($message);
         }
     }
