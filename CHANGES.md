@@ -130,6 +130,9 @@
 - Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
 - Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
 
+## Features
+- Add DreamHost Objects Storage [#4603](https://github.com/appwrite/appwrite/pull/4603)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
