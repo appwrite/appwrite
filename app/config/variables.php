@@ -63,9 +63,9 @@ return [
             ],
             [
                 'name' => '_APP_DOMAIN_FUNCTIONS',
-                'description' => 'A domain to use for function preview URLs. Setting to "disabled" turns off function preview URLs.',
+                'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
-                'default' => 'disabled',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

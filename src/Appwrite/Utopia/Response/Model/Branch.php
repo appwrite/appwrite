@@ -12,9 +12,9 @@ class Branch extends Model
         $this
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Repository Name.',
+                'description' => 'Branch Name.',
                 'default' => '',
-                'example' => 'appwrite',
+                'example' => 'main',
             ]);
     }
 

@@ -225,8 +225,8 @@ App::post('/v1/functions')
             $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, $template);
         }
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', 'disabled');
-        if ($functionsDomain !== 'disabled') {
+        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        if (!empty($functionsDomain)) {
             $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
             $domain = "{$routeSubdomain}.{$functionsDomain}";
@@ -1814,11 +1814,10 @@ App::get('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $variable = $dbForProject->findOne('variables', [
-            Query::equal('$id', [$variableId]),
-            Query::equal('resourceInternalId', [$function->getInternalId()]),
-            Query::equal('resourceType', ['function']),
-        ]);
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+            throw new Exception(Exception::VARIABLE_NOT_FOUND);
+        }
 
         if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
@@ -1856,11 +1855,10 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $variable = $dbForProject->findOne('variables', [
-            Query::equal('$id', [$variableId]),
-            Query::equal('resourceInternalId', [$function->getInternalId()]),
-            Query::equal('resourceType', ['function']),
-        ]);
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+            throw new Exception(Exception::VARIABLE_NOT_FOUND);
+        }
 
         if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
@@ -1916,11 +1914,10 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $variable = $dbForProject->findOne('variables', [
-            Query::equal('$id', [$variableId]),
-            Query::equal('resourceInternalId', [$function->getInternalId()]),
-            Query::equal('resourceType', ['function']),
-        ]);
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+            throw new Exception(Exception::VARIABLE_NOT_FOUND);
+        }
 
         if ($variable === false || $variable->isEmpty()) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);

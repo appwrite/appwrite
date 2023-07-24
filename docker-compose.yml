@@ -742,24 +742,6 @@ services:
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
-  # openruntimes-proxy:
-  #   container_name: openruntimes-proxy
-  #   hostname: proxy
-  #   <<: *x-logging
-  #   image: meldiron/proxy:0.3.0
-  #   networks:
-  #     - appwrite
-  #   environment:
-  #     - OPR_PROXY_ALGORITHM=random
-  #     - OPR_PROXY_EXECUTORS=exc1,exc2
-  #     - OPR_PROXY_HEALTHCHECK=enabled
-  #     - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
-  #     - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
-  #     - OPR_PROXY_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
-  #     - OPR_PROXY_ENV=development
-  #     - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
-  #     - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
-
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb

@@ -216,14 +216,11 @@ App::get('/v1/project/variables/:variableId')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
-    ->action(function (string $variableId, Response $response, Database $dbForProject) {
-        $variable = $dbForProject->findOne('variables', [
-            Query::equal('$id', [$variableId]),
-            Query::equal('resourceType', ['project']),
-        ]);
-
-        if ($variable === false || $variable->isEmpty()) {
+    ->action(function (string $variableId, Response $response, Document $project, Database $dbForProject) {
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
@@ -248,12 +245,8 @@ App::put('/v1/project/variables/:variableId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject) {
-        $variable = $dbForProject->findOne('variables', [
-            Query::equal('$id', [$variableId]),
-            Query::equal('resourceType', ['project']),
-        ]);
-
-        if ($variable === false || $variable->isEmpty()) {
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
@@ -296,12 +289,8 @@ App::delete('/v1/project/variables/:variableId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $variableId, Document $project, Response $response, Database $dbForProject) {
-        $variable = $dbForProject->findOne('variables', [
-            Query::equal('$id', [$variableId]),
-            Query::equal('resourceType', ['project']),
-        ]);
-
-        if ($variable === false || $variable->isEmpty()) {
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
