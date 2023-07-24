@@ -270,10 +270,10 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
         $repos = \array_slice($repos, 0, 5);
 
         $repos = \array_map(function ($repo) use ($installation) {
-            $repo['id'] = \strval($repo['id']);
-            $repo['pushedAt'] = $repo['pushed_at'];
-            $repo['provider'] = $installation->getAttribute('provider', '');
-            $repo['organization'] = $installation->getAttribute('organization', '');
+            $repo['id'] = \strval($repo['id'] ?? '');
+            $repo['pushedAt'] = $repo['pushed_at'] ?? null;
+            $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
+            $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
             return new Document($repo);
         }, $repos);
 
@@ -631,8 +631,8 @@ $createGitDeployments = function (GitHub $github, string $installationId, array 
     }
 };
 
-App::post('/v1/vcs/github/incomingwebhook')
-    ->desc('Captures GitHub Webhook Events')
+App::post('/v1/vcs/github/events')
+    ->desc('Create Event')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->inject('gitHub')
@@ -655,7 +655,7 @@ App::post('/v1/vcs/github/incomingwebhook')
             $event = $request->getHeader('x-github-event', '');
             $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-            $parsedPayload = $github->parseWebhookEvent($event, $payload);
+            $parsedPayload = $github->getEvent($event, $payload);
 
             if ($event == $github::EVENT_PUSH) {
                 $branchName = $parsedPayload["branch"];
