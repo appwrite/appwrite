@@ -30,21 +30,21 @@ class Migration extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Migration status.',
+                'description' => 'Migration status ( pending, processing, failed. completed ) ',
                 'default' => '',
                 'example' => 'pending',
             ])
             ->addRule('stage', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Migration stage.',
+                'description' => 'Migration stage ( init, processing, source-check, destination-check, migrating, finished )',
                 'default' => '',
                 'example' => 'init',
             ])
             ->addRule('source', [
                 'type' => self::TYPE_STRING,
-                'description' => 'An object containing the source of the migration.',
+                'description' => 'A string containing the type of source of the migration.',
                 'default' => '',
-                'example' => '{"type": "Appwrite", "endpoint": "xxxxxxxx", ...}',
+                'example' => 'Appwrite',
             ])
             ->addRule('resources', [
                 'type' => self::TYPE_STRING,

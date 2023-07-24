@@ -75,9 +75,9 @@ class MigrationsV1 extends Worker
      * @return Source
      * @throws \Exception
      */
-    protected function processSource(array $source): Source
+    protected function processSource(string $source, array $credentials): Source
     {
-        switch ($source['type']) {
+        switch ($source) {
             case Firebase::getName():
                 return new Firebase(
                     json_decode($source['serviceAccount'], true),
@@ -220,7 +220,7 @@ class MigrationsV1 extends Worker
             $migrationDocument->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
-            $source = $this->processSource(json_decode($migrationDocument->getAttribute('source'), true));
+            $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
 
             $destination = new DestinationsAppwrite(
                 $projectDocument->getId(),

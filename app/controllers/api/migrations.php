@@ -203,12 +203,12 @@ App::post('/v1/migrations/appwrite')
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
-            'source' => json_encode([
-                'type' => Appwrite::getName(),
+            'source' => Appwrite::getName(),
+            'credentials' => [
                 'endpoint' => $endpoint,
                 'projectId' => $projectId,
                 'apiKey' => $apiKey,
-            ]),
+            ],
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
@@ -276,7 +276,7 @@ App::post('/v1/migrations/firebase')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
     ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
-    ->param('serviceAccount', '', new Text(1024), "JSON of the Firebase service account credentials")
+    ->param('serviceAccount', '', new Text(65536), "JSON of the Firebase service account credentials")
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -287,10 +287,10 @@ App::post('/v1/migrations/firebase')
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
-            'source' => json_encode([
-                'type' => Firebase::getName(),
+            'source' => Firebase::getName(),
+            'credentials' => [
                 'serviceAccount' => $serviceAccount,
-            ]),
+            ],
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
@@ -326,16 +326,15 @@ App::get('/v1/migrations/firebase/report')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
     ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
-    ->param('serviceAccount', '', new Text(1024), "JSON of the Firebase service account credentials")
-    ->param('databaseURL', '', new URL(), "Source's Database URL")
+    ->param('serviceAccount', '', new Text(65536), "JSON of the Firebase service account credentials")
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
     ->inject('events')
-    ->action(function (array $resources, string $serviceAccount, string $databaseURL, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance) {
         try {
-            $firebase = new Firebase(json_decode($serviceAccount, true), $databaseURL);
+            $firebase = new Firebase(json_decode($serviceAccount, true));
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
@@ -375,15 +374,15 @@ App::post('/v1/migrations/supabase')
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
-            'source' => json_encode([
-                'type' => Supabase::getName(),
+            'source' => Supabase::getName(),
+            'credentials' => [
                 'endpoint' => $endpoint,
                 'apiKey' => $apiKey,
                 'databaseHost' => $databaseHost,
                 'username' => $username,
                 'password' => $password,
                 'port' => $port,
-            ]),
+            ],
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",
@@ -472,8 +471,8 @@ App::post('/v1/migrations/nhost')
             '$id' => ID::unique(),
             'status' => 'pending',
             'stage' => 'init',
-            'source' => json_encode([
-                'type' => NHost::getName(),
+            'source' => NHost::getName(),
+            'credentials' => [
                 'subdomain' => $subdomain,
                 'region' => $region,
                 'adminSecret' => $adminSecret,
@@ -481,7 +480,7 @@ App::post('/v1/migrations/nhost')
                 'username' => $username,
                 'password' => $password,
                 'port' => $port,
-            ]),
+            ],
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => "{}",

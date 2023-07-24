@@ -3620,6 +3620,17 @@ $collections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('credentials'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65536,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('resources'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
