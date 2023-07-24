@@ -15,6 +15,8 @@ use Utopia\Platform\Action;
 
 class Install extends Action
 {
+    protected string $path = '/usr/src/code/appwrite';
+
     public static function getName(): string
     {
         return 'install';
@@ -51,7 +53,6 @@ class Install extends Action
          * 6. Run data migration
          */
         $config = Config::getParam('variables');
-        $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         $vars = [];
@@ -71,19 +72,19 @@ class Install extends Action
         Console::success('Starting Appwrite installation...');
 
         // Create directory with write permissions
-        if (null !== $path && !\file_exists(\dirname($path))) {
-            if (!@\mkdir(\dirname($path), 0755, true)) {
-                Console::error('Can\'t create directory ' . \dirname($path));
+        if (null !== $this->path && !\file_exists(\dirname($this->path))) {
+            if (!@\mkdir(\dirname($this->path), 0755, true)) {
+                Console::error('Can\'t create directory ' . \dirname($this->path));
                 Console::exit(1);
             }
         }
 
-        $data = @file_get_contents($path . '/docker-compose.yml');
+        $data = @file_get_contents($this->path . '/docker-compose.yml');
 
         if ($data !== false) {
             $time = \time();
             Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
-            file_put_contents($path . '/docker-compose.yml.' . $time . '.backup', $data);
+            file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
@@ -117,11 +118,11 @@ class Install extends Action
                     }
                 }
 
-                $data = @file_get_contents($path . '/.env');
+                $data = @file_get_contents($this->path . '/.env');
 
                 if ($data !== false) { // Fetch all env vars from previous .env file
                     Console::info('Env file found, creating backup: .env.' . $time . '.backup');
-                    file_put_contents($path . '/.env.' . $time . '.backup', $data);
+                    file_put_contents($this->path . '/.env.' . $time . '.backup', $data);
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
@@ -214,7 +215,7 @@ class Install extends Action
             ->setParam('vars', $input)
         ;
 
-        if (!file_put_contents($path . '/docker-compose.yml', $templateForCompose->render(false))) {
+        if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
             $event = new Event();
             $event->setName(APP_VERSION_STABLE . ' - ' . $message)
@@ -225,7 +226,7 @@ class Install extends Action
             Console::exit(1);
         }
 
-        if (!file_put_contents($path . '/.env', $templateForEnv->render(false))) {
+        if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
             $event = new Event();
             $event->setName(APP_VERSION_STABLE . ' - ' . $message)
@@ -246,9 +247,9 @@ class Install extends Action
             }
         }
 
-        Console::log("Running \"docker compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
+        Console::log("Running \"docker compose -f {$this->path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("${env} docker compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("${env} docker compose -f {$this->path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
