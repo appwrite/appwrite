@@ -2524,7 +2524,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $index = $dbForProject->find('indexes', [Query::equal('collectionId', [$collectionId]), Query::equal('key', [$key]), Query::equal('databaseId', [$databaseId]), Query::limit(1)]);
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $index = $dbForProject->find('indexes', [Query::equal('$id', [$database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key]), Query::limit(1)]);
 
         if (empty($index)) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
@@ -2532,7 +2543,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
         $response->dynamic($index[0], Response::MODEL_INDEX);
     });
-;
+
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
