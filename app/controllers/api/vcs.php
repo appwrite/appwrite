@@ -65,7 +65,7 @@ App::get('/v1/vcs/github/installations')
         $prefs['vcsState'] = $state;
         $user->setAttribute('prefs', $prefs);
         $dbForConsole->updateDocument('users', $user->getId(), $user);
-        
+
         $appName = App::getEnv('VCS_GITHUB_APP_NAME');
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

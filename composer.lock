@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4478e6ea7546002b03722b73527f1286",
+    "content-hash": "9ce42ed4bf5a5223e421a89be9a261cd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -115,11 +115,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.11.1",
+            "version": "dev-feat-add-start-commands",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "9d74a477ba3333cbcfac565c46fcf19606b7b603"
+                "reference": "7e9e40dcf4cbdb483f0e20bf2e99b844554a533c"
             },
             "require": {
                 "php": ">=8.0",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-11-07T16:45:52+00:00"
+            "time": "2023-07-22T16:31:06+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2705,7 +2705,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "c836cb55c2d3e0e28506228c55a6c6efcb16ddbd"
+                "reference": "20d39035360f757da355374b59d374fc4dc80a5a"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
@@ -2754,7 +2754,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-07-20T12:42:56+00:00"
+            "time": "2023-07-21T11:31:42+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5497,6 +5497,12 @@
     ],
     "aliases": [
         {
+            "package": "appwrite/php-runtimes",
+            "version": "dev-feat-add-start-commands",
+            "alias": "0.11.99",
+            "alias_normalized": "0.11.99.0"
+        },
+        {
             "package": "appwrite/sdk-generator",
             "version": "dev-feat-add-path-keyword",
             "alias": "0.28.99",
@@ -5517,6 +5523,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "appwrite/php-runtimes": 20,
         "utopia-php/framework": 20,
         "utopia-php/vcs": 20,
         "appwrite/sdk-generator": 20

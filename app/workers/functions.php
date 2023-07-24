@@ -166,9 +166,9 @@ Server::setResource('execute', function () {
 
         /** Execute function */
         try {
-            $command = 'node src/server.js'; // TODO: Custom for each runtime
-            $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-            $executionResponse = $client->createExecution(
+            $command = $runtime['startCommand'];
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
                 version: $function->getAttribute('version'),

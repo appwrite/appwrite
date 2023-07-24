@@ -494,8 +494,6 @@ App::error()
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
 
-        \var_dump($route->getPath());
-
         if ($logger) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
                 try {

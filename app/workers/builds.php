@@ -174,9 +174,7 @@ class BuildsV1 extends Worker
                     $cloneRepository = !empty($vcsContribution) ?  $vcsContribution->getAttribute('repositoryName', $repositoryName) : $repositoryName;
 
                     $branchName = $deployment->getAttribute('vcsBranch');
-                    var_dump("root " . $rootDirectory);
                     $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
-                    var_dump($gitCloneCommand);
                     $stdout = '';
                     $stderr = '';
                     Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
@@ -364,7 +362,6 @@ class BuildsV1 extends Worker
                                 projectId: $project->getId(),
                                 deploymentId: $deployment->getId(),
                                 callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                    \var_dump("Got logs");
                                     if ($response === null) {
                                         $build = $build->setAttribute('stdout', $build->getAttribute('stdout', '') . $logs);
                                         $build = $dbForProject->updateDocument('builds', $build->getId(), $build);

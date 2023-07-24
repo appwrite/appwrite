@@ -42,7 +42,7 @@
         "ext-zlib": "*",
         "ext-sockets": "*",
         "appwrite/php-clamav": "1.1.*",
-        "appwrite/php-runtimes": "0.11.*",
+        "appwrite/php-runtimes": "dev-feat-add-start-commands as 0.11.99",
         "utopia-php/abuse": "0.16.*",
         "utopia-php/analytics": "0.10.2",
         "utopia-php/audit": "0.17.*",

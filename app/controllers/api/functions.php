@@ -911,7 +911,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceLocal')
     ->action(function (string $functionId, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
-        
+
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1515,7 +1515,7 @@ App::post('/v1/functions/:functionId/executions')
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
-            $command = 'node src/server.js'; // TODO: Custom for each runtime
+            $command = $runtime['startCommand'];
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
