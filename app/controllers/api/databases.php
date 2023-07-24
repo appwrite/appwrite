@@ -2535,13 +2535,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $index = $dbForProject->find('indexes', [Query::equal('$id', [$database->getInternalId() . '_' . $collection->getInternalId() . '_' . $key]), Query::limit(1)]);
-
+        $index = $collection->find('key', $key, 'indexes');
         if (empty($index)) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
 
-        $response->dynamic($index[0], Response::MODEL_INDEX);
+        $response->dynamic($index, Response::MODEL_INDEX);
     });
 
 
