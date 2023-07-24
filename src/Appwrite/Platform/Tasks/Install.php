@@ -198,8 +198,8 @@ class Install extends Action
             }
         }
 
-        $templateForCompose = new View(__DIR__ . '/../views/install/compose.phtml');
-        $templateForEnv = new View(__DIR__ . '/../views/install/env.phtml');
+        $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
+        $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
 
         $templateForCompose
             ->setParam('httpPort', $httpPort)
