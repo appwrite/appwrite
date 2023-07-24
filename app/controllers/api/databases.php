@@ -1664,6 +1664,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
         $queries = Query::parseQueries($queries);
         foreach ($queries as $query) {
             if ($query->getMethod() ===  Query::TYPE_SELECT) {
@@ -2521,6 +2534,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
+
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
 
         $queries = Query::parseQueries($queries);
         foreach ($queries as $query) {
