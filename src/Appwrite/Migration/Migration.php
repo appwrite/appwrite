@@ -61,21 +61,6 @@ abstract class Migration
     {
         Authorization::disable();
         Authorization::setDefaultStatus(false);
-
-        $this->collections = array_merge([
-            '_metadata' => [
-                '$id' => ID::custom('_metadata'),
-                '$collection' => Database::METADATA
-            ],
-            'audit' => [
-                '$id' => ID::custom('audit'),
-                '$collection' => Database::METADATA
-            ],
-            'abuse' => [
-                '$id' => ID::custom('abuse'),
-                '$collection' => Database::METADATA
-            ]
-        ], Config::getParam('collections', []));
     }
 
     /**
@@ -92,6 +77,31 @@ abstract class Migration
         $this->project = $project;
         $this->projectDB = $projectDB;
         $this->consoleDB = $consoleDB;
+
+        // var_dump("In setProject()", $this->projectDB->getNamespace());
+
+        $baseCollections = [
+            '_metadata' => [
+                '$id' => ID::custom('_metadata'),
+                '$collection' => Database::METADATA
+            ],
+            'audit' => [
+                '$id' => ID::custom('audit'),
+                '$collection' => Database::METADATA
+            ],
+            'abuse' => [
+                '$id' => ID::custom('abuse'),
+                '$collection' => Database::METADATA
+            ]
+        ];
+
+        if ($project->getInternalId() === 'console') {
+            $consoleCollections = Config::getParam('collections', [])['console'];
+            $this->collections = array_merge($baseCollections, $consoleCollections);
+        } else {
+            $projectCollections = Config::getParam('collections', [])['projects'];
+            $this->collections = array_merge($baseCollections, $projectCollections);
+        }
 
         return $this;
     }
@@ -258,7 +268,7 @@ abstract class Migration
     public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId, string $from = null): void
     {
         $from ??= $collectionId;
-        $collection = Config::getParam('collections', [])[$from] ?? null;
+        $collection = $this->collections[$from] ?? null;
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");
         }
@@ -274,6 +284,7 @@ abstract class Migration
         $filters = $attribute['filters'] ?? [];
         $default = $attribute['default'] ?? null;
 
+        // var_dump("Create Attribute From Collection ", $database->getNamespace());
         $database->createAttribute(
             collection: $collectionId,
             id: $attributeId,
@@ -304,7 +315,7 @@ abstract class Migration
     public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
     {
         $from ??= $collectionId;
-        $collection = Config::getParam('collections', [])[$collectionId] ?? null;
+        $collection = $this->collections[$collectionId] ?? null;
 
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");

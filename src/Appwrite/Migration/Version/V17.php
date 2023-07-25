@@ -29,8 +29,8 @@ class V17 extends Migration
         $this->migrateCollections();
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
-        Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'fixDocument']);
+        // Console::info('Migrating Documents');
+        // $this->forEachDocument([$this, 'fixDocument']);
     }
 
 
@@ -67,7 +67,7 @@ class V17 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            // $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
             switch ($id) {
                 case 'files':
@@ -141,6 +141,7 @@ class V17 extends Migration
                         /**
                          * Create 'resourceInternalId' attribute
                          */
+                        // var_dump("In schedules", $this->projectDB->getNamespace());
                         $this->createAttributeFromCollection($this->projectDB, $id, 'resourceInternalId');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
