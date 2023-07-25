@@ -111,14 +111,21 @@ abstract class Migration
      *
      * @param callable $callback
      */
-    public function forEachDocument(callable $callback): void
+    public function forEachDocument(callable $callback, array $collectionsToProcess): void
     {
-        foreach ($this->collections as $collection) {
-            if ($collection['$collection'] !== Database::METADATA) {
-                continue;
-            }
+        // Filter the collections
+        $filteredCollections = array_filter($this->collections, function($collection) use ($collectionsToProcess) {
+            return in_array($collection['$id'], $collectionsToProcess) && $collection['$collection'] === Database::METADATA;
+        });
 
-            Console::log('Migrating Collection ' . $collection['$id'] . ':');
+        // Check if any collections are left after filtering
+        if (empty($filteredCollections)) {
+            Console::warning("No valid collections provided. Exiting...");
+            return;
+        }
+
+        foreach ($filteredCollections as $collection) {
+            Console::log('Migrating Documents in Collection ' . $collection['$id'] . ':');
 
             \Co\run(function (array $collection, callable $callback) {
                 foreach ($this->documentsIterator($collection['$id']) as $document) {

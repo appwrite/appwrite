@@ -29,8 +29,8 @@ class V17 extends Migration
         $this->migrateCollections();
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
-        // Console::info('Migrating Documents');
-        // $this->forEachDocument([$this, 'fixDocument']);
+        Console::info('Migrating Documents');
+        $this->forEachDocument([$this, 'fixDocument'], ['projects', 'users']);
     }
 
 
