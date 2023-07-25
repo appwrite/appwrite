@@ -7,7 +7,7 @@ concurrency:
 on: [pull_request,push]
 jobs:
   build:
-    name: Unit & E2E
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
@@ -68,6 +68,11 @@ jobs:
         with:
           fetch-depth: 2
           submodules: recursive
+      - name: Runn Appwrite
+        run: | 
+          docker compose up -d
+          sleep 30
+          
       - name: Run both tests
         run: docker compose exec -T appwrite test --debug
 
