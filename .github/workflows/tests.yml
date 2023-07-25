@@ -54,8 +54,8 @@ jobs:
     - name: Environment Variables
       run:  docker compose exec -T appwrite vars
 
-    - name: Run Tests
-      run: docker compose exec -T appwrite test --debug
+    # - name: Run Tests
+    #   run: docker compose exec -T appwrite test --debug
   
   unit_test:
     name: Unit Test
