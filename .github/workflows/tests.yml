@@ -7,8 +7,11 @@ concurrency:
 on: [pull_request,push]
 jobs:
   build:
-    name: Build
+    name: Unit & E2E Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        services: [Account,Avatars,Console,Databases,Functions,GraphQL,Health,Locale,Projects,Realtime,Storage,Teams,Users,Webhooks]
 
     steps:
     - name: Checkout repository
@@ -56,165 +59,150 @@ jobs:
 
     # - name: Run Tests
     #   run: docker compose exec -T appwrite test --debug
+    - name: Run Unit Tests
+      run: docker compose exec -T appwrite test /usr/src/code/tests/unit --debug
+    - name: Run ${{ matrix.services }} e2e Tests
+      run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.services }} --debug
   
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    needs: build
+  # unit_test:
+  #   name: Unit Test
+  #   runs-on: ubuntu-latest
+  #   needs: build  # This ensures that the tests job runs only after the build job is completed.
 
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-          submodules: recursive
-      - name: Runn Appwrite
-        run: | 
-          docker compose up -d
-          sleep 30
-          
-      - name: Run both tests
-        run: docker compose exec -T appwrite test --debug
-
-  unit_test:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    needs: build  # This ensures that the tests job runs only after the build job is completed.
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-          submodules: recursive
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 2
+  #         submodules: recursive
     
-      - name: Run Unit Tests
-        run: docker compose exec appwrite test /usr/src/code/tests/unit
+  #     - name: Run Unit Tests
+  #       run: docker compose exec appwrite test /usr/src/code/tests/unit
 
-  account_test:
-    name: Account e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # account_test:
+  #   name: Account e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for account service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Account
+  #   steps:
+  #     - name: Run e2e Tests for account service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Account
   
-  avatar_test:
-    name: Avatar e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # avatar_test:
+  #   name: Avatar e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for avatar service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Avatar
+  #   steps:
+  #     - name: Run e2e Tests for avatar service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Avatar
 
-  databases_test:
-    name: Databases e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # databases_test:
+  #   name: Databases e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for databases service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Databases
+  #   steps:
+  #     - name: Run e2e Tests for databases service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Databases
   
-  functions_test:
-    name: Functions e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # functions_test:
+  #   name: Functions e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for functions service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Functions
+  #   steps:
+  #     - name: Run e2e Tests for functions service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Functions
 
-  graphql_test:
-    name: Graphql e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # graphql_test:
+  #   name: Graphql e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for graphql service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/GraphQl
+  #   steps:
+  #     - name: Run e2e Tests for graphql service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/GraphQl
   
-  health_test:
-    name: Health e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # health_test:
+  #   name: Health e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for health service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Health
+  #   steps:
+  #     - name: Run e2e Tests for health service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Health
   
-  locale_test:
-    name: Locale e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # locale_test:
+  #   name: Locale e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for locale service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Locale
+  #   steps:
+  #     - name: Run e2e Tests for locale service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Locale
 
-  storage_test:
-    name: Storage e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # storage_test:
+  #   name: Storage e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for storage service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Storage
+  #   steps:
+  #     - name: Run e2e Tests for storage service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Storage
 
-  teams_test:
-    name: Teams e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # teams_test:
+  #   name: Teams e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for teams service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Teams
+  #   steps:
+  #     - name: Run e2e Tests for teams service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Teams
 
-  users_test:
-    name: Users e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # users_test:
+  #   name: Users e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for users service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Users
+  #   steps:
+  #     - name: Run e2e Tests for users service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Users
 
-  webhooks_test:
-    name: Webhooks e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # webhooks_test:
+  #   name: Webhooks e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for webhooks service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Webhooks
+  #   steps:
+  #     - name: Run e2e Tests for webhooks service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Webhooks
 
-  realtime_test:
-    name: Realtime e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # realtime_test:
+  #   name: Realtime e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for realtime service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Realtime
+  #   steps:
+  #     - name: Run e2e Tests for realtime service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Realtime
   
-  console_test:
-    name: Console e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # console_test:
+  #   name: Console e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for console service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Console
+  #   steps:
+  #     - name: Run e2e Tests for console service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Console
 
-  project_test:
-    name: Project e2e Test
-    runs-on: ubuntu-latest
-    needs: build
+  # project_test:
+  #   name: Project e2e Test
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-    steps:
-      - name: Run e2e Tests for project service
-        run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Projects
+  #   steps:
+  #     - name: Run e2e Tests for project service
+  #       run: docker compose exec appwrite test /usr/src/code/tests/e2e/Services/Projects
   
   
