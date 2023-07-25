@@ -56,6 +56,21 @@ jobs:
 
     # - name: Run Tests
     #   run: docker compose exec -T appwrite test --debug
+  
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+          submodules: recursive
+      - name: Run both tests
+        run: docker compose exec -T appwrite test --debug
+
   unit_test:
     name: Unit Test
     runs-on: ubuntu-latest
@@ -67,10 +82,7 @@ jobs:
         with:
           fetch-depth: 2
           submodules: recursive
-       # If this run was triggered by a pull request event, then checkout
-       # the head of the pull request instead of the merge commit.
-      - run: git checkout HEAD^2
-        if: ${{ github.event_name == 'pull_request' }}
+    
       - name: Run Unit Tests
         run: docker compose exec appwrite test /usr/src/code/tests/unit
 
