@@ -587,9 +587,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
-      - ./vendor:/usr/src/code/vendor
     depends_on:
-      - redis
+      - mariadb
     environment:
       - _APP_ENV
       - _APP_OPENSSL_KEY_V1

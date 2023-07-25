@@ -887,7 +887,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->setContentType('application/gzip')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="deployment.tar.gz"')
+            ->addHeader('Content-Disposition', 'attachment; filename="'.$deploymentId.'.tar.gz"')
         ;
 
         $size = $deviceFunctions->getFileSize($path);

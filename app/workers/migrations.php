@@ -80,33 +80,33 @@ class MigrationsV1 extends Worker
         switch ($source) {
             case Firebase::getName():
                 return new Firebase(
-                    json_decode($source['serviceAccount'], true),
+                    json_decode($credentials['serviceAccount'], true),
                 );
                 break;
             case Supabase::getName():
                 return new Supabase(
-                    $source['endpoint'],
-                    $source['apiKey'],
-                    $source['databaseHost'],
+                    $credentials['endpoint'],
+                    $credentials['apiKey'],
+                    $credentials['databaseHost'],
                     "postgres",
-                    $source['username'],
-                    $source['password'],
-                    $source['port'],
+                    $credentials['username'],
+                    $credentials['password'],
+                    $credentials['port'],
                 );
                 break;
             case NHost::getName():
                 return new NHost(
-                    $source['subdomain'],
-                    $source['region'],
-                    $source['adminSecret'],
-                    $source['database'],
-                    $source['username'],
-                    $source['password'],
-                    $source['port'],
+                    $credentials['subdomain'],
+                    $credentials['region'],
+                    $credentials['adminSecret'],
+                    $credentials['database'],
+                    $credentials['username'],
+                    $credentials['password'],
+                    $credentials['port'],
                 );
                 break;
             case Appwrite::getName():
-                return new Appwrite($source['projectId'], str_starts_with($source['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $source['endpoint'], $source['apiKey']);
+                return new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']);
                 break;
             default:
                 throw new \Exception('Invalid source type');

@@ -95,24 +95,4 @@ class Migration extends Event
             'migration' => $this->migration
         ]);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setUser(Document $user): self
-    {
-        parent::setUser($user);
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setProject(Document $project): self
-    {
-        parent::setProject($project);
-
-        return $this;
-    }
 }

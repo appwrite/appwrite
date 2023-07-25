@@ -77,7 +77,7 @@ return [ // List of publicly visible scopes
         'description' => 'Access to read your project\'s health status',
     ],
     'migrations.read' => [
-        'description' => 'Access to read your project\'s migration logs',
+        'description' => 'Access to read your project\'s migrations',
     ],
     'migrations.write' => [
         'description' => 'Access to create, update, and delete your project\'s migrations.',
