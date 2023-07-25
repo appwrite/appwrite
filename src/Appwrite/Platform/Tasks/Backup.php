@@ -43,7 +43,7 @@ class Backup extends Action
         $local = new Local(self::$backups . '/' . $project . '/' . $folder);
         $source = $local->getRoot() . '/' . $filename;
 
-        $local->setTransferChunkSize(10  * 1024 * 1024); // > 5MB
+        $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
 
 //        $source = '/backups/shmuel.tar.gz'; // 1452521974
 //        $destination = '/shmuel/' . $time . '.tar.gz';
@@ -70,27 +70,11 @@ class Backup extends Action
             Console::exit();
         }
 
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'docker stop ' . $this->containerName;
-        self::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            self::log($stdout);
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        //        $cmd = 'tar czf ' . $file . ' --absolute-names ' . $this->directory;
-        //
-        //        $cmd = '
-        //        cd /var/lib/mysql
-        //        tar czf ' . $file . ' --absolute-names *';
-        //          Extract:::
-        //           tar --strip-components=4 -xf 2023-07-11_12:40:47.tar.gz -C ./a2
+        self::stopMysqlContainer($this->containerName);
 
         $stdout = '';
         $stderr = '';
+        // Tar from inside the mysql directory for not using --strip-components
         $cmd = 'cd ' . self::$mysqlDirectory . ' && tar zcf ' . $source . ' .';
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
@@ -107,30 +91,21 @@ class Backup extends Action
         }
 
         $filesize = \filesize($source);
-        self::log("Tar file size is :" . ceil($filesize / 1024 / 1024) . 'MB');
+        self::log("Tar file size is: " . ceil($filesize / 1024 / 1024) . 'MB');
         if ($filesize < (2 * 1024)) {
             Console::error("File size is very small: " . $source);
             Console::exit();
         }
 
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'docker start ' . $this->containerName;
-        self::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            self::log($stdout);
-            Console::error($stderr);
-            Console::exit();
-        }
+        self::startMysqlContainer($this->containerName);
 
         try {
-            self::log('Start transferring ' . $source);
+            self::log('Uploading: ' . $source);
 
             $destination = $s3->getRoot() . '/' . $filename;
 
             if (!$local->transfer($source, $destination, $s3)) {
-                Console::error('Error transferring to ' . $destination);
+                Console::error('Error uploading to ' . $destination);
                 Console::exit();
             }
 
@@ -173,6 +148,72 @@ class Backup extends Action
                 Console::error('Can\'t read ' . $env);
                 Console::exit();
             }
+        }
+    }
+
+    public static function startMysqlContainer($name): void
+    {
+        $stdout = '';
+        $stderr = '';
+        $cmd = 'docker start ' . $name;
+        Backup::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Backup::log($stdout);
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        sleep(5); // maybe change to while?
+
+        $cmd = 'docker ps --filter "status=running" --filter "name=' . $name . '"';
+        Backup::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        $stdout = explode(PHP_EOL, $stdout);
+        array_shift($stdout);
+        $info = array_shift($stdout);
+        if (empty($info)) {
+            Console::error($name  . ' container could not start check logs!');
+            Console::exit();
+        }
+    }
+
+    public static function stopMysqlContainer($name): void
+    {
+        $stdout = '';
+        $stderr = '';
+        $cmd = 'docker stop ' . $name;
+        self::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        var_dump($stdout);
+        if (!empty($stderr)) {
+            self::log($stdout);
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        sleep(5); // maybe change to while?
+
+        $cmd = 'docker ps --filter "status=running" --filter "name=' . $name . '"';
+        Console::execute($cmd, '', $stdout, $stderr);
+
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        $stdout = explode(PHP_EOL, $stdout);
+        array_shift($stdout); // remove headers row
+        $info = array_shift($stdout);
+        if (!empty($info)) {
+            Console::error($name  . ' container could not stop check logs!');
+            Console::exit();
         }
     }
 }

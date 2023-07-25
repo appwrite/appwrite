@@ -746,13 +746,14 @@ services:
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
   mariadb:
-    image: mysql:8.0.30 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mysql:8.0.33 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
+      - ./mysql-init.sql:/mysql-init.sql:rw
     ports:
       - "3306:3306"
     environment:
