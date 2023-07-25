@@ -406,7 +406,7 @@ App::post('/v1/teams/:teamId/memberships')
         }
 
         if (!$isPrivilegedUser && !$isAppUser && empty($url)) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'URL is required for non-privileged users');
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Param 'url' is required for non-privileged users');
         }
 
         $email = \strtolower($email);
