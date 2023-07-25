@@ -7,7 +7,7 @@ concurrency:
 on: [pull_request,push]
 jobs:
   build:
-    name: Unit & E2E Tests
+    name: Build & Unit Test
     runs-on: ubuntu-latest
 
     steps:
@@ -54,28 +54,8 @@ jobs:
     - name: Environment Variables
       run:  docker compose exec -T appwrite vars
 
-    # - name: Run Tests
-    #   run: docker compose exec -T appwrite test --debug
-  
-  unit_test:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    needs: build  # This ensures that the tests job runs only after the build job is completed.
-
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-          submodules: recursive
-      
-      - name: Start Appwrite
-        run:  |
-          docker compose up -d
-          sleep 30
-    
-      - name: Run Unit Tests
-        run: docker compose exec appwrite test /usr/src/code/tests/unit
+    - name: Run Unit Tests
+      run: docker compose exec appwrite test /usr/src/code/tests/unit 
 
   e2e_test:
     name: E2E Test
