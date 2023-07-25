@@ -4,7 +4,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-on: [pull_request]
+on: [pull_request,push]
 jobs:
   build:
     name: Unit & E2E
@@ -62,6 +62,15 @@ jobs:
     needs: build  # This ensures that the tests job runs only after the build job is completed.
 
     steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+          submodules: recursive
+       # If this run was triggered by a pull request event, then checkout
+       # the head of the pull request instead of the merge commit.
+      - run: git checkout HEAD^2
+        if: ${{ github.event_name == 'pull_request' }}
       - name: Run Unit Tests
         run: docker compose exec appwrite test /usr/src/code/tests/unit
 
