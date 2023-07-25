@@ -32,6 +32,7 @@ return [
     'audio/vorbis', // Vorbis RFC 5215
     'audio/vnd.wav', // wav RFC 2361
     'audio/aac', //AAC audio
+    'audio/x-hx-aac-adts', // AAC audio
 
     // Microsoft Word
     'application/msword',
