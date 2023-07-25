@@ -82,6 +82,15 @@ class Install extends Action
         $data = @file_get_contents($this->path . '/docker-compose.yml');
 
         if ($data !== false) {
+            if ($interactive == 'Y' && Console::isInteractive()) {
+                $answer = Console::confirm('Previous installation found, do you want to overwrite it? (Y/n)');
+
+                if ($answer !== 'Y') {
+                    Console::info('No action taken.');
+                    return;
+                }
+            }
+
             $time = \time();
             Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
             file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
