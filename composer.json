@@ -83,7 +83,7 @@
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",
-        "swoole/ide-helper": "5.0.0",
+        "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7"
     },
     "provide": {

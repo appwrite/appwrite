@@ -2744,12 +2744,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "0dc187fdd60266db1d7c93a185ee634d37b5f5c5"
+                "reference": "8c2f8a52d0b6153d1b23fde39d6b4cc688fcb9ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/0dc187fdd60266db1d7c93a185ee634d37b5f5c5",
-                "reference": "0dc187fdd60266db1d7c93a185ee634d37b5f5c5",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/8c2f8a52d0b6153d1b23fde39d6b4cc688fcb9ed",
+                "reference": "8c2f8a52d0b6153d1b23fde39d6b4cc688fcb9ed",
                 "shasum": ""
             },
             "require": {
@@ -2759,10 +2759,9 @@
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
+                "phpstan/phpstan": "1.10.26",
                 "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "5.0.0",
-                "vimeo/psalm": "4.15.0"
+                "swoole/ide-helper": "5.0.0"
             },
             "type": "library",
             "autoload": {
@@ -2788,7 +2787,7 @@
                 "issues": "https://github.com/utopia-php/swoole/issues",
                 "source": "https://github.com/utopia-php/swoole/tree/feat-framework-upgrade"
             },
-            "time": "2023-07-25T06:04:40+00:00"
+            "time": "2023-07-25T07:47:41+00:00"
         },
         {
             "name": "utopia-php/system",
