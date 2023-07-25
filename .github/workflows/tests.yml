@@ -4,7 +4,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-on: [pull_request,push]
+on: [pull_request]
 jobs:
   build:
     name: Build & Unit Test
