@@ -1672,7 +1672,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
-
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
@@ -1680,7 +1679,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         $queries = Query::parseQueries($queries);
         foreach ($queries as $query) {
             if ($query->getMethod() ===  Query::TYPE_SELECT) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, "Select queries are not valid.");
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Select queries are not valid.');
             }
         }
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
@@ -1693,7 +1692,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         if ($cursor) {
             $attributeId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]), Query::equal('key', [$attributeId]), Query::limit(1)]));
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [
+                Query::equal('collectionId', [$collectionId]),
+                Query::equal('databaseId', [$databaseId]),
+                Query::equal('key', [$attributeId]),
+                Query::limit(1),
+            ]));
 
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$attributeId}' for the 'cursor' value not found.");
@@ -1716,11 +1720,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
                 $attribute->setAttribute('onDelete', $options['onDelete']);
             }
         }
-         $filterQueries = Query::groupByType($queries)['filters'];
-         $response->dynamic(new Document([
+        $filterQueries = Query::groupByType($queries)['filters'];
+        $response->dynamic(new Document([
             'total' => $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT),
             'attributes' => $attributes,
-         ]), Response::MODEL_ATTRIBUTE_LIST);
+        ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
@@ -2550,7 +2554,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $queries = Query::parseQueries($queries);
         foreach ($queries as $query) {
             if ($query->getMethod() ===  Query::TYPE_SEARCH) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, "Select queries are not valid.");
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Select queries are not valid.');
             }
         }
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
@@ -2561,8 +2565,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         if ($cursor) {
             $indexId = $cursor->getValue();
-
-            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]), Query::equal('key', [$indexId]), Query::limit(1)]));
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [
+                Query::equal('collectionId', [$collectionId]),
+                Query::equal('databaseId', [$databaseId]),
+                Query::equal('key', [$indexId]),
+                Query::limit(1)
+            ]));
 
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Index '{$indexId}' for the 'cursor' value not found.");
@@ -2570,6 +2578,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
             $cursor->setValue($cursorDocument[0]);
         }
+
         $filterQueries = Query::groupByType($queries)['filters'];
         $response->dynamic(new Document([
             'total' => $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT),

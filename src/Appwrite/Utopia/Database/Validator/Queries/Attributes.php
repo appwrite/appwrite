@@ -9,7 +9,8 @@ class Attributes extends Base
         'type',
         'size',
         'required',
-        'array'
+        'array',
+        'status'
     ];
 
     /**
