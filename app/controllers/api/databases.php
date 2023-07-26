@@ -1789,17 +1789,11 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->param('key', '', new Key(), 'Attribute Key.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
-    ->param('encrypt', null, new Boolean(), 'Encrypt attribute? Encrypting an attribute means that the attribute can not be queried.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, ?bool $encrypt, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
 
-        $filter = '';
-
-        if ($encrypt != null) {
-            $filter = $encrypt ? 'encrypt' : 'decrypt';
-        }
 
         $attribute = updateAttribute(
             databaseId: $databaseId,
@@ -1808,7 +1802,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             dbForProject: $dbForProject,
             events: $events,
             type: Database::VAR_STRING,
-            filter: empty($filter) ? null : $filter,
             default: $default,
             required: $required
         );
