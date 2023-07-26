@@ -1684,10 +1684,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         }
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
-
-         // Get cursor document if there was a cursor query
-         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
-         $cursor = reset($cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
