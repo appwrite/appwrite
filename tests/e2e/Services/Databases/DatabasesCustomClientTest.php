@@ -320,7 +320,6 @@ class DatabasesCustomClientTest extends Scope
 
     public function testUpdateWithoutRelationPermission(): void
     {
-
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -338,7 +337,6 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $databaseId = $database['body']['$id'];
-
 
         // Creating collection 1
         $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
@@ -371,8 +369,6 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        \sleep(2);
-
         // Creating one to many relationship from collection 1 to colletion 2
         $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
@@ -385,8 +381,6 @@ class DatabasesCustomClientTest extends Scope
             'onDelete' => 'setNull',
             'key' => $collection2['body']['$id']
         ]);
-
-        \sleep(2);
 
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -412,8 +406,7 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
          ]);
 
-        \sleep(3);
-
+        \sleep(2);
 
         $childDocument =  $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -426,8 +419,6 @@ class DatabasesCustomClientTest extends Scope
             ],
             'permissions' => [],
         ]);
-
-        \sleep(3);
 
         // Creating parent document with a child reference to test the permissions
         $parentDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents', array_merge([
@@ -443,8 +434,6 @@ class DatabasesCustomClientTest extends Scope
             'permissions' => [],
         ]);
         $this->assertEquals(201, $parentDocument['headers']['status-code']);
-
-        \sleep(3);
 
         // Update document
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
