@@ -227,6 +227,11 @@ return [
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
     ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists.',
+        'code' => 409,
+    ],
 
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [

@@ -1,3 +1,8 @@
+# Version 1.3.8
+
+## Bugs
+- Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
+
 # Version 1.3.7
 
 ## Bugs
@@ -96,6 +101,7 @@
 ## Changes
 - Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+- Add security headers to the console endpoint [#4758](https://github.com/appwrite/appwrite/pull/4758)
 
 ## Bugs
 - Fix default oauth paths [#4725](https://github.com/appwrite/appwrite/pull/4725)
