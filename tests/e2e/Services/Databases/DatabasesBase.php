@@ -330,7 +330,7 @@ trait DatabasesBase
             'queries' => ['equal("type", "string")'],
         ]);
         $this->assertEquals(200, $attributes['headers']['status-code']);
-        $this->assertEquals(3, $attributes['body']['total']);
+        $this->assertEquals(4, $attributes['body']['total']);
     }
 
     /**
