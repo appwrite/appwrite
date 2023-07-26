@@ -136,7 +136,7 @@ class Project extends Model
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
                 'default' => [],
-                'example' => new \stdClass(),
+                'example' => [new \stdClass()],
                 'array' => true,
             ])
             ->addRule('platforms', [
@@ -326,7 +326,8 @@ class Project extends Model
             }
 
             $projectProviders[] = new Document([
-                'name' => ucfirst($key),
+                'key' => $key,
+                'name' => $provider['name'] ?? '',
                 'appId' => $providerValues[$key . 'Appid'] ?? '',
                 'secret' => $providerValues[$key . 'Secret'] ?? '',
                 'enabled' => $providerValues[$key . 'Enabled'] ?? false,
