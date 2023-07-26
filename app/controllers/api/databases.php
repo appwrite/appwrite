@@ -3392,27 +3392,27 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         };
 
         $skipCheckingPermission = true;
-        foreach ($newDocument as $key => $value) {
-            if ($document->getAttribute($key) instanceof Document) {
-                continue;
-            }
-            //If any of the values are different, we need to check permission.
-            if ($newDocument->getAttribute($key) !== $value) {
-                $skipCheckingPermission = false;
-                $newDocument->removeAttribute('$collectionId');
-                $newDocument->removeAttribute('$databaseId');
-                $newDocument->setAttribute('$collection', $collection->getId());
-                break;
-            }
+    foreach ($newDocument as $key => $value) {
+        if ($document->getAttribute($key) instanceof Document) {
+            continue;
         }
+        //If any of the values are different, we need to check permission.
+        if ($newDocument->getAttribute($key) !== $value) {
+            $skipCheckingPermission = false;
+            $newDocument->removeAttribute('$collectionId');
+            $newDocument->removeAttribute('$databaseId');
+            $newDocument->setAttribute('$collection', $collection->getId());
+            break;
+        }
+    }
 
-        if ($skipCheckingPermission) {
-            Authorization::skip(
-                fn() => $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE)
-            );
-        } else {
-            $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
-        }
+    if ($skipCheckingPermission) {
+        Authorization::skip(
+            fn() => $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE)
+        );
+    } else {
+        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+    }
 
     try {
         $document = $dbForProject->withRequestTimestamp(
