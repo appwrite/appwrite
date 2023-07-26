@@ -14,7 +14,8 @@ class Functions extends Base
         'schedulePrevious',
         'timeout',
         'entrypoint',
-        'commands'
+        'commands',
+        'vcsInstallationId'
     ];
 
     /**

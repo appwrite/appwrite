@@ -47,13 +47,6 @@ class Installation extends Model
                 'description' => 'Provider installation ID.',
                 'default' => '',
                 'example' => '5322',
-            ])
-            ->addRule('functions', [
-                'type' => Response::MODEL_FUNCTION,
-                'description' => 'List of connected functions.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
             ]);
     }
 
