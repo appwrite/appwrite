@@ -766,7 +766,6 @@ App::get('/v1/vcs/installations')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForConsole) {
-
         $queries = Query::parseQueries($queries);
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
@@ -794,21 +793,6 @@ App::get('/v1/vcs/installations')
 
         $results = $dbForConsole->find('vcsInstallations', $queries);
         $total = $dbForConsole->count('vcsInstallations', $filterQueries, APP_LIMIT_COUNT);
-
-        if (\count($results) > 0) {
-            $installationIds = \array_map(fn ($result) => $result->getInternalId(), $results);
-
-            $functions = Authorization::skip(fn () => $dbForProject->find('functions', [
-                Query::equal('vcsInstallationInternalId', \array_unique($installationIds)),
-                Query::limit(APP_LIMIT_SUBQUERY)
-            ]));
-
-            foreach ($results as $result) {
-                $installationFunctions = \array_filter($functions, fn ($function) => $function->getAttribute('vcsInstallationInternalId') === $result->getInternalId());
-
-                $result->setAttribute('functions', $installationFunctions);
-            }
-        }
 
         $response->dynamic(new Document([
             'installations' => $results,
@@ -842,13 +826,6 @@ App::get('/v1/vcs/installations/:installationId')
         if ($installation->getAttribute('projectInternalId') !== $project->getInternalId()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-
-        $functions = Authorization::skip(fn () => $dbForProject->find('functions', [
-            Query::equal('vcsInstallationInternalId', [$installation->getInternalId()]),
-            Query::limit(APP_LIMIT_SUBQUERY)
-        ]));
-
-        $installation->setAttribute('functions', $functions);
 
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     });
