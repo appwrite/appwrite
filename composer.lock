@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ce42ed4bf5a5223e421a89be9a261cd",
+    "content-hash": "80fc64e65856cb69e700df410603b79a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -119,7 +119,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "7e9e40dcf4cbdb483f0e20bf2e99b844554a533c"
+                "reference": "6c8b5f9fd447836d129d4d6feccbb686c9b8a96d"
             },
             "require": {
                 "php": ">=8.0",
@@ -154,7 +154,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2023-07-22T16:31:06+00:00"
+            "time": "2023-07-26T11:29:07+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2705,7 +2705,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "4c9bf5a884f359e2146dba69dcc6eddb50f7d6fe"
+                "reference": "059f0d3078192a17318344080d5c83c7d022362e"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
@@ -2754,7 +2754,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-07-24T07:36:55+00:00"
+            "time": "2023-07-24T17:19:36+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -2876,16 +2876,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-feat-add-path-keyword",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3bd342fbfa771d573fbf877af8ec977e5c7e9194"
+                "reference": "ee12cb1e250a6ceab291ad80b2acb4bcd2c4cf77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3bd342fbfa771d573fbf877af8ec977e5c7e9194",
-                "reference": "3bd342fbfa771d573fbf877af8ec977e5c7e9194",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ee12cb1e250a6ceab291ad80b2acb4bcd2c4cf77",
+                "reference": "ee12cb1e250a6ceab291ad80b2acb4bcd2c4cf77",
                 "shasum": ""
             },
             "require": {
@@ -2901,6 +2901,7 @@
                 "phpunit/phpunit": "^9.5.21",
                 "squizlabs/php_codesniffer": "^3.6"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2921,9 +2922,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/feat-add-path-keyword"
+                "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2023-05-11T20:31:12+00:00"
+            "time": "2023-07-25T01:15:31+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3630,16 +3631,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.22.1",
+            "version": "1.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "65c39594fbd8c67abfc68bb323f86447bab79cc0"
+                "reference": "a2b24135c35852b348894320d47b3902a94bc494"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/65c39594fbd8c67abfc68bb323f86447bab79cc0",
-                "reference": "65c39594fbd8c67abfc68bb323f86447bab79cc0",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/a2b24135c35852b348894320d47b3902a94bc494",
+                "reference": "a2b24135c35852b348894320d47b3902a94bc494",
                 "shasum": ""
             },
             "require": {
@@ -3671,9 +3672,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.22.1"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.23.0"
             },
-            "time": "2023-06-29T20:46:06+00:00"
+            "time": "2023-07-23T22:17:56+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5425,16 +5426,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.6.1",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "7e7d5839d4bec168dfeef0ac66d5c5a2edbabffd"
+                "reference": "5cf942bbab3df42afa918caeba947f1b690af64b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/7e7d5839d4bec168dfeef0ac66d5c5a2edbabffd",
-                "reference": "7e7d5839d4bec168dfeef0ac66d5c5a2edbabffd",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5cf942bbab3df42afa918caeba947f1b690af64b",
+                "reference": "5cf942bbab3df42afa918caeba947f1b690af64b",
                 "shasum": ""
             },
             "require": {
@@ -5480,7 +5481,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.6.1"
+                "source": "https://github.com/twigphp/Twig/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -5492,7 +5493,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-06-08T12:52:13+00:00"
+            "time": "2023-07-26T07:16:09+00:00"
         }
     ],
     "aliases": [
@@ -5504,7 +5505,7 @@
         },
         {
             "package": "appwrite/sdk-generator",
-            "version": "dev-feat-add-path-keyword",
+            "version": "9999999-dev",
             "alias": "0.28.99",
             "alias_normalized": "0.28.99.0"
         },

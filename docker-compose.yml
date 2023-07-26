@@ -423,6 +423,10 @@ services:
       - VCS_GITHUB_APP_NAME
       - VCS_GITHUB_PRIVATE_KEY
       - VCS_GITHUB_APP_ID
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_BUILD_TIMEOUT
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -498,12 +502,15 @@ services:
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
-      - _APP_FUNCTIONS_TIMEOUT
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_USAGE_STATS
       - DOCKERHUB_PULL_USERNAME
       - DOCKERHUB_PULL_PASSWORD
+      - _APP_FUNCTIONS_TIMEOUT
+      - _APP_FUNCTIONS_BUILD_TIMEOUT
+      - _APP_FUNCTIONS_CPUS
+      - _APP_FUNCTIONS_MEMORY
 
   appwrite-worker-mails:
     entrypoint: worker-mails

@@ -87,7 +87,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "dev-feat-add-path-keyword as 0.28.99",
+        "appwrite/sdk-generator": "dev-master as 0.28.99",
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",

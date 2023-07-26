@@ -36,7 +36,7 @@ class Executor
 
         $this->endpoint = $endpoint;
         $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->memory = \intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
             'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
