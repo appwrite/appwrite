@@ -8,6 +8,7 @@ class Indexes extends Base
         'key',
         'type',
         'status',
+        'error'
     ];
 
     /**
