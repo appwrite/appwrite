@@ -616,7 +616,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $response
                 ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                 ->addHeader('Pragma', 'no-cache')
-                 ->redirect($state['success'])
+                ->redirect($state['success'])
             ;
         }
         else {
