@@ -207,9 +207,9 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'document-create', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'document-delete', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
 
         $useCache = $route->getLabel('cache', false);
 
