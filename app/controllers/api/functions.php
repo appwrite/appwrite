@@ -136,7 +136,7 @@ App::get('/v1/functions')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -650,13 +650,11 @@ App::post('/v1/functions/:functionId/deployments')
             $end = $request->getContentRangeEnd();
             $fileSize = $request->getContentRangeSize();
             $deploymentId = $request->getHeader('x-appwrite-id', $deploymentId);
-            // TODO make `end >= $fileSize` in next breaking version
-            if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
+            if (is_null($start) || is_null($end) || is_null($fileSize)) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
-            // TODO remove the condition that checks `$end === $fileSize` in next breaking version
-            if ($end === $fileSize - 1 || $end === $fileSize) {
+            if ($end === $fileSize) {
                 //if it's a last chunks the chunk size might differ, so we set the $chunks and $chunk to notify it's last chunk
                 $chunks = $chunk = -1;
             } else {
@@ -814,7 +812,7 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1335,7 +1333,7 @@ App::get('/v1/functions/:functionId/executions')
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

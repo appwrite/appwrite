@@ -64,7 +64,6 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
-use Appwrite\Utopia\Response\Model\TemplateEmail;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
@@ -73,11 +72,9 @@ use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
-use Appwrite\Utopia\Response\Model\LocaleCode;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
-use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
 use Appwrite\Utopia\Response\Model\UsageDatabase;
@@ -169,8 +166,6 @@ class Response extends SwooleResponse
 
     // Locale
     public const MODEL_LOCALE = 'locale';
-    public const MODEL_LOCALE_CODE = 'localeCode';
-    public const MODEL_LOCALE_CODE_LIST = 'localeCodeList';
     public const MODEL_COUNTRY = 'country';
     public const MODEL_COUNTRY_LIST = 'countryList';
     public const MODEL_CONTINENT = 'continent';
@@ -216,8 +211,6 @@ class Response extends SwooleResponse
     public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
-    public const MODEL_SMS_TEMPLATE = 'smsTemplate';
-    public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
 
     // Health
     public const MODEL_HEALTH_STATUS = 'healthStatus';
@@ -299,7 +292,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'migrations', self::MODEL_MIGRATION_FIREBASE_PROJECT))
-            ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -332,7 +324,6 @@ class Response extends SwooleResponse
             ->setModel(new Token())
             ->setModel(new JWT())
             ->setModel(new Locale())
-            ->setModel(new LocaleCode())
             ->setModel(new File())
             ->setModel(new Bucket())
             ->setModel(new Team())
@@ -369,8 +360,6 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
-            ->setModel(new TemplateSMS())
-            ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
@@ -444,7 +433,7 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $output = $this->output(new Document($document->getArrayCopy()), $model);
+        $output = $this->output($document, $model);
 
         // If filter is set, parse the output
         if (self::hasFilter()) {
@@ -485,14 +474,14 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = new Document($document->getArrayCopy());
+        $data       = $document;
         $model      = $this->getModel($model);
         $output     = [];
 
-        $data = $model->filter($document);
+        $document = $model->filter($document);
 
         if ($model->isAny()) {
-            $this->payload = $data->getArrayCopy();
+            $this->payload = $document->getArrayCopy();
 
             return $this->payload;
         }
@@ -500,18 +489,18 @@ class Response extends SwooleResponse
         foreach ($model->getRules() as $key => $rule) {
             if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
                 if (\array_key_exists('default', $rule)) {
-                    $data->setAttribute($key, $rule['default']);
+                    $document->setAttribute($key, $rule['default']);
                 } else {
                     throw new Exception('Model ' . $model->getName() . ' is missing response key: ' . $key);
                 }
             }
 
             if ($rule['array']) {
-                if (!is_array($document[$key])) {
+                if (!is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
-                foreach ($document[$key] as $index => $item) {
+                foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
@@ -539,7 +528,7 @@ class Response extends SwooleResponse
                     }
                 }
             } else {
-                if ($document[$key] instanceof Document) {
+                if ($data[$key] instanceof Document) {
                     $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }

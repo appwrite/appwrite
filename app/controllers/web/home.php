@@ -6,7 +6,7 @@ use Utopia\Config\Config;
 
 App::get('/versions')
     ->desc('Get Version')
-    ->groups(['home'])
+    ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->inject('response')
     ->action(function (Response $response) {

@@ -40,7 +40,8 @@ class AuditsV1 extends Worker
         $dbForProject = $this->getProjectDB($project->getId());
         $audit = new Audit($dbForProject);
         $audit->log(
-            userId: $user->getInternalId(),
+            userInternalId: $user->getInternalId(),
+            userId: $user->getId(),
             // Pass first, most verbose event pattern
             event: $event,
             resource: $resource,
@@ -48,7 +49,6 @@ class AuditsV1 extends Worker
             ip: $ip,
             location: '',
             data: [
-                'userId' => $user->getId(),
                 'userName' => $userName,
                 'userEmail' => $userEmail,
                 'mode' => $mode,

@@ -344,7 +344,7 @@ class Swagger2 extends Format
                     case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-                    case 'Utopia\Database\Validator\Queries\Documents':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Files':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
@@ -353,7 +353,7 @@ class Swagger2 extends Format
                     case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Users':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
-                    case 'Utopia\Database\Validator\Queries':
+                    case 'Appwrite\Utopia\Database\Validator\Queries':
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [

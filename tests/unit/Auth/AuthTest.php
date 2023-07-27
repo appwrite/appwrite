@@ -352,10 +352,6 @@ class AuthTest extends TestCase
     {
         $user  = new Document([
             '$id' => ID::custom('123'),
-            'labels' => [
-                'vip',
-                'admin'
-            ],
             'emailVerification' => true,
             'phoneVerification' => true,
             'memberships' => [
@@ -381,7 +377,7 @@ class AuthTest extends TestCase
 
         $roles = Auth::getRoles($user);
 
-        $this->assertCount(13, $roles);
+        $this->assertCount(11, $roles);
         $this->assertContains(Role::users()->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'))->toString(), $roles);
         $this->assertContains(Role::users(Roles::DIMENSION_VERIFIED)->toString(), $roles);
@@ -393,8 +389,6 @@ class AuthTest extends TestCase
         $this->assertContains(Role::team(ID::custom('def'), 'guest')->toString(), $roles);
         $this->assertContains(Role::member(ID::custom('456'))->toString(), $roles);
         $this->assertContains(Role::member(ID::custom('abc'))->toString(), $roles);
-        $this->assertContains('label:vip', $roles);
-        $this->assertContains('label:admin', $roles);
 
         // Disable all verification
         $user['emailVerification'] = false;

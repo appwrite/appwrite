@@ -27,7 +27,6 @@ class DatabasesCustomServerTest extends Scope
             'databaseId' => ID::custom('first'),
             'name' => 'Test 1',
         ]);
-
         $this->assertEquals(201, $test1['headers']['status-code']);
         $this->assertEquals('Test 1', $test1['body']['name']);
 
@@ -57,7 +56,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)'],
+            'queries' => [ 'limit(1)' ],
         ]);
         $this->assertEquals(200, $databases['headers']['status-code']);
         $this->assertCount(1, $databases['body']['databases']);
@@ -66,7 +65,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)'],
+            'queries' => [ 'offset(1)' ],
         ]);
         $this->assertEquals(200, $databases['headers']['status-code']);
         $this->assertCount(1, $databases['body']['databases']);
@@ -75,7 +74,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("name", ["Test 1", "Test 2"])'],
+            'queries' => [ 'equal("name", ["Test 1", "Test 2"])' ],
         ]);
         $this->assertEquals(200, $databases['headers']['status-code']);
         $this->assertCount(2, $databases['body']['databases']);
@@ -84,7 +83,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("name", "Test 2")'],
+            'queries' => [ 'equal("name", "Test 2")' ],
         ]);
         $this->assertEquals(200, $databases['headers']['status-code']);
         $this->assertCount(1, $databases['body']['databases']);
@@ -93,7 +92,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("$id", "first")'],
+            'queries' => [ 'equal("$id", "first")' ],
         ]);
         $this->assertEquals(200, $databases['headers']['status-code']);
         $this->assertCount(1, $databases['body']['databases']);
@@ -105,7 +104,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderDesc("")'],
+            'queries' => [ 'orderDesc("")' ],
         ]);
 
         $this->assertEquals(2, $databases['body']['total']);
@@ -124,7 +123,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAfter("' . $base['body']['databases'][0]['$id'] . '")'],
+            'queries' => [ 'cursorAfter("' . $base['body']['databases'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $databases['body']['databases']);
@@ -134,7 +133,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAfter("' . $base['body']['databases'][1]['$id'] . '")'],
+            'queries' => [ 'cursorAfter("' . $base['body']['databases'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $databases['body']['databases']);
@@ -152,7 +151,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorBefore("' . $base['body']['databases'][1]['$id'] . '")'],
+            'queries' => [ 'cursorBefore("' . $base['body']['databases'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $databases['body']['databases']);
@@ -162,7 +161,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorBefore("' . $base['body']['databases'][0]['$id'] . '")'],
+            'queries' => [ 'cursorBefore("' . $base['body']['databases'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $databases['body']['databases']);
@@ -208,7 +207,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAfter("unknown")'],
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -245,42 +244,8 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(200, $database['headers']['status-code']);
         $this->assertEquals($databaseId, $database['body']['$id']);
         $this->assertEquals('Test 1', $database['body']['name']);
-        $this->assertEquals(true, $database['body']['enabled']);
+
         return ['databaseId' => $database['body']['$id']];
-    }
-
-    /**
-     * @depends testListDatabases
-     */
-    public function testUpdateDatabase(array $data)
-    {
-        $databaseId = $data['databaseId'];
-
-        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'name' => 'Test 1 Updated',
-            'enabled' => false,
-        ]);
-
-        $this->assertEquals(200, $database['headers']['status-code']);
-        $this->assertEquals('Test 1 Updated', $database['body']['name']);
-        $this->assertFalse($database['body']['enabled']);
-
-        // Now update the database without the passing the enabled parameter
-        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'name' => 'Test 1'
-        ]);
-
-        $this->assertEquals(200, $database['headers']['status-code']);
-        $this->assertEquals('Test 1', $database['body']['name']);
-        $this->assertTrue($database['body']['enabled']);
     }
 
     /**
@@ -308,7 +273,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    public function testListCollections(): array
+    public function testListCollections()
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -320,7 +285,6 @@ class DatabasesCustomServerTest extends Scope
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('invalidDocumentDatabase', $database['body']['name']);
-        $this->assertTrue($database['body']['enabled']);
 
         $databaseId = $database['body']['$id'];
         /**
@@ -365,9 +329,7 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(2, $collections['body']['total']);
         $this->assertEquals($test1['body']['$id'], $collections['body']['collections'][0]['$id']);
-        $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
         $this->assertEquals($test2['body']['$id'], $collections['body']['collections'][1]['$id']);
-        $this->assertEquals($test1['body']['enabled'], $collections['body']['collections'][0]['enabled']);
 
         $base = array_reverse($collections['body']['collections']);
 
@@ -375,7 +337,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)']
+            'queries' => [ 'limit(1)' ]
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
@@ -385,7 +347,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)']
+            'queries' => [ 'offset(1)' ]
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
@@ -395,7 +357,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("enabled", true)']
+            'queries' => [ 'equal("enabled", true)' ]
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
@@ -405,7 +367,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("enabled", false)']
+            'queries' => [ 'equal("enabled", false)' ]
         ]);
 
         $this->assertEquals(200, $collections['headers']['status-code']);
@@ -418,7 +380,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderDesc("")'],
+            'queries' => [ 'orderDesc("")' ],
         ]);
 
         $this->assertEquals(2, $collections['body']['total']);
@@ -437,7 +399,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAfter("' . $base['body']['collections'][0]['$id'] . '")'],
+            'queries' => [ 'cursorAfter("' . $base['body']['collections'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $collections['body']['collections']);
@@ -447,7 +409,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAfter("' . $base['body']['collections'][1]['$id'] . '")'],
+            'queries' => [ 'cursorAfter("' . $base['body']['collections'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $collections['body']['collections']);
@@ -465,7 +427,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorBefore("' . $base['body']['collections'][1]['$id'] . '")'],
+            'queries' => [ 'cursorBefore("' . $base['body']['collections'][1]['$id'] . '")' ],
         ]);
 
         $this->assertCount(1, $collections['body']['collections']);
@@ -475,7 +437,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorBefore("' . $base['body']['collections'][0]['$id'] . '")'],
+            'queries' => [ 'cursorBefore("' . $base['body']['collections'][0]['$id'] . '")' ],
         ]);
 
         $this->assertCount(0, $collections['body']['collections']);
@@ -521,7 +483,7 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAfter("unknown")'],
+            'queries' => [ 'cursorAfter("unknown")' ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -544,53 +506,6 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(409, $response['headers']['status-code']);
-        return [
-            'databaseId' => $databaseId,
-            'collectionId' => $test1['body']['$id'],
-        ];
-    }
-
-    /**
-     * @depends testListCollections
-     */
-    public function testGetCollection(array $data): void
-    {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
-
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertEquals('Test 1', $collection['body']['name']);
-        $this->assertEquals('first', $collection['body']['$id']);
-        $this->assertTrue($collection['body']['enabled']);
-    }
-
-    /**
-     * @depends testListCollections
-     */
-    public function testUpdateCollection(array $data)
-    {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
-
-        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'Test 1 Updated',
-            'enabled' => false
-        ]);
-
-        $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertEquals('Test 1 Updated', $collection['body']['name']);
-        $this->assertEquals('first', $collection['body']['$id']);
-        $this->assertFalse($collection['body']['enabled']);
     }
 
     public function testDeleteAttribute(): array
@@ -674,7 +589,7 @@ class DatabasesCustomServerTest extends Scope
             'data' => [
                 'firstName' => 'lorem',
                 'lastName' => 'ipsum',
-                'unneeded' => 'dolor'
+                'unneeded' =>  'dolor'
             ],
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1517,7 +1432,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);
@@ -1659,7 +1574,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('torsten@appwrite.io', $attribute['default']);
@@ -1802,7 +1717,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('127.0.0.1', $attribute['default']);
@@ -1944,7 +1859,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('http://appwrite.io', $attribute['default']);
@@ -2090,7 +2005,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123, $attribute['default']);
@@ -2353,7 +2268,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(123.456, $attribute['default']);
@@ -2612,7 +2527,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals(true, $attribute['default']);
@@ -2754,7 +2669,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('1975-06-12 14:12:55+02:00', $attribute['default']);
@@ -2901,7 +2816,7 @@ class DatabasesCustomServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $attribute = array_values(array_filter($new['body']['attributes'], fn(array $a) => $a['key'] === $key))[0] ?? null;
+        $attribute = array_values(array_filter($new['body']['attributes'], fn (array $a) => $a['key'] === $key))[0] ?? null;
         $this->assertNotNull($attribute);
         $this->assertFalse($attribute['required']);
         $this->assertEquals('lorem', $attribute['default']);

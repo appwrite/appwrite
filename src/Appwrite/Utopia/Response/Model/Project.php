@@ -136,7 +136,7 @@ class Project extends Model
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
                 'default' => [],
-                'example' => [new \stdClass()],
+                'example' => new \stdClass(),
                 'array' => true,
             ])
             ->addRule('platforms', [
@@ -166,49 +166,6 @@ class Project extends Model
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => true,
-            ])
-            ->addRule('smtpEnabled', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Status for custom SMTP',
-                'default' => false,
-                'example' => false,
-                'array' => false
-            ])
-            ->addRule('smtpSender', [
-                'type' => self::TYPE_STRING,
-                'description' => 'SMTP sender email',
-                'default' => '',
-                'example' => 'john@appwrite.io',
-            ])
-            ->addRule('smtpHost', [
-                'type' => self::TYPE_STRING,
-                'description' => 'SMTP server host name',
-                'default' => '',
-                'example' => 'mail.appwrite.io',
-            ])
-            ->addRule('smtpPort', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'SMTP server port',
-                'default' => '',
-                'example' => 25,
-            ])
-            ->addRule('smtpUsername', [
-                'type' => self::TYPE_STRING,
-                'description' => 'SMTP server username',
-                'default' => '',
-                'example' => 'emailuser',
-            ])
-            ->addRule('smtpPassword', [
-                'type' => self::TYPE_STRING,
-                'description' => 'SMTP server password',
-                'default' => '',
-                'example' => 'securepassword',
-            ])
-            ->addRule('smtpSecure', [
-                'type' => self::TYPE_STRING,
-                'description' => 'SMTP server secure protocol',
-                'default' => '',
-                'example' => 'tls',
             ])
         ;
 
@@ -275,16 +232,6 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
-        // SMTP
-        $smtp = $document->getAttribute('smtp', []);
-        $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
-        $document->setAttribute('smtpSender', $smtp['sender'] ?? '');
-        $document->setAttribute('smtpHost', $smtp['host'] ?? '');
-        $document->setAttribute('smtpPort', $smtp['port'] ?? '');
-        $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
-        $document->setAttribute('smtpPassword', $smtp['password'] ?? '');
-        $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
-
         // Services
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
@@ -326,8 +273,7 @@ class Project extends Model
             }
 
             $projectProviders[] = new Document([
-                'key' => $key,
-                'name' => $provider['name'] ?? '',
+                'name' => ucfirst($key),
                 'appId' => $providerValues[$key . 'Appid'] ?? '',
                 'secret' => $providerValues[$key . 'Secret'] ?? '',
                 'enabled' => $providerValues[$key . 'Enabled'] ?? false,

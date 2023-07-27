@@ -19,7 +19,7 @@ App::get('/v1/locale')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOCALE)
-    ->label('sdk.offline.model', '/localed')
+    ->label('sdk.offline.model', '/locale')
     ->label('sdk.offline.key', 'current')
     ->inject('request')
     ->inject('response')
@@ -66,28 +66,6 @@ App::get('/v1/locale')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
         ;
         $response->dynamic(new Document($output), Response::MODEL_LOCALE);
-    });
-
-App::get('/v1/locale/codes')
-    ->desc('List Locale Codes')
-    ->groups(['api', 'locale'])
-    ->label('scope', 'locale.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'listCodes')
-    ->label('sdk.description', '/docs/references/locale/list-locale-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_LOCALE_CODE_LIST)
-    ->label('sdk.offline.model', '/locale/localeCode')
-    ->label('sdk.offline.key', 'current')
-    ->inject('response')
-    ->action(function (Response $response) {
-        $codes = Config::getParam('locale-codes');
-        $response->dynamic(new Document([
-            'localeCodes' => $codes,
-            'total' => count($codes),
-        ]), Response::MODEL_LOCALE_CODE_LIST);
     });
 
 App::get('/v1/locale/countries')

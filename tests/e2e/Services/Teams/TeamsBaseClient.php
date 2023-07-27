@@ -39,11 +39,11 @@ trait TeamsBaseClient
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ]
+            'queries' => [ 'limit(0)' ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['memberships']);
+        $this->assertCount(0, $response['body']['memberships']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
