@@ -86,6 +86,7 @@ use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Migration;
+use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 
 /**
@@ -225,6 +226,8 @@ class Response extends SwooleResponse
     public const MODEL_MIGRATION = 'migration';
     public const MODEL_MIGRATION_LIST = 'migrationList';
     public const MODEL_MIGRATION_REPORT = 'migrationReport';
+    public const MODEL_MIGRATION_FIREBASE_PROJECT = 'firebaseProject';
+    public const MODEL_MIGRATION_FIREBASE_PROJECT_LIST = 'firebaseProjectList';
 
     // Deprecated
     public const MODEL_PERMISSIONS = 'permissions';
@@ -288,6 +291,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
+            ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'migrations', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -359,6 +363,7 @@ class Response extends SwooleResponse
             ->setModel(new ConsoleVariables())
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
+            ->setModel(new MigrationFirebaseProject())
             // Verification
             // Recovery
             // Tests (keep last)

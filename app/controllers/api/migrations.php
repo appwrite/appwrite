@@ -464,7 +464,7 @@ App::get('/v1/migrations/firebase/projects')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FIREBASE_PROJECT_LIST)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('firebase')
     ->inject('response')
@@ -474,6 +474,7 @@ App::get('/v1/migrations/firebase/projects')
         if (empty($search)) {
             $search = "";
         }
+    });
 
 
 
