@@ -622,6 +622,20 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
+  xtrabackup:
+    image: percona/percona-xtrabackup:latest
+    container_name: appwrite-xtrabackup
+    command: sleep infinity
+    #command: bash -c "sleep 86400"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+    volumes:
+      - xtrabackup_data:/backups
+      - appwrite-mariadb:/var/lib/mysql:r
+    networks:
+      - appwrite
+    user: 'root:root'
+
   appwrite-backup:
     entrypoint: db-backup
     <<: *x-logging
@@ -753,7 +767,6 @@ services:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-      - ./mysql-init.sql:/mysql-init.sql:rw
     ports:
       - "3306:3306"
     environment:
@@ -936,4 +949,5 @@ volumes:
   appwrite-config:
   appwrite-functions:
   appwrite-builds:
+  xtrabackup_data:
   # appwrite-chronograf:

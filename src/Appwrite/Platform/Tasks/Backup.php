@@ -72,6 +72,8 @@ class Backup extends Action
 
         self::stopMysqlContainer($this->containerName);
 
+        Console::exit();
+
         $stdout = '';
         $stderr = '';
         // Tar from inside the mysql directory for not using --strip-components
@@ -184,7 +186,7 @@ class Backup extends Action
         }
     }
 
-    public static function stopMysqlContainer($name): void
+    public static function stopMysqlContainer1($name): void
     {
         $stdout = '';
         $stderr = '';
@@ -216,4 +218,40 @@ class Backup extends Action
             Console::exit();
         }
     }
+
+
+
+    public static function stopMysqlContainer($name): void
+    {
+
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker exec appwrite-mariadb echo "hello"', '', $stdout, $stderr);
+        var_dump($stderr);
+        var_dump($stdout);
+
+
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "LOCK INSTANCE FOR BACKUP;"', '', $stdout, $stderr);
+        var_dump($stderr);
+        var_dump($stdout);
+
+
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "FLUSH TABLES WITH READ LOCK;"', '', $stdout, $stderr);
+        var_dump($stderr);
+        var_dump($stdout);
+
+        Console::loop(function () {
+            self::log('loop');
+        }, 100);
+
+
+        Console::exit();
+
+    }
+
+
 }
