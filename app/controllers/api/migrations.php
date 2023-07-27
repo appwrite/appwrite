@@ -1,14 +1,18 @@
 <?php
 
+use Appwrite\Auth\OAuth2\Firebase as OAuth2Firebase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Helpers\ID;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Firebase as GlobalFirebase;
 use Utopia\App;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
@@ -16,8 +20,8 @@ use Utopia\Transfer\Sources\Appwrite;
 use Utopia\Transfer\Sources\Firebase;
 use Utopia\Transfer\Sources\NHost;
 use Utopia\Transfer\Sources\Supabase;
-use Utopia\Transfer\Transfer;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Host;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -344,6 +348,136 @@ App::get('/v1/migrations/firebase/report')
         }
     });
 
+App::get('/v1/migrations/firebase/connect')
+    ->desc('Authorize with firebase')
+    ->groups(['api', 'migrations'])
+    ->label('scope', 'public')
+    ->label('origin', '*')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'createFirebaseAuth')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
+    ->label('sdk.methodType', 'webAuth')
+    ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Firebase authorization. Only console hostnames are allowed.', true, ['clients'])
+    ->param('projectId', '', new UID(), 'Project ID')
+    ->inject('response')
+    ->inject('request')
+    ->inject('user')
+    ->inject('dbForConsole')
+    ->action(function (string $redirect, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
+        $state = \json_encode([
+            'projectId' => $projectId,
+            'redirect' => $redirect
+        ]);
+
+        // replace firebase url state with migrationState in user prefs attribute
+        $prefs = $user->getAttribute('prefs', []);
+        $prefs['migrationState'] = $state;
+        $user->setAttribute('prefs', $prefs);
+        $dbForConsole->updateDocument('users', $user->getId(), $user);
+
+        $url = "https://accounts.google.com/o/oauth2/v2/auth" .
+            "?access_type=offline" .
+            "&scope=" . urlencode("https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/identitytoolkit") .
+            "&response_type=code" .
+            "&client_id=" . urlencode(App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID')) .
+            "&redirect_uri=" . $request->getProtocol() . '://' . $request->getHostname() . "/v1/migrations/firebase/redirect" .
+            "&state=" . urlencode($state) .
+            "&prompt=consent";
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($url);
+    });
+
+App::get('/v1/migrations/firebase/redirect')
+    ->desc('Capture and receive data on Firebase authorization')
+    ->groups(['api', 'migrations'])
+    ->label('scope', 'public')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->param('code', '', new Text(2048), 'OAuth2 code.', true)
+    ->inject('firebase')
+    ->inject('user')
+    ->inject('project')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $code, GlobalFirebase $firebase, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+        $prefs = $user->getAttribute('prefs', []);
+        $state = $prefs['migrationState'] ?? '{}';
+        $prefs['migrationState'] = '';
+        $user->setAttribute('prefs', $prefs);
+        $dbForConsole->updateDocument('users', $user->getId(), $user);
+
+        if (empty($state)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite Google App are currently unsupported.');
+        }
+
+        $state = \json_decode($state, true);
+        $redirect = $state['redirect'] ?? '';
+        $projectId = $state['projectId'] ?? '';
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if (empty($redirect)) {
+            $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
+        }
+
+        if ($project->isEmpty()) {
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($redirect);
+            return;
+        }
+
+        // OAuth Authroization
+        if (!empty($code)) {
+            $oauth2 = new OAuth2Firebase(App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''), App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''), "");
+            $accessToken = $oauth2->getAccessToken($code);
+            $refreshToken = $oauth2->getRefreshToken($code);
+            $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
+
+            $user = $user
+                ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
+                ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
+                ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
+
+            $dbForConsole->updateDocument('users', $user->getId(), $user);
+        }
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($redirect);
+    });
+
+App::get('/v1/migrations/firebase/projects')
+    ->desc('List Firebase Projects')
+    ->groups(['api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.method', 'listFirebaseProjects')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_FIREBASE_PROJECT_LIST)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->inject('firebase')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $search, GlobalFirebase $firebase, Response $response, Document $project, Database $dbForConsole) {
+        if (empty($search)) {
+            $search = "";
+        }
+
+
+
+
 App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Supabase Data')
@@ -363,7 +497,7 @@ App::post('/v1/migrations/supabase')
     ->param('databaseHost', '', new Text(512), "Source's Database Host")
     ->param('username', '', new Text(512), "Source's Database Username")
     ->param('password', '', new Text(512), "Source's Database Password")
-    ->param('port', 5432, new Integer(), "Source's Database Port", true)
+    ->param('port', 5432, new Integer(true), "Source's Database Port", true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -422,7 +556,7 @@ App::get('/v1/migrations/supabase/report')
     ->param('databaseHost', '', new Text(512), "Source's Database Host")
     ->param('username', '', new Text(512), "Source's Database Username")
     ->param('password', '', new Text(512), "Source's Database Password")
-    ->param('port', 5432, new Integer(), "Source's Database Port", true)
+    ->param('port', 5432, new Integer(true), "Source's Database Port", true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -460,7 +594,7 @@ App::post('/v1/migrations/nhost')
     ->param('database', '', new Text(512), "Source's Database Name")
     ->param('username', '', new Text(512), "Source's Database Username")
     ->param('password', '', new Text(512), "Source's Database Password")
-    ->param('port', 5432, new Integer(), "Source's Database Port", true)
+    ->param('port', 5432, new Integer(true), "Source's Database Port", true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -522,7 +656,7 @@ App::get('/v1/migrations/nhost/report')
     ->param('database', '', new Text(512), "Source's Database Name")
     ->param('username', '', new Text(512), "Source's Database Username")
     ->param('password', '', new Text(512), "Source's Database Password")
-    ->param('port', 5432, new Integer(), "Source's Database Port", true)
+    ->param('port', 5432, new Integer(true), "Source's Database Port", true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')

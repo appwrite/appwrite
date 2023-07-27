@@ -1180,3 +1180,7 @@ App::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
+App::setResource('firebase', function ($cache) {
+    return new Firebase($cache);
+}, ['cache']);

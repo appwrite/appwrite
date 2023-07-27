@@ -177,6 +177,8 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
@@ -587,6 +589,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
+      - ./vendor:/usr/src/code/tests
     depends_on:
       - mariadb
     environment:

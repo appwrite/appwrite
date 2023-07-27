@@ -2893,12 +2893,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/transfer.git",
-                "reference": "020f52a974d0b83f20f01917238fde2775be0352"
+                "reference": "92fee96a7d19b453232f625465de77ea79812f49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/020f52a974d0b83f20f01917238fde2775be0352",
-                "reference": "020f52a974d0b83f20f01917238fde2775be0352",
+                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/92fee96a7d19b453232f625465de77ea79812f49",
+                "reference": "92fee96a7d19b453232f625465de77ea79812f49",
                 "shasum": ""
             },
             "require": {
@@ -2955,7 +2955,7 @@
                 "source": "https://github.com/utopia-php/transfer/tree/feat-improve-features",
                 "issues": "https://github.com/utopia-php/transfer/issues"
             },
-            "time": "2023-07-24T14:36:49+00:00"
+            "time": "2023-07-26T12:08:52+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5691,16 +5691,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.6.1",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "7e7d5839d4bec168dfeef0ac66d5c5a2edbabffd"
+                "reference": "5cf942bbab3df42afa918caeba947f1b690af64b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/7e7d5839d4bec168dfeef0ac66d5c5a2edbabffd",
-                "reference": "7e7d5839d4bec168dfeef0ac66d5c5a2edbabffd",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5cf942bbab3df42afa918caeba947f1b690af64b",
+                "reference": "5cf942bbab3df42afa918caeba947f1b690af64b",
                 "shasum": ""
             },
             "require": {
@@ -5746,7 +5746,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.6.1"
+                "source": "https://github.com/twigphp/Twig/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -5758,7 +5758,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-06-08T12:52:13+00:00"
+            "time": "2023-07-26T07:16:09+00:00"
         }
     ],
     "aliases": [],

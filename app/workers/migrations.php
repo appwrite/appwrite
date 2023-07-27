@@ -222,6 +222,8 @@ class MigrationsV1 extends Worker
 
             $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
 
+            $source->report();
+
             $destination = new DestinationsAppwrite(
                 $projectDocument->getId(),
                 'http://appwrite/v1',
