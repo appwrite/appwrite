@@ -613,15 +613,22 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $query['secret'] = Auth::encodeSession($user->getId(), $secret);
             $state['success']['query'] = URLParser::unparseQuery($query);
             $state['success'] = URLParser::unparse($state['success']);
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                 ->redirect($state['success'])
+            ;
+        }
+        else {
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+                ->redirect($state['success'])
+            ;
         }
 
-        $response
-            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->addHeader('Pragma', 'no-cache')
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->redirect($state['success'])
-        ;
     });
 
 App::post('/v1/account/sessions/magic-url')
