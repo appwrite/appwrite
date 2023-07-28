@@ -48,7 +48,7 @@ use MaxMind\Db\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcsLogic = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template) {
+$redeployVcsLogic = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $vcsTemplate) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -77,15 +77,15 @@ $redeployVcsLogic = function (Request $request, Document $function, Document $pr
     $projectId = $project->getId();
     $functionId = $function->getId();
 
-    $targetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+    $vcsTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
 
     $buildEvent = new Build();
     $buildEvent
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setTargetUrl($targetUrl)
-        ->setTemplate($template)
+        ->setVcsTargetUrl($vcsTargetUrl)
+        ->setVcsTemplate($vcsTemplate)
         ->setProject($project)
         ->trigger();
 };
@@ -135,9 +135,9 @@ App::post('/v1/functions')
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
-        $template = new Document([]);
+        $vcsTemplate = new Document([]);
         if (!empty($templateRepositoryName) && !empty($templateOwnerName)) {
-            $template->setAttribute('repositoryName', $templateRepositoryName)
+            $vcsTemplate->setAttribute('repositoryName', $templateRepositoryName)
                 ->setAttribute('ownerName', $templateOwnerName)
                 ->setAttribute('rootDirectory', $templateRootDirectory)
                 ->setAttribute('branch', $templateBranch);
@@ -222,7 +222,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($vcsRepositoryId)) {
-            $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, $template);
+            $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, $vcsTemplate);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
