@@ -3663,27 +3663,6 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_agent'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['agent'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_path'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['path'],
-                'lengths' => [2048],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_method'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['method'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_status'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['status'],

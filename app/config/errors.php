@@ -546,25 +546,10 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
-    Exception::ROUTER_INVALID_TYPE => [
-        'name' => Exception::ROUTER_INVALID_TYPE,
-        'description' => 'Invalid domain configuration. Route type is not supported.',
-        'code' => 400,
-    ],
     Exception::ROUTER_UNKNOWN_HOST => [
         'name' => Exception::ROUTER_UNKNOWN_HOST,
         'description' => 'Host is not trusted. Add a custom domain to your project first.',
         'code' => 400,
-    ],
-    Exception::RULE_RESOURCE_ID_MISSING => [
-        'name' => Exception::RULE_RESOURCE_ID_MISSING,
-        'description' => 'With resourceType you provided, the resourceId is required.',
-        'code' => 400,
-    ],
-    Exception::RULE_CONFIGURATION_MISSING => [
-        'name' => Exception::RULE_CONFIGURATION_MISSING,
-        'description' => '_APP_DOMAIN_TARGET must be a public domain.',
-        'code' => 501,
     ],
     Exception::RULE_RESOURCE_NOT_FOUND => [
         'name' => Exception::RULE_RESOURCE_NOT_FOUND,

@@ -67,7 +67,7 @@ App::post('/v1/proxy/rules')
 
         if ($resourceType == 'function') {
             if (empty($resourceId)) {
-                throw new Exception(Exception::RULE_RESOURCE_ID_MISSING);
+                throw new Exception(Exception::FUNCTION_NOT_FOUND);
             }
 
             $function = $dbForProject->getDocument('functions', $resourceId);
@@ -238,9 +238,7 @@ App::delete('/v1/proxy/rules/:ruleId')
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        if (!$dbForConsole->deleteDocument('rules', $rule->getId())) {
-            throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
-        }
+        $dbForConsole->deleteDocument('rules', $rule->getId());
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
@@ -279,7 +277,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::RULE_CONFIGURATION_MISSING);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Domain target must be configured as environment variable.');
         }
 
         if ($rule->getAttribute('verification') === true) {

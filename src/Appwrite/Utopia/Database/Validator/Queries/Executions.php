@@ -6,9 +6,6 @@ class Executions extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'trigger',
-        'method',
-        'path',
-        'agent',
         'status',
         'statusCode',
         'duration'
