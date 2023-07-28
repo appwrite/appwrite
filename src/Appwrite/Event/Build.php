@@ -10,9 +10,9 @@ class Build extends Event
     protected string $type = '';
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
-    protected ?Document $template = null;
-    protected string $SHA = '';
-    protected string $targetUrl = '';
+    protected ?Document $vcsTemplate = null;
+    protected string $vcsCommitHash = '';
+    protected string $vcsTargetUrl = '';
     protected ?Document $vcsContribution = null;
 
     public function __construct()
@@ -23,12 +23,12 @@ class Build extends Event
     /**
      * Sets template for the build event.
      *
-     * @param Document $template
+     * @param Document $vcsTemplate
      * @return self
      */
-    public function setTemplate(Document $template): self
+    public function setVcsTemplate(Document $vcsTemplate): self
     {
-        $this->template = $template;
+        $this->vcsTemplate = $vcsTemplate;
 
         return $this;
     }
@@ -36,12 +36,12 @@ class Build extends Event
      /**
      * Sets commit SHA for the build event.
      *
-     * @param string $SHA is the commit hash of the incoming commit
+     * @param string $vcsCommitHash is the commit hash of the incoming commit
      * @return self
      */
-    public function setSHA(string $SHA): self
+    public function setVcsCommitHash(string $vcsCommitHash): self
     {
-        $this->SHA = $SHA;
+        $this->vcsCommitHash = $vcsCommitHash;
 
         return $this;
     }
@@ -49,12 +49,12 @@ class Build extends Event
     /**
      * Sets redirect target url for the deployment
      *
-     * @param string $targetUrl is the url that is to be set
+     * @param string $vcsTargetUrl is the url that is to be set
      * @return self
      */
-    public function setTargetUrl(string $targetUrl): self
+    public function setVcsTargetUrl(string $vcsTargetUrl): self
     {
-        $this->targetUrl = $targetUrl;
+        $this->vcsTargetUrl = $vcsTargetUrl;
 
         return $this;
     }
@@ -154,9 +154,9 @@ class Build extends Event
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
-            'template' => $this->template,
-            'SHA' => $this->SHA,
-            'targetUrl' => $this->targetUrl,
+            'vcsTemplate' => $this->vcsTemplate,
+            'vcsCommitHash' => $this->vcsCommitHash,
+            'vcsTargetUrl' => $this->vcsTargetUrl,
             'vcsContribution' => $this->vcsContribution
         ]);
     }

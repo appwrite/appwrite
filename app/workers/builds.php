@@ -48,9 +48,9 @@ class BuildsV1 extends Worker
         $project = new Document($this->args['project'] ?? []);
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
-        $template = new Document($this->args['template'] ?? []);
-        $SHA = $this->args['SHA'] ?? '';
-        $targetUrl = $this->args['targetUrl'] ?? '';
+        $vcsTemplate = new Document($this->args['vcsTemplate'] ?? []);
+        $vcsCommitHash = $this->args['vcsCommitHash'] ?? '';
+        $vcsTargetUrl = $this->args['vcsTargetUrl'] ?? '';
         $vcsContribution = new Document($this->args['vcsContribution'] ?? []);
 
         switch ($type) {
@@ -58,7 +58,7 @@ class BuildsV1 extends Worker
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($this->getCache());
-                $this->buildDeployment($github, $project, $resource, $deployment, $template, $SHA, $targetUrl, $vcsContribution);
+                $this->buildDeployment($github, $project, $resource, $deployment, $vcsTemplate, $vcsCommitHash, $vcsTargetUrl, $vcsContribution);
                 break;
 
             default:
@@ -67,7 +67,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $SHA = '', string $targetUrl = '', Document $vcsContribution = null)
+    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $vcsTemplate, string $vcsCommitHash = '', string $vcsTargetUrl = '', Document $vcsContribution = null)
     {
         global $register;
 
@@ -185,11 +185,11 @@ class BuildsV1 extends Worker
                     }
 
                     // Build from template
-                    $templateRepositoryName = $template->getAttribute('repositoryName', '');
-                    $templateOwnerName = $template->getAttribute('ownerName', '');
-                    $templateBranch = $template->getAttribute('branch', '');
+                    $templateRepositoryName = $vcsTemplate->getAttribute('repositoryName', '');
+                    $templateOwnerName = $vcsTemplate->getAttribute('ownerName', '');
+                    $templateBranch = $vcsTemplate->getAttribute('branch', '');
 
-                    $templateRootDirectory =  $template->getAttribute('rootDirectory', '');
+                    $templateRootDirectory =  $vcsTemplate->getAttribute('rootDirectory', '');
                     $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                     $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                     $templateRootDirectory = \ltrim($templateRootDirectory, '/');
@@ -221,10 +221,10 @@ class BuildsV1 extends Worker
                         $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
 
                         if ($exit !== 0) {
-                            throw new \Exception('Unable to get commit SHA: ' . $stderr);
+                            throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
                         }
 
-                        $SHA = \trim($stdout);
+                        $vcsCommitHash = \trim($stdout);
                     }
 
                     Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
@@ -249,7 +249,7 @@ class BuildsV1 extends Worker
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
 
                     if ($isVcsEnabled) {
-                        $this->runGitAction('processing', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                        $this->runGitAction('processing', $github, $vcsCommitHash, $owner, $repositoryName, $vcsTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
                     }
                 }
             }
@@ -259,7 +259,7 @@ class BuildsV1 extends Worker
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('building', $github, $vcsCommitHash, $owner, $repositoryName, $vcsTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Trigger Webhook */
@@ -412,7 +412,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('stdout', $response['stdout']);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('ready', $github, $vcsCommitHash, $owner, $repositoryName, $vcsTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             Console::success("Build id: $buildId created");
@@ -444,7 +444,7 @@ class BuildsV1 extends Worker
             Console::error($th->getMessage());
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $SHA, $owner, $repositoryName, $targetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('failed', $github, $vcsCommitHash, $owner, $repositoryName, $vcsTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -484,7 +484,7 @@ class BuildsV1 extends Worker
         }
     }
 
-    protected function runGitAction(string $status, GitHub $github, string $SHA, string $owner, string $repositoryName, string $targetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
+    protected function runGitAction(string $status, GitHub $github, string $vcsCommitHash, string $owner, string $repositoryName, string $vcsTargetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
     {
         if ($function->getAttribute('vcsSilentMode', false) === true) {
             return;
@@ -493,7 +493,7 @@ class BuildsV1 extends Worker
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
         $commentId = $deployment->getAttribute('vcsCommentId', '');
 
-        if (!empty($SHA)) {
+        if (!empty($vcsCommitHash)) {
             $message = match ($status) {
                 'ready' => 'Build succeeded.',
                 'failed' => 'Build failed.',
@@ -513,7 +513,7 @@ class BuildsV1 extends Worker
 
             $name = "{$functionName} ({$projectName})";
 
-            $github->updateCommitStatus($repositoryName, $SHA, $owner, $state, $message, $targetUrl, $name);
+            $github->updateCommitStatus($repositoryName, $vcsCommitHash, $owner, $state, $message, $vcsTargetUrl, $name);
         }
 
         if (!empty($commentId)) {
