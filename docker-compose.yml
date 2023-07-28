@@ -10,7 +10,7 @@ x-logging: &x-logging
       max-file: '5'
       max-size: '10m'
 
-version: '3'
+version: '3.8'
 
 services:
   traefik:
