@@ -427,13 +427,12 @@ class BuildsV1 extends Worker
 
             /** Update function schedule */
             $dbForConsole = $this->getConsoleDB();
+            // Inform scheduler if function is still active
             $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule->setAttribute('resourceUpdatedAt', DateTime::now());
-
             $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();

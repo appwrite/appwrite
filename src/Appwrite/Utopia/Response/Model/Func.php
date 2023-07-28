@@ -97,7 +97,7 @@ class Func extends Model
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
-                'example' => 1592981237,
+                'example' => 300,
             ])
             ->addRule('entrypoint', [
                 'type' => self::TYPE_STRING,
@@ -113,9 +113,9 @@ class Func extends Model
             ])
             ->addRule('vcsInstallationId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function vcs installation id.',
+                'description' => 'Function VCS (Version Control System) installation id.',
                 'default' => '',
-                'example' => '644051bd6572792165cc',
+                'example' => '6m40at4ejk5h2u9s1hboo',
             ])
             ->addRule('vcsRepositoryId', [
                 'type' => self::TYPE_STRING,
@@ -125,19 +125,19 @@ class Func extends Model
             ])
             ->addRule('vcsBranch', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Git branch name',
+                'description' => 'VCS (Version Control System) branch name',
                 'default' => '',
                 'example' => 'main',
             ])
             ->addRule('vcsRootDirectory', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Path to function in git repository',
+                'description' => 'Path to function in VCS (Version Control System) repository',
                 'default' => '',
                 'example' => 'functions/helloWorld',
             ])
             ->addRule('vcsSilentMode', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is VCS connection is in silent mode?',
+                'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
                 'default' => false,
                 'example' => false,
             ])

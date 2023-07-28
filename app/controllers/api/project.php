@@ -139,7 +139,8 @@ App::post('/v1/project/variables')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
         $variableId = ID::unique();
 
         $variable = new Document([
@@ -162,6 +163,7 @@ App::post('/v1/project/variables')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $functions = $dbForProject->find('functions', [
             Query::limit(APP_LIMIT_SUBQUERY)
@@ -244,7 +246,8 @@ App::put('/v1/project/variables/:variableId')
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject) {
+    ->inject('dbForConsole')
+    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
         $variable = $dbForProject->getDocument('variables', $variableId);
         if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
@@ -260,6 +263,7 @@ App::put('/v1/project/variables/:variableId')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $functions = $dbForProject->find('functions', [
             Query::limit(APP_LIMIT_SUBQUERY)

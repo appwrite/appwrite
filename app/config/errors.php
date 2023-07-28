@@ -566,8 +566,8 @@ return [
         'description' => '_APP_DOMAIN_TARGET must be a public domain.',
         'code' => 501,
     ],
-    Exception::RULE_RESOURCE_ID_NOT_FOUND => [
-        'name' => Exception::RULE_RESOURCE_ID_NOT_FOUND,
+    Exception::RULE_RESOURCE_NOT_FOUND => [
+        'name' => Exception::RULE_RESOURCE_NOT_FOUND,
         'description' => 'Resource could not be found. Check resourceId and resourceType.',
         'code' => 404,
     ],

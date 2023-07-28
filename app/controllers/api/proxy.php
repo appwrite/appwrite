@@ -73,7 +73,7 @@ App::post('/v1/proxy/rules')
             $function = $dbForProject->getDocument('functions', $resourceId);
 
             if ($function->isEmpty()) {
-                throw new Exception(Exception::RULE_RESOURCE_ID_NOT_FOUND);
+                throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
             }
 
             $resourceInternalId = $function->getInternalId();

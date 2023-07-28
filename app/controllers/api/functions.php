@@ -155,32 +155,6 @@ App::post('/v1/functions')
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS you need to provide all VCS parameters.');
         }
 
-        $vcsRepositoryDocId = '';
-        $vcsRepositoryDocInternalId = '';
-
-        // Git connect logic
-        if (!empty($vcsRepositoryId)) {
-            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepos', new Document([
-                '$id' => ID::unique(),
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                'vcsInstallationId' => $installation->getId(),
-                'vcsInstallationInternalId' => $installation->getInternalId(),
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getInternalId(),
-                'repositoryId' => $vcsRepositoryId,
-                'resourceId' => $functionId,
-                'resourceType' => 'function',
-                'pullRequests' => []
-            ]));
-
-            $vcsRepositoryDocId = $vcsRepoDoc->getId();
-            $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
-        }
-
         $function = $dbForProject->createDocument('functions', new Document([
             '$id' => $functionId,
             'execute' => $execute,
@@ -199,14 +173,46 @@ App::post('/v1/functions')
             'vcsInstallationId' => $installation->getId(),
             'vcsInstallationInternalId' => $installation->getInternalId(),
             'vcsRepositoryId' => $vcsRepositoryId,
-            'vcsRepositoryDocId' => $vcsRepositoryDocId,
-            'vcsRepositoryDocInternalId' => $vcsRepositoryDocInternalId,
+            'vcsRepositoryDocId' => '',
+            'vcsRepositoryDocInternalId' => '',
             'vcsBranch' => $vcsBranch,
             'vcsRootDirectory' => $vcsRootDirectory,
             'vcsSilentMode' => $vcsSilentMode,
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v3'
         ]));
+
+        $vcsRepositoryDocId = '';
+        $vcsRepositoryDocInternalId = '';
+
+        // Git connect logic
+        if (!empty($vcsRepositoryId)) {
+            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepos', new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+                'vcsInstallationId' => $installation->getId(),
+                'vcsInstallationInternalId' => $installation->getInternalId(),
+                'projectId' => $project->getId(),
+                'projectInternalId' => $project->getInternalId(),
+                'repositoryId' => $vcsRepositoryId,
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceType' => 'function',
+                'pullRequests' => []
+            ]));
+
+            $vcsRepositoryDocId = $vcsRepoDoc->getId();
+            $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
+
+            $function = $dbForProject->updateDocument('functions', $function->getId(), $function
+                ->setAttribute('vcsRepositoryDocId', $vcsRepositoryDocId)
+                ->setAttribute('vcsRepositoryDocInternalId', $vcsRepositoryDocInternalId));
+        }
+
 
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
@@ -680,7 +686,7 @@ App::put('/v1/functions/:functionId')
         if ($isConnected && empty($vcsRepositoryId)) {
             $repoDocs = $dbForConsole->find('vcsRepos', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
-                Query::equal('resourceId', [$functionId]),
+                Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', ['function']),
                 Query::limit(100),
             ]);
@@ -712,7 +718,8 @@ App::put('/v1/functions/:functionId')
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
                 'repositoryId' => $vcsRepositoryId,
-                'resourceId' => $functionId,
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
                 'resourceType' => 'function',
                 'pullRequests' => []
             ]));
@@ -758,13 +765,12 @@ App::put('/v1/functions/:functionId')
             $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, new Document());
         }
 
+        // Inform scheduler if function is still active
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $eventsInstance->setParam('functionId', $function->getId());
@@ -820,6 +826,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             'deployment' => $deployment->getId()
         ])));
 
+        // Inform scheduler if function is still active
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -866,12 +873,11 @@ App::delete('/v1/functions/:functionId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove function from DB');
         }
 
+        // Inform scheduler to no longer run function
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('active', false);
-
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $deletes
@@ -1411,11 +1417,6 @@ App::post('/v1/functions/:functionId/executions')
             'agent' => $agent
         ]);
 
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-        }
-
         $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
             $sessions = $user->getAttribute('sessions', []);
@@ -1464,6 +1465,11 @@ App::post('/v1/functions/:functionId/executions')
             ->setContext('function', $function);
 
         if ($async) {
+            if ($function->getAttribute('logging')) {
+                /** @var Document $execution */
+                $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            }
+
             $queueForFunctions
                 ->setType('http')
                 ->setExecution($execution)
@@ -1487,10 +1493,8 @@ App::post('/v1/functions/:functionId/executions')
         $vars = [];
 
         // Shared vars
-        $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
-            Query::equal('resourceType', ['project']),
-            Query::limit(APP_LIMIT_SUBQUERY)
-        ]), function (array $carry, Document $var) {
+        $varsShared = $project->getAttribute('variables', []);
+        $vars = \array_merge($vars, \array_reduce($varsShared, function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []));
@@ -1550,7 +1554,8 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         if ($function->getAttribute('logging')) {
-            Authorization::skip(fn () => $dbForProject->updateDocument('executions', $executionId, $execution));
+            /** @var Document $execution */
+            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         // TODO revise this later using route label
@@ -1748,9 +1753,11 @@ App::post('/v1/functions/:functionId/variables')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
+        // Inform scheduler to pull the latest changes
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -1874,9 +1881,11 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
+        // Inform scheduler to pull the latest changes
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
@@ -1927,6 +1936,7 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
 
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
+        // Inform scheduler to pull the latest changes
         $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())

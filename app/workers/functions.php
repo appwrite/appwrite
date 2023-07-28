@@ -129,11 +129,9 @@ Server::setResource('execute', function () {
 
         $vars = [];
 
-        // global vars
-        $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
-            Query::equal('resourceType', ['project']),
-            Query::limit(APP_LIMIT_SUBQUERY)
-        ]), function (array $carry, Document $var) {
+        // Shared vars
+        $varsShared = $project->getAttribute('variables', []);
+        $vars = \array_merge($vars, \array_reduce($varsShared, function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             return $carry;
         }, []));

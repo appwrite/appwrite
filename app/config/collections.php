@@ -732,6 +732,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('variables'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['subQueryProjectVariables'],
+            ],
         ],
         'indexes' => [
             [
@@ -2412,7 +2423,17 @@ $collections = [
                 'array' => false,
                 'filters' => [],
             ],
-            // TODO: Resource Internal ID?
+            [
+                '$id' => ID::custom('resourceInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
             [
                 '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,
@@ -2476,6 +2497,13 @@ $collections = [
                 '$id' => ID::custom('_key_resourceId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resourceInternalId',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],

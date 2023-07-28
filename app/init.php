@@ -436,6 +436,21 @@ Database::addFilter(
     }
 );
 
+// READ-ONLY! TO update, write directly to 'variables' collection. After update to vars, make sure to deleteCachedDocument()
+Database::addFilter(
+    'subQueryProjectVariables',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('variables', [
+                Query::equal('resourceType', ['project']),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]);
+    }
+);
+
 /**
  * DB Formats
  */

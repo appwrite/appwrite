@@ -43,11 +43,11 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Response $response)
+function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
 {
     $utopia->getRoute()->label('error', __DIR__ . '/../views/general/error.phtml');
 
-    $host = $swooleRequest->header['host'] ?? '';
+    $host = $request->getHostname() ?? '';
 
     $route = Authorization::skip(
         fn() => $dbForConsole->find('rules', [
@@ -169,11 +169,12 @@ App::init()
         /*
         * Appwrite Router
         */
-        $host = $swooleRequest->header['host'] ?? '';
+        
+        $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain && $host !== 'localhost') {
-            if (router($utopia, $dbForConsole, $swooleRequest, $response)) {
+            if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
         }
@@ -460,11 +461,11 @@ App::options()
         /*
         * Appwrite Router
         */
-        $host = $swooleRequest->header['host'] ?? '';
+        $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain && $host !== 'localhost') {
-            if (router($utopia, $dbForConsole, $swooleRequest, $response)) {
+            if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
         }
