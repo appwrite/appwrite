@@ -339,11 +339,13 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048), 'OAuth2 code.')
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
+    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
-    ->action(function (string $projectId, string $provider, string $code, string $state, Request $request, Response $response) {
+    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
@@ -352,7 +354,13 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+                . \http_build_query([
+                    'project' => $projectId,
+                    'code' => $code,
+                    'state' => $state,
+                    'error' => $error,
+                    'error_description' => $error_description
+                ]));
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -364,11 +372,13 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048), 'OAuth2 code.')
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
+    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
-    ->action(function (string $projectId, string $provider, string $code, string $state, Request $request, Response $response) {
+    ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
 
         $domain = $request->getHostname();
         $protocol = $request->getProtocol();
@@ -377,7 +387,13 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol . '://' . $domain . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
-                . \http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+                . \http_build_query([
+                    'project' => $projectId,
+                    'code' => $code,
+                    'state' => $state,
+                    'error' => $error,
+                    'error_description' => $error_description
+                ]));
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
@@ -395,8 +411,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('usage.params', ['provider:{request.provider}'])
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048), 'OAuth2 code.')
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
+    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -404,7 +422,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('events')
-    ->action(function (string $provider, string $code, string $state, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $events) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $events) use ($oauthDefaultSuccess) {
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -465,6 +483,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         if (!$providerEnabled) {
             $failureRedirect(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        }
+
+        if (!empty($error)) {
+            $message = 'The ' . $providerName . ' OAuth2 provider returned an error: ' . $error;
+            if (!empty($error_description)) {
+                $message .= ': ' . $error_description;
+            }
+            $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, $message);
+        }
+
+        if (empty($code)) {
+            $failureRedirect(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Missing OAuth2 code. Please contact the Appwrite team for additional support.');
         }
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
