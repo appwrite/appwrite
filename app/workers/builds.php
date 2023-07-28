@@ -156,8 +156,8 @@ class BuildsV1 extends Worker
                     $vcsInstallations = Authorization::skip(fn () => $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId));
                     $installationId = $vcsInstallations->getAttribute('installationId');
 
-                    $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
-                    $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+                    $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+                    $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
 
                     $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
                     $rootDirectory = $function->getAttribute('vcsRootDirectory', '');
