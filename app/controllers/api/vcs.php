@@ -187,6 +187,69 @@ App::get('/v1/vcs/github/redirect')
             ->redirect($redirect);
     });
 
+App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryId/detection')
+    ->desc('Detect runtime settings from source code')
+    ->groups(['api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.method', 'createRepositoryDetection')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_DETECTION)
+    ->param('installationId', '', new Text(256), 'Installation Id')
+    ->param('repositoryId', '', new Text(256), 'Repository Id')
+    ->param('rootDirectoryPath', '', new Text(256), 'Path to Root Directory', true)
+    ->inject('gitHub')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $vcsInstallationId, string $repositoryId, string $rootDirectoryPath, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
+        $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
+
+        if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        $installationId = $installation->getAttribute('installationId');
+        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
+        $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+
+        $owner = $github->getOwnerName($installationId);
+        $repositoryName = $github->getRepositoryName($repositoryId);
+
+        if (empty($repositoryName)) {
+            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
+        }
+
+        $files = $github->listRepositoryContents($owner, $repositoryName, $rootDirectoryPath);
+        $languages = $github->getRepositoryLanguages($owner, $repositoryName);
+
+        $detectorFactory = new Detector($files, $languages);
+
+        $detectorFactory
+            ->addDetector(new JavaScript())
+            ->addDetector(new PHP())
+            ->addDetector(new Python())
+            ->addDetector(new Dart())
+            ->addDetector(new Swift())
+            ->addDetector(new Ruby())
+            ->addDetector(new Java())
+            ->addDetector(new CPP())
+            ->addDetector(new Deno())
+            ->addDetector(new Dotnet());
+
+        $runtime = $detectorFactory->detect();
+
+        $detection = [];
+        $detection['runtime'] = $runtime;
+
+        $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
+    });
+
 App::get('/v1/vcs/github/installations/:installationId/repositories')
     ->desc('List Repositories')
     ->groups(['api', 'vcs'])
@@ -874,69 +937,6 @@ App::delete('/v1/vcs/installations/:installationId')
             ->setDocument($installation);
 
         $response->noContent();
-    });
-
-App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryId/detection')
-    ->desc('Detect runtime settings from source code')
-    ->groups(['api', 'vcs'])
-    ->label('scope', 'public')
-    ->label('sdk.namespace', 'vcs')
-    ->label('sdk.method', 'createRepositoryDetection')
-    ->label('sdk.description', '')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DETECTION)
-    ->param('installationId', '', new Text(256), 'Installation Id')
-    ->param('repositoryId', '', new Text(256), 'Repository Id')
-    ->param('rootDirectoryPath', '', new Text(256), 'Path to Root Directory', true)
-    ->inject('gitHub')
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForConsole')
-    ->action(function (string $vcsInstallationId, string $repositoryId, string $rootDirectoryPath, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
-        ]);
-
-        if ($installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        $installationId = $installation->getAttribute('installationId');
-        $privateKey = App::getEnv('VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('VCS_GITHUB_APP_ID');
-        $github->initialiseVariables($installationId, $privateKey, $githubAppId);
-
-        $owner = $github->getOwnerName($installationId);
-        $repositoryName = $github->getRepositoryName($repositoryId);
-
-        if (empty($repositoryName)) {
-            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
-        }
-
-        $files = $github->listRepositoryContents($owner, $repositoryName, $rootDirectoryPath);
-        $languages = $github->getRepositoryLanguages($owner, $repositoryName);
-
-        $detectorFactory = new Detector($files, $languages);
-
-        $detectorFactory
-            ->addDetector(new JavaScript())
-            ->addDetector(new PHP())
-            ->addDetector(new Python())
-            ->addDetector(new Dart())
-            ->addDetector(new Swift())
-            ->addDetector(new Ruby())
-            ->addDetector(new Java())
-            ->addDetector(new CPP())
-            ->addDetector(new Deno())
-            ->addDetector(new Dotnet());
-
-        $runtime = $detectorFactory->detect();
-
-        $detection = [];
-        $detection['runtime'] = $runtime;
-
-        $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
     });
 
 App::patch('/v1/vcs/github/installations/:installationId/vcsRepositories/:vcsRepositoryId')
