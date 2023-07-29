@@ -57,7 +57,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     )[0] ?? null;
 
     if ($route === null) {
-        throw new AppwriteException(AppwriteException::ROUTER_UNKNOWN_HOST);
+        throw new AppwriteException(AppwriteException::ROUTER_HOST_NOT_FOUND);
     }
 
     $projectId = $route->getAttribute('projectId');

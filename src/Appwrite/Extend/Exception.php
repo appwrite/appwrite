@@ -172,7 +172,7 @@ class Exception extends \Exception
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
 
     /** Router */
-    public const ROUTER_UNKNOWN_HOST                = 'router_unknown_host';
+    public const ROUTER_HOST_NOT_FOUND             = 'router_host_not_found';
 
     /** Proxy */
     public const RULE_RESOURCE_NOT_FOUND            = 'rule_resource_not_found';

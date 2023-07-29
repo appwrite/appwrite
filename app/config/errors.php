@@ -546,10 +546,10 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
-    Exception::ROUTER_UNKNOWN_HOST => [
-        'name' => Exception::ROUTER_UNKNOWN_HOST,
+    Exception::ROUTER_HOST_NOT_FOUND => [
+        'name' => Exception::ROUTER_HOST_NOT_FOUND,
         'description' => 'Host is not trusted. Add a custom domain to your project first.',
-        'code' => 400,
+        'code' => 404,
     ],
     Exception::RULE_RESOURCE_NOT_FOUND => [
         'name' => Exception::RULE_RESOURCE_NOT_FOUND,
