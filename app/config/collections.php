@@ -2352,10 +2352,10 @@ $collections = [
         ],
     ],
 
-    'vcsRepos' => [
+    'vcsRepositories' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcsRepos'),
-        'name' => 'vcsRepos',
+        '$id' => ID::custom('vcsRepositories'),
+        'name' => 'vcsRepositories',
         'attributes' => [
             [
                 '$id' => ID::custom('vcsInstallationId'),

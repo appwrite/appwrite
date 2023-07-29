@@ -187,7 +187,7 @@ App::post('/v1/functions')
 
         // Git connect logic
         if (!empty($vcsRepositoryId)) {
-            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepos', new Document([
+            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -684,7 +684,7 @@ App::put('/v1/functions/:functionId')
 
         // Git disconnect logic
         if ($isConnected && empty($vcsRepositoryId)) {
-            $repoDocs = $dbForConsole->find('vcsRepos', [
+            $repoDocs = $dbForConsole->find('vcsRepositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', ['function']),
@@ -692,7 +692,7 @@ App::put('/v1/functions/:functionId')
             ]);
 
             foreach ($repoDocs as $repoDoc) {
-                $dbForConsole->deleteDocument('vcsRepos', $repoDoc->getId());
+                $dbForConsole->deleteDocument('vcsRepositories', $repoDoc->getId());
             }
 
             $vcsRepositoryId = '';
@@ -706,7 +706,7 @@ App::put('/v1/functions/:functionId')
 
         // Git connect logic
         if (!$isConnected && !empty($vcsRepositoryId)) {
-            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepos', new Document([
+            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),

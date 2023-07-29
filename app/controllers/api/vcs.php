@@ -728,12 +728,12 @@ App::post('/v1/vcs/github/events')
                 $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
                 //find functionId from functions table
-                $vcsRepos = $dbForConsole->find('vcsRepos', [
+                $vcsRepositories = $dbForConsole->find('vcsRepositories', [
                     Query::equal('repositoryId', [$repositoryId]),
                     Query::limit(100),
                 ]);
 
-                $createGitDeployments($github, $installationId, $vcsRepos, $branchName, $vcsCommitHash, '', false, $dbForConsole, $getProjectDB, $request);
+                $createGitDeployments($github, $installationId, $vcsRepositories, $branchName, $vcsCommitHash, '', false, $dbForConsole, $getProjectDB, $request);
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead (update function as well)
@@ -745,13 +745,13 @@ App::post('/v1/vcs/github/events')
                     ]);
 
                     foreach ($vcsInstallations as $installation) {
-                        $vcsRepos = $dbForConsole->find('vcsRepos', [
+                        $vcsRepositories = $dbForConsole->find('vcsRepositories', [
                             Query::equal('vcsInstallationInternalId', [$installation->getInternalId()]),
                             Query::limit(1000)
                         ]);
 
-                        foreach ($vcsRepos as $repo) {
-                            $dbForConsole->deleteDocument('vcsRepos', $repo->getId());
+                        foreach ($vcsRepositories as $vcsRepository) {
+                            $dbForConsole->deleteDocument('vcsRepositories', $vcsRepository->getId());
                         }
 
                         $dbForConsole->deleteDocument('vcsInstallations', $installation->getId());
@@ -773,12 +773,12 @@ App::post('/v1/vcs/github/events')
 
                     $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
-                    $vcsRepos = $dbForConsole->find('vcsRepos', [
+                    $vcsRepositories = $dbForConsole->find('vcsRepositories', [
                         Query::equal('repositoryId', [$repositoryId]),
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    $createGitDeployments($github, $installationId, $vcsRepos, $branchName, $vcsCommitHash, $pullRequestNumber, $external, $dbForConsole, $getProjectDB, $request);
+                    $createGitDeployments($github, $installationId, $vcsRepositories, $branchName, $vcsCommitHash, $pullRequestNumber, $external, $dbForConsole, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 
@@ -787,19 +787,19 @@ App::post('/v1/vcs/github/events')
                     $external = $parsedPayload["external"] ?? true;
 
                     if ($external) {
-                        $vcsRepos = $dbForConsole->find('vcsRepos', [
+                        $vcsRepositories = $dbForConsole->find('vcsRepositories', [
                             Query::equal('repositoryId', [$repositoryId]),
                             Query::orderDesc('$createdAt')
                         ]);
 
-                        foreach ($vcsRepos as $vcsRepository) {
+                        foreach ($vcsRepositories as $vcsRepository) {
                             $pullRequests = $vcsRepository->getAttribute('pullRequests', []);
 
                             if (\in_array($pullRequestNumber, $pullRequests)) {
                                 $pullRequests = \array_diff($pullRequests, [$pullRequestNumber]);
                                 $vcsRepository = $vcsRepository->setAttribute('pullRequests', $pullRequests);
 
-                                $vcsRepository = Authorization::skip(fn () => $dbForConsole->updateDocument('vcsRepos', $vcsRepository->getId(), $vcsRepository));
+                                $vcsRepository = Authorization::skip(fn () => $dbForConsole->updateDocument('vcsRepositories', $vcsRepository->getId(), $vcsRepository));
                             }
                         }
                     }
@@ -955,7 +955,7 @@ App::patch('/v1/vcs/github/installations/:installationId/vcsRepositories/:vcsRep
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $vcsRepository = $dbForConsole->getDocument('vcsRepos', $vcsRepositoryId, [
+        $vcsRepository = $dbForConsole->getDocument('vcsRepositories', $vcsRepositoryId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
@@ -972,14 +972,14 @@ App::patch('/v1/vcs/github/installations/:installationId/vcsRepositories/:vcsRep
 
         // TODO: Delete from array when PR is closed
 
-        $vcsRepository = $dbForConsole->updateDocument('vcsRepos', $vcsRepository->getId(), $vcsRepository);
+        $vcsRepository = $dbForConsole->updateDocument('vcsRepositories', $vcsRepository->getId(), $vcsRepository);
 
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
         $installationId = $installation->getAttribute('installationId');
         $github->initialiseVariables($installationId, $privateKey, $githubAppId);
 
-        $vcsRepos = [$vcsRepository];
+        $vcsRepositories = [$vcsRepository];
         $repositoryId = $vcsRepository->getAttribute('repositoryId');
 
         $owner = $github->getOwnerName($installationId);
@@ -989,7 +989,7 @@ App::patch('/v1/vcs/github/installations/:installationId/vcsRepositories/:vcsRep
         $branchName = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
         $vcsCommitHash = $pullRequestResponse['head']['sha'] ?? '';
 
-        $createGitDeployments($github, $installationId, $vcsRepos, $branchName, $vcsCommitHash, $pullRequest, true, $dbForConsole, $getProjectDB, $request);
+        $createGitDeployments($github, $installationId, $vcsRepositories, $branchName, $vcsCommitHash, $pullRequest, true, $dbForConsole, $getProjectDB, $request);
 
         $response->noContent();
     });
