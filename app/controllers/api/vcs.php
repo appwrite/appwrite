@@ -242,35 +242,31 @@ App::get('/v1/vcs/github/installations')
     ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Git authorization. Only console hostnames are allowed.', true, ['clients'])
     ->param('projectId', '', new UID(), 'Project ID')
     ->inject('response')
-    ->inject('user')
-    ->inject('dbForConsole')
-    ->action(function (string $redirect, string $projectId, Response $response, Document $user, Database $dbForConsole) {
+    ->action(function (string $redirect, string $projectId, Response $response) {
         $state = \json_encode([
             'projectId' => $projectId,
             'redirect' => $redirect
         ]);
 
-        // replace github url state with vcsState in user prefs attribute
-        $prefs = $user->getAttribute('prefs', []);
-        $prefs['vcsState'] = $state;
-        $user->setAttribute('prefs', $prefs);
-        $dbForConsole->updateDocument('users', $user->getId(), $user);
-
         $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
+        $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
+            'state' => $state
+        ]);
+
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect("https://github.com/apps/$appName/installations/new");
+            ->redirect($url);
     });
 
-App::get('/v1/vcs/github/redirect')
+App::get('/v1/vcs/github/callback')
     ->desc('Capture installation and authorization from GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->param('installation_id', '', new Text(256), 'GitHub installation ID', true)
     ->param('setup_action', '', new Text(256), 'GitHub setup actuon type', true)
-    // ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
+    ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
     ->param('code', '', new Text(2048), 'OAuth2 code.', true)
     ->inject('gitHub')
     ->inject('user')
@@ -278,14 +274,7 @@ App::get('/v1/vcs/github/redirect')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $installationId, string $setupAction, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
-        // replace github url state with vcsState in user prefs attribute
-        $prefs = $user->getAttribute('prefs', []);
-        $state = $prefs['vcsState'] ?? '{}';
-        $prefs['vcsState'] = '';
-        $user->setAttribute('prefs', $prefs);
-        $dbForConsole->updateDocument('users', $user->getId(), $user);
-
+    ->action(function (string $installationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.');
         }
