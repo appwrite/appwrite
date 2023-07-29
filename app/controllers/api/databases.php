@@ -3289,7 +3289,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $checkPermissions = (function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
@@ -3331,7 +3331,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($relations as &$relation) {
-                    $skipCheckingPermission = false;
+                    $shouldUpdate = false;
                     // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
@@ -3347,6 +3347,9 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                             $relation->getId()
                         ));
 
+                        // Attribute $collection is required for update document. Copying it from old version of document.
+                        $relation->setAttribute('$collection', $relatedDocumentOldVersion->getAttribute('$collection'));
+
                         // If the child document has to be created it will need checking permissions.
                         if ($relatedDocumentOldVersion->isEmpty()) {
                             $type = Database::PERMISSION_CREATE;
@@ -3356,16 +3359,15 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                             }
                         } else {
                             $type = Database::PERMISSION_UPDATE;
-                            $skipCheckingPermission = true;
 
                             foreach ($relation as $key => $value) {
-                                //No need to compare values of relations as for each relation we are recursively checking permission.
+                                // No need to compare values of relations as for each relation we are recursively checking permission.
                                 if ($relatedDocumentOldVersion->getAttribute($key) instanceof Document) {
                                     continue;
                                 }
-                                //If any of the values are different, we need to check permission.
+                                // If any of the values are different, we need to check permission.
                                 if ($relatedDocumentOldVersion->getAttribute($key) !== $value) {
-                                    $skipCheckingPermission = false;
+                                    $shouldUpdate = true;
                                     $relation->removeAttribute('$collectionId');
                                     $relation->removeAttribute('$databaseId');
                                     $relation->setAttribute('$collection', $relatedCollection->getId());
@@ -3373,12 +3375,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                                 }
                             }
                         }
-                        if ($skipCheckingPermission) {
+                        if ($shouldUpdate) {
+                            $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type);
+                        } else {
                             Authorization::skip(
                                 fn() => $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type)
                             );
-                        } else {
-                            $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type);
                         }
                     }
                 }
@@ -3389,47 +3391,47 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
-        };
+        });
 
-        $skipCheckingPermission = true;
-    foreach ($newDocument as $key => $value) {
-        if ($document->getAttribute($key) instanceof Document) {
-            continue;
+        $shouldUpdate = false;
+        foreach ($newDocument as $key => $value) {
+            if ($document->getAttribute($key) instanceof Document) {
+                continue;
+            }
+            //If any of the values are different, we need to check permission.
+            if ($newDocument->getAttribute($key) !== $value) {
+                $shouldUpdate = true;
+                $newDocument->removeAttribute('$collectionId');
+                $newDocument->removeAttribute('$databaseId');
+                $newDocument->setAttribute('$collection', $collection->getId());
+                break;
+            }
         }
-        //If any of the values are different, we need to check permission.
-        if ($newDocument->getAttribute($key) !== $value) {
-            $skipCheckingPermission = false;
-            $newDocument->removeAttribute('$collectionId');
-            $newDocument->removeAttribute('$databaseId');
-            $newDocument->setAttribute('$collection', $collection->getId());
-            break;
+
+        if ($shouldUpdate) {
+            $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+        } else {
+            Authorization::skip(
+                fn() => $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE)
+            );
         }
-    }
 
-    if ($skipCheckingPermission) {
-        Authorization::skip(
-            fn() => $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE)
-        );
-    } else {
-        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
-    }
-
-    try {
-        $document = $dbForProject->withRequestTimestamp(
-            $requestTimestamp,
-            fn() => $dbForProject->updateDocument(
-                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $document->getId(),
-                $newDocument
-            )
-        );
-    } catch (AuthorizationException) {
-        throw new Exception(Exception::USER_UNAUTHORIZED);
-    } catch (DuplicateException) {
-        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-    } catch (StructureException $exception) {
-        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-    }
+        try {
+            $document = $dbForProject->withRequestTimestamp(
+                $requestTimestamp,
+                fn() => $dbForProject->updateDocument(
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $document->getId(),
+                    $newDocument
+                )
+            );
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        } catch (StructureException $exception) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {

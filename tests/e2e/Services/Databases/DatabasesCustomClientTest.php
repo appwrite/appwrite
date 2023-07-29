@@ -369,17 +369,45 @@ class DatabasesCustomClientTest extends Scope
             ]
         ]);
 
-        // Creating one to many relationship from collection 1 to colletion 2
-        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
+        $collection3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => ID::unique(),
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::user($userId)),
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),            ]
+        ]);
+
+        // Creating one to one relationship from collection 1 to colletion 2
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'relatedCollectionId' => $collection2['body']['$id'],
-            'type' => 'oneToMany',
+            'type' => 'oneToOne',
             'twoWay' => false,
             'onDelete' => 'setNull',
             'key' => $collection2['body']['$id']
+        ]);
+
+        // Creating one to one relationship from collection 2 to colletion 3
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => $collection3['body']['$id'],
+            'type' => 'oneToOne',
+            'twoWay' => false,
+            'onDelete' => 'setNull',
+            'key' => $collection3['body']['$id']
         ]);
 
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/attributes/string', array_merge([
@@ -406,20 +434,20 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
          ]);
 
-        \sleep(2);
-
-        $childDocument =  $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/documents', array_merge([
+         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection3['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'Rating' => '10',
-            ],
-            'permissions' => [],
-        ]);
+         ]), [
+            'key' => "Rating",
+            'size' => 100,
+            'required' => false,
+            'array' => false,
+            'default' => null,
+         ]);
 
+
+        \sleep(2);
         // Creating parent document with a child reference to test the permissions
         $parentDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -429,23 +457,43 @@ class DatabasesCustomClientTest extends Scope
             'documentId' => ID::unique(),
             'data' => [
                 'Title' => 'Captain America',
-                $collection2['body']['$id'] => [$childDocument['body']['$id']]
+                $collection2['body']['$id'] => [
+                    '$id' => ID::custom($collection2['body']['$id']),
+                    'Rating' => '10',
+                    $collection3['body']['$id'] => [
+                        '$id' => ID::custom($collection3['body']['$id']),
+                        'Rating' => '10'
+                    ]
+                ]
             ],
             'permissions' => [],
         ]);
         $this->assertEquals(201, $parentDocument['headers']['status-code']);
 
-        // Update document
+        // Update collection 3 document
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
-        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $parentDocument['body']['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection3['body']['$id'] . '/documents/' . $collection3['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'data' => [
-                'Title' => 'Updated Title',
+                'Rating' => '11',
             ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Update collection 2 document
+        // We should not be allowed to update the document as we do not have permission for collection 2.
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/documents/' . $collection2['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'Rating' => '11',
+            ]
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
     }
 }
