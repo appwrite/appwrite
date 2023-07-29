@@ -54,39 +54,39 @@ class Execution extends Model
                 'default' => '',
                 'example' => 'processing',
             ])
-            ->addRule('agent', [
-                'type' => self::TYPE_STRING,
-                'description' => 'HTTP request user agent header.',
-                'default' => '',
-                'example' => 'Chrome/51.0.2704.103',
-            ])
-            ->addRule('method', [
+            ->addRule('requestMethod', [
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP request method type.',
                 'default' => '',
                 'example' => 'GET',
             ])
-            ->addRule('path', [
+            ->addRule('requestPath', [
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP request path and query.',
                 'default' => '',
                 'example' => '/articles?id=5',
             ])
-            ->addRule('statusCode', [
+            ->addRule('requestHeaders', [
+                'type' => Response::MODEL_HEADERS,
+                'description' => 'HTTP request headers as a key-value object. This will return only whitelisted headers.',
+                'default' => new \stdClass(),
+                'example' => ['x-internal-timezone' => 'UTC'],
+            ])
+            ->addRule('responseStatusCode', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'HTTP response status code.',
                 'default' => 0,
                 'example' => 200,
             ])
-            ->addRule('body', [
+            ->addRule('responseBody', [
                 'type' => self::TYPE_STRING,
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
                 'default' => '',
                 'example' => 'Developers are awesome.',
                 ])
-            ->addRule('headers', [
+            ->addRule('responseheaders', [
                 'type' => Response::MODEL_HEADERS,
-                'description' => 'HTTP response headers as a key-value object. This will return empty unless execution is created as synchronous.',
+                'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
                 'default' => new \stdClass(),
                 'example' => ['x-internal-timezone' => 'UTC'],
             ])

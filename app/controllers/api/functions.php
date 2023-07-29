@@ -1389,34 +1389,6 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $executionId = ID::unique();
-
-        $agent = '';
-        foreach ($headers as $header => $value) {
-            if (\strtolower($header) === 'user-agent') {
-                $agent = $value;
-            }
-        }
-
-        $execution = new Document([
-            '$id' => $executionId,
-            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
-            'deploymentInternalId' => $deployment->getInternalId(),
-            'deploymentId' => $deployment->getId(),
-            'trigger' => 'http', // http / schedule / event
-            'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
-            'statusCode' => 0,
-            'errors' => '',
-            'logs' => '',
-            'duration' => 0.0,
-            'search' => implode(' ', [$functionId, $executionId]),
-            'path' => $path,
-            'method' => $method,
-            'agent' => $agent
-        ]);
-
         $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
             $sessions = $user->getAttribute('sessions', []);
@@ -1441,7 +1413,6 @@ App::post('/v1/functions/:functionId/executions')
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
-
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
@@ -1458,6 +1429,30 @@ App::post('/v1/functions/:functionId/executions')
                 $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
             }
         }
+
+        // TODO: Filter headers
+
+        $executionId = ID::unique();
+
+        $execution = new Document([
+            '$id' => $executionId,
+            '$permissions' => !$user->isEmpty() ? [Permission::read(Role::user($user->getId()))] : [],
+            'functionInternalId' => $function->getInternalId(),
+            'functionId' => $function->getId(),
+            'deploymentInternalId' => $deployment->getInternalId(),
+            'deploymentId' => $deployment->getId(),
+            'trigger' => 'http', // http / schedule / event
+            'status' => $async ? 'waiting' : 'processing', // waiting / processing / completed / failed
+            'responseStatusCode' => 0,
+            'responseHeaders' => [],
+            'requestPath' => $path,
+            'requestMethod' => $method,
+            'requestHeaders' => $headers,
+            'errors' => '',
+            'logs' => '',
+            'duration' => 0.0,
+            'search' => implode(' ', [$functionId, $executionId]),
+        ]);
 
         $events
             ->setParam('functionId', $function->getId())
@@ -1535,10 +1530,13 @@ App::post('/v1/functions/:functionId/executions')
                 runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
             );
 
+            // TODO: Filter headers
+
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
-            $execution->setAttribute('statusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
+            $execution->setAttribute('responseHeaders', $executionResponse['headers']);
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
@@ -1548,7 +1546,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
-                ->setAttribute('statusCode', 500)
+                ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
         }
@@ -1574,8 +1572,8 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('errors', '');
         }
 
-        $execution->setAttribute('body', $executionResponse['body']);
-        $execution->setAttribute('headers', $executionResponse['headers']);
+        $execution->setAttribute('responseBody', $executionResponse['body']);
+        $execution->setAttribute('responseHeaders', $executionResponse['headers']);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

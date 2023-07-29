@@ -78,32 +78,35 @@ Server::setResource('execute', function () {
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
+        $headers['x-appwrite-trigger'] = $trigger;
+        $headers['x-appwrite-event'] = $event ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
-            $agent = '';
-            foreach ($headers as $header => $value) {
-                if (\strtolower($header) === 'user-agent') {
-                    $agent = $value;
-                }
-            }
+            // TODO: Filter headers
 
             $executionId = ID::unique();
             $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionId' => $functionId,
-                'deploymentId' => $deploymentId,
-                'trigger' => $trigger,
+                'functionInternalId' => $function->getInternalId(),
+                'functionId' => $function->getId(),
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentId' => $deployment->getId(),
+                'trigger' => 'http',
                 'status' => 'processing',
-                'statusCode' => 0,
+                'responseStatusCode' => 0,
+                'responseHeaders' => [],
+                'requestPath' => $path,
+                'requestMethod' => $method,
+                'requestHeaders' => $headers,
                 'errors' => '',
                 'logs' => '',
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
-                'path' => $path,
-                'method' => $method,
-                'agent' => $agent
             ]);
 
             if ($function->getAttribute('logging')) {
@@ -152,11 +155,6 @@ Server::setResource('execute', function () {
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
         ]);
 
-        $headers['x-appwrite-trigger'] = $trigger;
-        $headers['x-appwrite-event'] = $event ?? '';
-        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
-        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
-
         $body = $eventData ?? '';
         if (empty($body)) {
             $body = $data ?? '';
@@ -184,10 +182,13 @@ Server::setResource('execute', function () {
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
 
+            // TODO: Filter headers
+
             /** Update execution status */
             $execution
                 ->setAttribute('status', $status)
-                ->setAttribute('statusCode', $executionResponse['statusCode'])
+                ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
+                ->setAttribute('responseHeaders', $executionResponse['headers'])
                 ->setAttribute('logs', $executionResponse['logs'])
                 ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
@@ -197,7 +198,7 @@ Server::setResource('execute', function () {
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
-                ->setAttribute('statusCode', 500)
+                ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
             Console::error($th->getTraceAsString());
