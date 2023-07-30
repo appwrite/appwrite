@@ -15,6 +15,6 @@ class Installations extends Base
      */
     public function __construct()
     {
-        parent::__construct('vcsInstallations', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('installations', self::ALLOWED_ATTRIBUTES);
     }
 }

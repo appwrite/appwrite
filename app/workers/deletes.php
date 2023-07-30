@@ -752,7 +752,7 @@ class DeletesV1 extends Worker
         $this->listByGroup('functions', [
             Query::equal('installationInternalId', [$document->getInternalId()])
         ], $dbForProject, function ($function) use ($dbForProject, $dbForConsole) {
-            $dbForConsole->deleteDocument('vcsRepositories', $function->getAttribute('repositoryId'));
+            $dbForConsole->deleteDocument('repositories', $function->getAttribute('repositoryId'));
 
             $function = $function
                 ->setAttribute('installationId', '')

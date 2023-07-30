@@ -153,7 +153,7 @@ class BuildsV1 extends Worker
         try {
             if ($isNewBuild) {
                 if ($isVcsEnabled) {
-                    $installation = $dbForConsole->getDocument('vcsInstallations', $installationId, [
+                    $installation = $dbForConsole->getDocument('installations', $installationId, [
                         Query::equal('projectInternalId', [$project->getInternalId()])
                     ]);
                     $providerInstallationId = $installation->getAttribute('providerInstallationId');

@@ -143,7 +143,7 @@ App::post('/v1/functions')
                 ->setAttribute('branch', $templateBranch);
         }
 
-        $installation = $dbForConsole->getDocument('vcsInstallations', $installationId, [
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
@@ -184,7 +184,7 @@ App::post('/v1/functions')
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
-            $repository = $dbForConsole->createDocument('vcsRepositories', new Document([
+            $repository = $dbForConsole->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -651,7 +651,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $installation = $dbForConsole->getDocument('vcsInstallations', $installationId, [
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
@@ -676,7 +676,7 @@ App::put('/v1/functions/:functionId')
 
         // Git disconnect logic
         if ($isConnected && empty($providerRepositoryId)) {
-            $repositories = $dbForConsole->find('vcsRepositories', [
+            $repositories = $dbForConsole->find('repositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', ['function']),
@@ -684,7 +684,7 @@ App::put('/v1/functions/:functionId')
             ]);
 
             foreach ($repositories as $repository) {
-                $dbForConsole->deleteDocument('vcsRepositories', $repository->getId());
+                $dbForConsole->deleteDocument('repositories', $repository->getId());
             }
 
             $providerRepositoryId = '';
@@ -700,7 +700,7 @@ App::put('/v1/functions/:functionId')
         if (!$isConnected && !empty($providerRepositoryId)) {
             $teamId = $project->getAttribute('teamId', '');
 
-            $repository = $dbForConsole->createDocument('vcsRepositories', new Document([
+            $repository = $dbForConsole->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::team(ID::custom($teamId))),
@@ -1306,7 +1306,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         // TODO: Somehow set commit SHA & ownerName & repoName for git deployments, and file path for manual. Redeploy should use exact same source code
 
-        $installation = $dbForConsole->getDocument('vcsInstallations', $deployment->getAttribute('installationId', ''));
+        $installation = $dbForConsole->getDocument('installations', $deployment->getAttribute('installationId', ''));
 
         $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]));
 

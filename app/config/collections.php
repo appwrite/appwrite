@@ -2254,10 +2254,10 @@ $collections = [
         ],
     ],
 
-    'vcsInstallations' => [
+    'installations' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcsInstallations'),
-        'name' => 'vcsInstallations',
+        '$id' => ID::custom('installations'),
+        'name' => 'installations',
         'attributes' => [
             [
                 '$id' => ID::custom('projectId'),
@@ -2352,10 +2352,10 @@ $collections = [
         ],
     ],
 
-    'vcsRepositories' => [
+    'repositories' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('vcsRepositories'),
-        'name' => 'vcsRepositories',
+        '$id' => ID::custom('repositories'),
+        'name' => 'repositories',
         'attributes' => [
             [
                 '$id' => ID::custom('installationId'),
