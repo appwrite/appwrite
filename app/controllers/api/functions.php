@@ -1430,7 +1430,12 @@ App::post('/v1/functions/:functionId/executions')
             }
         }
 
-        // TODO: Filter headers
+        $headersFiltered = [];
+        foreach ($headers as $key => $value) {
+            if(\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+            }
+        }
 
         $executionId = ID::unique();
 
@@ -1447,7 +1452,7 @@ App::post('/v1/functions/:functionId/executions')
             'responseHeaders' => [],
             'requestPath' => $path,
             'requestMethod' => $method,
-            'requestHeaders' => $headers,
+            'requestHeaders' => $headersFiltered,
             'errors' => '',
             'logs' => '',
             'duration' => 0.0,
@@ -1530,13 +1535,18 @@ App::post('/v1/functions/:functionId/executions')
                 runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
             );
 
-            // TODO: Filter headers
+            $headersFiltered = [];
+            foreach ($executionResponse['headers'] as $key => $value) {
+                if(\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                    $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+                }
+            }
 
             /** Update execution status */
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
             $execution->setAttribute('status', $status);
             $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('responseHeaders', $executionResponse['headers']);
+            $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);

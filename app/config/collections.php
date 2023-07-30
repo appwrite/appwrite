@@ -3681,9 +3681,9 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_statusCode'),
+                '$id' => ID::custom('_key_responseStatusCode'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['statusCode'],
+                'attributes' => ['responseStatusCode'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],

@@ -3,9 +3,27 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 
-class Headers extends Any
+class Headers extends Model
 {
+    public function __construct()
+    {
+        $this
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Header name.',
+                'default' => '',
+                'example' => 'Content-Type',
+            ])
+            ->addRule('value', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Header value.',
+                'default' => '',
+                'example' => 'application/json',
+            ]);
+    }
+
     /**
      * Get Name
      *

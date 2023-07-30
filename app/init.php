@@ -178,6 +178,9 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Function headers
+const FUNCTION_WHITELIST_HEADERS_REQUEST = ['content-type', 'agent'];
+const FUNCTION_WHITELIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 
 $register = new Registry();
 

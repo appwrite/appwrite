@@ -41,6 +41,12 @@ class Repository extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('runtime', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Auto-detected runtime suggestion. Empty if getting response of getRuntime().',
+                'default' => '',
+                'example' => 'node',
+            ])
             ->addRule('pushedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Last commit date in ISO 8601 format.',

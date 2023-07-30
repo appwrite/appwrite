@@ -86,7 +86,12 @@ Server::setResource('execute', function () {
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
-            // TODO: Filter headers
+            $headersFiltered = [];
+            foreach ($headers as $key => $value) {
+                if(\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                    $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+                }
+            }
 
             $executionId = ID::unique();
             $execution = new Document([
@@ -102,7 +107,7 @@ Server::setResource('execute', function () {
                 'responseHeaders' => [],
                 'requestPath' => $path,
                 'requestMethod' => $method,
-                'requestHeaders' => $headers,
+                'requestHeaders' => $headersFiltered,
                 'errors' => '',
                 'logs' => '',
                 'duration' => 0.0,
@@ -182,13 +187,18 @@ Server::setResource('execute', function () {
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
 
-            // TODO: Filter headers
+            $headersFiltered = [];
+            foreach ($executionResponse['headers'] as $key => $value) {
+                if(\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                    $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+                }
+            }
 
             /** Update execution status */
             $execution
                 ->setAttribute('status', $status)
                 ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
-                ->setAttribute('responseHeaders', $executionResponse['headers'])
+                ->setAttribute('responseHeaders', $headersFiltered)
                 ->setAttribute('logs', $executionResponse['logs'])
                 ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);

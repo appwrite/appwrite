@@ -377,12 +377,12 @@ App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryI
     ->label('sdk.response.model', Response::MODEL_DETECTION)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('repositoryId', '', new Text(256), 'Repository Id')
-    ->param('rootDirectoryPath', '', new Text(256), 'Path to Root Directory', true)
+    ->param('rootDirectory', '', new Text(256), 'Path to Root Directory', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $vcsInstallationId, string $repositoryId, string $rootDirectoryPath, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
+    ->action(function (string $vcsInstallationId, string $repositoryId, string $rootDirectory, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
         $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
@@ -403,7 +403,7 @@ App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryI
             throw new Exception(Exception::REPOSITORY_NOT_FOUND);
         }
 
-        $files = $github->listRepositoryContents($owner, $repositoryName, $rootDirectoryPath);
+        $files = $github->listRepositoryContents($owner, $repositoryName, $rootDirectory);
         $languages = $github->getRepositoryLanguages($owner, $repositoryName);
 
         $detectorFactory = new Detector($files, $languages);
@@ -511,11 +511,33 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
         // Limit the maximum results to 5
         $repos = \array_slice($repos, 0, 5);
 
-        $repos = \array_map(function ($repo) use ($installation) {
+        $repos = \array_map(function ($repo) use ($installation, $github) {
             $repo['id'] = \strval($repo['id'] ?? '');
             $repo['pushedAt'] = $repo['pushed_at'] ?? null;
             $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
             $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
+
+            $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+            $languages = $github->getRepositoryLanguages($repo['organization'], $repo['name']);
+    
+            $detectorFactory = new Detector($files, $languages);
+    
+            $detectorFactory
+                ->addDetector(new JavaScript())
+                ->addDetector(new PHP())
+                ->addDetector(new Python())
+                ->addDetector(new Dart())
+                ->addDetector(new Swift())
+                ->addDetector(new Ruby())
+                ->addDetector(new Java())
+                ->addDetector(new CPP())
+                ->addDetector(new Deno())
+                ->addDetector(new Dotnet());
+    
+            $runtime = $detectorFactory->detect();
+
+            $repo['runtime'] = $runtime;
+
             return new Document($repo);
         }, $repos);
 

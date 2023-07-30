@@ -69,8 +69,9 @@ class Execution extends Model
             ->addRule('requestHeaders', [
                 'type' => Response::MODEL_HEADERS,
                 'description' => 'HTTP request headers as a key-value object. This will return only whitelisted headers.',
-                'default' => new \stdClass(),
-                'example' => ['x-internal-timezone' => 'UTC'],
+                'default' => [],
+                'example' => [['Content-Type' => 'application/json']],
+                'array' => true,
             ])
             ->addRule('responseStatusCode', [
                 'type' => self::TYPE_INTEGER,
@@ -87,8 +88,9 @@ class Execution extends Model
             ->addRule('responseheaders', [
                 'type' => Response::MODEL_HEADERS,
                 'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
-                'default' => new \stdClass(),
-                'example' => ['x-internal-timezone' => 'UTC'],
+                'default' => [],
+                'example' => [['Content-Type' => 'application/json']],
+                'array' => true,
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
