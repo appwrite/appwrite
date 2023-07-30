@@ -51,7 +51,7 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.38.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/framework": "0.28.*",
+        "utopia-php/framework": "0.29.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c41be9b81d4ee69cf915be4c7ba37975",
+    "content-hash": "4121eccf3644a4eb5cac0e619fcdafd9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2218,16 +2218,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.28.4",
+            "version": "0.29",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "98c5469efe195aeecc63745dbf8e2f357f8cedac"
+                "reference": "1c8ed95fb73531b0508ad69f85dafc4c78a64414"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/98c5469efe195aeecc63745dbf8e2f357f8cedac",
-                "reference": "98c5469efe195aeecc63745dbf8e2f357f8cedac",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c8ed95fb73531b0508ad69f85dafc4c78a64414",
+                "reference": "1c8ed95fb73531b0508ad69f85dafc4c78a64414",
                 "shasum": ""
             },
             "require": {
@@ -2235,9 +2235,9 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpstan/phpstan": "1.9.x-dev",
-                "phpunit/phpunit": "^9.5.25",
-                "vimeo/psalm": "4.27.0"
+                "phpbench/phpbench": "^1.2",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5.25"
             },
             "type": "library",
             "autoload": {
@@ -2257,9 +2257,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.28.4"
+                "source": "https://github.com/utopia-php/framework/tree/0.29"
             },
-            "time": "2023-06-03T14:09:22+00:00"
+            "time": "2023-07-30T07:56:23+00:00"
         },
         {
             "name": "utopia-php/image",
