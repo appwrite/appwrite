@@ -153,6 +153,11 @@ class BuildsV1 extends Worker
         try {
             if ($isNewBuild) {
                 if ($isVcsEnabled) {
+                    $installation = $dbForConsole->getDocument('vcsInstallations', $installationId, [
+                        Query::equal('projectInternalId', [$project->getInternalId()])
+                    ]);
+                    $providerInstallationId = $installation->getAttribute('providerInstallationId');
+
                     $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
                     $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
 
@@ -162,9 +167,9 @@ class BuildsV1 extends Worker
                     $rootDirectory = \ltrim($rootDirectory, '.');
                     $rootDirectory = \ltrim($rootDirectory, '/');
 
-                    $github->initialiseVariables($installationId, $privateKey, $githubAppId);
+                    $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
 
-                    $owner = $github->getOwnerName($installationId);
+                    $owner = $github->getOwnerName($providerInstallationId);
                     $repositoryName = $github->getRepositoryName($providerRepositoryId);
 
                     $cloneOwner = !empty($providerContribution) ?  $providerContribution->getAttribute('owner', $owner) : $owner;

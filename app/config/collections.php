@@ -3615,7 +3615,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('responseStatusCode'),
@@ -3637,7 +3637,7 @@ $collections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [],
+                'filters' => ['json'],
             ],
             [
                 '$id' => ID::custom('search'),

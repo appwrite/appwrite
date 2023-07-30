@@ -130,17 +130,17 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
         $execution = \json_decode($executionResponse, true);
 
-        foreach ($execution['headers'] as $header => $value) {
-            $response->setHeader($header, $value);
+        foreach ($execution['responseHeaders'] as $header) {
+            $response->setHeader($header['key'], $header['value']);
         }
 
-        $body = $execution['body'] ?? '';
+        $body = $execution['responseBody'] ?? '';
 
-        if (($execution['headers']['x-open-runtimes-encoding'] ?? '') === 'base64') {
+        if (($execution['responseHeaders']['x-open-runtimes-encoding'] ?? '') === 'base64') {
             $body = \base64_decode($body);
         }
 
-        $response->setStatusCode($execution['statusCode'] ?? 200)->send($body);
+        $response->setStatusCode($execution['responseStatusCode'] ?? 200)->send($body);
         return true;
     } elseif ($type === 'api') {
         return false;
@@ -172,6 +172,7 @@ App::init()
         
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        \var_dump($host);
         // Only run Router when external domain
         if ($host !== $mainDomain && $host !== 'localhost') {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
