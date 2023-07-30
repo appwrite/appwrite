@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Vcs\Comment;
+use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\ID;
@@ -365,7 +366,7 @@ App::get('/v1/vcs/github/callback')
             ->redirect($redirect);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryId/detection')
+App::post('/v1/vcs/github/installations/:installationId/repositories/:repositoryId/detection')
     ->desc('Detect runtime settings from source code')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -422,8 +423,13 @@ App::get('/v1/vcs/github/installations/:installationId/repositories/:repositoryI
 
         $runtime = $detectorFactory->detect();
 
+        $runtimes = Config::getParam('runtimes');
+        $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
+            return $runtimes[$key]['key'] === $runtime;
+        }))[0];
+
         $detection = [];
-        $detection['runtime'] = $runtime;
+        $detection['runtime'] = $runtimeDetail;
 
         $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
     });
@@ -536,7 +542,12 @@ App::get('/v1/vcs/github/installations/:installationId/repositories')
     
             $runtime = $detectorFactory->detect();
 
-            $repo['runtime'] = $runtime;
+            $runtimes = Config::getParam('runtimes');
+            $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
+                return $runtimes[$key]['key'] === $runtime;
+            }))[0];
+
+            $repo['runtime'] = $runtimeDetail;
 
             return new Document($repo);
         }, $repos);
