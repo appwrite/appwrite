@@ -169,7 +169,7 @@ App::init()
         /*
         * Appwrite Router
         */
-        
+
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
