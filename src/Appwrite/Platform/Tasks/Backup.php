@@ -7,13 +7,13 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 
 class Backup extends Action
 {
     public static string $mysqlDirectory = '/var/lib/mysql';
     public static string $backups = '/backups'; // Mounted volume
     protected string $containerName = 'appwrite-mariadb';
+    protected string $project;
 
     public static function getName(): string
     {
@@ -22,62 +22,72 @@ class Backup extends Action
 
     public function __construct()
     {
+
+        $this->checkEnvVariables();
+        $this->project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
+
         $this
             ->desc('Backup a DB')
             ->callback(fn() => $this->action());
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function action(): void
+    public function fullBackup()
     {
-        self::log('--- Backup Start --- ');
-        $this->checkEnvVariables();
-
-        $start = microtime(true);
-        $filename = date('Ymd_His') . '.tar.gz';
+        $time = date('Ymd_His');
+        $project = $this->project;
+        $filename = $time . '.tar.gz';
         $folder = App::getEnv('_APP_BACKUP_FOLDER');
-        $project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
-        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
-        $local = new Local(self::$backups . '/' . $project . '/' . $folder);
-        $source = $local->getRoot() . '/' . $filename;
+        $s3 = new DOSpaces('/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $local = new Local(self::$backups . '/' . $project . '/' . $folder . '/' . $time);
+        $backups = $local->getRoot() . '/files';
+        $tarFile = $local->getRoot() . '/' . $filename;
 
         $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
-
-//        $source = '/backups/shmuel.tar.gz'; // 1452521974
-//        $destination = '/shmuel/' . $time . '.tar.gz';
-//
-//        $local->transfer($source, $destination, $s3);
-//
-//        if ($s3->exists($destination)) {
-//            Console::success('Uploaded successfully !!! ' . $destination);
-//            Console::exit();
-//        }
-
-        if (!$s3->exists('/')) {
-            Console::error('Can\'t read from DO ');
-            Console::exit();
-        }
 
         if (!file_exists(self::$backups)) {
             Console::error('Mount directory does not exist');
             Console::exit();
         }
 
-        if (!file_exists($local->getRoot()) && !mkdir($local->getRoot(), 0755, true)) {
-            Console::error('Error creating directory: ' . $local->getRoot());
+        if (!file_exists($backups) && !mkdir($backups, 0755, true)) {
+            Console::error('Error creating directory: ' . $backups);
             Console::exit();
         }
 
-        self::stopMysqlContainer($this->containerName);
-
-        Console::exit();
+        $args = [
+            '--user=root',
+            '--password=rootsecretpassword',
+            '--host=mariadb',
+            '--backup',
+            '--compress',
+            //'--compress-threads=1',
+            //'--no-lock', // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
+            '--safe-slave-backup',
+            '--safe-slave-backup-timeout=300',
+            '--check-privileges',
+            '--target-dir=' . $backups,
+        ];
 
         $stdout = '';
         $stderr = '';
-        // Tar from inside the mysql directory for not using --strip-components
-        $cmd = 'cd ' . self::$mysqlDirectory . ' && tar zcf ' . $source . ' .';
+        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        self::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        //self::log($stdout);
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            //Console::exit();
+        }
+
+        if (!file_exists($backups . '/sys')) {
+            Console::error('Backup failed missing files');
+            Console::exit();
+        }
+
+        $stdout = '';
+        $stderr = '';
+        // Tar from inside the directory for not using --strip-components
+        $cmd = 'cd ' . $backups . ' && tar zcf ' . $tarFile . ' .';
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         self::log($stdout);
@@ -86,27 +96,31 @@ class Backup extends Action
             Console::exit();
         }
 
-
-        if (!file_exists($source)) {
-            Console::error("Can't find tar file: " . $source);
+        if (!file_exists($tarFile)) {
+            Console::error("Can't find tar file: " . $tarFile);
             Console::exit();
         }
 
-        $filesize = \filesize($source);
+        $filesize = \filesize($tarFile);
         self::log("Tar file size is: " . ceil($filesize / 1024 / 1024) . 'MB');
-        if ($filesize < (2 * 1024)) {
-            Console::error("File size is very small: " . $source);
+        if ($filesize < (2 * 1024 * 1024)) {
+            Console::error("File size is very small: " . $tarFile);
             Console::exit();
         }
 
-        self::startMysqlContainer($this->containerName);
+        // self::startMysqlContainer($this->containerName);
+
+        if (!$s3->exists('/')) {
+            Console::error('Can\'t read from DO ');
+            Console::exit();
+        }
 
         try {
-            self::log('Uploading: ' . $source);
+            self::log('Uploading: ' . $tarFile);
 
             $destination = $s3->getRoot() . '/' . $filename;
 
-            if (!$local->transfer($source, $destination, $s3)) {
+            if (!$local->transfer($tarFile, $destination, $s3)) {
                 Console::error('Error uploading to ' . $destination);
                 Console::exit();
             }
@@ -120,12 +134,225 @@ class Backup extends Action
             Console::exit();
         }
 
-        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
-
         Console::loop(function () {
             self::log('loop');
         }, 100);
     }
+
+    public function incrementalBackup()
+    {
+        $project = $this->project;
+        //$folder = ceil(time() / 60 * 60);
+        //$folder = date('Y_m_d');
+        //$folder = ceil(date('z') / 7); // day of the year 0-365
+        $folder = date('W'); // week of the year  0 - 51
+
+        $folder = 'inc_v1_' . date('Y') . '_' . $folder;
+        $local = new Local(self::$backups . '/' . $project . '/' . $folder);
+        $position = 1;
+        $target = $local->getRoot() . '/' . $position;
+        $base = null;
+
+        if (file_exists($local->getRoot() . '/position')) {
+            $position = intval(file_get_contents($local->getRoot() . '/position'));
+
+            if (!file_exists($local->getRoot() . '/' . $position . '/xtrabackup_checkpoints')) {
+                Console::error('Backup ' . $folder . ' is garbage!!!');
+                Console::exit();
+            }
+
+            $position += 1;
+            $base = $target;
+            $target = $local->getRoot() . '/' . $position;
+
+            Console::success($position);
+        }
+
+        if (!empty($base) && !file_exists($base) && !mkdir($base, 0755, true)) {
+            Console::error('Error creating base directory: ' . $base);
+            Console::exit();
+        }
+
+        if (!file_exists($target) && !mkdir($target, 0755, true)) {
+            Console::error('Error creating backup directory: ' . $target);
+            Console::exit();
+        }
+
+        file_put_contents($local->getRoot() . '/position', $position);
+
+        $args = [
+            '--user=root',
+            '--password=rootsecretpassword',
+            '--backup=1',
+            '--host=mariadb',
+            '--safe-slave-backup',
+            '--safe-slave-backup-timeout=300',
+            '--check-privileges',
+            //'--no-lock',  // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
+            //'--compress=lz4',
+            //'--compress-threads=1',
+            '--target-dir=' . $target
+        ];
+
+        if (!empty($base)) {
+            $args[] = '--incremental-basedir=' . $base;
+        }
+
+        $stdout = '';
+        $stderr = '';
+        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        self::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        self::log("stdout ========= ");
+        self::log($stdout);
+        self::log("stdout ========= ");
+
+        if (!empty($stderr)) {
+           // Console::error($stderr);
+            //Console::exit();
+        }
+
+        self::log('completed start!');
+
+        // For some reason they write everything as stderr
+        if (!str_contains($stderr, 'completed OK!')) {
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        self::log('completed end!');
+
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    public function action(): void
+    {
+        self::log('--- Backup Start --- ');
+        $start = microtime(true);
+        $type = 'incremental';
+
+        switch ($type) {
+            case 'incremental':
+                for ($i = 0; $i < 3; $i++) {
+                    $this->incrementalBackup();
+                }
+                break;
+            case 'full':
+                $this->fullBackup();
+                break;
+            default:
+                Console::error('No type detected');
+                Console::exit();
+        }
+
+        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+    }
+
+
+
+//
+//    /**
+//     * @throws \Exception
+//     */
+//    public function action(): void
+//    {
+//        self::log('--- Backup Start --- ');
+//        $this->checkEnvVariables();
+//
+//        $start = microtime(true);
+//        $filename = date('Ymd_His') . '.tar.gz';
+//        $folder = App::getEnv('_APP_BACKUP_FOLDER');
+//        $project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
+//        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+//        $local = new Local(self::$backups . '/' . $project . '/' . $folder);
+//        $source = $local->getRoot() . '/' . $filename;
+//
+//        $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+//
+////        $source = '/backups/shmuel.tar.gz'; // 1452521974
+////        $destination = '/shmuel/' . $time . '.tar.gz';
+////
+////        $local->transfer($source, $destination, $s3);
+////
+////        if ($s3->exists($destination)) {
+////            Console::success('Uploaded successfully !!! ' . $destination);
+////            Console::exit();
+////        }
+//
+//        if (!$s3->exists('/')) {
+//            Console::error('Can\'t read from DO ');
+//            Console::exit();
+//        }
+//
+//        if (!file_exists(self::$backups)) {
+//            Console::error('Mount directory does not exist');
+//            Console::exit();
+//        }
+//
+//        if (!file_exists($local->getRoot()) && !mkdir($local->getRoot(), 0755, true)) {
+//            Console::error('Error creating directory: ' . $local->getRoot());
+//            Console::exit();
+//        }
+//
+//        self::stopMysqlContainer($this->containerName);
+//
+//        Console::exit();
+//
+//        $stdout = '';
+//        $stderr = '';
+//        // Tar from inside the mysql directory for not using --strip-components
+//        $cmd = 'cd ' . self::$mysqlDirectory . ' && tar zcf ' . $source . ' .';
+//        self::log($cmd);
+//        Console::execute($cmd, '', $stdout, $stderr);
+//        self::log($stdout);
+//        if (!empty($stderr)) {
+//            Console::error($stderr);
+//            Console::exit();
+//        }
+//
+//
+//        if (!file_exists($source)) {
+//            Console::error("Can't find tar file: " . $source);
+//            Console::exit();
+//        }
+//
+//        $filesize = \filesize($source);
+//        self::log("Tar file size is: " . ceil($filesize / 1024 / 1024) . 'MB');
+//        if ($filesize < (2 * 1024)) {
+//            Console::error("File size is very small: " . $source);
+//            Console::exit();
+//        }
+//
+//        self::startMysqlContainer($this->containerName);
+//
+//        try {
+//            self::log('Uploading: ' . $source);
+//
+//            $destination = $s3->getRoot() . '/' . $filename;
+//
+//            if (!$local->transfer($source, $destination, $s3)) {
+//                Console::error('Error uploading to ' . $destination);
+//                Console::exit();
+//            }
+//
+//            if (!$s3->exists($destination)) {
+//                Console::error('File not found on s3 ' . $destination);
+//                Console::exit();
+//            }
+//        } catch (\Exception $e) {
+//            Console::error($e->getMessage());
+//            Console::exit();
+//        }
+//
+//        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+//
+//        Console::loop(function () {
+//            self::log('loop');
+//        }, 100);
+//    }
 
     public static function log(string $message): void
     {
@@ -250,8 +477,5 @@ class Backup extends Action
 
 
         Console::exit();
-
     }
-
-
 }

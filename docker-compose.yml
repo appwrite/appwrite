@@ -630,7 +630,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
     volumes:
-      - xtrabackup_data:/backups
+      #- xtrabackup_data:/backups
+      - ./backups:/backups:rw
       - appwrite-mariadb:/var/lib/mysql:r
     networks:
       - appwrite
@@ -949,5 +950,5 @@ volumes:
   appwrite-config:
   appwrite-functions:
   appwrite-builds:
-  xtrabackup_data:
+  #xtrabackup_data:
   # appwrite-chronograf:
