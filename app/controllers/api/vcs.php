@@ -518,40 +518,45 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         // Limit the maximum results to 5
         $repos = \array_slice($repos, 0, 5);
 
-        $repos = \array_map(function ($repo) use ($installation, $github) {
+        $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
             $repo['pushedAt'] = $repo['pushed_at'] ?? null;
             $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
             $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
-
-            $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
-            $languages = $github->getRepositoryLanguages($repo['organization'], $repo['name']);
-    
-            $detectorFactory = new Detector($files, $languages);
-    
-            $detectorFactory
-                ->addDetector(new JavaScript())
-                ->addDetector(new PHP())
-                ->addDetector(new Python())
-                ->addDetector(new Dart())
-                ->addDetector(new Swift())
-                ->addDetector(new Ruby())
-                ->addDetector(new Java())
-                ->addDetector(new CPP())
-                ->addDetector(new Deno())
-                ->addDetector(new Dotnet());
-    
-            $runtime = $detectorFactory->detect();
-
-            $runtimes = Config::getParam('runtimes');
-            $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                return $runtimes[$key]['key'] === $runtime;
-            }))[0] ?? '';
-
-            $repo['runtime'] = $runtimeDetail;
-
             return new Document($repo);
         }, $repos);
+
+        $repos = batch(\array_map(function ($repo) use ($github) {
+            return function () use ($repo, $github) {
+                $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+                $languages = $github->getRepositoryLanguages($repo['organization'], $repo['name']);
+
+                $detectorFactory = new Detector($files, $languages);
+
+                $detectorFactory
+                    ->addDetector(new JavaScript())
+                    ->addDetector(new PHP())
+                    ->addDetector(new Python())
+                    ->addDetector(new Dart())
+                    ->addDetector(new Swift())
+                    ->addDetector(new Ruby())
+                    ->addDetector(new Java())
+                    ->addDetector(new CPP())
+                    ->addDetector(new Deno())
+                    ->addDetector(new Dotnet());
+
+                $runtime = $detectorFactory->detect();
+
+                $runtimes = Config::getParam('runtimes');
+                $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
+                    return $runtimes[$key]['key'] === $runtime;
+                }))[0] ?? '';
+
+                $repo['runtime'] = $runtimeDetail;
+
+                return $repo;
+            };
+        }, $repos));
 
         $response->dynamic(new Document([
             'repositories' => $repos,

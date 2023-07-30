@@ -172,7 +172,6 @@ App::init()
         
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
-        \var_dump($host);
         // Only run Router when external domain
         if ($host !== $mainDomain && $host !== 'localhost') {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
