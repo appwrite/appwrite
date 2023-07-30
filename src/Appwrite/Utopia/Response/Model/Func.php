@@ -111,31 +111,31 @@ class Func extends Model
                 'default' => '',
                 'example' => 'npm install',
             ])
-            ->addRule('vcsInstallationId', [
+            ->addRule('installationId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function VCS (Version Control System) installation id.',
                 'default' => '',
                 'example' => '6m40at4ejk5h2u9s1hboo',
             ])
-            ->addRule('vcsRepositoryId', [
+            ->addRule('providerRepositoryId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) Repository ID',
                 'default' => '',
                 'example' => 'appwrite',
             ])
-            ->addRule('vcsBranch', [
+            ->addRule('providerBranch', [
                 'type' => self::TYPE_STRING,
                 'description' => 'VCS (Version Control System) branch name',
                 'default' => '',
                 'example' => 'main',
             ])
-            ->addRule('vcsRootDirectory', [
+            ->addRule('providerRootDirectory', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Path to function in VCS (Version Control System) repository',
                 'default' => '',
                 'example' => 'functions/helloWorld',
             ])
-            ->addRule('vcsSilentMode', [
+            ->addRule('providerSilentMode', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is VCS (Version Control System) connection is in silent mode? When in silence mode, no comments will be posted on the repository pull or merge requests',
                 'default' => false,

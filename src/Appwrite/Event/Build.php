@@ -10,10 +10,10 @@ class Build extends Event
     protected string $type = '';
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
-    protected ?Document $vcsTemplate = null;
-    protected string $vcsCommitHash = '';
-    protected string $vcsTargetUrl = '';
-    protected ?Document $vcsContribution = null;
+    protected ?Document $template = null;
+    protected string $providerCommitHash = '';
+    protected string $providerTargetUrl = '';
+    protected ?Document $providerContribution = null;
 
     public function __construct()
     {
@@ -23,12 +23,12 @@ class Build extends Event
     /**
      * Sets template for the build event.
      *
-     * @param Document $vcsTemplate
+     * @param Document $template
      * @return self
      */
-    public function setVcsTemplate(Document $vcsTemplate): self
+    public function setTemplate(Document $template): self
     {
-        $this->vcsTemplate = $vcsTemplate;
+        $this->template = $template;
 
         return $this;
     }
@@ -36,12 +36,12 @@ class Build extends Event
      /**
      * Sets commit SHA for the build event.
      *
-     * @param string $vcsCommitHash is the commit hash of the incoming commit
+     * @param string $providerCommitHash is the commit hash of the incoming commit
      * @return self
      */
-    public function setVcsCommitHash(string $vcsCommitHash): self
+    public function setProviderCommitHash(string $providerCommitHash): self
     {
-        $this->vcsCommitHash = $vcsCommitHash;
+        $this->providerCommitHash = $providerCommitHash;
 
         return $this;
     }
@@ -49,12 +49,12 @@ class Build extends Event
     /**
      * Sets redirect target url for the deployment
      *
-     * @param string $vcsTargetUrl is the url that is to be set
+     * @param string $providerTargetUrl is the url that is to be set
      * @return self
      */
-    public function setVcsTargetUrl(string $vcsTargetUrl): self
+    public function setProviderTargetUrl(string $providerTargetUrl): self
     {
-        $this->vcsTargetUrl = $vcsTargetUrl;
+        $this->providerTargetUrl = $providerTargetUrl;
 
         return $this;
     }
@@ -75,12 +75,12 @@ class Build extends Event
     /**
      * Sets custom owner and repository for VCS clone command during build
      *
-     * @param Document $owner
+     * @param Document $providerContribution
      * @return self
      */
-    public function setVcsContribution(Document $vcsContribution): self
+    public function setProviderContribution(Document $providerContribution): self
     {
-        $this->vcsContribution = $vcsContribution;
+        $this->providerContribution = $providerContribution;
 
         return $this;
     }
@@ -154,10 +154,10 @@ class Build extends Event
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
-            'vcsTemplate' => $this->vcsTemplate,
-            'vcsCommitHash' => $this->vcsCommitHash,
-            'vcsTargetUrl' => $this->vcsTargetUrl,
-            'vcsContribution' => $this->vcsContribution
+            'template' => $this->template,
+            'providerCommitHash' => $this->providerCommitHash,
+            'providerTargetUrl' => $this->providerTargetUrl,
+            'providerContribution' => $this->providerContribution
         ]);
     }
 }

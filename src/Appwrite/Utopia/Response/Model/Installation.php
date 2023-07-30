@@ -42,7 +42,7 @@ class Installation extends Model
                 'example' => 'appwrite',
                 'array' => false,
             ])
-            ->addRule('installationId', [
+            ->addRule('providerInstallationId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Provider installation ID.',
                 'default' => '',

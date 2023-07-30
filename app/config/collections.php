@@ -2282,7 +2282,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('installationId'),
+                '$id' => ID::custom('providerInstallationId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2343,9 +2343,9 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_installationId'),
+                '$id' => ID::custom('_key_providerInstallationId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['installationId'],
+                'attributes' => ['providerInstallationId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2358,7 +2358,7 @@ $collections = [
         'name' => 'vcsRepositories',
         'attributes' => [
             [
-                '$id' => ID::custom('vcsInstallationId'),
+                '$id' => ID::custom('installationId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2369,7 +2369,7 @@ $collections = [
                 'filters' => []
             ],
             [
-                '$id' => ID::custom('vcsInstallationInternalId'),
+                '$id' => ID::custom('installationInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2402,7 +2402,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('repositoryId'),
+                '$id' => ID::custom('providerRepositoryId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2446,7 +2446,7 @@ $collections = [
                 'filters' => []
             ],
             [
-                '$id' => ID::custom('pullRequests'),
+                '$id' => ID::custom('providerPullRequestIds'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 128,
@@ -2459,16 +2459,16 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_vcsInstallationId'),
+                '$id' => ID::custom('_key_installationId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsInstallationId'],
+                'attributes' => ['installationId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsInstallationInternalId'),
+                '$id' => ID::custom('_key_installationInternalId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsInstallationInternalId'],
+                'attributes' => ['installationInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2487,9 +2487,9 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_repositoryId'),
+                '$id' => ID::custom('_key_providerRepositoryId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['repositoryId'],
+                'attributes' => ['providerRepositoryId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2523,7 +2523,7 @@ $collections = [
         'name' => 'vcsComments',
         'attributes' => [
             [
-                '$id' => ID::custom('vcsInstallationId'),
+                '$id' => ID::custom('installationId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2534,7 +2534,7 @@ $collections = [
                 'filters' => []
             ],
             [
-                '$id' => ID::custom('vcsInstallationInternalId'),
+                '$id' => ID::custom('installationInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2567,7 +2567,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('repositoryId'),
+                '$id' => ID::custom('providerRepositoryId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2578,7 +2578,7 @@ $collections = [
                 'filters' => []
             ],
             [
-                '$id' => ID::custom('commentId'),
+                '$id' => ID::custom('providerCommentId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2589,7 +2589,7 @@ $collections = [
                 'filters' => []
             ],
             [
-                '$id' => ID::custom('pullRequestId'),
+                '$id' => ID::custom('providerPullRequestId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2600,7 +2600,7 @@ $collections = [
                 'filters' => []
             ],
             [
-                '$id' => ID::custom('branch'),
+                '$id' => ID::custom('providerBranch'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2613,16 +2613,16 @@ $collections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_vcsInstallationId'),
+                '$id' => ID::custom('_key_installationId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsInstallationId'],
+                'attributes' => ['installationId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsInstallationInternalId'),
+                '$id' => ID::custom('_key_installationInternalId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsInstallationInternalId'],
+                'attributes' => ['installationInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2641,23 +2641,23 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_repositoryId'),
+                '$id' => ID::custom('_key_providerRepositoryId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['repositoryId'],
+                'attributes' => ['providerRepositoryId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_pullRequestId'),
+                '$id' => ID::custom('_key_providerPullRequestId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['pullRequestId'],
+                'attributes' => ['providerPullRequestId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_branch'),
+                '$id' => ID::custom('_key_providerBranch'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['branch'],
+                'attributes' => ['providerBranch'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -2712,7 +2712,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsInstallationId'),
+                '$id' => ID::custom('installationId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -2722,38 +2722,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsInstallationInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('vcsRepositoryId'),
-                'type' => Database::VAR_STRING,
-                'signed' => true,
-                'size' => Database::LENGTH_KEY,
-                'format' => '',
-                'filters' => [],
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$id' => ID::custom('vcsRepositoryDocId'),
-                'type' => Database::VAR_STRING,
-                'signed' => true,
-                'size' => Database::LENGTH_KEY,
-                'format' => '',
-                'filters' => [],
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$id' => ID::custom('vcsRepositoryDocInternalId'),
+                '$id' => ID::custom('installationInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -2764,7 +2733,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('vcsBranch'),
+                '$id' => ID::custom('providerRepositoryId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -2774,7 +2743,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsRootDirectory'),
+                '$id' => ID::custom('repositoryId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -2784,7 +2753,38 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsSilentMode'),
+                '$id' => ID::custom('repositoryInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('providerBranch'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$id' => ID::custom('providerRootDirectory'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$id' => ID::custom('providerSilentMode'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
                 'size' => 0,
@@ -2971,37 +2971,37 @@ $collections = [
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsInstallationId'),
+                '$id' => ID::custom('_key_installationId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsInstallationId'],
+                'attributes' => ['installationId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsInstallationInternalId'),
+                '$id' => ID::custom('_key_installationInternalId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsInstallationInternalId'],
+                'attributes' => ['installationInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsRepositoryId'),
+                '$id' => ID::custom('_key_providerRepositoryId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsRepositoryId'],
+                'attributes' => ['providerRepositoryId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsRepositoryDocId'),
+                '$id' => ID::custom('_key_repositoryId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsRepositoryDocId'],
+                'attributes' => ['repositoryId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_vcsRepositoryDocInternalId'),
+                '$id' => ID::custom('_key_repositoryInternalId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['vcsRepositoryDocInternalId'],
+                'attributes' => ['repositoryInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -3127,7 +3127,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('vcsInstallationId'),
+                '$id' => ID::custom('installationId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -3137,7 +3137,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsInstallationInternalId'),
+                '$id' => ID::custom('installationInternalId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -3147,7 +3147,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsRepositoryId'),
+                '$id' => ID::custom('providerRepositoryId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -3157,7 +3157,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsRepositoryDocId'),
+                '$id' => ID::custom('repositoryId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -3167,7 +3167,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsRepositoryDocInternalId'),
+                '$id' => ID::custom('repositoryInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3178,7 +3178,7 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('vcsBranch'),
+                '$id' => ID::custom('providerBranch'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -3188,7 +3188,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsRootDirectory'),
+                '$id' => ID::custom('providerRootDirectory'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,
@@ -3198,7 +3198,7 @@ $collections = [
                 'array' => false,
             ],
             [
-                '$id' => ID::custom('vcsCommentId'),
+                '$id' => ID::custom('providerCommentId'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => 2048,

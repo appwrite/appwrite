@@ -750,19 +750,19 @@ class DeletesV1 extends Worker
         $dbForConsole = $this->getConsoleDB();
 
         $this->listByGroup('functions', [
-            Query::equal('vcsInstallationInternalId', [$document->getInternalId()])
+            Query::equal('installationInternalId', [$document->getInternalId()])
         ], $dbForProject, function ($function) use ($dbForProject, $dbForConsole) {
-            $dbForConsole->deleteDocument('vcsRepositories', $function->getAttribute('vcsRepositoryId'));
+            $dbForConsole->deleteDocument('vcsRepositories', $function->getAttribute('repositoryId'));
 
             $function = $function
-                ->setAttribute('vcsInstallationId', '')
-                ->setAttribute('vcsInstallationInternalId', '')
-                ->setAttribute('vcsRepositoryId', '')
-                ->setAttribute('vcsBranch', '')
-                ->setAttribute('vcsSilentMode', false)
-                ->setAttribute('vcsRootDirectory', '')
-                ->setAttribute('vcsRepositoryDocId', '')
-                ->setAttribute('vcsRepositoryDocInternalId', '');
+                ->setAttribute('installationId', '')
+                ->setAttribute('installationInternalId', '')
+                ->setAttribute('providerRepositoryId', '')
+                ->setAttribute('providerBranch', '')
+                ->setAttribute('providerSilentMode', false)
+                ->setAttribute('providerRootDirectory', '')
+                ->setAttribute('repositoryId', '')
+                ->setAttribute('repositoryInternalId', '');
             $dbForProject->updateDocument('functions', $function->getId(), $function);
         });
     }

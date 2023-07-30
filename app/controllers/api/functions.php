@@ -48,7 +48,7 @@ use MaxMind\Db\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcsLogic = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $vcsTemplate) {
+$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -63,13 +63,13 @@ $redeployVcsLogic = function (Request $request, Document $function, Document $pr
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
         'type' => 'vcs',
-        'vcsInstallationId' => $installation->getId(),
-        'vcsInstallationInternalId' => $installation->getInternalId(),
-        'vcsRepositoryId' => $function->getAttribute('vcsRepositoryId', ''),
-        'vcsRepositoryDocId' => $function->getAttribute('vcsRepositoryDocId', ''),
-        'vcsRepositoryDocInternalId' => $function->getAttribute('vcsRepositoryDocInternalId', ''),
-        'vcsBranch' => $function->getAttribute('vcsBranch', 'main'),
-        'vcsRootDirectory' => $function->getAttribute('vcsRootDirectory', ''),
+        'installationId' => $installation->getId(),
+        'installationInternalId' => $installation->getInternalId(),
+        'providerRepositoryId' => $function->getAttribute('providerRepositoryId', ''),
+        'repositoryId' => $function->getAttribute('repositoryId', ''),
+        'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
+        'providerBranch' => $function->getAttribute('providerBranch', 'main'),
+        'providerRootDirectory' => $function->getAttribute('providerRootDirectory', ''),
         'search' => implode(' ', [$deploymentId, $entrypoint]),
         'activate' => true,
     ]));
@@ -77,15 +77,15 @@ $redeployVcsLogic = function (Request $request, Document $function, Document $pr
     $projectId = $project->getId();
     $functionId = $function->getId();
 
-    $vcsTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+    $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
 
     $buildEvent = new Build();
     $buildEvent
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setVcsTargetUrl($vcsTargetUrl)
-        ->setVcsTemplate($vcsTemplate)
+        ->setProviderTargetUrl($providerTargetUrl)
+        ->setTemplate($template)
         ->setProject($project)
         ->trigger();
 };
@@ -115,13 +115,13 @@ App::post('/v1/functions')
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('commands', '', new Text('1028'), 'Build Commands.', true)
-    ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
-    ->param('vcsRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
-    ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
-    ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
-    ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
-    ->param('templateRepositoryName', '', new Text(128), 'Repository name of the template', true)
-    ->param('templateOwnerName', '', new Text(128), 'Owner name of the template', true)
+    ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('providerRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
+    ->param('providerBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
+    ->param('providerSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
+    ->param('providerRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
+    ->param('templateRepository', '', new Text(128), 'Repository name of the template', true)
+    ->param('templateOwner', '', new Text(128), 'Owner name of the template', true)
     ->param('templateRootDirectory', '', new Text(128), 'Path to function code in the template repo', true)
     ->param('templateBranch', '', new Text(128), 'Branch of template repo with the code', true)
     ->inject('request')
@@ -131,28 +131,28 @@ App::post('/v1/functions')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, string $templateRepositoryName, string $templateOwnerName, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
-        $vcsTemplate = new Document([]);
-        if (!empty($templateRepositoryName) && !empty($templateOwnerName)) {
-            $vcsTemplate->setAttribute('repositoryName', $templateRepositoryName)
-                ->setAttribute('ownerName', $templateOwnerName)
+        $template = new Document([]);
+        if (!empty($templateRepository) && !empty($templateOwner) && !empty($templateRootDirectory) && !empty($templateBranch)) {
+            $template->setAttribute('repositoryName', $templateRepository)
+                ->setAttribute('ownerName', $templateOwner)
                 ->setAttribute('rootDirectory', $templateRootDirectory)
                 ->setAttribute('branch', $templateBranch);
         }
 
-        $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
+        $installation = $dbForConsole->getDocument('vcsInstallations', $installationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
-        if (!empty($vcsInstallationId) && $installation->isEmpty()) {
+        if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($vcsRepositoryId) && (empty($vcsInstallationId) || empty($vcsBranch))) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS you need to provide all VCS parameters.');
+        if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
         $function = $dbForProject->createDocument('functions', new Document([
@@ -170,49 +170,42 @@ App::post('/v1/functions')
             'timeout' => $timeout,
             'entrypoint' => $entrypoint,
             'commands' => $commands,
-            'vcsInstallationId' => $installation->getId(),
-            'vcsInstallationInternalId' => $installation->getInternalId(),
-            'vcsRepositoryId' => $vcsRepositoryId,
-            'vcsRepositoryDocId' => '',
-            'vcsRepositoryDocInternalId' => '',
-            'vcsBranch' => $vcsBranch,
-            'vcsRootDirectory' => $vcsRootDirectory,
-            'vcsSilentMode' => $vcsSilentMode,
             'search' => implode(' ', [$functionId, $name, $runtime]),
-            'version' => 'v3'
+            'version' => 'v3',
+            'installationId' => $installation->getId(),
+            'installationInternalId' => $installation->getInternalId(),
+            'providerRepositoryId' => $providerRepositoryId,
+            'repositoryId' => '',
+            'repositoryInternalId' => '',
+            'providerBranch' => $providerBranch,
+            'providerRootDirectory' => $providerRootDirectory,
+            'providerSilentMode' => $providerSilentMode,
         ]));
 
-        $vcsRepositoryDocId = '';
-        $vcsRepositoryDocInternalId = '';
-
         // Git connect logic
-        if (!empty($vcsRepositoryId)) {
-            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepositories', new Document([
+        if (!empty($providerRepositoryId)) {
+            $repository = $dbForConsole->createDocument('vcsRepositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
                     Permission::read(Role::any()),
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-                'vcsInstallationId' => $installation->getId(),
-                'vcsInstallationInternalId' => $installation->getInternalId(),
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getInternalId(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
-                'repositoryId' => $vcsRepositoryId,
+                'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
                 'resourceType' => 'function',
-                'pullRequests' => []
+                'providerPullRequestIds' => []
             ]));
 
-            $vcsRepositoryDocId = $vcsRepoDoc->getId();
-            $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
-
             $function = $dbForProject->updateDocument('functions', $function->getId(), $function
-                ->setAttribute('vcsRepositoryDocId', $vcsRepositoryDocId)
-                ->setAttribute('vcsRepositoryDocInternalId', $vcsRepositoryDocInternalId));
+                ->setAttribute('repositoryId', $repository->getId())
+                ->setAttribute('repositoryInternalId', $repository->getInternalId()));
         }
-
 
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
@@ -227,8 +220,8 @@ App::post('/v1/functions')
         );
 
         // Redeploy vcs logic
-        if (!empty($vcsRepositoryId)) {
-            $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, $vcsTemplate);
+        if (!empty($providerRepositoryId)) {
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $template);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -638,19 +631,18 @@ App::put('/v1/functions/:functionId')
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
     ->param('commands', '', new Text('1028'), 'Build Commands.', true)
-    ->param('vcsInstallationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
-    ->param('vcsRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
-    ->param('vcsBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
-    ->param('vcsSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
-    ->param('vcsRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
+    ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('providerRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
+    ->param('providerBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
+    ->param('providerSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
+    ->param('providerRootDirectory', '', new Text(128), 'Path to function code in the linked repo', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $vcsInstallationId, string $vcsRepositoryId, string $vcsBranch, bool $vcsSilentMode, string $vcsRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -659,16 +651,16 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $installation = $dbForConsole->getDocument('vcsInstallations', $vcsInstallationId, [
+        $installation = $dbForConsole->getDocument('vcsInstallations', $installationId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
         ]);
 
-        if (!empty($vcsInstallationId) && $installation->isEmpty()) {
+        if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        if (!empty($vcsRepositoryId) && (empty($vcsInstallationId) || empty($vcsBranch))) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS you need to provide all VCS parameters.');
+        if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
         if ($function->isEmpty()) {
@@ -677,55 +669,59 @@ App::put('/v1/functions/:functionId')
 
         $enabled ??= $function->getAttribute('enabled', true);
 
-        $vcsRepositoryDocId = $function->getAttribute('vcsRepositoryDocId', '');
-        $vcsRepositoryDocInternalId = $function->getAttribute('vcsRepositoryDocInternalId', '');
+        $repositoryId = $function->getAttribute('repositoryId', '');
+        $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
 
-        $isConnected = !empty($function->getAttribute('vcsRepositoryId', ''));
+        $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
         // Git disconnect logic
-        if ($isConnected && empty($vcsRepositoryId)) {
-            $repoDocs = $dbForConsole->find('vcsRepositories', [
+        if ($isConnected && empty($providerRepositoryId)) {
+            $repositories = $dbForConsole->find('vcsRepositories', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
                 Query::equal('resourceInternalId', [$function->getInternalId()]),
                 Query::equal('resourceType', ['function']),
                 Query::limit(100),
             ]);
 
-            foreach ($repoDocs as $repoDoc) {
-                $dbForConsole->deleteDocument('vcsRepositories', $repoDoc->getId());
+            foreach ($repositories as $repository) {
+                $dbForConsole->deleteDocument('vcsRepositories', $repository->getId());
             }
 
-            $vcsRepositoryId = '';
-            $vcsInstallationId = '';
-            $vcsBranch = '';
-            $vcsRootDirectory = '';
-            $vcsSilentMode = true;
-            $vcsRepositoryDocId = '';
-            $vcsRepositoryDocInternalId = '';
+            $providerRepositoryId = '';
+            $installationId = '';
+            $providerBranch = '';
+            $providerRootDirectory = '';
+            $providerSilentMode = true;
+            $repositoryId = '';
+            $repositoryInternalId = '';
         }
 
         // Git connect logic
-        if (!$isConnected && !empty($vcsRepositoryId)) {
-            $vcsRepoDoc = $dbForConsole->createDocument('vcsRepositories', new Document([
+        if (!$isConnected && !empty($providerRepositoryId)) {
+            $teamId = $project->getAttribute('teamId', '');
+
+            $repository = $dbForConsole->createDocument('vcsRepositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
-                'vcsInstallationId' => $installation->getId(),
-                'vcsInstallationInternalId' => $installation->getInternalId(),
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getInternalId(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getInternalId(),
-                'repositoryId' => $vcsRepositoryId,
+                'providerRepositoryId' => $providerRepositoryId,
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
                 'resourceType' => 'function',
-                'pullRequests' => []
+                'providerPullRequestIds' => []
             ]));
 
-            $vcsRepositoryDocId = $vcsRepoDoc->getId();
-            $vcsRepositoryDocInternalId = $vcsRepoDoc->getInternalId();
+            $repositoryId = $repository->getId();
+            $repositoryInternalId = $repository->getInternalId();
         }
 
         $live = true;
@@ -733,7 +729,7 @@ App::put('/v1/functions/:functionId')
         if (
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
-            $function->getAttribute('vcsRootDirectory') !== $vcsRootDirectory
+            $function->getAttribute('providerRootDirectory') !== $providerRootDirectory
         ) {
             $live = false;
         }
@@ -749,20 +745,20 @@ App::put('/v1/functions/:functionId')
             'logging' => $logging,
             'entrypoint' => $entrypoint,
             'commands' => $commands,
-            'vcsInstallationId' => $installation->getId(),
-            'vcsInstallationInternalId' => $installation->getInternalId(),
-            'vcsRepositoryId' => $vcsRepositoryId,
-            'vcsRepositoryDocId' => $vcsRepositoryDocId,
-            'vcsRepositoryDocInternalId' => $vcsRepositoryDocInternalId,
-            'vcsBranch' => $vcsBranch,
-            'vcsRootDirectory' => $vcsRootDirectory,
-            'vcsSilentMode' => $vcsSilentMode,
+            'installationId' => $installation->getId(),
+            'installationInternalId' => $installation->getInternalId(),
+            'providerRepositoryId' => $providerRepositoryId,
+            'repositoryId' => $repositoryId,
+            'repositoryInternalId' => $repositoryInternalId,
+            'providerBranch' => $providerBranch,
+            'providerRootDirectory' => $providerRootDirectory,
+            'providerSilentMode' => $providerSilentMode,
             'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
         ])));
 
         // Redeploy logic
-        if (!$isConnected && !empty($vcsRepositoryId)) {
-            $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, new Document());
+        if (!$isConnected && !empty($providerRepositoryId)) {
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document());
         }
 
         // Inform scheduler if function is still active
@@ -1289,8 +1285,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Event $events) use ($redeployVcsLogic) {
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project) use ($redeployVcs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1311,9 +1306,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         // TODO: Somehow set commit SHA & ownerName & repoName for git deployments, and file path for manual. Redeploy should use exact same source code
 
-        $installation = $dbForConsole->getDocument('vcsInstallations', $deployment->getAttribute('vcsInstallationId', ''));
+        $installation = $dbForConsole->getDocument('vcsInstallations', $deployment->getAttribute('installationId', ''));
 
-        $redeployVcsLogic($request, $function, $project, $installation, $dbForProject, new Document([]));
+        $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]));
 
         $response->noContent();
     });
