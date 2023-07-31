@@ -1,0 +1,1 @@
+Create a new build for an Appwrite Function deployment. This endpoint can be used to retry a failed build.
