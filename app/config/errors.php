@@ -330,18 +330,18 @@ return [
         'description' => 'Installation with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::REPOSITORY_NOT_FOUND => [
-        'name' => Exception::REPOSITORY_NOT_FOUND,
+    Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
+        'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
         'description' => 'Repository with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VCS_REPOSITORY_NOT_FOUND => [
-        'name' => Exception::VCS_REPOSITORY_NOT_FOUND,
+    Exception::REPOSITORY_NOT_FOUND => [
+        'name' => Exception::REPOSITORY_NOT_FOUND,
         'description' => 'VCS Repository with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VCS_CONTRIBUTION_ALREADY_AUTHORIZED => [
-        'name' => Exception::VCS_CONTRIBUTION_ALREADY_AUTHORIZED,
+    Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
+        'name' => Exception::PROVIDER_CONTRIBUTION_CONFLICT,
         'description' => 'External ontribution is already authorized.',
         'code' => 409,
     ],

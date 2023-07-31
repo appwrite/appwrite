@@ -40,8 +40,6 @@ class Specs extends Action
 
     public function action(string $version, string $mode, Registry $register): void
     {
-        // $db = $register->get('db');
-        // $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');

@@ -899,6 +899,66 @@ return [
         ],
     ],
     [
+        'category' => 'VCS (Version Control System)',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_VCS_GITHUB_APP_NAME',
+                'description' => 'Name of your GitHub app. You can find it in URL of your GitHub application.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_PRIVATE_KEY',
+                'description' => 'GitHub app RSA private key. You can generate private keys from GitHub application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_APP_ID',
+                'description' => 'GitHub application ID. You can find it in your GitHub application details.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_CLIENT_ID',
+                'description' => 'GitHub client ID. You can find it in your GitHub application details.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_CLIENT_SECRET',
+                'description' => 'GitHub client secret. You can generate secrets in your GitHub application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
+                'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Maintenance',
         'description' => '',
         'variables' => [

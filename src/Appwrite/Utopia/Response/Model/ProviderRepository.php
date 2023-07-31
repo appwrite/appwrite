@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Repository extends Model
+class ProviderRepository extends Model
 {
     public function __construct()
     {
@@ -63,7 +63,7 @@ class Repository extends Model
      */
     public function getName(): string
     {
-        return 'Repository';
+        return 'ProviderRepository';
     }
 
     /**
@@ -73,6 +73,6 @@ class Repository extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_REPOSITORY;
+        return Response::MODEL_PROVIDER_REPOSITORY;
     }
 }

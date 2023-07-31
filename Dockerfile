@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM meldiron/base:0.2.3 as final
+FROM appwrite/base:0.4.2 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -45,6 +45,7 @@ ENV _APP_SERVER=swoole \
     _APP_LOCALE=en \
     _APP_WORKER_PER_CORE= \
     _APP_DOMAIN=localhost \
+    _APP_DOMAIN_FUNCTIONS=functions.localhost \
     _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
@@ -122,7 +123,13 @@ ENV _APP_SERVER=swoole \
     _APP_MAINTENANCE_RETENTION_USAGE_HOURLY=8640000 \
     _APP_MAINTENANCE_INTERVAL=86400 \
     _APP_LOGGING_PROVIDER= \
-    _APP_LOGGING_CONFIG=
+    _APP_LOGGING_CONFIG= \
+    _APP_VCS_GITHUB_APP_NAME= \
+    _APP_VCS_GITHUB_PRIVATE_KEY= \
+    _APP_VCS_GITHUB_APP_ID= \
+    _APP_VCS_GITHUB_CLIENT_ID= \
+    _APP_VCS_GITHUB_CLIENT_SECRET= \
+    _APP_VCS_GITHUB_WEBHOOK_SECRET=
 
 RUN apk add git
 

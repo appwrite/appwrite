@@ -95,7 +95,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
 
             if (empty($repositoryName)) {
-                throw new Exception(Exception::REPOSITORY_NOT_FOUND);
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
             }
 
             $isAuthorized = !$external;
@@ -227,7 +227,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
     }
 };
 
-App::get('/v1/vcs/github/installations')
+App::get('/v1/vcs/github/authorize')
     ->desc('Install GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -402,7 +402,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $repositoryName = $github->getRepositoryName($providerRepositoryId);
 
         if (empty($repositoryName)) {
-            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
         $files = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
@@ -444,7 +444,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_REPOSITORY_LIST)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY_LIST)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('gitHub')
@@ -561,7 +561,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $response->dynamic(new Document([
             'repositories' => $repos,
             'total' => \count($repos),
-        ]), Response::MODEL_REPOSITORY_LIST);
+        ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
@@ -573,7 +573,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_REPOSITORY)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('name', '', new Text(256), 'Repository name (slug)')
     ->param('private', '', new Boolean(false), 'Mark repository public or private')
@@ -635,7 +635,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
@@ -647,7 +647,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_REPOSITORY)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER_REPOSITORY)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
     ->inject('gitHub')
@@ -672,7 +672,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
 
         if (empty($repositoryName)) {
-            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
         $repository = $github->getRepository($owner, $repositoryName);
@@ -682,7 +682,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repository['organization'] = $installation->getAttribute('organization', '');
         $repository['provider'] = $installation->getAttribute('provider', '');
 
-        $response->dynamic(new Document($repository), Response::MODEL_REPOSITORY);
+        $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
 App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
@@ -719,7 +719,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
 
         if (empty($repositoryName)) {
-            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
         $branches = $github->listBranches($owner, $repositoryName) ?? [];
@@ -996,11 +996,11 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         ]);
 
         if ($repository->isEmpty()) {
-            throw new Exception(Exception::VCS_REPOSITORY_NOT_FOUND);
+            throw new Exception(Exception::REPOSITORY_NOT_FOUND);
         }
 
         if (\in_array($providerPullRequestId, $repository->getAttribute('providerPullRequestIds', []))) {
-            throw new Exception(Exception::VCS_CONTRIBUTION_ALREADY_AUTHORIZED);
+            throw new Exception(Exception::PROVIDER_CONTRIBUTION_CONFLICT);
         }
 
         $providerPullRequestIds = \array_unique(\array_merge($repository->getAttribute('providerPullRequestIds', []), [$providerPullRequestId]));

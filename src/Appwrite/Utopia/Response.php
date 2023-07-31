@@ -73,9 +73,8 @@ use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Installation;
-use Appwrite\Utopia\Response\Model\Repository;
-use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
+use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
@@ -87,6 +86,7 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\Mock; // Keep last
 
 /**
  * @method Response setStatusCode(int $code = 200)
@@ -183,8 +183,8 @@ class Response extends SwooleResponse
     // VCS
     public const MODEL_INSTALLATION = 'installation';
     public const MODEL_INSTALLATION_LIST = 'installationList';
-    public const MODEL_REPOSITORY = 'repository';
-    public const MODEL_REPOSITORY_LIST = 'repositoryList';
+    public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
+    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
     public const MODEL_BRANCH = 'branch';
     public const MODEL_BRANCH_LIST = 'branchList';
     public const MODEL_DETECTION = 'detection';
@@ -275,7 +275,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
-            ->setModel(new BaseList('Repositories List', self::MODEL_REPOSITORY_LIST, 'repositories', self::MODEL_REPOSITORY))
+            ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
             ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
@@ -332,7 +332,7 @@ class Response extends SwooleResponse
             ->setModel(new Membership())
             ->setModel(new Func())
             ->setModel(new Installation())
-            ->setModel(new Repository())
+            ->setModel(new ProviderRepository())
             ->setModel(new Detection())
             ->setModel(new Branch())
             ->setModel(new Runtime())

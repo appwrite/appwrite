@@ -108,9 +108,9 @@ class Exception extends \Exception
 
     /** VCS */
     public const INSTALLATION_NOT_FOUND              = 'installation_not_found';
+    public const PROVIDER_REPOSITORY_NOT_FOUND       = 'provider_repository_not_found';
     public const REPOSITORY_NOT_FOUND                = 'repository_not_found';
-    public const VCS_REPOSITORY_NOT_FOUND            = 'vcs_repository_not_found';
-    public const VCS_CONTRIBUTION_ALREADY_AUTHORIZED = 'vcs_contribution_already_authorized';
+    public const PROVIDER_CONTRIBUTION_CONFLICT      = 'provider_contribution_conflict';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';

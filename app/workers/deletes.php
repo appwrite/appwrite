@@ -462,9 +462,9 @@ class DeletesV1 extends Worker
         $functionInternalId = $document->getInternalId();
 
         /**
-         * Delete routes
+         * Delete rules
          */
-        Console::info("Deleting routes for function " . $functionId);
+        Console::info("Deleting rules for function " . $functionId);
         $this->deleteByGroup('rules', [
             Query::equal('resourceType', ['function']),
             Query::equal('resourceInternalId', [$functionInternalId]),
