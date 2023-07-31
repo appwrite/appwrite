@@ -3289,12 +3289,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $checkPermissions = (function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $checkPermissions = (function (Document $collection, Document $document, Document $old, string $permission, bool $shouldUpdate = false) use (&$checkPermissions, $dbForProject, $database) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
             $validator = new Authorization($permission);
 
             $valid = $validator->isValid($collection->getPermissionsByType($permission));
-            if (!$documentSecurity && !$valid) {
+            if (!$documentSecurity && !$valid && $shouldUpdate) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
@@ -3375,13 +3375,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                                 }
                             }
                         }
-                        if ($shouldUpdate) {
-                            $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type);
-                        } else {
-                            Authorization::skip(
-                                fn() => $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type)
-                            );
-                        }
+                        $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type, $shouldUpdate);
                     }
                 }
 
@@ -3408,13 +3402,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         }
 
-        if ($shouldUpdate) {
-            $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
-        } else {
-            Authorization::skip(
-                fn() => $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE)
-            );
-        }
+        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE, $shouldUpdate);
 
         try {
             $document = $dbForProject->withRequestTimestamp(
