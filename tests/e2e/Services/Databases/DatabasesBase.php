@@ -1231,62 +1231,6 @@ trait DatabasesBase
         return ['documents' => $documents['body']['documents'], 'databaseId' => $databaseId];
     }
 
-    public function testCreateCollectionAlias(): array
-    {
-        // Create default database
-        $database = $this->client->call(Client::METHOD_POST, '/databases', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'databaseId' => ID::custom('default'),
-            'name' => 'Default'
-        ]);
-
-        $this->assertNotEmpty($database['body']['$id']);
-        $this->assertEquals(201, $database['headers']['status-code']);
-
-        /**
-         * Test for SUCCESS
-         */
-
-        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Movies',
-            'permissions' => [],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals(201, $movies['headers']['status-code']);
-        $this->assertEquals('Movies', $movies['body']['name']);
-
-        return ['moviesId' => $movies['body']['$id']];
-    }
-
-    /**
-     * @depends testCreateCollectionAlias
-     */
-    public function testListDocumentsAlias(array $data): array
-    {
-        /**
-         * Test for SUCCESS
-         */
-
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals(0, $documents['body']['total']);
-
-        return [];
-    }
-
     /**
      * @depends testListDocuments
      */

@@ -1358,7 +1358,6 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     });
 
 App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
-    ->alias('/v1/storage/files/:fileId', ['bucketId' => 'default'])
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')

@@ -697,7 +697,6 @@ App::delete('/v1/databases/:databaseId')
     });
 
 App::post('/v1/databases/:databaseId/collections')
-    ->alias('/v1/database/collections', ['databaseId' => 'default'])
     ->desc('Create Collection')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
