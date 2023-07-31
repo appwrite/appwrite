@@ -65,9 +65,8 @@ class Backup extends Action
                 );
 
                 $this->upload(
-                    folder: $folder,
-                    filename: $filename,
-                    tarFile: $tarFile,
+                    subFolder: $folder,
+                    file: $tarFile,
                     local: $local
                 );
 
@@ -98,12 +97,12 @@ class Backup extends Action
             '--password=rootsecretpassword', // todo use .env
             '--host=mariadb',
             '--backup',
-            '--compress',
+            //'--compress',
             //'--compress-threads=1',
             //'--no-lock', // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
-            '--check-privileges',
+            //'--check-privileges',
             '--target-dir=' . $backups,
         ];
 
@@ -151,9 +150,10 @@ class Backup extends Action
         }
     }
 
-    public function upload(string $folder, string $filename, string $tarFile, Device $local)
+    public function upload(string $subFolder, string $file, Device $local)
     {
-        $s3 = new DOSpaces('/' . $this->project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $filename = basename($file);
+        $s3 = new DOSpaces('/' . $this->project . '/' . $subFolder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (!$s3->exists('/')) {
             Console::error('Can\'t read from DO ');
@@ -161,10 +161,10 @@ class Backup extends Action
         }
 
         try {
-            self::log('Uploading: ' . $tarFile);
+            self::log('Uploading: ' . $file);
             $destination = $s3->getRoot() . '/' . $filename;
 
-            if (!$local->transfer($tarFile, $destination, $s3)) {
+            if (!$local->transfer($file, $destination, $s3)) {
                 Console::error('Error uploading to ' . $destination);
                 Console::exit();
             }
@@ -191,7 +191,7 @@ class Backup extends Action
         $local = new Local(self::$backups . '/' . $project . '/inc/' . $folder);
         $position = 1;
         $target = $local->getRoot() . '/' . $position;
-        $base = null;
+        $base = '';
 
         if (file_exists($local->getRoot() . '/position')) {
             $position = intval(file_get_contents($local->getRoot() . '/position'));
@@ -201,17 +201,13 @@ class Backup extends Action
                 Console::exit();
             }
 
+            $base = $local->getRoot() . '/' . $position;
             $position += 1;
-            $base = $target;
             $target = $local->getRoot() . '/' . $position;
-
-            Console::success($position);
         }
 
-        if (!empty($base) && !file_exists($base) && !mkdir($base, 0755, true)) {
-            Console::error('Error creating base directory: ' . $base);
-            Console::exit();
-        }
+        Console::success($base);
+        Console::success($target);
 
         if (!file_exists($target) && !mkdir($target, 0755, true)) {
             Console::error('Error creating backup directory: ' . $target);
@@ -243,10 +239,6 @@ class Backup extends Action
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
-        self::log("stdout ========= ");
-        self::log($stdout);
-        self::log("stdout ========= ");
-
         if (!empty($stderr)) {
            // Console::error($stderr);
             //Console::exit();
