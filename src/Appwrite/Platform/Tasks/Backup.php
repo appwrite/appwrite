@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
 
@@ -22,7 +23,6 @@ class Backup extends Action
 
     public function __construct()
     {
-
         $this->checkEnvVariables();
         $this->project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
 
@@ -31,19 +31,58 @@ class Backup extends Action
             ->callback(fn() => $this->action());
     }
 
-    public function fullBackup()
+    public function action(): void
     {
-        $time = date('Ymd_His');
-        $project = $this->project;
-        $filename = $time . '.tar.gz';
-        $folder = App::getEnv('_APP_BACKUP_FOLDER');
-        $s3 = new DOSpaces('/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
-        $local = new Local(self::$backups . '/' . $project . '/' . $folder . '/' . $time);
-        $backups = $local->getRoot() . '/files';
-        $tarFile = $local->getRoot() . '/' . $filename;
+        self::log('--- Backup Start --- ');
+        $start = microtime(true);
+        $type = 'inc';
+        //$type = 'full';
 
-        $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+        switch ($type) {
+            case 'inc':
+                for ($i = 0; $i <= 4; $i++) {
+                    $this->incrementalBackup();
+                }
+                break;
+            case 'full':
+                $time = date('Ymd_His');
+                $filename = $time . '.tar.gz';
+                $folder = App::getEnv('_APP_BACKUP_FOLDER');
 
+                $local = new Local(self::$backups . '/' . $this->project . '/' . $folder . '/' . $time);
+                $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+
+                $backups = $local->getRoot() . '/files';
+                $tarFile = $local->getRoot() . '/' . $filename;
+
+                $this->fullBackup(
+                    backups: $backups,
+                );
+
+                $this->tar(
+                    folder: $backups,
+                    tarFile: $tarFile,
+                );
+
+                $this->upload(
+                    folder: $folder,
+                    filename: $filename,
+                    tarFile: $tarFile,
+                    local: $local
+                );
+
+                break;
+
+            default:
+                Console::error('No type detected');
+                Console::exit();
+        }
+
+        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+    }
+
+    public function fullBackup(string $backups)
+    {
         if (!file_exists(self::$backups)) {
             Console::error('Mount directory does not exist');
             Console::exit();
@@ -56,7 +95,7 @@ class Backup extends Action
 
         $args = [
             '--user=root',
-            '--password=rootsecretpassword',
+            '--password=rootsecretpassword', // todo use .env
             '--host=mariadb',
             '--backup',
             '--compress',
@@ -79,15 +118,18 @@ class Backup extends Action
             //Console::exit();
         }
 
-        if (!file_exists($backups . '/sys')) {
+        if (!file_exists($backups . '/xtrabackup_checkpoints')) {
             Console::error('Backup failed missing files');
             Console::exit();
         }
+    }
 
+    public function tar(string $folder, string $tarFile)
+    {
         $stdout = '';
         $stderr = '';
         // Tar from inside the directory for not using --strip-components
-        $cmd = 'cd ' . $backups . ' && tar zcf ' . $tarFile . ' .';
+        $cmd = 'cd ' . $folder . ' && tar zcf ' . $tarFile . ' .';
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         self::log($stdout);
@@ -107,8 +149,11 @@ class Backup extends Action
             Console::error("File size is very small: " . $tarFile);
             Console::exit();
         }
+    }
 
-        // self::startMysqlContainer($this->containerName);
+    public function upload(string $folder, string $filename, string $tarFile, Device $local)
+    {
+        $s3 = new DOSpaces('/' . $this->project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (!$s3->exists('/')) {
             Console::error('Can\'t read from DO ');
@@ -117,7 +162,6 @@ class Backup extends Action
 
         try {
             self::log('Uploading: ' . $tarFile);
-
             $destination = $s3->getRoot() . '/' . $filename;
 
             if (!$local->transfer($tarFile, $destination, $s3)) {
@@ -133,10 +177,6 @@ class Backup extends Action
             Console::error($e->getMessage());
             Console::exit();
         }
-
-        Console::loop(function () {
-            self::log('loop');
-        }, 100);
     }
 
     public function incrementalBackup()
@@ -147,8 +187,8 @@ class Backup extends Action
         //$folder = ceil(date('z') / 7); // day of the year 0-365
         $folder = date('W'); // week of the year  0 - 51
 
-        $folder = 'inc_v1_' . date('Y') . '_' . $folder;
-        $local = new Local(self::$backups . '/' . $project . '/' . $folder);
+        $folder = 'v1_' . date('Y') . '_' . $folder;
+        $local = new Local(self::$backups . '/' . $project . '/inc/' . $folder);
         $position = 1;
         $target = $local->getRoot() . '/' . $position;
         $base = null;
@@ -212,44 +252,15 @@ class Backup extends Action
             //Console::exit();
         }
 
-        self::log('completed start!');
-
-        // For some reason they write everything as stderr
+        // For some reason they write everything as $stderr
         if (!str_contains($stderr, 'completed OK!')) {
+            /// Todo We need to destroy this directory and all the data inside or move it somewhere
             Console::error($stderr);
             Console::exit();
         }
-
-        self::log('completed end!');
-
     }
 
 
-    /**
-     * @throws \Exception
-     */
-    public function action(): void
-    {
-        self::log('--- Backup Start --- ');
-        $start = microtime(true);
-        $type = 'incremental';
-
-        switch ($type) {
-            case 'incremental':
-                for ($i = 0; $i < 3; $i++) {
-                    $this->incrementalBackup();
-                }
-                break;
-            case 'full':
-                $this->fullBackup();
-                break;
-            default:
-                Console::error('No type detected');
-                Console::exit();
-        }
-
-        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
-    }
 
 
 
