@@ -231,8 +231,14 @@ App::init()
 
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+                        $isAdminMode = $mode === APP_MODE_ADMIN;
+                        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+                        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+                        if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                        }
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);

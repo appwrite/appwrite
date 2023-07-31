@@ -727,7 +727,7 @@ App::post('/v1/databases/:databaseId/collections')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -790,7 +790,7 @@ App::get('/v1/databases/:databaseId/collections')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -846,7 +846,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled')  && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -986,7 +986,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -1052,7 +1052,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled')  && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -2664,14 +2664,20 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        $isAdminMode = $mode === APP_MODE_ADMIN;
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::DATABASE_NOT_FOUND);
+            }
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }
@@ -2883,13 +2889,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        $isAdminMode = $mode === APP_MODE_ADMIN;
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::DATABASE_NOT_FOUND);
+            }
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+        if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
             if (!$collection->getAttribute('documentSecurity', false)) {
                 $validator = new Authorization(Database::PERMISSION_READ);
                 if (!$validator->isValid($collection->getRead())) {
@@ -2898,8 +2910,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
         }
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::COLLECTION_NOT_FOUND);
+            }
         }
 
         // Validate queries
@@ -3017,14 +3031,20 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        $isAdminMode = $mode === APP_MODE_ADMIN;
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::DATABASE_NOT_FOUND);
+            }
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }
@@ -3229,14 +3249,20 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        $isAdminMode = $mode === APP_MODE_ADMIN;
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::DATABASE_NOT_FOUND);
+            }
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }
@@ -3467,14 +3493,20 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        $isAdminMode = $mode === APP_MODE_ADMIN;
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || !$database->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::DATABASE_NOT_FOUND);
+            }
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::COLLECTION_NOT_FOUND);
             }
         }

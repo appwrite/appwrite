@@ -364,8 +364,14 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $validator = new Authorization(Database::PERMISSION_CREATE);
@@ -692,8 +698,14 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
@@ -768,8 +780,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
@@ -837,8 +855,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
@@ -983,8 +1007,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
@@ -1123,8 +1153,14 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
@@ -1282,8 +1318,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttributes('fileSecurity', false);
@@ -1387,8 +1429,14 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Delete $deletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
-            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
         }
 
         $fileSecurity = $bucket->getAttributes('fileSecurity', false);

@@ -1038,7 +1038,11 @@ App::post('/v1/functions/:functionId/executions')
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::FUNCTION_NOT_FOUND);
             }
         }
@@ -1233,7 +1237,11 @@ App::get('/v1/functions/:functionId/executions')
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::FUNCTION_NOT_FOUND);
             }
         }
@@ -1305,7 +1313,11 @@ App::get('/v1/functions/:functionId/executions/:executionId')
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
                 throw new Exception(Exception::FUNCTION_NOT_FOUND);
             }
         }
