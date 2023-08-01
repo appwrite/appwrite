@@ -9,7 +9,6 @@ use Utopia\Database\Helpers\ID;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Firebase as GlobalFirebase;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -265,10 +264,9 @@ App::get('/v1/migrations/appwrite/report')
         }
     });
 
-
 App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase Data')
+    ->desc('Migrate Firebase Data (Service Account)')
     ->label('scope', 'migrations.write')
     ->label('event', 'migrations.create')
     ->label('audits.event', 'migration.create')
@@ -314,6 +312,91 @@ App::post('/v1/migrations/firebase')
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/firebaseOAuth')
+    ->groups(['api', 'migrations'])
+    ->desc('Migrate Firebase Data (OAuth)')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'migrateFirebaseOAuth')
+    ->label('sdk.description', '/docs/references/migrations/migration-firebase.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
+    ->param('projectId', '', new Text(65536), "Project ID of the Firebase Project")
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->inject('project')
+    ->inject('user')
+    ->inject('events')
+    ->inject('request')
+    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $eventsInstance, Request $request) {
+        $firebase = new OAuth2Firebase(
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''), 
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''), 
+            $request->getProtocol() . '://' . $request->getHostname() . "/v1/migrations/firebase/redirect"
+        );
+
+        $accessToken = $user->getAttribute('migrationsFirebaseAccessToken');
+        $refreshToken = $user->getAttribute('migrationsFirebaseRefreshToken');
+        $accessTokenExpiry = $user->getAttribute('migrationsFirebaseAccessTokenExpiry');
+
+        $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
+        if ($isExpired) {
+            $firebase->refreshTokens($refreshToken);
+
+            $accessToken = $firebase->getAccessToken('');
+            $refreshToken = $firebase->getRefreshToken('');
+
+            $verificationId = $firebase->getUserID($accessToken);
+
+            if (empty($verificationId)) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
+            }
+
+            $user = $user
+                ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
+                ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
+                ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
+
+            $dbForConsole->updateDocument('users', $user->getId(), $user);
+        }
+        
+        $firebase->createServiceAccount($accessToken, $projectId);
+        
+        // $migration = $dbForProject->createDocument('migrations', new Document([
+        //     '$id' => ID::unique(),
+        //     'status' => 'pending',
+        //     'stage' => 'init',
+        //     'source' => Firebase::getName(),
+        //     'credentials' => [
+        //         'serviceAccount' => $serviceAccount,
+        //     ],
+        //     'resources' => $resources,
+        //     'statusCounters' => '{}',
+        //     'resourceData' => "{}",
+        //     'errors' => []
+        // ]));
+
+        // $eventsInstance->setParam('migrationId', $migration->getId());
+
+        // // Trigger Transfer
+        // $event = new Migration();
+        // $event
+        //     ->setMigration($migration)
+        //     ->setProject($project)
+        //     ->setUser($user)
+        //     ->trigger();
+
+        // $response
+        //     ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+        //     ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
 App::get('/v1/migrations/firebase/report')
@@ -372,20 +455,16 @@ App::get('/v1/migrations/firebase/connect')
             'redirect' => $redirect
         ]);
 
-        // replace firebase url state with migrationState in user prefs attribute
         $prefs = $user->getAttribute('prefs', []);
         $prefs['migrationState'] = $state;
         $user->setAttribute('prefs', $prefs);
         $dbForConsole->updateDocument('users', $user->getId(), $user);
 
-        $url = "https://accounts.google.com/o/oauth2/v2/auth" .
-            "?access_type=offline" .
-            "&scope=" . urlencode("https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/identitytoolkit") .
-            "&response_type=code" .
-            "&client_id=" . urlencode(App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID')) .
-            "&redirect_uri=" . $request->getProtocol() . '://' . $request->getHostname() . "/v1/migrations/firebase/redirect" .
-            "&state=" . urlencode($state) .
-            "&prompt=consent";
+        $oauth2 = new OAuth2Firebase(
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''), 
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''), 
+            $request->getProtocol() . '://' . $request->getHostname() . "/v1/migrations/firebase/redirect");
+        $url = $oauth2->getLoginURL();
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -399,13 +478,12 @@ App::get('/v1/migrations/firebase/redirect')
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->param('code', '', new Text(2048), 'OAuth2 code.', true)
-    ->inject('firebase')
     ->inject('user')
     ->inject('project')
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $code, GlobalFirebase $firebase, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (string $code, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
         $prefs = $user->getAttribute('prefs', []);
         $state = $prefs['migrationState'] ?? '{}';
         $prefs['migrationState'] = '';
@@ -423,7 +501,7 @@ App::get('/v1/migrations/firebase/redirect')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if (empty($redirect)) {
-            $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
+            $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/migrations";
         }
 
         if ($project->isEmpty()) {
@@ -436,7 +514,12 @@ App::get('/v1/migrations/firebase/redirect')
 
         // OAuth Authroization
         if (!empty($code)) {
-            $oauth2 = new OAuth2Firebase(App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''), App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''), "");
+            $oauth2 = new OAuth2Firebase(
+                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''), 
+                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''), 
+                $request->getProtocol() . '://' . $request->getHostname() . "/v1/migrations/firebase/redirect"
+            );
+
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
@@ -457,26 +540,91 @@ App::get('/v1/migrations/firebase/redirect')
 
 App::get('/v1/migrations/firebase/projects')
     ->desc('List Firebase Projects')
-    ->groups(['api', 'vcs'])
+    ->groups(['api', 'migrations'])
     ->label('scope', 'public')
-    ->label('sdk.namespace', 'vcs')
+    ->label('sdk.namespace', 'migrations')
     ->label('sdk.method', 'listFirebaseProjects')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->inject('firebase')
+    ->inject('user')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $search, GlobalFirebase $firebase, Response $response, Document $project, Database $dbForConsole) {
-        if (empty($search)) {
-            $search = "";
+    ->inject('request')
+    ->action(function (Document $user, Response $response, Document $project, Database $dbForConsole, Request $request) {
+        $firebase = new OAuth2Firebase(
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''), 
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''), 
+            $request->getProtocol() . '://' . $request->getHostname() . "/v1/migrations/firebase/redirect"
+        );
+
+        $accessToken = $user->getAttribute('migrationsFirebaseAccessToken');
+        $refreshToken = $user->getAttribute('migrationsFirebaseRefreshToken');
+        $accessTokenExpiry = $user->getAttribute('migrationsFirebaseAccessTokenExpiry');
+
+        $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
+        if ($isExpired) {
+            $firebase->refreshTokens($refreshToken);
+
+            $accessToken = $firebase->getAccessToken('');
+            $refreshToken = $firebase->getRefreshToken('');
+
+            $verificationId = $firebase->getUserID($accessToken);
+
+            if (empty($verificationId)) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
+            }
+
+            $user = $user
+                ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
+                ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
+                ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
+
+            $dbForConsole->updateDocument('users', $user->getId(), $user);
         }
+
+        $projects = $firebase->getProjects($accessToken);
+
+        $output = [];
+        foreach ($projects as $project) {
+            $output[] = [
+                'displayName' => $project['displayName'],
+                'projectId' => $project['projectId'],
+            ];
+        }
+
+        $response->dynamic(new Document([
+            'projects' => $output,
+            'total' => count($output),
+        ]), Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST);
     });
 
+App::get('/v1/migrations/firebase/deauthorize')
+    ->desc('Revoke Appwrite\'s authorization to access Firebase Projects')
+    ->groups(['api', 'migrations'])
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'firebaseDeauthorize')
+    ->label('sdk.description', '')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->inject('user')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->inject('request')
+    ->action(function (Document $user, Response $response, Document $project, Database $dbForConsole, Request $request) {
+        $user = $user
+            ->setAttribute('migrationsFirebaseAccessToken', '')
+            ->setAttribute('migrationsFirebaseRefreshToken', '')
+            ->setAttribute('migrationsFirebaseAccessTokenExpiry', '');
 
+        $dbForConsole->updateDocument('users', $user->getId(), $user);
+
+        $response->noContent();
+    });
 
 
 App::post('/v1/migrations/supabase')

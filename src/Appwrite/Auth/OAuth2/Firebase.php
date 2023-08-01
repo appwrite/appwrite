@@ -41,10 +41,13 @@ class Firebase extends OAuth2
     public function getLoginURL(): string
     {
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . \http_build_query([
+            'access_type' => 'offline',
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state)
+            'state' => \json_encode($this->state),
+            'response_type' => 'code',
+            'prompt' => 'consent',
         ]);
     }
 
@@ -69,15 +72,13 @@ class Firebase extends OAuth2
                 ])
             );
 
-            $output = [];
-            \parse_str($response, $output);
-            $this->tokens = $output;
+            $this->tokens =  \json_decode($response, true);
         }
 
         return $this->tokens;
     }
 
-        /**
+    /**
      * @param string $refreshToken
      *
      * @return array
@@ -173,20 +174,44 @@ class Firebase extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
+            $response = $this->request(
+                'GET',
+                'https://www.googleapis.com/oauth2/v1/userinfo',
+                ['Authorization: Bearer ' . \urlencode($accessToken)]
+            );
 
-            $emails = $this->request('GET', ' https://www.googleapis.com/oauth2/v1/userinfo?alt=json', ['Authorization: token ' . \urlencode($accessToken)]);
-
-            $emails = \json_decode($emails, true);
-            foreach ($emails as $email) {
-                if (isset($email['verified']) && $email['verified'] === true) {
-                    $this->user['email'] = $email['email'];
-                    $this->user['verified'] = $email['verified'];
-                    break;
-                }
-            }
+            $this->user = \json_decode($response, true);
         }
 
         return $this->user;
+    }
+
+    public function getProjects(string $accessToken): array
+    {
+        $projects = $this->request('GET', 'https://firebase.googleapis.com/v1beta1/projects', ['Authorization: Bearer ' . \urlencode($accessToken)]);
+
+        $projects = \json_decode($projects, true);
+
+        return $projects['results'];
+    }
+
+    public function createServiceAccount(string $accessToken, string $projectID): array
+    {
+        $response = $this->request(
+            'POST',
+            "https://iam.googleapis.com/v1/projects/{$projectID}/serviceAccounts",
+            [
+                'Authorization: Bearer ' . \urlencode($accessToken),
+                'Content-Type: application/json'
+            ],
+            json_encode([
+                'accountId' => 'appwrite-migrations',
+                'serviceAccount' => [
+                    'displayName' => 'Appwrite Migrations'
+                ]
+            ])
+        );
+
+        return json_decode($response, true);
     }
 }
