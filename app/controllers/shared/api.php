@@ -5,7 +5,6 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
@@ -16,7 +15,6 @@ use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -552,5 +550,13 @@ App::shutdown()
                 ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
                 ->setParam('project.{scope}.network.outbound', $response->getSize())
                 ->submit();
+        }
+    });
+
+App::init()
+    ->groups(['usage'])
+    ->action(function () {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

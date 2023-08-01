@@ -1,3 +1,18 @@
+## 8.0.0
+
+* Added relationships support
+* Added support for new queries: `isNull`, `isNotNull`, `startsWith`, `notStartsWith`, `endsWith`, `between` and `select`.
+* Added update attribute support
+* Added team prefs support
+* Changed function create/update `execute` parameter to optional
+* Changed team `update` to `updateName`
+* Changed `Account` service to use the `User` model instead of `Account`
+
+## 7.3.0
+
+* Improve helper classes
+* Deprecated `InputFile` default constructor and introduced `InputFile.fromPath` and `InputFile.fromBytes` for consistency with other SDKs
+
 ## 7.2.0
 
 * Support for GraphQL

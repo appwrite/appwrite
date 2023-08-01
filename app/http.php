@@ -92,7 +92,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         $collections = Config::getParam('collections', []);
 
         try {
-            $redis->flushAll();
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
         } catch (\Exception $e) {
@@ -114,12 +113,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 continue;
             }
             if (!$dbForConsole->getCollection($key)->isEmpty()) {
-                continue;
-            }
-            /**
-             * Skip to prevent 0.16 migration issues.
-             */
-            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
                 continue;
             }
 
@@ -296,7 +289,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('detailedTrace', $th->getTrace());
-            $log->addExtra('roles', Authorization::$roles);
+            $log->addExtra('roles', Authorization::getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);

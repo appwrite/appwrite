@@ -41,6 +41,7 @@ Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init()
+    ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
@@ -233,7 +234,7 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -384,7 +385,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -437,7 +438,7 @@ App::error()
                 $log->addExtra('line', $error->getLine());
                 $log->addExtra('trace', $error->getTraceAsString());
                 $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::$roles);
+                $log->addExtra('roles', Authorization::getRoles());
 
                 $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
                 $log->setAction($action);
@@ -485,6 +486,10 @@ App::error()
                     $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
                     break;
             }
+        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
+            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, null, null, $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
@@ -581,7 +586,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -591,7 +596,7 @@ App::get('/.well-known/acme-challenge')
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
 
-        $validator = new Text(100, [
+        $validator = new Text(100, allowList: [
             ...Text::NUMBERS,
             ...Text::ALPHABET_LOWER,
             ...Text::ALPHABET_UPPER,

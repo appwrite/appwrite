@@ -100,8 +100,8 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.2.1';
+const APP_CACHE_BUSTER = 506;
+const APP_VERSION_STABLE = '1.3.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -285,12 +285,23 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('attributes', [
-                Query::equal('collectionInternalId', [$document->getInternalId()]),
-                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getLimitForAttributes()),
-            ]);
+        $attributes = $database->find('attributes', [
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
+            Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+            Query::limit($database->getLimitForAttributes()),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $options = $attribute->getAttribute('options');
+                foreach ($options as $key => $value) {
+                    $attribute->setAttribute($key, $value);
+                }
+                $attribute->removeAttribute('options');
+            }
+        }
+
+        return $attributes;
     }
 );
 
@@ -892,7 +903,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
     if ($projectId === 'console') {
         return $console;
@@ -1155,3 +1166,17 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $params,
     );
 }, ['utopia', 'dbForProject']);
+
+App::setResource('requestTimestamp', function ($request) {
+    //TODO: Move this to the Request class itself
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);

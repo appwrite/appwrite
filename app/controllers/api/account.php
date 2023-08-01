@@ -62,7 +62,7 @@ App::post('/v1/account')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
@@ -549,7 +549,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge([
             '$id' => ID::unique(),
@@ -701,7 +701,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $loginSecret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -827,7 +827,7 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -976,7 +976,7 @@ App::post('/v1/account/sessions/phone')
         }
 
         $secret = Auth::codeGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -1064,7 +1064,7 @@ App::put('/v1/account/sessions/phone')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -1216,7 +1216,7 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::addSeconds(new \DateTime(), $duration);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -1328,7 +1328,7 @@ App::get('/v1/account')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->inject('response')
@@ -1356,7 +1356,7 @@ App::get('/v1/account/prefs')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
 
-        $prefs = $user->getAttribute('prefs', new \stdClass());
+        $prefs = $user->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -1389,6 +1389,7 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
             $sessions[$key] = $session;
         }
@@ -1411,7 +1412,7 @@ App::get('/v1/account/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('user')
     ->inject('locale')
@@ -1426,7 +1427,7 @@ App::get('/v1/account/logs')
 
         $audit = new EventAudit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 
         $output = [];
 
@@ -1495,7 +1496,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration))
+                    ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -1520,19 +1521,22 @@ App::patch('/v1/account/name')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user
+        $user
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')])));
+            ->setAttribute('search', implode(' ', [$user->getId(), $name, $user->getAttribute('email', ''), $user->getAttribute('phone', '')]));
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $events->setParam('userId', $user->getId());
 
@@ -1554,17 +1558,18 @@ App::patch('/v1/account/password')
     ->label('sdk.description', '/docs/references/account/update-password.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->param('oldPassword', '', new Password(), 'Current user password. Must be at least 8 chars.', true)
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
@@ -1585,12 +1590,14 @@ App::patch('/v1/account/password')
             array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now()))
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+        $user
+            ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $events->setParam('userId', $user->getId());
 
@@ -1612,16 +1619,17 @@ App::patch('/v1/account/email')
     ->label('sdk.description', '/docs/references/account/update-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $email, string $password, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
         $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
 
         if (
@@ -1642,7 +1650,7 @@ App::patch('/v1/account/email')
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $email, $user->getAttribute('phone', '')]));
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -1667,16 +1675,17 @@ App::patch('/v1/account/phone')
     ->label('sdk.description', '/docs/references/account/update-phone.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
 
         $isAnonymousUser = Auth::isAnonymousUser($user); // Check if request is from an anonymous account for converting
 
@@ -1693,7 +1702,7 @@ App::patch('/v1/account/phone')
             ->setAttribute('search', implode(' ', [$user->getId(), $user->getAttribute('name', ''), $user->getAttribute('email', ''), $phone]));
 
         try {
-            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -1718,17 +1727,20 @@ App::patch('/v1/account/prefs')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account/prefs')
     ->label('sdk.offline.key', 'current')
     ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (array $prefs, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+        $user->setAttribute('prefs', $prefs);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $events->setParam('userId', $user->getId());
 
@@ -1750,15 +1762,18 @@ App::patch('/v1/account/status')
     ->label('sdk.description', '/docs/references/account/update-status.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->inject('requestTimestamp')
     ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
 
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('status', false));
+        $user->setAttribute('status', false);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $events
             ->setParam('userId', $user->getId())
@@ -1767,6 +1782,12 @@ App::patch('/v1/account/status')
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
+
+        $protocol = $request->getProtocol();
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -1788,6 +1809,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to delete the current device session.')
+    ->inject('requestTimestamp')
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1795,7 +1817,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('locale')
     ->inject('events')
     ->inject('project')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Document $project) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Document $project) {
 
         $protocol = $request->getProtocol();
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1807,9 +1829,11 @@ App::delete('/v1/account/sessions/:sessionId')
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
-                unset($sessions[$key]);
+                $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
+                    return $dbForProject->deleteDocument('sessions', $session->getId());
+                });
 
-                $dbForProject->deleteDocument('sessions', $session->getId());
+                unset($sessions[$key]);
 
                 $session->setAttribute('current', false);
 
@@ -1916,7 +1940,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
-                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration));
+                $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
                 $events
                     ->setParam('userId', $user->getId())
@@ -2283,7 +2307,7 @@ App::post('/v1/account/verification')
             ->setBody($body)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
-            ->setName($user->getAttribute('name'))
+            ->setName($user->getAttribute('name') ?? '')
             ->trigger()
         ;
 
@@ -2357,7 +2381,7 @@ App::put('/v1/account/verification')
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
-            ->setParam('userId', $user->getId())
+            ->setParam('userId', $userId)
             ->setParam('tokenId', $verificationDocument->getId())
         ;
 

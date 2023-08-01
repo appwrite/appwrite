@@ -29,6 +29,7 @@ use Utopia\Domains\Domain;
 use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -91,38 +92,43 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        $project = $dbForConsole->createDocument('projects', new Document([
-            '$id' => $projectId,
-            '$permissions' => [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ],
-            'name' => $name,
-            'teamInternalId' => $team->getInternalId(),
-            'teamId' => $team->getId(),
-            'region' => $region,
-            'description' => $description,
-            'logo' => $logo,
-            'url' => $url,
-            'version' => APP_VERSION_STABLE,
-            'legalName' => $legalName,
-            'legalCountry' => $legalCountry,
-            'legalState' => $legalState,
-            'legalCity' => $legalCity,
-            'legalAddress' => $legalAddress,
-            'legalTaxId' => ID::custom($legalTaxId),
-            'services' => new stdClass(),
-            'platforms' => null,
-            'authProviders' => [],
-            'webhooks' => null,
-            'keys' => null,
-            'domains' => null,
-            'auths' => $auths,
-            'search' => implode(' ', [$projectId, $name]),
-        ]));
+        try {
+            $project = $dbForConsole->createDocument('projects', new Document([
+                '$id' => $projectId,
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'name' => $name,
+                'teamInternalId' => $team->getInternalId(),
+                'teamId' => $team->getId(),
+                'region' => $region,
+                'description' => $description,
+                'logo' => $logo,
+                'url' => $url,
+                'version' => APP_VERSION_STABLE,
+                'legalName' => $legalName,
+                'legalCountry' => $legalCountry,
+                'legalState' => $legalState,
+                'legalCity' => $legalCity,
+                'legalAddress' => $legalAddress,
+                'legalTaxId' => ID::custom($legalTaxId),
+                'services' => new stdClass(),
+                'platforms' => null,
+                'authProviders' => [],
+                'webhooks' => null,
+                'keys' => null,
+                'domains' => null,
+                'auths' => $auths,
+                'search' => implode(' ', [$projectId, $name]),
+            ]));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
+
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
 
@@ -184,7 +190,7 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -245,7 +251,7 @@ App::get('/v1/projects/:projectId')
 
 App::get('/v1/projects/:projectId/usage')
     ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects'])
+    ->groups(['api', 'projects', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
@@ -678,17 +684,11 @@ App::delete('/v1/projects/:projectId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('password', '', new Password(), 'Your user password for confirmation. Must be at least 8 chars.')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
     ->inject('deletes')
-    ->action(function (string $projectId, string $password, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
-
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
-        }
-
+    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1237,7 +1237,7 @@ App::get('/v1/projects/:projectId/platforms')
         }
 
         $platforms = $dbForConsole->find('platforms', [
-            Query::equal('projectId', [$project->getId()]),
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::limit(5000),
         ]);
 
@@ -1402,7 +1402,7 @@ App::post('/v1/projects/:projectId/domains')
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
+            throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
         }
 
         $domain = new Domain($domain);

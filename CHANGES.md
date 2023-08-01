@@ -1,13 +1,72 @@
-# Version TBD
+# Version 1.3.8
 
-## Features
-- Password dictionary setting allows to compare user's password against command password database [4906](https://github.com/appwrite/appwrite/pull/4906)
-- Password history setting allows to save user's last used password so that it may not be used again.  Maximum number of history saved is 20, which can be configured. Minimum is 0 which means disabled. [#4866](https://github.com/appwrite/appwrite/pull/4866)
+## Bugs
+- Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
+
+# Version 1.3.7
+
+## Bugs
+- Fix the routing for the default OAuth2 pages [#5640](https://github.com/appwrite/appwrite/pull/5640) [#5648](https://github.com/appwrite/appwrite/pull/5648)
+- Add support for trailing slashes in Routes and URLs [#5647](https://github.com/appwrite/appwrite/pull/5647) [#5648](https://github.com/appwrite/appwrite/pull/5648)
+
+# Version 1.3.6
 
 ## Bugs
 
-- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+- Fix Console deep linking to result in a 404 [#5632](https://github.com/appwrite/appwrite/pull/5632)
+- Fix ACME HTTP Challenge [#5632](https://github.com/appwrite/appwrite/pull/5632)
+
+# Version 1.3.5
+
+## Bugs
+
+- Fix minimum length for string attribute default values [#5606](https://github.com/appwrite/appwrite/pull/5606), [#5602](https://github.com/appwrite/appwrite/pull/5602)
+- Update framework to fix route mismatches [#5603](https://github.com/appwrite/appwrite/pull/5603)
+
+# Version 1.3.4
+
+## Bugs
+
+- Update migration to properly migrate bucket permissions [#5497](https://github.com/appwrite/appwrite/pull/5497)
+
+# Version 1.3.3
+
+## Bugs
+- Fixed migration resetting some data [#5455](https://github.com/appwrite/appwrite/pull/5455)
+
+# Version 1.3.2
+
+## Bugs
+- Fixed auto-setting custom ID on nested documents [#5363](https://github.com/appwrite/appwrite/pull/5363)
+- Fixed listDocuments not returning all the documents [#5395](https://github.com/appwrite/appwrite/pull/5395)
+- Fixed deleting keys, webhooks, platforms and domains after deleting project [#5395](https://github.com/appwrite/appwrite/pull/5395)
+- Fixed empty team prefs returning as JSON object rather array [#5361](https://github.com/appwrite/appwrite/pull/5361)
+
+# Version 1.3.1
+
+## Bugs
+- Fixed Migration issue regarding 500 error [#5356](https://github.com/appwrite/appwrite/pull/5356)
+
+# Version 1.3.0
+
+## Features
+- Password dictionary setting allows to compare user's password against command password database [#4906](https://github.com/appwrite/appwrite/pull/4906)
+- Password history setting allows to save user's last used password so that it may not be used again.  Maximum number of history saved is 20, which can be configured. Minimum is 0 which means disabled. [#4866](https://github.com/appwrite/appwrite/pull/4866)
+- Update APIs to check X-Appwrite-Timestamp header [#5024](https://github.com/appwrite/appwrite/pull/5024)
+- Database relationships [#5238](https://github.com/appwrite/appwrite/pull/5238)
+- New query operators [#5238](https://github.com/appwrite/appwrite/pull/5238)
+- Team preferences [#5196](https://github.com/appwrite/appwrite/pull/5196)
+- Update attribute metadata [#5164](https://github.com/appwrite/appwrite/pull/5164)
+
+## Bugs
 - Fix not storing function's response on response codes 5xx [#4610](https://github.com/appwrite/appwrite/pull/4610)
+- Fix expire to formatTz in create account session [#4985](https://github.com/appwrite/appwrite/pull/4985)
+- Fix deleting projects when organization is deleted [#5335](https://github.com/appwrite/appwrite/pull/5335)
+- Fix deleting collections from a project [#4983](https://github.com/appwrite/appwrite/pull/4983)
+- Fix cleaning up project databases [#4984](https://github.com/appwrite/appwrite/pull/4984)
+- Fix creating documents with attributes with special characters [#246](https://github.com/utopia-php/database/pull/246)
+- Fix deleting attribute not deleting metadata index [#246](https://github.com/utopia-php/database/pull/246)
+- Fix create attribute event payload [#246](https://github.com/utopia-php/database/pull/246)
 
 # Version 1.2.1
 ## Changes
@@ -42,6 +101,7 @@
 ## Changes
 - Released `appwrite/console` [2.0.2](https://github.com/appwrite/console/releases/tag/2.0.2)
 - Make `region` parameter optional with default for project create [#4763](https://github.com/appwrite/appwrite/pull/4763)
+- Add security headers to the console endpoint [#4758](https://github.com/appwrite/appwrite/pull/4758)
 
 ## Bugs
 - Fix default oauth paths [#4725](https://github.com/appwrite/appwrite/pull/4725)

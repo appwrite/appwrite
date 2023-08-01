@@ -6,6 +6,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -21,7 +22,6 @@ use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -36,11 +36,9 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\WhiteList;
-use Appwrite\Event\Phone as EventPhone;
+use Utopia\Validator\Assoc;
+use Utopia\Validator\Text;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -69,17 +67,23 @@ App::post('/v1/teams')
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
-        $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => $teamId,
-            '$permissions' => [
-                Permission::read(Role::team($teamId)),
-                Permission::update(Role::team($teamId, 'owner')),
-                Permission::delete(Role::team($teamId, 'owner')),
-            ],
-            'name' => $name,
-            'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-            'search' => implode(' ', [$teamId, $name]),
-        ])));
+
+        try {
+            $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
+                '$id' => $teamId,
+                '$permissions' => [
+                    Permission::read(Role::team($teamId)),
+                    Permission::update(Role::team($teamId, 'owner')),
+                    Permission::delete(Role::team($teamId, 'owner')),
+                ],
+                'name' => $name,
+                'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+                'prefs' => new \stdClass(),
+                'search' => implode(' ', [$teamId, $name]),
+            ])));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::TEAM_ALREADY_EXISTS);
+        }
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             if (!\in_array('owner', $roles)) {
@@ -136,7 +140,7 @@ App::get('/v1/teams')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TEAM_LIST)
     ->label('sdk.offline.model', '/teams')
-    ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Teams(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Teams::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -201,28 +205,22 @@ App::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::put('/v1/teams/:teamId')
-    ->desc('Update Team')
+App::get('/v1/teams/:teamId/prefs')
+    ->desc('Get Team Preferences')
     ->groups(['api', 'teams'])
-    ->label('event', 'teams.[teamId].update')
-    ->label('scope', 'teams.write')
-    ->label('audits.event', 'team.update')
-    ->label('audits.resource', 'team/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('scope', 'teams.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'update')
-    ->label('sdk.description', '/docs/references/teams/update-team.md')
+    ->label('sdk.method', 'getPrefs')
+    ->label('sdk.description', '/docs/references/teams/get-team-prefs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TEAM)
-    ->label('sdk.offline.model', '/teams')
-    ->label('sdk.offline.key', '{teamId}')
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $name, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $teamId, Response $response, Database $dbForProject) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -230,13 +228,88 @@ App::put('/v1/teams/:teamId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $team = $dbForProject->updateDocument('teams', $team->getId(), $team
+        $prefs = $team->getAttribute('prefs', []);
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
+App::put('/v1/teams/:teamId')
+    ->desc('Update Name')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.[teamId].update')
+    ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.update')
+    ->label('audits.resource', 'team/{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updateName')
+    ->label('sdk.description', '/docs/references/teams/update-team-name.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TEAM)
+    ->label('sdk.offline.model', '/teams')
+    ->label('sdk.offline.key', '{teamId}')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('name', null, new Text(128), 'New team name. Max length: 128 chars.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events) {
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $team
             ->setAttribute('name', $name)
-            ->setAttribute('search', implode(' ', [$teamId, $name])));
+            ->setAttribute('search', implode(' ', [$teamId, $name]));
+
+        $team = $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $team) {
+            return $dbForProject->updateDocument('teams', $team->getId(), $team);
+        });
 
         $events->setParam('teamId', $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
+    });
+
+App::put('/v1/teams/:teamId/prefs')
+    ->desc('Update Preferences')
+    ->groups(['api', 'teams'])
+    ->label('event', 'teams.[teamId].update.prefs')
+    ->label('scope', 'teams.write')
+    ->label('audits.event', 'team.update')
+    ->label('audits.resource', 'team/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'updatePrefs')
+    ->label('sdk.description', '/docs/references/teams/update-team-prefs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PREFERENCES)
+    ->label('sdk.offline.model', '/teams/{teamId}/prefs')
+    ->param('teamId', '', new UID(), 'Team ID.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+
+        $team = $dbForProject->getDocument('teams', $teamId);
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
+
+        $events->setParam('teamId', $team->getId());
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
 App::delete('/v1/teams/:teamId')
@@ -349,10 +422,10 @@ App::post('/v1/teams/:teamId/memberships')
             if ($invitee->isEmpty()) {
                 throw new Exception(Exception::USER_NOT_FOUND, 'User with given userId doesn\'t exist.', 404);
             }
-            if (!empty($email) && $invitee->getAttribute('email', '') != $email) {
+            if (!empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and email doesn\'t match', 409);
             }
-            if (!empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+            if (!empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given userId and phone doesn\'t match', 409);
             }
             $email = $invitee->getAttribute('email', '');
@@ -360,12 +433,12 @@ App::post('/v1/teams/:teamId/memberships')
             $name = empty($name) ? $invitee->getAttribute('name', '') : $name;
         } elseif (!empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
-            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') != $phone) {
+            if (!empty($invitee) && !empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
         } elseif (!empty($phone)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('phone', [$phone])]);
-            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') != $email) {
+            if (!empty($invitee) && !empty($email) && $invitee->getAttribute('email', '') !== $email) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given phone and email doesn\'t match', 409);
             }
         }
@@ -539,7 +612,7 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP_LIST)
     ->label('sdk.offline.model', '/teams/{teamId}/memberships')
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
@@ -934,7 +1007,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -970,7 +1043,7 @@ App::get('/v1/teams/:teamId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => $log['data']['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,

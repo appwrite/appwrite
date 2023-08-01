@@ -83,6 +83,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
+      - ./dev:/usr/src/code/dev
     depends_on:
       - mariadb
       - redis
@@ -346,7 +347,6 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      #- ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
@@ -476,6 +476,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./dev:/usr/src/code/dev
       - appwrite-functions:/storage/functions:rw
       - appwrite-builds:/storage/builds:rw
       - /tmp:/tmp:rw
