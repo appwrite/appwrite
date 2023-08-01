@@ -55,7 +55,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
 };
 
 App::get('/v1/avatars/credit-cards/:code')
-    ->desc('Get Credit Card Icon')
+    ->desc('Get credit card icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -75,7 +75,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
-    ->desc('Get Browser Icon')
+    ->desc('Get browser icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -95,7 +95,7 @@ App::get('/v1/avatars/browsers/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/flags/:code')
-    ->desc('Get Country Flag')
+    ->desc('Get country flag')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -115,7 +115,7 @@ App::get('/v1/avatars/flags/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/image')
-    ->desc('Get Image from URL')
+    ->desc('Get image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -166,7 +166,7 @@ App::get('/v1/avatars/image')
     });
 
 App::get('/v1/avatars/favicon')
-    ->desc('Get Favicon')
+    ->desc('Get favicon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -298,7 +298,7 @@ App::get('/v1/avatars/favicon')
     });
 
 App::get('/v1/avatars/qr')
-    ->desc('Get QR Code')
+    ->desc('Get QR code')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -339,7 +339,7 @@ App::get('/v1/avatars/qr')
     });
 
 App::get('/v1/avatars/initials')
-    ->desc('Get User Initials')
+    ->desc('Get user initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache.resource', 'avatar/initials')

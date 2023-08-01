@@ -16,7 +16,7 @@ App::init()
 
 
 App::get('/v1/console/variables')
-    ->desc('Get Variables')
+    ->desc('Get variables')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
