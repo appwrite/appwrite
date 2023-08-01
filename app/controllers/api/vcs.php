@@ -15,6 +15,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Vcs\Comment;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
@@ -528,38 +529,42 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
         $repos = batch(\array_map(function ($repo) use ($github) {
             return function () use ($repo, $github) {
-                $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
-                $languages = $github->getRepositoryLanguages($repo['organization'], $repo['name']);
+                try {
+                    $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
+                    $languages = $github->getRepositoryLanguages($repo['organization'], $repo['name']);
 
-                $detectorFactory = new Detector($files, $languages);
+                    $detectorFactory = new Detector($files, $languages);
 
-                $detectorFactory
-                    ->addDetector(new JavaScript())
-                    ->addDetector(new PHP())
-                    ->addDetector(new Python())
-                    ->addDetector(new Dart())
-                    ->addDetector(new Swift())
-                    ->addDetector(new Ruby())
-                    ->addDetector(new Java())
-                    ->addDetector(new CPP())
-                    ->addDetector(new Deno())
-                    ->addDetector(new Dotnet());
+                    $detectorFactory
+                        ->addDetector(new JavaScript())
+                        ->addDetector(new PHP())
+                        ->addDetector(new Python())
+                        ->addDetector(new Dart())
+                        ->addDetector(new Swift())
+                        ->addDetector(new Ruby())
+                        ->addDetector(new Java())
+                        ->addDetector(new CPP())
+                        ->addDetector(new Deno())
+                        ->addDetector(new Dotnet());
 
-                $runtime = $detectorFactory->detect();
+                    $runtime = $detectorFactory->detect();
 
-                $runtimes = Config::getParam('runtimes');
-                $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
-                    return $runtimes[$key]['key'] === $runtime;
-                }))[0] ?? '';
+                    $runtimes = Config::getParam('runtimes');
+                    $runtimeDetail = \array_reverse(\array_filter(\array_keys($runtimes), function ($key) use ($runtime, $runtimes) {
+                        return $runtimes[$key]['key'] === $runtime;
+                    }))[0] ?? '';
 
-                $repo['runtime'] = $runtimeDetail;
-
+                    $repo['runtime'] = $runtimeDetail;
+                } catch (Throwable $error) {
+                    $repo['runtime'] = "";
+                    Console::warning("Runtime not detected for " . $repo['organization'] . "/" . $repo['name']);
+                }
                 return $repo;
             };
         }, $repos));
 
         $response->dynamic(new Document([
-            'repositories' => $repos,
+            'providerRepositories' => $repos,
             'total' => \count($repos),
         ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
     });
