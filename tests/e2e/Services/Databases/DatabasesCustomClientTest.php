@@ -381,7 +381,7 @@ class DatabasesCustomClientTest extends Scope
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
                 Permission::update(Role::user($userId)),
-                Permission::delete(Role::user($userId)),            
+                Permission::delete(Role::user($userId)),
             ]
         ]);
 
@@ -410,7 +410,7 @@ class DatabasesCustomClientTest extends Scope
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
                 Permission::update(Role::user($userId)),
-                Permission::delete(Role::user($userId)),            
+                Permission::delete(Role::user($userId)),
             ]
         ]);
 
