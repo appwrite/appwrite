@@ -5,6 +5,7 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
@@ -101,7 +102,8 @@ App::init()
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->inject('mails')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -167,9 +169,9 @@ App::init()
             }
         }
 
-    /*
-     * Background Jobs
-     */
+        /*
+        * Background Jobs
+        */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -190,6 +192,17 @@ App::init()
             ->setParam('httpMethod', $request->getMethod())
             ->setParam('project.{scope}.network.inbound', 0)
             ->setParam('project.{scope}.network.outbound', 0);
+
+        $smtp = $project->getAttribute('smtp', []);
+        if (!empty($smtp) && ($smtp['enabled'] ?? false)) {
+            $mails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? 25)
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSenderEmail($smtp['sender'] ?? '')
+                ->setSmtpReplyTo($smtp['replyTo'] ?? '');
+        }
 
         $deletes->setProject($project);
         $database->setProject($project);
@@ -356,6 +369,7 @@ App::shutdown()
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('user')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
@@ -363,8 +377,8 @@ App::shutdown()
     ->inject('database')
     ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
-
+    ->inject('dbForConsole')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject, Database $dbForConsole) use ($parseLabel) {
         $responsePayload = $response->getPayload();
 
         if (!empty($events->getEvent())) {
@@ -424,7 +438,6 @@ App::shutdown()
 
         $route = $utopia->match($request);
         $requestParams = $route->getParamsValues();
-        $user = $audits->getUser();
 
         /**
          * Audit labels
@@ -437,10 +450,7 @@ App::shutdown()
             }
         }
 
-        $pattern = $route->getLabel('audits.userId', null);
-        if (!empty($pattern)) {
-            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-            $user = $dbForProject->getDocument('users', $userId);
+        if (!$user->isEmpty()) {
             $audits->setUser($user);
         }
 
@@ -550,6 +560,22 @@ App::shutdown()
                 ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
                 ->setParam('project.{scope}.network.outbound', $response->getSize())
                 ->submit();
+        }
+
+        /**
+         * Update user last activity
+         */
+        if (!$user->isEmpty()) {
+            $accessedAt = $user->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if (APP_MODE_ADMIN !== $mode) {
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                } else {
+                    $dbForConsole->updateDocument('users', $user->getId(), $user);
+                }
+            }
         }
     });
 

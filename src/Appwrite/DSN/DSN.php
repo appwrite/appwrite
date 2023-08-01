@@ -55,8 +55,8 @@ class DSN
         }
 
         $this->scheme = $parts['scheme'] ?? null;
-        $this->user = $parts['user'] ?? null;
-        $this->password = $parts['pass'] ?? null;
+        $this->user = isset($parts['user']) ? \urldecode($parts['user']) : null;
+        $this->password = isset($parts['pass']) ? \urldecode($parts['pass']) : null;
         $this->host = $parts['host'] ?? null;
         $this->port = $parts['port'] ?? null;
         $this->database = $parts['path'] ?? null;
@@ -124,7 +124,7 @@ class DSN
     }
 
     /**
-     * Return the query string
+     * Return the raw query string
      *
      * @return ?string
      */

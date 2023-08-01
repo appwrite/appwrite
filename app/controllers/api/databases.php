@@ -1,56 +1,57 @@
 <?php
 
-use Utopia\App;
+use Appwrite\Auth\Auth;
+use Appwrite\Detector\Detector;
+use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Collections;
+use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Response;
+use MaxMind\Db\Reader;
+use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Helpers\ID;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\FloatValidator;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Text;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\JSON;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
+use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Key;
-use Utopia\Database\Validator\Permissions;
-use Utopia\Database\Validator\Structure;
-use Utopia\Database\Validator\UID;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Index as IndexValidator;
+use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Permissions;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries\Document as DocumentQueriesValidator;
+use Utopia\Database\Validator\Queries\Documents;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Structure;
+use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Appwrite\Auth\Auth;
-use Appwrite\Network\Validator\Email;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\FloatValidator;
 use Utopia\Validator\IP;
-use Utopia\Validator\URL;
-use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\Query\Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset;
-use Appwrite\Utopia\Response;
-use Appwrite\Detector\Detector;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
-use Appwrite\Utopia\Database\Validator\Queries;
-use Appwrite\Utopia\Database\Validator\Queries\Collections;
-use Appwrite\Utopia\Database\Validator\Queries\Databases;
-use Appwrite\Utopia\Database\Validator\Queries\Document as DocumentValidator;
-use Appwrite\Utopia\Database\Validator\Queries\Documents;
-use Utopia\Config\Config;
-use MaxMind\Db\Reader;
+use Utopia\Validator\Integer;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\URL;
+use Utopia\Validator\WhiteList;
 
 /**
  * Create attribute of varying type
@@ -327,22 +328,22 @@ function updateAttribute(
     }
 
     if ($type === Database::VAR_RELATIONSHIP) {
-        $options = \array_merge($attribute->getAttribute('options', []), $options);
-        $attribute->setAttribute('options', $options);
+        $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
+        $attribute->setAttribute('options', $primaryDocumentOptions);
 
         $dbForProject->updateRelationship(
             collection: $collectionId,
             id: $key,
-            onDelete: $options['onDelete'],
+            onDelete: $primaryDocumentOptions['onDelete'],
         );
 
-        if ($options['twoWay']) {
-            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $options['relatedCollection']);
-            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
+        if ($primaryDocumentOptions['twoWay']) {
+            $relatedCollection = $dbForProject->getDocument('database_' . $db->getInternalId(), $primaryDocumentOptions['relatedCollection']);
+
+            $relatedAttribute = $dbForProject->getDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey']);
             $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
             $relatedAttribute->setAttribute('options', $relatedOptions);
-
-            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey'], $relatedAttribute);
+            $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
             $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
         }
     } else {
@@ -434,7 +435,7 @@ App::post('/v1/databases')
                 ]);
             }
             $dbForProject->createCollection('database_' . $database->getInternalId(), $attributes, $indexes);
-        } catch (DuplicateException $th) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
         }
 
@@ -470,10 +471,9 @@ App::get('/v1/databases')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
-            /** @var Query $cursor */
             $databaseId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('databases', $databaseId);
 
@@ -530,7 +530,7 @@ App::get('/v1/databases/:databaseId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -566,7 +566,7 @@ App::get('/v1/databases/:databaseId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => ID::custom($log['userId']),
+                'userId' => ID::custom($log['data']['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -638,7 +638,7 @@ App::put('/v1/databases/:databaseId')
                 ->setAttribute('name', $name)
                 ->setAttribute('enabled', $enabled)
                 ->setAttribute('search', implode(' ', [$databaseId, $name])));
-        } catch (AuthorizationException $exception) {
+        } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, 'Bad structure. ' . $exception->getMessage());
@@ -801,7 +801,7 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -875,7 +875,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -917,7 +917,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => $log['data']['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -2346,6 +2346,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $db->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
@@ -2426,21 +2427,28 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $lengths[$i] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
         }
 
+        $index = new Document([
+            '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
+            'key' => $key,
+            'status' => 'processing', // processing, available, failed, deleting, stuck
+            'databaseInternalId' => $db->getInternalId(),
+            'databaseId' => $databaseId,
+            'collectionInternalId' => $collection->getInternalId(),
+            'collectionId' => $collectionId,
+            'type' => $type,
+            'attributes' => $attributes,
+            'lengths' => $lengths,
+            'orders' => $orders,
+        ]);
+
+        $validator = new IndexValidator($dbForProject->getAdapter()->getMaxIndexLength());
+        if (!$validator->isValid($collection->setAttribute('indexes', $index, Document::SET_TYPE_APPEND))) {
+            throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
+        }
+
         try {
-            $index = $dbForProject->createDocument('indexes', new Document([
-                '$id' => ID::custom($db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key),
-                'key' => $key,
-                'status' => 'processing', // processing, available, failed, deleting, stuck
-                'databaseInternalId' => $db->getInternalId(),
-                'databaseId' => $databaseId,
-                'collectionInternalId' => $collection->getInternalId(),
-                'collectionId' => $collectionId,
-                'type' => $type,
-                'attributes' => $attributes,
-                'lengths' => $lengths,
-                'orders' => $orders,
-            ]));
-        } catch (DuplicateException $th) {
+            $index = $dbForProject->createDocument('indexes', $index);
+        } catch (DuplicateException) {
             throw new Exception(Exception::INDEX_ALREADY_EXISTS);
         }
 
@@ -2535,20 +2543,14 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $indexes = $collection->getAttribute('indexes');
-
-        // Search for index
-        $indexIndex = array_search($key, array_map(fn($idx) => $idx['key'], $indexes));
-
-        if ($indexIndex === false) {
+        $index = $collection->find('key', $key, 'indexes');
+        if (empty($index)) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
 
-        $index = $indexes[$indexIndex];
-        $index->setAttribute('collectionId', $database->getInternalId() . '_' . $collectionId);
-
         $response->dynamic($index, Response::MODEL_INDEX);
     });
+
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
@@ -2623,7 +2625,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
     ->label('audits.event', 'document.create')
-    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
+    ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
     ->label('usage.metric', 'documents.{scope}.requests.create')
     ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
@@ -2653,7 +2655,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (empty($data)) {
-            throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
         }
 
         if (isset($data['$id'])) {
@@ -2910,7 +2912,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
@@ -3028,7 +3030,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         }
 
         // Validate queries
-        $queriesValidator = new DocumentValidator($collection->getAttribute('attributes'));
+        $queriesValidator = new DocumentQueriesValidator($collection->getAttribute('attributes'));
         $validQueries = $queriesValidator->isValid($queries);
         if (!$validQueries) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
@@ -3101,7 +3103,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->param('documentId', '', new UID(), 'Document ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')
@@ -3149,7 +3151,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => $log['data']['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,

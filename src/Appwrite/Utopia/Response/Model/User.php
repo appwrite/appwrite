@@ -77,6 +77,13 @@ class User extends Model
                 'default' => true,
                 'example' => true,
             ])
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the user.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
+            ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Password update time in ISO 8601 format.',
@@ -112,6 +119,12 @@ class User extends Model
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
+            ])
+            ->addRule('accessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_USER_ACCCESS / 60 / 60 . ' hours.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
     }
