@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3641c51bceff91fe3b50e2fa8b661b74",
+    "content-hash": "b1268df543ddce77736d06d81c958d73",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -994,16 +994,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.0.0",
+            "version": "6.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "7fc2af3af62bd69e6e3404d561e371a83c112be9"
+                "reference": "ce5ef5e6776c16af306d38e20674973f072e05ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/7fc2af3af62bd69e6e3404d561e371a83c112be9",
-                "reference": "7fc2af3af62bd69e6e3404d561e371a83c112be9",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/ce5ef5e6776c16af306d38e20674973f072e05ed",
+                "reference": "ce5ef5e6776c16af306d38e20674973f072e05ed",
                 "shasum": ""
             },
             "require": {
@@ -1059,7 +1059,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2022-04-11T09:58:17+00:00"
+            "time": "2023-01-16T08:18:02+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -2685,26 +2685,30 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.13.2",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b"
+                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ad1c00f24ca56e73888acc2af3deee4919b1194b",
-                "reference": "ad1c00f24ca56e73888acc2af3deee4919b1194b",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/eda6651ac16884dc2a79ecb984ea591ba1ed498c",
+                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c",
                 "shasum": ""
             },
             "require": {
+                "ext-brotli": "*",
                 "ext-fileinfo": "*",
+                "ext-lz4": "*",
+                "ext-snappy": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
                 "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
             },
@@ -2718,12 +2722,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple Storage library to manage application storage",
             "keywords": [
                 "framework",
@@ -2734,9 +2732,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.13.2"
+                "source": "https://github.com/utopia-php/storage/tree/0.14.0"
             },
-            "time": "2022-12-20T11:11:35+00:00"
+            "time": "2023-03-15T00:16:34+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3031,16 +3029,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.29.4",
+            "version": "0.33.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "35ec927d1de1854bebe8894e16b1646c3fdd5567"
+                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/35ec927d1de1854bebe8894e16b1646c3fdd5567",
-                "reference": "35ec927d1de1854bebe8894e16b1646c3fdd5567",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9f5db4a637b23879ceacea9ed2d33b0486771ffc",
+                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc",
                 "shasum": ""
             },
             "require": {
@@ -3076,9 +3074,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.29.4"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.7"
             },
-            "time": "2023-02-03T05:44:59+00:00"
+            "time": "2023-07-12T12:15:43+00:00"
         },
         {
             "name": "doctrine/deprecations",
