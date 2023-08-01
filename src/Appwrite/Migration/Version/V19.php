@@ -150,7 +150,6 @@ class V19 extends Migration
     {
         try {
             $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}`";
-
             $this->pdo->prepare("
             ALTER TABLE {$table}
             CHANGE COLUMN `_uid` `_uid` VARCHAR(255) NOT NULL ;
