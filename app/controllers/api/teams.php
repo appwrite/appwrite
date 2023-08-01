@@ -350,9 +350,9 @@ App::delete('/v1/teams/:teamId')
 
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
             $user->setAttribute('memberships', array_values(array_filter(
-                $user->getAttribute('memberships', []), 
-                fn($um) => $um['teamId'] !== $membership->getAttribute('teamId'))
-            ));
+                $user->getAttribute('memberships', []),
+                fn($um) => $um['teamId'] !== $membership->getAttribute('teamId')
+            )));
             $dbForProject->updateDocument('users', $user->getId(), $user);
         }
 
