@@ -11,9 +11,12 @@ use Utopia\Storage\Device\Local;
 
 class Backup extends Action
 {
-    public static string $mysqlDirectory = '/var/lib/mysql';
+    //public static string $mysqlDirectory = '/var/lib/mysql';
     public static string $backups = '/backups'; // Mounted volume
-    protected string $containerName = 'appwrite-mariadb';
+    //protected string $containerName = 'appwrite-mariadb';
+    protected string $host = 'mariadb';
+    protected int $processors = 4;
+    protected string $cnf = '/etc/my.cnf';
     protected string $project;
 
     public static function getName(): string
@@ -33,42 +36,33 @@ class Backup extends Action
 
     public function action(): void
     {
+        // Todo: Check if previous task is still running...
+
         self::log('--- Backup Start --- ');
         $start = microtime(true);
-        $type = 'inc';
+        //$type = 'inc';
         $type = 'full';
 
         switch ($type) {
             case 'inc':
                 for ($i = 0; $i <= 4; $i++) {
                     $this->incrementalBackup();
+                    sleep(10);
                 }
                 break;
             case 'full':
-                $time = date('Ymd_His');
+                $time = date('Y_m_d_H_i_s');
+                self::log('--- Creating backup ' . $time . '  --- ');
                 $filename = $time . '.tar.gz';
-                $folder = App::getEnv('_APP_BACKUP_FOLDER');
-
-                $local = new Local(self::$backups . '/' . $this->project . '/' . $folder . '/' . $time);
+                $local = new Local(self::$backups . '/' . $this->project . '/full/' . $time);
                 $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
 
                 $backups = $local->getRoot() . '/files';
                 $tarFile = $local->getPath($filename);
 
-                $this->fullBackup(
-                    backups: $backups,
-                );
-
-                $this->tar(
-                    folder: $backups,
-                    tarFile: $tarFile,
-                );
-
-                $this->upload(
-                    subFolder: $folder,
-                    file: $tarFile,
-                    local: $local
-                );
+                $this->fullBackup($backups);
+                $this->tar($backups, $tarFile);
+                $this->upload($tarFile, $local);
 
                 break;
 
@@ -82,33 +76,38 @@ class Backup extends Action
         Console::loop(function () {
             self::log('loop');
         }, 2 * 60);
-
     }
 
-    public function fullBackup(string $backups)
+    public function fullBackup(string $target)
     {
         if (!file_exists(self::$backups)) {
             Console::error('Mount directory does not exist');
             Console::exit();
         }
 
-        if (!file_exists($backups) && !mkdir($backups, 0755, true)) {
-            Console::error('Error creating directory: ' . $backups);
+        if (!file_exists($target) && !mkdir($target, 0755, true)) {
+            Console::error('Error creating directory: ' . $target);
             Console::exit();
         }
 
         $args = [
+            // '--defaults-file=' . $this->cnf, // [ERROR] Failed to open required defaults file: /etc/my.cnf
             '--user=root',
             '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
-            '--host=mariadb',
+            '--host=' . $this->host,
             '--backup',
-            //'--compress',
-            //'--compress-threads=1',
-            //'--no-lock', // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
+            '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
-            //'--check-privileges',
-            '--target-dir=' . $backups,
+            '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
+            '--target-dir=' . $target,
+            '--compress=lz4',
+            '--parallel=' . $this->processors,
+            '--compress-threads=' . $this->processors,
+            //'--encrypt-threads=' . $this->processors,
+            //'--encrypt=AES256',
+            //'--encrypt-key-file=' . '/encryption_key_file',
+            //'--no-lock', // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
         ];
 
         $stdout = '';
@@ -122,18 +121,23 @@ class Backup extends Action
             //Console::exit();
         }
 
-        if (!file_exists($backups . '/xtrabackup_checkpoints')) {
+        if (!str_contains($stderr, 'completed OK!')) {
+            Console::error('Backup failed');
+            Console::exit();
+        }
+
+        if (!file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Backup failed missing files');
             Console::exit();
         }
     }
 
-    public function tar(string $folder, string $tarFile)
+    public function tar(string $directory, string $file)
     {
         $stdout = '';
         $stderr = '';
         // Tar from inside the directory for not using --strip-components
-        $cmd = 'cd ' . $folder . ' && tar zcf ' . $tarFile . ' .';
+        $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' .';
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         self::log($stdout);
@@ -142,23 +146,23 @@ class Backup extends Action
             Console::exit();
         }
 
-        if (!file_exists($tarFile)) {
-            Console::error("Can't find tar file: " . $tarFile);
+        if (!file_exists($file)) {
+            Console::error("Can't find tar file: " . $file);
             Console::exit();
         }
 
-        $filesize = \filesize($tarFile);
+        $filesize = \filesize($file);
         self::log("Tar file size is: " . ceil($filesize / 1024 / 1024) . 'MB');
         if ($filesize < (2 * 1024 * 1024)) {
-            Console::error("File size is very small: " . $tarFile);
+            Console::error("File size is very small: " . $file);
             Console::exit();
         }
     }
 
-    public function upload(string $subFolder, string $file, Device $local)
+    public function upload(string $file, Device $local)
     {
         $filename = basename($file);
-        $s3 = new DOSpaces('/' . $this->project . '/' . $subFolder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $s3 = new DOSpaces('/' . $this->project . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (!$s3->exists('/')) {
             Console::error('Can\'t read from DO ');
@@ -225,7 +229,7 @@ class Backup extends Action
             '--user=root',
             '--password=rootsecretpassword',
             '--backup=1',
-            '--host=mariadb',
+            '--host=' . $this->host,
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
             '--check-privileges',
@@ -373,7 +377,6 @@ class Backup extends Action
     {
         foreach (
             [
-                '_APP_BACKUP_FOLDER',
                 '_APP_CONNECTIONS_DB_PROJECT',
                 '_DO_SPACES_BUCKET_NAME',
                 '_DO_SPACES_ACCESS_KEY',
@@ -456,35 +459,35 @@ class Backup extends Action
     }
 
 
-
-    public static function stopMysqlContainer($name): void
-    {
-
-        $stdout = '';
-        $stderr = '';
-        Console::execute('docker exec appwrite-mariadb echo "hello"', '', $stdout, $stderr);
-        var_dump($stderr);
-        var_dump($stdout);
-
-
-        $stdout = '';
-        $stderr = '';
-        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "LOCK INSTANCE FOR BACKUP;"', '', $stdout, $stderr);
-        var_dump($stderr);
-        var_dump($stdout);
-
-
-        $stdout = '';
-        $stderr = '';
-        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "FLUSH TABLES WITH READ LOCK;"', '', $stdout, $stderr);
-        var_dump($stderr);
-        var_dump($stdout);
-
-        Console::loop(function () {
-            self::log('loop');
-        }, 100);
-
-
-        Console::exit();
-    }
+//
+//    public static function stopMysqlContainer($name): void
+//    {
+//
+//        $stdout = '';
+//        $stderr = '';
+//        Console::execute('docker exec appwrite-mariadb echo "hello"', '', $stdout, $stderr);
+//        var_dump($stderr);
+//        var_dump($stdout);
+//
+//
+//        $stdout = '';
+//        $stderr = '';
+//        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "LOCK INSTANCE FOR BACKUP;"', '', $stdout, $stderr);
+//        var_dump($stderr);
+//        var_dump($stdout);
+//
+//
+//        $stdout = '';
+//        $stderr = '';
+//        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "FLUSH TABLES WITH READ LOCK;"', '', $stdout, $stderr);
+//        var_dump($stderr);
+//        var_dump($stdout);
+//
+//        Console::loop(function () {
+//            self::log('loop');
+//        }, 100);
+//
+//
+//        Console::exit();
+//    }
 }
