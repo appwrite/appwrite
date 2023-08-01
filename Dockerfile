@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.4.2 as final
+FROM meldiron/base:0.2.3 as final
 
 LABEL maintainer="team@appwrite.io"
 
