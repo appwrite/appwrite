@@ -29,6 +29,7 @@ class V19 extends Migration
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
         $this->alterPermissionIndex('_metadata');
+        $this->alterUidType('_metadata');
 
         Console::info('Migrating Databases');
         $this->migrateDatabases();
@@ -57,11 +58,13 @@ class V19 extends Migration
             $databaseTable = "database_{$database->getInternalId()}";
 
             $this->alterPermissionIndex($databaseTable);
+            $this->alterUidType($databaseTable);
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
                 $this->alterPermissionIndex($collectionTable);
+                $this->alterUidType($collectionTable);
             }
         }
     }
@@ -98,6 +101,7 @@ class V19 extends Migration
             }
             if (!in_array($id, ['files', 'collections'])) {
                 $this->alterPermissionIndex($id);
+                $this->alterUidType($id);
             }
 
             usleep(50000);
@@ -131,11 +135,25 @@ class V19 extends Migration
     protected function alterPermissionIndex($collectionName): void
     {
         try {
-            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms";
+            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms`";
             $this->pdo->prepare("
                 ALTER TABLE {$table}
                 DROP INDEX `_permission`, 
                 ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
+            ")->execute();
+        } catch (\Throwable $th) {
+            Console::warning($th->getMessage());
+        }
+    }
+
+    protected function alterUidType($collectionName): void
+    {
+        try {
+            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}`";
+
+            $this->pdo->prepare("
+            ALTER TABLE {$table}
+            CHANGE COLUMN `_uid` `_uid` VARCHAR(255) NOT NULL ;
             ")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
@@ -155,6 +173,7 @@ class V19 extends Migration
             $id = "bucket_{$bucket->getInternalId()}";
             Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
             $this->alterPermissionIndex($id);
+            $this->alterUidType($id);
         }
     }
 }
