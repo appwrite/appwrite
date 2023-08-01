@@ -12,7 +12,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
 App::get('/v1/health')
-    ->desc('Get http')
+    ->desc('Get HTTP')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -47,7 +47,7 @@ App::get('/v1/health/version')
     });
 
 App::get('/v1/health/db')
-    ->desc('Get db')
+    ->desc('Get DB')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])

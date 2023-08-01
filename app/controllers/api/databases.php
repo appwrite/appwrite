@@ -1517,7 +1517,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
     ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
-    ->desc('Create dateTime attribute')
+    ->desc('Create datetime attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
