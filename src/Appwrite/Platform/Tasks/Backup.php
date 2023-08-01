@@ -36,7 +36,7 @@ class Backup extends Action
         self::log('--- Backup Start --- ');
         $start = microtime(true);
         $type = 'inc';
-        //$type = 'full';
+        $type = 'full';
 
         switch ($type) {
             case 'inc':
@@ -53,7 +53,7 @@ class Backup extends Action
                 $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
 
                 $backups = $local->getRoot() . '/files';
-                $tarFile = $local->getRoot() . '/' . $filename;
+                $tarFile = $local->getPath($filename);
 
                 $this->fullBackup(
                     backups: $backups,
@@ -78,6 +78,11 @@ class Backup extends Action
         }
 
         self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+
+        Console::loop(function () {
+            self::log('loop');
+        }, 2 * 60);
+
     }
 
     public function fullBackup(string $backups)
@@ -94,7 +99,7 @@ class Backup extends Action
 
         $args = [
             '--user=root',
-            '--password=rootsecretpassword', // todo use .env
+            '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
             '--host=mariadb',
             '--backup',
             //'--compress',
@@ -373,7 +378,8 @@ class Backup extends Action
                 '_DO_SPACES_BUCKET_NAME',
                 '_DO_SPACES_ACCESS_KEY',
                 '_DO_SPACES_SECRET_KEY',
-                '_DO_SPACES_REGION'
+                '_DO_SPACES_REGION',
+                '_APP_DB_ROOT_PASS'
             ] as $env
         ) {
             if (empty(App::getEnv($env))) {

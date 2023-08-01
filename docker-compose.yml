@@ -661,6 +661,7 @@ services:
       - _DO_SPACES_SECRET_KEY
       - _DO_SPACES_REGION
       - _APP_BACKUP_FOLDER
+      - _APP_DB_ROOT_PASS
 
   appwrite-usage:
     entrypoint: usage
