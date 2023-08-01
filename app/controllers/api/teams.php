@@ -343,11 +343,17 @@ App::delete('/v1/teams/:teamId')
             Query::limit(2000), // TODO fix members limit
         ]);
 
-        // TODO delete all members individually from the user object
         foreach ($memberships as $membership) {
             if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership for team from DB');
             }
+
+            $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+            $user->setAttribute('memberships', array_values(array_filter(
+                $user->getAttribute('memberships', []), 
+                fn($um) => $um['teamId'] !== $membership->getAttribute('teamId'))
+            ));
+            $dbForProject->updateDocument('users', $user->getId(), $user);
         }
 
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
