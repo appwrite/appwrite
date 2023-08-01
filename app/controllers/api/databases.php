@@ -3287,24 +3287,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
+        $data['$collection'] = $document->getAttribute('$collection'); // Attribute $collection is required for Utopia. Copying it from old version of document
         $newDocument = new Document($data);
 
-        $checkPermissions = (function (Document $collection, Document $document, Document $old, string $permission, bool $shouldUpdate = false) use (&$checkPermissions, $dbForProject, $database) {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization($permission);
-
-            $valid = $validator->isValid($collection->getPermissionsByType($permission));
-            if (!$documentSecurity && !$valid && $shouldUpdate) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
-
-            if ($permission === Database::PERMISSION_UPDATE) {
-                $valid = $valid || $validator->isValid($old->getPermissionsByType($permission));
-                if ($documentSecurity && !$valid) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
-            }
-
+        $addCollectionAttributeToRelations = (function (Document $collection, Document $document) use (&$addCollectionAttributeToRelations, $dbForProject, $database) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3331,7 +3317,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($relations as &$relation) {
-                    $shouldUpdate = false;
                     // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
@@ -3347,35 +3332,18 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                             $relation->getId()
                         ));
 
-                        // Attribute $collection is required for update document. Copying it from old version of document.
+                        // Attribute $collection is required for Utopia. Copying it from old version of document.
                         $relation->setAttribute('$collection', $relatedDocumentOldVersion->getAttribute('$collection'));
 
                         // If the child document has to be created it will need checking permissions.
                         if ($relatedDocumentOldVersion->isEmpty()) {
-                            $type = Database::PERMISSION_CREATE;
-
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
                         } else {
-                            $type = Database::PERMISSION_UPDATE;
-
-                            foreach ($relation as $key => $value) {
-                                // No need to compare values of relations as for each relation we are recursively checking permission.
-                                if ($relatedDocumentOldVersion->getAttribute($key) instanceof Document) {
-                                    continue;
-                                }
-                                // If any of the values are different, we need to check permission.
-                                if ($relatedDocumentOldVersion->getAttribute($key) !== $value) {
-                                    $shouldUpdate = true;
-                                    $relation->removeAttribute('$collectionId');
-                                    $relation->removeAttribute('$databaseId');
-                                    $relation->setAttribute('$collection', $relatedCollection->getId());
-                                    break;
-                                }
-                            }
+                            $relation->setAttribute('$collection', 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
                         }
-                        $checkPermissions($relatedCollection, $relation, $relatedDocumentOldVersion, $type, $shouldUpdate);
+                        $addCollectionAttributeToRelations($relatedCollection, $relation);
                     }
                 }
 
@@ -3387,22 +3355,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         });
 
-        $shouldUpdate = false;
-        foreach ($newDocument as $key => $value) {
-            if ($document->getAttribute($key) instanceof Document) {
-                continue;
-            }
-            //If any of the values are different, we need to check permission.
-            if ($newDocument->getAttribute($key) !== $value) {
-                $shouldUpdate = true;
-                $newDocument->removeAttribute('$collectionId');
-                $newDocument->removeAttribute('$databaseId');
-                $newDocument->setAttribute('$collection', $collection->getId());
-                break;
-            }
-        }
-
-        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE, $shouldUpdate);
+        $addCollectionAttributeToRelations($collection, $newDocument);
 
         try {
             $document = $dbForProject->withRequestTimestamp(
