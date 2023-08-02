@@ -19,6 +19,8 @@ class Restore extends Action
     // todo: it will be erased!!!!
     //protected string $containerName = 'appwrite-mariadb';
     protected string $host = 'mariadb';
+    protected string $project;
+
     protected int $processors = 4;
 
     public static function getName(): string
@@ -33,11 +35,19 @@ class Restore extends Action
             ->param('id', '', new Text(100), 'Folder Identifier')
             ->param('cloud', null, new WhiteList(['true', 'false'], true), 'Take file from cloud?')
             ->param('project', null, new WhiteList(['db_fra1_02'], true), 'From _APP_CONNECTIONS_DB_PROJECT')
-            ->callback(fn ($id, $cloud, $project) => $this->action($id, $cloud, $project));
+            ->param('datadir', null, new Text(100), 'mysql datadir path')
+            ->callback(fn ($id, $cloud, $project, $datadir) => $this->action($id, $cloud, $project, $datadir));
     }
 
-    public function action(string $id, string $cloud, string $project): void
+    public function action(string $id, string $cloud, string $project, string $datadir): void
     {
+        $datadir = '/backups/var_lib_mysql';
+
+        if (file_exists($datadir . '/sys')) {
+            Console::error('Datadir ' . $datadir . ' must be empty!');
+            Console::exit();
+        }
+
         $this->checkEnvVariables();
         $filename = $id . '.tar.gz';
         Backup::log('--- Restore Start ' . $filename . ' --- ');
@@ -76,6 +86,7 @@ class Restore extends Action
 
         $this->decompress($files);
         $this->prepare($files);
+        $this->restore($files, $cloud, $datadir);
 
         Backup::log("Restore Finish in " . (microtime(true) - $start) . " seconds");
     }
@@ -117,28 +128,30 @@ class Restore extends Action
             Console::exit();
         }
 
+        $logfile = $target . '/../log.txt';
+
         $args = [
             '--user=root',
             '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
             '--host=' . $this->host,
             '--decompress',
+            '--strict',
+            '--remove-original', // Removes *.lz4
             '--parallel=' . $this->processors,
             '--compress-threads=' . $this->processors,
             '--target-dir=' . $target,
+            '2> ' . $logfile,
         ];
 
-        $stdout = '';
-        $stderr = '';
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
         Backup::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            //Console::exit();
-        }
+        shell_exec($cmd);
 
-        if (!str_contains($stderr, 'completed OK!')) {
-            Console::error('Error decompressing: ' . $target);
+        $stderr = shell_exec('tail -1 ' . $logfile);
+        Backup::log($stderr);
+
+        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
+            Console::error('Decompress failed');
             Console::exit();
         }
     }
@@ -150,29 +163,67 @@ class Restore extends Action
             Console::exit();
         }
 
+        $logfile = $target . '/../log.txt';
+
         $args = [
             '--user=root',
             '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
             '--host=' . $this->host,
             '--prepare',
+            '--strict',
             '--target-dir=' . $target,
+            '2> ' . $logfile,
         ];
 
-        $stdout = '';
-        $stderr = '';
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
         Backup::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            //Console::exit();
-        }
+        shell_exec($cmd);
 
-        if (!str_contains($stderr, 'completed OK!')) {
-            Console::error('Error preparing: ' . $target);
+        $stderr = shell_exec('tail -1 ' . $logfile);
+        Backup::log($stderr);
+
+        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
+            Console::error('Prepare failed');
             Console::exit();
         }
     }
+
+    public function restore(string $target, bool $cloud, string $datadir)
+    {
+        if (!file_exists($target)) {
+            Console::error('restore error directory not found: ' . $target);
+            Console::exit();
+        }
+
+        $logfile = $target . '/../log.txt';
+
+        $args = [
+            '--user=root',
+            '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
+            '--host=' . $this->host,
+            $cloud ? '--move-back' : '--copy-back',
+            '--strict',
+            '--target-dir=' . $target,
+            '--datadir=' . $datadir,
+            '--parallel=' . $this->processors,
+            '2> ' . $logfile,
+        ];
+
+        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        Backup::log($cmd);
+        shell_exec($cmd);
+
+        $stderr = shell_exec('tail -1 ' . $logfile);
+        Backup::log($stderr);
+
+        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
+            Console::error('Restore failed');
+            Console::exit();
+        }
+
+        // todo: Do we need to chown -R mysql:mysql /var/lib/mysql?
+    }
+
 
 //    public function action(string $filename, string $cloud, string $project, string $folder): void
 //    {

@@ -12,3 +12,4 @@ app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
 /backups/
+/shimon/

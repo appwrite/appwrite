@@ -622,47 +622,6 @@ services:
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
-  xtrabackup:
-    image: percona/percona-xtrabackup:latest
-    container_name: appwrite-xtrabackup
-    command: sleep infinity
-    #command: bash -c "sleep 86400"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-    volumes:
-      #- xtrabackup_data:/backups
-      - ./backups:/backups:rw
-      - appwrite-mariadb:/var/lib/mysql:r
-    networks:
-      - appwrite
-    user: 'root:root'
-
-  appwrite-backup:
-    entrypoint: db-backup
-    <<: *x-logging
-    container_name: appwrite-backup
-    image: appwrite-dev
-    networks:
-      - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - appwrite-mariadb:/var/lib/mysql:rw
-      - ./backups:/backups:rw
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
-    depends_on:
-      - redis
-    environment:
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _DO_SPACES_BUCKET_NAME
-      - _DO_SPACES_ACCESS_KEY
-      - _DO_SPACES_SECRET_KEY
-      - _DO_SPACES_REGION
-      - _APP_BACKUP_FOLDER
-      - _APP_DB_ROOT_PASS
-
   appwrite-usage:
     entrypoint: usage
     <<: *x-logging
@@ -788,6 +747,73 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
+
+
+  xtrabackup:
+    image: percona/percona-xtrabackup:latest
+    container_name: appwrite-xtrabackup
+    command: sleep infinity
+    #command: bash -c "sleep 86400"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+    volumes:
+      #- xtrabackup_data:/backups
+      - ./backups:/backups:rw
+      - appwrite-mariadb:/var/lib/mysql:r
+    networks:
+      - appwrite
+    user: 'root:root'
+
+  appwrite-backup:
+    entrypoint: db-backup
+    <<: *x-logging
+    container_name: appwrite-backup
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - appwrite-mariadb:/var/lib/mysql:rw
+      - ./backups:/backups:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./dev:/usr/local/dev
+      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
+    depends_on:
+      - redis
+    environment:
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _DO_SPACES_BUCKET_NAME
+      - _DO_SPACES_ACCESS_KEY
+      - _DO_SPACES_SECRET_KEY
+      - _DO_SPACES_REGION
+      - _APP_BACKUP_FOLDER
+      - _APP_DB_ROOT_PASS
+
+  appwrite-restore:
+    command: sleep infinity
+    container_name: appwrite-backup-restore
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+      - ./backups:/backups:rw
+      - ./shimon:/var/lib/shimon:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./dev:/usr/local/dev
+      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
+    depends_on:
+      - redis
+    environment:
+      - _APP_CONNECTIONS_DB_PROJECT
+      - _DO_SPACES_BUCKET_NAME
+      - _DO_SPACES_ACCESS_KEY
+      - _DO_SPACES_SECRET_KEY
+      - _DO_SPACES_REGION
+      - _APP_BACKUP_FOLDER
+      - _APP_DB_ROOT_PASS
 
   redis:
     image: redis:7.0.4-alpine

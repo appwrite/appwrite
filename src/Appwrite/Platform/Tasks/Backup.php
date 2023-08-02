@@ -17,6 +17,7 @@ class Backup extends Action
     protected string $host = 'mariadb';
     protected int $processors = 4;
     protected string $cnf = '/etc/my.cnf';
+    protected string $compressAlgorithm = 'lz4';
     protected string $project;
 
     public static function getName(): string
@@ -90,46 +91,45 @@ class Backup extends Action
             Console::exit();
         }
 
+        $logfile = $target . '/../log.txt';
+
         $args = [
-            // '--defaults-file=' . $this->cnf, // [ERROR] Failed to open required defaults file: /etc/my.cnf
+            //'--defaults-file=' . $this->cnf, // [ERROR] Failed to open required defaults file: /etc/my.cnf
             '--user=root',
             '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
             '--host=' . $this->host,
             '--backup',
+            '--strict',
+            '--history=' . $this->project, // logs PERCONA_SCHEMA.xtrabackup_history
             '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . $target,
-            '--compress=lz4',
             '--parallel=' . $this->processors,
+            '--compress=' . $this->compressAlgorithm,
             '--compress-threads=' . $this->processors,
+            '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.htm
             //'--encrypt-threads=' . $this->processors,
             //'--encrypt=AES256',
             //'--encrypt-key-file=' . '/encryption_key_file',
             //'--no-lock', // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
+            '2> ' . $logfile,
         ];
 
-        $stdout = '';
-        $stderr = '';
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
         self::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        //self::log($stdout);
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            //Console::exit();
-        }
+        shell_exec($cmd);
 
-        if (!str_contains($stderr, 'completed OK!')) {
+        $stderr = shell_exec('tail -1 ' . $logfile);
+        Backup::log($stderr);
+
+        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Backup failed');
             Console::exit();
         }
 
-        if (!file_exists($target . '/xtrabackup_checkpoints')) {
-            Console::error('Backup failed missing files');
-            Console::exit();
-        }
+        // todo: remove logfile?
     }
 
     public function tar(string $directory, string $file)
@@ -165,7 +165,7 @@ class Backup extends Action
         $s3 = new DOSpaces('/' . $this->project . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (!$s3->exists('/')) {
-            Console::error('Can\'t read from DO ');
+            Console::error('Can\'t read s3 root directory');
             Console::exit();
         }
 
@@ -229,6 +229,7 @@ class Backup extends Action
             '--user=root',
             '--password=rootsecretpassword',
             '--backup=1',
+            '--strict',
             '--host=' . $this->host,
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
