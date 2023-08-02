@@ -40,12 +40,6 @@ class Identity extends Model
                 'default' => '',
                 'example' => 'email',
             ])
-            ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Connection status. Can be connected or disconnected',
-                'default' => '',
-                'example' => 'connected',
-            ])
             ->addRule('providerUid', [
                 'type' => self::TYPE_STRING,
                 'description' => 'ID of the User in the Identity Provider.',

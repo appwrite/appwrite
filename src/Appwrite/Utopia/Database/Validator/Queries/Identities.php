@@ -7,7 +7,6 @@ class Identities extends Base
     public const ALLOWED_ATTRIBUTES = [
         'userId',
         'provider',
-        'status',
         'providerUid',
         'providerEmail',
     ];
