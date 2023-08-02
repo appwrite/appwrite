@@ -1960,17 +1960,6 @@ $collections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('status'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 256,
-                'signed' => true,
-                'required' => true,
-                'default' => 'connected',
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('providerUid'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2060,13 +2049,6 @@ $collections = [
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
                 'lengths' => [100],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_status'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['status'],
-                'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [

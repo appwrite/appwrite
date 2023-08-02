@@ -628,7 +628,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userInternalId' => $user->getInternalId(),
                 'userId' => $userId,
                 'provider' => $provider,
-                'status' => 'connected',
                 'providerUid' => $oauth2ID,
                 'providerEmail' => $email,
                 'providerAccessToken' => $accessToken,
@@ -637,7 +636,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ]));
         } else {
             $identity
-                ->setAttribute('status', 'connected')
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
                 ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
