@@ -280,6 +280,7 @@ class DeletesV1 extends Worker
 
         foreach ($projects as $project) {
             $this->deleteProject($project);
+            $dbForConsole->deleteDocument('projects', $project->getId());
         }
     }
 
