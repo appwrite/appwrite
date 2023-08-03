@@ -207,9 +207,11 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $calculateUsage = fn ($event, Document $document) => $databaseListener($event, $document, $usage);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', $calculateUsage);
+
+        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', $calculateUsage);
 
         $useCache = $route->getLabel('cache', false);
 

@@ -8,7 +8,8 @@ class Indexes extends Base
         'key',
         'type',
         'status',
-        'error'
+        'attributes',
+        'error',
     ];
 
     /**
@@ -17,6 +18,6 @@ class Indexes extends Base
      */
     public function __construct()
     {
-        parent::__construct('attributes', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('indexes', self::ALLOWED_ATTRIBUTES);
     }
 }

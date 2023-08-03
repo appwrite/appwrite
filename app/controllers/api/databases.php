@@ -1676,54 +1676,77 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
-        foreach ($queries as $query) {
+        $queriesFromRequest = Query::parseQueries($queries);   
+
+        // Add type property in query if select query exists and type property doesn't exist as type is required for response model
+        $hasDetailsinQuery = [
+            'selectQuery' => false,
+            'typeAttributeInSelectQuery' => false,
+        ];
+        foreach ($queriesFromRequest as $query) {
             if ($query->getMethod() ===  Query::TYPE_SELECT) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Select queries are not valid.');
+                $hasDetailsinQuery['selectQuery'] = true;
+            }
+            if(\array_search('type', $query->getValues())){
+                $hasDetailsinQuery['typeAttributeInSelectQuery'] = true;
             }
         }
-        \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
+        $transformedQueries = $queriesFromRequest;
+        if ($hasDetailsinQuery['selectQuery'] && !$hasDetailsinQuery['typeAttributeInSelectQuery']) {
+            \array_push($transformedQueries, Query::select(['type']));
+        }
+
+        \array_push($transformedQueries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($transformedQueries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
-
             $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [
                 Query::equal('collectionId', [$collectionId]),
                 Query::equal('databaseId', [$databaseId]),
                 Query::equal('key', [$attributeId]),
                 Query::limit(1),
             ]));
-
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$attributeId}' for the 'cursor' value not found.");
             }
-
             $cursor->setValue($cursorDocument[0]);
         }
-
-         $attributes = $dbForProject->find('attributes', $queries);
+        
+        $attributes = $dbForProject->find('attributes', $transformedQueries);
+        $filterQueries = Query::groupByType($transformedQueries)['filters'];
+        $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
 
          //Add relationship data from options to attributes as it loses options during response setup
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP ) {
                 $options = $attribute->getAttribute('options');
-                $attribute->setAttribute('relatedCollection', $options['relatedCollection']);
-                $attribute->setAttribute('relationType', $options['relationType']);
-                $attribute->setAttribute('twoWay', $options['twoWay']);
-                $attribute->setAttribute('twoWayKey', $options['twoWayKey']);
-                $attribute->setAttribute('side', $options['side']);
-                $attribute->setAttribute('onDelete', $options['onDelete']);
+                if(!\is_null($options)){
+                    $attribute->setAttribute('relatedCollection', $options['relatedCollection']);
+                    $attribute->setAttribute('relationType', $options['relationType']);
+                    $attribute->setAttribute('twoWay', $options['twoWay']);
+                    $attribute->setAttribute('twoWayKey', $options['twoWayKey']);
+                    $attribute->setAttribute('side', $options['side']);
+                    $attribute->setAttribute('onDelete', $options['onDelete']);
+                }
             }
         }
-        $filterQueries = Query::groupByType($queries)['filters'];
-        $response->dynamic(new Document([
-            'total' => $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT),
+        $output = $response->output(new Document([
+            'total' => $total,
             'attributes' => $attributes,
         ]), Response::MODEL_ATTRIBUTE_LIST);
+
+        // If type Attribute didn't exist in select query we need to remove type attribute from attribute list
+        if ($hasDetailsinQuery['selectQuery'] && !$hasDetailsinQuery['typeAttributeInSelectQuery']) {
+            foreach($output['attributes'] as &$attribute) {
+                unset($attribute['type']);
+            }
+        }
+
+        $response->static($output);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
@@ -2551,11 +2574,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         }
 
         $queries = Query::parseQueries($queries);
-        foreach ($queries as $query) {
-            if ($query->getMethod() ===  Query::TYPE_SEARCH) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, 'Select queries are not valid.');
-            }
-        }
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
          // Get cursor document if there was a cursor query

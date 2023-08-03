@@ -459,6 +459,33 @@ class Response extends SwooleResponse
     }
 
     /**
+     * Sends the response based on content type
+     *
+     * @param array $ouput
+     *
+     * return void
+     * @throws Exception
+     */
+    public function static(array $output): void 
+    {
+        switch ($this->getContentType()) {
+            case self::CONTENT_TYPE_JSON:
+                $this->json(!empty($output) ? $output : new \stdClass());
+                break;
+
+            case self::CONTENT_TYPE_YAML:
+                $this->yaml(!empty($output) ? $output : new \stdClass());
+                break;
+
+            case self::CONTENT_TYPE_NULL:
+                break;
+
+            default:
+                $this->json(!empty($output) ? $output : new \stdClass());
+        }
+    }
+
+    /**
      * Generate valid response object from document data
      *
      * @param Document $document
@@ -491,45 +518,46 @@ class Response extends SwooleResponse
                 }
             }
 
-            if ($rule['array']) {
-                if (!is_array($document[$key])) {
-                    throw new Exception($key . ' must be an array of type ' . $rule['type']);
-                }
-
-                foreach ($document[$key] as $index => $item) {
-                    if ($item instanceof Document) {
-                        if (\is_array($rule['type'])) {
-                            foreach ($rule['type'] as $type) {
-                                $condition = false;
-                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                    $condition = $item->getAttribute($attribute) === $val;
-                                    if (!$condition) {
+            if ($rule['required'] && !(\is_null($document[$key]))) {
+                if ($rule['array']) {
+                    if (!is_array($document[$key])) {
+                        throw new Exception($key . ' must be an array of type ' . $rule['type']);
+                    }
+    
+                    foreach ($document[$key] as $index => $item) {
+                        if ($item instanceof Document) {
+                            if (\is_array($rule['type'])) {
+                                foreach ($rule['type'] as $type) {
+                                    $condition = false;
+                                    foreach ($this->getModel($type)->conditions as $attribute => $val) {
+                                        $condition = $item->getAttribute($attribute) === $val;
+                                        if (!$condition) {
+                                            break;
+                                        }
+                                    }
+                                    if ($condition) {
+                                        $ruleType = $type;
                                         break;
                                     }
                                 }
-                                if ($condition) {
-                                    $ruleType = $type;
-                                    break;
-                                }
+                            } else {
+                                $ruleType = $rule['type'];
                             }
-                        } else {
-                            $ruleType = $rule['type'];
+    
+                            if (!array_key_exists($ruleType, $this->models)) {
+                                throw new Exception('Missing model for rule: ' . $ruleType);
+                            }
+    
+                            $data[$key][$index] = $this->output($item, $ruleType);
                         }
-
-                        if (!array_key_exists($ruleType, $this->models)) {
-                            throw new Exception('Missing model for rule: ' . $ruleType);
-                        }
-
-                        $data[$key][$index] = $this->output($item, $ruleType);
+                    }
+                } else {
+                    if ($document[$key] instanceof Document) {
+                        $data[$key] = $this->output($data[$key], $rule['type']);
                     }
                 }
-            } else {
-                if ($document[$key] instanceof Document) {
-                    $data[$key] = $this->output($data[$key], $rule['type']);
-                }
+                $output[$key] = $data[$key];
             }
-
-            $output[$key] = $data[$key];
         }
 
         $this->payload = $output;
