@@ -530,10 +530,6 @@ App::get('/v1/users/:userId/memberships')
         $memberships = array_map(function ($membership) use ($dbForProject, $user) {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
 
-            if ($team->isEmpty()) {
-                throw new Exception(Exception::TEAM_NOT_FOUND);
-            }
-
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
