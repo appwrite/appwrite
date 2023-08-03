@@ -199,4 +199,17 @@ return [
         'optional' => false,
         'icon' => '',
     ],
+    'assistant' => [
+        'key' => 'assistant',
+        'name' => 'Assistant',
+        'subtitle' => 'The Appwrite assistant service allows you to interact with appwrite assistant.',
+        'description' => '',
+        'controller' => 'api/assistant.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+    ],
 ];

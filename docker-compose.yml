@@ -659,6 +659,15 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+  
+  appwrite-assistant:
+    container_name: appwrite-assistant
+    image: dlohani/appwrite_ask
+    networks:
+      - appwrite
+    environment:
+      - OPENAI_API_KEY
+      
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
