@@ -56,29 +56,31 @@ class Comment
             ];
         }
 
-        $text .= "> Bored? Read random [Wikipedia Page](https://en.wikipedia.org/wiki/Special:Random).\n\n";
+        $text .= "> **Your function has automatically been deployed.** Learn more about Appwrite Function Deployments in our [documentation](https://appwrite.io/docs/functions).\n\n";
 
         foreach ($projects as $projectId => $project) {
-            $text .= "### {$project['name']} `{$projectId}`\n\n";
-            $text .= "| Function | Status | Actions |\n";
-            $text .= "| :- | :-  | :- |\n";
+            $text .= "**{$project['name']}** `{$projectId}`\n\n";
+            $text .= "| Function | ID | Status | Build Logs |\n";
+            $text .= "| :- | :-  | :-  | :- |\n";
 
             foreach ($project['functions'] as $functionId => $function) {
                 $status = match ($function['status']) {
-                    'waiting' => '⌛ Waiting',
+                    'waiting' => '⌛ Waiting to build',
                     'processing' => '🤔 Processing',
                     'building' => '🛠️ Building',
                     'ready' => '✅ Ready',
                     'failed' => '❌ Failed',
                 };
 
-                $execute = $function['status'] === 'ready' ? "[Execute](#) \\| [Activate](#)" : '_Build must be ready first_';
+                $logs = $function['status'] === 'ready' ? "[View output](#)" : '_Build must be ready first_';
 
-                $text .= "| **{$function['name']}** `{$functionId}` | {$status} ([Logs](#)) | {$execute} |\n";
+                $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$logs} |\n";
             }
 
             $text .= "\n";
         }
+
+        $text .= "> **💡 Did you know?** \n Appwrite has a discord community with XX members. [Come join us!](https://appwrite.io/discord).\n\n";
 
         return $text;
     }
