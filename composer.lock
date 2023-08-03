@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c41be9b81d4ee69cf915be4c7ba37975",
+    "content-hash": "acb2fc370254dfd67f7d44aa1fa0e694",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2740,28 +2740,28 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.5.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1"
+                "reference": "5b60e7f730641cc182bc36b1f9939d4a76d3439b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
-                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/5b60e7f730641cc182bc36b1f9939d4a76d3439b",
+                "reference": "5b60e7f730641cc182bc36b1f9939d4a76d3439b",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.28.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "4.8.3",
-                "vimeo/psalm": "4.15.0"
+                "swoole/ide-helper": "5.0.2"
             },
             "type": "library",
             "autoload": {
@@ -2785,9 +2785,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.5.0"
+                "source": "https://github.com/utopia-php/swoole/tree/0.8.0"
             },
-            "time": "2022-10-19T22:19:07+00:00"
+            "time": "2023-07-25T10:29:58+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5275,16 +5275,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "4.8.9",
+            "version": "5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "8f82ba3b6af04a5bccb97c1654af992d1ee8b0fe"
+                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/8f82ba3b6af04a5bccb97c1654af992d1ee8b0fe",
-                "reference": "8f82ba3b6af04a5bccb97c1654af992d1ee8b0fe",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
+                "reference": "16cfee44a6ec92254228c39bcab2fb8ae74cc2ea",
                 "shasum": ""
             },
             "type": "library",
@@ -5301,19 +5301,9 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/4.8.9"
+                "source": "https://github.com/swoole/ide-helper/tree/5.0.2"
             },
-            "funding": [
-                {
-                    "url": "https://gitee.com/swoole/swoole?donate=true",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/swoole",
-                    "type": "github"
-                }
-            ],
-            "time": "2022-04-18T20:38:04+00:00"
+            "time": "2023-03-20T06:05:55+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
