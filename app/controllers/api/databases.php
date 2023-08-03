@@ -1676,7 +1676,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queriesFromRequest = Query::parseQueries($queries);   
+        $queriesFromRequest = Query::parseQueries($queries);
 
         // Add type property in query if select query exists and type property doesn't exist as type is required for response model
         $hasDetailsinQuery = [
@@ -1687,7 +1687,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             if ($query->getMethod() ===  Query::TYPE_SELECT) {
                 $hasDetailsinQuery['selectQuery'] = true;
             }
-            if(\array_search('type', $query->getValues())){
+            if (\array_search('type', $query->getValues())) {
                 $hasDetailsinQuery['typeAttributeInSelectQuery'] = true;
             }
         }
@@ -1715,16 +1715,16 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             }
             $cursor->setValue($cursorDocument[0]);
         }
-        
+
         $attributes = $dbForProject->find('attributes', $transformedQueries);
         $filterQueries = Query::groupByType($transformedQueries)['filters'];
         $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
 
          //Add relationship data from options to attributes as it loses options during response setup
         foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP ) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
                 $options = $attribute->getAttribute('options');
-                if(!\is_null($options)){
+                if (!\is_null($options)) {
                     $attribute->setAttribute('relatedCollection', $options['relatedCollection']);
                     $attribute->setAttribute('relationType', $options['relationType']);
                     $attribute->setAttribute('twoWay', $options['twoWay']);
@@ -1741,7 +1741,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         // If type Attribute didn't exist in select query we need to remove type attribute from attribute list
         if ($hasDetailsinQuery['selectQuery'] && !$hasDetailsinQuery['typeAttributeInSelectQuery']) {
-            foreach($output['attributes'] as &$attribute) {
+            foreach ($output['attributes'] as &$attribute) {
                 unset($attribute['type']);
             }
         }

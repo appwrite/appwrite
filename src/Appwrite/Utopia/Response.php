@@ -466,7 +466,7 @@ class Response extends SwooleResponse
      * return void
      * @throws Exception
      */
-    public function static(array $output): void 
+    public function static(array $output): void
     {
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -523,7 +523,7 @@ class Response extends SwooleResponse
                     if (!is_array($document[$key])) {
                         throw new Exception($key . ' must be an array of type ' . $rule['type']);
                     }
-    
+
                     foreach ($document[$key] as $index => $item) {
                         if ($item instanceof Document) {
                             if (\is_array($rule['type'])) {
@@ -543,11 +543,11 @@ class Response extends SwooleResponse
                             } else {
                                 $ruleType = $rule['type'];
                             }
-    
+
                             if (!array_key_exists($ruleType, $this->models)) {
                                 throw new Exception('Missing model for rule: ' . $ruleType);
                             }
-    
+
                             $data[$key][$index] = $this->output($item, $ruleType);
                         }
                     }
