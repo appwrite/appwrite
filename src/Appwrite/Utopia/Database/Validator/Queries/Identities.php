@@ -9,6 +9,7 @@ class Identities extends Base
         'provider',
         'providerUid',
         'providerEmail',
+        'providerAccessTokenExpiry',
     ];
 
     /**
