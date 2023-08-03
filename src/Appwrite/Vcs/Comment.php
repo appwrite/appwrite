@@ -3,6 +3,7 @@
 namespace Appwrite\Vcs;
 
 use Utopia\Database\Document;
+use Utopia\App;
 
 class Comment
 {
@@ -56,31 +57,36 @@ class Comment
             ];
         }
 
-        $text .= "> **Your function has automatically been deployed.** Learn more about Appwrite Function Deployments in our [documentation](https://appwrite.io/docs/functions).\n\n";
+        //TODO: Update link to documentation
+        $text .= "**Your function has automatically been deployed.** Learn more about Appwrite Function Deployments in our [documentation](https://appwrite.io/docs/functions).\n\n";
 
         foreach ($projects as $projectId => $project) {
             $text .= "**{$project['name']}** `{$projectId}`\n\n";
             $text .= "| Function | ID | Status | Build Logs |\n";
             $text .= "| :- | :-  | :-  | :- |\n";
 
+            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = App::getEnv('_APP_DOMAIN');
+
             foreach ($project['functions'] as $functionId => $function) {
                 $status = match ($function['status']) {
-                    'waiting' => '⌛ Waiting to build',
-                    'processing' => '🤔 Processing',
-                    'building' => '🛠️ Building',
-                    'ready' => '✅ Ready',
-                    'failed' => '❌ Failed',
+                    'waiting' => '<img src="' . $protocol . '://' . $hostname . '/state-waiting.png" alt="Waiting" height="25" align="center"> Waiting to build',
+                    'processing' => '<img src="' . $protocol . '://' . $hostname . '/animation-building.gif" alt="Processing" height="29" align="center"> Processing',
+                    'building' => '<img src="' . $protocol . '://' . $hostname . '/animation-building.gif" alt="Building" height="29" align="center"> Building',
+                    'ready' => '<img src="' . $protocol . '://' . $hostname . '/state-success.png" alt="Processing" height="25" align="center">  Ready',
+                    'failed' => '<img src="' . $protocol . '://' . $hostname . '/state-failed.png" alt="Processing" height="25" align="center">  Failed',
                 };
+                //TODO: Update names of images
 
-                $logs = $function['status'] === 'ready' ? "[View output](#)" : '_Build must be ready first_';
+                $logs = '[View output](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
 
                 $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$logs} |\n";
             }
 
-            $text .= "\n";
+            $text .= "\n\n";
         }
-
-        $text .= "> **💡 Did you know?** \n Appwrite has a discord community with XX members. [Come join us!](https://appwrite.io/discord).\n\n";
+        //TODO: Update did you know section
+        $text .= "> **💡 Did you know?** \n Appwrite has a discord community with XX members. [Come join us!](https://appwrite.io/discord)\n\n";
 
         return $text;
     }
