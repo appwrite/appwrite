@@ -17,6 +17,10 @@
 
 - Improve permission indexes [DB #248](https://github.com/utopia-php/database/pull/248)
 - Validators back-ported to Utopia [#5439](https://github.com/appwrite/appwrite/pull/5439)
+# Version 1.3.8
+
+## Bugs
+- Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
 
 # Version 1.3.7
 

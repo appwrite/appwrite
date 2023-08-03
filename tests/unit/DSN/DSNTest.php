@@ -71,6 +71,39 @@ class DSNTest extends TestCase
         $this->assertNull($dsn->getPort());
         $this->assertEmpty($dsn->getDatabase());
         $this->assertNull($dsn->getQuery());
+
+        $password = 'sl/sh+$@no:her';
+        $encoded = \urlencode($password);
+        $dsn = new DSN("sms://user:$encoded@localhost");
+        $this->assertEquals("sms", $dsn->getScheme());
+        $this->assertEquals("user", $dsn->getUser());
+        $this->assertEquals($password, $dsn->getPassword());
+        $this->assertEquals("localhost", $dsn->getHost());
+        $this->assertNull($dsn->getPort());
+        $this->assertEmpty($dsn->getDatabase());
+        $this->assertNull($dsn->getQuery());
+
+        $user = 'admin@example.com';
+        $encoded = \urlencode($user);
+        $dsn = new DSN("sms://$encoded@localhost");
+        $this->assertEquals("sms", $dsn->getScheme());
+        $this->assertEquals($user, $dsn->getUser());
+        $this->assertNull($dsn->getPassword());
+        $this->assertEquals("localhost", $dsn->getHost());
+        $this->assertNull($dsn->getPort());
+        $this->assertEmpty($dsn->getDatabase());
+        $this->assertNull($dsn->getQuery());
+
+        $value = 'I am 100% value=<complex>, "right"?!';
+        $encoded = \urlencode($value);
+        $dsn = new DSN("sms://localhost?value=$encoded");
+        $this->assertEquals("sms", $dsn->getScheme());
+        $this->assertNull($dsn->getUser());
+        $this->assertNull($dsn->getPassword());
+        $this->assertEquals("localhost", $dsn->getHost());
+        $this->assertNull($dsn->getPort());
+        $this->assertEmpty($dsn->getDatabase());
+        $this->assertEquals("value=$encoded", $dsn->getQuery());
     }
 
     public function testFail(): void
