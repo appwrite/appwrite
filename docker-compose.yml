@@ -178,7 +178,6 @@ services:
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
-      - ASSISTANT_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
@@ -668,7 +667,6 @@ services:
       - appwrite
     environment:
       - OPENAI_API_KEY
-      - ASSISTANT_SECRET
       
 
   mariadb:

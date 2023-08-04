@@ -45,6 +45,7 @@ App::post('/v1/console/assistant')
     ->desc('Ask Query')
     ->groups(['api', 'assistant'])
     ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'assistant')
     ->label('sdk.method', 'chat')
     ->label('sdk.description', '/docs/references/assistant/chat.md')
@@ -52,14 +53,13 @@ App::post('/v1/console/assistant')
     ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
     ->param('query', '', new Text(2000), 'Query')
     ->inject('response')
-    ->action(function (string $query, Response $response) {
+    ->inject('user')
+    ->action(function (string $query, Response $response, Document $user) {
         $ch = curl_init('http://appwrite-assistant:3003/');
         $responseHeaders = [];
         $query = json_encode(['prompt' => $query]);
-
-        $headers = ['accept: text/event-stream', 'authorization: ' . APP::getEnv('ASSISTANT_SECRET')];
+        $headers = ['accept: text/event-stream'];
         $handleEvent = function ($ch, $data) use ($response) {
-
             $response->chunk($data);
 
             return \strlen($data);
