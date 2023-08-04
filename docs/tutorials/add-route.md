@@ -131,12 +131,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
 ```
 
-```php
-App::post('/v1/storage/buckets/:bucketId/files')
-    ->label('usage.metric', 'files.{scope}.requests.create')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
-```
-
 ### 5. Param
 
 As the name implies, `param()` is used to define a request parameter.
@@ -152,7 +146,7 @@ As the name implies, `param()` is used to define a request parameter.
 
 ```php
 App::get('/v1/account/logs')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
 ```
 
 ### 6. inject

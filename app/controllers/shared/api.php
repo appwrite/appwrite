@@ -6,7 +6,6 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -154,13 +153,12 @@ App::init()
     ->inject('user')
     ->inject('events')
     ->inject('audits')
-    ->inject('mails')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('queueForUsage')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Mail $mails, Delete $deletes, EventDatabase $database, Database $dbForProject, Usage $queueForUsage, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, Usage $queueForUsage, string $mode) use ($databaseListener) {
 
         $route = $utopia->match($request);
 
@@ -592,5 +590,13 @@ App::shutdown()
             $queueForUsage
                 ->setProject($project)
                 ->trigger();
+        }
+    });
+
+App::init()
+    ->groups(['usage'])
+    ->action(function () {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

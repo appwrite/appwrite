@@ -52,6 +52,7 @@ class Exception extends \Exception
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
+    public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -67,6 +68,7 @@ class Exception extends \Exception
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
+    public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
@@ -136,6 +138,8 @@ class Exception extends \Exception
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
     public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
     public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
+    public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
+    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
     /** Attribute */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
@@ -146,6 +150,7 @@ class Exception extends \Exception
     public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';

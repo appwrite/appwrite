@@ -7,9 +7,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\DateTime;
 use Tests\E2E\Client;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class AccountConsoleClientTest extends Scope
 {

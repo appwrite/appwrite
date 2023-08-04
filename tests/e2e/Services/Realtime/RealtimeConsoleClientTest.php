@@ -443,7 +443,7 @@ class RealtimeConsoleClientTest extends Scope
                 'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
-            'timeout' => 10,
+            'timeout' => 10
         ]);
 
         $functionId = $response1['body']['$id'] ?? '';
@@ -482,6 +482,7 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
