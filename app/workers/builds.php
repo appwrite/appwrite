@@ -220,9 +220,6 @@ class BuildsV1 extends Worker
                             throw new \Exception('Unable to push code repository: ' . $stderr);
                         }
 
-                        \var_dump($stdout);
-                        \var_dump($stderr);
-
                         $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
 
                         if ($exit !== 0) {
