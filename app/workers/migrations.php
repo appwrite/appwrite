@@ -2,16 +2,14 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
-use Utopia\Database\Helpers\ID;
 use Appwrite\Permission;
-use Appwrite\Query;
 use Appwrite\Resque\Worker;
 use Appwrite\Role;
 use Appwrite\Utopia\Response\Model\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Transfer\Destination;
+use Utopia\Database\Helpers\ID;
 use Utopia\Transfer\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Transfer\Resource;
 use Utopia\Transfer\Source;
@@ -21,10 +19,10 @@ use Utopia\Transfer\Sources\NHost;
 use Utopia\Transfer\Sources\Supabase;
 use Utopia\Transfer\Transfer;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Migrations V1 Worker');
-Console::success(APP_NAME . ' Migrations worker v1 has started');
+Console::success(APP_NAME.' Migrations worker v1 has started');
 
 class MigrationsV1 extends Worker
 {
@@ -37,7 +35,7 @@ class MigrationsV1 extends Worker
 
     public function getName(): string
     {
-        return "migrations";
+        return 'migrations';
     }
 
     public function init(): void
@@ -56,11 +54,10 @@ class MigrationsV1 extends Worker
             return;
         }
 
-
         /**
          * Handle Event execution.
          */
-        if (!empty($events)) {
+        if (! empty($events)) {
             return;
         }
 
@@ -73,6 +70,7 @@ class MigrationsV1 extends Worker
      * Process Source
      *
      * @return Source
+     *
      * @throws \Exception
      */
     protected function processSource(string $source, array $credentials): Source
@@ -88,7 +86,7 @@ class MigrationsV1 extends Worker
                     $credentials['endpoint'],
                     $credentials['apiKey'],
                     $credentials['databaseHost'],
-                    "postgres",
+                    'postgres',
                     $credentials['username'],
                     $credentials['password'],
                     $credentials['port'],
@@ -264,6 +262,7 @@ class MigrationsV1 extends Worker
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
+
                 return;
             }
 
@@ -278,6 +277,7 @@ class MigrationsV1 extends Worker
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
                 $migrationDocument->setAttribute('errors', [$th->getMessage()]);
+
                 return;
             }
 

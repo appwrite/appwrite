@@ -22,12 +22,12 @@ abstract class MigrationTest extends TestCase
     /**
      * Runs every document fix twice, to prevent corrupted data on multiple migrations.
      *
-     * @param Document $document
+     * @param  Document  $document
      */
     protected function fixDocument(Document $document)
     {
         return $this->method->invokeArgs($this->migration, [
-            $this->method->invokeArgs($this->migration, [$document])
+            $this->method->invokeArgs($this->migration, [$document]),
         ]);
     }
 
@@ -36,14 +36,14 @@ abstract class MigrationTest extends TestCase
      */
     public function testMigrationVersions(): void
     {
-        require_once __DIR__ . '/../../../app/init.php';
+        require_once __DIR__.'/../../../app/init.php';
 
         foreach (Migration::$versions as $class) {
-            $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\' . $class));
+            $this->assertTrue(class_exists('Appwrite\\Migration\\Version\\'.$class));
         }
         // Test if current version exists
         // Only test official releases - skip if latest is release candidate
-        if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
+        if (! (\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
     }
@@ -60,8 +60,8 @@ abstract class MigrationTest extends TestCase
                 'a' => true,
                 'b' => 'abc',
                 'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ]
+                'd' => ['a', 'b', 'c'],
+            ],
         ], [
             'bool' => true,
             'string' => 'abc',
@@ -71,8 +71,8 @@ abstract class MigrationTest extends TestCase
                 'a' => true,
                 'b' => 'abc',
                 'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ]
+                'd' => ['a', 'b', 'c'],
+            ],
         ]));
         $this->assertFalse(Migration::hasDifference([
             'bool' => true,
@@ -83,15 +83,15 @@ abstract class MigrationTest extends TestCase
                 'a' => true,
                 'b' => 'abc',
                 'c' => 123,
-                'd' => ['a', 'b', 'c']
-            ]
+                'd' => ['a', 'b', 'c'],
+            ],
         ], [
             'string' => 'abc',
             'assoc' => [
                 'a' => true,
                 'b' => 'abc',
                 'c' => 123,
-                'd' => ['a', 'b', 'c']
+                'd' => ['a', 'b', 'c'],
             ],
             'int' => 123,
             'array' => ['a', 'b', 'c'],
@@ -99,40 +99,40 @@ abstract class MigrationTest extends TestCase
 
         ]));
         $this->assertTrue(Migration::hasDifference([
-            'a' => true
+            'a' => true,
         ], [
-            'b' => true
+            'b' => true,
         ]));
         $this->assertTrue(Migration::hasDifference([
-            'a' => 'true'
+            'a' => 'true',
         ], [
-            'a' => true
+            'a' => true,
         ]));
         $this->assertTrue(Migration::hasDifference([
-            'a' => true
+            'a' => true,
         ], [
-            'a' => false
+            'a' => false,
         ]));
         $this->assertTrue(Migration::hasDifference([
             'nested' => [
-                'a' => true
-            ]
+                'a' => true,
+            ],
         ], [
-            'nested' => []
+            'nested' => [],
         ]));
         $this->assertTrue(Migration::hasDifference([
             'assoc' => [
                 'bool' => true,
                 'string' => 'abc',
                 'int' => 123,
-                'array' => ['a', 'b', 'c']
-            ]
+                'array' => ['a', 'b', 'c'],
+            ],
         ], [
             'nested' => [
                 'a' => true,
                 'int' => '123',
-                'array' => ['a', 'b', 'c']
-            ]
+                'array' => ['a', 'b', 'c'],
+            ],
         ]));
     }
 }
