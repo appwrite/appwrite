@@ -518,7 +518,7 @@ class Response extends SwooleResponse
                 }
             }
 
-            if ($rule['required'] && !(\is_null($document[$key]))) {
+            if ($data->isSet($key)) {
                 if ($rule['array']) {
                     if (!is_array($document[$key])) {
                         throw new Exception($key . ' must be an array of type ' . $rule['type']);
@@ -556,8 +556,8 @@ class Response extends SwooleResponse
                         $data[$key] = $this->output($data[$key], $rule['type']);
                     }
                 }
-                $output[$key] = $data[$key];
             }
+            $output[$key] = $data[$key];
         }
 
         $this->payload = $output;
