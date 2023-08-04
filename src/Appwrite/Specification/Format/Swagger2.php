@@ -342,6 +342,8 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\ArrayList':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
                     case 'Utopia\Database\Validator\Queries\Documents':
