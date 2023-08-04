@@ -3,6 +3,11 @@
 - Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
 - Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
+# Version 1.3.8
+
+## Bugs
+- Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
+
 # Version 1.3.7
 
 ## Bugs
