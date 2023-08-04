@@ -195,7 +195,7 @@ class Firebase extends OAuth2
         return $projects['results'];
     }
 
-    public function createServiceAccount(string $accessToken, string $projectID): array
+    public function createServiceAccount(string $accessToken, string $projectID): string
     {
         $response = $this->request(
             'POST',
@@ -212,6 +212,6 @@ class Firebase extends OAuth2
             ])
         );
 
-        return json_decode($response, true);
+        return $response;
     }
 }
