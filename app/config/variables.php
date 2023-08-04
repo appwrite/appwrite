@@ -106,6 +106,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONSOLE_ROOT_SESSION',
+                'description' => 'Domain policy for the Appwrite console session cookie. By default, set to \'disabled\', meaning the session cookie will be set to the domain of the Appwrite console (e.g. cloud.appwrite.io). When set to \'enabled\', the session cookie will be set to the registerable domain of the Appwrite server (e.g. appwrite.io).',
+                'introduction' => '',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
                 'description' => 'This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: \'Appwrite\'. You can use url encoded strings for spaces and special chars.',
                 'introduction' => '0.7.0',
@@ -413,7 +422,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,

@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.2.2 as final
+FROM appwrite/base:0.4.2 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -51,6 +51,7 @@ ENV _APP_SERVER=swoole \
     _APP_CONSOLE_WHITELIST_ROOT=enabled \
     _APP_CONSOLE_WHITELIST_EMAILS= \
     _APP_CONSOLE_WHITELIST_IPS= \
+    _APP_CONSOLE_ROOT_SESSION= \
     _APP_SYSTEM_EMAIL_NAME= \
     _APP_SYSTEM_EMAIL_ADDRESS= \
     _APP_SYSTEM_RESPONSE_FORMAT= \

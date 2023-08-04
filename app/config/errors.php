@@ -195,6 +195,21 @@ return [
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
+    Exception::USER_OAUTH2_BAD_REQUEST => [
+        'name' => Exception::USER_OAUTH2_BAD_REQUEST,
+        'description' => 'OAuth2 provider rejected the bad request.',
+        'code' => 400,
+    ],
+    Exception::USER_OAUTH2_UNAUTHORIZED => [
+        'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
+        'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_PROVIDER_ERROR => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
+        'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -226,6 +241,11 @@ return [
         'name' => Exception::TEAM_INVITE_MISMATCH,
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
+    ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists.',
+        'code' => 409,
     ],
 
     /** Membership */
@@ -492,6 +512,11 @@ return [
         'description' => 'Index with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::INDEX_INVALID => [
+        'name' => Exception::INDEX_INVALID,
+        'description' => 'Index invalid.',
+        'code' => 400,
+    ],
 
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
@@ -537,6 +562,16 @@ return [
     Exception::PROJECT_KEY_EXPIRED => [
         'name' => Exception::PROJECT_KEY_EXPIRED,
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
+        'code' => 401,
+    ],
+    Exception::PROJECT_SMTP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
+        'description' => 'Provided SMTP config is invalid.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
+        'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
+        'description' => 'The default template for the project cannot be deleted.',
         'code' => 401,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
