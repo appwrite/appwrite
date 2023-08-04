@@ -105,5 +105,5 @@ return [ // List of publicly visible scopes
     ],
     'targets.write' => [
         'description' => 'Access to create, update, and delete your project\'s targets',
-    ],    
+    ],
 ];
