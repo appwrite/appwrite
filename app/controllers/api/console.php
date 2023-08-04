@@ -55,8 +55,7 @@ App::post('/v1/console/assistant')
     ->label('abuse-key', 'userId:{userId}')
     ->param('query', '', new Text(2000), 'Query')
     ->inject('response')
-    ->inject('user')
-    ->action(function (string $query, Response $response, Document $user) {
+    ->action(function (string $query, Response $response) {
         $ch = curl_init('http://appwrite-assistant:3003/');
         $responseHeaders = [];
         $query = json_encode(['prompt' => $query]);
