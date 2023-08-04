@@ -188,7 +188,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('providers', __DIR__ . '/config/providers.php');
+Config::load('providers', __DIR__ . '/config/authProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
@@ -212,6 +212,7 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
+Config::load('messagingProviders', __DIR__ . '/config/messagingProviders.php');
 
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');
