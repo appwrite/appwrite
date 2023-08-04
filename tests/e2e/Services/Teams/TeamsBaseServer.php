@@ -308,7 +308,7 @@ trait TeamsBaseServer
         $this->assertArrayHasKey('prefs', $new_team['body']);
 
         /**
-         * Use the Create Team Membership endpoint 
+         * Use the Create Team Membership endpoint
          * to create 5 new users and add them to the team immediately
          */
         for ($i = 0; $i < 5; $i++) {
