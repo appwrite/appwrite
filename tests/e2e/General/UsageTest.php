@@ -11,7 +11,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class UsageTest extends Scope
 {
@@ -57,10 +57,10 @@ class UsageTest extends Scope
                 '/users',
                 $headers,
                 [
-                'userId'   => 'unique()',
-                'email'    => $email,
-                'password' => $password,
-                'name'     => $name,
+                    'userId'   => 'unique()',
+                    'email'    => $email,
+                    'password' => $password,
+                    'name'     => $name,
                 ]
             );
 
@@ -157,23 +157,18 @@ class UsageTest extends Scope
             $res = $this->client->call(
                 Client::METHOD_POST,
                 '/storage/buckets',
-                array_merge(
-                    $headers,
-                    [
-                    'content-type' => 'multipart/form-data'
-                    ]
-                ),
+                $headers,
                 [
-                'bucketId' => 'unique()',
-                'name' => $name,
-                'fileSecurity' => false,
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::create(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
-                    ]
+                    'bucketId' => 'unique()',
+                    'name' => $name,
+                    'fileSecurity' => false,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::create(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]
             );
             $this->assertEquals($name, $res['body']['name']);
             $this->assertNotEmpty($res['body']['$id']);
@@ -221,8 +216,8 @@ class UsageTest extends Scope
                 '/storage/buckets/' . $bucketId . '/files',
                 array_merge($headers, ['content-type' => 'multipart/form-data']),
                 [
-                'fileId' => 'unique()',
-                'file' => new CURLFile($file['path'], '', $file['name']),
+                    'fileId' => 'unique()',
+                    'file' => new CURLFile($file['path'], '', $file['name']),
                 ]
             );
 
@@ -337,10 +332,10 @@ class UsageTest extends Scope
             $res = $this->client->call(
                 Client::METHOD_POST,
                 '/databases',
-                array_merge($headers, ['content-type' => 'multipart/form-data']),
+                $headers,
                 [
-                'databaseId' => 'unique()',
-                'name' => $name,
+                    'databaseId' => 'unique()',
+                    'name' => $name,
                 ]
             );
 
@@ -370,17 +365,17 @@ class UsageTest extends Scope
             $res = $this->client->call(
                 Client::METHOD_POST,
                 '/databases/' . $databaseId . '/collections',
-                array_merge($headers, ['content-type' => 'multipart/form-data']),
+                $headers,
                 [
-                'collectionId' => 'unique()',
-                'name' => $name,
-                'documentSecurity' => false,
-                'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::create(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
+                    'collectionId' => 'unique()',
+                    'name' => $name,
+                    'documentSecurity' => false,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::create(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
                 ]
             );
 
@@ -408,9 +403,9 @@ class UsageTest extends Scope
             '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes' . '/string',
             $headers,
             [
-            'key' => 'name',
-            'size' => 255,
-            'required' => true,
+                'key' => 'name',
+                'size' => 255,
+                'required' => true,
             ]
         );
 
@@ -424,10 +419,10 @@ class UsageTest extends Scope
             $res = $this->client->call(
                 Client::METHOD_POST,
                 '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents',
-                array_merge($headers, ['content-type' => 'multipart/form-data']),
+                $headers,
                 [
-                'documentId' => 'unique()',
-                'data' => ['name' => $name]
+                    'documentId' => 'unique()',
+                    'data' => ['name' => $name]
                 ]
             );
             $this->assertEquals($name, $res['body']['name']);
@@ -544,20 +539,20 @@ class UsageTest extends Scope
             '/functions',
             $headers,
             [
-            'functionId' => 'unique()',
-            'name' => 'Test',
-            'runtime' => 'php-8.0',
-            'vars' => [
-                'funcKey1' => 'funcValue1',
-                'funcKey2' => 'funcValue2',
-                'funcKey3' => 'funcValue3',
-            ],
-            'events' => [
-                'users.*.create',
-                'users.*.delete',
-            ],
-            'schedule' => '0 0 1 1 *',
-            'timeout' => 10,
+                'functionId' => 'unique()',
+                'name' => 'Test',
+                'runtime' => 'php-8.0',
+                'vars' => [
+                    'funcKey1' => 'funcValue1',
+                    'funcKey2' => 'funcValue2',
+                    'funcKey3' => 'funcValue3',
+                ],
+                'events' => [
+                    'users.*.create',
+                    'users.*.delete',
+                ],
+                'schedule' => '0 0 1 1 *',
+                'timeout' => 10,
             ]
         );
 
@@ -574,9 +569,9 @@ class UsageTest extends Scope
             '/functions/' . $functionId . '/deployments',
             array_merge($headers, ['content-type' => 'multipart/form-data',]),
             [
-            'entrypoint' => 'index.php',
-            'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
-            'activate' => true
+                'entrypoint' => 'index.php',
+                'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+                'activate' => true
             ]
         );
 
@@ -608,7 +603,7 @@ class UsageTest extends Scope
             '/functions/' . $functionId . '/executions',
             $headers,
             [
-            'async' => false,
+                'async' => false,
             ]
         );
 
@@ -629,7 +624,7 @@ class UsageTest extends Scope
             '/functions/' . $functionId . '/executions',
             $headers,
             [
-            'async' => false,
+                'async' => false,
             ]
         );
 
@@ -648,7 +643,7 @@ class UsageTest extends Scope
             '/functions/' . $functionId . '/executions',
             $headers,
             [
-            'async' => true,
+                'async' => true,
             ]
         );
 
@@ -741,9 +736,6 @@ class UsageTest extends Scope
 
     public function tearDown(): void
     {
-        $this->usersTotal = 0;
-        $this->requestsTotal = 0;
-        $projectId = '';
-        $headers = [];
+        $this->projectId = '';
     }
 }

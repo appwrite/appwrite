@@ -111,6 +111,62 @@ class TeamsServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $team['body']);
         $team = $team['body']['data']['teamsGet'];
         $this->assertIsArray($team);
+
+        return $team;
+    }
+
+    /**
+     * @depends testGetTeam
+     */
+    public function testUpdateTeamPrefs($team)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_TEAM_PREFERENCES);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'teamId' =>  $team['_id'],
+                'prefs' => [
+                    'key' => 'value'
+                ]
+            ],
+        ];
+
+        $prefs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertIsArray($prefs['body']['data']);
+        $this->assertArrayNotHasKey('errors', $prefs['body']);
+        $this->assertIsArray($prefs['body']['data']['teamsUpdatePrefs']);
+        $this->assertEquals('{"key":"value"}', $prefs['body']['data']['teamsUpdatePrefs']['data']);
+
+        return $team;
+    }
+
+    /**
+     * @depends testUpdateTeamPrefs
+     */
+    public function testGetTeamPreferences($team)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$GET_TEAM_PREFERENCES);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'teamId' => $team['_id'],
+            ]
+        ];
+
+        $prefs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertIsArray($prefs['body']['data']);
+        $this->assertArrayNotHasKey('errors', $prefs['body']);
+        $this->assertIsArray($prefs['body']['data']['teamsGetPrefs']);
     }
 
     /**
@@ -168,7 +224,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeam($team)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TEAM);
+        $query = $this->getQuery(self::$UPDATE_TEAM_NAME);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -184,7 +240,7 @@ class TeamsServerTest extends Scope
 
         $this->assertIsArray($team['body']['data']);
         $this->assertArrayNotHasKey('errors', $team['body']);
-        $team = $team['body']['data']['teamsUpdate'];
+        $team = $team['body']['data']['teamsUpdateName'];
         $this->assertEquals('New Name', $team['name']);
     }
 

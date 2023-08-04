@@ -275,22 +275,26 @@ $server->job()
                         continue;
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
-
-                    $execute(
-                        queueForUsage: $queueForUsage,
-                        dbForProject: $dbForProject,
-                        project: $project,
-                        function: $function,
-                        queueForFunctions: $queueForFunctions,
-                        trigger: 'event',
-                        event: $events[0],
-                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
-                        user: $user,
-                        data: null,
-                        executionId: null,
-                        jwt: null
-                    );
-                    Console::success('Triggered function: ' . $events[0]);
+                    try {
+                        $execute(
+                            log: $log,
+                            queueForUsage: $queueForUsage,
+                            dbForProject: $dbForProject,
+                            project: $project,
+                            function: $function,
+                            queueForFunctions: $queueForFunctions,
+                            trigger: 'event',
+                            event: $events[0],
+                            eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
+                            user: $user,
+                            data: null,
+                            executionId: null,
+                            jwt: null
+                        );
+                        Console::success('Triggered function: ' . $events[0]);
+                    } catch (\Throwable $th) {
+                        Console::error("Failed to execute " . $function->getId() . " with error: " . $th->getMessage());
+                    }
                 }
             }
             return;

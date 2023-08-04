@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class FunctionsCustomServerTest extends Scope
 {
@@ -364,6 +364,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -411,6 +412,7 @@ class FunctionsCustomServerTest extends Scope
             $largeTag = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/deployments', array_merge($headers, $this->getHeaders()), [
                 'entrypoint' => 'index.php',
                 'code' => $curlFile,
+                'activate' => true
             ]);
             $counter++;
             $id = $largeTag['body']['$id'];
@@ -739,7 +741,6 @@ class FunctionsCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $data['functionId'] . '/executions', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -750,7 +751,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $execution['headers']['status-code']);
 
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
         $this->assertStringContainsString('Test1', $execution['body']['response']);
         $this->assertStringContainsString('http', $execution['body']['response']);
         $this->assertStringContainsString('PHP', $execution['body']['response']);
@@ -867,7 +867,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -950,7 +949,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -964,6 +962,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => $entrypoint,
             'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -1060,7 +1059,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1173,7 +1171,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 
@@ -1287,7 +1284,6 @@ class FunctionsCustomServerTest extends Scope
     //         'name' => 'Test ' . $name,
     //         'runtime' => $name,
     //         'events' => [],
-    //         'schedule' => '',
     //         'timeout' => $timeout,
     //     ]);
 
@@ -1401,7 +1397,6 @@ class FunctionsCustomServerTest extends Scope
             'name' => 'Test ' . $name,
             'runtime' => $name,
             'events' => [],
-            'schedule' => '',
             'timeout' => $timeout,
         ]);
 

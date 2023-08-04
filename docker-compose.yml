@@ -653,8 +653,8 @@ services:
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
       - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-schedule:
     entrypoint: schedule
