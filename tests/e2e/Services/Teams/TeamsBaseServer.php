@@ -285,31 +285,8 @@ trait TeamsBaseServer
 
     public function testTeamDeleteUpdatesUserMembership()
     {
+        // Array to store the IDs of newly created users
         $new_users = [];
-
-        /**
-         * Create 5 new users and add their IDs to an array
-         */
-        for ($i = 0; $i < 5; $i++) {
-            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'userId' => ID::unique(),
-                'email' => 'newuser' . $i . '@localhost.test',
-                'password' => 'password',
-                'name' => 'New User ' . $i,
-            ], false);
-
-            $user_body = json_decode($user['body'], true);
-
-            $this->assertEquals(201, $user['headers']['status-code']);
-            $this->assertEquals('newuser' . $i . '@localhost.test', $user_body['email']);
-            $this->assertEquals('New User ' . $i, $user_body['name']);
-            $this->assertEquals($user_body['status'], true);
-
-            array_push($new_users, $user_body['$id']);
-        }
 
         /**
          * Create a new team
@@ -331,7 +308,8 @@ trait TeamsBaseServer
         $this->assertArrayHasKey('prefs', $new_team['body']);
 
         /**
-         * Create team memberships for each of the new users
+         * Use the Create Team Membership endpoint 
+         * to create 5 new users and add them to the team immediately
          */
         for ($i = 0; $i < 5; $i++) {
             $new_membership = $this->client->call(Client::METHOD_POST, '/teams/' . $new_team['body']['$id'] . '/memberships', array_merge([
@@ -354,6 +332,8 @@ trait TeamsBaseServer
             $dateValidator = new DatetimeValidator();
             $this->assertEquals(true, $dateValidator->isValid($new_membership['body']['joined']));
             $this->assertEquals(true, $new_membership['body']['confirm']);
+
+            $new_users[] = $new_membership['body']['userId'];
         }
 
         /**
