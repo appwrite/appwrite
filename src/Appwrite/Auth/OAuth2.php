@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth;
 
+use Appwrite\Auth\OAuth2\Exception;
+
 abstract class OAuth2
 {
     /**
@@ -78,6 +80,13 @@ abstract class OAuth2
      *
      * @return string
      */
+    abstract public function getUserID(string $accessToken): string;
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     abstract public function getUserEmail(string $accessToken): string;
 
     /**
@@ -148,11 +157,11 @@ abstract class OAuth2
      *
      * @return string
      */
-    public function getAccessTokenExpiry(string $code): string
+    public function getAccessTokenExpiry(string $code): int
     {
         $tokens = $this->getTokens($code);
 
-        return $tokens['expires_in'] ?? '';
+        return $tokens['expires_in'] ?? 0;
     }
 
     // The parseState function was designed specifically for Amazon OAuth2 Adapter to override.
@@ -195,7 +204,13 @@ abstract class OAuth2
         // Send the request & save response to $response
         $response = \curl_exec($ch);
 
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
         \curl_close($ch);
+
+        if ($code != 200) {
+            throw new Exception($response, $code);
+        }
 
         return (string)$response;
     }
