@@ -187,8 +187,8 @@ class BuildsV1 extends Worker
                     }
 
                     // Build from template
-                    $templateRepositoryName = $template->getAttribute('repository', '');
-                    $templateOwnerName = $template->getAttribute('owner', '');
+                    $templateRepositoryName = $template->getAttribute('repositoryName', '');
+                    $templateOwnerName = $template->getAttribute('ownerName', '');
                     $templateBranch = $template->getAttribute('branch', '');
 
                     $templateRootDirectory =  $template->getAttribute('rootDirectory', '');
@@ -219,6 +219,9 @@ class BuildsV1 extends Worker
                         if ($exit !== 0) {
                             throw new \Exception('Unable to push code repository: ' . $stderr);
                         }
+
+                        \var_dump($stdout);
+                        \var_dump($stderr);
 
                         $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
 

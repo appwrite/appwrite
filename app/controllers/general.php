@@ -58,8 +58,8 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
     if ($route === null) {
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
-        
-        if($mainDomain === 'localhost') {
+
+        if ($mainDomain === 'localhost') {
             throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Please configure domain environment variables before using Appwrite outside of localhost.');
         } else {
             throw new AppwriteException(AppwriteException::ROUTER_HOST_NOT_FOUND);

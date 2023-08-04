@@ -635,6 +635,14 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             $repository = $github->createRepository($owner, $name, $private);
         }
 
+        if (isset($repository['errors'])) {
+            $message = $repository['message'] ?? 'Unknown error.';
+            if (isset($repository['errors'][0])) {
+                $message .= ' ' . $repository['errors'][0]['message'];
+            }
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Provider Error: ' . $message);
+        }
+
         $repository['id'] = \strval($repository['id']) ?? '';
         $repository['pushedAt'] = $repository['pushed_at'] ?? '';
         $repository['organization'] = $installation->getAttribute('organization', '');
