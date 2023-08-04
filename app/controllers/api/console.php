@@ -58,7 +58,7 @@ App::post('/v1/console/assistant')
         $query = json_encode(['prompt' => $query]);
 
         $headers = ['accept: text/event-stream', 'authorization: ' . APP::getEnv('ASSISTANT_SECRET')];
-        $handleEvent = function($ch, $data) use ($response) {
+        $handleEvent = function ($ch, $data) use ($response) {
 
             $response->chunk($data);
 
@@ -92,5 +92,4 @@ App::post('/v1/console/assistant')
         curl_close($ch);
 
         $response->chunk('', true);
-
     });
