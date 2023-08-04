@@ -14,6 +14,7 @@ use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
+use Utopia\Validator\Nullable;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -266,7 +267,7 @@ App::post('/v1/mock/tests/general/upload')
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
-    ->param('file', [], new File(), 'Sample file param', false)
+    ->param('file', [], new File(), 'Sample file param', skipValidation: true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $x, int $y, array $z, mixed $file, Request $request, Response $response) {
@@ -425,6 +426,21 @@ App::get('/v1/mock/tests/general/empty')
     ->action(function (Response $response) {
 
         $response->noContent();
+    });
+
+App::post('/v1/mock/tests/general/nullable')
+    ->desc('Nullable Test')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'nullable')
+    ->label('sdk.description', 'Mock a nullable parameter.')
+    ->label('sdk.mock', true)
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('nullable', '', new Nullable(new Text(100)), 'Sample string param')
+    ->param('optional', '', new Text(100), 'Sample string param', true)
+    ->action(function (string $required, string $nullable, ?string $optional) {
     });
 
 /** Endpoint to test if required headers are sent from the SDK */

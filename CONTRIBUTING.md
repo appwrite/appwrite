@@ -319,7 +319,7 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 The following steps are used to generate a new console SDK:
 
-1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container.
+1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs version=<version-number> mode=normal` command in a running `appwrite/appwrite` container.
 2. Generate a new SDK using the command `php app/cli.php sdks`.
 3. Change your working dir using `cd app/sdks/console-web`.
 4. Build the new SDK `npm run build`.
@@ -344,8 +344,7 @@ If you are in PHP Storm you don't need any plugin. Below are the settings requir
 
 1. Create an init file. 
 2. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php**.
-3. Change the IP address to your development machine's IP. Without the proper IP address, the debugger won't connect. 
-4. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+3. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 

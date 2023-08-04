@@ -8,6 +8,7 @@ use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
+use Utopia\Validator\Nullable;
 
 class Swagger2 extends Format
 {
@@ -285,6 +286,13 @@ class Swagger2 extends Format
                     }
                 }
 
+                $isNullable = $validator instanceof Nullable;
+
+                if ($isNullable) {
+                    /** @var Nullable $validator */
+                    $validator = $validator->getValidator();
+                }
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
@@ -446,6 +454,10 @@ class Swagger2 extends Format
 
                     if ($node['x-global'] ?? false) {
                         $body['schema']['properties'][$name]['x-global'] = true;
+                    }
+
+                    if ($isNullable) {
+                        $body['schema']['properties'][$name]['x-nullable'] = true;
                     }
 
                     if (\array_key_exists('items', $node)) {

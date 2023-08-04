@@ -17,7 +17,7 @@ $auth = Config::getParam('auth', []);
  * indexes => list of indexes
  */
 
- $commonCollections = [
+$commonCollections = [
     'users' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('users'),
@@ -65,6 +65,17 @@ $auth = Config::getParam('auth', []);
                 'required' => false,
                 'default' => null,
                 'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('passwordHistory'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
                 'filters' => [],
             ],
             [
@@ -687,6 +698,17 @@ $auth = Config::getParam('auth', []);
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('prefs'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => new \stdClass(),
+                'array' => false,
+                'filters' => ['json'],
+            ],
         ],
         'indexes' => [
             [
@@ -1052,6 +1074,7 @@ $auth = Config::getParam('auth', []);
             ],
         ]
     ],
+
     'stats' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('stats'),
@@ -1137,47 +1160,48 @@ $auth = Config::getParam('auth', []);
             ],
         ],
     ],
-     'statsLogger' => [
-         '$collection' => ID::custom(Database::METADATA),
-         '$id' => ID::custom('statsLogger'),
-         'name' => 'StatsLogger',
-         'attributes' => [
-             [
-                 '$id' => ID::custom('time'),
-                 'type' => Database::VAR_DATETIME,
-                 'format' => '',
-                 'size' => 0,
-                 'signed' => false,
-                 'required' => false,
-                 'default' => null,
-                 'array' => false,
-                 'filters' => ['datetime'],
-             ],
-             [
-                 '$id' => ID::custom('metrics'),
-                 'type' => Database::VAR_STRING,
-                 'format' => '',
-                 'size' => 5012,
-                 'signed' => true,
-                 'required' => false,
-                 'default' => [],
-                 'array' => false,
-                 'filters' => ['json'],
-             ],
-         ],
-         'indexes' => [
-             [
-                 '$id' => ID::custom('_key_time'),
-                 'type' => Database::INDEX_KEY,
-                 'attributes' => ['time'],
-                 'lengths' => [],
-                 'orders' => [Database::ORDER_DESC],
-             ],
-         ],
-     ],
- ];
 
- $projectCollections = array_merge([
+    'statsLogger' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('statsLogger'),
+        'name' => 'StatsLogger',
+        'attributes' => [
+            [
+                '$id' => ID::custom('time'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => ID::custom('metrics'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 5012,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => ID::custom('_key_time'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['time'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_DESC],
+            ],
+        ],
+    ],
+];
+
+$projectCollections = array_merge([
     'databases' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('databases'),
@@ -1233,7 +1257,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -1255,7 +1279,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -1387,6 +1411,16 @@ $auth = Config::getParam('auth', []);
                 'array' => true,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('options'),
+                'type' => Database::VAR_STRING,
+                'size' => 16384,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
         ],
         'indexes' => [
             [
@@ -1410,7 +1444,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -1432,7 +1466,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -2273,7 +2307,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -2411,9 +2445,9 @@ $auth = Config::getParam('auth', []);
             ],
         ],
     ],
- ], $commonCollections);
+], $commonCollections);
 
- $consoleCollections = array_merge([
+$consoleCollections = array_merge([
     'projects' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('projects'),
@@ -2425,7 +2459,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -2821,7 +2855,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -2915,7 +2949,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -3020,7 +3054,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -3062,7 +3096,7 @@ $auth = Config::getParam('auth', []);
                 '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 512, // Output of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
+                'size' => 512, // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -3132,7 +3166,7 @@ $auth = Config::getParam('auth', []);
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => false,
+                'required' => true,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
@@ -3372,9 +3406,9 @@ $auth = Config::getParam('auth', []);
             ],
         ]
     ],
- ], $commonCollections);
+], $commonCollections);
 
- $bucketCollections = [
+$bucketCollections = [
     'files' => [
         '$collection' => ID::custom('buckets'),
         '$id' => ID::custom('files'),
@@ -3638,9 +3672,9 @@ $auth = Config::getParam('auth', []);
             ],
         ]
     ],
- ];
+];
 
- $dbCollections = [
+$dbCollections = [
     'collections' => [
         '$collection' => ID::custom('databases'),
         '$id' => ID::custom('collections'),
@@ -3760,14 +3794,14 @@ $auth = Config::getParam('auth', []);
             ],
         ],
     ],
- ];
+];
 
 
- $collections = [
+$collections = [
     'projects' => $projectCollections,
     'console'  => $consoleCollections,
     'buckets' => $bucketCollections,
     'databases' => $dbCollections
- ];
+];
 
- return $collections;
+return $collections;
