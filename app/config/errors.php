@@ -629,4 +629,21 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
+    
+    /** Migrations */
+    Exception::MIGRATION_NOT_FOUND => [
+        'name' => Exception::MIGRATION_NOT_FOUND,
+        'description' => 'Migration with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_ALREADY_EXISTS => [
+        'name' => Exception::MIGRATION_ALREADY_EXISTS,
+        'description' => 'Migration with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::MIGRATION_IN_PROGRESS => [
+        'name' => Exception::MIGRATION_IN_PROGRESS,
+        'description' => 'Migration is already in progress.',
+        'code' => 409,
+    ],
 ];

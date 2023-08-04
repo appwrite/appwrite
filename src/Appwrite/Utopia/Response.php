@@ -88,6 +88,9 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\Migration;
+use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
+use Appwrite\Utopia\Response\Model\MigrationReport;
 
 /**
  * @method int getStatusCode()
@@ -198,6 +201,13 @@ class Response extends SwooleResponse
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
 
+    // Migrations
+    public const MODEL_MIGRATION = 'migration';
+    public const MODEL_MIGRATION_LIST = 'migrationList';
+    public const MODEL_MIGRATION_REPORT = 'migrationReport';
+    public const MODEL_MIGRATION_FIREBASE_PROJECT = 'firebaseProject';
+    public const MODEL_MIGRATION_FIREBASE_PROJECT_LIST = 'firebaseProjectList';
+
     // Project
     public const MODEL_PROJECT = 'project';
     public const MODEL_PROJECT_LIST = 'projectList';
@@ -288,6 +298,8 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
+            ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
+            ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -360,6 +372,9 @@ class Response extends SwooleResponse
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
+            ->setModel(new Migration())
+            ->setModel(new MigrationReport())
+            ->setModel(new MigrationFirebaseProject())
             // Verification
             // Recovery
             // Tests (keep last)

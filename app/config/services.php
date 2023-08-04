@@ -199,4 +199,17 @@ return [
         'optional' => false,
         'icon' => '',
     ],
+    'migrations' => [
+        'key' => 'migrations',
+        'name' => 'Migrations',
+        'subtitle' => 'The Migrations service allows you to migrate third-party data to your Appwrite server.',
+        'description' => '/docs/services/migrations.md',
+        'controller' => 'api/migrations.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/migrations',
+        'tests' => true,
+        'optional' => true,
+        'icon' => '/images/services/migrations.png',
+    ],
 ];

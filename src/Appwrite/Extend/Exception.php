@@ -32,6 +32,7 @@ class Exception extends \Exception
      * - Platform
      * - Domain
      * - GraphQL
+     * - Migrations
      */
 
     /** General */
@@ -198,6 +199,11 @@ class Exception extends \Exception
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
+
+    /** Migrations */
+    public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
+    public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
+    public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
 
     protected $type = '';
 
