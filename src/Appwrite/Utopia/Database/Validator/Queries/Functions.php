@@ -15,7 +15,7 @@ class Functions extends Base
         'timeout',
         'entrypoint',
         'commands',
-        'vcsInstallationId'
+        'installationId'
     ];
 
     /**

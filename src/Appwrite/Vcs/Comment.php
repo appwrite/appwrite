@@ -73,8 +73,8 @@ class Comment
                     'waiting' => '<img src="' . $protocol . '://' . $hostname . '/state-waiting.png" alt="Waiting" height="25" align="center"> Waiting to build',
                     'processing' => '<img src="' . $protocol . '://' . $hostname . '/animation-building.gif" alt="Processing" height="29" align="center"> Processing',
                     'building' => '<img src="' . $protocol . '://' . $hostname . '/animation-building.gif" alt="Building" height="29" align="center"> Building',
-                    'ready' => '<img src="' . $protocol . '://' . $hostname . '/state-success.png" alt="Processing" height="25" align="center">  Ready',
-                    'failed' => '<img src="' . $protocol . '://' . $hostname . '/state-failed.png" alt="Processing" height="25" align="center">  Failed',
+                    'ready' => '<img src="' . $protocol . '://' . $hostname . '/state-success.png" alt="Ready" height="25" align="center"> Ready',
+                    'failed' => '<img src="' . $protocol . '://' . $hostname . '/state-failed.png" alt="Failed" height="25" align="center"> Failed',
                 };
                 //TODO: Update names of images
 
