@@ -1,4 +1,5 @@
 <?php
+
 return [
   'email' => [
     'mailchimp' => [
