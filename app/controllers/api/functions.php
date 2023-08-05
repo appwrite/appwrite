@@ -1145,8 +1145,7 @@ App::get('/v1/functions/:functionId/deployments')
         foreach ($results as $result) {
             $build = $dbForProject->getDocument('builds', $result->getAttribute('buildId', ''));
             $result->setAttribute('status', $build->getAttribute('status', 'processing'));
-            $result->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
-            $result->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+            $result->setAttribute('buildLogs', $build->getAttribute('logs', ''));
             $result->setAttribute('buildTime', $build->getAttribute('duration', 0));
             $result->setAttribute('size', $result->getAttribute('size', 0) + $build->getAttribute('size', 0));
         }
@@ -1192,8 +1191,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
 
         $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         $deployment->setAttribute('status', $build->getAttribute('status', 'waiting'));
-        $deployment->setAttribute('buildStderr', $build->getAttribute('stderr', ''));
-        $deployment->setAttribute('buildStdout', $build->getAttribute('stdout', ''));
+        $deployment->setAttribute('buildLogs', $build->getAttribute('logs', ''));
         $deployment->setAttribute('buildTime', $build->getAttribute('duration', 0));
         $deployment->setAttribute('size', $deployment->getAttribute('size', 0) + $build->getAttribute('size', 0));
 

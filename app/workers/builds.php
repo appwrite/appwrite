@@ -128,8 +128,7 @@ class BuildsV1 extends Worker
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
-                'stdout' => '',
-                'stderr' => '',
+                'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
                 'size' => 0
@@ -365,7 +364,7 @@ class BuildsV1 extends Worker
                                 deploymentId: $deployment->getId(),
                                 callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
                                     if ($response === null) {
-                                        $build = $build->setAttribute('stdout', $build->getAttribute('stdout', '') . $logs);
+                                        $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
                                         $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                         /**
@@ -410,8 +409,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
-            $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['stdout']);
+            $build->setAttribute('logs', $response['output']);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $providerTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -442,7 +440,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('stderr', $th->getMessage());
+            $build->setAttribute('logs', $th->getMessage());
             Console::error($th->getMessage());
 
             if ($isVcsEnabled) {
