@@ -112,7 +112,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
+        'description' => 'The current user has been blocked.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -226,6 +226,11 @@ return [
         'name' => Exception::TEAM_INVITE_MISMATCH,
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
+    ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists.',
+        'code' => 409,
     ],
 
     /** Membership */
@@ -408,9 +413,14 @@ return [
         'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
         'code' => 400,
     ],
+    Exception::DOCUMENT_MISSING_DATA => [
+        'name' => Exception::DOCUMENT_MISSING_DATA,
+        'description' => 'The document data is missing. You must provide the document data.',
+        'code' => 400,
+    ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document payload is missing.',
+        'description' => 'The document data and permissions are missing. You must provide either the document data or permissions to be updated.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
@@ -498,6 +508,11 @@ return [
         'name' => Exception::PROJECT_NOT_FOUND,
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
+    ],
+    Exception::PROJECT_ALREADY_EXISTS => [
+        'name' => Exception::PROJECT_ALREADY_EXISTS,
+        'description' => 'Project with the requested ID already exists.',
+        'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,

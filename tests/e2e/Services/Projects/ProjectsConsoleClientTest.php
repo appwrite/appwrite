@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Extend\Exception;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
@@ -98,7 +99,37 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        return ['projectId' => $projectId];
+        return [
+            'projectId' => $projectId,
+            'teamId' => $team['body']['$id']
+        ];
+    }
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateDuplicateProject($data)
+    {
+        $teamId = $data['teamId'] ?? '';
+        $projectId = $data['projectId'] ?? '';
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => $projectId,
+            'name' => 'Project Duplicate',
+            'teamId' => $teamId,
+            'region' => 'default'
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(409, $response['body']['code']);
+        $this->assertEquals(Exception::PROJECT_ALREADY_EXISTS, $response['body']['type']);
+        $this->assertEquals('Project with the requested ID already exists.', $response['body']['message']);
     }
 
     /**
@@ -587,7 +618,7 @@ class ProjectsConsoleClientTest extends Scope
         foreach ($providers as $key => $provider) {
             $asserted = false;
             foreach ($response['body']['providers'] as $responseProvider) {
-                if ($responseProvider['name'] === ucfirst($key)) {
+                if ($responseProvider['key'] === $key) {
                     $this->assertEquals('AppId-' . ucfirst($key), $responseProvider['appId']);
                     $this->assertEquals('Secret-' . ucfirst($key), $responseProvider['secret']);
                     $this->assertFalse($responseProvider['enabled']);
@@ -629,7 +660,7 @@ class ProjectsConsoleClientTest extends Scope
         foreach ($providers as $key => $provider) {
             $asserted = false;
             foreach ($response['body']['providers'] as $responseProvider) {
-                if ($responseProvider['name'] === ucfirst($key)) {
+                if ($responseProvider['key'] === $key) {
                     // On first provider, test enabled=false
                     $this->assertEquals($i !== 0, $responseProvider['enabled']);
                     $asserted = true;
@@ -783,11 +814,11 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 501);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/anonymous', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
-        ]), []);
+        ]));
 
         $this->assertEquals($response['headers']['status-code'], 501);
 
@@ -843,6 +874,19 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
+        $email = uniqid() . 'user@localhost.test';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
         $this->assertEquals($response['headers']['status-code'], 501);
 
         /**
@@ -857,6 +901,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+
+        $email = uniqid() . 'user@localhost.test';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -2966,15 +3012,13 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $project['headers']['status-code']);
 
-        // Delete team
-        $team = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+        // Delete Project
+        $project = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'password' => 'password'
-        ]);
+        ], $this->getHeaders()));
 
-        $this->assertEquals(204, $team['headers']['status-code']);
+        $this->assertEquals(204, $project['headers']['status-code']);
 
         // Ensure I can get team but not a project
         $team = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId, array_merge([

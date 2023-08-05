@@ -100,8 +100,8 @@ const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate pe
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 503;
-const APP_VERSION_STABLE = '1.3.4';
+const APP_CACHE_BUSTER = 506;
+const APP_VERSION_STABLE = '1.3.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -903,7 +903,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
     if ($projectId === 'console') {
         return $console;
