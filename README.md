@@ -128,6 +128,12 @@ Choose from one of the providers below:
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
+        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+          <br /><sub><b>Akamai</b></sub></a>    
+      </a>
+    </td>
   </tr>
 </table>
 

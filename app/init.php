@@ -34,6 +34,9 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
 use Utopia\Logger\Logger;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Database;
@@ -59,9 +62,7 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
@@ -72,7 +73,6 @@ use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
@@ -104,6 +104,7 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 506;
 const APP_VERSION_STABLE = '1.3.8';
@@ -245,6 +246,7 @@ Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
 Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
 Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
 Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
+Config::load('locale-templates', __DIR__ . '/config/locale/templates.php');
 Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
@@ -494,6 +496,29 @@ Database::addFilter(
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+Database::addFilter(
+    'userSearch',
+    function (mixed $value, Document $user) {
+        $searchValues = [
+            $user->getId(),
+            $user->getAttribute('email', ''),
+            $user->getAttribute('name', ''),
+            $user->getAttribute('phone', '')
+        ];
+
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $searchValues[] = 'label:' . $label;
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
     }
 );
 
@@ -781,78 +806,24 @@ $register->set('promiseAdapter', function () {
  * Localization
  */
 Locale::$exceptions = false;
-Locale::setLanguageFromJSON('af', __DIR__ . '/config/locale/translations/af.json');
-Locale::setLanguageFromJSON('ar', __DIR__ . '/config/locale/translations/ar.json');
-Locale::setLanguageFromJSON('as', __DIR__ . '/config/locale/translations/as.json');
-Locale::setLanguageFromJSON('az', __DIR__ . '/config/locale/translations/az.json');
-Locale::setLanguageFromJSON('be', __DIR__ . '/config/locale/translations/be.json');
-Locale::setLanguageFromJSON('bg', __DIR__ . '/config/locale/translations/bg.json');
-Locale::setLanguageFromJSON('bh', __DIR__ . '/config/locale/translations/bh.json');
-Locale::setLanguageFromJSON('bn', __DIR__ . '/config/locale/translations/bn.json');
-Locale::setLanguageFromJSON('bs', __DIR__ . '/config/locale/translations/bs.json');
-Locale::setLanguageFromJSON('ca', __DIR__ . '/config/locale/translations/ca.json');
-Locale::setLanguageFromJSON('cs', __DIR__ . '/config/locale/translations/cs.json');
-Locale::setLanguageFromJSON('da', __DIR__ . '/config/locale/translations/da.json');
-Locale::setLanguageFromJSON('de', __DIR__ . '/config/locale/translations/de.json');
-Locale::setLanguageFromJSON('el', __DIR__ . '/config/locale/translations/el.json');
-Locale::setLanguageFromJSON('en', __DIR__ . '/config/locale/translations/en.json');
-Locale::setLanguageFromJSON('eo', __DIR__ . '/config/locale/translations/eo.json');
-Locale::setLanguageFromJSON('es', __DIR__ . '/config/locale/translations/es.json');
-Locale::setLanguageFromJSON('fa', __DIR__ . '/config/locale/translations/fa.json');
-Locale::setLanguageFromJSON('fi', __DIR__ . '/config/locale/translations/fi.json');
-Locale::setLanguageFromJSON('fo', __DIR__ . '/config/locale/translations/fo.json');
-Locale::setLanguageFromJSON('fr', __DIR__ . '/config/locale/translations/fr.json');
-Locale::setLanguageFromJSON('ga', __DIR__ . '/config/locale/translations/ga.json');
-Locale::setLanguageFromJSON('gu', __DIR__ . '/config/locale/translations/gu.json');
-Locale::setLanguageFromJSON('he', __DIR__ . '/config/locale/translations/he.json');
-Locale::setLanguageFromJSON('hi', __DIR__ . '/config/locale/translations/hi.json');
-Locale::setLanguageFromJSON('hr', __DIR__ . '/config/locale/translations/hr.json');
-Locale::setLanguageFromJSON('hu', __DIR__ . '/config/locale/translations/hu.json');
-Locale::setLanguageFromJSON('hy', __DIR__ . '/config/locale/translations/hy.json');
-Locale::setLanguageFromJSON('id', __DIR__ . '/config/locale/translations/id.json');
-Locale::setLanguageFromJSON('is', __DIR__ . '/config/locale/translations/is.json');
-Locale::setLanguageFromJSON('it', __DIR__ . '/config/locale/translations/it.json');
-Locale::setLanguageFromJSON('ja', __DIR__ . '/config/locale/translations/ja.json');
-Locale::setLanguageFromJSON('jv', __DIR__ . '/config/locale/translations/jv.json');
-Locale::setLanguageFromJSON('kn', __DIR__ . '/config/locale/translations/kn.json');
-Locale::setLanguageFromJSON('km', __DIR__ . '/config/locale/translations/km.json');
-Locale::setLanguageFromJSON('ko', __DIR__ . '/config/locale/translations/ko.json');
-Locale::setLanguageFromJSON('la', __DIR__ . '/config/locale/translations/la.json');
-Locale::setLanguageFromJSON('lb', __DIR__ . '/config/locale/translations/lb.json');
-Locale::setLanguageFromJSON('lt', __DIR__ . '/config/locale/translations/lt.json');
-Locale::setLanguageFromJSON('lv', __DIR__ . '/config/locale/translations/lv.json');
-Locale::setLanguageFromJSON('ml', __DIR__ . '/config/locale/translations/ml.json');
-Locale::setLanguageFromJSON('mr', __DIR__ . '/config/locale/translations/mr.json');
-Locale::setLanguageFromJSON('ms', __DIR__ . '/config/locale/translations/ms.json');
-Locale::setLanguageFromJSON('nb', __DIR__ . '/config/locale/translations/nb.json');
-Locale::setLanguageFromJSON('ne', __DIR__ . '/config/locale/translations/ne.json');
-Locale::setLanguageFromJSON('nl', __DIR__ . '/config/locale/translations/nl.json');
-Locale::setLanguageFromJSON('nn', __DIR__ . '/config/locale/translations/nn.json');
-Locale::setLanguageFromJSON('or', __DIR__ . '/config/locale/translations/or.json');
-Locale::setLanguageFromJSON('pa', __DIR__ . '/config/locale/translations/pa.json');
-Locale::setLanguageFromJSON('pl', __DIR__ . '/config/locale/translations/pl.json');
-Locale::setLanguageFromJSON('pt-br', __DIR__ . '/config/locale/translations/pt-br.json');
-Locale::setLanguageFromJSON('pt-pt', __DIR__ . '/config/locale/translations/pt-pt.json');
-Locale::setLanguageFromJSON('ro', __DIR__ . '/config/locale/translations/ro.json');
-Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
-Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
-Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json');
-Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
-Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
-Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
-Locale::setLanguageFromJSON('sn', __DIR__ . '/config/locale/translations/sn.json');
-Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
-Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
-Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
-Locale::setLanguageFromJSON('te', __DIR__ . '/config/locale/translations/te.json');
-Locale::setLanguageFromJSON('th', __DIR__ . '/config/locale/translations/th.json');
-Locale::setLanguageFromJSON('tl', __DIR__ . '/config/locale/translations/tl.json');
-Locale::setLanguageFromJSON('tr', __DIR__ . '/config/locale/translations/tr.json');
-Locale::setLanguageFromJSON('uk', __DIR__ . '/config/locale/translations/uk.json');
-Locale::setLanguageFromJSON('ur', __DIR__ . '/config/locale/translations/ur.json');
-Locale::setLanguageFromJSON('vi', __DIR__ . '/config/locale/translations/vi.json');
-Locale::setLanguageFromJSON('zh-cn', __DIR__ . '/config/locale/translations/zh-cn.json');
-Locale::setLanguageFromJSON('zh-tw', __DIR__ . '/config/locale/translations/zh-tw.json');
+
+$locales = Config::getParam('locale-codes', []);
+
+foreach ($locales as $locale) {
+    $code = $locale['code'];
+
+    $path = __DIR__ . '/config/locale/translations/' . $code . '.json';
+
+    if (!\file_exists($path)) {
+        $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
+        if (!\file_exists($path)) {
+            var_dump('Unable to find tralsnations for ' . $locale['code'] . ' so using en.json');
+            $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
+        }
+    }
+
+    Locale::setLanguageFromJSON($code, $path);
+}
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
@@ -877,6 +848,10 @@ App::setResource('loggerBreadcrumbs', function () {
 
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+
+App::setResource('localeCodes', function () {
+    return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
+});
 
 // Queues
 App::setResource('events', fn() => new Event('', ''));
@@ -1028,7 +1003,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
     if ($projectId === 'console') {
         return $console;
@@ -1236,7 +1211,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
-        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
         $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
         return $complexity * $limit;
