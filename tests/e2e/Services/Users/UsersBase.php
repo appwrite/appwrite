@@ -3,8 +3,9 @@
 namespace Tests\E2E\Services\Users;
 
 use Appwrite\Tests\Retry;
+use Appwrite\Utopia\Response;
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 trait UsersBase
 {
@@ -35,6 +36,7 @@ trait UsersBase
         $this->assertEquals($body['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($body['status'], true);
         $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
+        $this->assertEquals($body['labels'], []);
 
         /**
          * Test Create with Custom ID for SUCCESS
@@ -56,7 +58,7 @@ trait UsersBase
         $this->assertEquals(true, $res['body']['status']);
         $this->assertGreaterThan('2000-01-01 00:00:00', $res['body']['registration']);
 
-         /**
+        /**
          * Test Create with hashed passwords
          */
         $res = $this->client->call(Client::METHOD_POST, '/users/md5', array_merge([
@@ -180,7 +182,7 @@ trait UsersBase
      */
     public function testCreateUserSessionHashed(array $data): void
     {
-        $userIds = [ 'md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified' ];
+        $userIds = ['md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
 
         foreach ($userIds as $userId) {
             // Ensure sessions can be created with hashed passwords
@@ -236,7 +238,7 @@ trait UsersBase
     {
         /**
          * Test for SUCCESS
-        */
+         */
 
         // Email + password
         $response = $this->client->call(Client::METHOD_POST, '/users', array_merge([
@@ -644,6 +646,19 @@ trait UsersBase
         $this->assertIsInt($users['body']['total']);
         $this->assertGreaterThan(0, $users['body']['total']);
 
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->client->call(Client::METHOD_GET, '/users/non_existent', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 404);
+        $this->assertEquals($user['body']['code'], 404);
+        $this->assertEquals($user['body']['message'], 'User with the requested ID could not be found.');
+        $this->assertEquals($user['body']['type'], 'user_not_found');
+
         return $data;
     }
 
@@ -874,6 +889,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    #[Retry(count: 1)]
     public function testUpdateAndGetUserPrefs(array $data): array
     {
         /**
@@ -953,7 +969,7 @@ trait UsersBase
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['phone'], $updatedNumber);
 
-         /**
+        /**
          * Test for FAILURE
          */
 
@@ -1001,6 +1017,98 @@ trait UsersBase
         $this->assertEquals($response['body']['users'][0]['phone'], $newNumber);
     }
 
+    /**
+     * @return array{}
+     */
+    public function userLabelsProvider()
+    {
+        return [
+            'single label' => [
+                ['admin'],
+                Response::STATUS_CODE_OK,
+                ['admin'],
+            ],
+            'replace with multiple labels' => [
+                ['vip', 'pro'],
+                Response::STATUS_CODE_OK,
+                ['vip', 'pro'],
+            ],
+            'clear labels' => [
+                [],
+                Response::STATUS_CODE_OK,
+                [],
+            ],
+            'duplicate labels' => [
+                ['vip', 'vip', 'pro'],
+                Response::STATUS_CODE_OK,
+                ['vip', 'pro'],
+            ],
+            'invalid label' => [
+                ['invalid-label'],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+            'too long' => [
+                [\str_repeat('a', 129)],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+            'too many labels' => [
+                [\array_fill(0, 101, 'a')],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+        ];
+    }
+
+    /**
+     * @depends testGetUser
+     * @dataProvider userLabelsProvider
+     */
+    public function testUpdateUserLabels(array $labels, int $expectedStatus, array $expectedLabels, array $data): array
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => $labels,
+        ]);
+
+        $this->assertEquals($expectedStatus, $user['headers']['status-code']);
+        if ($expectedStatus === Response::STATUS_CODE_OK) {
+            $this->assertEquals($user['body']['labels'], $expectedLabels);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateUserLabelsWithoutLabels(array $data): array
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(Response::STATUS_CODE_BAD_REQUEST, $user['headers']['status-code']);
+
+        return $data;
+    }
+
+    public function testUpdateUserLabelsNonExistentUser(): void
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/dne/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['admin'],
+        ]);
+
+        $this->assertEquals(Response::STATUS_CODE_NOT_FOUND, $user['headers']['status-code']);
+    }
+
 
     /**
      * @depends testGetUser
@@ -1023,7 +1131,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ],
+            'queries' => ['limit(1)'],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1035,7 +1143,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => ['offset(1)'],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1046,7 +1154,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)', 'offset(1)' ],
+            'queries' => ['limit(1)', 'offset(1)'],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -1070,25 +1178,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(101)']
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
             'queries' => ['offset(-1)']
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 400);
-
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => ['offset(5001)']
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);

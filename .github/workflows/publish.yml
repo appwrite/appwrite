@@ -1,0 +1,46 @@
+name: "Build and Publish"
+
+on:
+  push:
+    tags:
+      - appwrite-*
+
+jobs:
+  build-publish:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 2
+        submodules: recursive
+        ref: feat-db-pools-master
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: appwrite/cloud
+        tags: |
+          type=ref,event=tag
+
+    - name: Build & Publish to DockerHub
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        platforms: linux/amd64
+        build-args: |
+          VERSION=${{ steps.meta.outputs.version }}
+          VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
+          VITE_GA_PROJECT=G-L7G2B6PLDS
+          VITE_CONSOLE_MODE=cloud
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}

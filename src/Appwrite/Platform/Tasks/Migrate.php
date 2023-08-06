@@ -99,8 +99,8 @@ class Migrate extends Action
                         ->setProject($project, $projectDB, $dbForConsole)
                         ->execute();
                 } catch (\Throwable $th) {
-                    throw $th;
                     Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    throw $th;
                 }
 
                 $this->clearProjectsCache($redis, $project);

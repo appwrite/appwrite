@@ -93,6 +93,11 @@ return [
         'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
         'code' => 500,
     ],
+    Exception::GENERAL_USAGE_DISABLED => [
+        'name' => Exception::GENERAL_USAGE_DISABLED,
+        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -107,12 +112,12 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email already exists in your project.',
+        'description' => 'A user with the same id, email, or phone already exists in your project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
+        'description' => 'The current user has been blocked.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -231,6 +236,11 @@ return [
         'name' => Exception::TEAM_INVITE_MISMATCH,
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
+    ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists.',
+        'code' => 409,
     ],
 
     /** Membership */
@@ -435,15 +445,30 @@ return [
         'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
         'code' => 400,
     ],
+    Exception::DOCUMENT_MISSING_DATA => [
+        'name' => Exception::DOCUMENT_MISSING_DATA,
+        'description' => 'The document data is missing. You must provide the document data.',
+        'code' => 400,
+    ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document payload is missing.',
+        'description' => 'The document data and permissions are missing. You must provide either the document data or permissions to be updated.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
         'description' => 'Document with the requested ID already exists.',
         'code' => 409,
+    ],
+    Exception::DOCUMENT_UPDATE_CONFLICT => [
+        'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
+        'description' => 'Remote document is newer than local.',
+        'code' => 409,
+    ],
+    Exception::DOCUMENT_DELETE_RESTRICTED => [
+        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
+        'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
     ],
 
     /** Attributes */
@@ -454,12 +479,12 @@ return [
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the <span class="tag">available</span> state.',
+        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_NOT_AVAILABLE => [
         'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not yet <span class="tag">available</span>. Please try again later.',
+        'description' => 'The requested attribute is not yet available. Please try again later.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
@@ -469,7 +494,7 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
+        'description' => 'Default values cannot be set for array or required attributes.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
@@ -485,6 +510,11 @@ return [
     Exception::ATTRIBUTE_VALUE_INVALID => [
         'name' => Exception::ATTRIBUTE_VALUE_INVALID,
         'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_TYPE_INVALID => [
+        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
+        'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
 
@@ -504,12 +534,22 @@ return [
         'description' => 'Index with the requested ID already exists.',
         'code' => 409,
     ],
+    Exception::INDEX_INVALID => [
+        'name' => Exception::INDEX_INVALID,
+        'description' => 'Index invalid.',
+        'code' => 400,
+    ],
 
     /** Project Errors */
     Exception::PROJECT_NOT_FOUND => [
         'name' => Exception::PROJECT_NOT_FOUND,
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
+    ],
+    Exception::PROJECT_ALREADY_EXISTS => [
+        'name' => Exception::PROJECT_ALREADY_EXISTS,
+        'description' => 'Project with the requested ID already exists.',
+        'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
@@ -571,6 +611,16 @@ return [
         'description' => 'Domain verification failed. Please check your DNS records.',
         'code' => 401,
     ],
+    Exception::PROJECT_SMTP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
+        'description' => 'Provided SMTP config is invalid.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
+        'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
+        'description' => 'The default template for the project cannot be deleted.',
+        'code' => 401,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',
@@ -595,5 +645,15 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in your project.',
         'code' => 409,
+    ],
+    Exception::GRAPHQL_NO_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Param "query" is not optional.',
+        'code' => 400,
+    ],
+    Exception::GRAPHQL_TOO_MANY_QUERIES => [
+        'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
+        'description' => 'Too many queries.',
+        'code' => 400,
     ],
 ];

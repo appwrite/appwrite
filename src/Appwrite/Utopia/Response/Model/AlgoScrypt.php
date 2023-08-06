@@ -10,6 +10,12 @@ class AlgoScrypt extends Model
     public function __construct()
     {
         $this
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Algo type.',
+                'default' => 'scrypt',
+                'example' => 'scrypt',
+            ])
             ->addRule('costCpu', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'CPU complexity of computed hash.',

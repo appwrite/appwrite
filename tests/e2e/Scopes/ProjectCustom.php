@@ -3,7 +3,7 @@
 namespace Tests\E2E\Scopes;
 
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 trait ProjectCustom
 {
@@ -46,14 +46,7 @@ trait ProjectCustom
             'name' => 'Demo Project',
             'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
-            'logo' => '',
             'url' => 'https://appwrite.io',
-            'legalName' => '',
-            'legalCountry' => '',
-            'legalState' => '',
-            'legalCity' => '',
-            'legalAddress' => '',
-            'legalTaxId' => '',
         ]);
 
         $this->assertEquals(201, $project['headers']['status-code']);
@@ -104,15 +97,13 @@ trait ProjectCustom
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
-                'functions.*',
+                // 'functions.*', TODO @christyjacob4 : enable test once we allow functions.* events
                 'buckets.*',
                 'teams.*',
                 'users.*'
             ],
             'url' => 'http://request-catcher:5000/webhook',
             'security' => false,
-            'httpUser' => '',
-            'httpPass' => '',
         ]);
 
         $this->assertEquals(201, $webhook['headers']['status-code']);

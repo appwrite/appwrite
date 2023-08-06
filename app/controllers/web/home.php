@@ -6,7 +6,7 @@ use Utopia\Config\Config;
 
 App::get('/versions')
     ->desc('Get Version')
-    ->groups(['web', 'home'])
+    ->groups(['home'])
     ->label('scope', 'public')
     ->inject('response')
     ->action(function (Response $response) {
@@ -17,7 +17,7 @@ App::get('/versions')
         ];
 
         foreach ($platforms as $platform) {
-            $languages = $platform['languages'] ?? [];
+            $languages = $platform['sdks'] ?? [];
 
             foreach ($languages as $key => $language) {
                 if (isset($language['dev']) && $language['dev']) {

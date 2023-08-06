@@ -1,9 +1,9 @@
 <?php
 
 return [
-    '/' => [
-        'key' => 'homepage',
-        'name' => 'Homepage',
+    'web/home' => [
+        'key' => 'web/home',
+        'name' => 'Home',
         'subtitle' => '',
         'description' => '',
         'controller' => 'web/home.php',
@@ -14,8 +14,8 @@ return [
         'optional' => false,
         'icon' => '',
     ],
-    'console' => [
-        'key' => 'console',
+    'web/console' => [
+        'key' => 'web/console',
         'name' => 'Console',
         'subtitle' => '',
         'description' => '',
@@ -215,13 +215,26 @@ return [
     'graphql' => [
         'key' => 'graphql',
         'name' => 'GraphQL',
-        'subtitle' => 'Appwrite\'s GraphQL Endpoint',
-        'description' => 'GraphQL Endpoint',
+        'subtitle' => 'The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.',
+        'description' => '/docs/services/graphql.md',
         'controller' => 'api/graphql.php',
-        'sdk' => false,
-        'docs' => false,
-        'docsUrl' => '',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => 'https://appwrite.io/docs/graphql',
         'tests' => true,
+        'optional' => true,
+        'icon' => '/images/services/graphql.png',
+    ],
+    'console' => [
+        'key' => 'console',
+        'name' => 'Console',
+        'subtitle' => 'The Console service allows you to interact with console relevant informations.',
+        'description' => '',
+        'controller' => 'api/console.php',
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
         'optional' => false,
         'icon' => '',
     ],

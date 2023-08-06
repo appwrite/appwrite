@@ -6,8 +6,8 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
 use Utopia\App;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 class Realtime extends Adapter
 {
@@ -149,7 +149,7 @@ class Realtime extends Adapter
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
-                'timestamp' => DateTime::now(),
+                'timestamp' => DateTime::formatTz(DateTime::now()),
                 'payload' => $payload
             ]
         ]));
