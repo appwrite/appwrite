@@ -49,7 +49,9 @@ jobs:
         sleep 30
 
     - name: Doctor
-      run: docker compose exec -T appwrite doctor
+      run:  |
+        docker compose logs appwrite
+        docker compose exec -T appwrite doctor
 
     - name: Environment Variables
       run:  docker compose exec -T appwrite vars
