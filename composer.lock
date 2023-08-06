@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5d0bd8e918333aead96afb6ed6980263",
+    "content-hash": "05a5e7c9a6788a7bc4b4074e680a724a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1676,16 +1676,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.29",
+            "version": "dev-fix-router-behaviour",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "1c8ed95fb73531b0508ad69f85dafc4c78a64414"
+                "reference": "ae9c22f92111fa4bbb2389873ece26738d3c4a79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c8ed95fb73531b0508ad69f85dafc4c78a64414",
-                "reference": "1c8ed95fb73531b0508ad69f85dafc4c78a64414",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ae9c22f92111fa4bbb2389873ece26738d3c4a79",
+                "reference": "ae9c22f92111fa4bbb2389873ece26738d3c4a79",
                 "shasum": ""
             },
             "require": {
@@ -1715,9 +1715,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.29"
+                "source": "https://github.com/utopia-php/framework/tree/fix-router-behaviour"
             },
-            "time": "2023-07-30T07:56:23+00:00"
+            "time": "2023-08-06T13:18:52+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5356,6 +5356,12 @@
             "alias_normalized": "0.11.99.0"
         },
         {
+            "package": "utopia-php/framework",
+            "version": "dev-fix-router-behaviour",
+            "alias": "0.29.99",
+            "alias_normalized": "0.29.99.0"
+        },
+        {
             "package": "utopia-php/platform",
             "version": "dev-feat-upgrade-framework-lib",
             "alias": "0.4.99",
@@ -5371,6 +5377,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "appwrite/php-runtimes": 20,
+        "utopia-php/framework": 20,
         "utopia-php/platform": 20,
         "utopia-php/vcs": 20
     },

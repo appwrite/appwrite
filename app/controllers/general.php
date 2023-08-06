@@ -136,7 +136,12 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
         $execution = \json_decode($executionResponse, true);
 
+        $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {
+            if (\strtolower($header['name']) === 'content-type') {
+                $contentType = $header['value'];
+            }
+
             $response->setHeader($header['name'], $header['value']);
         }
 
@@ -149,7 +154,11 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
             }
         }
 
-        $response->setStatusCode($execution['responseStatusCode'] ?? 200)->send($body);
+        $response
+            ->setContentType($contentType)
+            ->setStatusCode($execution['responseStatusCode'] ?? 200)
+            ->send($body);
+
         return true;
     } elseif ($type === 'api') {
         return false;
@@ -161,7 +170,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 }
 
 App::init()
-    ->groups(['api'])
+    ->groups(['api', 'web'])
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')

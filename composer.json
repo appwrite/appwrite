@@ -1,4 +1,5 @@
 {
+    "minimum-stability": "dev",
     "name": "appwrite/server-ce",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
@@ -51,7 +52,7 @@
         "utopia-php/config": "0.2.*",
         "utopia-php/database": "0.38.*",
         "utopia-php/domains": "1.1.*",
-        "utopia-php/framework": "0.29.*",
+        "utopia-php/framework": "dev-fix-router-behaviour as 0.29.99",
         "utopia-php/dsn": "0.1.*",
         "utopia-php/image": "0.5.*",
         "utopia-php/locale": "0.4.*",
