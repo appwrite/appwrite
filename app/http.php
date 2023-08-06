@@ -233,7 +233,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-
     // Serve static files (console) only for main domain
     $host = $request->getHostname() ?? '';
     $mainDomain = App::getEnv('_APP_DOMAIN', '');
@@ -250,8 +249,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             return;
         }
     }
-
-
 
     $app = new App('UTC');
 

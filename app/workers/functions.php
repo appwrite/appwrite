@@ -204,7 +204,7 @@ Server::setResource('execute', function () {
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
-                    $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
                 }
             }
 

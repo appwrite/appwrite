@@ -50,7 +50,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     $host = $request->getHostname() ?? '';
 
     $route = Authorization::skip(
-        fn() => $dbForConsole->find('rules', [
+        fn () => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
         ])
@@ -68,7 +68,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
-        fn() => $dbForConsole->getDocument('projects', $projectId)
+        fn () => $dbForConsole->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
@@ -78,7 +78,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     }
 
     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
-    $path = ($swooleRequest->server['request_uri'] ?? '');
+    $path = ($swooleRequest->server['request_uri'] ?? '/');
     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
         return false;
     }
@@ -89,7 +89,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $functionId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
-        $path = ($swooleRequest->server['request_uri'] ?? '');
+        $path = ($swooleRequest->server['request_uri'] ?? '/');
         $query = ($swooleRequest->server['query_string'] ?? '');
         if (!empty($query)) {
             $path .= '?' . $query;
@@ -137,13 +137,16 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $execution = \json_decode($executionResponse, true);
 
         foreach ($execution['responseHeaders'] as $header) {
-            $response->setHeader($header['key'], $header['value']);
+            $response->setHeader($header['name'], $header['value']);
         }
 
         $body = $execution['responseBody'] ?? '';
 
-        if (($execution['responseHeaders']['x-open-runtimes-encoding'] ?? '') === 'base64') {
-            $body = \base64_decode($body);
+        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
+        if (!empty($encodingKey)) {
+            if (($execution['responseHeaders'][$encodingKey] ?? '') === 'base64') {
+                $body = \base64_decode($body);
+            }
         }
 
         $response->setStatusCode($execution['responseStatusCode'] ?? 200)->send($body);
@@ -253,7 +256,7 @@ App::init()
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-            $endDomain->getRegisterable() !== ''
+                $endDomain->getRegisterable() !== ''
         );
 
         $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
@@ -327,8 +330,7 @@ App::init()
             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
-            ->addHeader('Access-Control-Allow-Credentials', 'true')
-        ;
+            ->addHeader('Access-Control-Allow-Credentials', 'true');
 
         /*
         * Validate Client Domain - Check to avoid CSRF attack
@@ -401,7 +403,7 @@ App::init()
 
                 $expire = $key->getAttribute('expire');
                 if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new AppwriteException(AppwriteException:: PROJECT_KEY_EXPIRED);
+                    throw new AppwriteException(AppwriteException::PROJECT_KEY_EXPIRED);
                 }
 
                 Authorization::setRole(Auth::USER_ROLE_APPS);
@@ -643,8 +645,7 @@ App::error()
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->addHeader('Expires', '0')
             ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code)
-        ;
+            ->setStatusCode($code);
 
         $template = ($route) ? $route->getLabel('error', null) : null;
 
@@ -658,8 +659,7 @@ App::error()
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
-                ->setParam('trace', $trace)
-            ;
+                ->setParam('trace', $trace);
 
             $response->html($layout->render());
         }
@@ -744,6 +744,7 @@ include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/api/auth.php';
 
 App::wildcard()
+    ->groups(['api'])
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });

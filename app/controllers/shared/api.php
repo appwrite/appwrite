@@ -582,8 +582,6 @@ App::shutdown()
             }
         }
 
-
-
         if ($project->getId() !== 'console') {
             if ($mode !== APP_MODE_ADMIN) {
                 $fileSize = 0;

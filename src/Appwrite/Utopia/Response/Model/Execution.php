@@ -85,7 +85,7 @@ class Execution extends Model
                 'default' => '',
                 'example' => 'Developers are awesome.',
                 ])
-            ->addRule('responseheaders', [
+            ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,
                 'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
                 'default' => [],

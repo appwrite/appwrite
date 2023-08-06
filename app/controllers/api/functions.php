@@ -1492,7 +1492,7 @@ App::post('/v1/functions/:functionId/executions')
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
-                    $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
                 }
             }
 
@@ -1536,8 +1536,13 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('errors', '');
         }
 
+        $headers = [];
+        foreach ($executionResponse['headers'] as $key => $value) {
+            $headers[] = [ 'name' => $key, 'value' => $value ];
+        }
+
         $execution->setAttribute('responseBody', $executionResponse['body']);
-        $execution->setAttribute('responseHeaders', $executionResponse['headers']);
+        $execution->setAttribute('responseHeaders', $headers);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
