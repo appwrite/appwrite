@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a15f62920dedaf99e321ffd94e89d9f4",
+    "content-hash": "1976213fec6737919e7702bfa0f79bc6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2158,25 +2158,23 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.3.2",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb"
+                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
-                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "php": ">=7.1"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpunit/phpunit": "^9.3"
+                "phpunit/phpunit": "^7.0"
             },
             "type": "library",
             "autoload": {
@@ -2192,10 +2190,6 @@
                 {
                     "name": "Eldad Fux",
                     "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Wess Cope",
-                    "email": "wess@appwrite.io"
                 }
             ],
             "description": "Utopia Domains library is simple and lite library for parsing web domains. This library is aiming to be as simple and easy to learn and use.",
@@ -2212,9 +2206,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/0.3.2"
+                "source": "https://github.com/utopia-php/domains/tree/master"
             },
-            "time": "2023-07-19T16:39:24+00:00"
+            "time": "2020-02-23T07:40:02+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -2222,12 +2216,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "6dcef9af940b7bb87c8fac8cffab41f84ad2c2c9"
+                "reference": "be16910b9f8afc5017729e03f4478ae6760c3b63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/6dcef9af940b7bb87c8fac8cffab41f84ad2c2c9",
-                "reference": "6dcef9af940b7bb87c8fac8cffab41f84ad2c2c9",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/be16910b9f8afc5017729e03f4478ae6760c3b63",
+                "reference": "be16910b9f8afc5017729e03f4478ae6760c3b63",
                 "shasum": ""
             },
             "require": {
@@ -2261,7 +2255,7 @@
                 "issues": "https://github.com/utopia-php/framework/issues",
                 "source": "https://github.com/utopia-php/framework/tree/feat-v2"
             },
-            "time": "2023-08-06T07:03:38+00:00"
+            "time": "2023-08-06T07:13:17+00:00"
         },
         {
             "name": "utopia-php/image",
