@@ -2,24 +2,24 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Database\DateTime;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
 
 class Backup extends Action
 {
-    //public static string $mysqlDirectory = '/var/lib/mysql';
-    public static string $backups = '/backups'; // Mounted volume
-    //protected string $containerName = 'appwrite-mariadb';
     protected string $host = 'mariadb';
-    protected int $processors = 4;
-    protected string $cnf = '/etc/my.cnf';
-    protected string $compressAlgorithm = 'lz4';
     protected string $project;
+    public const BACKUPS = '/backups';
+    //public const BACKUP_INTERVAL = 60 * 60 * 4; // 4 hours;
+    public const BACKUP_INTERVAL = 300; // 4 hours;
+    public const COMPRESS_ALGORITHM = 'lz4';
+    public const CNF = '/etc/my.cnf';
+    public const PROCESSORS = 4;
 
     public static function getName(): string
     {
@@ -33,66 +33,83 @@ class Backup extends Action
 
         $this
             ->desc('Backup a DB')
-            ->callback(fn() => $this->action());
+            ->inject('pools')
+            ->callback(fn(Group $pools) => $this->action($pools));
     }
 
-
-    public function action(): void
+    /**
+     * @throws \Exception
+     */
+    public function action($pools): void
     {
-        $interval = 60 * 60 * 4;
+        $attempts = 0;
+        $max = 10;
+        $sleep = 5;
 
-        Console::loop(function () use ($interval) {
+        do {
+            try {
+                $attempts++;
+                $pools
+                    ->get('database_' . $this->project)
+                    ->pop()
+                    ->getResource()
+                ;
+
+                break; // leave the do-while if successful
+            } catch (\Exception $e) {
+                Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                if ($attempts >= $max) {
+                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                }
+
+                sleep($sleep);
+            }
+        } while ($attempts < $max);
+
+        Console::loop(function () {
             $this->start();
-        }, $interval);
+        }, self::BACKUP_INTERVAL);
     }
 
     public function start(): void
     {
-        // Todo: Check if previous task is still running...
+        self::log('--- Backup Start --- ');
+        $start = microtime(true);
+        //$type = 'inc';
+        $type = 'full';
 
-        $interval = 60 * 60 * 4;
+        switch ($type) {
+            case 'inc':
+                $this->incrementalBackup();
+                break;
+            case 'full':
+                $time = date('Y_m_d_H_i_s');
+                self::log('--- Creating backup ' . $time . '  --- ');
+                $filename = $time . '.tar.gz';
+                $local = new Local(self::BACKUPS . '/' . $this->project . '/full/' . $time);
+                $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
 
-        Console::loop(function () use ($interval) {
-            self::log('--- Backup Start --- ');
-            $start = microtime(true);
-            //$type = 'inc';
-            $type = 'full';
+                $backups = $local->getRoot() . '/files';
+                $tarFile = $local->getPath($filename);
 
-            switch ($type) {
-                case 'inc':
-                    for ($i = 0; $i <= 4; $i++) {
-                        $this->incrementalBackup();
-                        sleep(10);
-                    }
-                    break;
-                case 'full':
-                    $time = date('Y_m_d_H_i_s');
-                    self::log('--- Creating backup ' . $time . '  --- ');
-                    $filename = $time . '.tar.gz';
-                    $local = new Local(self::$backups . '/' . $this->project . '/full/' . $time);
-                    $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+                $this->fullBackup($backups);
+                $this->tar($backups, $tarFile);
+                $this->upload($tarFile, $local);
+                // todo: Do we want to delete the tar file? and remain with the folder?
+                // todo: Do we want to delete the tar log.file?
+                break;
 
-                    $backups = $local->getRoot() . '/files';
-                    $tarFile = $local->getPath($filename);
+            default:
+                Console::error('No type detected');
+                Console::exit();
+        }
 
-                    $this->fullBackup($backups);
-                    $this->tar($backups, $tarFile);
-                    $this->upload($tarFile, $local);
-
-                    break;
-
-                default:
-                    Console::error('No type detected');
-                    Console::exit();
-            }
-
-            self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
-        }, $interval);
+        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
 
     public function fullBackup(string $target)
     {
-        if (!file_exists(self::$backups)) {
+        if (!file_exists(self::BACKUPS)) {
             Console::error('Mount directory does not exist');
             Console::exit();
         }
@@ -117,9 +134,9 @@ class Backup extends Action
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . $target,
-            '--parallel=' . $this->processors,
-            '--compress=' . $this->compressAlgorithm,
-            '--compress-threads=' . $this->processors,
+            '--parallel=' . self::PROCESSORS,
+            '--compress=' . self::COMPRESS_ALGORITHM,
+            '--compress-threads=' . self::PROCESSORS,
             '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.htm
             //'--encrypt-threads=' . $this->processors,
             //'--encrypt=AES256',
@@ -208,7 +225,7 @@ class Backup extends Action
         $folder = date('W'); // week of the year  0 - 51
 
         $folder = 'v1_' . date('Y') . '_' . $folder;
-        $local = new Local(self::$backups . '/' . $project . '/inc/' . $folder);
+        $local = new Local(self::BACKUPS . '/' . $project . '/inc/' . $folder);
         $position = 1;
         $target = $local->getRoot() . '/' . $position;
         $base = '';
@@ -273,111 +290,6 @@ class Backup extends Action
         }
     }
 
-
-
-
-
-//
-//    /**
-//     * @throws \Exception
-//     */
-//    public function action(): void
-//    {
-//        self::log('--- Backup Start --- ');
-//        $this->checkEnvVariables();
-//
-//        $start = microtime(true);
-//        $filename = date('Ymd_His') . '.tar.gz';
-//        $folder = App::getEnv('_APP_BACKUP_FOLDER');
-//        $project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
-//        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
-//        $local = new Local(self::$backups . '/' . $project . '/' . $folder);
-//        $source = $local->getRoot() . '/' . $filename;
-//
-//        $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
-//
-////        $source = '/backups/shmuel.tar.gz'; // 1452521974
-////        $destination = '/shmuel/' . $time . '.tar.gz';
-////
-////        $local->transfer($source, $destination, $s3);
-////
-////        if ($s3->exists($destination)) {
-////            Console::success('Uploaded successfully !!! ' . $destination);
-////            Console::exit();
-////        }
-//
-//        if (!$s3->exists('/')) {
-//            Console::error('Can\'t read from DO ');
-//            Console::exit();
-//        }
-//
-//        if (!file_exists(self::$backups)) {
-//            Console::error('Mount directory does not exist');
-//            Console::exit();
-//        }
-//
-//        if (!file_exists($local->getRoot()) && !mkdir($local->getRoot(), 0755, true)) {
-//            Console::error('Error creating directory: ' . $local->getRoot());
-//            Console::exit();
-//        }
-//
-//        self::stopMysqlContainer($this->containerName);
-//
-//        Console::exit();
-//
-//        $stdout = '';
-//        $stderr = '';
-//        // Tar from inside the mysql directory for not using --strip-components
-//        $cmd = 'cd ' . self::$mysqlDirectory . ' && tar zcf ' . $source . ' .';
-//        self::log($cmd);
-//        Console::execute($cmd, '', $stdout, $stderr);
-//        self::log($stdout);
-//        if (!empty($stderr)) {
-//            Console::error($stderr);
-//            Console::exit();
-//        }
-//
-//
-//        if (!file_exists($source)) {
-//            Console::error("Can't find tar file: " . $source);
-//            Console::exit();
-//        }
-//
-//        $filesize = \filesize($source);
-//        self::log("Tar file size is: " . ceil($filesize / 1024 / 1024) . 'MB');
-//        if ($filesize < (2 * 1024)) {
-//            Console::error("File size is very small: " . $source);
-//            Console::exit();
-//        }
-//
-//        self::startMysqlContainer($this->containerName);
-//
-//        try {
-//            self::log('Uploading: ' . $source);
-//
-//            $destination = $s3->getRoot() . '/' . $filename;
-//
-//            if (!$local->transfer($source, $destination, $s3)) {
-//                Console::error('Error uploading to ' . $destination);
-//                Console::exit();
-//            }
-//
-//            if (!$s3->exists($destination)) {
-//                Console::error('File not found on s3 ' . $destination);
-//                Console::exit();
-//            }
-//        } catch (\Exception $e) {
-//            Console::error($e->getMessage());
-//            Console::exit();
-//        }
-//
-//        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
-//
-//        Console::loop(function () {
-//            self::log('loop');
-//        }, 100);
-//    }
-
     public static function log(string $message): void
     {
         if (!empty($message)) {
@@ -403,103 +315,4 @@ class Backup extends Action
             }
         }
     }
-
-    public static function startMysqlContainer($name): void
-    {
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'docker start ' . $name;
-        Backup::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Backup::log($stdout);
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        sleep(5); // maybe change to while?
-
-        $cmd = 'docker ps --filter "status=running" --filter "name=' . $name . '"';
-        Backup::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        $stdout = explode(PHP_EOL, $stdout);
-        array_shift($stdout);
-        $info = array_shift($stdout);
-        if (empty($info)) {
-            Console::error($name  . ' container could not start check logs!');
-            Console::exit();
-        }
-    }
-
-    public static function stopMysqlContainer1($name): void
-    {
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'docker stop ' . $name;
-        self::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        var_dump($stdout);
-        if (!empty($stderr)) {
-            self::log($stdout);
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        sleep(5); // maybe change to while?
-
-        $cmd = 'docker ps --filter "status=running" --filter "name=' . $name . '"';
-        Console::execute($cmd, '', $stdout, $stderr);
-
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        $stdout = explode(PHP_EOL, $stdout);
-        array_shift($stdout); // remove headers row
-        $info = array_shift($stdout);
-        if (!empty($info)) {
-            Console::error($name  . ' container could not stop check logs!');
-            Console::exit();
-        }
-    }
-
-
-//
-//    public static function stopMysqlContainer($name): void
-//    {
-//
-//        $stdout = '';
-//        $stderr = '';
-//        Console::execute('docker exec appwrite-mariadb echo "hello"', '', $stdout, $stderr);
-//        var_dump($stderr);
-//        var_dump($stdout);
-//
-//
-//        $stdout = '';
-//        $stderr = '';
-//        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "LOCK INSTANCE FOR BACKUP;"', '', $stdout, $stderr);
-//        var_dump($stderr);
-//        var_dump($stdout);
-//
-//
-//        $stdout = '';
-//        $stderr = '';
-//        Console::execute('docker exec appwrite-mariadb mysql -uroot -prootsecretpassword -e "FLUSH TABLES WITH READ LOCK;"', '', $stdout, $stderr);
-//        var_dump($stderr);
-//        var_dump($stdout);
-//
-//        Console::loop(function () {
-//            self::log('loop');
-//        }, 100);
-//
-//
-//        Console::exit();
-//    }
 }

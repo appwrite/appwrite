@@ -14,14 +14,11 @@ use Utopia\Validator\WhiteList;
 
 class Restore extends Action
 {
-    //  docker compose exec appwrite-backup db-restore --cloud=false --filename=2023-07-19_09:25:11.tar.gz --project=db_fra1_02 --folder=daily
     // todo: Carefully double check this is not a production value!!!!!!!!!!!!!!!
     // todo: it will be erased!!!!
-    //protected string $containerName = 'appwrite-mariadb';
     protected string $host = 'mariadb';
     protected string $project;
-
-    protected int $processors = 4;
+    public const PROCESSORS = 4;
 
     public static function getName(): string
     {
@@ -34,15 +31,14 @@ class Restore extends Action
             ->desc('Restore a DB')
             ->param('id', '', new Text(100), 'Folder Identifier')
             ->param('cloud', null, new WhiteList(['true', 'false'], true), 'Take file from cloud?')
-            ->param('project', null, new WhiteList(['db_fra1_02'], true), 'From _APP_CONNECTIONS_DB_PROJECT')
+            ->param('project', null, new WhiteList(['db_fra1_01', 'db_fra1_02', 'db_fra1_03', 'db_fra1_04', 'db_fra1_05', 'db_fra1_06', 'db_fra1_07'], true), 'From _APP_CONNECTIONS_DB_PROJECT')
             ->param('datadir', null, new Text(100), 'mysql datadir path')
             ->callback(fn ($id, $cloud, $project, $datadir) => $this->action($id, $cloud, $project, $datadir));
     }
 
     public function action(string $id, string $cloud, string $project, string $datadir): void
     {
-        //$datadir = '/backups/var_lib_mysql';
-        //$datadir = '/var/lib/shimon';
+        $datadir = '/varlibmysql';
 
         if (!file_exists($datadir)) {
             Console::error('Datadir not found: ' . $datadir);
@@ -59,17 +55,19 @@ class Restore extends Action
             Console::exit();
         }
 
+        $this->checkContainerIsStopped();
         $this->checkEnvVariables();
+
         $filename = $id . '.tar.gz';
         Backup::log('--- Restore Start ' . $filename . ' --- ');
         $start = microtime(true);
         $cloud = $cloud === 'true';
 
-        $local = new Local(Backup::$backups . '/' . $project . '/full/' . $id);
+        $local = new Local(Backup::BACKUPS . '/' . $project . '/full/' . $id);
         $files = $local->getRoot() . '/files';
 
         if ($cloud) {
-            $local = new Local(Backup::$backups . '/downloads/' . $id);
+            $local = new Local(Backup::BACKUPS . '/downloads/' . $id);
             $this->download($project, $filename, $local);
             $files = $local->getRoot() . '/files';
             if (!file_exists($files) && !mkdir($files, 0755, true)) {
@@ -160,8 +158,8 @@ class Restore extends Action
             '--decompress',
             '--strict',
             '--remove-original', // Removes *.lz4
-            '--parallel=' . $this->processors,
-            '--compress-threads=' . $this->processors,
+            '--parallel=' . self::PROCESSORS,
+            '--compress-threads=' . self::PROCESSORS,
             '--target-dir=' . $target,
             '2> ' . $logfile,
         ];
@@ -228,7 +226,7 @@ class Restore extends Action
             '--strict',
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
-            '--parallel=' . $this->processors,
+            '--parallel=' . self::PROCESSORS,
             '2> ' . $logfile,
         ];
 
@@ -245,80 +243,6 @@ class Restore extends Action
         }
 
         // todo: Do we need to chown -R mysql:mysql /var/lib/mysql?
-    }
-
-    public function actionV1(string $filename, string $cloud, string $project, string $folder): void
-    {
-        $this->checkEnvVariables();
-
-        Backup::log('--- Restore Start ' . $filename . ' --- ');
-        $start = microtime(true);
-
-        $cloud = $cloud === 'true';
-        $file = Backup::$backups . '/' . $project . '/' . $folder . '/' . $filename;
-        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
-        $download = new Local(Backup::$backups . '/downloads');
-
-        if (!file_exists($download->getRoot()) && !mkdir($download->getRoot(), 0755, true)) {
-            Console::error('Error creating directory: ' . $download->getRoot());
-            Console::exit();
-        }
-
-        if ($cloud) {
-            try {
-                $path = $s3->getPath($filename);
-
-                if (!$s3->exists($path)) {
-                    Console::error('File: ' . $path . ' does not exist on cloud');
-                    Console::exit();
-                }
-
-                $file = $download->getPath($filename);
-                Backup::log('Downloading: ' . $file);
-
-                if (!$s3->transfer($path, $file, $download)) {
-                    Console::error('Error Downloading ' . $file);
-                    Console::exit();
-                }
-            } catch (Exception $e) {
-                Console::error($e->getMessage());
-                Console::exit();
-            }
-        }
-
-        if (!file_exists($file)) {
-            Console::error('Restore file not found: ' . $file);
-            Console::exit();
-        }
-
-        Backup::stopMysqlContainer($this->containerName);
-
-        $stdout = '';
-        $stderr = '';
-        //$cmd = 'mv ' . Backup::$mysqlDirectory . '/* ' . ' ' . $original . '/';
-        // todo: do we care about original?
-        $cmd = 'rm -r ' . Backup::$mysqlDirectory . '/*';
-        Backup::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        Backup::log($stdout);
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'tar -xzf ' . $file . ' -C ' . Backup::$mysqlDirectory;
-        Backup::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        Backup::startMysqlContainer($this->containerName);
-
-        Backup::log("Restore Finish in " . (microtime(true) - $start) . " seconds");
     }
 
     public function checkEnvVariables(): void
@@ -338,4 +262,28 @@ class Restore extends Action
             }
         }
     }
+
+    public function checkContainerIsStopped(): void
+    {
+        $cmd = 'docker ps --filter "status=running" --filter "name=' . $this->host . '"';
+        Backup::log($cmd);
+        $stderr = '';
+        $stdout = '';
+        Console::execute($cmd, '', $stdout, $stderr);
+
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        $stdout = explode(PHP_EOL, $stdout);
+        array_shift($stdout);
+        $info = array_shift($stdout);
+
+        if (!empty($info)) {
+            Console::error('Please stop container: ' . $this->host);
+            //Console::exit();
+        }
+    }
+
 }

@@ -752,12 +752,11 @@ services:
     image: percona/percona-xtrabackup:latest
     container_name: appwrite-xtrabackup
     command: sleep infinity
-    #command: bash -c "sleep 86400"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
     volumes:
-      #- xtrabackup_data:/backups
       - ./backups:/backups:rw
+      - ./varlibmysql:/varlibmysql:rw
       - appwrite-mariadb:/var/lib/mysql:r
     networks:
       - appwrite
@@ -798,7 +797,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./backups:/backups:rw
-      - ./shimon:/var/lib/shimon:rw
+      - ./varlibmysql:/varlibmysql:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./dev:/usr/local/dev
     depends_on:
@@ -974,5 +973,4 @@ volumes:
   appwrite-config:
   appwrite-functions:
   appwrite-builds:
-  #xtrabackup_data:
   # appwrite-chronograf:
