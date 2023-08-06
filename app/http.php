@@ -84,7 +84,7 @@ Http::onStart()
         Http::setResource('cache', fn () => $redis);
 
         /** @var Utopia\Database\Database $dbForConsole */
-        $dbForConsole = $app->getResource('dbForConsole');
+        $dbForConsole = $app->getResource('dbForConsole', 0);
 
         Console::success('[Setup] - Server database init started...');
 
