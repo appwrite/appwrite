@@ -89,7 +89,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.33.*",
+        "appwrite/sdk-generator": "dev-master as 0.33.99",
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.6",

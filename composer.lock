@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "05a5e7c9a6788a7bc4b4074e680a724a",
+    "content-hash": "d38fc7a4fa4ce6b4c5ea727e27bcf9fd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1680,12 +1680,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "ae9c22f92111fa4bbb2389873ece26738d3c4a79"
+                "reference": "fbbb6b5494379306928906862b924bb6d906df0d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ae9c22f92111fa4bbb2389873ece26738d3c4a79",
-                "reference": "ae9c22f92111fa4bbb2389873ece26738d3c4a79",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/fbbb6b5494379306928906862b924bb6d906df0d",
+                "reference": "fbbb6b5494379306928906862b924bb6d906df0d",
                 "shasum": ""
             },
             "require": {
@@ -1717,7 +1717,7 @@
                 "issues": "https://github.com/utopia-php/framework/issues",
                 "source": "https://github.com/utopia-php/framework/tree/fix-router-behaviour"
             },
-            "time": "2023-08-06T13:18:52+00:00"
+            "time": "2023-08-06T18:43:07+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2702,16 +2702,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.33.7",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc"
+                "reference": "ee12cb1e250a6ceab291ad80b2acb4bcd2c4cf77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9f5db4a637b23879ceacea9ed2d33b0486771ffc",
-                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ee12cb1e250a6ceab291ad80b2acb4bcd2c4cf77",
+                "reference": "ee12cb1e250a6ceab291ad80b2acb4bcd2c4cf77",
                 "shasum": ""
             },
             "require": {
@@ -2727,6 +2727,7 @@
                 "phpunit/phpunit": "^9.5.21",
                 "squizlabs/php_codesniffer": "^3.6"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2747,9 +2748,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2023-07-12T12:15:43+00:00"
+            "time": "2023-07-25T01:15:31+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -5356,6 +5357,12 @@
             "alias_normalized": "0.11.99.0"
         },
         {
+            "package": "appwrite/sdk-generator",
+            "version": "9999999-dev",
+            "alias": "0.33.99",
+            "alias_normalized": "0.33.99.0"
+        },
+        {
             "package": "utopia-php/framework",
             "version": "dev-fix-router-behaviour",
             "alias": "0.29.99",
@@ -5379,7 +5386,8 @@
         "appwrite/php-runtimes": 20,
         "utopia-php/framework": 20,
         "utopia-php/platform": 20,
-        "utopia-php/vcs": 20
+        "utopia-php/vcs": 20,
+        "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

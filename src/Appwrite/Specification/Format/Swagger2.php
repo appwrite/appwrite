@@ -161,7 +161,7 @@ class Swagger2 extends Format
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $route->getLabel('sdk.method', \uniqid()),
-                    'weight' => $route->getOrder(),
+                    // 'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
                     'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
