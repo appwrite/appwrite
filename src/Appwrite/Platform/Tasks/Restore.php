@@ -38,6 +38,7 @@ class Restore extends Action
 
     public function action(string $id, string $cloud, string $project, string $datadir): void
     {
+        // todo? why do we need to pass it as variable?
         $datadir = '/varlibmysql';
 
         if (!file_exists($datadir)) {
