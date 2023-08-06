@@ -171,9 +171,7 @@ App::init()
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
-    ->inject('pools')
-    ->inject('cache')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Group $pools, Cache $cache) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
         /*
         * Appwrite Router
         */

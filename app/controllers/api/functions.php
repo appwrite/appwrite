@@ -12,10 +12,6 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
-use Utopia\Database\Validator\UID;
 use Utopia\Validator\Assoc;
 use Appwrite\Usage\Stats;
 use Utopia\Database\Helpers\ID;
@@ -1303,7 +1299,7 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForFunctions')
     ->inject('geodb')
     ->inject('queueForUsage')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb, Usage $queueForUsage) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, string $mode, Func $queueForFunctions, Reader $geodb, Usage $queueForUsage) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 

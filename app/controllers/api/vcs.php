@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
+use Utopia\Validator\Host;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Appwrite\Utopia\Request;
@@ -11,16 +12,15 @@ use Appwrite\Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Vcs\Comment;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Detector\Adapter\CPP;
@@ -920,7 +920,7 @@ App::get('/v1/vcs/installations')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

@@ -3185,17 +3185,6 @@ $consoleCollections = array_merge([
                 'filters' => ['subQueryKeys'],
             ],
             [
-                '$id' => ID::custom('domains'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['subQueryDomains'],
-            ],
-            [
                 '$id' => ID::custom('search'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -4351,7 +4340,7 @@ $consoleCollections = array_merge([
             ],
         ],
     ],
-    
+
     'vcsCommentLocks' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('vcsCommentLocks'),

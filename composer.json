@@ -58,7 +58,7 @@
         "utopia-php/logger": "0.3.*",
         "utopia-php/messaging": "0.1.*",
         "utopia-php/orchestration": "0.9.*",
-        "utopia-php/platform": "0.4.*",
+        "utopia-php/platform": "dev-feat-upgrade-framework-lib as 0.4.99",
         "utopia-php/pools": "0.4.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.5.*",
