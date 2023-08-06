@@ -1018,7 +1018,7 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
-    if ($projectId === 'console') {
+    if (empty($projectId) || $projectId === 'console') {
         return $console;
     }
 
