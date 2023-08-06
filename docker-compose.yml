@@ -748,7 +748,6 @@ services:
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
 
-
   xtrabackup:
     image: percona/percona-xtrabackup:latest
     container_name: appwrite-xtrabackup
@@ -778,7 +777,6 @@ services:
       - ./backups:/backups:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
     depends_on:
       - redis
     environment:
@@ -803,7 +801,6 @@ services:
       - ./shimon:/var/lib/shimon:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
     depends_on:
       - redis
     environment:

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\Database\DateTime;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -35,48 +36,58 @@ class Backup extends Action
             ->callback(fn() => $this->action());
     }
 
+
     public function action(): void
+    {
+        $interval = 60 * 60 * 4;
+
+        Console::loop(function () use ($interval) {
+            $this->start();
+        }, $interval);
+    }
+
+    public function start(): void
     {
         // Todo: Check if previous task is still running...
 
-        self::log('--- Backup Start --- ');
-        $start = microtime(true);
-        //$type = 'inc';
-        $type = 'full';
+        $interval = 60 * 60 * 4;
 
-        switch ($type) {
-            case 'inc':
-                for ($i = 0; $i <= 4; $i++) {
-                    $this->incrementalBackup();
-                    sleep(10);
-                }
-                break;
-            case 'full':
-                $time = date('Y_m_d_H_i_s');
-                self::log('--- Creating backup ' . $time . '  --- ');
-                $filename = $time . '.tar.gz';
-                $local = new Local(self::$backups . '/' . $this->project . '/full/' . $time);
-                $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+        Console::loop(function () use ($interval) {
+            self::log('--- Backup Start --- ');
+            $start = microtime(true);
+            //$type = 'inc';
+            $type = 'full';
 
-                $backups = $local->getRoot() . '/files';
-                $tarFile = $local->getPath($filename);
+            switch ($type) {
+                case 'inc':
+                    for ($i = 0; $i <= 4; $i++) {
+                        $this->incrementalBackup();
+                        sleep(10);
+                    }
+                    break;
+                case 'full':
+                    $time = date('Y_m_d_H_i_s');
+                    self::log('--- Creating backup ' . $time . '  --- ');
+                    $filename = $time . '.tar.gz';
+                    $local = new Local(self::$backups . '/' . $this->project . '/full/' . $time);
+                    $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
 
-                $this->fullBackup($backups);
-                $this->tar($backups, $tarFile);
-                $this->upload($tarFile, $local);
+                    $backups = $local->getRoot() . '/files';
+                    $tarFile = $local->getPath($filename);
 
-                break;
+                    $this->fullBackup($backups);
+                    $this->tar($backups, $tarFile);
+                    $this->upload($tarFile, $local);
 
-            default:
-                Console::error('No type detected');
-                Console::exit();
-        }
+                    break;
 
-        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+                default:
+                    Console::error('No type detected');
+                    Console::exit();
+            }
 
-        Console::loop(function () {
-            self::log('loop');
-        }, 2 * 60);
+            self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+        }, $interval);
     }
 
     public function fullBackup(string $target)

@@ -41,9 +41,20 @@ class Restore extends Action
 
     public function action(string $id, string $cloud, string $project, string $datadir): void
     {
-        $datadir = '/backups/var_lib_mysql';
+        //$datadir = '/backups/var_lib_mysql';
+        //$datadir = '/var/lib/shimon';
 
-        if (file_exists($datadir . '/sys')) {
+        if (!file_exists($datadir)) {
+            Console::error('Datadir not found: ' . $datadir);
+            Console::exit();
+        }
+
+        if (!str_starts_with($datadir, '/')) {
+            Console::error('datadir must start with /');
+            Console::exit();
+        }
+
+        if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
             Console::error('Datadir ' . $datadir . ' must be empty!');
             Console::exit();
         }
@@ -93,6 +104,18 @@ class Restore extends Action
 
     public function download(string $project, string $filename, Device $local)
     {
+        if (file_exists($local->getRoot())) {
+            $stdout = '';
+            $stderr = '';
+            $cmd = 'rm -rf ' . $local->getRoot();
+            Backup::log($cmd);
+            Console::execute($cmd, '', $stdout, $stderr);
+            if (!empty($stderr)) {
+                Console::error($stderr);
+                Console::exit();
+            }
+        }
+
         if (!file_exists($local->getRoot()) && !mkdir($local->getRoot(), 0755, true)) {
             Console::error('Error creating directory: ' . $local->getRoot());
             Console::exit();
@@ -224,80 +247,79 @@ class Restore extends Action
         // todo: Do we need to chown -R mysql:mysql /var/lib/mysql?
     }
 
+    public function actionV1(string $filename, string $cloud, string $project, string $folder): void
+    {
+        $this->checkEnvVariables();
 
-//    public function action(string $filename, string $cloud, string $project, string $folder): void
-//    {
-//        $this->checkEnvVariables();
-//
-//        Backup::log('--- Restore Start ' . $filename . ' --- ');
-//        $start = microtime(true);
-//
-//        $cloud = $cloud === 'true';
-//        $file = Backup::$backups . '/' . $project . '/' . $folder . '/' . $filename;
-//        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
-//        $download = new Local(Backup::$backups . '/downloads');
-//
-//        if (!file_exists($download->getRoot()) && !mkdir($download->getRoot(), 0755, true)) {
-//            Console::error('Error creating directory: ' . $download->getRoot());
-//            Console::exit();
-//        }
-//
-//        if ($cloud) {
-//            try {
-//                $path = $s3->getPath($filename);
-//
-//                if (!$s3->exists($path)) {
-//                    Console::error('File: ' . $path . ' does not exist on cloud');
-//                    Console::exit();
-//                }
-//
-//                $file = $download->getPath($filename);
-//                Backup::log('Downloading: ' . $file);
-//
-//                if (!$s3->transfer($path, $file, $download)) {
-//                    Console::error('Error Downloading ' . $file);
-//                    Console::exit();
-//                }
-//            } catch (Exception $e) {
-//                Console::error($e->getMessage());
-//                Console::exit();
-//            }
-//        }
-//
-//        if (!file_exists($file)) {
-//            Console::error('Restore file not found: ' . $file);
-//            Console::exit();
-//        }
-//
-//        Backup::stopMysqlContainer($this->containerName);
-//
-//        $stdout = '';
-//        $stderr = '';
-//        //$cmd = 'mv ' . Backup::$mysqlDirectory . '/* ' . ' ' . $original . '/';
-//        // todo: do we care about original?
-//        $cmd = 'rm -r ' . Backup::$mysqlDirectory . '/*';
-//        Backup::log($cmd);
-//        Console::execute($cmd, '', $stdout, $stderr);
-//        Backup::log($stdout);
-//        if (!empty($stderr)) {
-//            Console::error($stderr);
-//            Console::exit();
-//        }
-//
-//        $stdout = '';
-//        $stderr = '';
-//        $cmd = 'tar -xzf ' . $file . ' -C ' . Backup::$mysqlDirectory;
-//        Backup::log($cmd);
-//        Console::execute($cmd, '', $stdout, $stderr);
-//        if (!empty($stderr)) {
-//            Console::error($stderr);
-//            Console::exit();
-//        }
-//
-//        Backup::startMysqlContainer($this->containerName);
-//
-//        Backup::log("Restore Finish in " . (microtime(true) - $start) . " seconds");
-//    }
+        Backup::log('--- Restore Start ' . $filename . ' --- ');
+        $start = microtime(true);
+
+        $cloud = $cloud === 'true';
+        $file = Backup::$backups . '/' . $project . '/' . $folder . '/' . $filename;
+        $s3 = new DOSpaces('/v1/' . $project . '/' . $folder, App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $download = new Local(Backup::$backups . '/downloads');
+
+        if (!file_exists($download->getRoot()) && !mkdir($download->getRoot(), 0755, true)) {
+            Console::error('Error creating directory: ' . $download->getRoot());
+            Console::exit();
+        }
+
+        if ($cloud) {
+            try {
+                $path = $s3->getPath($filename);
+
+                if (!$s3->exists($path)) {
+                    Console::error('File: ' . $path . ' does not exist on cloud');
+                    Console::exit();
+                }
+
+                $file = $download->getPath($filename);
+                Backup::log('Downloading: ' . $file);
+
+                if (!$s3->transfer($path, $file, $download)) {
+                    Console::error('Error Downloading ' . $file);
+                    Console::exit();
+                }
+            } catch (Exception $e) {
+                Console::error($e->getMessage());
+                Console::exit();
+            }
+        }
+
+        if (!file_exists($file)) {
+            Console::error('Restore file not found: ' . $file);
+            Console::exit();
+        }
+
+        Backup::stopMysqlContainer($this->containerName);
+
+        $stdout = '';
+        $stderr = '';
+        //$cmd = 'mv ' . Backup::$mysqlDirectory . '/* ' . ' ' . $original . '/';
+        // todo: do we care about original?
+        $cmd = 'rm -r ' . Backup::$mysqlDirectory . '/*';
+        Backup::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        Backup::log($stdout);
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        $stdout = '';
+        $stderr = '';
+        $cmd = 'tar -xzf ' . $file . ' -C ' . Backup::$mysqlDirectory;
+        Backup::log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            Console::exit();
+        }
+
+        Backup::startMysqlContainer($this->containerName);
+
+        Backup::log("Restore Finish in " . (microtime(true) - $start) . " seconds");
+    }
 
     public function checkEnvVariables(): void
     {
