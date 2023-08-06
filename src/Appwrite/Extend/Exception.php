@@ -83,6 +83,7 @@ class Exception extends \Exception
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
+    public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -106,6 +107,7 @@ class Exception extends \Exception
     public const STORAGE_BUCKET_NOT_FOUND          = 'storage_bucket_not_found';
     public const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
+    public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';

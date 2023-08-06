@@ -566,7 +566,7 @@ Http::get('/v1/databases/:databaseId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => ID::custom($log['userId']),
+                'userId' => ID::custom($log['data']['userId']),
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -917,7 +917,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => $log['data']['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
@@ -2535,17 +2535,10 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $indexes = $collection->getAttribute('indexes');
-
-        // Search for index
-        $indexIndex = array_search($key, array_map(fn($idx) => $idx['key'], $indexes));
-
-        if ($indexIndex === false) {
+        $index = $collection->find('key', $key, 'indexes');
+        if (empty($index)) {
             throw new Exception(Exception::INDEX_NOT_FOUND);
         }
-
-        $index = $indexes[$indexIndex];
-        $index->setAttribute('collectionId', $database->getInternalId() . '_' . $collectionId);
 
         $response->dynamic($index, Response::MODEL_INDEX);
     });
@@ -3149,7 +3142,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => $log['data']['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1dda97a2619f621b8645f3e8a06b78c7",
+    "content-hash": "a15f62920dedaf99e321ffd94e89d9f4",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1906,16 +1906,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.26.0",
+            "version": "0.27.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "e7228080f14df28737fbb050c180c26d86ac0403"
+                "reference": "bdf89d7fe381bd4c891ad217612580a35e8c7642"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e7228080f14df28737fbb050c180c26d86ac0403",
-                "reference": "e7228080f14df28737fbb050c180c26d86ac0403",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/bdf89d7fe381bd4c891ad217612580a35e8c7642",
+                "reference": "bdf89d7fe381bd4c891ad217612580a35e8c7642",
                 "shasum": ""
             },
             "require": {
@@ -1947,9 +1947,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.26.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.27.0"
             },
-            "time": "2023-04-27T15:43:50+00:00"
+            "time": "2023-05-15T07:04:48+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -2158,23 +2158,25 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "v1.1.0",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
+                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
+                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.0",
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0"
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -2190,6 +2192,10 @@
                 {
                     "name": "Eldad Fux",
                     "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Wess Cope",
+                    "email": "wess@appwrite.io"
                 }
             ],
             "description": "Utopia Domains library is simple and lite library for parsing web domains. This library is aiming to be as simple and easy to learn and use.",
@@ -2206,9 +2212,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/master"
+                "source": "https://github.com/utopia-php/domains/tree/0.3.2"
             },
-            "time": "2020-02-23T07:40:02+00:00"
+            "time": "2023-07-19T16:39:24+00:00"
         },
         {
             "name": "utopia-php/framework",

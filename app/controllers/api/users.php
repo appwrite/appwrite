@@ -577,7 +577,7 @@ Http::get('/v1/users/:userId/logs')
 
         $audit = new Audit($dbForProject);
 
-        $logs = $audit->getLogsByUser($user->getId(), $limit, $offset);
+        $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 
         $output = [];
 
