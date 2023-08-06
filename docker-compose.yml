@@ -705,12 +705,26 @@ services:
     volumes:
       - appwrite-redis:/data:rw
 
+  # freshclam:
+  #   image: appwrite/clamav:2.0.0
+  #   container_name: appwrite-freshclam
+  #   environment:
+  #     MODE: freshclam
+  #   volumes:
+  #     - appwrite-clamav-conf:/etc/clamav
+  #     - appwrite-clamav-data:/var/lib/clamav
+
   # clamav:
-  #   image: appwrite/clamav:1.2.0
+  #   image: appwrite/clamav:2.0.0
   #   container_name: appwrite-clamav
+  #   environment:
+  #     MODE: clamd
+  #   restart: unless-stopped
   #   networks:
   #     - appwrite
   #   volumes:
+  #     - appwrite-clamav-conf:/etc/clamav
+  #     - appwrite-clamav-data:/var/lib/clamav
   #     - appwrite-uploads:/storage/uploads
 
   influxdb:
@@ -853,3 +867,5 @@ volumes:
   appwrite-config:
   appwrite-executor:
   # appwrite-chronograf:
+  # appwrite-clamav-conf:
+  # appwrite-clamav-data:
