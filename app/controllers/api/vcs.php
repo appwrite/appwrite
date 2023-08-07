@@ -672,6 +672,10 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
 
             $repository = $github->createRepository($owner, $name, $private);
         }
+        
+        if (isset($repository['message'])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Provider Error: ' . $repository['message']);
+        }
 
         if (isset($repository['errors'])) {
             $message = $repository['message'] ?? 'Unknown error.';
