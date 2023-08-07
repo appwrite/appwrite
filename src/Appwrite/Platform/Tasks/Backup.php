@@ -242,7 +242,7 @@ class Backup extends Action
     public static function getDsn(string $database): ?DSN
     {
         foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_PROJECT')) as $project) {
-            list($db, $dsn) = explode('=', $project);
+           [$db, $dsn] = explode('=', $project);
             if ($db === $database) {
                 return new DSN($dsn);
             }
