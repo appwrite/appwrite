@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
+
 class AttributeRelationship extends Attribute
 {
     public function __construct()
