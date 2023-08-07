@@ -18,51 +18,51 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
-use Appwrite\SMS\Adapter\Mock;
-use Appwrite\SMS\Adapter\Telesign;
-use Appwrite\SMS\Adapter\TextMagic;
-use Appwrite\SMS\Adapter\Twilio;
-use Appwrite\SMS\Adapter\Msg91;
-use Appwrite\SMS\Adapter\Vonage;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Delete;
+use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
-use Appwrite\Network\Validator\IP;
-use Appwrite\Network\Validator\URL;
+use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
-use Utopia\Database\Document;
+use Utopia\Logger\Logger;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
-use Utopia\Logger\Logger;
-use Utopia\Config\Config;
 use Utopia\Locale\Locale;
+use Utopia\DSN\DSN;
+use Utopia\Messaging\Adapters\SMS\Mock;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
+use Utopia\Messaging\Adapters\SMS\Msg91;
+use Utopia\Messaging\Adapters\SMS\Telesign;
+use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Twilio;
+use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
-use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Backblaze;
 use Utopia\Storage\Device\DOSpaces;
+use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
-use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Wasabi;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
@@ -74,11 +74,14 @@ use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
+use Utopia\Validator\Range;
+use Utopia\Validator\IP;
+use Utopia\Validator\URL;
+use Utopia\Validator\WhiteList;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -90,6 +93,9 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
+const APP_LIMIT_USER_SESSIONS_MAX = 100;
+const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
 const APP_LIMIT_ENCRYPTION = 20000000; //20MB
 const APP_LIMIT_COMPRESSION = 20000000; //20MB
@@ -98,10 +104,12 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
+const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.1.2';
+const APP_CACHE_BUSTER = 506;
+const APP_VERSION_STABLE = '1.3.8';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -179,8 +187,41 @@ const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 // Function headers
-const FUNCTION_WHITELIST_HEADERS_REQUEST = ['content-type', 'agent'];
+const FUNCTION_WHITELIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length'];
 const FUNCTION_WHITELIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
+// Usage metrics
+const METRIC_TEAMS = 'teams';
+const METRIC_USERS = 'users';
+const METRIC_SESSIONS  = 'sessions';
+const METRIC_DATABASES = 'databases';
+const METRIC_COLLECTIONS = 'collections';
+const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
+const METRIC_DOCUMENTS = 'documents';
+const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
+const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
+const METRIC_BUCKETS = 'buckets';
+const METRIC_FILES  = 'files';
+const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
+const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
+const METRIC_FUNCTIONS  = 'functions';
+const METRIC_DEPLOYMENTS  = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
+const METRIC_BUILDS  = 'builds';
+const METRIC_BUILDS_STORAGE  = 'builds.storage';
+const METRIC_BUILDS_COMPUTE  = 'builds.compute';
+const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_EXECUTIONS  = 'executions';
+const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
+const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
+const METRIC_NETWORK_REQUESTS  = 'network.requests';
+const METRIC_NETWORK_INBOUND  = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 
 $register = new Registry();
 
@@ -196,6 +237,7 @@ Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -211,6 +253,7 @@ Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
 Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
 Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
 Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
+Config::load('locale-templates', __DIR__ . '/config/locale/templates.php');
 Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
@@ -291,12 +334,23 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('attributes', [
-                Query::equal('collectionInternalId', [$document->getInternalId()]),
-                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getLimitForAttributes()),
-            ]);
+        $attributes = $database->find('attributes', [
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
+            Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+            Query::limit($database->getLimitForAttributes()),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $options = $attribute->getAttribute('options');
+                foreach ($options as $key => $value) {
+                    $attribute->setAttribute($key, $value);
+                }
+                $attribute->removeAttribute('options');
+            }
+        }
+
+        return $attributes;
     }
 );
 
@@ -454,6 +508,29 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'userSearch',
+    function (mixed $value, Document $user) {
+        $searchValues = [
+            $user->getId(),
+            $user->getAttribute('email', ''),
+            $user->getAttribute('name', ''),
+            $user->getAttribute('phone', '')
+        ];
+
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $searchValues[] = 'label:' . $label;
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
 /**
  * DB Formats
  */
@@ -585,13 +662,11 @@ $register->set('pools', function () {
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
-
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
             $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
-
             if (empty($dsn)) {
                 //throw new Exception(Exception::GENERAL_SERVER_ERROR, "Missing value for DSN connection in {$key}");
                 continue;
@@ -616,7 +691,6 @@ $register->set('pools', function () {
              *
              * Resource assignment to an adapter will happen below.
              */
-
             switch ($dsnScheme) {
                 case 'mysql':
                 case 'mariadb':
@@ -654,7 +728,6 @@ $register->set('pools', function () {
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 $adapter = null;
-
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -698,30 +771,6 @@ $register->set('pools', function () {
     return $group;
 });
 
-$register->set('influxdb', function () {
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
-});
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -751,85 +800,39 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2022-06.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
-
+$register->set('passwordsDictionary', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
+$register->set('promiseAdapter', function () {
+    return new Swoole();
+});
 /*
  * Localization
  */
 Locale::$exceptions = false;
-Locale::setLanguageFromJSON('af', __DIR__ . '/config/locale/translations/af.json');
-Locale::setLanguageFromJSON('ar', __DIR__ . '/config/locale/translations/ar.json');
-Locale::setLanguageFromJSON('as', __DIR__ . '/config/locale/translations/as.json');
-Locale::setLanguageFromJSON('az', __DIR__ . '/config/locale/translations/az.json');
-Locale::setLanguageFromJSON('be', __DIR__ . '/config/locale/translations/be.json');
-Locale::setLanguageFromJSON('bg', __DIR__ . '/config/locale/translations/bg.json');
-Locale::setLanguageFromJSON('bh', __DIR__ . '/config/locale/translations/bh.json');
-Locale::setLanguageFromJSON('bn', __DIR__ . '/config/locale/translations/bn.json');
-Locale::setLanguageFromJSON('bs', __DIR__ . '/config/locale/translations/bs.json');
-Locale::setLanguageFromJSON('ca', __DIR__ . '/config/locale/translations/ca.json');
-Locale::setLanguageFromJSON('cs', __DIR__ . '/config/locale/translations/cs.json');
-Locale::setLanguageFromJSON('da', __DIR__ . '/config/locale/translations/da.json');
-Locale::setLanguageFromJSON('de', __DIR__ . '/config/locale/translations/de.json');
-Locale::setLanguageFromJSON('el', __DIR__ . '/config/locale/translations/el.json');
-Locale::setLanguageFromJSON('en', __DIR__ . '/config/locale/translations/en.json');
-Locale::setLanguageFromJSON('eo', __DIR__ . '/config/locale/translations/eo.json');
-Locale::setLanguageFromJSON('es', __DIR__ . '/config/locale/translations/es.json');
-Locale::setLanguageFromJSON('fa', __DIR__ . '/config/locale/translations/fa.json');
-Locale::setLanguageFromJSON('fi', __DIR__ . '/config/locale/translations/fi.json');
-Locale::setLanguageFromJSON('fo', __DIR__ . '/config/locale/translations/fo.json');
-Locale::setLanguageFromJSON('fr', __DIR__ . '/config/locale/translations/fr.json');
-Locale::setLanguageFromJSON('ga', __DIR__ . '/config/locale/translations/ga.json');
-Locale::setLanguageFromJSON('gu', __DIR__ . '/config/locale/translations/gu.json');
-Locale::setLanguageFromJSON('he', __DIR__ . '/config/locale/translations/he.json');
-Locale::setLanguageFromJSON('hi', __DIR__ . '/config/locale/translations/hi.json');
-Locale::setLanguageFromJSON('hr', __DIR__ . '/config/locale/translations/hr.json');
-Locale::setLanguageFromJSON('hu', __DIR__ . '/config/locale/translations/hu.json');
-Locale::setLanguageFromJSON('hy', __DIR__ . '/config/locale/translations/hy.json');
-Locale::setLanguageFromJSON('id', __DIR__ . '/config/locale/translations/id.json');
-Locale::setLanguageFromJSON('is', __DIR__ . '/config/locale/translations/is.json');
-Locale::setLanguageFromJSON('it', __DIR__ . '/config/locale/translations/it.json');
-Locale::setLanguageFromJSON('ja', __DIR__ . '/config/locale/translations/ja.json');
-Locale::setLanguageFromJSON('jv', __DIR__ . '/config/locale/translations/jv.json');
-Locale::setLanguageFromJSON('kn', __DIR__ . '/config/locale/translations/kn.json');
-Locale::setLanguageFromJSON('km', __DIR__ . '/config/locale/translations/km.json');
-Locale::setLanguageFromJSON('ko', __DIR__ . '/config/locale/translations/ko.json');
-Locale::setLanguageFromJSON('la', __DIR__ . '/config/locale/translations/la.json');
-Locale::setLanguageFromJSON('lb', __DIR__ . '/config/locale/translations/lb.json');
-Locale::setLanguageFromJSON('lt', __DIR__ . '/config/locale/translations/lt.json');
-Locale::setLanguageFromJSON('lv', __DIR__ . '/config/locale/translations/lv.json');
-Locale::setLanguageFromJSON('ml', __DIR__ . '/config/locale/translations/ml.json');
-Locale::setLanguageFromJSON('mr', __DIR__ . '/config/locale/translations/mr.json');
-Locale::setLanguageFromJSON('ms', __DIR__ . '/config/locale/translations/ms.json');
-Locale::setLanguageFromJSON('nb', __DIR__ . '/config/locale/translations/nb.json');
-Locale::setLanguageFromJSON('ne', __DIR__ . '/config/locale/translations/ne.json');
-Locale::setLanguageFromJSON('nl', __DIR__ . '/config/locale/translations/nl.json');
-Locale::setLanguageFromJSON('nn', __DIR__ . '/config/locale/translations/nn.json');
-Locale::setLanguageFromJSON('or', __DIR__ . '/config/locale/translations/or.json');
-Locale::setLanguageFromJSON('pa', __DIR__ . '/config/locale/translations/pa.json');
-Locale::setLanguageFromJSON('pl', __DIR__ . '/config/locale/translations/pl.json');
-Locale::setLanguageFromJSON('pt-br', __DIR__ . '/config/locale/translations/pt-br.json');
-Locale::setLanguageFromJSON('pt-pt', __DIR__ . '/config/locale/translations/pt-pt.json');
-Locale::setLanguageFromJSON('ro', __DIR__ . '/config/locale/translations/ro.json');
-Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
-Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
-Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json');
-Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
-Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
-Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
-Locale::setLanguageFromJSON('sn', __DIR__ . '/config/locale/translations/sn.json');
-Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
-Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
-Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
-Locale::setLanguageFromJSON('te', __DIR__ . '/config/locale/translations/te.json');
-Locale::setLanguageFromJSON('th', __DIR__ . '/config/locale/translations/th.json');
-Locale::setLanguageFromJSON('tl', __DIR__ . '/config/locale/translations/tl.json');
-Locale::setLanguageFromJSON('tr', __DIR__ . '/config/locale/translations/tr.json');
-Locale::setLanguageFromJSON('uk', __DIR__ . '/config/locale/translations/uk.json');
-Locale::setLanguageFromJSON('ur', __DIR__ . '/config/locale/translations/ur.json');
-Locale::setLanguageFromJSON('vi', __DIR__ . '/config/locale/translations/vi.json');
-Locale::setLanguageFromJSON('zh-cn', __DIR__ . '/config/locale/translations/zh-cn.json');
-Locale::setLanguageFromJSON('zh-tw', __DIR__ . '/config/locale/translations/zh-tw.json');
+
+$locales = Config::getParam('locale-codes', []);
+
+foreach ($locales as $locale) {
+    $code = $locale['code'];
+
+    $path = __DIR__ . '/config/locale/translations/' . $code . '.json';
+
+    if (!\file_exists($path)) {
+        $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
+        if (!\file_exists($path)) {
+            var_dump('Unable to find tralsnations for ' . $locale['code'] . ' so using en.json');
+            $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
+        }
+    }
+
+    Locale::setLanguageFromJSON($code, $path);
+}
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
@@ -853,8 +856,11 @@ App::setResource('loggerBreadcrumbs', function () {
 });
 
 App::setResource('register', fn() => $register);
-
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+
+App::setResource('localeCodes', function () {
+    return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
+});
 
 // Queues
 App::setResource('events', fn() => new Event('', ''));
@@ -869,14 +875,14 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
         'name' => 'Current Host',
-        'type' => 'web',
+        'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
@@ -888,7 +894,7 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
         )
     );
 
@@ -899,7 +905,7 @@ App::setResource('clients', function ($request, $console, $project) {
                 fn ($node) => $node['hostname'],
                 \array_filter(
                     $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname']))
+                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
                 )
             )
         )
@@ -1010,15 +1016,9 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = 'console';
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
-    if (!empty($request->getParam('project', ''))) {
-        $projectId = $request->getParam('project', '');
-    } elseif (!empty($request->getHeader('x-appwrite-project', ''))) {
-        $projectId = $request->getHeader('x-appwrite-project', '');
-    }
-
-    if ($projectId === 'console') {
+    if (empty($projectId) || $projectId === 'console') {
         return $console;
     }
 
@@ -1042,7 +1042,7 @@ App::setResource('console', function () {
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'localhost',
             ], // Current host is added on app init
         ],
@@ -1217,6 +1217,11 @@ App::setResource('geodb', function ($register) {
     return $register->get('geodb');
 }, ['register']);
 
+App::setResource('passwordsDictionary', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary');
+}, ['register']);
+
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
     $user = $dsn->getUser();
@@ -1239,10 +1244,100 @@ App::setResource('servers', function () {
 
     $languages = array_map(function ($language) {
         return strtolower($language['name']);
-    }, $server['languages']);
+    }, $server['sdks']);
 
     return $languages;
 });
+
+App::setResource('promiseAdapter', function ($register) {
+    return $register->get('promiseAdapter');
+}, ['register']);
+
+App::setResource('schema', function ($utopia, $dbForProject) {
+
+    $complexity = function (int $complexity, array $args) {
+        $queries = Query::parseQueries($args['queries'] ?? []);
+        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
+        $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
+
+        return $complexity * $limit;
+    };
+
+    $attributes = function (int $limit, int $offset) use ($dbForProject) {
+        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+            Query::limit($limit),
+            Query::offset($offset),
+        ]));
+
+        return \array_map(function ($attr) {
+            return $attr->getArrayCopy();
+        }, $attrs);
+    };
+
+    $urls = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents";
+        },
+        'read' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+        'delete' => function (string $databaseId, string $collectionId, array $args) {
+            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
+        },
+    ];
+
+    $params = [
+        'list' => function (string $databaseId, string $collectionId, array $args) {
+            return [ 'queries' => $args['queries']];
+        },
+        'create' => function (string $databaseId, string $collectionId, array $args) {
+            $id = $args['id'] ?? 'unique()';
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'documentId' => $id,
+                'collectionId' => $collectionId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+        'update' => function (string $databaseId, string $collectionId, array $args) {
+            $documentId = $args['id'];
+            $permissions = $args['permissions'] ?? null;
+
+            unset($args['id']);
+            unset($args['permissions']);
+
+            // Order must be the same as the route params
+            return [
+                'databaseId' => $databaseId,
+                'collectionId' => $collectionId,
+                'documentId' => $documentId,
+                'data' => $args,
+                'permissions' => $permissions,
+            ];
+        },
+    ];
+
+    return Schema::build(
+        $utopia,
+        $complexity,
+        $attributes,
+        $urls,
+        $params,
+    );
+}, ['utopia', 'dbForProject']);
 
 App::setResource('contributors', function () {
     $path = 'app/config/cloud/contributors.json';
@@ -1265,3 +1360,17 @@ App::setResource('heroes', function () {
 App::setResource('gitHub', function (Cache $cache) {
     return new VcsGitHub($cache);
 }, ['cache']);
+
+App::setResource('requestTimestamp', function ($request) {
+    //TODO: Move this to the Request class itself
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);

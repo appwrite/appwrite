@@ -12,7 +12,7 @@ use Appwrite\Vcs\Comment;
 use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
 use Utopia\Database\Document;
 use Utopia\Config\Config;
@@ -67,6 +67,11 @@ class BuildsV1 extends Worker
         }
     }
 
+    /**
+     * @throws \Utopia\Database\Exception\Authorization
+     * @throws \Utopia\Database\Exception\Structure
+     * @throws Throwable
+     */
     protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $providerCommitHash = '', string $providerTargetUrl = '', Document $providerContribution = null)
     {
         global $register;
@@ -128,8 +133,7 @@ class BuildsV1 extends Worker
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
                 'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
-                'stdout' => '',
-                'stderr' => '',
+                'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
                 'size' => 0
@@ -365,7 +369,7 @@ class BuildsV1 extends Worker
                                 deploymentId: $deployment->getId(),
                                 callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
                                     if ($response === null) {
-                                        $build = $build->setAttribute('stdout', $build->getAttribute('stdout', '') . $logs);
+                                        $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
                                         $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
                                         /**
@@ -410,8 +414,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', 'ready');
             $build->setAttribute('path', $response['path']);
             $build->setAttribute('size', $response['size']);
-            $build->setAttribute('stderr', $response['stderr']);
-            $build->setAttribute('stdout', $response['stdout']);
+            $build->setAttribute('logs', $response['output']);
 
             if ($isVcsEnabled) {
                 $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $providerTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -442,7 +445,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('stderr', $th->getMessage());
+            $build->setAttribute('logs', $th->getMessage());
             Console::error($th->getMessage());
 
             if ($isVcsEnabled) {
@@ -467,23 +470,20 @@ class BuildsV1 extends Worker
                 channels: $target['channels'],
                 roles: $target['roles']
             );
-
-            /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                $statsd = $register->get('statsd');
-                $usage = new Stats($statsd);
-                $usage
-                    ->setParam('projectInternalId', $project->getInternalId())
-                    ->setParam('projectId', $project->getId())
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('builds.{scope}.compute', 1)
-                    ->setParam('buildStatus', $build->getAttribute('status', ''))
-                    ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('networkRequestSize', 0)
-                    ->setParam('networkResponseSize', 0)
-                    ->submit();
-            }
         }
+
+        /** Trigger usage queue */
+        $this
+            ->getUsageQueue()
+            ->setProject($project)
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+            ->trigger()
+        ;
     }
 
     protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, string $providerTargetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)

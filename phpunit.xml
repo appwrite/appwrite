@@ -7,7 +7,7 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
-        >
+>
     <extensions>
         <extension class="Appwrite\Tests\TestHook" />
     </extensions>
@@ -20,9 +20,11 @@
             <directory>./tests/e2e/General</directory>
             <directory>./tests/e2e/Scopes</directory>
             <directory>./tests/e2e/Services/Account</directory>
+            <directory>./tests/e2e/Services/Console</directory>
             <directory>./tests/e2e/Services/Realtime</directory>
             <directory>./tests/e2e/Services/Avatars</directory>
             <directory>./tests/e2e/Services/Databases</directory>
+            <directory>./tests/e2e/Services/GraphQL</directory>
             <directory>./tests/e2e/Services/Health</directory>
             <directory>./tests/e2e/Services/Locale</directory>
             <directory>./tests/e2e/Services/Projects</directory>

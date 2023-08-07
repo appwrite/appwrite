@@ -1,10 +1,10 @@
 <?php
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
-use Swoole\Coroutine as Co;
 use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
+use Utopia\Validator\Host;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Appwrite\Utopia\Request;
@@ -12,16 +12,15 @@ use Appwrite\Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Host;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Vcs\Comment;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Detector\Adapter\CPP;
@@ -241,18 +240,22 @@ App::get('/v1/vcs/github/authorize')
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
     ->label('sdk.hide', true)
-    ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Git authorization. Only console hostnames are allowed.', true, ['clients'])
+    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
+    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->param('projectId', '', new UID(), 'Project ID')
+    ->inject('request')
     ->inject('response')
-    ->action(function (string $redirect, string $projectId, Response $response) {
+    ->action(function (string $success, string $failure, string $projectId, Request $request, Response $response) {
         $state = \json_encode([
             'projectId' => $projectId,
-            'redirect' => $redirect
+            'success' => $success,
+            'failure' => $failure,
         ]);
 
         $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
         $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
-            'state' => $state
+            'state' => $state,
+            'redirect_uri' => $request->getProtocol() . '://' . $request->getHostname() . "/v1/vcs/github/callback"
         ]);
 
         $response
@@ -266,10 +269,10 @@ App::get('/v1/vcs/github/callback')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->param('installation_id', '', new Text(256), 'GitHub installation ID', true)
-    ->param('setup_action', '', new Text(256), 'GitHub setup actuon type', true)
+    ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
+    ->param('setup_action', '', new Text(256, 0), 'GitHub setup actuon type', true)
     ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
-    ->param('code', '', new Text(2048), 'OAuth2 code.', true)
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code.', true)
     ->inject('gitHub')
     ->inject('user')
     ->inject('project')
@@ -277,26 +280,47 @@ App::get('/v1/vcs/github/callback')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
-        if (empty($state)) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.');
-        }
-
         $state = \json_decode($state, true);
-        $redirect = $state['redirect'] ?? '';
         $projectId = $state['projectId'] ?? '';
+
+        $defaultState = [
+            'success' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
+            'failure' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
+        ];
+
+        $state = \array_merge($defaultState, $state);
+
+        $redirectSuccess = $state['success'] ?? '';
+        $redirectFailure = $state['failure'] ?? '';
+
+        if (empty($state)) {
+            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
+
+            if (!empty($redirectFailure)) {
+                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
+                return $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+            }
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+        }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
-        if (empty($redirect)) {
-            $redirect = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations";
-        }
-
         if ($project->isEmpty()) {
-            $response
-                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                ->addHeader('Pragma', 'no-cache')
-                ->redirect($redirect);
-            return;
+            $error = 'Project with the ID from state could not be found.';
+
+            if (!empty($redirectFailure)) {
+                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
+                return $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+            }
+
+            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
         $personalSlug = '';
@@ -359,13 +383,23 @@ App::get('/v1/vcs/github/callback')
                 $installation = $dbForConsole->updateDocument('installations', $installation->getId(), $installation);
             }
         } else {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.');
+            $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';
+
+            if (!empty($redirectFailure)) {
+                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
+                return $response
+                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->addHeader('Pragma', 'no-cache')
+                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
+            }
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
         }
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->redirect($redirect);
+            ->redirect($redirectSuccess);
     });
 
 App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
@@ -524,7 +558,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             $repo['pushedAt'] = $repo['pushed_at'] ?? null;
             $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
             $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
-            return new Document($repo);
+            return $repo;
         }, $repos);
 
         $repos = batch(\array_map(function ($repo) use ($github) {
@@ -562,6 +596,10 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 return $repo;
             };
         }, $repos));
+
+        $repos = \array_map(function ($repo) {
+            return new Document($repo);
+        }, $repos);
 
         $response->dynamic(new Document([
             'providerRepositories' => $repos,
@@ -633,6 +671,10 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             $owner = $github->getOwnerName($providerInstallationId);
 
             $repository = $github->createRepository($owner, $name, $private);
+        }
+        
+        if (isset($repository['message'])) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Provider Error: ' . $repository['message']);
         }
 
         if (isset($repository['errors'])) {
@@ -888,7 +930,7 @@ App::get('/v1/vcs/installations')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

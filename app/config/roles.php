@@ -6,6 +6,7 @@ $member = [
     'public',
     'home',
     'console',
+    'graphql',
     'account',
     'teams.read',
     'teams.write',
@@ -22,6 +23,7 @@ $member = [
 ];
 
 $admins = [
+    'graphql',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -57,9 +59,11 @@ return [
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
+            'none',
             'public',
             'home',
             'console',
+            'graphql',
             'documents.read',
             'documents.write',
             'files.read',
@@ -71,22 +75,22 @@ return [
     ],
     Auth::USER_ROLE_USERS => [
         'label' => 'Users',
-        'scopes' => \array_merge($member, []),
+        'scopes' => \array_merge($member, [ 'none' ]),
     ],
     Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => \array_merge($admins, []),
+        'scopes' => \array_merge($admins, [ 'none' ]),
     ],
     Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => \array_merge($admins, []),
+        'scopes' => \array_merge($admins, [ 'none' ]),
     ],
     Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($member, $admins, []),
+        'scopes' => \array_merge($member, $admins, [ 'none' ]),
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
-        'scopes' => ['health.read'],
+        'scopes' => ['health.read', 'graphql', 'none'],
     ],
 ];

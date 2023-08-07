@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -50,7 +50,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     $host = $request->getHostname() ?? '';
 
     $route = Authorization::skip(
-        fn() => $dbForConsole->find('rules', [
+        fn () => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
         ])
@@ -68,7 +68,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
-        fn() => $dbForConsole->getDocument('projects', $projectId)
+        fn () => $dbForConsole->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
         $status = $project->getAttribute('services', [])['proxy'];
@@ -78,7 +78,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     }
 
     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
-    $path = ($swooleRequest->server['request_uri'] ?? '');
+    $path = ($swooleRequest->server['request_uri'] ?? '/');
     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
         return false;
     }
@@ -89,7 +89,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $functionId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
-        $path = ($swooleRequest->server['request_uri'] ?? '');
+        $path = ($swooleRequest->server['request_uri'] ?? '/');
         $query = ($swooleRequest->server['query_string'] ?? '');
         if (!empty($query)) {
             $path .= '?' . $query;
@@ -136,17 +136,29 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
         $execution = \json_decode($executionResponse, true);
 
+        $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {
-            $response->setHeader($header['key'], $header['value']);
+            if (\strtolower($header['name']) === 'content-type') {
+                $contentType = $header['value'];
+            }
+
+            $response->setHeader($header['name'], $header['value']);
         }
 
         $body = $execution['responseBody'] ?? '';
 
-        if (($execution['responseHeaders']['x-open-runtimes-encoding'] ?? '') === 'base64') {
-            $body = \base64_decode($body);
+        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
+        if (!empty($encodingKey)) {
+            if (($execution['responseHeaders'][$encodingKey] ?? '') === 'base64') {
+                $body = \base64_decode($body);
+            }
         }
 
-        $response->setStatusCode($execution['responseStatusCode'] ?? 200)->send($body);
+        $response
+            ->setContentType($contentType)
+            ->setStatusCode($execution['responseStatusCode'] ?? 200)
+            ->send($body);
+
         return true;
     } elseif ($type === 'api') {
         return false;
@@ -158,6 +170,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 }
 
 App::init()
+    ->groups(['api', 'web'])
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')
@@ -167,11 +180,10 @@ App::init()
     ->inject('dbForConsole')
     ->inject('user')
     ->inject('locale')
+    ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
-    ->inject('pools')
-    ->inject('cache')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $clients, array $servers, Group $pools, Cache $cache) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
         /*
         * Appwrite Router
         */
@@ -218,7 +230,7 @@ App::init()
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
-        if (\in_array($localeParam, Config::getParam('locale-codes'))) {
+        if (\in_array($localeParam, $localeCodes)) {
             $locale->setDefault($localeParam);
         }
 
@@ -253,16 +265,24 @@ App::init()
         Config::setParam(
             'domainVerification',
             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-            $endDomain->getRegisterable() !== ''
+                $endDomain->getRegisterable() !== ''
         );
 
-        Config::setParam('cookieDomain', (
-            $request->getHostname() === 'localhost' ||
-            $request->getHostname() === 'localhost:' . $request->getPort() ||
-            (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-        )
-            ? null
-            : '.' . $request->getHostname());
+        $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
+        $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
+
+        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+        $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+        Config::setParam(
+            'cookieDomain',
+            $isLocalHost || $isIpAddress
+                ? null
+                : ($isConsoleProject && $isConsoleRootSession
+                    ? '.' . $selfDomain->getRegisterable()
+                    : '.' . $request->getHostname()
+                )
+        );
 
         /*
         * Response format
@@ -316,11 +336,10 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
-            ->addHeader('Access-Control-Allow-Credentials', 'true')
-        ;
+            ->addHeader('Access-Control-Allow-Credentials', 'true');
 
         /*
         * Validate Client Domain - Check to avoid CSRF attack
@@ -393,7 +412,7 @@ App::init()
 
                 $expire = $key->getAttribute('expire');
                 if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new AppwriteException(AppwriteException:: PROJECT_KEY_EXPIRED);
+                    throw new AppwriteException(AppwriteException::PROJECT_KEY_EXPIRED);
                 }
 
                 Authorization::setRole(Auth::USER_ROLE_APPS);
@@ -481,7 +500,7 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-Appwrite-ID, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -522,6 +541,7 @@ App::error()
                 $log->setType(Log::TYPE_ERROR);
                 $log->setMessage($error->getMessage());
 
+                $log->addTag('database', $project->getAttribute('database', 'console'));
                 $log->addTag('method', $route->getMethod());
                 $log->addTag('url', $route->getPath());
                 $log->addTag('verboseType', get_class($error));
@@ -534,7 +554,7 @@ App::error()
                 $log->addExtra('line', $error->getLine());
                 $log->addExtra('trace', $error->getTraceAsString());
                 $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::$roles);
+                $log->addExtra('roles', Authorization::getRoles());
 
                 $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
                 $log->setAction($action);
@@ -582,6 +602,10 @@ App::error()
                     $error->setType(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
                     break;
             }
+        } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
+            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, null, null, $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
         }
 
         /** Wrap all exceptions inside Appwrite\Extend\Exception */
@@ -630,8 +654,7 @@ App::error()
             ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->addHeader('Expires', '0')
             ->addHeader('Pragma', 'no-cache')
-            ->setStatusCode($code)
-        ;
+            ->setStatusCode($code);
 
         $template = ($route) ? $route->getLabel('error', null) : null;
 
@@ -645,8 +668,7 @@ App::error()
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
                 ->setParam('code', $code)
-                ->setParam('trace', $trace)
-            ;
+                ->setParam('trace', $trace);
 
             $response->html($layout->render());
         }
@@ -677,7 +699,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -687,7 +709,7 @@ App::get('/.well-known/acme-challenge')
         $uriChunks = \explode('/', $request->getURI());
         $token = $uriChunks[\count($uriChunks) - 1];
 
-        $validator = new Text(100, [
+        $validator = new Text(100, allowList: [
             ...Text::NUMBERS,
             ...Text::ALPHABET_LOWER,
             ...Text::ALPHABET_UPPER,
@@ -728,8 +750,10 @@ App::get('/.well-known/acme-challenge')
     });
 
 include_once __DIR__ . '/shared/api.php';
+include_once __DIR__ . '/shared/api/auth.php';
 
 App::wildcard()
+    ->groups(['api'])
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });

@@ -62,7 +62,7 @@ class Comment
 
         foreach ($projects as $projectId => $project) {
             $text .= "**{$project['name']}** `{$projectId}`\n\n";
-            $text .= "| Function | ID | Status | Build Logs |\n";
+            $text .= "| Function | ID | Status | Action |\n";
             $text .= "| :- | :-  | :-  | :- |\n";
 
             $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
@@ -78,7 +78,8 @@ class Comment
                 };
                 //TODO: Update names of images
 
-                $logs = '[View output](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                //TODO: Change View logs to Authorize for external contributors
+                $logs = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
 
                 $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$logs} |\n";
             }

@@ -70,17 +70,11 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'ready',
             ])
-            ->addRule('buildStdout', [
+            ->addRule('buildLogs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The build stdout.',
+                'description' => 'The build logs.',
                 'default' => '',
                 'example' => 'Compiling source files...',
-            ])
-            ->addRule('buildStderr', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The build stderr.',
-                'default' => '',
-                'example' => 'File index.ts not found!',
             ])
             ->addRule('buildTime', [
                 'type' => self::TYPE_INTEGER,

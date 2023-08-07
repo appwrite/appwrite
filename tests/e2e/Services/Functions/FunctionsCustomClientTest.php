@@ -7,10 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 class FunctionsCustomClientTest extends Scope
 {
@@ -109,6 +107,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -223,6 +222,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -321,6 +321,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -549,6 +550,7 @@ class FunctionsCustomClientTest extends Scope
         ], [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)), //different tarball names intentional
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';

@@ -8,11 +8,11 @@ use Utopia\Database\Document;
 class Mail extends Event
 {
     protected string $recipient = '';
-    protected string $url = '';
-    protected string $type = '';
+    protected string $from = '';
     protected string $name = '';
-    protected string $locale = '';
-    protected ?Document $team = null;
+    protected string $subject = '';
+    protected string $body = '';
+    protected array $smtp = [];
 
     public function __construct()
     {
@@ -20,26 +20,26 @@ class Mail extends Event
     }
 
     /**
-     * Sets team for the mail event.
+     * Sets subject for the mail event.
      *
-     * @param Document $team
+     * @param string $subject
      * @return self
      */
-    public function setTeam(Document $team): self
+    public function setSubject(string $subject): self
     {
-        $this->team = $team;
+        $this->subject = $subject;
 
         return $this;
     }
 
     /**
-     * Returns set team for the mail event.
+     * Returns subject for the mail event.
      *
-     * @return null|Document
+     * @return string
      */
-    public function getTeam(): ?Document
+    public function getSubject(): string
     {
-        return $this->team;
+        return $this->subject;
     }
 
     /**
@@ -66,49 +66,49 @@ class Mail extends Event
     }
 
     /**
-     * Sets url for the mail event.
+     * Sets from for the mail event.
      *
-     * @param string $url
+     * @param string $from
      * @return self
      */
-    public function setUrl(string $url): self
+    public function setFrom(string $from): self
     {
-        $this->url = $url;
+        $this->from = $from;
 
         return $this;
     }
 
     /**
-     * Returns set url for the mail event.
+     * Returns from for mail event.
      *
      * @return string
      */
-    public function getURL(): string
+    public function getFrom(): string
     {
-        return $this->url;
+        return $this->from;
     }
 
     /**
-     * Sets type for the mail event (use the constants starting with MAIL_TYPE_*).
+     * Sets body for the mail event.
      *
-     * @param string $type
+     * @param string $body
      * @return self
      */
-    public function setType(string $type): self
+    public function setBody(string $body): self
     {
-        $this->type = $type;
+        $this->body = $body;
 
         return $this;
     }
 
     /**
-     * Returns set type for the mail event.
+     * Returns body for the mail event.
      *
      * @return string
      */
-    public function getType(): string
+    public function getBody(): string
     {
-        return $this->type;
+        return $this->body;
     }
 
     /**
@@ -135,26 +135,135 @@ class Mail extends Event
     }
 
     /**
-     * Sets locale for the mail event.
+     * Set SMTP Host
      *
-     * @param string $locale
+     * @param string $host
      * @return self
      */
-    public function setLocale(string $locale): self
+    public function setSmtpHost(string $host): self
     {
-        $this->locale = $locale;
-
+        $this->smtp['host'] = $host;
         return $this;
     }
 
     /**
-     * Returns set locale for the mail event.
+     * Set SMTP port
+     *
+     * @param int port
+     * @return self
+     */
+    public function setSmtpPort(int $port): self
+    {
+        $this->smtp['port'] = $port;
+        return $this;
+    }
+
+    /**
+     * Set SMTP username
+     *
+     * @param string $username
+     * @return self
+     */
+    public function setSmtpUsername(string $username): self
+    {
+        $this->smtp['username'];
+        return $this;
+    }
+
+    /**
+     * Set SMTP password
+     *
+     * @param string $password
+     * @return self
+     */
+    public function setSmtpPassword(string $password): self
+    {
+        $this->smtp['password'];
+        return $this;
+    }
+
+    /**
+     * Set SMTP sender email
+     *
+     * @param string $senderEmail
+     * @return self
+     */
+    public function setSmtpSenderEmail(string $senderEmail): self
+    {
+        $this->smtp['senderEmail'] = $senderEmail;
+        return $this;
+    }
+
+    /**
+     * Set SMTP reply to
+     *
+     * @param string $replyTo
+     * @return self
+     */
+    public function setSmtpReplyTo(string $replyTo): self
+    {
+        $this->smtp['replyTo'] = $replyTo;
+        return $this;
+    }
+
+    /**
+     * Get SMTP
      *
      * @return string
      */
-    public function getLocale(): string
+    public function getSmtpHost(): string
     {
-        return $this->locale;
+        return $this->smtp['host'] ?? '';
+    }
+
+    /**
+     * Get SMTP port
+     *
+     * @return integer
+     */
+    public function getSmtpPort(): int
+    {
+        return $this->smtp['port'] ?? 0;
+    }
+
+    /**
+     * Get SMTP username
+     *
+     * @return string
+     */
+    public function getSmtpUsername(): string
+    {
+        return $this->smtp['username'] ?? '';
+    }
+
+    /**
+     * Get SMTP password
+     *
+     * @return string
+     */
+    public function getSmtpPassword(): string
+    {
+        return $this->smtp['password'] ?? '';
+    }
+
+    /**
+     * Get SMTP sender email
+     *
+     * @return string
+     */
+    public function getSmtpSenderEmail(): string
+    {
+        return $this->smtp['senderEmail'] ?? '';
+    }
+
+    /**
+     * Get SMTP reply to
+     *
+     * @return string
+     */
+    public function getSmtpReplyTo(): string
+    {
+        return $this->smtp['replyTo'] ?? '';
     }
 
     /**
@@ -166,15 +275,12 @@ class Mail extends Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'payload' => $this->payload,
+            'from' => $this->from,
             'recipient' => $this->recipient,
-            'url' => $this->url,
-            'locale' => $this->locale,
-            'type' => $this->type,
             'name' => $this->name,
-            'team' => $this->team,
+            'subject' => $this->subject,
+            'body' => $this->body,
+            'smtp' => $this->smtp,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }

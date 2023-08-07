@@ -31,6 +31,7 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * - GraphQL
      */
 
     /** General */
@@ -51,6 +52,7 @@ class Exception extends \Exception
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
+    public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -66,6 +68,7 @@ class Exception extends \Exception
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
+    public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
@@ -83,6 +86,7 @@ class Exception extends \Exception
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
+    public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -141,8 +145,11 @@ class Exception extends \Exception
     /** Documents */
     public const DOCUMENT_NOT_FOUND                = 'document_not_found';
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
+    public const DOCUMENT_MISSING_DATA             = 'document_missing_data';
     public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
     public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
+    public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
+    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
     /** Attribute */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
@@ -153,21 +160,28 @@ class Exception extends \Exception
     public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
+    public const INDEX_INVALID                     = 'index_invalid';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
     public const PROJECT_UNKNOWN                   = 'project_unknown';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
+    public const PROJECT_ALREADY_EXISTS            = 'project_already_exists';
     public const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
+
+    public const PROJECT_SMTP_CONFIG_INVALID       = 'project_smtp_config_invalid';
+
+    public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
@@ -190,6 +204,10 @@ class Exception extends \Exception
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
+
+    /** GraphqQL */
+    public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
+    public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     protected $type = '';
     protected $errors = [];

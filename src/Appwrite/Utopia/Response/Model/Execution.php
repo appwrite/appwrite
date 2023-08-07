@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 
 class Execution extends Model
 {
@@ -68,7 +68,7 @@ class Execution extends Model
             ])
             ->addRule('requestHeaders', [
                 'type' => Response::MODEL_HEADERS,
-                'description' => 'HTTP request headers as a key-value object. This will return only whitelisted headers.',
+                'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
                 'default' => [],
                 'example' => [['Content-Type' => 'application/json']],
                 'array' => true,
@@ -85,7 +85,7 @@ class Execution extends Model
                 'default' => '',
                 'example' => 'Developers are awesome.',
                 ])
-            ->addRule('responseheaders', [
+            ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,
                 'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
                 'default' => [],
