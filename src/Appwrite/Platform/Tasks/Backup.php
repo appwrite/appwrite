@@ -91,7 +91,7 @@ class Backup extends Action
 
         $filename = $time . '.tar.gz';
         $local = new Local(self::BACKUPS . '/' . $this->database . '/full/' . $time);
-        $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+        $local->setTransferChunkSize(5 * 1024 * 1024); // 5MB
 
         $backups = $local->getRoot() . '/files';
         $tarFile = $local->getPath($filename);
