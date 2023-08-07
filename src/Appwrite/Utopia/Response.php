@@ -2,6 +2,9 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Utopia\Response\Model\Message;
+use Appwrite\Utopia\Response\Model\Subscriber;
+use Appwrite\Utopia\Response\Model\Topic;
 use Exception;
 use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
@@ -78,6 +81,7 @@ use Appwrite\Utopia\Response\Model\LocaleCode;
 use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
@@ -179,6 +183,18 @@ class Response extends SwooleResponse
     public const MODEL_LANGUAGE_LIST = 'languageList';
     public const MODEL_PHONE = 'phone';
     public const MODEL_PHONE_LIST = 'phoneList';
+
+    // Messaging
+    public const MODEL_PROVIDER = 'provider';
+    public const MODEL_PROVIDER_LIST = 'providerList';
+    public const MODEL_MESSAGE = 'message';
+    public const MODEL_MESSAGE_LIST = 'messageList';
+    public const MODEL_TOPIC = 'topic';
+    public const MODEL_TOPIC_LIST = 'topicList';
+    public const MODEL_SUBSCRIBER = 'subscriber';
+    public const MODEL_SUBSCRIBER_LIST = 'subscriberList';
+    public const MODEL_TARGET = 'target';
+    public const MODEL_TARGET_LIST = 'targetList';
 
     // Teams
     public const MODEL_TEAM = 'team';
@@ -289,6 +305,11 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
+            ->setModel(new BaseList('Provider list', self::MODEL_PROVIDER_LIST, 'providers', self::MODEL_PROVIDER))
+            ->setModel(new BaseList('Message list', self::MODEL_MESSAGE_LIST, 'messages', self::MODEL_MESSAGE))
+            ->setModel(new BaseList('Topic list', self::MODEL_TOPIC_LIST, 'topics', self::MODEL_TOPIC))
+            ->setModel(new BaseList('Subscriber list', self::MODEL_SUBSCRIBER_LIST, 'subscribers', self::MODEL_SUBSCRIBER))
+            ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))            
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -361,6 +382,11 @@ class Response extends SwooleResponse
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
+            ->setModel(new Provider())
+            ->setModel(new Message())
+            ->setModel(new Topic())
+            ->setModel(new Subscriber())
+            ->setModel(new Target())
             // Verification
             // Recovery
             // Tests (keep last)
