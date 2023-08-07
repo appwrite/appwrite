@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Exception;
+use Utopia\DSN\DSN;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -9,11 +11,12 @@ use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
+use Utopia\Validator\Text;
 
 class Backup extends Action
 {
-    protected string $host = 'mariadb';
-    protected string $project;
+    protected ?DSN $dsn = null;
+    protected ?string $database = null;
     public const BACKUPS = '/backups';
     //public const BACKUP_INTERVAL = 60 * 60 * 4; // 4 hours;
     public const BACKUP_INTERVAL = 300; // 4 hours;
@@ -29,19 +32,27 @@ class Backup extends Action
     public function __construct()
     {
         $this->checkEnvVariables();
-        $this->project = explode('=', App::getEnv('_APP_CONNECTIONS_DB_PROJECT'))[0];
 
         $this
             ->desc('Backup a DB')
+            ->param('database', null, new Text(20), 'passed from command')
             ->inject('pools')
-            ->callback(fn(Group $pools) => $this->action($pools));
+            ->callback(fn(string $database, Group $pools) => $this->action($database, $pools));
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    public function action($pools): void
+    public function action($database, $pools): void
     {
+        $this->database = $database;
+        $this->dsn = self::getDsn($database);
+
+        if (!$this->dsn instanceof DSN) {
+            Console::error('No dsn match');
+            Console::exit();
+        }
+
         $attempts = 0;
         $max = 10;
         $sleep = 5;
@@ -50,16 +61,16 @@ class Backup extends Action
             try {
                 $attempts++;
                 $pools
-                    ->get('database_' . $this->project)
+                    ->get('database_' . $database)
                     ->pop()
                     ->getResource()
                 ;
 
                 break; // leave the do-while if successful
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                    throw new Exception('Failed to connect to database: ' . $e->getMessage());
                 }
 
                 sleep($sleep);
@@ -73,36 +84,24 @@ class Backup extends Action
 
     public function start(): void
     {
-        self::log('--- Backup Start --- ');
         $start = microtime(true);
-        //$type = 'inc';
-        $type = 'full';
+        $time = date('Y_m_d_H_i_s');
 
-        switch ($type) {
-            case 'inc':
-                $this->incrementalBackup();
-                break;
-            case 'full':
-                $time = date('Y_m_d_H_i_s');
-                self::log('--- Creating backup ' . $time . '  --- ');
-                $filename = $time . '.tar.gz';
-                $local = new Local(self::BACKUPS . '/' . $this->project . '/full/' . $time);
-                $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
+        self::log('--- Backup Start --- ');
+        self::log('--- Creating backup ' . $time . '  --- ');
 
-                $backups = $local->getRoot() . '/files';
-                $tarFile = $local->getPath($filename);
+        $filename = $time . '.tar.gz';
+        $local = new Local(self::BACKUPS . '/' . $this->database . '/full/' . $time);
+        $local->setTransferChunkSize(5  * 1024 * 1024); // > 5MB
 
-                $this->fullBackup($backups);
-                $this->tar($backups, $tarFile);
-                $this->upload($tarFile, $local);
-                // todo: Do we want to delete the tar file? and remain with the folder?
-                // todo: Do we want to delete the tar log.file?
-                break;
+        $backups = $local->getRoot() . '/files';
+        $tarFile = $local->getPath($filename);
 
-            default:
-                Console::error('No type detected');
-                Console::exit();
-        }
+        $this->fullBackup($backups);
+        $this->tar($backups, $tarFile);
+        $this->upload($tarFile, $local);
+        // todo: Do we want to delete the tar file? and remain with the folder?
+        // todo: Do we want to delete the backup.log?
 
         self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
@@ -119,16 +118,16 @@ class Backup extends Action
             Console::exit();
         }
 
-        $logfile = $target . '/../log.txt';
+        $logfile = $target . '/../backup.log';
 
         $args = [
             //'--defaults-file=' . $this->cnf, // [ERROR] Failed to open required defaults file: /etc/my.cnf
-            '--user=root',
-            '--password=' . App::getEnv('_APP_DB_ROOT_PASS'),
-            '--host=' . $this->host,
+            '--user=' . $this->dsn->getUser(),
+            '--password=' . $this->dsn->getPassword(),
+            '--host=' . $this->dsn->getHost(),
             '--backup',
             '--strict',
-            '--history=' . $this->project, // logs PERCONA_SCHEMA.xtrabackup_history
+            '--history=' . $this->database, // logs PERCONA_SCHEMA.xtrabackup_history name attribute
             '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
@@ -190,7 +189,7 @@ class Backup extends Action
     public function upload(string $file, Device $local)
     {
         $filename = basename($file);
-        $s3 = new DOSpaces('/' . $this->project . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $s3 = new DOSpaces('/' . $this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (!$s3->exists('/')) {
             Console::error('Can\'t read s3 root directory');
@@ -210,82 +209,8 @@ class Backup extends Action
                 Console::error('File not found on s3 ' . $destination);
                 Console::exit();
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Console::error($e->getMessage());
-            Console::exit();
-        }
-    }
-
-    public function incrementalBackup()
-    {
-        $project = $this->project;
-        //$folder = ceil(time() / 60 * 60);
-        //$folder = date('Y_m_d');
-        //$folder = ceil(date('z') / 7); // day of the year 0-365
-        $folder = date('W'); // week of the year  0 - 51
-
-        $folder = 'v1_' . date('Y') . '_' . $folder;
-        $local = new Local(self::BACKUPS . '/' . $project . '/inc/' . $folder);
-        $position = 1;
-        $target = $local->getRoot() . '/' . $position;
-        $base = '';
-
-        if (file_exists($local->getRoot() . '/position')) {
-            $position = intval(file_get_contents($local->getRoot() . '/position'));
-
-            if (!file_exists($local->getRoot() . '/' . $position . '/xtrabackup_checkpoints')) {
-                Console::error('Backup ' . $folder . ' is garbage!!!');
-                Console::exit();
-            }
-
-            $base = $local->getRoot() . '/' . $position;
-            $position += 1;
-            $target = $local->getRoot() . '/' . $position;
-        }
-
-        Console::success($base);
-        Console::success($target);
-
-        if (!file_exists($target) && !mkdir($target, 0755, true)) {
-            Console::error('Error creating backup directory: ' . $target);
-            Console::exit();
-        }
-
-        file_put_contents($local->getRoot() . '/position', $position);
-
-        $args = [
-            '--user=root',
-            '--password=rootsecretpassword',
-            '--backup=1',
-            '--strict',
-            '--host=' . $this->host,
-            '--safe-slave-backup',
-            '--safe-slave-backup-timeout=300',
-            '--check-privileges',
-            //'--no-lock',  // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
-            //'--compress=lz4',
-            //'--compress-threads=1',
-            '--target-dir=' . $target
-        ];
-
-        if (!empty($base)) {
-            $args[] = '--incremental-basedir=' . $base;
-        }
-
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
-        self::log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-           // Console::error($stderr);
-            //Console::exit();
-        }
-
-        // For some reason they write everything as $stderr
-        if (!str_contains($stderr, 'completed OK!')) {
-            /// Todo We need to destroy this directory and all the data inside or move it somewhere
-            Console::error($stderr);
             Console::exit();
         }
     }
@@ -306,7 +231,6 @@ class Backup extends Action
                 '_DO_SPACES_ACCESS_KEY',
                 '_DO_SPACES_SECRET_KEY',
                 '_DO_SPACES_REGION',
-                '_APP_DB_ROOT_PASS'
             ] as $env
         ) {
             if (empty(App::getEnv($env))) {
@@ -314,5 +238,16 @@ class Backup extends Action
                 Console::exit();
             }
         }
+    }
+
+    public static function getDsn(string $database): ?DSN
+    {
+        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_PROJECT')) as $project) {
+            list($db, $dsn) = explode('=', $project);
+            if ($db === $database) {
+                return new DSN($dsn);
+            }
+        }
+        return null;
     }
 }

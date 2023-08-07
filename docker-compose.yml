@@ -752,8 +752,6 @@ services:
     image: percona/percona-xtrabackup:latest
     container_name: appwrite-xtrabackup
     command: sleep infinity
-    environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
     volumes:
       - ./backups:/backups:rw
       - ./varlibmysql:/varlibmysql:rw
@@ -764,6 +762,8 @@ services:
 
   appwrite-backup:
     entrypoint: db-backup
+    command:
+      - --database=db_fra1_02
     <<: *x-logging
     container_name: appwrite-backup
     image: appwrite-dev
@@ -772,7 +772,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - appwrite-mariadb:/var/lib/mysql:rw
+      - appwrite-mariadb:/var/lib/mysql:r
       - ./backups:/backups:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./dev:/usr/local/dev
@@ -784,8 +784,6 @@ services:
       - _DO_SPACES_ACCESS_KEY
       - _DO_SPACES_SECRET_KEY
       - _DO_SPACES_REGION
-      - _APP_BACKUP_FOLDER
-      - _APP_DB_ROOT_PASS
 
   appwrite-restore:
     command: sleep infinity
@@ -808,8 +806,6 @@ services:
       - _DO_SPACES_ACCESS_KEY
       - _DO_SPACES_SECRET_KEY
       - _DO_SPACES_REGION
-      - _APP_BACKUP_FOLDER
-      - _APP_DB_ROOT_PASS
 
   redis:
     image: redis:7.0.4-alpine
