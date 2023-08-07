@@ -18,8 +18,7 @@ class Backup extends Action
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     public const BACKUPS = '/backups';
-    //public const BACKUP_INTERVAL = 60 * 60 * 4; // 4 hours;
-    public const BACKUP_INTERVAL = 300; // 4 hours;
+    public const BACKUP_INTERVAL = 60 * 60 * 4; // 4 hours;
     public const COMPRESS_ALGORITHM = 'lz4';
     public const CNF = '/etc/my.cnf';
     public const PROCESSORS = 4;

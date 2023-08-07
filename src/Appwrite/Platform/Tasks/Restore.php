@@ -47,9 +47,6 @@ class Restore extends Action
             Console::exit();
         }
 
-        // todo? why do we need to pass it as variable?
-        //$datadir = '/varlibmysql';
-
         if (!file_exists($datadir)) {
             Console::error('Datadir not found: ' . $datadir);
             Console::exit();
@@ -96,6 +93,11 @@ class Restore extends Action
         } else {
             $local = new Local(Backup::BACKUPS . '/' . $database . '/full/' . $id);
             $files = $local->getRoot() . '/files';
+        }
+
+        if (!file_exists($files)) {
+            Console::error('Directory not found: ' . $files);
+            Console::exit();
         }
 
         $this->decompress($files);
@@ -150,11 +152,6 @@ class Restore extends Action
 
     public function decompress(string $target)
     {
-        if (!file_exists($target)) {
-            Console::error('decompress error directory not found: ' . $target);
-            Console::exit();
-        }
-
         $logfile = $target . '/../decompress.log';
 
         $args = [
