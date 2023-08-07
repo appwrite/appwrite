@@ -662,7 +662,7 @@ services:
   
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: dlohani/appwrite_ask
+    image: appwrite/assistant:0.1.0
     networks:
       - appwrite
     environment:
