@@ -201,6 +201,16 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false,
     ],
+    'oidc' => [
+        'name' => 'OpenID Connect',
+        'developers' => 'https://openid.net/connect/faq/',
+        'icon' => 'icon-oidc',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => 'oidc.phtml',
+        'beta' => false,
+        'mock' => false,
+    ],
     'okta' => [
         'name' => 'Okta',
         'developers' => 'https://developer.okta.com/',
@@ -222,7 +232,7 @@ return [ // Ordered by ABC.
         'mock' => false
     ],
     'paypalSandbox' => [
-        'name' => 'PayPal',
+        'name' => 'PayPal Sandbox',
         'developers' => 'https://developer.paypal.com/docs/api/overview/',
         'icon' => 'icon-paypal',
         'enabled' => true,
@@ -292,7 +302,7 @@ return [ // Ordered by ABC.
         'mock' => false,
     ],
     'tradeshiftBox' => [
-        'name' => 'Tradeshift',
+        'name' => 'Tradeshift Sandbox',
         'developers' => 'https://developers.tradeshift.com/docs/api',
         'icon' => 'icon-tradeshiftbox',
         'enabled' => true,

@@ -152,7 +152,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container for better resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -212,7 +212,16 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
+            [
+                'name' => '_APP_CONSOLE_INVITES',
+                'description' => 'This option allows you to disable the invitation of new users to the Appwrite console. When enabled, console users are allowed to invite new users to a project. By default this option is enabled.',
+                'introduction' => '1.2.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -315,54 +324,33 @@ return [
                 'question' => '',
                 'filter' => 'password'
             ],
-        ],
-    ],
-    [
-        'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
-        'variables' => [
             [
-                'name' => '_APP_INFLUXDB_HOST',
-                'description' => 'InfluxDB server host name address. Default value is: \'influxdb\'.',
-                'introduction' => '',
-                'default' => 'influxdb',
+                'name' => '_APP_CONNECTIONS_MAX',
+                'description' => 'MariaDB server maximum connections.',
+                'introduction' => 'TBD',
+                'default' => 251,
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
-            [
-                'name' => '_APP_INFLUXDB_PORT',
-                'description' => 'InfluxDB server TCP port. Default value is: \'8086\'.',
-                'introduction' => '',
-                'default' => '8086',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
-        'variables' => [
-            [
-                'name' => '_APP_STATSD_HOST',
-                'description' => 'StatsD server host name address. Default value is: \'telegraf\'.',
-                'introduction' => '',
-                'default' => 'telegraf',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_STATSD_PORT',
-                'description' => 'StatsD server TCP port. Default value is: \'8125\'.',
-                'introduction' => '',
-                'default' => '8125',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
+//             [
+//                 'name' => '_APP_CONNECTIONS_DB_PROJECT',
+//                 'description' => 'A list of comma-separated key value pairs representing Project DBs where key is the database name and value is the DSN connection string.',
+//                 'introduction' => 'TBD',
+//                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
+//                 'required' => true,
+//                 'question' => '',
+//                 'filter' => ''
+//             ],
+//             [
+//                 'name' => '_APP_CONNECTIONS_DB_CONSOLE',
+//                 'description' => 'A key value pair representing the Console DB where key is the database name and value is the DSN connection string.',
+//                 'introduction' => 'TBD',
+//                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
+//                 'required' => true,
+//                 'question' => '',
+//                 'filter' => ''
+//             ]
         ],
     ],
     [
@@ -490,8 +478,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_CONNECTIONS_STORAGE',
+                'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty. Available devices are local, s3, dospaces, linode, backblaze and wasabi.',
+                'introduction' => '1.1.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+            ],
+            [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Select default storage device. The default value is \'local\'. List of supported adapters are \'local\', \'s3\', \'dospaces\', \'backblaze\', \'linode\' and \'wasabi\'.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => 'local',
                 'required' => false,
@@ -499,7 +495,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_ACCESS_KEY',
-                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -507,7 +503,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_SECRET',
-                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -515,7 +511,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_REGION',
-                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -523,7 +519,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_BUCKET',
-                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -531,7 +527,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
-                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -539,7 +535,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_SECRET',
-                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -547,7 +543,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_REGION',
-                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -555,7 +551,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
-                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -563,7 +559,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_ACCESS_KEY',
-                'description' => 'Backblaze access key. Required when the storage adapter is set to Backblaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -571,7 +567,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_SECRET',
-                'description' => 'Backblaze secret key. Required when the storage adapter is set to Backblaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -579,7 +575,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_REGION',
-                'description' => 'Backblaze region. Required when storage adapter is set to Backblaze. You can find your region info from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => 'us-west-004',
                 'required' => false,
@@ -587,7 +583,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_BUCKET',
-                'description' => 'Backblaze bucket. Required when storage adapter is set to Backblaze. You can create your bucket from your Backblaze console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -595,7 +591,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_ACCESS_KEY',
-                'description' => 'Linode object storage access key. Required when the storage adapter is set to Linode. You can get your access key from your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -603,7 +599,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_SECRET',
-                'description' => 'Linode object storage secret key. Required when the storage adapter is set to Linode. You can get your secret key from your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -611,7 +607,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_REGION',
-                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info from your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -619,7 +615,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_BUCKET',
-                'description' => 'Linode object storage bucket. Required when storage adapter is set to Linode. You can create buckets in your Linode console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -627,7 +623,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_ACCESS_KEY',
-                'description' => 'Wasabi access key. Required when the storage adapter is set to Wasabi. You can get your access key from your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -635,7 +631,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_SECRET',
-                'description' => 'Wasabi secret key. Required when the storage adapter is set to Wasabi. You can get your secret key from your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -643,7 +639,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_REGION',
-                'description' => 'Wasabi region. Required when storage adapter is set to Wasabi. You can find your region info from your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -651,7 +647,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_BUCKET',
-                'description' => 'Wasabi bucket. Required when storage adapter is set to Wasabi. You can create buckets in your Wasabi console.',
+                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -692,7 +688,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
-                'description' => 'The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
+                'description' => 'Deprecated since 1.2.0. Runtimes now timeout by inactivity using \'_APP_FUNCTIONS_INACTIVE_THRESHOLD\'.',
                 'introduction' => '0.7.0',
                 'default' => '10',
                 'required' => false,
@@ -719,7 +715,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
+                'description' => 'Deprecated since 1.2.0. High use of swap memory is not recommended to preserve harddrive health.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -782,7 +778,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
-                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead!',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -791,7 +787,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
-                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead!',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -800,7 +796,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_EMAIL',
-                'description' => 'The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 1.2.0. Email is no longer needed.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -809,9 +805,45 @@ return [
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'introduction' => '1.2.0',
+                'default' => 'runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOCKER_HUB_USERNAME',
+                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '1.2.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOCKER_HUB_PASSWORD',
+                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '1.2.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
+                'description' => 'Interval how often executor checks for inactive runimes. The default value is 60 seconds.',
+                'introduction' => '1.2.0',
+                'default' => '60',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -876,6 +908,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
+                'description' => 'Schedules deletion interval ( in seconds ) ',
+                'introduction' => 'TBD',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
     [
