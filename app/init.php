@@ -188,7 +188,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('providers', __DIR__ . '/config/authProviders.php');
+Config::load('authProviders', __DIR__ . '/config/authProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');

@@ -315,7 +315,7 @@ class Project extends Model
         }
 
         // Providers
-        $providers = Config::getParam('providers', []);
+        $providers = Config::getParam('authProviders', []);
         $providerValues = $document->getAttribute('authProviders', []);
         $projectProviders = [];
 

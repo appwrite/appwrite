@@ -5,7 +5,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
-$providers = Config::getParam('providers', []);
+$providers = Config::getParam('authProviders', []);
 $auth = Config::getParam('auth', []);
 
 /**
