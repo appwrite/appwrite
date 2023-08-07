@@ -136,7 +136,7 @@ class Backup extends Action
             '--parallel=' . self::PROCESSORS,
             '--compress=' . self::COMPRESS_ALGORITHM,
             '--compress-threads=' . self::PROCESSORS,
-            '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.htm
+            '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             //'--encrypt-threads=' . $this->processors,
             //'--encrypt=AES256',
             //'--encrypt-key-file=' . '/encryption_key_file',
