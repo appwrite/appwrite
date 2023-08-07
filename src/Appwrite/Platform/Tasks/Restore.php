@@ -60,7 +60,8 @@ class Restore extends Action
             Console::exit();
         }
 
-        $this->checkContainerIsStopped();
+        //todo: check if the container is stopped
+        //$this->checkContainerIsStopped();
 
         $filename = $id . '.tar.gz';
         Backup::log('--- Restore Start ' . $filename . ' --- ');
