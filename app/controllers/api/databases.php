@@ -3284,7 +3284,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $data['$collection'] = $document->getAttribute('$collection'); // Attribute $collection is required for Utopia. Copying it from old version of document
         $newDocument = new Document($data);
 
-        $addCollectionAttributeToRelations = (function (Document $collection, Document $document) use (&$addCollectionAttributeToRelations, $dbForProject, $database) {
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3321,23 +3321,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $relatedDocumentOldVersion = Authorization::skip(fn() => $dbForProject->getDocument(
+                        $oldDocument = Authorization::skip(fn() => $dbForProject->getDocument(
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
+                        $relation->removeAttribute('$collectionId');
+                        $relation->removeAttribute('$databaseId');
+                        // Attribute $collection is required for Utopia.
+                        $relation->setAttribute('$collection', 
+                        'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
 
-                        // Attribute $collection is required for Utopia. Copying it from old version of document.
-                        $relation->setAttribute('$collection', $relatedDocumentOldVersion->getAttribute('$collection'));
-
-                        // If the child document has to be created it will need checking permissions.
-                        if ($relatedDocumentOldVersion->isEmpty()) {
+                        if ($oldDocument->isEmpty()) {
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
-                        } else {
-                            $relation->setAttribute('$collection', 'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
                         }
-                        $addCollectionAttributeToRelations($relatedCollection, $relation);
+                        $setCollection($relatedCollection, $relation);
                     }
                 }
 
@@ -3349,8 +3348,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             }
         });
 
-        $addCollectionAttributeToRelations($collection, $newDocument);
-
+        $setCollection($collection, $newDocument);
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
