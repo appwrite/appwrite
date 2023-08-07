@@ -31,6 +31,7 @@ use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
+use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
@@ -205,8 +206,8 @@ class Response extends SwooleResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
-    public const MODEL_PROVIDER = 'provider';
-    public const MODEL_PROVIDER_LIST = 'providerList';
+    public const MODEL_AUTH_PROVIDER = 'authProvider';
+    public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM = 'platform';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_DOMAIN = 'domain';
@@ -277,7 +278,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
+            ->setModel(new BaseList('Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
@@ -334,7 +335,7 @@ class Response extends SwooleResponse
             ->setModel(new Webhook())
             ->setModel(new Key())
             ->setModel(new Domain())
-            ->setModel(new Provider())
+            ->setModel(new AuthProvider())
             ->setModel(new Platform())
             ->setModel(new Variable())
             ->setModel(new Country())

@@ -133,8 +133,8 @@ class Project extends Model
                 'example' => true,
             ])
             ->addRule('providers', [
-                'type' => Response::MODEL_PROVIDER,
-                'description' => 'List of Providers.',
+                'type' => Response::MODEL_AUTH_PROVIDER,
+                'description' => 'List of Auth Providers.',
                 'default' => [],
                 'example' => [new \stdClass()],
                 'array' => true,

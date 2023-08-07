@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Provider extends Model
+class AuthProvider extends Model
 {
     /**
      * @var bool
@@ -17,13 +17,13 @@ class Provider extends Model
         $this
             ->addRule('key', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider.',
+                'description' => 'Auth Provider.',
                 'default' => '',
                 'example' => 'github',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider name.',
+                'description' => 'Auth Provider name.',
                 'default' => '',
                 'example' => 'GitHub',
             ])
@@ -41,7 +41,7 @@ class Provider extends Model
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Provider is active and can be used to create session.',
+                'description' => 'Auth Provider is active and can be used to create session.',
                 'example' => '',
             ])
         ;
@@ -54,7 +54,7 @@ class Provider extends Model
      */
     public function getName(): string
     {
-        return 'Provider';
+        return 'AuthProvider';
     }
 
     /**
@@ -64,6 +64,6 @@ class Provider extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_PROVIDER;
+        return Response::MODEL_AUTH_PROVIDER;
     }
 }
