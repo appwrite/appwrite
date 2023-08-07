@@ -243,8 +243,9 @@ App::get('/v1/vcs/github/authorize')
     ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
     ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->param('projectId', '', new UID(), 'Project ID')
+    ->inject('request')
     ->inject('response')
-    ->action(function (string $success, string $failure, string $projectId, Response $response) {
+    ->action(function (string $success, string $failure, string $projectId, Request $request, Response $response) {
         $state = \json_encode([
             'projectId' => $projectId,
             'success' => $success,
@@ -253,7 +254,8 @@ App::get('/v1/vcs/github/authorize')
 
         $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
         $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
-            'state' => $state
+            'state' => $state,
+            'redirect_uri' => $request->getProtocol() . '://' . $request->getHostname() . "/v1/vcs/github/callback"
         ]);
 
         $response
@@ -556,7 +558,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             $repo['pushedAt'] = $repo['pushed_at'] ?? null;
             $repo['provider'] = $installation->getAttribute('provider', '') ?? '';
             $repo['organization'] = $installation->getAttribute('organization', '') ?? '';
-            return new Document($repo);
+            return $repo;
         }, $repos);
 
         $repos = batch(\array_map(function ($repo) use ($github) {
@@ -594,6 +596,10 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
                 return $repo;
             };
         }, $repos));
+
+        $repos = \array_map(function ($repo) {
+            return new Document($repo);
+        }, $repos);
 
         $response->dynamic(new Document([
             'providerRepositories' => $repos,

@@ -94,7 +94,7 @@ Server::setResource('execute', function () {
         if ($execution->isEmpty()) {
             $headersFiltered = [];
             foreach ($headers as $key => $value) {
-                if (\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_REQUEST)) {
                     $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
                 }
             }
@@ -203,7 +203,7 @@ Server::setResource('execute', function () {
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
-                if (\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_RESPONSE)) {
                     $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
                 }
             }

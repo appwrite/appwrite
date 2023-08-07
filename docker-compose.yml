@@ -724,7 +724,7 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: exc1
+    hostname: executor
     <<: *x-logging
     stop_signal: SIGINT
     image: meldiron/executor:0.3.6

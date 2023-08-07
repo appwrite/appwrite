@@ -114,17 +114,17 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
-    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('commands', '', new Text('1028'), 'Build Commands.', true)
-    ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
-    ->param('providerRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
-    ->param('providerBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
+    ->param('entrypoint', '', new Text(1028), 'Entrypoint File.')
+    ->param('commands', '', new Text(1028, 0), 'Build Commands.', true)
+    ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
+    ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo', true)
-    ->param('templateRepository', '', new Text(128), 'Repository name of the template', true)
-    ->param('templateOwner', '', new Text(128), 'Owner name of the template', true)
-    ->param('templateRootDirectory', '', new Text(128), 'Path to function code in the template repo', true)
-    ->param('templateBranch', '', new Text(128), 'Branch of template repo with the code', true)
+    ->param('templateRepository', '', new Text(128, 0), 'Repository name of the template', true)
+    ->param('templateOwner', '', new Text(128, 0), 'Owner name of the template', true)
+    ->param('templateRootDirectory', '', new Text(128, 0), 'Path to function code in the template repo', true)
+    ->param('templateBranch', '', new Text(128, 0), 'Branch of template repo with the code', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -581,11 +581,11 @@ App::put('/v1/functions/:functionId')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
-    ->param('entrypoint', '', new Text('1028'), 'Entrypoint File.')
-    ->param('commands', '', new Text('1028'), 'Build Commands.', true)
-    ->param('installationId', '', new Text(128), 'Appwrite Installation ID for vcs deployment.', true)
-    ->param('providerRepositoryId', '', new Text(128), 'Repository ID of the repo linked to the function', true)
-    ->param('providerBranch', '', new Text(128), 'Production branch for the repo linked to the function', true)
+    ->param('entrypoint', '', new Text(1028), 'Entrypoint File.')
+    ->param('commands', '', new Text(1028, 0), 'Build Commands.', true)
+    ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
+    ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
+    ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
     ->param('providerSilentMode', false, new Boolean(), 'Is VCS connection in silent mode for the repo linked to the function?', true)
     ->param('providerRootDirectory', '', new Text(128, 0), 'Path to function code in the linked repo', true)
     ->inject('request')
@@ -1386,7 +1386,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
-            if (\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+            if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_REQUEST)) {
                 $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
             }
         }
@@ -1491,7 +1491,7 @@ App::post('/v1/functions/:functionId/executions')
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
-                if (\in_array($key, FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+                if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_RESPONSE)) {
                     $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
                 }
             }

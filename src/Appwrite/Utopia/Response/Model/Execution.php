@@ -68,7 +68,7 @@ class Execution extends Model
             ])
             ->addRule('requestHeaders', [
                 'type' => Response::MODEL_HEADERS,
-                'description' => 'HTTP request headers as a key-value object. This will return only whitelisted headers.',
+                'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',
                 'default' => [],
                 'example' => [['Content-Type' => 'application/json']],
                 'array' => true,
