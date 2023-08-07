@@ -1676,30 +1676,28 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queriesFromRequest = Query::parseQueries($queries);
+        $queries = Query::parseQueries($queries);
 
         // Add type property in query if select query exists and type property doesn't exist as type is required for response model
-        $hasDetailsinQuery = [
-            'selectQuery' => false,
-            'typeAttributeInSelectQuery' => false,
-        ];
-        foreach ($queriesFromRequest as $query) {
+        $hasSelect = false;
+        $hasTypeAttribute = false;
+        foreach ($queries as $query) {
             if ($query->getMethod() ===  Query::TYPE_SELECT) {
-                $hasDetailsinQuery['selectQuery'] = true;
+                $hasSelect = true;
             }
             if (\array_search('type', $query->getValues())) {
-                $hasDetailsinQuery['typeAttributeInSelectQuery'] = true;
+                $hasTypeAttribute = true;
             }
         }
-        $transformedQueries = $queriesFromRequest;
-        if ($hasDetailsinQuery['selectQuery'] && !$hasDetailsinQuery['typeAttributeInSelectQuery']) {
-            \array_push($transformedQueries, Query::select(['type']));
+
+        if ($hasSelect && !$hasTypeAttribute) {
+            \array_push($queries, Query::select(['type']));
         }
 
-        \array_push($transformedQueries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
+        \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($transformedQueries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -1716,8 +1714,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             $cursor->setValue($cursorDocument[0]);
         }
 
-        $attributes = $dbForProject->find('attributes', $transformedQueries);
-        $filterQueries = Query::groupByType($transformedQueries)['filters'];
+        $attributes = $dbForProject->find('attributes', $queries);
+        $filterQueries = Query::groupByType($queries)['filters'];
         $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
 
          //Add relationship data from options to attributes as it loses options during response setup
@@ -1740,7 +1738,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         ]), Response::MODEL_ATTRIBUTE_LIST);
 
         // If type Attribute didn't exist in select query we need to remove type attribute from attribute list
-        if ($hasDetailsinQuery['selectQuery'] && !$hasDetailsinQuery['typeAttributeInSelectQuery']) {
+        if ($hasSelect && !$hasTypeAttribute) {
             foreach ($output['attributes'] as &$attribute) {
                 unset($attribute['type']);
             }
