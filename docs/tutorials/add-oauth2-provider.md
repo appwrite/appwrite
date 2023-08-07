@@ -37,7 +37,7 @@ Finally, you will need to create a `feat-XXX-YYY-oauth` branch based on the `mas
 The first step in adding a new OAuth2 provider is to add it to the list of providers located at:
 
 ```
-app/config/providers.php
+app/config/authProviders.php
 ```
 
 Make sure to fill in all data needed and that your provider array key name:
@@ -45,7 +45,7 @@ Make sure to fill in all data needed and that your provider array key name:
 - is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format
 - has no spaces or special characters
 
-> Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
+> Please make sure to keep the list of providers in `authProviders.php` in the alphabetical order A-Z.
 
 ### 2.2 Add Provider Logo
 
@@ -199,7 +199,7 @@ If you need any help with the contribution, feel free to head over to [our Disco
 
 If your OAuth provider requires special configuration apart from `clientId` and `clientSecret` you can create a custom form. Currently this is being realized through putting all custom fields as JSON into the `clientSecret` field to keep the project API stable. You can implement your custom form following these steps:
 
-1. Add your custom form in `app/views/console/users/oauth/[PROVIDER].phtml`. Below is a template you can use. Add the filename to `app/config/providers.php`.
+1. Add your custom form in `app/views/console/users/oauth/[PROVIDER].phtml`. Below is a template you can use. Add the filename to `app/config/authProviders.php`.
 
 ```php
 <?php

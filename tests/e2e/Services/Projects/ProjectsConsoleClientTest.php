@@ -807,7 +807,7 @@ class ProjectsConsoleClientTest extends Scope
     public function testUpdateProjectOAuth($data): array
     {
         $id = $data['projectId'] ?? '';
-        $providers = require('app/config/providers.php');
+        $providers = require('app/config/authProviders.php');
 
         /**
          * Test for SUCCESS
