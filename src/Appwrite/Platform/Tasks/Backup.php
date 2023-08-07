@@ -42,7 +42,7 @@ class Backup extends Action
     /**
      * @throws Exception
      */
-    public function action($database, $pools): void
+    public function action($database, Group $pools): void
     {
         $this->database = $database;
         $this->dsn = self::getDsn($database);

@@ -753,8 +753,8 @@ services:
     container_name: appwrite-xtrabackup
     command: sleep infinity
     volumes:
-      - ./backups:/backups:rw
-      - ./varlibmysql:/varlibmysql:rw
+      - backup-data:/backups:rw
+      - restore-data:/varlibmysql:rw
       - appwrite-mariadb:/var/lib/mysql:r
     networks:
       - appwrite
@@ -773,7 +773,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - appwrite-mariadb:/var/lib/mysql:r
-      - ./backups:/backups:rw
+      - backup-data:/backups:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./dev:/usr/local/dev
     depends_on:
@@ -794,8 +794,8 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./backups:/backups:rw
-      - ./varlibmysql:/varlibmysql:rw
+      - backup-data:/backups:rw
+      - restore-data:/varlibmysql:rw
       - /var/run/docker.sock:/var/run/docker.sock
       - ./dev:/usr/local/dev
     depends_on:
@@ -969,4 +969,6 @@ volumes:
   appwrite-config:
   appwrite-functions:
   appwrite-builds:
+  backup-data:
+  restore-data:
   # appwrite-chronograf:
