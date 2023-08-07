@@ -48,7 +48,7 @@ class Backup extends Action
         $this->dsn = self::getDsn($database);
 
         if (!$this->dsn instanceof DSN) {
-            Console::error('No dsn match');
+            Console::error('No DSN match');
             Console::exit();
         }
 
