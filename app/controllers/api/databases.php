@@ -3328,8 +3328,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                         $relation->removeAttribute('$collectionId');
                         $relation->removeAttribute('$databaseId');
                         // Attribute $collection is required for Utopia.
-                        $relation->setAttribute('$collection', 
-                        'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+                        $relation->setAttribute(
+                            '$collection',
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
+                        );
 
                         if ($oldDocument->isEmpty()) {
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
