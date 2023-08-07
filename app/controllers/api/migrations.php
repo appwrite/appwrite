@@ -471,7 +471,7 @@ App::get('/v1/migrations/firebase/report/oauth')
     ->label('scope', 'migrations.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'getFirebaseReport')
+    ->label('sdk.method', 'getFirebaseReportOAuth')
     ->label('sdk.description', '/docs/references/migrations/migration-firebase-report.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -532,22 +532,23 @@ App::get('/v1/migrations/firebase/connect')
     ->groups(['api', 'migrations'])
     ->label('scope', 'public')
     ->label('origin', '*')
-    ->label('sdk.auth', [])
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'migrations')
     ->label('sdk.method', 'createFirebaseAuth')
     ->label('sdk.description', '')
     ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
+    ->label('sdk.hide', true)
     ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Firebase authorization. Only console hostnames are allowed.', true, ['clients'])
-    ->param('projectId', '', new UID(), 'Project ID')
+    ->param('project', '', new UID(), 'Project ID')
     ->inject('response')
     ->inject('request')
     ->inject('user')
     ->inject('dbForConsole')
-    ->action(function (string $redirect, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
+    ->action(function (string $redirect, string $project, Response $response, Request $request, Document $user, Database $dbForConsole) {
         $state = \json_encode([
-            'projectId' => $projectId,
+            'projectId' => $project,
             'redirect' => $redirect,
         ]);
 
