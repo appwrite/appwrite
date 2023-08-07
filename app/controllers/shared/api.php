@@ -28,7 +28,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         $parts = explode('.', $match);
 
         if (count($parts) !== 2) {
-            throw new Exception('Too less or too many parts', 400, Exception::GENERAL_ARGUMENT_INVALID);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "The server encountered an error while parsing the label: $label. Please create an issue on GitHub to allow us to investigate further https://github.com/appwrite/appwrite/issues/new/choose");
         }
 
         $namespace = $parts[0] ?? '';
