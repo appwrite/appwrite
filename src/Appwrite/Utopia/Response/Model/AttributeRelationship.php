@@ -3,7 +3,7 @@
 namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
-
+use Utopia\Database\Document;
 class AttributeRelationship extends Attribute
 {
     public function __construct()
@@ -72,5 +72,24 @@ class AttributeRelationship extends Attribute
     public function getType(): string
     {
         return Response::MODEL_ATTRIBUTE_RELATIONSHIP;
+    }
+
+    /**
+     * Process Document before returning it to the client
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        $options = $document->getAttribute('options');
+        if (!\is_null($options)) {
+            $document->setAttribute('relatedCollection', $options['relatedCollection']);
+            $document->setAttribute('relationType', $options['relationType']);
+            $document->setAttribute('twoWay', $options['twoWay']);
+            $document->setAttribute('twoWayKey', $options['twoWayKey']);
+            $document->setAttribute('side', $options['side']);
+            $document->setAttribute('onDelete', $options['onDelete']);
+        }
+        return $document;
     }
 }

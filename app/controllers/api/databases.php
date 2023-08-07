@@ -1718,20 +1718,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         $filterQueries = Query::groupByType($queries)['filters'];
         $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
 
-         //Add relationship data from options to attributes as it loses options during response setup
-        foreach ($attributes as $attribute) {
-            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
-                $options = $attribute->getAttribute('options');
-                if (!\is_null($options)) {
-                    $attribute->setAttribute('relatedCollection', $options['relatedCollection']);
-                    $attribute->setAttribute('relationType', $options['relationType']);
-                    $attribute->setAttribute('twoWay', $options['twoWay']);
-                    $attribute->setAttribute('twoWayKey', $options['twoWayKey']);
-                    $attribute->setAttribute('side', $options['side']);
-                    $attribute->setAttribute('onDelete', $options['onDelete']);
-                }
-            }
-        }
         $output = $response->output(new Document([
             'total' => $total,
             'attributes' => $attributes,
