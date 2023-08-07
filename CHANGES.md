@@ -17,7 +17,15 @@
 
 - Improve permission indexes [DB #248](https://github.com/utopia-php/database/pull/248)
 - Validators back-ported to Utopia [#5439](https://github.com/appwrite/appwrite/pull/5439)
+
 # Version 1.3.8
+
+## Changes
+
+- Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
+- Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
 
 ## Bugs
 - Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
@@ -112,6 +120,40 @@
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
+- New usage metrics collection flow [#4770](https://github.com/appwrite/appwrite/pull/4770)
+  - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
+  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
+  - Removed usage labels dependency.
+  - Dropped type attribute from stats collection.
+  - Usage metrics are processed via new usage worker.
+  - Metrics changes: 
+    - Storage
+      - deprecated
+        - filesCreate, filesRead, filesUpdate, filesDelete, bucketsCreate, bucketsRead, bucketsUpdate, bucketsDelete.
+      - renamed
+        - filesCount to filesTotal, storage to filesStorage, bucketsCount to bucketsTotal.
+    - Auth 
+        - deprecated
+          - usersCreate, usersRead, usersUpdate, usersDelete, sessionsCreate sessionsProviderCreate, sessionsDelete.
+        - renamed
+          - usersCount to usersTotal.
+        - added
+          - sessionsTotal.
+    - Databases
+      - deprecated
+        - databasesCreate, databasesRead, databasesDelete, documentsCreate, documentsRead, documentsUpdate, documentsDelete, collectionsCreate, collectionsRead, collectionsUpdate, collectionsDelete.
+      - renamed
+        - databasesCount to databasesTotal, collectionsCount to collectionsTotal, documentsCount to documentsTotal.
+    - Functions
+      - deprecated 
+        - executionsFailure, executionsSuccess, buildsFailure, buildsSuccess, executionsFailure, executionsSuccess.
+      - renamed
+        - executionsTime to executionsCompute, buildsTime to buildsCompute, documentsCount to documentsTotal.
+      - added
+        - functionsTotal, buildsStorage, deploymentsTotal, deploymentsStorage.
+    - Project
+      - renamed
+        - executions to executionsTotal, builds to buildsTotal, requests to requestsTotal, storage to filesStorage, buckets to bucketsTotal, users to usersTotal, documents to documentsTotal, collections to collectionsTotal, databases to databasesTotal.
 
 ## Bugs
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)

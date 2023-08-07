@@ -2,10 +2,9 @@
 
 namespace Appwrite\Event;
 
-use DateTime;
-use Resque;
-use ResqueScheduler;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Func extends Event
 {
@@ -15,7 +14,7 @@ class Func extends Event
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
         parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
     }
@@ -143,7 +142,15 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        if ($this->paused) {
+            return false;
+        }
+
+        $client = new Client($this->queue, $this->connection);
+
+        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'function' => $this->function,
@@ -151,28 +158,26 @@ class Func extends Event
             'type' => $this->type,
             'jwt' => $this->jwt,
             'payload' => $this->payload,
-            'data' => $this->data
+            'events' => $events,
+            'data' => $this->data,
         ]);
     }
 
     /**
-     * Schedules the function event and schedules it in the functions worker queue.
+     * Generate a function event from a base event
      *
-     * @param \DateTime|int $at
-     * @return void
-     * @throws \Resque_Exception
-     * @throws \ResqueScheduler_InvalidTimestampException
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function schedule(DateTime|int $at): void
+    public function from(Event $event): self
     {
-        ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'function' => $this->function,
-            'execution' => $this->execution,
-            'type' => $this->type,
-            'payload' => $this->payload,
-            'data' => $this->data
-        ]);
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        return $this;
     }
 }

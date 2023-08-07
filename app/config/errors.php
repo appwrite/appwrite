@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_CODES_DISABLED => [
+        'name' => Exception::GENERAL_CODES_DISABLED,
+        'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
+        'code' => 500,
+    ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
         'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
@@ -128,6 +133,11 @@ return [
     Exception::USER_EMAIL_NOT_WHITELISTED => [
         'name' => Exception::USER_EMAIL_NOT_WHITELISTED,
         'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
+        'code' => 401,
+    ],
+    Exception::USER_INVALID_CODE => [
+        'name' => Exception::USER_INVALID_CODE,
+        'description' => 'The specified code is not valid. Contact your administrator for more information.',
         'code' => 401,
     ],
     Exception::USER_IP_NOT_WHITELISTED => [
@@ -596,8 +606,13 @@ return [
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
+        'description' => 'The requested domain is currently in use by a project.',
         'code' => 409,
+    ],
+    Exception::DOMAIN_FORBIDDEN => [
+        'name' => Exception::DOMAIN_FORBIDDEN,
+        'description' => 'The requested domain cannot be used as a custom domain.',
+        'code' => 403,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
