@@ -10,54 +10,54 @@ class Subscriber extends Model
   /**
    * @var bool
    */
-  protected bool $public = false;
+    protected bool $public = false;
 
-  public function __construct()
-  {
-    $this
-      ->addRule('$id', [
+    public function __construct()
+    {
+        $this
+        ->addRule('$id', [
         'type' => self::TYPE_STRING,
         'description' => 'Subscriber ID.',
         'default' => '',
         'example' => '259125845563242502',
-      ])
-      ->addRule('userId', [
+        ])
+        ->addRule('userId', [
         'type' => self::TYPE_STRING,
         'description' => 'User ID.',
         'default' => '',
         'example' => '259125845563242502',
-      ])
-      ->addRule('targetId', [
+        ])
+        ->addRule('targetId', [
         'type' => self::TYPE_STRING,
         'description' => 'Target ID.',
         'default' => '',
         'example' => '259125845563242502',
-      ])
-      ->addRule('topicId', [
+        ])
+        ->addRule('topicId', [
         'type' => self::TYPE_STRING,
         'description' => 'Topic ID.',
         'default' => '',
         'example' => '259125845563242502',
-      ]);
-  }
+        ]);
+    }
 
   /**
    * Get Name
    *
    * @return string
    */
-  public function getName(): string
-  {
-    return 'Subscriber';
-  }
+    public function getName(): string
+    {
+        return 'Subscriber';
+    }
 
   /**
    * Get Type
    *
    * @return string
    */
-  public function getType(): string
-  {
-    return Response::MODEL_SUBSCRIBER;
-  }
+    public function getType(): string
+    {
+        return Response::MODEL_SUBSCRIBER;
+    }
 }
