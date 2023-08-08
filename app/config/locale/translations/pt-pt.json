@@ -17,7 +17,7 @@
     "emails.magicSession.signature": "Equipa {{project}}",
     "emails.recovery.subject": "Redefinição de senha",
     "emails.recovery.hello": "Olá {{name}}",
-    "emails.recovery.body": "tilize este link para redefinir a palavra-passe do seu projecto {{project}}",
+    "emails.recovery.body": "Utilize este link para redefinir a palavra-passe do seu projecto {{project}}",
     "emails.recovery.footer": "Se não pediu para redefinir a sua palavra-passe, pode ignorar esta mensagem.",
     "emails.recovery.thanks": "Obrigado",
     "emails.recovery.signature": "Equipa {{project}}",
