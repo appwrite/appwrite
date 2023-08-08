@@ -4,6 +4,7 @@
 
 - Add error attribute to indexes and attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
 - Add new index validation rules [#5710](https://github.com/appwrite/appwrite/pull/5710)
+- Added support for disallowing passwords that contain personal data [#5371](https://github.com/appwrite/appwrite/pull/5371)
 
 ## Fixes
 
