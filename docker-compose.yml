@@ -721,7 +721,7 @@ services:
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mysql:8.0.33 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
@@ -753,8 +753,8 @@ services:
     container_name: appwrite-xtrabackup
     command: sleep infinity
     volumes:
-      - backup-data:/backups:rw
-      - restore-data:/varlibmysql:rw
+      - ./backup-data:/backups:rw
+      - ./restore-data:/varlibmysql:rw
       - appwrite-mariadb:/var/lib/mysql:r
     networks:
       - appwrite
@@ -774,12 +774,13 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - appwrite-mariadb:/var/lib/mysql:r
-      - backup-data:/backups:rw
+      - ./backup-data:/backups:rw
 
     depends_on:
       - redis
     environment:
       - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_REPLICAS
       - _DO_SPACES_BUCKET_NAME
       - _DO_SPACES_ACCESS_KEY
       - _DO_SPACES_SECRET_KEY
@@ -795,12 +796,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - backup-data:/backups:rw
-      - restore-data:/varlibmysql:rw
+      - ./backup-data:/backups:rw
+      - ./restore-data:/varlibmysql:rw
     depends_on:
       - redis
     environment:
       - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_REPLICAS
       - _DO_SPACES_BUCKET_NAME
       - _DO_SPACES_ACCESS_KEY
       - _DO_SPACES_SECRET_KEY
@@ -968,6 +970,6 @@ volumes:
   appwrite-config:
   appwrite-functions:
   appwrite-builds:
-  backup-data:
-  restore-data:
+  #backup-data:
+  #restore-data:
   # appwrite-chronograf:

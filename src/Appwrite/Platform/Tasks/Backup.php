@@ -49,7 +49,7 @@ class Backup extends Action
     public function action(string $database, Group $pools): void
     {
         $this->database = $database;
-        $this->dsn = self::getDsn($database);
+        $this->dsn = $this->getDsn($database);
         $this->s3 = new DOSpaces('/' . $this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (is_null($this->dsn)) {
@@ -223,6 +223,7 @@ class Backup extends Action
         foreach (
             [
                 '_APP_CONNECTIONS_DB_PROJECT',
+                '_APP_CONNECTIONS_DB_REPLICAS',
                 '_DO_SPACES_BUCKET_NAME',
                 '_DO_SPACES_ACCESS_KEY',
                 '_DO_SPACES_SECRET_KEY',
@@ -234,5 +235,16 @@ class Backup extends Action
                 Console::exit();
             }
         }
+    }
+
+    public function getDsn(string $database): ?DSN
+    {
+        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_REPLICAS')) as $project) {
+            [$db, $dsn] = explode('=', $project);
+            if ($db === $database) {
+                return new DSN($dsn);
+            }
+        }
+        return null;
     }
 }

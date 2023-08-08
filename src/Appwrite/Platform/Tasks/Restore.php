@@ -41,7 +41,7 @@ class Restore extends Action
     public function action(string $id, string $cloud, string $database, string $datadir): void
     {
         $this->database = $database;
-        $this->dsn = self::getDsn($database);
+        $this->dsn = $this->getDsn($database);
 
         if (!$this->dsn instanceof DSN) {
             Console::error('No dsn match');
@@ -66,28 +66,20 @@ class Restore extends Action
         if ($cloud) {
             $local = new Local(self::BACKUPS_PATH . '/downloads/' . $id);
 
-            if (file_exists($local->getRoot())) {
-                $stdout = '';
-                $stderr = '';
-                $cmd = 'rm -rf ' . $local->getRoot();
-                $this->log($cmd);
-                Console::execute($cmd, '', $stdout, $stderr);
-                if (!empty($stderr)) {
-                    Console::error($stderr);
-                    Console::exit();
-                }
-            }
-
             $files = $local->getRoot() . '/files';
 
-            $this->log('Creating Directory: ' . $files);
-            if (!mkdir($files, 0755, true)) {
+            if (!file_exists($files) && !mkdir($files, 0755, true)) {
                 Console::error('Error creating directory: ' . $files);
                 Console::exit();
             }
 
-            $this->download($filename, $local);
-            $this->untar($local->getPath($filename), $files);
+            $file = $local->getPath($filename);
+
+            if (!file_exists($file)) {
+                $this->download($file, $local);
+            }
+
+            $this->untar($file, $files);
         } else {
             $local = new Local(self::BACKUPS_PATH . '/' . $database . '/full/' . $id);
             $files = $local->getRoot() . '/files';
@@ -105,8 +97,9 @@ class Restore extends Action
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
 
-    public function download(string $filename, Device $local)
+    public function download(string $file, Device $local)
     {
+        $filename = basename($file);
         $s3 = new DOSpaces($this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         try {
@@ -117,7 +110,6 @@ class Restore extends Action
                 Console::exit();
             }
 
-            $file = $local->getPath($filename);
             $this->log('Downloading: ' . $file);
 
             if (!$s3->transfer($path, $file, $local)) {
@@ -150,7 +142,7 @@ class Restore extends Action
 
     public function decompress(string $target)
     {
-        $logfile = $target . '/../decompress.log';
+        $logfile = $target . '/../log.txt';
 
         $args = [
             '--user=' . $this->dsn->getUser(),
@@ -185,7 +177,7 @@ class Restore extends Action
             Console::exit();
         }
 
-        $logfile = $target . '/../prepare.log';
+        $logfile = $target . '/../log.txt';
 
         $args = [
             '--user=' . $this->dsn->getUser(),
@@ -217,7 +209,7 @@ class Restore extends Action
             Console::exit();
         }
 
-        $logfile = $target . '/../restore.log';
+        $logfile = $target . '/../log.txt';
 
         $args = [
             '--user=' . $this->dsn->getUser(),
@@ -243,6 +235,8 @@ class Restore extends Action
             Console::exit();
         }
 
+        unlink($logfile);
+
         // todo: Do we need to chown -R mysql:mysql /var/lib/mysql?
     }
 
@@ -250,6 +244,7 @@ class Restore extends Action
     {
         foreach (
             [
+                '_APP_CONNECTIONS_DB_REPLICAS',
                 '_DO_SPACES_BUCKET_NAME',
                 '_DO_SPACES_ACCESS_KEY',
                 '_DO_SPACES_SECRET_KEY',
@@ -272,7 +267,7 @@ class Restore extends Action
 
     public function getDsn(string $database): ?DSN
     {
-        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_PROJECT')) as $project) {
+        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_REPLICAS')) as $project) {
             [$db, $dsn] = explode('=', $project);
             if ($db === $database) {
                 return new DSN($dsn);

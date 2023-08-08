@@ -11,5 +11,6 @@ debug/
 app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
-/backups/
+/backup-data/
+/restore-data/
 /varlibmysql/

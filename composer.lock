@@ -2626,12 +2626,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ae190865088491d7f8aa3fc63e6906efe6e42295"
+                "reference": "25f6b80b3063b85d7c9483be85f7b6ffea4c1edd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ae190865088491d7f8aa3fc63e6906efe6e42295",
-                "reference": "ae190865088491d7f8aa3fc63e6906efe6e42295",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/25f6b80b3063b85d7c9483be85f7b6ffea4c1edd",
+                "reference": "25f6b80b3063b85d7c9483be85f7b6ffea4c1edd",
                 "shasum": ""
             },
             "require": {
@@ -2643,7 +2643,8 @@
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.*.*",
+                "utopia-php/system": "0.*.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2672,7 +2673,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/feat-transfer"
             },
-            "time": "2023-07-25T07:40:02+00:00"
+            "time": "2023-08-08T02:58:34+00:00"
         },
         {
             "name": "utopia-php/swoole",
