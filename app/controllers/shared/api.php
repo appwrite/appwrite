@@ -232,11 +232,12 @@ App::init()
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-                        $isAdminMode = $mode === APP_MODE_ADMIN;
-                        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+                        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+                        $isAdminMode = $mode === APP_MODE_ADMIN;
+                        $isConsole = $isAdminMode && $isPrivilegedUser;
 
-                        if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+                        if (!$isConsole && !$isAPIKey) {
                             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                         }
                     }

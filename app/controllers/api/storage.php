@@ -365,11 +365,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -699,11 +700,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -781,11 +783,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -856,11 +859,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -1008,11 +1012,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -1154,11 +1159,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -1319,11 +1325,12 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
@@ -1430,11 +1437,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isAppUser = Auth::isAppUser(Authorization::getRoles());
+            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
             $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+            $isAdminMode = $mode === APP_MODE_ADMIN;
+            $isConsole = $isAdminMode && $isPrivilegedUser;
 
-            if (!($isAdminMode && ($isAppUser || $isPrivilegedUser))) {
+            if (!$isConsole && !$isAPIKey) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
         }
