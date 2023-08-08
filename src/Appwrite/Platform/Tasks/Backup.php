@@ -152,14 +152,18 @@ class Backup extends Action
             Console::exit();
         }
 
-        unlink($logfile);
+        if (!unlink($logfile)) {
+            Console::error('Error deleting: ' . $logfile);
+            Console::exit();
+        }
     }
 
     public function tar(string $directory, string $file)
     {
         $stdout = '';
         $stderr = '';
-        $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' .';
+
+        $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' . && cd ' . getcwd();
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         self::log($stdout);
@@ -208,7 +212,10 @@ class Backup extends Action
             Console::exit();
         }
 
-        unlink($file);
+        if (!unlink($file)) {
+            Console::error('Error deleting: ' . $file);
+            Console::exit();
+        }
     }
 
     public static function log(string $message): void
