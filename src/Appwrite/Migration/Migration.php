@@ -106,8 +106,6 @@ abstract class Migration
     {
         $this->project = $project;
         $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('_' . $this->project->getId());
-
         $this->consoleDB = $consoleDB;
 
         return $this;
