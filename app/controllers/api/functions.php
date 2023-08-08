@@ -575,6 +575,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings with execution roles. By default no user is granted with any execute permissions. [learn more about permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -594,7 +595,7 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -681,7 +682,8 @@ App::put('/v1/functions/:functionId')
         if (
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
-            $function->getAttribute('providerRootDirectory') !== $providerRootDirectory
+            $function->getAttribute('providerRootDirectory') !== $providerRootDirectory || 
+            $function->getAttribute('runtime') !== $runtime
         ) {
             $live = false;
         }
@@ -689,6 +691,7 @@ App::put('/v1/functions/:functionId')
         $function = $dbForProject->updateDocument('functions', $function->getId(), new Document(array_merge($function->getArrayCopy(), [
             'execute' => $execute,
             'name' => $name,
+            'runtime' => $runtime,
             'events' => $events,
             'schedule' => $schedule,
             'timeout' => $timeout,
@@ -705,7 +708,7 @@ App::put('/v1/functions/:functionId')
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
-            'search' => implode(' ', [$functionId, $name, $function->getAttribute('runtime')]),
+            'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
         // Redeploy logic
@@ -1387,7 +1390,7 @@ App::post('/v1/functions/:functionId/executions')
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
             if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_REQUEST)) {
-                $headersFiltered[] = [ 'key' => $key, 'value' => $value ];
+                $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
             }
         }
 
@@ -1687,6 +1690,7 @@ App::post('/v1/functions/:functionId/variables')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
