@@ -754,7 +754,6 @@ services:
     command: sleep infinity
     volumes:
       - ./backup-data:/backups:rw
-      - ./restore-data:/varlibmysql:rw
       - appwrite-mariadb:/var/lib/mysql:r
     networks:
       - appwrite
@@ -773,9 +772,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - appwrite-mariadb:/var/lib/mysql:r
       - ./backup-data:/backups:rw
-
+      - appwrite-mariadb:/var/lib/mysql:r
     depends_on:
       - redis
     environment:
@@ -797,7 +795,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./backup-data:/backups:rw
-      - ./restore-data:/varlibmysql:rw
+      - appwrite-mariadb:/var/lib/mysql:rw
     depends_on:
       - redis
     environment:
@@ -971,5 +969,4 @@ volumes:
   appwrite-functions:
   appwrite-builds:
   #backup-data:
-  #restore-data:
   # appwrite-chronograf:

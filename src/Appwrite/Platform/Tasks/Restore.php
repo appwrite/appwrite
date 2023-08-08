@@ -16,6 +16,7 @@ use Utopia\Validator\WhiteList;
 class Restore extends Action
 {
     public const BACKUPS_PATH = '/backups';
+    public const DATADIR = '/var/lib/mysql';
     public const PROCESSORS = 4;
     protected ?DSN $dsn = null;
     protected string $database;
@@ -30,8 +31,7 @@ class Restore extends Action
             ->param('id', '', new Text(20), 'The backup identification')
             ->param('cloud', null, new WhiteList(['true', 'false'], true), 'Download backup from cloud or use local directory')
             ->param('database', null, new Text(10), 'The Database name for example db_fra1_01')
-            ->param('datadir', null, new Text(100), 'The Path where database would be stored')
-            ->callback(fn ($id, $cloud, $project, $datadir) => $this->action($id, $cloud, $project, $datadir));
+            ->callback(fn ($id, $cloud, $project) => $this->action($id, $cloud, $project));
     }
 
     public static function getName(): string
@@ -39,11 +39,12 @@ class Restore extends Action
         return 'restore';
     }
 
-    public function action(string $id, string $cloud, string $database, string $datadir): void
+    public function action(string $id, string $cloud, string $database): void
     {
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
         $this->s3 = new DOSpaces('/' . $database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $datadir = self::DATADIR;
 
         if (is_null($this->dsn)) {
             Console::error('No DSN match');
