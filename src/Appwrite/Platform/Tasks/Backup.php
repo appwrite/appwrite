@@ -15,39 +15,44 @@ use Utopia\Validator\Text;
 
 class Backup extends Action
 {
+    public const BACKUPS_PATH = '/backups';
+    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    public const COMPRESS_ALGORITHM = 'lz4';
+    public const CONFIG_PATH = '/etc/my.cnf';
+    public const PROCESSORS = 4;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
-    public const BACKUPS = '/backups';
-    public const BACKUP_INTERVAL = 60 * 60 * 4; // 4 hours;
-    public const COMPRESS_ALGORITHM = 'lz4';
-    public const CNF = '/etc/my.cnf';
-    public const PROCESSORS = 4;
+    protected ?DOSpaces $s3 = null;
 
-    public static function getName(): string
-    {
-        return 'backup';
-    }
-
+    /**
+     * @throws Exception
+     */
     public function __construct()
     {
         $this->checkEnvVariables();
 
         $this
             ->desc('Backup a DB')
-            ->param('database', null, new Text(20), 'passed from command')
+            ->param('database', null, new Text(20), 'Database name for example db_fra1_01')
             ->inject('pools')
             ->callback(fn(string $database, Group $pools) => $this->action($database, $pools));
+    }
+
+    public static function getName(): string
+    {
+        return 'backup';
     }
 
     /**
      * @throws Exception
      */
-    public function action($database, Group $pools): void
+    public function action(string $database, Group $pools): void
     {
         $this->database = $database;
         $this->dsn = self::getDsn($database);
+        $this->s3 = new DOSpaces('/' . $this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
-        if (!$this->dsn instanceof DSN) {
+        if (is_null($this->dsn)) {
             Console::error('No DSN match');
             Console::exit();
         }
@@ -62,8 +67,7 @@ class Backup extends Action
                 $pools
                     ->get('database_' . $database)
                     ->pop()
-                    ->getResource()
-                ;
+                    ->getResource();
 
                 break; // leave the do-while if successful
             } catch (Exception $e) {
@@ -78,7 +82,7 @@ class Backup extends Action
 
         Console::loop(function () {
             $this->start();
-        }, self::BACKUP_INTERVAL);
+        }, self::BACKUP_INTERVAL_SECONDS);
     }
 
     public function start(): void
@@ -90,7 +94,7 @@ class Backup extends Action
         self::log('--- Creating backup ' . $time . '  --- ');
 
         $filename = $time . '.tar.gz';
-        $local = new Local(self::BACKUPS . '/' . $this->database . '/full/' . $time);
+        $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full/' . $time);
         $local->setTransferChunkSize(5 * 1024 * 1024); // 5MB
 
         $backups = $local->getRoot() . '/files';
@@ -99,15 +103,13 @@ class Backup extends Action
         $this->fullBackup($backups);
         $this->tar($backups, $tarFile);
         $this->upload($tarFile, $local);
-        // todo: Do we want to delete the tar file? and remain with the folder?
-        // todo: Do we want to delete the backup.log?
 
         self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
 
     public function fullBackup(string $target)
     {
-        if (!file_exists(self::BACKUPS)) {
+        if (!file_exists(self::BACKUPS_PATH)) {
             Console::error('Mount directory does not exist');
             Console::exit();
         }
@@ -120,7 +122,6 @@ class Backup extends Action
         $logfile = $target . '/../backup.log';
 
         $args = [
-            //'--defaults-file=' . $this->cnf, // [ERROR] Failed to open required defaults file: /etc/my.cnf
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
@@ -136,10 +137,6 @@ class Backup extends Action
             '--compress=' . self::COMPRESS_ALGORITHM,
             '--compress-threads=' . self::PROCESSORS,
             '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
-            //'--encrypt-threads=' . $this->processors,
-            //'--encrypt=AES256',
-            //'--encrypt-key-file=' . '/encryption_key_file',
-            //'--no-lock', // https://docs.percona.com/percona-xtrabackup/8.0/xtrabackup-option-reference.html#-no-lock
             '2> ' . $logfile,
         ];
 
@@ -148,21 +145,20 @@ class Backup extends Action
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        Backup::log($stderr);
+        self::log($stderr);
 
         if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Backup failed');
             Console::exit();
         }
 
-        // todo: remove logfile?
+        unlink($logfile);
     }
 
     public function tar(string $directory, string $file)
     {
         $stdout = '';
         $stderr = '';
-        // Tar from inside the directory for not using --strip-components
         $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' .';
         self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
@@ -173,14 +169,14 @@ class Backup extends Action
         }
 
         if (!file_exists($file)) {
-            Console::error("Can't find tar file: " . $file);
+            Console::error('Can\'t find tar file: ' . $file);
             Console::exit();
         }
 
         $filesize = \filesize($file);
-        self::log("Tar file size is: " . ceil($filesize / 1024 / 1024) . 'MB');
+        self::log('Tar file size is: ' . ceil($filesize / 1024 / 1024) . 'MB');
         if ($filesize < (2 * 1024 * 1024)) {
-            Console::error("File size is very small: " . $file);
+            Console::error('File size is very small: ' . $file);
             Console::exit();
         }
     }
@@ -188,30 +184,31 @@ class Backup extends Action
     public function upload(string $file, Device $local)
     {
         $filename = basename($file);
-        $s3 = new DOSpaces('/' . $this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
-        if (!$s3->exists('/')) {
+        if (!$this->s3->exists('/')) {
             Console::error('Can\'t read s3 root directory');
             Console::exit();
         }
 
         try {
             self::log('Uploading: ' . $file);
-            $destination = $s3->getRoot() . '/' . $filename;
+            $destination = $this->s3->getRoot() . '/' . $filename;
 
-            if (!$local->transfer($file, $destination, $s3)) {
+            if (!$local->transfer($file, $destination, $this->s3)) {
                 Console::error('Error uploading to ' . $destination);
                 Console::exit();
             }
 
-            if (!$s3->exists($destination)) {
-                Console::error('File not found on s3 ' . $destination);
+            if (!$this->s3->exists($destination)) {
+                Console::error('File not found in destination: ' . $destination);
                 Console::exit();
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
             Console::exit();
         }
+
+        unlink($file);
     }
 
     public static function log(string $message): void
@@ -237,16 +234,5 @@ class Backup extends Action
                 Console::exit();
             }
         }
-    }
-
-    public static function getDsn(string $database): ?DSN
-    {
-        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_PROJECT')) as $project) {
-           [$db, $dsn] = explode('=', $project);
-            if ($db === $database) {
-                return new DSN($dsn);
-            }
-        }
-        return null;
     }
 }

@@ -721,7 +721,7 @@ services:
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
   mariadb:
-    image: mysql:8.0.33 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
@@ -770,12 +770,12 @@ services:
     networks:
       - appwrite
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - appwrite-mariadb:/var/lib/mysql:r
       - backup-data:/backups:rw
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./dev:/usr/local/dev
+
     depends_on:
       - redis
     environment:
@@ -792,12 +792,11 @@ services:
     networks:
       - appwrite
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - backup-data:/backups:rw
       - restore-data:/varlibmysql:rw
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./dev:/usr/local/dev
     depends_on:
       - redis
     environment:

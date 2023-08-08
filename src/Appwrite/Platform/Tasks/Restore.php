@@ -15,14 +15,10 @@ use Utopia\Validator\WhiteList;
 
 class Restore extends Action
 {
+    public const BACKUPS_PATH = '/backups';
+    public const PROCESSORS = 4;
     protected ?DSN $dsn = null;
     protected string $database;
-    public const PROCESSORS = 4;
-
-    public static function getName(): string
-    {
-        return 'restore';
-    }
 
     public function __construct()
     {
@@ -30,17 +26,22 @@ class Restore extends Action
 
         $this
             ->desc('Restore a DB')
-            ->param('id', '', new Text(20), 'Folder Identifier')
-            ->param('cloud', null, new WhiteList(['true', 'false'], true), 'Take file from cloud?')
-            ->param('database', null, new Text(10), 'example: db_fra1_01..')
-            ->param('datadir', null, new Text(100), 'mysql datadir path')
+            ->param('id', '', new Text(20), 'The backup identification')
+            ->param('cloud', null, new WhiteList(['true', 'false'], true), 'Download backup from cloud or use local directory')
+            ->param('database', null, new Text(10), 'The Database name for example db_fra1_01')
+            ->param('datadir', null, new Text(100), 'The Path where database would be stored')
             ->callback(fn ($id, $cloud, $project, $datadir) => $this->action($id, $cloud, $project, $datadir));
+    }
+
+    public static function getName(): string
+    {
+        return 'restore';
     }
 
     public function action(string $id, string $cloud, string $database, string $datadir): void
     {
         $this->database = $database;
-        $this->dsn = Backup::getDsn($database);
+        $this->dsn = self::getDsn($database);
 
         if (!$this->dsn instanceof DSN) {
             Console::error('No dsn match');
@@ -57,22 +58,19 @@ class Restore extends Action
             Console::exit();
         }
 
-        //todo: check if the container is stopped
-        //$this->checkContainerIsStopped();
-
         $filename = $id . '.tar.gz';
-        Backup::log('--- Restore Start ' . $filename . ' --- ');
+        $this->log('--- Restore Start ' . $filename . ' --- ');
         $start = microtime(true);
         $cloud = $cloud === 'true';
 
         if ($cloud) {
-            $local = new Local(Backup::BACKUPS . '/downloads/' . $id);
+            $local = new Local(self::BACKUPS_PATH . '/downloads/' . $id);
 
             if (file_exists($local->getRoot())) {
                 $stdout = '';
                 $stderr = '';
                 $cmd = 'rm -rf ' . $local->getRoot();
-                Backup::log($cmd);
+                $this->log($cmd);
                 Console::execute($cmd, '', $stdout, $stderr);
                 if (!empty($stderr)) {
                     Console::error($stderr);
@@ -82,7 +80,7 @@ class Restore extends Action
 
             $files = $local->getRoot() . '/files';
 
-            Backup::log('Creating Directory: ' . $files);
+            $this->log('Creating Directory: ' . $files);
             if (!mkdir($files, 0755, true)) {
                 Console::error('Error creating directory: ' . $files);
                 Console::exit();
@@ -91,7 +89,7 @@ class Restore extends Action
             $this->download($filename, $local);
             $this->untar($local->getPath($filename), $files);
         } else {
-            $local = new Local(Backup::BACKUPS . '/' . $database . '/full/' . $id);
+            $local = new Local(self::BACKUPS_PATH . '/' . $database . '/full/' . $id);
             $files = $local->getRoot() . '/files';
         }
 
@@ -104,7 +102,7 @@ class Restore extends Action
         $this->prepare($files);
         $this->restore($files, $cloud, $datadir);
 
-        Backup::log("Restore Finish in " . (microtime(true) - $start) . " seconds");
+        $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
 
     public function download(string $filename, Device $local)
@@ -120,7 +118,7 @@ class Restore extends Action
             }
 
             $file = $local->getPath($filename);
-            Backup::log('Downloading: ' . $file);
+            $this->log('Downloading: ' . $file);
 
             if (!$s3->transfer($path, $file, $local)) {
                 Console::error('Error Downloading ' . $file);
@@ -137,7 +135,7 @@ class Restore extends Action
         $stdout = '';
         $stderr = '';
         $cmd = 'tar -xzf ' . $file . ' -C ' . $directory;
-        Backup::log($cmd);
+        $this->log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         if (!empty($stderr)) {
             Console::error($stderr);
@@ -168,11 +166,11 @@ class Restore extends Action
         ];
 
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
-        Backup::log($cmd);
+        $this->log($cmd);
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        Backup::log($stderr);
+        $this->log($stderr);
 
         if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Decompress failed');
@@ -200,11 +198,11 @@ class Restore extends Action
         ];
 
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
-        Backup::log($cmd);
+        $this->log($cmd);
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        Backup::log($stderr);
+        $this->log($stderr);
 
         if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Prepare failed');
@@ -234,11 +232,11 @@ class Restore extends Action
         ];
 
         $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
-        Backup::log($cmd);
+        $this->log($cmd);
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        Backup::log($stderr);
+        $this->log($stderr);
 
         if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Restore failed');
@@ -265,27 +263,21 @@ class Restore extends Action
         }
     }
 
-    public function checkContainerIsStopped(): void
+    public function log(string $message): void
     {
-        $host = $this->dsn->getHost();
-        $cmd = 'docker ps --filter "status=running" --filter "name=' . $host . '"';
-        Backup::log($cmd);
-        $stderr = '';
-        $stdout = '';
-        Console::execute($cmd, '', $stdout, $stderr);
-
-        if (!empty($stderr)) {
-            Console::error($stderr);
-            Console::exit();
+        if (!empty($message)) {
+            Console::log(date('Y-m-d H:i:s') . ' ' . $message);
         }
+    }
 
-        $stdout = explode(PHP_EOL, $stdout);
-        array_shift($stdout);
-        $info = array_shift($stdout);
-
-        if (!empty($info)) {
-            Console::error('Please stop container: ' . $host);
-            //Console::exit();
+    public function getDsn(string $database): ?DSN
+    {
+        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_PROJECT')) as $project) {
+            [$db, $dsn] = explode('=', $project);
+            if ($db === $database) {
+                return new DSN($dsn);
+            }
         }
+        return null;
     }
 }
