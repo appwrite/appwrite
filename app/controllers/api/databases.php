@@ -351,7 +351,6 @@ function updateAttribute(
             id: $key,
             required: $required,
             default: $default,
-            filters: [$filter],
             formatOptions: $options ?? null
         );
     }
