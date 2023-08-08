@@ -682,7 +682,7 @@ App::put('/v1/functions/:functionId')
         if (
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
-            $function->getAttribute('providerRootDirectory') !== $providerRootDirectory || 
+            $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
             $function->getAttribute('runtime') !== $runtime
         ) {
             $live = false;
