@@ -459,33 +459,6 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Sends the response based on content type
-     *
-     * @param array $ouput
-     *
-     * return void
-     * @throws Exception
-     */
-    public function static(array $output): void
-    {
-        switch ($this->getContentType()) {
-            case self::CONTENT_TYPE_JSON:
-                $this->json(!empty($output) ? $output : new \stdClass());
-                break;
-
-            case self::CONTENT_TYPE_YAML:
-                $this->yaml(!empty($output) ? $output : new \stdClass());
-                break;
-
-            case self::CONTENT_TYPE_NULL:
-                break;
-
-            default:
-                $this->json(!empty($output) ? $output : new \stdClass());
-        }
-    }
-
-    /**
      * Generate valid response object from document data
      *
      * @param Document $document

@@ -1678,22 +1678,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $queries = Query::parseQueries($queries);
 
-        // Add type property in query if select query exists and type property doesn't exist as type is required for response model
-        $hasSelect = false;
-        $hasTypeAttribute = false;
-        foreach ($queries as $query) {
-            if ($query->getMethod() ===  Query::TYPE_SELECT) {
-                $hasSelect = true;
-            }
-            if (\array_search('type', $query->getValues())) {
-                $hasTypeAttribute = true;
-            }
-        }
-
-        if ($hasSelect && !$hasTypeAttribute) {
-            \array_push($queries, Query::select(['type']));
-        }
-
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
         // Get cursor document if there was a cursor query
@@ -1714,23 +1698,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             $cursor->setValue($cursorDocument[0]);
         }
 
-        $attributes = $dbForProject->find('attributes', $queries);
         $filterQueries = Query::groupByType($queries)['filters'];
-        $total = $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT);
 
-        $output = $response->output(new Document([
-            'total' => $total,
-            'attributes' => $attributes,
+        $response->dynamic(new Document([
+            'total' => $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT),
+            'attributes' => $dbForProject->find('attributes', $queries),
         ]), Response::MODEL_ATTRIBUTE_LIST);
-
-        // If type Attribute didn't exist in select query we need to remove type attribute from attribute list
-        if ($hasSelect && !$hasTypeAttribute) {
-            foreach ($output['attributes'] as &$attribute) {
-                unset($attribute['type']);
-            }
-        }
-
-        $response->static($output);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')

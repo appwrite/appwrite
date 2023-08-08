@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
+use Appwrite\Extend\Exception;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -22,7 +23,7 @@ class Base extends Queries
      * @param string[] $allowedAttributes
      * @throws \Exception
      */
-    public function __construct(string $collection, array $allowedAttributes)
+    public function __construct(string $collection, array $allowedAttributes, ?array $prohibitedQueries = [])
     {
         $collection = Config::getParam('collections', [])[$collection];
         // array for constant lookup time
@@ -69,6 +70,14 @@ class Base extends Queries
             new Order($attributes),
             new Select($attributes),
         ];
+        // Remove prohibited validators from the $validators array
+        foreach ($prohibitedQueries as $prohibitedQuery) {
+            foreach ($validators as $key => $validator) {
+                if ($validator instanceof $prohibitedQuery) {
+                    unset($validators[$key]);
+                }
+            }
+        }
 
         parent::__construct($validators);
     }
