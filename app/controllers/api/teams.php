@@ -343,11 +343,12 @@ App::delete('/v1/teams/:teamId')
             Query::limit(2000), // TODO fix members limit
         ]);
 
-        // TODO delete all members individually from the user object
+        // Memberships are deleted here instead of in the worker to make sure user permisions are updated instantly
         foreach ($memberships as $membership) {
             if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership for team from DB');
             }
+            $dbForProject->deleteCachedDocument('users', $membership->getAttribute('userId'));
         }
 
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
