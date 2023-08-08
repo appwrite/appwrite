@@ -21,8 +21,8 @@ class Firebase extends OAuth2
      */
     protected array $scopes = [
         'https://www.googleapis.com/auth/firebase',
-        'https://www.googleapis.com/auth/datastore', 
-        'https://www.googleapis.com/auth/cloud-platform', 
+        'https://www.googleapis.com/auth/datastore',
+        'https://www.googleapis.com/auth/cloud-platform',
         'https://www.googleapis.com/auth/identitytoolkit',
         'https://www.googleapis.com/auth/userinfo.profile'
     ];
@@ -51,7 +51,7 @@ class Firebase extends OAuth2
         ]);
     }
 
-        /**
+    /**
      * @param string $code
      *
      * @return array
@@ -176,8 +176,8 @@ class Firebase extends OAuth2
         if (empty($this->user)) {
             $response = $this->request(
                 'GET',
-                'https://www.googleapis.com/oauth2/v1/userinfo',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . \urlencode($accessToken),
+                [],
             );
 
             $this->user = \json_decode($response, true);
@@ -195,11 +195,12 @@ class Firebase extends OAuth2
         return $projects['results'];
     }
 
-    public function createServiceAccount(string $accessToken, string $projectID): string
+    public function createServiceAccount(string $accessToken, string $projectID): array
     {
+        // Create Service Account
         $response = $this->request(
             'POST',
-            "https://iam.googleapis.com/v1/projects/{$projectID}/serviceAccounts",
+            'https://iam.googleapis.com/v1/projects/' . $projectID . '/serviceAccounts',
             [
                 'Authorization: Bearer ' . \urlencode($accessToken),
                 'Content-Type: application/json'
@@ -212,6 +213,20 @@ class Firebase extends OAuth2
             ])
         );
 
-        return $response;
+        $response = json_decode($response, true);
+
+        // Create Service Account Key
+        $responseKey = $this->request(
+            'POST',
+            'https://iam.googleapis.com/v1/projects/' . $projectID . '/serviceAccounts/' . $response['email'] . '/keys',
+            [
+                'Authorization: Bearer ' . \urlencode($accessToken),
+                'Content-Type: application/json'
+            ]
+        );
+
+        $responseKey = json_decode($responseKey, true);
+
+        return json_decode(base64_decode($responseKey['privateKeyData']), true);
     }
 }

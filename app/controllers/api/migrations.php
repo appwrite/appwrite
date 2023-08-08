@@ -186,35 +186,44 @@ App::post('/v1/migrations/firebase/oauth')
             $dbForConsole->updateDocument('users', $user->getId(), $user);
         }
 
-        $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
+        if ($user->getAttribute('migrationsFirebaseServiceAccount')) {
+            $serviceAccount = json_decode($user->getAttribute('migrationsFirebaseServiceAccount'), true);
+        } else {
+            $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
+            $user = $user
+                ->setAttribute('migrationsFirebaseServiceAccount', json_encode($serviceAccount));
 
-        // $migration = $dbForProject->createDocument('migrations', new Document([
-        //     '$id' => ID::unique(),
-        //     'status' => 'pending',
-        //     'stage' => 'init',
-        //     'source' => Firebase::getName(),
-        //     'credentials' => [
-        //         'serviceAccount' => $serviceAccount,
-        //     ],
-        //     'resources' => $resources,
-        //     'statusCounters' => '{}',
-        //     'resourceData' => '{}',
-        //     'errors' => []
-        // ]));
+            $dbForConsole->updateDocument('users', $user->getId(), $user);
+        }
 
-        // $events->setParam('migrationId', $migration->getId());
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => ID::unique(),
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => Firebase::getName(),
+            'credentials' => [
+                'serviceAccount' => $serviceAccount,
+            ],
+            'resources' => $resources,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => []
+        ]));
 
-        // // Trigger Transfer
-        // $event = new Migration();
-        // $event
-        //     ->setMigration($migration)
-        //     ->setProject($project)
-        //     ->setUser($user)
-        //     ->trigger();
+        $events->setParam('migrationId', $migration->getId());
 
-        // $response
-        //     ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-        //     ->dynamic($migration, Response::MODEL_MIGRATION);
+        // Trigger Transfer
+        var_dump($project);
+        $event = new Migration();
+        $event
+            ->setMigration($migration)
+            ->setProject($project)
+            ->setUser($user)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
 App::post('/v1/migrations/supabase')
@@ -515,13 +524,24 @@ App::get('/v1/migrations/firebase/report/oauth')
                 $dbForConsole->updateDocument('users', $user->getId(), $user);
             }
 
-            $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
+            // Get Service Account
+            if ($user->getAttribute('migrationsFirebaseServiceAccount')) {
+                $serviceAccount = json_decode($user->getAttribute('migrationsFirebaseServiceAccount'), true);
+            } else {
+                $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
+                $user = $user
+                    ->setAttribute('migrationsFirebaseServiceAccount', json_encode($serviceAccount));
 
-            $firebase = new Firebase(json_decode($serviceAccount, true));
+                $dbForConsole->updateDocument('users', $user->getId(), $user);
+            }
+
+            $firebase = new Firebase(array_merge($serviceAccount, ['project_id' => $projectId]));
+
+            $report = $firebase->report($resources);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
-                ->dynamic(new Document($firebase->report($resources)), Response::MODEL_MIGRATION_REPORT);
+                ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
         }

@@ -275,6 +275,17 @@ $commonCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['encrypt'],
+            ],
+            [
+                '$id' => ID::custom('migrationsFirebaseServiceAccount'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['encrypt'],
             ]
         ],
         'indexes' => [
