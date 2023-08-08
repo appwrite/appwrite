@@ -690,6 +690,14 @@ services:
       - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
 
+  appwrite-assistant:
+    container_name: appwrite-assistant
+    image: appwrite/assistant:0.1.0
+    networks:
+      - appwrite
+    environment:
+      - OPENAI_API_KEY
+
   openruntimes-executor:
     container_name: openruntimes-executor
     hostname: exc1
