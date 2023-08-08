@@ -107,6 +107,7 @@ class Exception extends \Exception
     public const STORAGE_BUCKET_NOT_FOUND          = 'storage_bucket_not_found';
     public const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
+    public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';

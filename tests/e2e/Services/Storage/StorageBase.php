@@ -240,6 +240,29 @@ trait StorageBase
 
         $this->assertEquals(400, $failedBucket['headers']['status-code']);
 
+        /**
+         * Test for FAILURE set x-appwrite-id to unique()
+         */
+        $source = realpath(__DIR__ . '/../../../resources/logo.png');
+        $totalSize = \filesize($source);
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . $size . '/' . $size,
+            'x-appwrite-id' => 'unique()',
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile($source, 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(400, $res['headers']['status-code']);
+        $this->assertEquals('The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().', $res['body']['message']);
+
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
