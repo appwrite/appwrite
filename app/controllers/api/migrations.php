@@ -541,14 +541,14 @@ App::get('/v1/migrations/firebase/connect')
     ->label('sdk.methodType', 'webAuth')
     ->label('sdk.hide', true)
     ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Firebase authorization. Only console hostnames are allowed.', true, ['clients'])
-    ->param('project', '', new UID(), 'Project ID')
+    ->param('projectId', '', new UID(), 'Project ID')
     ->inject('response')
     ->inject('request')
     ->inject('user')
     ->inject('dbForConsole')
-    ->action(function (string $redirect, string $project, Response $response, Request $request, Document $user, Database $dbForConsole) {
+    ->action(function (string $redirect, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
         $state = \json_encode([
-            'projectId' => $project,
+            'projectId' => $projectId,
             'redirect' => $redirect,
         ]);
 
