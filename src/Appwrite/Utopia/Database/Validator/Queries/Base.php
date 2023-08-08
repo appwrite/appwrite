@@ -23,7 +23,7 @@ class Base extends Queries
      * @param string[] $allowedAttributes
      * @throws \Exception
      */
-    public function __construct(string $collection, array $allowedAttributes, ?array $prohibitedQueries = [])
+    public function __construct(string $collection, array $allowedAttributes, array $prohibitedQueries = [])
     {
         $collection = Config::getParam('collections', [])[$collection];
         // array for constant lookup time
