@@ -61,8 +61,9 @@ class Restore extends Action
             Console::exit();
         }
 
+        $this->log('--- Restore Start ' . $id . ' --- ');
+
         $filename = $id . '.tar.gz';
-        $this->log('--- Restore Start ' . $filename . ' --- ');
         $start = microtime(true);
         $cloud = $cloud === 'true';
 
@@ -96,7 +97,6 @@ class Restore extends Action
         $this->decompress($files);
         $this->prepare($files);
         $this->restore($files, $cloud, $datadir);
-        //$this->chown($datadir); //todo: chown: unknown user/group mysql:mysql
 
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
@@ -234,19 +234,6 @@ class Restore extends Action
 
         if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
             Console::error('Restore failed');
-            Console::exit();
-        }
-    }
-
-    public function chown(string $datadir)
-    {
-        $stderr = '';
-        $stdout = '';
-        $cmd = 'chown -R mysql:mysql ' . $datadir;
-        $this->log($cmd);
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error($stderr);
             Console::exit();
         }
     }
