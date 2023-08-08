@@ -95,6 +95,7 @@ class Restore extends Action
         $this->decompress($files);
         $this->prepare($files);
         $this->restore($files, $cloud, $datadir);
+        //$this->chown($datadir); //todo: chown: unknown user/group mysql:mysql
 
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
@@ -234,10 +235,19 @@ class Restore extends Action
             Console::error('Restore failed');
             Console::exit();
         }
+    }
 
-        unlink($logfile);
-
-        // todo: Do we need to chown -R mysql:mysql /var/lib/mysql?
+    public function chown(string $datadir)
+    {
+        $stderr = '';
+        $stdout = '';
+        $cmd = 'chown -R mysql:mysql ' . $datadir;
+        $this->log($cmd);
+        Console::execute($cmd, '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error($stderr);
+            Console::exit();
+        }
     }
 
     public function checkEnvVariables(): void
