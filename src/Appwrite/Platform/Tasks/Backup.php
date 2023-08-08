@@ -50,7 +50,7 @@ class Backup extends Action
     {
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
-        $this->s3 = new DOSpaces('/' . $this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
+        $this->s3 = new DOSpaces('/' . $database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (is_null($this->dsn)) {
             Console::error('No DSN match');

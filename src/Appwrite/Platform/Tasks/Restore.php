@@ -19,6 +19,7 @@ class Restore extends Action
     public const PROCESSORS = 4;
     protected ?DSN $dsn = null;
     protected string $database;
+    protected ?DOSpaces $s3 = null;
 
     public function __construct()
     {
@@ -42,9 +43,10 @@ class Restore extends Action
     {
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
+        $this->s3 = new DOSpaces('/' . $database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
-        if (!$this->dsn instanceof DSN) {
-            Console::error('No dsn match');
+        if (is_null($this->dsn)) {
+            Console::error('No DSN match');
             Console::exit();
         }
 
@@ -100,19 +102,17 @@ class Restore extends Action
     public function download(string $file, Device $local)
     {
         $filename = basename($file);
-        $s3 = new DOSpaces($this->database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
-
         try {
-            $path = $s3->getPath($filename);
+            $path = $this->s3->getPath($filename);
 
-            if (!$s3->exists($path)) {
+            if (!$this->s3->exists($path)) {
                 Console::error('File: ' . $path . ' does not exist on cloud');
                 Console::exit();
             }
 
             $this->log('Downloading: ' . $file);
 
-            if (!$s3->transfer($path, $file, $local)) {
+            if (!$this->s3->transfer($path, $file, $local)) {
                 Console::error('Error Downloading ' . $file);
                 Console::exit();
             }
