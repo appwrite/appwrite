@@ -175,13 +175,21 @@ App::init()
             $endDomain->getRegisterable() !== ''
         );
 
-        Config::setParam('cookieDomain', (
-            $request->getHostname() === 'localhost' ||
-            $request->getHostname() === 'localhost:' . $request->getPort() ||
-            (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-        )
-            ? null
-            : '.' . $request->getHostname());
+        $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
+        $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
+
+        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+        $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+
+        Config::setParam(
+            'cookieDomain',
+            $isLocalHost || $isIpAddress
+                ? null
+                : ($isConsoleProject && $isConsoleRootSession
+                    ? '.' . $selfDomain->getRegisterable()
+                    : '.' . $request->getHostname()
+                )
+        );
 
         /*
         * Response format
@@ -427,6 +435,7 @@ App::error()
                 $log->setType(Log::TYPE_ERROR);
                 $log->setMessage($error->getMessage());
 
+                $log->addTag('database', $project->getAttribute('database', 'console'));
                 $log->addTag('method', $route->getMethod());
                 $log->addTag('url', $route->getPath());
                 $log->addTag('verboseType', get_class($error));
@@ -637,6 +646,7 @@ App::get('/.well-known/acme-challenge/*')
     });
 
 include_once __DIR__ . '/shared/api.php';
+include_once __DIR__ . '/shared/api/auth.php';
 
 foreach (Config::getParam('services', []) as $service) {
     include_once $service['controller'];

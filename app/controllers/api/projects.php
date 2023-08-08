@@ -16,21 +16,21 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Registry\Registry;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
-use Utopia\Database\Exception\Duplicate;
+use Utopia\Cache\Cache;
+use Utopia\Pools\Group;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -76,8 +76,10 @@ App::post('/v1/projects')
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->inject('cache')
+    ->inject('pools')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -92,6 +94,39 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+
+        $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
+        $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
+        $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
+        $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
+
+        $databases = Config::getParam('pools-database', []);
+
+        /**
+         * Extract db from list while backing
+         */
+        if (count($databases) > 1) {
+            $now = new \DateTime();
+
+            foreach ($databases as $index => $database) {
+                if (empty($backups[$database])) {
+                    continue;
+                }
+                $backup = $backups[$database];
+                $from = \DateTime::createFromFormat('H:i', $backup['from']);
+                $to = \DateTime::createFromFormat('H:i', $backup['to']);
+                if ($now >= $from && $now <= $to) {
+                    unset($databases[$index]);
+                    break;
+                }
+            }
+        }
+
+        if ($index = array_search('database_db_fra1_05', $databases)) {
+            $database = $databases[$index];
+        } else {
+            $database = $databases[array_rand($databases)];
+        }
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -129,14 +164,13 @@ App::post('/v1/projects')
                 'domains' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
+                'database' => $database
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-
+        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
 
@@ -145,6 +179,9 @@ App::post('/v1/projects')
 
         $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
@@ -252,120 +289,6 @@ App::get('/v1/projects/:projectId')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects/:projectId/usage')
-    ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects', 'usage'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->inject('register')
-    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            $dbForProject->setNamespace("_{$project->getInternalId()}");
-
-            $metrics = [
-                'project.$all.network.requests',
-                'project.$all.network.bandwidth',
-                'project.$all.storage.size',
-                'users.$all.count.total',
-                'databases.$all.count.total',
-                'documents.$all.count.total',
-                'executions.$all.compute.total',
-                'buckets.$all.count.total'
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'requests' => $stats[$metrics[0]] ?? [],
-                'network' => $stats[$metrics[1]] ?? [],
-                'storage' => $stats[$metrics[2]] ?? [],
-                'users' => $stats[$metrics[3]] ?? [],
-                'databases' => $stats[$metrics[4]] ?? [],
-                'documents' => $stats[$metrics[5]] ?? [],
-                'executions' => $stats[$metrics[6]] ?? [],
-                'buckets' => $stats[$metrics[7]] ?? [],
-            ]);
-        }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')
@@ -1500,9 +1423,12 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        if ($domain === App::getEnv('_APP_DOMAIN', '') || $domain === App::getEnv('_APP_DOMAIN_TARGET', '')) {
+            throw new Exception(Exception::DOMAIN_FORBIDDEN);
+        }
+
         $document = $dbForConsole->findOne('domains', [
-            Query::equal('domain', [$domain]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('domain', [$domain])
         ]);
 
         if ($document && !$document->isEmpty()) {
@@ -1698,6 +1624,10 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
 
         if ($domain === false || $domain->isEmpty()) {
             throw new Exception(Exception::DOMAIN_NOT_FOUND);
+        }
+
+        if ($domain->getAttribute('domain') === App::getEnv('_APP_DOMAIN', '') || $domain->getAttribute('domain') === App::getEnv('_APP_DOMAIN_TARGET', '')) {
+            throw new Exception(Exception::DOMAIN_FORBIDDEN);
         }
 
         $dbForConsole->deleteDocument('domains', $domain->getId());
