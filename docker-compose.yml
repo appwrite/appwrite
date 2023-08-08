@@ -167,6 +167,8 @@ services:
       - _APP_GRAPHQL_MAX_DEPTH
       - _APP_CONSOLE_GITHUB_APP_ID
       - _APP_CONSOLE_GITHUB_SECRET
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
   appwrite-realtime:
     entrypoint: realtime
@@ -614,6 +616,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
+      - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
 
   appwrite-maintenance:
     entrypoint: maintenance
