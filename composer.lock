@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cba8158b4dadaf46a10f4b688fbe6fa4",
+    "content-hash": "3d405c36476afef55ba95599aa11e0dd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1274,24 +1274,25 @@
         },
         {
             "name": "utopia-php/analytics",
-            "version": "0.2.0",
+            "version": "0.10.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/analytics.git",
-                "reference": "adfc2d057a7f6ab618a77c8a20ed3e35485ff416"
+                "reference": "14c805114736f44c26d6d24b176a2f8b93d86a1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/adfc2d057a7f6ab618a77c8a20ed3e35485ff416",
-                "reference": "adfc2d057a7f6ab618a77c8a20ed3e35485ff416",
+                "url": "https://api.github.com/repos/utopia-php/analytics/zipball/14c805114736f44c26d6d24b176a2f8b93d86a1f",
+                "reference": "14c805114736f44c26d6d24b176a2f8b93d86a1f",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4"
+                "php": ">=8.0",
+                "utopia-php/cli": "^0.15.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "dev-main",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -1303,16 +1304,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Torsten Dittmann",
-                    "email": "torsten@appwrite.io"
-                }
-            ],
             "description": "A simple library to track events & users.",
             "keywords": [
                 "analytics",
@@ -1323,9 +1314,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/analytics/issues",
-                "source": "https://github.com/utopia-php/analytics/tree/0.2.0"
+                "source": "https://github.com/utopia-php/analytics/tree/0.10.2"
             },
-            "time": "2021-03-23T21:33:07+00:00"
+            "time": "2023-03-22T12:01:09+00:00"
         },
         {
             "name": "utopia-php/audit",
