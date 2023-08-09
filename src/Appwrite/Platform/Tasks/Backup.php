@@ -50,19 +50,23 @@ class Backup extends Action
     {
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
-        $this->s3 = new DOSpaces('/' . $database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
 
         if (is_null($this->dsn)) {
             Console::error('No DSN match');
             Console::exit();
         }
 
+        try {
+            $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE'));
+            $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
+        } catch (\Exception $e) {
+            Console::error($e->getMessage() . 'Invalid DSN.');
+            Console::exit();
+        }
+
         $attempts = 0;
         $max = 10;
         $sleep = 5;
-
-        $resource = $pools->get('replica_' . $database);
-        var_dump($resource);
 
         do {
             try {
@@ -71,6 +75,7 @@ class Backup extends Action
                     ->get('replica_' . $database)
                     ->pop()
                     ->getResource();
+
                 break; // leave the do-while if successful
             } catch (Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -124,6 +129,7 @@ class Backup extends Action
         $logfile = $target . '/../backup.log';
 
         $args = [
+            'xtrabackup',
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
@@ -142,7 +148,7 @@ class Backup extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
         self::log($cmd);
         shell_exec($cmd);
 
@@ -231,11 +237,8 @@ class Backup extends Action
     {
         foreach (
             [
+                '_APP_CONNECTIONS_BACKUPS_STORAGE',
                 '_APP_CONNECTIONS_DB_REPLICAS',
-                '_DO_SPACES_BUCKET_NAME',
-                '_DO_SPACES_ACCESS_KEY',
-                '_DO_SPACES_SECRET_KEY',
-                '_DO_SPACES_REGION',
             ] as $env
         ) {
             if (empty(App::getEnv($env))) {

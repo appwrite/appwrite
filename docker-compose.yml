@@ -126,6 +126,7 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_CONNECTIONS_DB_PROJECT
+      - _APP_CONNECTIONS_DB_REPLICAS
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_CACHE
       - _APP_CONNECTIONS_QUEUE
@@ -750,7 +751,7 @@ services:
 
   xtrabackup:
     image: percona/percona-xtrabackup:latest
-    container_name: appwrite-xtrabackup
+    container_name: xtrabackup
     command: sleep infinity
     volumes:
       - backup-data:/backups:rw
@@ -777,12 +778,8 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_DB_REPLICAS
-      - _DO_SPACES_BUCKET_NAME
-      - _DO_SPACES_ACCESS_KEY
-      - _DO_SPACES_SECRET_KEY
-      - _DO_SPACES_REGION
+      - _APP_CONNECTIONS_BACKUPS_STORAGE
 
   appwrite-restore:
     command: sleep infinity
@@ -799,12 +796,8 @@ services:
     depends_on:
       - redis
     environment:
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_DB_REPLICAS
-      - _DO_SPACES_BUCKET_NAME
-      - _DO_SPACES_ACCESS_KEY
-      - _DO_SPACES_SECRET_KEY
-      - _DO_SPACES_REGION
+      - _APP_CONNECTIONS_BACKUPS_STORAGE
 
   redis:
     image: redis:7.0.4-alpine

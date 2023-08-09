@@ -42,12 +42,18 @@ class Restore extends Action
     public function action(string $id, string $cloud, string $database): void
     {
         $this->database = $database;
-        $this->dsn = $this->getDsn($database);
-        $this->s3 = new DOSpaces('/' . $database . '/full', App::getEnv('_DO_SPACES_ACCESS_KEY'), App::getEnv('_DO_SPACES_SECRET_KEY'), App::getEnv('_DO_SPACES_BUCKET_NAME'), App::getEnv('_DO_SPACES_REGION'));
         $datadir = self::DATADIR;
-
+        $this->dsn = $this->getDsn($database);
         if (is_null($this->dsn)) {
             Console::error('No DSN match');
+            Console::exit();
+        }
+
+        try {
+            $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE'));
+            $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
+        } catch (\Exception $e) {
+            Console::error($e->getMessage() . 'Invalid DSN.');
             Console::exit();
         }
 
@@ -147,6 +153,7 @@ class Restore extends Action
         $logfile = $target . '/../log.txt';
 
         $args = [
+            'xtrabackup',
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
@@ -159,7 +166,7 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
         $this->log($cmd);
         shell_exec($cmd);
 
@@ -182,6 +189,7 @@ class Restore extends Action
         $logfile = $target . '/../log.txt';
 
         $args = [
+            'xtrabackup',
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
@@ -191,7 +199,7 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
         $this->log($cmd);
         shell_exec($cmd);
 
@@ -214,6 +222,7 @@ class Restore extends Action
         $logfile = $target . '/../log.txt';
 
         $args = [
+            'xtrabackup',
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
@@ -225,7 +234,7 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec appwrite-xtrabackup xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
         $this->log($cmd);
         shell_exec($cmd);
 
@@ -242,11 +251,8 @@ class Restore extends Action
     {
         foreach (
             [
+                '_APP_CONNECTIONS_BACKUPS_STORAGE',
                 '_APP_CONNECTIONS_DB_REPLICAS',
-                '_DO_SPACES_BUCKET_NAME',
-                '_DO_SPACES_ACCESS_KEY',
-                '_DO_SPACES_SECRET_KEY',
-                '_DO_SPACES_REGION',
             ] as $env
         ) {
             if (empty(App::getEnv($env))) {

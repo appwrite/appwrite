@@ -536,7 +536,7 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_REPLICAS', $fallbackForDB),
             'multiple' => true,
-            'schemes' => ['mysql'],
+            'schemes' => ['mariadb', 'mysql'],
         ],
         'queue' => [
             'type' => 'queue',
