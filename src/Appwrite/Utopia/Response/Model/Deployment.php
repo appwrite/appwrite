@@ -28,6 +28,12 @@ class Deployment extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of deployment.',
+                'default' => '',
+                'example' => 'vcs',
+            ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource ID.',
@@ -99,6 +105,12 @@ class Deployment extends Model
                 'description' => 'The url of the vcs provider repository',
                 'default' => '',
                 'example' => 'https://github.com/vermakhushboo/g4-node-function',
+            ])
+            ->addRule('providerBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The branch name of the vcs provider repository',
+                'default' => '',
+                'example' => 'main',
             ])
             ->addRule('providerCommitHash', [
                 'type' => self::TYPE_STRING,
