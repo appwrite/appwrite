@@ -782,6 +782,18 @@ $commonCollections = [
                 'array' => false,
                 'filters' => ['encrypt'],
             ],
+            [
+                // Used to store data from provider that may or may not be sensitive
+                '$id' => ID::custom('secrets'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json', 'encrypt'],
+            ],
         ],
         'indexes' => [
             [
