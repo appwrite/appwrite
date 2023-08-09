@@ -10,6 +10,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Utopia\Database\Validator\Queries;
+use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -656,7 +657,7 @@ App::get('/v1/users/identities')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

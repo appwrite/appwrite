@@ -900,7 +900,7 @@ App::get('/v1/account/identities')
         $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -940,7 +940,7 @@ App::delete('/v1/account/identities/:identityId')
     ->label('sdk.description', '/docs/references/account/delete-identity.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('identityId', [], new UID(), '')
+    ->param('identityId', [], new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $identityId, Response $response, Database $dbForProject) {

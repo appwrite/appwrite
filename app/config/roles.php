@@ -52,7 +52,9 @@ $admins = [
     'execution.read',
     'execution.write',
     'rules.read',
-    'rules.write'
+    'rules.write',
+    'migrations.read',
+    'migrations.write',
 ];
 
 return [
