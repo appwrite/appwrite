@@ -61,14 +61,19 @@ class Backup extends Action
         $max = 10;
         $sleep = 5;
 
+        $resource = $pools
+            ->get('replica_' . $database)
+            ->pop()
+            ->getResource();
+        var_dump($resource);
+
         do {
             try {
                 $attempts++;
-                $resource = $pools
+                $pools
                     ->get('replica_' . $database)
                     ->pop()
                     ->getResource();
-                var_dump($resource);
                 break; // leave the do-while if successful
             } catch (Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
