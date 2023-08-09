@@ -437,10 +437,7 @@ App::error()
             }
 
             App::setResource('error', fn() => new Exception(Exception::QUERY_TIMEOUT));
-            return;
         }
-
-        App::setResource('error', fn() => $error);
     });
 
 App::post('/v1/databases')
