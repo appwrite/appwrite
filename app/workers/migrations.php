@@ -232,12 +232,6 @@ class MigrationsV1 extends Worker
                 $destination
             );
 
-            $migrationDocument->setAttribute('stage', 'source-check');
-            $this->updateMigrationDocument($migrationDocument, $projectDocument);
-
-            $migrationDocument->setAttribute('stage', 'destination-check');
-            $this->updateMigrationDocument($migrationDocument, $projectDocument);
-
             /** Start Transfer */
             $migrationDocument->setAttribute('stage', 'migrating');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
