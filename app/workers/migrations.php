@@ -5,7 +5,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Permission;
 use Appwrite\Resque\Worker;
 use Appwrite\Role;
-use Appwrite\Utopia\Response\Model\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -61,7 +60,7 @@ class MigrationsV1 extends Worker
             return;
         }
 
-        $this->dbForProject = $this->getProjectDB($this->args['project']['$id']);
+        $this->dbForProject = $this->getProjectDB(new Document($this->args['project']));
 
         $this->processMigration();
     }

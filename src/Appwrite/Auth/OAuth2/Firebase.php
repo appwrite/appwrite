@@ -87,7 +87,7 @@ class Firebase extends OAuth2
     {
         $response = $this->request(
             'POST',
-            'https://github.com/login/oauth/access_token',
+            'https://oauth2.googleapis.com/token',
             [],
             \http_build_query([
                 'client_id' => $this->appID,
@@ -195,12 +195,47 @@ class Firebase extends OAuth2
         return $projects['results'];
     }
 
-    public function createServiceAccount(string $accessToken, string $projectID): array
+    /*
+        Be careful with the setIAMPolicy method, it will overwrite all existing policies
+    **/
+    public function assignIAMRoles(string $accessToken, string $email, string $projectId) {
+        // Get IAM Roles
+        $iamRoles = $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/'.$projectId.':getIamPolicy', [
+            'Authorization: Bearer ' . \urlencode($accessToken),
+            'Content-Type: application/json'
+        ]);
+
+        $iamRoles = \json_decode($iamRoles, true);
+
+        $iamRoles['bindings'][] = [
+            'role' => 'roles/identitytoolkit.admin',
+            'members' => [
+                'serviceAccount:'.$email
+            ]
+        ];
+
+        $iamRoles['bindings'][] = [
+            'role' => 'roles/firebase.admin',
+            'members' => [
+                'serviceAccount:'.$email
+            ]
+        ];
+
+        // Set IAM Roles
+        $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/'.$projectId.':setIamPolicy', [
+            'Authorization: Bearer ' . \urlencode($accessToken),
+            'Content-Type: application/json'
+        ], json_encode([
+            'policy' => $iamRoles
+        ]));
+    }
+
+    public function createServiceAccount(string $accessToken, string $projectId): array
     {
         // Create Service Account
         $response = $this->request(
             'POST',
-            'https://iam.googleapis.com/v1/projects/' . $projectID . '/serviceAccounts',
+            'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts',
             [
                 'Authorization: Bearer ' . \urlencode($accessToken),
                 'Content-Type: application/json'
@@ -215,10 +250,12 @@ class Firebase extends OAuth2
 
         $response = json_decode($response, true);
 
+        $this->assignIAMRoles($accessToken, $response['email'], $projectId);
+
         // Create Service Account Key
         $responseKey = $this->request(
             'POST',
-            'https://iam.googleapis.com/v1/projects/' . $projectID . '/serviceAccounts/' . $response['email'] . '/keys',
+            'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts/' . $response['email'] . '/keys',
             [
                 'Authorization: Bearer ' . \urlencode($accessToken),
                 'Content-Type: application/json'

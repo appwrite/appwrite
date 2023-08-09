@@ -84,56 +84,6 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/firebase')
-    ->groups(['api', 'migrations'])
-    ->desc('Migrate Firebase Data (Service Account)')
-    ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.create')
-    ->label('audits.event', 'migration.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'migrations')
-    ->label('sdk.method', 'createFirebaseMigration')
-    ->label('sdk.description', '/docs/references/migrations/migration-firebase.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MIGRATION)
-    ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
-    ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
-        $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
-            'status' => 'pending',
-            'stage' => 'init',
-            'source' => Firebase::getName(),
-            'credentials' => [
-                'serviceAccount' => $serviceAccount,
-            ],
-            'resources' => $resources,
-            'statusCounters' => '{}',
-            'resourceData' => '{}',
-            'errors' => [],
-        ]));
-
-        $events->setParam('migrationId', $migration->getId());
-
-        // Trigger Transfer
-        $event = new Migration();
-        $event
-            ->setMigration($migration)
-            ->setProject($project)
-            ->setUser($user)
-            ->trigger();
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
-            ->dynamic($migration, Response::MODEL_MIGRATION);
-    });
-
 App::post('/v1/migrations/firebase/oauth')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (OAuth)')
@@ -168,8 +118,7 @@ App::post('/v1/migrations/firebase/oauth')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
         if ($identity === false || $identity->isEmpty()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR); //TODO: REMOVE
-            // throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
         $accessToken = $identity->getAttribute('providerAccessToken');
@@ -213,7 +162,7 @@ App::post('/v1/migrations/firebase/oauth')
             'stage' => 'init',
             'source' => Firebase::getName(),
             'credentials' => [
-                'serviceAccount' => $serviceAccount,
+                'serviceAccount' => json_encode($serviceAccount),
             ],
             'resources' => $resources,
             'statusCounters' => '{}',
@@ -224,7 +173,56 @@ App::post('/v1/migrations/firebase/oauth')
         $events->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        var_dump($project);
+        $event = new Migration();
+        $event
+            ->setMigration($migration)
+            ->setProject($project)
+            ->setUser($user)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/firebase')
+    ->groups(['api', 'migrations'])
+    ->desc('Migrate Firebase Data (Service Account)')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'migrations')
+    ->label('sdk.method', 'createFirebaseMigration')
+    ->label('sdk.description', '/docs/references/migrations/migration-firebase.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_ACCEPTED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MIGRATION)
+    ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate')
+    ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->inject('events')
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => ID::unique(),
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => Firebase::getName(),
+            'credentials' => [
+                'serviceAccount' => $serviceAccount,
+            ],
+            'resources' => $resources,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+        ]));
+
+        $events->setParam('migrationId', $migration->getId());
+
+        // Trigger Transfer
         $event = new Migration();
         $event
             ->setMigration($migration)
@@ -515,8 +513,7 @@ App::get('/v1/migrations/firebase/report/oauth')
                 Query::equal('userInternalId', [$user->getInternalId()]),
             ]);
             if ($identity === false || $identity->isEmpty()) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR); //TODO: REMOVE
-                // throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+                throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
             }
 
             $accessToken = $identity->getAttribute('providerAccessToken');
@@ -749,7 +746,7 @@ App::get('/v1/migrations/firebase/projects')
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
         if ($identity === false || $identity->isEmpty()) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase'); //TODO: Replace with USER_IDENTITY_NOT_FOUND
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
         $accessToken = $identity->getAttribute('providerAccessToken');
@@ -766,7 +763,11 @@ App::get('/v1/migrations/firebase/projects')
 
         $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
         if ($isExpired) {
-            $firebase->refreshTokens($refreshToken);
+            try {
+                $firebase->refreshTokens($refreshToken);
+            } catch (\Exception $e) {
+                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Failed to refresh Firebase access token');
+            }
 
             $accessToken = $firebase->getAccessToken('');
             $refreshToken = $firebase->getRefreshToken('');

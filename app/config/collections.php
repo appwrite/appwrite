@@ -2732,7 +2732,7 @@ $projectCollections = array_merge([
                 'required' => false,
                 'default' => [],
                 'array' => false,
-                'filters' => ['json'],
+                'filters' => ['json', 'encrypt'],
             ],
             [
                 '$id' => ID::custom('resources'),
