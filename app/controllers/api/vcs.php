@@ -414,7 +414,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     ->label('sdk.response.model', Response::MODEL_DETECTION)
     ->param('installationId', '', new Text(256), 'Installation Id')
     ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
-    ->param('providerRootDirectory', '', new Text(256), 'Path to Root Directory', true)
+    ->param('providerRootDirectory', '', new Text(256, 0), 'Path to Root Directory', true)
     ->inject('gitHub')
     ->inject('response')
     ->inject('project')
