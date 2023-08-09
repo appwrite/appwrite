@@ -145,6 +145,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
+    chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-usage
 
 # Letsencrypt Permissions
