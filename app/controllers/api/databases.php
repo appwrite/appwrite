@@ -421,7 +421,7 @@ App::error()
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
                     'path' => $request->getURI()
-            ])));
+                ])));
             } else {
                 $document->setAttribute('count', $document->getAttribute('count') + 1);
                 $max = intval(App::getEnv('_APP_SLOW_QUERIES_MAX_HITS', 5));
