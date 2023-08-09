@@ -38,7 +38,7 @@ use Utopia\Validator\Boolean;
 
 use function Swoole\Coroutine\batch;
 
-$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, callable $getProjectDB, Request $request) {
     foreach ($repositories as $resource) {
         $resourceType = $resource->getAttribute('resourceType');
 
@@ -186,10 +186,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerRepositoryId' => $providerRepositoryId,
                 'repositoryId' => $repositoryId,
                 'repositoryInternalId' => $repositoryInternalId,
+                'providerBranchUrl' => $providerBranchUrl,
                 'providerRepositoryName' => $providerRepositoryName,
                 'providerRepositoryOwner' => $providerRepositoryOwner,
                 'providerRepositoryUrl' => $providerRepositoryUrl,
                 'providerCommitHash' => $providerCommitHash,
+                'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
                 'providerCommitAuthor' => $providerCommitAuthor,
                 'providerCommitMessage' => $providerCommitMessage,
                 'providerCommitUrl' => $providerCommitUrl,
@@ -386,7 +388,7 @@ App::get('/v1/vcs/github/callback')
         if (!empty($providerInstallationId)) {
             $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
             $projectInternalId = $project->getInternalId();
@@ -472,7 +474,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId);
         $repositoryName = $github->getRepositoryName($providerRepositoryId);
@@ -482,7 +484,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         }
 
         $files = $github->listRepositoryContents($owner, $repositoryName, $providerRootDirectory);
-        $languages = $github->getRepositoryLanguages($owner, $repositoryName);
+        $languages = $github->listRepositoryLanguages($owner, $repositoryName);
 
         $detectorFactory = new Detector($files, $languages);
 
@@ -543,13 +545,13 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $page = 1;
         $perPage = 100;
 
         $loadPage = function ($page) use ($github, $perPage) {
-            $repos = $github->listRepositoriesForVCSApp($page, $perPage);
+            $repos = $github->listRepositories($page, $perPage);
             return $repos;
         };
 
@@ -606,7 +608,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             return function () use ($repo, $github) {
                 try {
                     $files = $github->listRepositoryContents($repo['organization'], $repo['name'], '');
-                    $languages = $github->getRepositoryLanguages($repo['organization'], $repo['name']);
+                    $languages = $github->listRepositoryLanguages($repo['organization'], $repo['name']);
 
                     $detectorFactory = new Detector($files, $languages);
 
@@ -716,7 +718,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId);
 
             $repository = $github->createRepository($owner, $name, $private);
@@ -770,7 +772,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
         $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
@@ -817,7 +819,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
         $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
@@ -865,6 +867,7 @@ App::post('/v1/vcs/github/events')
             if ($event == $github::EVENT_PUSH) {
                 $providerBranchCreated = $parsedPayload["created"] ?? false;
                 $providerBranch = $parsedPayload["branch"] ?? '';
+                $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
                 $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
                 $providerInstallationId = $parsedPayload["installationId"] ?? '';
@@ -872,10 +875,11 @@ App::post('/v1/vcs/github/events')
                 $providerCommitHash = $parsedPayload["commitHash"] ?? '';
                 $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                 $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
+                $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
                 $providerCommitMessage = $parsedPayload["headCommitMessage"] ?? '';
                 $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
 
-                $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+                $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
                 //find functionId from functions table
                 $repositories = $dbForConsole->find('repositories', [
@@ -885,7 +889,7 @@ App::post('/v1/vcs/github/events')
 
                 // create new deployment only on push and not when branch is created
                 if (!$providerBranchCreated) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
@@ -913,6 +917,7 @@ App::post('/v1/vcs/github/events')
             } elseif ($event == $github::EVENT_PULL_REQUEST) {
                 if ($parsedPayload["action"] == "opened" || $parsedPayload["action"] == "reopened" || $parsedPayload["action"] == "synchronize") {
                     $providerBranch = $parsedPayload["branch"] ?? '';
+                    $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                     $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
                     $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
                     $providerInstallationId = $parsedPayload["installationId"] ?? '';
@@ -922,13 +927,14 @@ App::post('/v1/vcs/github/events')
                     $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                     $external = $parsedPayload["external"] ?? true;
                     $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
+                    $providerCommitAuthorUrl = $parsedPayload["authorUrl"] ?? '';
 
                     // Ignore sync for non-external. We handle it in push webhook
                     if (!$external && $parsedPayload["action"] == "synchronize") {
                         return $response->json($parsedPayload);
                     }
 
-                    $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+                    $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
                     $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
@@ -939,7 +945,7 @@ App::post('/v1/vcs/github/events')
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 
@@ -1135,7 +1141,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+        $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $repositories = [$repository];
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');

@@ -106,6 +106,12 @@ class Deployment extends Model
                 'default' => '',
                 'example' => '7c3f25d',
             ])
+            ->addRule('providerCommitAuthorUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The url of vcs commit author',
+                'default' => '',
+                'example' => 'https://github.com/vermakhushboo',
+            ])
             ->addRule('providerCommitAuthor', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The name of vcs commit author',
@@ -124,7 +130,18 @@ class Deployment extends Model
                 'default' => '',
                 'example' => 'https://github.com/vermakhushboo/g4-node-function/commit/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb',
             ])
-        ;
+            ->addRule('providerBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The branch of the vcs repository',
+                'default' => '',
+                'example' => '0.7.x',
+            ])
+            ->addRule('providerBranchUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The branch of the vcs repository',
+                'default' => '',
+                'example' => 'https://github.com/vermakhushboo/appwrite/tree/0.7.x',
+            ]);
     }
 
     /**

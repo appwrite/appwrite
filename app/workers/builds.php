@@ -171,7 +171,7 @@ class BuildsV1 extends Worker
                     $rootDirectory = \ltrim($rootDirectory, '.');
                     $rootDirectory = \ltrim($rootDirectory, '/');
 
-                    $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+                    $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
                     $owner = $github->getOwnerName($providerInstallationId);
                     $repositoryName = $github->getRepositoryName($providerRepositoryId);

@@ -2342,6 +2342,16 @@ $projectCollections = array_merge([
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('providerCommitAuthorUrl'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('providerCommitAuthor'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
@@ -2373,6 +2383,16 @@ $projectCollections = array_merge([
             ],
             [
                 '$id' => ID::custom('providerBranch'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => Database::LENGTH_KEY,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$id' => ID::custom('providerBranchUrl'),
                 'type' => Database::VAR_STRING,
                 'signed' => true,
                 'size' => Database::LENGTH_KEY,

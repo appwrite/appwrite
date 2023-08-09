@@ -56,12 +56,14 @@ $redeployVcs = function (Request $request, Document $function, Document $project
     $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
     $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
     $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
-    $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+    $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
     $owner = $github->getOwnerName($providerInstallationId);
     $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
     $repositoryName = $github->getRepositoryName($providerRepositoryId);
     $providerBranch = $function->getAttribute('providerBranch', 'main');
-    $repositoryUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+    $authorUrl = "https://github.com/$owner";
+    $repositoryUrl = "https://github.com/$owner/$repositoryName";
+    $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
     $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
 
     $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -81,10 +83,12 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'providerRepositoryId' => $providerRepositoryId,
         'repositoryId' => $function->getAttribute('repositoryId', ''),
         'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
+        'providerBranchUrl' => $branchUrl,
         'providerRepositoryName' => $repositoryName,
         'providerRepositoryOwner' => $owner,
         'providerRepositoryUrl' => $repositoryUrl,
         'providerCommitHash' => $commitDetails['commitHash'] ?? '',
+        'providerCommitAuthorUrl' => $authorUrl,
         'providerCommitAuthor' => $commitDetails['commitAuthor'] ?? '',
         'providerCommitMessage' => $commitDetails['commitMessage'] ?? '',
         'providerCommitUrl' => $commitDetails['commitUrl'] ?? '',
@@ -93,6 +97,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'search' => implode(' ', [$deploymentId, $entrypoint]),
         'activate' => true,
     ]));
+    var_dump($deployment);
 
     $projectId = $project->getId();
     $functionId = $function->getId();
