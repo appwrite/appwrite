@@ -2,13 +2,13 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\Queries;
-use Appwrite\Utopia\Database\Validator\Query\Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset;
-use Appwrite\Utopia\Database\Validator\Query\Cursor;
-use Appwrite\Utopia\Database\Validator\Query\Filter;
-use Appwrite\Utopia\Database\Validator\Query\Order;
-use Appwrite\Utopia\Database\Validator\Query\Select;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Filter;
+use Utopia\Database\Validator\Query\Order;
+use Utopia\Database\Validator\Query\Select;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,7 +24,9 @@ class Base extends Queries
      */
     public function __construct(string $collection, array $allowedAttributes)
     {
-        $collection = Config::getParam('collections', [])[$collection];
+        $config = Config::getParam('collections', []);
+        $collections = array_merge($config['console'], $config['projects'], $config['buckets'], $config['databases']);
+        $collection = $collections[$collection];
         // array for constant lookup time
         $allowedAttributesLookup = [];
         foreach ($allowedAttributes as $attribute) {
@@ -70,6 +72,6 @@ class Base extends Queries
             new Select($attributes),
         ];
 
-        parent::__construct(...$validators);
+        parent::__construct($validators);
     }
 }

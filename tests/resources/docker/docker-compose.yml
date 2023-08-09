@@ -36,7 +36,7 @@ services:
         - TESTING=true
         - VERSION=dev
     restart: unless-stopped
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -63,7 +63,6 @@ services:
       - mariadb
       - redis
       # - clamav
-      - influxdb
     environment:
       - _APP_ENV
       - _APP_OPTIONS_ABUSE
@@ -79,8 +78,6 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_USAGE_STATS
-      - _APP_INFLUXDB_HOST
-      - _APP_INFLUXDB_PORT
       - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_STORAGE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
@@ -100,13 +97,10 @@ services:
       - appwrite
     depends_on:
       - redis
-      - telegraf
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
-      - _APP_STATSD_HOST
-      - _APP_STATSD_PORT
 
   appwrite-worker-audits:
     entrypoint: worker-audits
@@ -182,7 +176,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
     environment:
@@ -207,7 +201,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
@@ -269,7 +263,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
-  
+
   appwrite-worker-builds:
     entrypoint: worker-builds
     container_name: appwrite-worker-builds
@@ -277,7 +271,7 @@ services:
       context: .
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -368,21 +362,6 @@ services:
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
 
-  influxdb:
-    image: influxdb:1.6
-    container_name: appwrite-influxdb
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-influxdb:/var/lib/influxdb:rw
-
-  telegraf:
-    image: appwrite/telegraf:1.1.0
-    container_name: appwrite-telegraf
-    restart: unless-stopped
-    networks:
-      - appwrite
 
   # redis-commander:
   #   image: rediscommander/redis-commander:latest
@@ -407,24 +386,6 @@ services:
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
-  # chronograf:
-  #   image: chronograf:1.5
-  #   container_name: appwrite-chronograf
-  #   restart: unless-stopped
-  #   networks:
-  #   - appwrite
-  #   volumes:
-  #   - appwrite-chronograf:/var/lib/chronograf
-  #   ports:
-  #   - "8888:8888"
-  #   environment:
-  #   - INFLUXDB_URL=http://influxdb:8086
-  #   - KAPACITOR_URL=http://kapacitor:9092
-  #   - AUTH_DURATION=48h
-  #   - TOKEN_SECRET=duperduper5674829!jwt
-  #   - GH_CLIENT_ID=d86f7145a41eacfc52cc
-  #   - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
-  #   - GH_ORGS=appwrite
 
   # webgrind:
   #   image: 'jokkedk/webgrind:latest'
@@ -444,6 +405,4 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-functions:
-  appwrite-influxdb:
-  appwrite-chronograf:
   appwrite-config:

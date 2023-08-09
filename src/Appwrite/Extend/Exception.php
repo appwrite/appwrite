@@ -51,6 +51,7 @@ class Exception extends \Exception
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
+    public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
 
     /** Users */
@@ -62,11 +63,13 @@ class Exception extends \Exception
     public const USER_PASSWORD_RESET_REQUIRED      = 'user_password_reset_required';
     public const USER_EMAIL_NOT_WHITELISTED        = 'user_email_not_whitelisted';
     public const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
+    public const USER_INVALID_CODE                 = 'user_invalid_code';
     public const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
     public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
+    public const USER_PASSWORD_PERSONAL_DATA       = 'password_personal_data';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
@@ -75,6 +78,9 @@ class Exception extends \Exception
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
+    public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
+    public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -157,6 +163,7 @@ class Exception extends \Exception
     public const INDEX_NOT_FOUND                   = 'index_not_found';
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
+    public const INDEX_INVALID                     = 'index_invalid';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
@@ -168,6 +175,10 @@ class Exception extends \Exception
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
+
+    public const PROJECT_SMTP_CONFIG_INVALID       = 'project_smtp_config_invalid';
+
+    public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
@@ -185,6 +196,7 @@ class Exception extends \Exception
     /** Domain */
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
+    public const DOMAIN_FORBIDDEN                  = 'domain_forbidden';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
     public const DOMAIN_TARGET_INVALID             = 'domain_target_invalid';
 
@@ -193,6 +205,7 @@ class Exception extends \Exception
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
     protected $type = '';
+    protected $errors = [];
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {

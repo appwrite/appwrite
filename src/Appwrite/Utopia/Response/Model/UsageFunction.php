@@ -16,30 +16,16 @@ class UsageFunction extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('executionsTotal', [
+            ->addRule('deploymentsTotal', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for number of function executions.',
+                'description' => 'Aggregated stats for number of function deployments.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('executionsFailure', [
+            ->addRule('deploymentsStorage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for function execution failures.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('executionsSuccess', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for function execution successes.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('executionsTime', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for function execution duration.',
+                'description' => 'Aggregated stats for function deployments storage.',
                 'default' => [],
                 'example' => [],
                 'array' => true
@@ -51,23 +37,31 @@ class UsageFunction extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('buildsFailure', [
+            ->addRule('buildsStorage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for function build failures.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('buildsSuccess', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for function build successes.',
+                'description' => 'Aggregated stats for builds  storage.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('buildsTime', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for function build duration.',
+                'description' => 'Aggregated stats for function build  compute.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsTotal', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated stats for number of function executions.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+
+            ->addRule('executionsTime', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated stats for function execution compute.',
                 'default' => [],
                 'example' => [],
                 'array' => true

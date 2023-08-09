@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -57,11 +58,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-User-Id'], $id);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], true);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -137,8 +137,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $name);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['registration']));
         $this->assertEquals($webhook['data']['status'], false);
         $this->assertEquals($webhook['data']['email'], $email);
         $this->assertEquals($webhook['data']['emailVerification'], false);
@@ -195,11 +194,10 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-User-Id'], $id);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -374,8 +372,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
         $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
         $this->assertNotEmpty($webhook['data']['osCode']);
         $this->assertIsString($webhook['data']['osCode']);
@@ -687,8 +684,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -744,12 +740,11 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id']), true);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-User-Id'], $id);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -805,8 +800,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -864,8 +858,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
 
         $data['secret'] = $webhook['data']['secret'];
 
@@ -923,13 +916,12 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-        $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), true);
+        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? '', $userUid);
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertNotEmpty($webhook['data']['userId']);
         $this->assertNotEmpty($webhook['data']['teamId']);
         $this->assertCount(2, $webhook['data']['roles']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($webhook['data']['joined']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['joined']));
         $this->assertEquals(true, $webhook['data']['confirm']);
 
         /**
