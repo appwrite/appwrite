@@ -64,11 +64,11 @@ class Backup extends Action
         do {
             try {
                 $attempts++;
-                $pools
+                $resource = $pools
                     ->get('replica_' . $database)
                     ->pop()
                     ->getResource();
-
+                var_dump($resource);
                 break; // leave the do-while if successful
             } catch (Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -229,7 +229,6 @@ class Backup extends Action
     {
         foreach (
             [
-                //'_APP_CONNECTIONS_DB_PROJECT',
                 '_APP_CONNECTIONS_DB_REPLICAS',
                 '_DO_SPACES_BUCKET_NAME',
                 '_DO_SPACES_ACCESS_KEY',
