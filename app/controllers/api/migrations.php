@@ -146,14 +146,14 @@ App::post('/v1/migrations/firebase/oauth')
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
-        if ($user->getAttribute('migrationsFirebaseServiceAccount')) {
-            $serviceAccount = json_decode($user->getAttribute('migrationsFirebaseServiceAccount'), true);
+        if ($identity->getAttribute('secret')) {
+            $serviceAccount = $identity->getAttribute('secret');
         } else {
             $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
-            $user = $user
-                ->setAttribute('migrationsFirebaseServiceAccount', json_encode($serviceAccount));
+            $identity = $identity
+                ->setAttribute('secret', $serviceAccount);
 
-            $dbForConsole->updateDocument('users', $user->getId(), $user);
+            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
         $migration = $dbForProject->createDocument('migrations', new Document([
@@ -542,14 +542,14 @@ App::get('/v1/migrations/firebase/report/oauth')
             }
 
             // Get Service Account
-            if ($user->getAttribute('migrationsFirebaseServiceAccount')) {
-                $serviceAccount = json_decode($user->getAttribute('migrationsFirebaseServiceAccount'), true);
+            if ($identity->getAttribute('secret')) {
+                $serviceAccount = $identity->getAttribute('secret');
             } else {
                 $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
-                $user = $user
-                    ->setAttribute('migrationsFirebaseServiceAccount', json_encode($serviceAccount));
+                $identity = $identity
+                    ->setAttribute('secret', $serviceAccount);
 
-                $dbForConsole->updateDocument('users', $user->getId(), $user);
+                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
 
             $firebase = new Firebase(array_merge($serviceAccount, ['project_id' => $projectId]));
