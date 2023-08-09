@@ -16,8 +16,8 @@ class Exception extends AppwriteException
         $this->message = $response;
         $decoded = json_decode($response, true);
         if (\is_array($decoded)) {
-            $this->error = $decoded['error'];
-            $this->errorDescription = $decoded['error_description'];
+            $this->error = $decoded['error'] ?? $decoded['message'] ?? "Unknown error";
+            $this->errorDescription = $decoded['error_description'] ?? "No description";
             $this->message =  $this->error . ': ' . $this->errorDescription;
         }
         $type = match ($code) {
