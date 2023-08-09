@@ -3597,7 +3597,7 @@ $collections = [
         'name' => 'slowQueries',
         'attributes' => [
             [
-                '$id' => 'blocked',
+                '$id' => ID::custom('blocked'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
                 'size' => 0,
