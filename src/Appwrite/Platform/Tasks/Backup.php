@@ -142,6 +142,7 @@ class Backup extends Action
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
+            '--port=' . $this->dsn->getPort(),
             '--backup',
             '--strict',
             '--history=' . $this->database, // logs PERCONA_SCHEMA.xtrabackup_history name attribute
