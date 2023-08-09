@@ -61,10 +61,7 @@ class Backup extends Action
         $max = 10;
         $sleep = 5;
 
-        $resource = $pools
-            ->get('replica_' . $database)
-            ->pop()
-            ->getResource();
+        $resource = $pools->get('replica_' . $database);
         var_dump($resource);
 
         do {
