@@ -727,7 +727,7 @@ services:
     hostname: executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: meldiron/executor:0.3.6
+    image: openruntimes/executor:0.3.1
     networks:
       - appwrite
       - runtimes
@@ -750,6 +750,28 @@ services:
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
+
+  openruntimes-proxy:
+    container_name: openruntimes-proxy
+    hostname: proxy
+    <<: *x-logging
+    stop_signal: SIGINT
+    image: openruntimes/proxy:0.3.0
+    networks:
+      - appwrite
+      - runtimes
+    environment:
+      - OPR_PROXY_WORKER_PER_CORE=$_APP_WORKER_PER_CORE
+      - OPR_PROXY_ENV=$_APP_ENV
+      - OPR_PROXY_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
+      - OPR_PROXY_SECRET=$_APP_EXECUTOR_SECRET
+      - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
+      - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
+      - OPR_PROXY_ALGORITHM=random
+      - OPR_PROXY_EXECUTORS=executor
+      - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
+      - OPR_PROXY_MAX_TIMEOUT=600
+      - OPR_PROXY_HEALTHCHECK=enabled
 
   mariadb:
     image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p

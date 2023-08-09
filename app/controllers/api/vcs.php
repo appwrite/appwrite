@@ -108,9 +108,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
 
+            $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
+
+            $action = $isAuthorized ? [ 'type' => 'logs' ] : [ 'type' => 'authorize', 'url' => $authorizeUrl ];
+
             if (empty($latestCommentId)) {
                 $comment = new Comment();
-                $comment->addBuild($project, $function, $commentStatus, $deploymentId);
+                $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
 
                 if (!empty($providerPullRequestId)) {
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
@@ -147,7 +151,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             } else {
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
-                $comment->addBuild($project, $function, $commentStatus, $deploymentId);
+                $comment->addBuild($project, $function, $commentStatus, $deploymentId, $action);
 
                 $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
             }
@@ -157,12 +161,11 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $projectName = $project->getAttribute('name');
                 $name = "{$functionName} ({$projectName})";
                 $message = 'Authorization required for external contributor.';
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
                 $repositoryName = $github->getRepositoryName($providerRepositoryId);
                 $owner = $github->getOwnerName($providerInstallationId);
-                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $providerTargetUrl, $name);
+                $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
                 continue;
             }
 
@@ -332,13 +335,44 @@ App::get('/v1/vcs/github/callback')
             $refreshToken = $oauth2->getRefreshToken($code) ?? '';
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code) ?? '';
             $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
+            $email = $oauth2->getUserEmail($accessToken);
+            $oauth2ID = $oauth2->getUserID($accessToken);
 
-            $user = $user
-                ->setAttribute('vcsGithubAccessToken', $accessToken)
-                ->setAttribute('vcsGithubRefreshToken', $refreshToken)
-                ->setAttribute('vcsGithubAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
+            // Makes sure this email is not already used in another identity
+            $identity = $dbForConsole->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if ($identity !== false && !$identity->isEmpty()) {
+                if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
+                    throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                }
+            }
 
-            $dbForConsole->updateDocument('users', $user->getId(), $user);
+            if ($identity !== false && !$identity->isEmpty()) {
+                $identity = $identity
+                    ->setAttribute('providerAccessToken', $accessToken)
+                    ->setAttribute('providerRefreshToken', $refreshToken)
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
+
+                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+            } else {
+                $identity = $dbForConsole->createDocument('identities', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userInternalId' => $user->getInternalId(),
+                    'userId' => $user->getId(),
+                    'provider' => 'github',
+                    'providerUid' => $oauth2ID,
+                    'providerEmail' => $email,
+                    'providerAccessToken' => $accessToken,
+                    'providerRefreshToken' => $refreshToken,
+                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                ]));
+            }
         }
 
         // Create / Update installation
@@ -637,9 +671,17 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         if ($installation->getAttribute('personal', false) === true) {
             $oauth2 = new OAuth2Github(App::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), App::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
-            $accessToken = $user->getAttribute('vcsGithubAccessToken');
-            $refreshToken = $user->getAttribute('vcsGithubRefreshToken');
-            $accessTokenExpiry = $user->getAttribute('vcsGithubAccessTokenExpiry');
+            $identity = $dbForConsole->findOne('identities', [
+                Query::equal('provider', ['github']),
+                Query::equal('userInternalId', [$user->getInternalId()]),
+            ]);
+            if ($identity === false || $identity->isEmpty()) {
+                throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+            }
+
+            $accessToken = $identity->getAttribute('providerAccessToken');
+            $refreshToken = $identity->getAttribute('providerRefreshToken');
+            $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
 
             $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
             if ($isExpired) {
@@ -654,12 +696,12 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                     throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, "Another request is currently refreshing OAuth token. Please try again.");
                 }
 
-                $user = $user
-                    ->setAttribute('vcsGithubAccessToken', $accessToken)
-                    ->setAttribute('vcsGithubRefreshToken', $refreshToken)
-                    ->setAttribute('vcsGithubAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+                $identity = $identity
+                    ->setAttribute('providerAccessToken', $accessToken)
+                    ->setAttribute('providerRefreshToken', $refreshToken)
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                $dbForConsole->updateDocument('users', $user->getId(), $user);
+                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
 
             $repository = $oauth2->createRepository($accessToken, $name, $private);
