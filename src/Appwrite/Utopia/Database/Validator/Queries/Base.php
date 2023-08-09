@@ -9,7 +9,6 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Order;
-use Utopia\Database\Validator\Query\Select;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -23,7 +22,7 @@ class Base extends Queries
      * @param string[] $allowedAttributes
      * @throws \Exception
      */
-    public function __construct(string $collection, array $allowedAttributes, array $prohibitedQueries = [])
+    public function __construct(string $collection, array $allowedAttributes)
     {
         $config = Config::getParam('collections', []);
         $collections = array_merge($config['console'], $config['projects'], $config['buckets'], $config['databases']);
@@ -70,16 +69,7 @@ class Base extends Queries
             new Cursor(),
             new Filter($attributes),
             new Order($attributes),
-            new Select($attributes),
         ];
-        // Remove prohibited validators from the $validators array
-        foreach ($prohibitedQueries as $prohibitedQuery) {
-            foreach ($validators as $key => $validator) {
-                if ($validator instanceof $prohibitedQuery) {
-                    unset($validators[$key]);
-                }
-            }
-        }
 
         parent::__construct($validators);
     }

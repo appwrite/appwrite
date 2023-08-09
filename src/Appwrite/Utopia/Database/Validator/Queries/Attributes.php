@@ -26,6 +26,6 @@ class Attributes extends Base
      */
     public function __construct()
     {
-        parent::__construct('attributes', self::ALLOWED_ATTRIBUTES, self::PROHIBITED_QUERIES);
+        parent::__construct('attributes', self::ALLOWED_ATTRIBUTES);
     }
 }
