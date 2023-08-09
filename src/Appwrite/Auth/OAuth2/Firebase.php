@@ -198,9 +198,10 @@ class Firebase extends OAuth2
     /*
         Be careful with the setIAMPolicy method, it will overwrite all existing policies
     **/
-    public function assignIAMRoles(string $accessToken, string $email, string $projectId) {
+    public function assignIAMRoles(string $accessToken, string $email, string $projectId)
+    {
         // Get IAM Roles
-        $iamRoles = $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/'.$projectId.':getIamPolicy', [
+        $iamRoles = $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/' . $projectId . ':getIamPolicy', [
             'Authorization: Bearer ' . \urlencode($accessToken),
             'Content-Type: application/json'
         ]);
@@ -210,19 +211,19 @@ class Firebase extends OAuth2
         $iamRoles['bindings'][] = [
             'role' => 'roles/identitytoolkit.admin',
             'members' => [
-                'serviceAccount:'.$email
+                'serviceAccount:' . $email
             ]
         ];
 
         $iamRoles['bindings'][] = [
             'role' => 'roles/firebase.admin',
             'members' => [
-                'serviceAccount:'.$email
+                'serviceAccount:' . $email
             ]
         ];
 
         // Set IAM Roles
-        $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/'.$projectId.':setIamPolicy', [
+        $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/' . $projectId . ':setIamPolicy', [
             'Authorization: Bearer ' . \urlencode($accessToken),
             'Content-Type: application/json'
         ], json_encode([

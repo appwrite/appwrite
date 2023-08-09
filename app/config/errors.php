@@ -659,7 +659,7 @@ return [
         'description' => 'Too many queries.',
         'code' => 400,
     ],
-    
+
     /** Migrations */
     Exception::MIGRATION_NOT_FOUND => [
         'name' => Exception::MIGRATION_NOT_FOUND,
