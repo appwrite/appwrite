@@ -5,6 +5,8 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -161,9 +163,18 @@ App::post('/v1/migrations/firebase/oauth')
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
-        $accessToken = $user->getAttribute('migrationsFirebaseAccessToken');
-        $refreshToken = $user->getAttribute('migrationsFirebaseRefreshToken');
-        $accessTokenExpiry = $user->getAttribute('migrationsFirebaseAccessTokenExpiry');
+        $identity = $dbForConsole->findOne('identities', [
+            Query::equal('provider', ['firebase']),
+            Query::equal('userInternalId', [$user->getInternalId()]),
+        ]);
+        if ($identity === false || $identity->isEmpty()) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR); //TODO: REMOVE
+            // throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+        }
+
+        $accessToken = $identity->getAttribute('providerAccessToken');
+        $refreshToken = $identity->getAttribute('providerRefreshToken');
+        $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
 
         $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
         if ($isExpired) {
@@ -178,12 +189,12 @@ App::post('/v1/migrations/firebase/oauth')
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
             }
 
-            $user = $user
-                ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
-                ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
-                ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $firebase->getAccessTokenExpiry('')));
+            $identity = $identity
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
-            $dbForConsole->updateDocument('users', $user->getId(), $user);
+            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
         if ($user->getAttribute('migrationsFirebaseServiceAccount')) {
@@ -499,9 +510,18 @@ App::get('/v1/migrations/firebase/report/oauth')
                 $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
             );
 
-            $accessToken = $user->getAttribute('migrationsFirebaseAccessToken');
-            $refreshToken = $user->getAttribute('migrationsFirebaseRefreshToken');
-            $accessTokenExpiry = $user->getAttribute('migrationsFirebaseAccessTokenExpiry');
+            $identity = $dbForConsole->findOne('identities', [
+                Query::equal('provider', ['firebase']),
+                Query::equal('userInternalId', [$user->getInternalId()]),
+            ]);
+            if ($identity === false || $identity->isEmpty()) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR); //TODO: REMOVE
+                // throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+            }
+
+            $accessToken = $identity->getAttribute('providerAccessToken');
+            $refreshToken = $identity->getAttribute('providerRefreshToken');
+            $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
 
             $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
             if ($isExpired) {
@@ -516,12 +536,12 @@ App::get('/v1/migrations/firebase/report/oauth')
                     throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
                 }
 
-                $user = $user
-                    ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
-                    ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
-                    ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $firebase->getAccessTokenExpiry('')));
+                $identity = $identity
+                    ->setAttribute('providerAccessToken', $accessToken)
+                    ->setAttribute('providerRefreshToken', $refreshToken)
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
-                $dbForConsole->updateDocument('users', $user->getId(), $user);
+                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
 
             // Get Service Account
@@ -641,6 +661,8 @@ App::get('/v1/migrations/firebase/redirect')
             $accessToken = $oauth2->getAccessToken($code);
             $refreshToken = $oauth2->getRefreshToken($code);
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code);
+            $email = $oauth2->getUserEmail($accessToken);
+            $oauth2ID = $oauth2->getUserID($accessToken);
 
             if (empty($accessToken)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to get access token.');
@@ -654,12 +676,42 @@ App::get('/v1/migrations/firebase/redirect')
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to get access token expiry.');
             }
 
-            $user = $user
-                ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
-                ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
-                ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
+            // Makes sure this email is not already used in another identity
+            $identity = $dbForConsole->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
 
-            $dbForConsole->updateDocument('users', $user->getId(), $user);
+            if ($identity !== false && !$identity->isEmpty()) {
+                if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
+                    throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                }
+            }
+
+            if ($identity !== false && !$identity->isEmpty()) {
+                $identity = $identity
+                    ->setAttribute('providerAccessToken', $accessToken)
+                    ->setAttribute('providerRefreshToken', $refreshToken)
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
+
+                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+            } else {
+                $identity = $dbForConsole->createDocument('identities', new Document([
+                    '$id' => ID::unique(),
+                    '$permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
+                    'userInternalId' => $user->getInternalId(),
+                    'userId' => $user->getId(),
+                    'provider' => 'firebase',
+                    'providerUid' => $oauth2ID,
+                    'providerEmail' => $email,
+                    'providerAccessToken' => $accessToken,
+                    'providerRefreshToken' => $refreshToken,
+                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                ]));
+            }
         } else {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Missing OAuth2 code.');
         }
@@ -686,23 +738,31 @@ App::get('/v1/migrations/firebase/projects')
     ->inject('dbForConsole')
     ->inject('request')
     ->action(function (Document $user, Response $response, Document $project, Database $dbForConsole, Request $request) {
-        if (empty($user->getAttribute('migrationsFirebaseAccessToken')) || empty($user->getAttribute('migrationsFirebaseRefreshToken')) || empty($user->getAttribute('migrationsFirebaseAccessTokenExpiry'))) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase');
-        }
-
-        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Missing Google OAuth credentials');
-        }
-
         $firebase = new OAuth2Firebase(
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
-        $accessToken = $user->getAttribute('migrationsFirebaseAccessToken');
-        $refreshToken = $user->getAttribute('migrationsFirebaseRefreshToken');
-        $accessTokenExpiry = $user->getAttribute('migrationsFirebaseAccessTokenExpiry');
+        $identity = $dbForConsole->findOne('identities', [
+            Query::equal('provider', ['firebase']),
+            Query::equal('userInternalId', [$user->getInternalId()]),
+        ]);
+        if ($identity === false || $identity->isEmpty()) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase'); //TODO: Replace with USER_IDENTITY_NOT_FOUND
+        }
+
+        $accessToken = $identity->getAttribute('providerAccessToken');
+        $refreshToken = $identity->getAttribute('providerRefreshToken');
+        $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
+
+        if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase');
+        }
+
+        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Missing Google OAuth credentials');
+        }
 
         $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
         if ($isExpired) {
@@ -717,12 +777,12 @@ App::get('/v1/migrations/firebase/projects')
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
             }
 
-            $user = $user
-                ->setAttribute('migrationsFirebaseAccessToken', $accessToken)
-                ->setAttribute('migrationsFirebaseRefreshToken', $refreshToken)
-                ->setAttribute('migrationsFirebaseAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $firebase->getAccessTokenExpiry('')));
+            $identity = $identity
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
-            $dbForConsole->updateDocument('users', $user->getId(), $user);
+            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
         $projects = $firebase->getProjects($accessToken);
@@ -754,12 +814,16 @@ App::get('/v1/migrations/firebase/deauthorize')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (Document $user, Response $response, Database $dbForConsole) {
-        $user = $user
-            ->setAttribute('migrationsFirebaseAccessToken', '')
-            ->setAttribute('migrationsFirebaseRefreshToken', '')
-            ->setAttribute('migrationsFirebaseAccessTokenExpiry', '');
+        $identity = $dbForConsole->findOne('identities', [
+            Query::equal('provider', ['firebase']),
+            Query::equal('userInternalId', [$user->getInternalId()]),
+        ]);
 
-        $dbForConsole->updateDocument('users', $user->getId(), $user);
+        if ($identity === false || $identity->isEmpty()) {
+            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase'); //TODO: Replace with USER_IDENTITY_NOT_FOUND
+        }
+
+        $dbForConsole->deleteDocument('identities', $identity->getId());
 
         $response->noContent();
     });
