@@ -50,7 +50,7 @@ class V15 extends Filter
                 break;
             case Response::MODEL_DATABASE:
             case Response::MODEL_DEPLOYMENT:
-            case Response::MODEL_DOMAIN:
+            // case Response::MODEL_DOMAIN:
             case Response::MODEL_PLATFORM:
             case Response::MODEL_PROJECT:
             case Response::MODEL_TEAM:
@@ -59,7 +59,7 @@ class V15 extends Filter
                 break;
             case Response::MODEL_DATABASE_LIST:
             case Response::MODEL_DEPLOYMENT_LIST:
-            case Response::MODEL_DOMAIN_LIST:
+            // case Response::MODEL_DOMAIN_LIST:
             case Response::MODEL_PLATFORM_LIST:
             case Response::MODEL_PROJECT_LIST:
             case Response::MODEL_TEAM_LIST:
@@ -72,9 +72,9 @@ class V15 extends Filter
                     case Response::MODEL_DEPLOYMENT_LIST:
                         $listKey = 'deployments';
                         break;
-                    case Response::MODEL_DOMAIN_LIST:
-                        $listKey = 'domains';
-                        break;
+                    // case Response::MODEL_DOMAIN_LIST:
+                    //     $listKey = 'domains';
+                    //     break;
                     case Response::MODEL_PLATFORM_LIST:
                         $listKey = 'platforms';
                         break;

@@ -46,7 +46,7 @@ jobs:
     - name: Start Appwrite
       run:  |
         docker compose up -d
-        sleep 30
+        sleep 60
 
     - name: Doctor
       run:  |
