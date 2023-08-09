@@ -82,6 +82,48 @@ class Deployment extends Model
                 'default' => 0,
                 'example' => 128,
             ])
+            ->addRule('providerRepositoryName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The name of the vcs provider repository',
+                'default' => '',
+                'example' => 'database',
+            ])
+            ->addRule('providerRepositoryOwner', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The name of the vcs provider repository owner',
+                'default' => '',
+                'example' => 'utopia',
+            ])
+            ->addRule('providerRepositoryUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The url of the vcs provider repository',
+                'default' => '',
+                'example' => 'https://github.com/vermakhushboo/g4-node-function',
+            ])
+            ->addRule('providerCommitHash', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The commit hash of the vcs commit',
+                'default' => '',
+                'example' => '7c3f25d',
+            ])
+            ->addRule('providerCommitAuthor', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The name of vcs commit author',
+                'default' => '',
+                'example' => 'Khushboo Verma',
+            ])
+            ->addRule('providerCommitMessage', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The commit message',
+                'default' => '',
+                'example' => 'Update index.js',
+            ])
+            ->addRule('providerCommitUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The url of the vcs commit',
+                'default' => '',
+                'example' => 'https://github.com/vermakhushboo/g4-node-function/commit/60c0416257a9cbcdd96b2d370c38d8f8d150ccfb',
+            ])
         ;
     }
 

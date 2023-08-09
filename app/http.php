@@ -57,7 +57,6 @@ $http->on('AfterReload', function ($server, $workerId) {
 });
 
 Files::load(__DIR__ . '/../console');
-Files::load(__DIR__ . '/../public/images/vcs');
 
 include __DIR__ . '/controllers/general.php';
 

@@ -38,7 +38,7 @@ use Utopia\Validator\Boolean;
 
 use function Swoole\Coroutine\batch;
 
-$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerCommitHash, string $providerPullRequestId, bool $external, Database $dbForConsole, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, callable $getProjectDB, Request $request) {
     foreach ($repositories as $resource) {
         $resourceType = $resource->getAttribute('resourceType');
 
@@ -55,7 +55,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $repositoryInternalId = $resource->getInternalId();
             $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
             $installationId = $resource->getAttribute('installationId');
-            $installationInternalId = $resource->getAttribute('internalInstallationId');
+            $installationInternalId = $resource->getAttribute('installationInternalId');
             $productionBranch = $function->getAttribute('providerBranch');
             $activate = false;
 
@@ -183,6 +183,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'providerRepositoryId' => $providerRepositoryId,
                 'repositoryId' => $repositoryId,
                 'repositoryInternalId' => $repositoryInternalId,
+                'providerRepositoryName' => $providerRepositoryName,
+                'providerRepositoryOwner' => $providerRepositoryOwner,
+                'providerRepositoryUrl' => $providerRepositoryUrl,
+                'providerCommitHash' => $providerCommitHash,
+                'providerCommitAuthor' => $providerCommitAuthor,
+                'providerCommitMessage' => $providerCommitMessage,
+                'providerCommitUrl' => $providerCommitUrl,
                 'providerCommentId' => \strval($latestCommentId),
                 'providerBranch' => $providerBranch,
                 'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
@@ -816,8 +823,14 @@ App::post('/v1/vcs/github/events')
             if ($event == $github::EVENT_PUSH) {
                 $providerBranch = $parsedPayload["branch"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
+                $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
                 $providerInstallationId = $parsedPayload["installationId"] ?? '';
-                $providerCommitHash = $parsedPayload["SHA"] ?? '';
+                $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
+                $providerCommitHash = $parsedPayload["commitHash"] ?? '';
+                $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
+                $providerCommitAuthor = $parsedPayload["headCommitAuthor"] ?? '';
+                $providerCommitMessage = $parsedPayload["headCommitMessage"] ?? '';
+                $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
 
                 $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
 
@@ -827,7 +840,7 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]);
 
-                $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, '', false, $dbForConsole, $getProjectDB, $request);
+                $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $getProjectDB, $request);
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead (update function as well)
@@ -855,10 +868,14 @@ App::post('/v1/vcs/github/events')
                 if ($parsedPayload["action"] == "opened" || $parsedPayload["action"] == "reopened" || $parsedPayload["action"] == "synchronize") {
                     $providerBranch = $parsedPayload["branch"] ?? '';
                     $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
+                    $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
                     $providerInstallationId = $parsedPayload["installationId"] ?? '';
+                    $providerRepositoryUrl = $parsedPayload["repositoryUrl"] ?? '';
                     $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
-                    $providerCommitHash = $parsedPayload["SHA"] ?? '';
+                    $providerCommitHash = $parsedPayload["commitHash"] ?? '';
+                    $providerRepositoryOwner = $parsedPayload["owner"] ?? '';
                     $external = $parsedPayload["external"] ?? true;
+                    $providerCommitUrl = $parsedPayload["headCommitUrl"] ?? '';
 
                     // Ignore sync for non-external. We handle it in push webhook
                     if (!$external && $parsedPayload["action"] == "synchronize") {
@@ -867,12 +884,16 @@ App::post('/v1/vcs/github/events')
 
                     $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
 
+                    $commitDetails = $github->getCommit($providerRepositoryOwner, $providerRepositoryName, $providerCommitHash);
+                    $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
+                    $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
+
                     $repositories = $dbForConsole->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, $external, $dbForConsole, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 
