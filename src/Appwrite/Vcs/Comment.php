@@ -19,7 +19,7 @@ class Comment
         return \count($this->builds) === 0;
     }
 
-    public function addBuild(Document $project, Document $function, string $buildStatus, string $deploymentId): void
+    public function addBuild(Document $project, Document $function, string $buildStatus, string $deploymentId, array $action): void
     {
         // Unique index
         $id = $project->getId() . '_' . $function->getId();
@@ -30,7 +30,8 @@ class Comment
             'functionName' => $function->getAttribute('name'),
             'functionId' => $function->getId(),
             'buildStatus' => $buildStatus,
-            'deploymentId' => $deploymentId
+            'deploymentId' => $deploymentId,
+            'action' => $action,
         ];
     }
 
@@ -53,7 +54,8 @@ class Comment
             $projects[$build['projectId']]['functions'][$build['functionId']] = [
                 'name' => $build['functionName'],
                 'status' => $build['buildStatus'],
-                'deploymentId' => $build['deploymentId']
+                'deploymentId' => $build['deploymentId'],
+                'action' => $build['action'],
             ];
         }
 
@@ -70,24 +72,26 @@ class Comment
 
             foreach ($project['functions'] as $functionId => $function) {
                 $status = match ($function['status']) {
-                    'waiting' => '<img src="' . $protocol . '://' . $hostname . '/state-waiting.png" alt="Waiting" height="25" align="center"> Waiting to build',
-                    'processing' => '<img src="' . $protocol . '://' . $hostname . '/animation-building.gif" alt="Processing" height="29" align="center"> Processing',
-                    'building' => '<img src="' . $protocol . '://' . $hostname . '/animation-building.gif" alt="Building" height="29" align="center"> Building',
-                    'ready' => '<img src="' . $protocol . '://' . $hostname . '/state-success.png" alt="Ready" height="25" align="center"> Ready',
-                    'failed' => '<img src="' . $protocol . '://' . $hostname . '/state-failed.png" alt="Failed" height="25" align="center"> Failed',
+                    'waiting' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-waiting.png" alt="Waiting" height="25" align="center"> Waiting to build',
+                    'processing' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-building.gif" alt="Processing" height="29" align="center"> Processing',
+                    'building' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-building.gif" alt="Building" height="29" align="center"> Building',
+                    'ready' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-success.png" alt="Ready" height="25" align="center"> Ready',
+                    'failed' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-failed.png" alt="Failed" height="25" align="center"> Failed',
                 };
-                //TODO: Update names of images
 
-                //TODO: Change View logs to Authorize for external contributors
-                $logs = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                if ($function['action']['type'] === 'logs') {
+                    $action = '[View Logs](' . $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId . '/deployment-' . $function['deploymentId'] . ')';
+                } else {
+                    $action = '[Authorize](' . $function['action']['url'] . ')';
+                }
 
-                $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$logs} |\n";
+                $text .= "| {$function['name']} | `{$functionId}` | {$status} | {$action} |\n";
             }
 
             $text .= "\n\n";
         }
         //TODO: Update did you know section
-        $text .= "> **💡 Did you know?** \n Appwrite has a discord community with XX members. [Come join us!](https://appwrite.io/discord)\n\n";
+        $text .= "> **💡 Did you know?** \n Appwrite has a Discord community with over 16 000 members. [Come join us!](https://appwrite.io/discord)\n\n";
 
         return $text;
     }

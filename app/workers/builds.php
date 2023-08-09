@@ -543,7 +543,7 @@ class BuildsV1 extends Worker
             try {
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $function, $status, $deployment->getId());
+                $comment->addBuild($project, $function, $status, $deployment->getId(), [ 'type' => 'logs' ]);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } catch (\Exception $e) {
                 $error = $e;

@@ -175,6 +175,16 @@ return [
         'description' => 'Passwords do not match. Please check the password and confirm password.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_RECENTLY_USED => [
+        'name' => Exception::USER_PASSWORD_RECENTLY_USED,
+        'description' => 'The password you are trying to use is similar to your previous password. Please choose a stronger password.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_PERSONAL_DATA => [
+        'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. Please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
@@ -209,6 +219,21 @@ return [
         'name' => Exception::USER_MISSING_ID,
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
+    ],
+    Exception::USER_OAUTH2_BAD_REQUEST => [
+        'name' => Exception::USER_OAUTH2_BAD_REQUEST,
+        'description' => 'OAuth2 provider rejected the bad request.',
+        'code' => 400,
+    ],
+    Exception::USER_OAUTH2_UNAUTHORIZED => [
+        'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
+        'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_PROVIDER_ERROR => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
+        'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
     ],
 
     /** Teams */
