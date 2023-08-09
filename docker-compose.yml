@@ -170,7 +170,7 @@ services:
       - _APP_SLOW_QUERIES_MAX_HITS
       - _APP_SLOW_QUERIES_TIMEOUT
       - _APP_SLOW_QUERIES
-      -
+
   appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging
