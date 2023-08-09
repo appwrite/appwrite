@@ -110,7 +110,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $authorizeUrl = $request->getProtocol() . '://' . $request->getHostname() . "/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
-            $action = $isAuthorized ? [ 'type' => 'logs' ] : [ 'type' => 'authorize', 'url' => $authorizeUrl ];
+            $action = $isAuthorized ? ['type' => 'logs'] : ['type' => 'authorize', 'url' => $authorizeUrl];
 
             if (empty($latestCommentId)) {
                 $comment = new Comment();
@@ -863,6 +863,7 @@ App::post('/v1/vcs/github/events')
             $parsedPayload = $github->getEvent($event, $payload);
 
             if ($event == $github::EVENT_PUSH) {
+                $providerBranchCreated = $parsedPayload["created"] ?? false;
                 $providerBranch = $parsedPayload["branch"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
                 $providerRepositoryName = $parsedPayload["repositoryName"] ?? '';
@@ -882,7 +883,10 @@ App::post('/v1/vcs/github/events')
                     Query::limit(100),
                 ]);
 
-                $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $getProjectDB, $request);
+                // create new deployment only on push and not when branch is created
+                if (!$providerBranchCreated) {
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $getProjectDB, $request);
+                }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
                     // TODO: Use worker for this job instead (update function as well)

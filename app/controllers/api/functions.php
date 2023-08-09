@@ -46,12 +46,24 @@ use Utopia\Database\Validator\Roles;
 use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use MaxMind\Db\Reader;
+use Utopia\VCS\Adapter\Git\GitHub;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template) {
+$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template, GitHub $github) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
+    $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
+    $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+    $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+    $github->initialiseVariables($providerInstallationId, $privateKey, $githubAppId);
+    $owner = $github->getOwnerName($providerInstallationId);
+    $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
+    $repositoryName = $github->getRepositoryName($providerRepositoryId);
+    $providerBranch = $function->getAttribute('providerBranch', 'main');
+    $repositoryUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
+    $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+
     $deployment = $dbForProject->createDocument('deployments', new Document([
         '$id' => $deploymentId,
         '$permissions' => [
@@ -66,10 +78,17 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'type' => 'vcs',
         'installationId' => $installation->getId(),
         'installationInternalId' => $installation->getInternalId(),
-        'providerRepositoryId' => $function->getAttribute('providerRepositoryId', ''),
+        'providerRepositoryId' => $providerRepositoryId,
         'repositoryId' => $function->getAttribute('repositoryId', ''),
         'repositoryInternalId' => $function->getAttribute('repositoryInternalId', ''),
-        'providerBranch' => $function->getAttribute('providerBranch', 'main'),
+        'providerRepositoryName' => $repositoryName,
+        'providerRepositoryOwner' => $owner,
+        'providerRepositoryUrl' => $repositoryUrl,
+        'providerCommitHash' => $commitDetails['commitHash'] ?? '',
+        'providerCommitAuthor' => $commitDetails['commitAuthor'] ?? '',
+        'providerCommitMessage' => $commitDetails['commitMessage'] ?? '',
+        'providerCommitUrl' => $commitDetails['commitUrl'] ?? '',
+        'providerBranch' => $providerBranch,
         'providerRootDirectory' => $function->getAttribute('providerRootDirectory', ''),
         'search' => implode(' ', [$deploymentId, $entrypoint]),
         'activate' => true,
@@ -132,7 +151,8 @@ App::post('/v1/functions')
     ->inject('user')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole) use ($redeployVcs) {
+    ->inject('gitHub')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
@@ -224,7 +244,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, $template);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $template, $github);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -456,18 +476,18 @@ App::get('/v1/functions/:functionId/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric][] = [
+                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
 
         $response->dynamic(new Document([
             'range' => $range,
@@ -534,18 +554,18 @@ App::get('/v1/functions/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric][] = [
+                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
         $response->dynamic(new Document([
             'range' => $range,
             'functionsTotal' => $usage[$metrics[0]],
@@ -595,7 +615,8 @@ App::put('/v1/functions/:functionId')
     ->inject('project')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole) use ($redeployVcs) {
+    ->inject('gitHub')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -713,7 +734,7 @@ App::put('/v1/functions/:functionId')
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document());
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document(), $github);
         }
 
         // Inform scheduler if function is still active
@@ -1247,7 +1268,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->inject('project')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project) use ($redeployVcs) {
+    ->inject('gitHub')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github) use ($redeployVcs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1270,7 +1292,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         $installation = $dbForConsole->getDocument('installations', $deployment->getAttribute('installationId', ''));
 
-        $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]));
+        $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]), $github);
 
         $response->noContent();
     });
@@ -1390,7 +1412,7 @@ App::post('/v1/functions/:functionId/executions')
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
             if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_REQUEST)) {
-                $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
 
@@ -1495,7 +1517,7 @@ App::post('/v1/functions/:functionId/executions')
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_RESPONSE)) {
-                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                    $headersFiltered[] = ['name' => $key, 'value' => $value];
                 }
             }
 
@@ -1511,8 +1533,8 @@ App::post('/v1/functions/:functionId/executions')
              * Sync execution compute usage from
              */
             $queueForUsage
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000)) // per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000)) // per function
             ;
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
@@ -1541,7 +1563,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $headers = [];
         foreach ($executionResponse['headers'] as $key => $value) {
-            $headers[] = [ 'name' => $key, 'value' => $value ];
+            $headers[] = ['name' => $key, 'value' => $value];
         }
 
         $execution->setAttribute('responseBody', $executionResponse['body']);
