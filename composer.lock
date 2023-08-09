@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d0376329098f3bb85c4c924336c7169",
+    "content-hash": "e16b630ecf5085dfdfa004886dee2e35",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2459,11 +2459,11 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "dev-feat-git-adapter",
+            "version": "0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "9f1665cb7818a05adf77c17972e560c2e43b7974"
+                "reference": "fc9c38a3f84a4391470cc7184199dec6f953b144"
             },
             "require": {
                 "adhocore/jwt": "^1.1",
@@ -2512,7 +2512,7 @@
                 "utopia",
                 "vcs"
             ],
-            "time": "2023-08-09T17:22:48+00:00"
+            "time": "2023-08-09T20:48:51+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5316,17 +5316,10 @@
             "version": "9999999-dev",
             "alias": "0.33.99",
             "alias_normalized": "0.33.99.0"
-        },
-        {
-            "package": "utopia-php/vcs",
-            "version": "dev-feat-git-adapter",
-            "alias": "0.1.99",
-            "alias_normalized": "0.1.99.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/vcs": 20,
         "appwrite/sdk-generator": 20
     },
     "prefer-stable": false,
