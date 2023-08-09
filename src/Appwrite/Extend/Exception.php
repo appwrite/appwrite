@@ -69,6 +69,7 @@ class Exception extends \Exception
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
     public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
+    public const USER_PASSWORD_PERSONAL_DATA       = 'password_personal_data';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
@@ -78,6 +79,9 @@ class Exception extends \Exception
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
+    public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
+    public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';

@@ -562,6 +562,7 @@ App::error()
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $error->getMessage())
+                ->setParam('type', $type)
                 ->setParam('code', $code)
                 ->setParam('trace', $trace)
             ;
