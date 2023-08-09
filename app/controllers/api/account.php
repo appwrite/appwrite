@@ -43,6 +43,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PersonalData;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -191,6 +192,13 @@ App::post('/v1/account')
 
             if ($total >= $limit) {
                 throw new Exception(Exception::USER_COUNT_EXCEEDED);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+            $personalDataValidator = new PersonalData($userId, $email, $name, null);
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
 
@@ -838,7 +846,7 @@ App::post('/v1/account/sessions/magic-url')
                 }
             }
 
-            $userId = $userId == 'unique()' ? ID::unique() : $userId;
+            $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             $user->setAttributes([
                 '$id' => $userId,
@@ -1091,7 +1099,7 @@ App::post('/v1/account/sessions/phone')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-key', 'url:{url},email:{param-phone}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->inject('request')
@@ -1756,16 +1764,22 @@ App::patch('/v1/account/password')
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
         $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
-        $history = [];
+        $history = $user->getAttribute('passwordHistory', []);
         if ($historyLimit > 0) {
-            $history = $user->getAttribute('passwordHistory', []);
             $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
             if (!$validator->isValid($password)) {
-                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED, 'The password was recently used', 409);
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
             $history[] = $newPassword;
-            array_slice($history, (count($history) - $historyLimit), $historyLimit);
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
+        if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
+            $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
+            if (!$personalDataValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
         }
 
         $user
@@ -2360,8 +2374,9 @@ App::put('/v1/account/recovery')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('project')
     ->inject('events')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $events) {
         if ($password !== $passwordAgain) {
             throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
@@ -2381,8 +2396,23 @@ App::put('/v1/account/recovery')
 
         Authorization::setRole(Role::user($profile->getId())->toString());
 
+        $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
+
+        $historyLimit = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
+        $history = $profile->getAttribute('passwordHistory', []);
+        if ($historyLimit > 0) {
+            $validator = new PasswordHistory($history, $profile->getAttribute('hash'), $profile->getAttribute('hashOptions'));
+            if (!$validator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
+            }
+
+            $history[] = $newPassword;
+            $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
+        }
+
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS))
+                ->setAttribute('password', $newPassword)
+                ->setAttribute('passwordHistory', $history)
                 ->setAttribute('passwordUpdate', DateTime::now())
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
