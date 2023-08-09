@@ -10,14 +10,14 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Transfer\Destinations\Appwrite as DestinationsAppwrite;
-use Utopia\Transfer\Resource;
-use Utopia\Transfer\Source;
-use Utopia\Transfer\Sources\Appwrite;
-use Utopia\Transfer\Sources\Firebase;
-use Utopia\Transfer\Sources\NHost;
-use Utopia\Transfer\Sources\Supabase;
-use Utopia\Transfer\Transfer;
+use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
+use Utopia\Migration\Resource;
+use Utopia\Migration\Source;
+use Utopia\Migration\Sources\Appwrite;
+use Utopia\Migration\Sources\Firebase;
+use Utopia\Migration\Sources\NHost;
+use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Transfer;
 
 require_once __DIR__.'/../init.php';
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52febef59caefbcc741b310adf5ad60f",
+    "content-hash": "ca47a56f2285cea787de1f58a8ee968c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1962,6 +1962,64 @@
             "time": "2023-02-07T05:42:46+00:00"
         },
         {
+            "name": "utopia-php/migration",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/migration.git",
+                "reference": "9dc59bbe0d126e20434580a5aa7cae5793bab024"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/9dc59bbe0d126e20434580a5aa7cae5793bab024",
+                "reference": "9dc59bbe0d126e20434580a5aa7cae5793bab024",
+                "shasum": ""
+            },
+            "require": {
+                "appwrite/appwrite": "^8.0",
+                "php": ">=8.0",
+                "utopia-php/cli": "^0.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.10",
+                "phpunit/phpunit": "^9.3",
+                "vlucas/phpdotenv": "^5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Migration\\": "src/Migration"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Bradley Schofield",
+                    "email": "bradley@appwrite.io"
+                }
+            ],
+            "description": "A simple library to migrate resources between services.",
+            "keywords": [
+                "framework",
+                "migration",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/0.2.0"
+            },
+            "time": "2023-08-09T16:28:43+00:00"
+        },
+        {
             "name": "utopia-php/mongo",
             "version": "0.2.0",
             "source": {
@@ -2497,76 +2555,6 @@
                 "source": "https://github.com/utopia-php/system/tree/0.6.0"
             },
             "time": "2022-11-07T13:51:59+00:00"
-        },
-        {
-            "name": "utopia-php/transfer",
-            "version": "dev-feat-improve-features",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/transfer.git",
-                "reference": "7fca998f19e2d12dcfa003d7534e4ae1c2f205a1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/transfer/zipball/7fca998f19e2d12dcfa003d7534e4ae1c2f205a1",
-                "reference": "7fca998f19e2d12dcfa003d7534e4ae1c2f205a1",
-                "shasum": ""
-            },
-            "require": {
-                "appwrite/appwrite": "^8.0",
-                "php": ">=8.0",
-                "utopia-php/cli": "^0.15.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.10",
-                "phpunit/phpunit": "^9.3",
-                "vlucas/phpdotenv": "^5.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Transfer\\": "src/Transfer"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/Transfer"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                },
-                {
-                    "name": "Bradley Schofield",
-                    "email": "bradley@appwrite.io"
-                }
-            ],
-            "description": "A simple library to transfer resources between services.",
-            "keywords": [
-                "framework",
-                "php",
-                "transfer",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "source": "https://github.com/utopia-php/transfer/tree/feat-improve-features",
-                "issues": "https://github.com/utopia-php/transfer/issues"
-            },
-            "time": "2023-08-09T11:33:01+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5365,9 +5353,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/transfer": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5391,5 +5377,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.1.0"
 }

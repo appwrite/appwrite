@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Transfer\Resource;
+use Utopia\Migration\Resource;
 
 class MigrationReport extends Model
 {
