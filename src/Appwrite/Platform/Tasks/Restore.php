@@ -21,10 +21,18 @@ class Restore extends Action
     protected ?DSN $dsn = null;
     protected string $database;
     protected ?DOSpaces $s3 = null;
+    protected string|null $xtrabackupContainerId = null;
 
     public function __construct()
     {
         $this->checkEnvVariables();
+
+        $this->xtrabackupContainerId = shell_exec('docker ps -aqf "name=xtrabackup"');
+        $this->xtrabackupContainerId = str_replace(PHP_EOL, '', $this->xtrabackupContainerId);
+        if (empty($this->xtrabackupContainerId)) {
+            Console::error('Xtrabackup Container ID not found');
+            Console::exit();
+        }
 
         $this
             ->desc('Restore a DB')
@@ -166,7 +174,7 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
         $this->log($cmd);
         shell_exec($cmd);
 
@@ -199,7 +207,7 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
         $this->log($cmd);
         shell_exec($cmd);
 
@@ -234,7 +242,7 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
         $this->log($cmd);
         shell_exec($cmd);
 

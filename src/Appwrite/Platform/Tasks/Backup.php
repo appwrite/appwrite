@@ -23,6 +23,7 @@ class Backup extends Action
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
+    protected string $xtrabackupContainerId;
 
     /**
      * @throws Exception
@@ -87,6 +88,13 @@ class Backup extends Action
             }
         } while ($attempts < $max);
 
+        $this->xtrabackupContainerId = shell_exec('docker ps -aqf "name=xtrabackup"');
+        $this->xtrabackupContainerId = str_replace(PHP_EOL, '', $this->xtrabackupContainerId);
+        if (empty($this->xtrabackupContainerId)) {
+            Console::error('Xtrabackup Container ID not found');
+            Console::exit();
+        }
+
         Console::loop(function () {
             $this->start();
         }, self::BACKUP_INTERVAL_SECONDS);
@@ -148,7 +156,7 @@ class Backup extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec xtrabackup ' . implode(' ', $args);
+        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
         self::log($cmd);
         shell_exec($cmd);
 
