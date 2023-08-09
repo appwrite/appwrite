@@ -470,6 +470,11 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('tokens', [
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
+
+        // Delete identities
+        $this->deleteByGroup('identities', [
+            Query::equal('userInternalId', [$userInternalId])
+        ], $dbForProject);
     }
 
     /**
