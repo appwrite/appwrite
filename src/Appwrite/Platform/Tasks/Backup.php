@@ -32,8 +32,8 @@ class Backup extends Action
         $this->checkEnvVariables();
 
         $this
-            ->desc('Backup a DB')
-            ->param('database', null, new Text(20), 'Database name for example db_fra1_01')
+            ->desc('Backup a database')
+            ->param('database', null, new Text(20), 'Database name, for example db_fra1_01')
             ->inject('pools')
             ->callback(fn(string $database, Group $pools) => $this->action($database, $pools));
     }
@@ -229,7 +229,7 @@ class Backup extends Action
     {
         foreach (
             [
-                '_APP_CONNECTIONS_DB_PROJECT',
+                //'_APP_CONNECTIONS_DB_PROJECT',
                 '_APP_CONNECTIONS_DB_REPLICAS',
                 '_DO_SPACES_BUCKET_NAME',
                 '_DO_SPACES_ACCESS_KEY',
