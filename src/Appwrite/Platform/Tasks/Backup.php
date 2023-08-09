@@ -65,7 +65,7 @@ class Backup extends Action
             try {
                 $attempts++;
                 $pools
-                    ->get('database_' . $database)
+                    ->get('replica_' . $database)
                     ->pop()
                     ->getResource();
 
