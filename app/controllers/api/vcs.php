@@ -119,7 +119,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 if (!empty($providerPullRequestId)) {
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
                 } elseif (!empty($providerBranch)) {
-                    $gitPullRequest = $github->getBranchPullRequest($owner, $repositoryName, $providerBranch);
+                    $gitPullRequest = $github->getPullRequestFromBranch($owner, $repositoryName, $providerBranch);
                     $providerPullRequestId = \strval($gitPullRequest['number'] ?? '');
                     if (!empty($providerPullRequestId)) {
                         $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
