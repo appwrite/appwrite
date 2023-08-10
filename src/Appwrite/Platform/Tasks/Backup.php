@@ -87,8 +87,7 @@ class Backup extends Action
                 sleep($sleep);
             }
         } while ($attempts < $max);
-
-        $containerId = shell_exec('docker ps -aqf "name=xtrabackup"');
+        $containerId = shell_exec('docker ps -aqf "name=xtrabackup" --format "{{.ID}}"');
         $containerId = str_replace(PHP_EOL, '', $containerId);
         if (empty($containerId)) {
             Console::error('Xtrabackup Container ID not found');

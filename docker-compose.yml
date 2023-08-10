@@ -779,7 +779,7 @@ services:
       - redis
     environment:
       - _APP_CONNECTIONS_DB_REPLICAS
-      - _APP_CONNECTIONS_BACKUPS_STORAGE
+      - _APP_CONNECTIONS_BACKUPS_STORAGE=dospaces://DO00ZZLVBLWLP6JJJVM2:aaEZ+eu8k80raNoDPlcwX8fwzSr3CzL5P+4UiwMnugw@default/cloud-fra1-stg-backups-1?region=fra1
 
   appwrite-restore:
     command: sleep infinity
