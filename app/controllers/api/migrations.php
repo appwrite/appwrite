@@ -146,12 +146,12 @@ App::post('/v1/migrations/firebase/oauth')
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
-        if ($identity->getAttribute('secret')) {
-            $serviceAccount = $identity->getAttribute('secret');
+        if ($identity->getAttribute('secrets')) {
+            $serviceAccount = $identity->getAttribute('secrets');
         } else {
             $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
             $identity = $identity
-                ->setAttribute('secret', $serviceAccount);
+                ->setAttribute('secrets', $serviceAccount);
 
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
@@ -309,7 +309,7 @@ App::post('/v1/migrations/nhost')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
     ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
-    ->param('subdomain', '', new URL(), 'Source\'s Subdomain')
+    ->param('subdomain', '', new Text(512), 'Source\'s Subdomain')
     ->param('region', '', new Text(512), 'Source\'s Region')
     ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret')
     ->param('database', '', new Text(512), 'Source\'s Database Name')
@@ -542,12 +542,12 @@ App::get('/v1/migrations/firebase/report/oauth')
             }
 
             // Get Service Account
-            if ($identity->getAttribute('secret')) {
-                $serviceAccount = $identity->getAttribute('secret');
+            if ($identity->getAttribute('secrets')) {
+                $serviceAccount = $identity->getAttribute('secrets');
             } else {
                 $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
                 $identity = $identity
-                    ->setAttribute('secret', $serviceAccount);
+                    ->setAttribute('secrets', $serviceAccount);
 
                 $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
