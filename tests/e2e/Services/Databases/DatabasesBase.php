@@ -1378,7 +1378,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["title", "releaseYear"])',
+                'select(["title", "releaseYear", "$id"])',
             ],
         ]);
 
@@ -4098,10 +4098,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["libraries.*"])',
+                'select(["libraries.*", "$id"])',
             ],
         ]);
-
         $document = $response['body']['documents'][0];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $document);
@@ -4111,7 +4110,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["fullName"])'
+                'select(["fullName", "$id"])'
             ],
         ]);
 
