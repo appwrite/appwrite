@@ -1325,7 +1325,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["title", "releaseYear"])',
+                'select(["title", "releaseYear", "$id"])',
             ],
         ]);
 
@@ -4045,7 +4045,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["libraries.*"])',
+                'select(["libraries.*", "$id"])',
             ],
         ]);
 
@@ -4058,7 +4058,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["fullName"])'
+                'select(["fullName", "$id"])'
             ],
         ]);
 
