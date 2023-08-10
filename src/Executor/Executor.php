@@ -4,7 +4,6 @@ namespace Executor;
 
 use Exception;
 use Utopia\App;
-use Utopia\CLI\Console;
 
 class Executor
 {
@@ -18,20 +17,29 @@ class Executor
     public const METHOD_CONNECT = 'CONNECT';
     public const METHOD_TRACE = 'TRACE';
 
-    private $endpoint;
+    private bool $selfSigned = false;
 
-    private $selfSigned = false;
+    private string $endpoint;
 
-    protected $headers = [
-        'content-type' => '',
-    ];
+    protected array $headers;
+
+    protected int $cpus;
+
+    protected int $memory;
 
     public function __construct(string $endpoint)
     {
         if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
             throw new Exception('Unsupported endpoint');
         }
+
         $this->endpoint = $endpoint;
+        $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $this->memory = intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->headers = [
+            'content-type' => 'application/json',
+            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+        ];
     }
 
     /**
@@ -42,45 +50,41 @@ class Executor
      * @param string $deploymentId
      * @param string $projectId
      * @param string $source
-     * @param string $runtime
-     * @param string $baseImage
+     * @param string $image
      * @param bool $remove
      * @param string $entrypoint
      * @param string $workdir
-     * @param string $destinaction
-     * @param string $network
-     * @param array $vars
+     * @param string $destination
+     * @param array $variables
      * @param array $commands
      */
     public function createRuntime(
         string $deploymentId,
         string $projectId,
         string $source,
-        string $runtime,
-        string $baseImage,
+        string $image,
         bool $remove = false,
         string $entrypoint = '',
         string $workdir = '',
         string $destination = '',
-        array $vars = [],
+        array $variables = [],
         array $commands = []
     ) {
+        $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
-        $headers = [
-            'content-type' => 'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ];
+        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
-            'runtimeId' => "$projectId-$deploymentId",
+            'runtimeId' => $runtimeId,
             'source' => $source,
             'destination' => $destination,
-            'runtime' => $runtime,
-            'baseImage' => $baseImage,
+            'image' => $image,
             'entrypoint' => $entrypoint,
             'workdir' => $workdir,
-            'vars' => $vars,
+            'variables' => $variables,
             'remove' => $remove,
-            'commands' => $commands
+            'commands' => $commands,
+            'cpus' => $this->cpus,
+            'memory' => $this->memory,
         ];
 
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
@@ -89,36 +93,8 @@ class Executor
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
-            throw new \Exception($response['body']['message'], $status);
-        }
-
-        return $response['body'];
-    }
-
-    /**
-     * Delete Runtime
-     *
-     * Deletes a runtime and cleans up any containers remaining.
-     *
-     * @param string $projectId
-     * @param string $deploymentId
-     */
-    public function deleteRuntime(string $projectId, string $deploymentId)
-    {
-        $runtimeId = "$projectId-$deploymentId";
-        $route = "/runtimes/$runtimeId";
-        $headers = [
-            'content-type' =>  'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ];
-
-        $params = [];
-
-        $response = $this->call(self::METHOD_DELETE, $route, $headers, $params, true, 30);
-
-        $status = $response['headers']['status-code'];
-        if ($status >= 400) {
-            throw new \Exception($response['body']['message'], $status);
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
         }
 
         return $response['body'];
@@ -129,86 +105,52 @@ class Executor
      *
      * @param string $projectId
      * @param string $deploymentId
-     * @param string $path
-     * @param array $vars
-     * @param string $entrypoint
-     * @param string $data
-     * @param string runtime
-     * @param string $baseImage
+     * @param string $payload
+     * @param array $variables
      * @param int $timeout
+     * @param string $image
+     * @param string $source
+     * @param string $entrypoint
      *
      * @return array
      */
     public function createExecution(
         string $projectId,
         string $deploymentId,
-        string $path,
-        array $vars,
+        string $payload,
+        array $variables,
+        int $timeout,
+        string $image,
+        string $source,
         string $entrypoint,
-        string $data,
-        string $runtime,
-        string $baseImage,
-        $timeout
     ) {
-        $route = "/execution";
-        $headers = [
-            'content-type' =>  'application/json',
-            'x-appwrite-executor-key' => App::getEnv('_APP_EXECUTOR_SECRET', '')
-        ];
+        $runtimeId = "$projectId-$deploymentId";
+        $route = '/runtimes/' . $runtimeId . '/execution';
+        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
         $params = [
-            'runtimeId' => "$projectId-$deploymentId",
-            'vars' => $vars,
-            'data' => $data,
+            'runtimeId' => $runtimeId,
+            'variables' => $variables,
+            'payload' => $payload,
             'timeout' => $timeout,
+
+            'image' => $image,
+            'source' => $source,
+            'entrypoint' => $entrypoint,
+            'cpus' => $this->cpus,
+            'memory' => $this->memory,
         ];
 
-        /* Add 2 seconds as a buffer to the actual timeout value since there can be a slight variance*/
-        $requestTimeout  = $timeout + 2;
+        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
+        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
+
         $status = $response['headers']['status-code'];
-
-        for ($attempts = 0; $attempts < 10; $attempts++) {
-            try {
-                switch (true) {
-                    case $status < 400:
-                        return $response['body'];
-                    case $status === 404:
-                        $response = $this->createRuntime(
-                            deploymentId: $deploymentId,
-                            projectId: $projectId,
-                            source: $path,
-                            runtime: $runtime,
-                            baseImage: $baseImage,
-                            vars: $vars,
-                            entrypoint: $entrypoint,
-                            commands: []
-                        );
-                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-                        $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
-                        break;
-                    case $status === 406:
-                        $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $requestTimeout);
-                        $status = $response['headers']['status-code'];
-
-                        if ($status < 400) {
-                            return $response['body'];
-                        }
-                        break;
-                    default:
-                        throw new \Exception($response['body']['message'], $status);
-                }
-            } catch (\Exception $e) {
-                throw new \Exception($e->getMessage(), $e->getCode());
-            }
-            sleep(2);
+        if ($status >= 400) {
+            $message = \is_string($response['body']) ? $response['body'] : $response['body']['message'];
+            throw new \Exception($message, $status);
         }
 
-        throw new Exception($response['body']['message'], 503);
+        return $response['body'];
     }
 
     /**
