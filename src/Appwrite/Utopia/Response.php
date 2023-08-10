@@ -493,43 +493,41 @@ class Response extends SwooleResponse
                 }
             }
 
-            if ($data->isSet($key)) {
-                if ($rule['array']) {
-                    if (!is_array($document[$key])) {
-                        throw new Exception($key . ' must be an array of type ' . $rule['type']);
-                    }
+            if ($rule['array']) {
+                if (!is_array($document[$key])) {
+                    throw new Exception($key . ' must be an array of type ' . $rule['type']);
+                }
 
-                    foreach ($document[$key] as $index => $item) {
-                        if ($item instanceof Document) {
-                            if (\is_array($rule['type'])) {
-                                foreach ($rule['type'] as $type) {
-                                    $condition = false;
-                                    foreach ($this->getModel($type)->conditions as $attribute => $val) {
-                                        $condition = $item->getAttribute($attribute) === $val;
-                                        if (!$condition) {
-                                            break;
-                                        }
-                                    }
-                                    if ($condition) {
-                                        $ruleType = $type;
+                foreach ($document[$key] as $index => $item) {
+                    if ($item instanceof Document) {
+                        if (\is_array($rule['type'])) {
+                            foreach ($rule['type'] as $type) {
+                                $condition = false;
+                                foreach ($this->getModel($type)->conditions as $attribute => $val) {
+                                    $condition = $item->getAttribute($attribute) === $val;
+                                    if (!$condition) {
                                         break;
                                     }
                                 }
-                            } else {
-                                $ruleType = $rule['type'];
+                                if ($condition) {
+                                    $ruleType = $type;
+                                    break;
+                                }
                             }
-
-                            if (!array_key_exists($ruleType, $this->models)) {
-                                throw new Exception('Missing model for rule: ' . $ruleType);
-                            }
-
-                            $data[$key][$index] = $this->output($item, $ruleType);
+                        } else {
+                            $ruleType = $rule['type'];
                         }
+
+                        if (!array_key_exists($ruleType, $this->models)) {
+                            throw new Exception('Missing model for rule: ' . $ruleType);
+                        }
+
+                        $data[$key][$index] = $this->output($item, $ruleType);
                     }
-                } else {
-                    if ($document[$key] instanceof Document) {
-                        $data[$key] = $this->output($data[$key], $rule['type']);
-                    }
+                }
+            } else {
+                if ($document[$key] instanceof Document) {
+                    $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }
             $output[$key] = $data[$key];
