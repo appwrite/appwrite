@@ -66,7 +66,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
     $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
 
     $commitDetails = [];
-    if (!$template->isEmpty()) {
+    if ($template->isEmpty()) {
         try {
             $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
         } catch (\Throwable $error) {
@@ -107,8 +107,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'search' => implode(' ', [$deploymentId, $entrypoint]),
         'activate' => true,
     ]));
-    var_dump($deployment);
-
+    
     $projectId = $project->getId();
     $functionId = $function->getId();
 
