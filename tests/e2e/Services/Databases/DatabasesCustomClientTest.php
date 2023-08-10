@@ -577,7 +577,7 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-
+        $this->assertEquals(11, $response['body'][$collection2['body']['$id']]['collection3']['Rating']);
         // Update collection 2 document
         // We should not be allowed to update the document as we do not have permission for collection 2.
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/documents/' . $collection2['body']['$id'], array_merge([
