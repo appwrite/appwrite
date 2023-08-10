@@ -548,6 +548,7 @@ class DatabasesCustomClientTest extends Scope
                 ]
             ]
         ]);
+
         $this->assertEquals(201, $parentDocument['headers']['status-code']);
 
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
@@ -578,7 +579,24 @@ class DatabasesCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(11, $response['body'][$collection2['body']['$id']]['collection3']['Rating']);
-        // Update collection 2 document
+
+        // We should not be allowed to update the document as we do not have permission for collection 2.
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $collection1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'Title' => 'Captain America',
+                $collection2['body']['$id'] => [
+                    '$id' => ID::custom($collection2['body']['$id']),
+                    'Rating' => '11',
+                    $collection3['body']['$id'] => null,
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
         // We should not be allowed to update the document as we do not have permission for collection 2.
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/documents/' . $collection2['body']['$id'], array_merge([
             'content-type' => 'application/json',

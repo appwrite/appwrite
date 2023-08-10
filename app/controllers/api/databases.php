@@ -3197,13 +3197,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
+        $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
-        $data['$collection'] = $document->getAttribute('$collection'); // Attribute $collection is required for Utopia. Copying it from old version of document
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+        $setCollection = function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3267,9 +3267,10 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
-        });
+        };
 
         $setCollection($collection, $newDocument);
+
         try {
             $document = $dbForProject->withRequestTimestamp(
                 $requestTimestamp,
