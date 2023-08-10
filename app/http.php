@@ -43,12 +43,12 @@ $server->onBeforeReload(function ($server, $workerId) {
 $server->onAfterReload(function ($server, $workerId) {
     Console::success('Reload completed...');
 });
-    
+
 Http::onWorkerStart()
     ->inject('workerId')
-    ->action(function($workerId) {
-    Console::success('Worker ' . ++$workerId . ' started successfully');
-});
+    ->action(function ($workerId) {
+        Console::success('Worker ' . ++$workerId . ' started successfully');
+    });
 
 
 include __DIR__ . '/controllers/general.php';
@@ -57,72 +57,72 @@ Http::onStart()
     ->inject('register')
     ->inject('utopia')
     ->inject('server')
-    ->action(function($register, $app,  $http) use ($payloadSize) {
+    ->action(function ($register, $app, $http) use ($payloadSize) {
 
-    go(function () use ($register, $app) {
-        // wait for database to be ready
-        $attempts = 0;
-        $max = 10;
-        $sleep = 1;
+        go(function () use ($register, $app) {
+            // wait for database to be ready
+            $attempts = 0;
+            $max = 10;
+            $sleep = 1;
 
-        do {
-            try {
-                $attempts++;
-                $db = $register->get('dbPool')->get();
-                $redis = $register->get('redisPool')->get();
-                break; // leave the do-while if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+            do {
+                try {
+                    $attempts++;
+                    $db = $register->get('dbPool')->get();
+                    $redis = $register->get('redisPool')->get();
+                    break; // leave the do-while if successful
+                } catch (\Exception $e) {
+                    Console::warning("Database not ready. Retrying connection ({$attempts})...");
+                    if ($attempts >= $max) {
+                        throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                    }
+                    sleep($sleep);
                 }
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
+            } while ($attempts < $max);
 
-        Http::setResource('db', fn () => $db);
-        Http::setResource('cache', fn () => $redis);
+            Http::setResource('db', fn () => $db);
+            Http::setResource('cache', fn () => $redis);
 
-        /** @var Utopia\Database\Database $dbForConsole */
-        $dbForConsole = $app->getResource('dbForConsole', 0);
+            /** @var Utopia\Database\Database $dbForConsole */
+            $dbForConsole = $app->getResource('dbForConsole', 0);
 
-        Console::success('[Setup] - Server database init started...');
+            Console::success('[Setup] - Server database init started...');
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
+            /** @var array $collections */
+            $collections = Config::getParam('collections', []);
 
-        try {
-            Console::success('[Setup] - Creating database: appwrite...');
-            $dbForConsole->create();
-        } catch (\Exception $e) {
-            Console::success('[Setup] - Skip: metadata table already exists');
-        }
-
-        if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
-            $audit = new Audit($dbForConsole);
-            $audit->setup();
-        }
-
-        if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
-            $adapter = new TimeLimit("", 0, 1, $dbForConsole);
-            $adapter->setup();
-        }
-
-        foreach ($collections as $key => $collection) {
-            if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                continue;
-            }
-            if (!$dbForConsole->getCollection($key)->isEmpty()) {
-                continue;
+            try {
+                Console::success('[Setup] - Creating database: appwrite...');
+                $dbForConsole->create();
+            } catch (\Exception $e) {
+                Console::success('[Setup] - Skip: metadata table already exists');
             }
 
-            Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+            if ($dbForConsole->getCollection(Audit::COLLECTION)->isEmpty()) {
+                $audit = new Audit($dbForConsole);
+                $audit->setup();
+            }
 
-            $attributes = [];
-            $indexes = [];
+            if ($dbForConsole->getCollection(TimeLimit::COLLECTION)->isEmpty()) {
+                $adapter = new TimeLimit("", 0, 1, $dbForConsole);
+                $adapter->setup();
+            }
 
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
+            foreach ($collections as $key => $collection) {
+                if (($collection['$collection'] ?? '') !== Database::METADATA) {
+                    continue;
+                }
+                if (!$dbForConsole->getCollection($key)->isEmpty()) {
+                    continue;
+                }
+
+                Console::success('[Setup] - Creating collection: ' . $collection['$id'] . '...');
+
+                $attributes = [];
+                $indexes = [];
+
+                foreach ($collection['attributes'] as $attribute) {
+                    $attributes[] = new Document([
                     '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
@@ -132,25 +132,25 @@ Http::onStart()
                     'filters' => $attribute['filters'],
                     'default' => $attribute['default'] ?? null,
                     'format' => $attribute['format'] ?? ''
-                ]);
-            }
+                    ]);
+                }
 
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
+                foreach ($collection['indexes'] as $index) {
+                    $indexes[] = new Document([
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
                     'orders' => $index['orders'],
-                ]);
+                    ]);
+                }
+
+                $dbForConsole->createCollection($key, $attributes, $indexes);
             }
 
-            $dbForConsole->createCollection($key, $attributes, $indexes);
-        }
-
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
-            Console::success('[Setup] - Creating default bucket...');
-            $dbForConsole->createDocument('buckets', new Document([
+            if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+                Console::success('[Setup] - Creating default bucket...');
+                $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
                 '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
@@ -168,21 +168,21 @@ Http::onStart()
                     Permission::delete(Role::any()),
                 ],
                 'search' => 'buckets Default',
-            ]));
+                ]));
 
-            $bucket = $dbForConsole->getDocument('buckets', 'default');
+                $bucket = $dbForConsole->getDocument('buckets', 'default');
 
-            Console::success('[Setup] - Creating files collection for default bucket...');
-            $files = $collections['files'] ?? [];
-            if (empty($files)) {
-                throw new Exception('Files collection is not configured.');
-            }
+                Console::success('[Setup] - Creating files collection for default bucket...');
+                $files = $collections['files'] ?? [];
+                if (empty($files)) {
+                    throw new Exception('Files collection is not configured.');
+                }
 
-            $attributes = [];
-            $indexes = [];
+                $attributes = [];
+                $indexes = [];
 
-            foreach ($files['attributes'] as $attribute) {
-                $attributes[] = new Document([
+                foreach ($files['attributes'] as $attribute) {
+                    $attributes[] = new Document([
                     '$id' => ID::custom($attribute['$id']),
                     'type' => $attribute['type'],
                     'size' => $attribute['size'],
@@ -192,34 +192,34 @@ Http::onStart()
                     'filters' => $attribute['filters'],
                     'default' => $attribute['default'] ?? null,
                     'format' => $attribute['format'] ?? ''
-                ]);
-            }
+                    ]);
+                }
 
-            foreach ($files['indexes'] as $index) {
-                $indexes[] = new Document([
+                foreach ($files['indexes'] as $index) {
+                    $indexes[] = new Document([
                     '$id' => ID::custom($index['$id']),
                     'type' => $index['type'],
                     'attributes' => $index['attributes'],
                     'lengths' => $index['lengths'],
                     'orders' => $index['orders'],
-                ]);
+                    ]);
+                }
+
+                $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
             }
 
-            $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
-        }
+            Console::success('[Setup] - Server database init completed...');
+        });
 
-        Console::success('[Setup] - Server database init completed...');
-    });
-
-    Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
-    Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
+        Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
+        Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
     // listen ctrl + c
-    Process::signal(2, function () use ($http) {
-        Console::log('Stop by Ctrl+C');
-        $http->shutdown();
+        Process::signal(2, function () use ($http) {
+            Console::log('Stop by Ctrl+C');
+            $http->shutdown();
+        });
     });
-});
 
 Http::onRequest()
     ->inject('register')
@@ -230,7 +230,7 @@ Http::onRequest()
         $response = new Response($response);
         Http::setResource('request', fn()=>$request);
         Http::setResource('response', fn()=>$response);
-        
+
         $db = $register->get('dbPool')->get();
         $redis = $register->get('redisPool')->get();
 

@@ -658,127 +658,126 @@ Http::init()
 
 
     $http->on('start', function ($http) {
-    global $orchestrationPool;
-    global $activeRuntimes;
+        global $orchestrationPool;
+        global $activeRuntimes;
 
     /**
      * Warmup: make sure images are ready to run fast 🚀
      */
-    $runtimes = new Runtimes('v2');
-    $allowList = empty(Http::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', Http::getEnv('_APP_FUNCTIONS_RUNTIMES'));
-    $runtimes = $runtimes->getAll(true, $allowList);
-    foreach ($runtimes as $runtime) {
-        go(function () use ($runtime, $orchestrationPool) {
-            try {
-                $orchestration = $orchestrationPool->get();
-                Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
-                $response = $orchestration->pull($runtime['image']);
-                if ($response) {
-                    Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
-                } else {
-                    Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+        $runtimes = new Runtimes('v2');
+        $allowList = empty(Http::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', Http::getEnv('_APP_FUNCTIONS_RUNTIMES'));
+        $runtimes = $runtimes->getAll(true, $allowList);
+        foreach ($runtimes as $runtime) {
+            go(function () use ($runtime, $orchestrationPool) {
+                try {
+                    $orchestration = $orchestrationPool->get();
+                    Console::info('Warming up ' . $runtime['name'] . ' ' . $runtime['version'] . ' environment...');
+                    $response = $orchestration->pull($runtime['image']);
+                    if ($response) {
+                        Console::success("Successfully Warmed up {$runtime['name']} {$runtime['version']}!");
+                    } else {
+                        Console::warning("Failed to Warmup {$runtime['name']} {$runtime['version']}!");
+                    }
+                } catch (\Throwable $th) {
+                } finally {
+                    $orchestrationPool->put($orchestration);
                 }
-            } catch (\Throwable $th) {
-            } finally {
-                $orchestrationPool->put($orchestration);
-            }
-        });
-    }
+            });
+        }
 
     /**
      * Remove residual runtimes
      */
-    Console::info('Removing orphan runtimes...');
-    try {
-        $orchestration = $orchestrationPool->get();
-        $orphans = $orchestration->list(['label' => 'openruntimes-type=runtime']);
-    } finally {
-        $orchestrationPool->put($orchestration);
-    }
+        Console::info('Removing orphan runtimes...');
+        try {
+            $orchestration = $orchestrationPool->get();
+            $orphans = $orchestration->list(['label' => 'openruntimes-type=runtime']);
+        } finally {
+            $orchestrationPool->put($orchestration);
+        }
 
-    foreach ($orphans as $runtime) {
-        go(function () use ($runtime, $orchestrationPool) {
-            try {
-                $orchestration = $orchestrationPool->get();
-                $orchestration->remove($runtime->getName(), true);
-                Console::success("Successfully removed {$runtime->getName()}");
-            } catch (\Throwable $th) {
-                Console::error('Orphan runtime deletion failed: ' . $th->getMessage());
-            } finally {
-                $orchestrationPool->put($orchestration);
-            }
-        });
-    }
+        foreach ($orphans as $runtime) {
+            go(function () use ($runtime, $orchestrationPool) {
+                try {
+                    $orchestration = $orchestrationPool->get();
+                    $orchestration->remove($runtime->getName(), true);
+                    Console::success("Successfully removed {$runtime->getName()}");
+                } catch (\Throwable $th) {
+                    Console::error('Orphan runtime deletion failed: ' . $th->getMessage());
+                } finally {
+                    $orchestrationPool->put($orchestration);
+                }
+            });
+        }
 
     /**
      * Register handlers for shutdown
      */
-    @Process::signal(SIGINT, function () use ($http) {
-        $http->shutdown();
-    });
+        @Process::signal(SIGINT, function () use ($http) {
+            $http->shutdown();
+        });
 
-    @Process::signal(SIGQUIT, function () use ($http) {
-        $http->shutdown();
-    });
+        @Process::signal(SIGQUIT, function () use ($http) {
+            $http->shutdown();
+        });
 
-    @Process::signal(SIGKILL, function () use ($http) {
-        $http->shutdown();
-    });
+        @Process::signal(SIGKILL, function () use ($http) {
+            $http->shutdown();
+        });
 
-    @Process::signal(SIGTERM, function () use ($http) {
-        $http->shutdown();
-    });
+        @Process::signal(SIGTERM, function () use ($http) {
+            $http->shutdown();
+        });
 
     /**
      * Run a maintenance worker every MAINTENANCE_INTERVAL seconds to remove inactive runtimes
      */
-    Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
-        Console::warning("Running maintenance task ...");
-        foreach ($activeRuntimes as $runtime) {
-            $inactiveThreshold = \time() - Http::getEnv('_APP_FUNCTIONS_INACTIVE_THRESHOLD', 60);
-            if ($runtime['updated'] < $inactiveThreshold) {
-                go(function () use ($runtime, $orchestrationPool, $activeRuntimes) {
-                    try {
-                        $orchestration = $orchestrationPool->get();
-                        $orchestration->remove($runtime['name'], true);
-                        $activeRuntimes->del($runtime['name']);
-                        Console::success("Successfully removed {$runtime['name']}");
-                    } catch (\Throwable $th) {
-                        Console::error('Inactive Runtime deletion failed: ' . $th->getMessage());
-                    } finally {
-                        $orchestrationPool->put($orchestration);
-                    }
-                });
-            }
-        }
-    });
-});
-
-$server = new Server("0.0.0.0", 80);
-
-$server->onBeforeShutdown(function () {
-    global $orchestrationPool;
-    Console::info('Cleaning up containers before shutdown...');
-
-    $orchestration = $orchestrationPool->get();
-    $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=runtime']);
-    $orchestrationPool->put($orchestration);
-
-    foreach ($functionsToRemove as $container) {
-        go(function () use ($orchestrationPool, $container) {
-            try {
-                $orchestration = $orchestrationPool->get();
-                $orchestration->remove($container->getId(), true);
-                Console::info('Removed container ' . $container->getName());
-            } catch (\Throwable $th) {
-                Console::error('Failed to remove container: ' . $container->getName());
-            } finally {
-                $orchestrationPool->put($orchestration);
+        Timer::tick(MAINTENANCE_INTERVAL * 1000, function () use ($orchestrationPool, $activeRuntimes) {
+            Console::warning("Running maintenance task ...");
+            foreach ($activeRuntimes as $runtime) {
+                $inactiveThreshold = \time() - Http::getEnv('_APP_FUNCTIONS_INACTIVE_THRESHOLD', 60);
+                if ($runtime['updated'] < $inactiveThreshold) {
+                    go(function () use ($runtime, $orchestrationPool, $activeRuntimes) {
+                        try {
+                            $orchestration = $orchestrationPool->get();
+                            $orchestration->remove($runtime['name'], true);
+                            $activeRuntimes->del($runtime['name']);
+                            Console::success("Successfully removed {$runtime['name']}");
+                        } catch (\Throwable $th) {
+                            Console::error('Inactive Runtime deletion failed: ' . $th->getMessage());
+                        } finally {
+                            $orchestrationPool->put($orchestration);
+                        }
+                    });
+                }
             }
         });
-    }
-});
+    });
 
-$http = new Http($server, 'UTC');
-$http->start();
+    $server = new Server("0.0.0.0", 80);
 
+    $server->onBeforeShutdown(function () {
+        global $orchestrationPool;
+        Console::info('Cleaning up containers before shutdown...');
+
+        $orchestration = $orchestrationPool->get();
+        $functionsToRemove = $orchestration->list(['label' => 'openruntimes-type=runtime']);
+        $orchestrationPool->put($orchestration);
+
+        foreach ($functionsToRemove as $container) {
+            go(function () use ($orchestrationPool, $container) {
+                try {
+                    $orchestration = $orchestrationPool->get();
+                    $orchestration->remove($container->getId(), true);
+                    Console::info('Removed container ' . $container->getName());
+                } catch (\Throwable $th) {
+                    Console::error('Failed to remove container: ' . $container->getName());
+                } finally {
+                    $orchestrationPool->put($orchestration);
+                }
+            });
+        }
+    });
+
+    $http = new Http($server, 'UTC');
+    $http->start();
