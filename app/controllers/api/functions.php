@@ -64,7 +64,17 @@ $redeployVcs = function (Request $request, Document $function, Document $project
     $authorUrl = "https://github.com/$owner";
     $repositoryUrl = "https://github.com/$owner/$repositoryName";
     $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
-    $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+
+    $commitDetails = [];
+    if (!$template->isEmpty()) {
+        try {
+            $commitDetails = $github->getLatestCommit($owner, $repositoryName, $providerBranch);
+        } catch (\Throwable $error) {
+            Console::warning('Failed to get latest commit details');
+            Console::warning($error->getMessage());
+            Console::warning($error->getTraceAsString());
+        }
+    }
 
     $deployment = $dbForProject->createDocument('deployments', new Document([
         '$id' => $deploymentId,

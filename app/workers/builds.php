@@ -231,6 +231,31 @@ class BuildsV1 extends Worker
                         }
 
                         $providerCommitHash = \trim($stdout);
+                        $authorUrl = "https://github.com/$cloneOwner";
+
+                        $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
+                        $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
+                        $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
+                        $deployment->setAttribute('providerCommitMessage', "Create '" .  $function->getAttribute('name', '') . "' function");
+                        $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
+                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
+                        /**
+                         * Send realtime Event
+                         */
+                        $target = Realtime::fromPayload(
+                            // Pass first, most verbose event pattern
+                            event: $allEvents[0],
+                            payload: $build,
+                            project: $project
+                        );
+                        Realtime::send(
+                            projectId: 'console',
+                            payload: $build->getArrayCopy(),
+                            events: $allEvents,
+                            channels: $target['channels'],
+                            roles: $target['roles']
+                        );
                     }
 
                     Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
@@ -482,8 +507,7 @@ class BuildsV1 extends Worker
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-            ->trigger()
-        ;
+            ->trigger();
     }
 
     protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, string $providerTargetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
@@ -543,7 +567,7 @@ class BuildsV1 extends Worker
             try {
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
-                $comment->addBuild($project, $function, $status, $deployment->getId(), [ 'type' => 'logs' ]);
+                $comment->addBuild($project, $function, $status, $deployment->getId(), ['type' => 'logs']);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
             } catch (\Exception $e) {
                 $error = $e;
