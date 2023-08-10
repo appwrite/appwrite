@@ -530,6 +530,7 @@ class Response extends SwooleResponse
                     $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }
+
             $output[$key] = $data[$key];
         }
 
