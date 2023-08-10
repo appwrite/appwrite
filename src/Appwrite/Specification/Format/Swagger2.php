@@ -293,6 +293,7 @@ class Swagger2 extends Format
                     $validator = $validator->getValidator();
                 }
 
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
@@ -413,11 +414,13 @@ class Swagger2 extends Format
                         /** @var \Utopia\Validator\WhiteList $validator */
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
+
                         if (!($route->getLabel('sdk.namespace', '') == 'users' && $route->getLabel('sdk.method', '') == 'getUsage' && $name == 'provider')) {
                             $node['enum'] = $validator->getList();
                             $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
                             $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
                         }
+
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
@@ -455,6 +458,13 @@ class Swagger2 extends Format
                         'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if (isset($node['enum'])) {
+                        /// If the enum flag is Set, add the enum values to the body
+                        $body['schema']['properties'][$name]['enum'] = $node['enum'];
+                        $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
+                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'] ?? null;
+                    }
 
                     if ($node['x-global'] ?? false) {
                         $body['schema']['properties'][$name]['x-global'] = true;
