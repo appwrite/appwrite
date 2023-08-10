@@ -143,9 +143,9 @@ class Backup extends Action
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
             '--port=' . $this->dsn->getPort(),
-            '--no-server-version-check',
             '--backup',
             '--strict',
+            '--verbose',
             '--history=' . $this->database, // logs PERCONA_SCHEMA.xtrabackup_history name attribute
             '--slave-info',
             '--safe-slave-backup',
