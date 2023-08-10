@@ -338,19 +338,6 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $memberships = $dbForProject->find('memberships', [
-            Query::equal('teamId', [$teamId]),
-            Query::limit(2000), // TODO fix members limit
-        ]);
-
-        // Memberships are deleted here instead of in the worker to make sure user permisions are updated instantly
-        foreach ($memberships as $membership) {
-            if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership for team from DB');
-            }
-            $dbForProject->deleteCachedDocument('users', $membership->getAttribute('userId'));
-        }
-
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }

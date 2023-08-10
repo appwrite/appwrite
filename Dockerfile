@@ -43,7 +43,6 @@ ENV DOCKER_COMPOSE_VERSION=v2.5.0
 ENV _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_LOCALE=en \
-    _APP_WORKER_PER_CORE= \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
@@ -63,27 +62,6 @@ ENV _APP_SERVER=swoole \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_STORAGE_ANTIVIRUS_HOST=clamav \
     _APP_STORAGE_ANTIVIRUS_PORT=3310 \
-    _APP_STORAGE_DEVICE=Local \
-    _APP_STORAGE_S3_ACCESS_KEY= \
-    _APP_STORAGE_S3_SECRET= \
-    _APP_STORAGE_S3_REGION= \
-    _APP_STORAGE_S3_BUCKET= \
-    _APP_STORAGE_DO_SPACES_ACCESS_KEY= \
-    _APP_STORAGE_DO_SPACES_SECRET= \
-    _APP_STORAGE_DO_SPACES_REGION= \
-    _APP_STORAGE_DO_SPACES_BUCKET= \
-    _APP_STORAGE_BACKBLAZE_ACCESS_KEY= \
-    _APP_STORAGE_BACKBLAZE_SECRET= \
-    _APP_STORAGE_BACKBLAZE_REGION= \
-    _APP_STORAGE_BACKBLAZE_BUCKET= \
-    _APP_STORAGE_LINODE_ACCESS_KEY= \
-    _APP_STORAGE_LINODE_SECRET= \
-    _APP_STORAGE_LINODE_REGION= \
-    _APP_STORAGE_LINODE_BUCKET= \
-    _APP_STORAGE_WASABI_ACCESS_KEY= \
-    _APP_STORAGE_WASABI_SECRET= \
-    _APP_STORAGE_WASABI_REGION= \
-    _APP_STORAGE_WASABI_BUCKET= \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -91,39 +69,22 @@ ENV _APP_SERVER=swoole \
     _APP_DB_USER=root \
     _APP_DB_PASS=password \
     _APP_DB_SCHEMA=appwrite \
-    _APP_INFLUXDB_HOST=influxdb \
-    _APP_INFLUXDB_PORT=8086 \
-    _APP_STATSD_HOST=telegraf \
-    _APP_STATSD_PORT=8125 \
-    _APP_SMTP_HOST= \
-    _APP_SMTP_PORT= \
-    _APP_SMTP_SECURE= \
-    _APP_SMTP_USERNAME= \
-    _APP_SMTP_PASSWORD= \
-    _APP_SMS_PROVIDER= \
-    _APP_SMS_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
-    _APP_FUNCTIONS_CONTAINERS=10 \
     _APP_FUNCTIONS_CPUS=1 \
     _APP_FUNCTIONS_MEMORY=128 \
-    _APP_FUNCTIONS_MEMORY_SWAP=128 \
     _APP_EXECUTOR_SECRET=a-random-secret \
-    _APP_EXECUTOR_HOST=http://appwrite-executor/v1 \
-    _APP_EXECUTOR_RUNTIME_NETWORK=appwrite_runtimes \
+    _APP_EXECUTOR_HOST=http://exc1/v1 \
     _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION \
     _APP_USAGE_STATS=enabled \
-    _APP_USAGE_AGGREGATION_INTERVAL=30 \
     # 14 Days = 1209600 s
     _APP_MAINTENANCE_RETENTION_EXECUTION=1209600 \
     _APP_MAINTENANCE_RETENTION_AUDIT=1209600 \
     # 1 Day = 86400 s
     _APP_MAINTENANCE_RETENTION_ABUSE=86400 \
     _APP_MAINTENANCE_RETENTION_USAGE_HOURLY=8640000 \
-    _APP_MAINTENANCE_INTERVAL=86400 \
-    _APP_LOGGING_PROVIDER= \
-    _APP_LOGGING_CONFIG=
+    _APP_MAINTENANCE_INTERVAL=86400
 
 RUN \
   if [ "$DEBUG" == "true" ]; then \
@@ -137,6 +98,7 @@ COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app
+COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
@@ -157,16 +119,21 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/maintenance && \
-    chmod +x /usr/local/bin/usage && \
+    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
+    chmod +x /usr/local/bin/clear-card-cache && \
+    chmod +x /usr/local/bin/calc-users-stats && \
+    chmod +x /usr/local/bin/calc-tier-stats && \
+    chmod +x /usr/local/bin/patch-delete-project-collections && \
+    chmod +x /usr/local/bin/maintenance &&  \
+    chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
-    chmod +x /usr/local/bin/executor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
+    chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
@@ -177,7 +144,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
-    chmod +x /usr/local/bin/worker-webhooks
+    chmod +x /usr/local/bin/worker-webhooks && \
+    chmod +x /usr/local/bin/worker-usage
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

@@ -9,7 +9,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Roles;
 
 class AuthTest extends TestCase
