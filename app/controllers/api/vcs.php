@@ -201,8 +201,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'activate' => $activate,
             ]));
 
-            $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
-
             if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
                 $functionName = $function->getAttribute('name');
                 $projectName = $project->getAttribute('name');
@@ -212,6 +210,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
                 $repositoryName = $github->getRepositoryName($providerRepositoryId);
                 $owner = $github->getOwnerName($providerInstallationId);
+
+                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
@@ -229,8 +229,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 ->setResource($function)
                 ->setProviderContribution($contribution)
                 ->setDeployment($deployment)
-                ->setProviderTargetUrl($providerTargetUrl)
-                ->setProviderCommitHash($providerCommitHash)
                 ->setProject($project)
                 ->trigger();
 

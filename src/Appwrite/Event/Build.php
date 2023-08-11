@@ -11,8 +11,6 @@ class Build extends Event
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
     protected ?Document $template = null;
-    protected string $providerCommitHash = '';
-    protected string $providerTargetUrl = '';
     protected ?Document $providerContribution = null;
 
     public function __construct()
@@ -29,32 +27,6 @@ class Build extends Event
     public function setTemplate(Document $template): self
     {
         $this->template = $template;
-
-        return $this;
-    }
-
-     /**
-     * Sets commit SHA for the build event.
-     *
-     * @param string $providerCommitHash is the commit hash of the incoming commit
-     * @return self
-     */
-    public function setProviderCommitHash(string $providerCommitHash): self
-    {
-        $this->providerCommitHash = $providerCommitHash;
-
-        return $this;
-    }
-
-    /**
-     * Sets redirect target url for the deployment
-     *
-     * @param string $providerTargetUrl is the url that is to be set
-     * @return self
-     */
-    public function setProviderTargetUrl(string $providerTargetUrl): self
-    {
-        $this->providerTargetUrl = $providerTargetUrl;
 
         return $this;
     }
@@ -155,8 +127,6 @@ class Build extends Event
             'deployment' => $this->deployment,
             'type' => $this->type,
             'template' => $this->template,
-            'providerCommitHash' => $this->providerCommitHash,
-            'providerTargetUrl' => $this->providerTargetUrl,
             'providerContribution' => $this->providerContribution
         ]);
     }

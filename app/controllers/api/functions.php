@@ -108,17 +108,11 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
-    $projectId = $project->getId();
-    $functionId = $function->getId();
-
-    $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
-
     $buildEvent = new Build();
     $buildEvent
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setProviderTargetUrl($providerTargetUrl)
         ->setTemplate($template)
         ->setProject($project)
         ->trigger();
