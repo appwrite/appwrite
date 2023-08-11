@@ -11,7 +11,6 @@ class Build extends Event
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
     protected ?Document $template = null;
-    protected ?Document $providerContribution = null;
 
     public function __construct()
     {
@@ -40,19 +39,6 @@ class Build extends Event
     public function setResource(Document $resource): self
     {
         $this->resource = $resource;
-
-        return $this;
-    }
-
-    /**
-     * Sets custom owner and repository for VCS clone command during build
-     *
-     * @param Document $providerContribution
-     * @return self
-     */
-    public function setProviderContribution(Document $providerContribution): self
-    {
-        $this->providerContribution = $providerContribution;
 
         return $this;
     }
@@ -126,8 +112,7 @@ class Build extends Event
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
-            'template' => $this->template,
-            'providerContribution' => $this->providerContribution
+            'template' => $this->template
         ]);
     }
 }

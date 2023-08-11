@@ -49,14 +49,13 @@ class BuildsV1 extends Worker
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
         $template = new Document($this->args['template'] ?? []);
-        $providerContribution = new Document($this->args['providerContribution'] ?? []);
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($this->getCache());
-                $this->buildDeployment($github, $project, $resource, $deployment, $template, $providerContribution);
+                $this->buildDeployment($github, $project, $resource, $deployment, $template);
                 break;
 
             default:
@@ -70,7 +69,7 @@ class BuildsV1 extends Worker
      * @throws \Utopia\Database\Exception\Structure
      * @throws Throwable
      */
-    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Document $providerContribution = null)
+    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template)
     {
         global $register;
 
@@ -173,8 +172,8 @@ class BuildsV1 extends Worker
                     $owner = $github->getOwnerName($providerInstallationId);
                     $repositoryName = $github->getRepositoryName($providerRepositoryId);
 
-                    $cloneOwner = !empty($providerContribution) ?  $providerContribution->getAttribute('owner', $owner) : $owner;
-                    $cloneRepository = !empty($providerContribution) ?  $providerContribution->getAttribute('repository', $repositoryName) : $repositoryName;
+                    $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
+                    $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
 
                     $branchName = $deployment->getAttribute('providerBranch');
                     $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);

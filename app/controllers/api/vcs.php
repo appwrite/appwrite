@@ -169,6 +169,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 continue;
             }
 
+            if ($external) {
+                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
+                $providerRepositoryName = $pullRequestResponse['head']['repo']['owner']['login'];
+                $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
+            }
+
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
@@ -215,19 +221,10 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
-            $contribution = new Document([]);
-            if ($external) {
-                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
-
-                $contribution->setAttribute('ownerName', $pullRequestResponse['head']['repo']['owner']['login']);
-                $contribution->setAttribute('repositoryName', $pullRequestResponse['head']['repo']['name']);
-            }
-
             $buildEvent = new Build();
             $buildEvent
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setProviderContribution($contribution)
                 ->setDeployment($deployment)
                 ->setProject($project)
                 ->trigger();
