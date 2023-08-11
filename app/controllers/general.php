@@ -148,8 +148,8 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $body = $execution['responseBody'] ?? '';
 
         $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-        if (!empty($encodingKey)) {
-            if (($execution['responseHeaders'][$encodingKey] ?? '') === 'base64') {
+        if ($encodingKey !== false) {
+            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
                 $body = \base64_decode($body);
             }
         }
