@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_CODES_DISABLED => [
+        'name' => Exception::GENERAL_CODES_DISABLED,
+        'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
+        'code' => 500,
+    ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
         'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
@@ -130,6 +135,11 @@ return [
         'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
         'code' => 401,
     ],
+    Exception::USER_INVALID_CODE => [
+        'name' => Exception::USER_INVALID_CODE,
+        'description' => 'The specified code is not valid. Contact your administrator for more information.',
+        'code' => 401,
+    ],
     Exception::USER_IP_NOT_WHITELISTED => [
         'name' => Exception::USER_IP_NOT_WHITELISTED,
         'description' => 'Console registration is restricted to specific IPs. Contact your administrator for more information.',
@@ -165,9 +175,24 @@ return [
         'description' => 'Passwords do not match. Please check the password and confirm password.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_RECENTLY_USED => [
+        'name' => Exception::USER_PASSWORD_RECENTLY_USED,
+        'description' => 'The password you are trying to use is similar to your previous password. Please choose a stronger password.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_PERSONAL_DATA => [
+        'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. Please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_IDENTITY_NOT_FOUND => [
+        'name' => Exception::USER_IDENTITY_NOT_FOUND,
+        'description' => 'The identity could not be found.',
         'code' => 404,
     ],
     Exception::USER_UNAUTHORIZED => [
@@ -194,6 +219,21 @@ return [
         'name' => Exception::USER_MISSING_ID,
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
+    ],
+    Exception::USER_OAUTH2_BAD_REQUEST => [
+        'name' => Exception::USER_OAUTH2_BAD_REQUEST,
+        'description' => 'OAuth2 provider rejected the bad request.',
+        'code' => 400,
+    ],
+    Exception::USER_OAUTH2_UNAUTHORIZED => [
+        'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
+        'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_PROVIDER_ERROR => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
+        'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
     ],
 
     /** Teams */
@@ -581,8 +621,13 @@ return [
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
+        'description' => 'The requested domain is currently in use by a project.',
         'code' => 409,
+    ],
+    Exception::DOMAIN_FORBIDDEN => [
+        'name' => Exception::DOMAIN_FORBIDDEN,
+        'description' => 'The requested domain cannot be used as a custom domain.',
+        'code' => 403,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
@@ -613,5 +658,22 @@ return [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries.',
         'code' => 400,
+    ],
+
+    /** Migrations */
+    Exception::MIGRATION_NOT_FOUND => [
+        'name' => Exception::MIGRATION_NOT_FOUND,
+        'description' => 'Migration with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_ALREADY_EXISTS => [
+        'name' => Exception::MIGRATION_ALREADY_EXISTS,
+        'description' => 'Migration with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::MIGRATION_IN_PROGRESS => [
+        'name' => Exception::MIGRATION_IN_PROGRESS,
+        'description' => 'Migration is already in progress.',
+        'code' => 409,
     ],
 ];
