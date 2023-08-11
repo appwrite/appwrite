@@ -576,7 +576,7 @@ class DatabasesCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($parentDocument['body'], $response['body']);
 
-        // Giving update permission of collection 3 to user. 
+        // Giving update permission of collection 3 to user.
         $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/collection3', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
