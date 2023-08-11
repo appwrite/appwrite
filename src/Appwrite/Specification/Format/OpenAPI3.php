@@ -414,17 +414,17 @@ class OpenAPI3 extends Format
 
                         //Iterate from the blackList. If it matches with the current one, then it is a blackList
                         // Do not add the enum
-                        $isBlackList = false;
-                        foreach ($this->blacklist as $blacklist) {
+                        $allowed = true;
+                        foreach ($this->enumBlacklist as $blacklist) {
                             if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') 
                             && $blacklist['method'] == $route->getLabel('sdk.method', '') 
                             && $blacklist['parameter'] == $name) {
-                                $isBlackList = true;
+                                $allowed = false;
                                 break;
                             }
                         }
 
-                        if (!$isBlackList) {
+                        if (!false) {
                                 $node['schema']['enum'] = $validator->getList();
                                 $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
                                 $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);

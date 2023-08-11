@@ -42,7 +42,7 @@ abstract class Format
     /*
      * Blacklist to omit the enum types for the given route's parameter
      */
-    protected array $blacklist = [
+    protected array $enumBlacklist = [
         [
             'namespace' => 'users',
             'method' => 'getUsage',
