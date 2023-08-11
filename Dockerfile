@@ -33,11 +33,8 @@ FROM appwrite/base:0.2.2 as final
 
 LABEL maintainer="team@appwrite.io"
 
-ARG VERSION=dev
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
-
-ENV _APP_VERSION=$VERSION
 
 RUN \
   if [ "$DEBUG" == "true" ]; then \
