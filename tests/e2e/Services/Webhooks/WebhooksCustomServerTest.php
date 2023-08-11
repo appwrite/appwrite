@@ -401,6 +401,7 @@ class WebhooksCustomServerTest extends Scope
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 

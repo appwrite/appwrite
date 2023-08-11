@@ -372,17 +372,17 @@ return [
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found.',
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'VCS Repository with the requested ID could not be found.',
+        'description' => 'Repository with the requested ID could not be found.',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
         'name' => Exception::PROVIDER_CONTRIBUTION_CONFLICT,
-        'description' => 'External ontribution is already authorized.',
+        'description' => 'External contribution is already authorized.',
         'code' => 409,
     ],
 

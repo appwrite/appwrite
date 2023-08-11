@@ -116,6 +116,8 @@ Server::setResource('reduce', function (Cache $cache, Registry $register, $pools
                     $executions = $dbForProject->getDocument('stats', md5(INFINITY_PERIOD .  str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS)));
                     $executionsCompute = $dbForProject->getDocument('stats', md5(INFINITY_PERIOD . str_replace('{functionInternalId}', $document->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE)));
 
+                    \var_dump($deploymentsStorage);
+
                     if (!empty($deployments['value'])) {
                         $metrics[] = [
                             'key' => METRIC_DEPLOYMENTS,

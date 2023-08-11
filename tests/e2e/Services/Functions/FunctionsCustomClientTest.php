@@ -54,6 +54,7 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -172,6 +173,7 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 
@@ -298,6 +300,7 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'vars' => [
                 'funcKey1' => 'funcValue1',
                 'funcKey2' => 'funcValue2',
@@ -362,6 +365,7 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => [],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 
@@ -500,6 +504,7 @@ class FunctionsCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 

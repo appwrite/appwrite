@@ -24,6 +24,7 @@ class FunctionsConsoleClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -41,6 +42,19 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test Failure - Entrypoint',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0'
         ]);
 

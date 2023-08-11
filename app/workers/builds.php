@@ -157,9 +157,7 @@ class BuildsV1 extends Worker
         try {
             if ($isNewBuild) {
                 if ($isVcsEnabled) {
-                    $installation = $dbForConsole->getDocument('installations', $installationId, [
-                        Query::equal('projectInternalId', [$project->getInternalId()])
-                    ]);
+                    $installation = $dbForConsole->getDocument('installations', $installationId);
                     $providerInstallationId = $installation->getAttribute('providerInstallationId');
 
                     $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');

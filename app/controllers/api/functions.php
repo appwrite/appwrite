@@ -178,9 +178,7 @@ App::post('/v1/functions')
                 ->setAttribute('branch', $templateBranch);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
-        ]);
+        $installation = $dbForConsole->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -639,9 +637,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
-        ]);
+        $installation = $dbForConsole->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -1425,7 +1421,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
-            if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
@@ -1530,7 +1526,7 @@ App::post('/v1/functions/:functionId/executions')
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
-                if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_RESPONSE)) {
+                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
                     $headersFiltered[] = ['name' => $key, 'value' => $value];
                 }
             }

@@ -438,6 +438,7 @@ class RealtimeConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
