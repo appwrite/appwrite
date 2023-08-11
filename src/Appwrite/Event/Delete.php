@@ -56,18 +56,6 @@ class Delete extends Event
     }
 
     /**
-     * set Function
-     *
-     * @param Document $function
-     * @return self
-     */
-    public function setFunction(Document $function): self
-    {
-        $this->function = $function;
-        return $this;
-    }
-
-    /**
      * Sets datetime for 1h interval.
      *
      * @param string $datetime

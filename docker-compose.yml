@@ -17,8 +17,6 @@ services:
     image: traefik:2.9
     <<: *x-logging
     container_name: appwrite-traefik
-    environment:
-      - DO_AUTH_TOKEN=$_APP_DOMAIN_DO_TOKEN
     command:
       - --log.level=DEBUG
       - --api.insecure=true
@@ -30,10 +28,6 @@ services:
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
-      - --certificatesresolvers.digitalocean.acme.dnschallenge=true
-      - --certificatesresolvers.digitalocean.acme.dnschallenge.provider=digitalocean
-      - --certificatesresolvers.digitalocean.acme.email=$_APP_SYSTEM_SECURITY_EMAIL_ADDRESS
-      - --certificatesresolvers.digitalocean.acme.storage=/storage/certificates/digitalocean.json
     ports:
       - 80:80
       - 8080:80
