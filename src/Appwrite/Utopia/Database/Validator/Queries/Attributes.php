@@ -16,10 +16,6 @@ class Attributes extends Base
         'error'
     ];
 
-    public const PROHIBITED_QUERIES = [
-        Select::class
-    ];
-
     /**
      * Expression constructor
      *
