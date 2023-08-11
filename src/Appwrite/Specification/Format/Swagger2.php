@@ -415,7 +415,17 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
 
-                        if (!($route->getLabel('sdk.namespace', '') == 'users' && $route->getLabel('sdk.method', '') == 'getUsage' && $name == 'provider')) {
+                        //Iterate from the blackList. If it matches with the current one, then it is a blackList
+                        // Do not add the enum
+                        $isBlackList = false;
+                        foreach ($this->blacklist as $blacklist) {
+                            if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') && $blacklist['method'] == $route->getLabel('sdk.method', '') && $blacklist['parameter'] == $name) {
+                                $isBlackList = true;
+                                break;
+                            }
+                        }
+
+                        if (!$isBlackList) {
                             $node['enum'] = $validator->getList();
                             $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
                             $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);

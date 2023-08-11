@@ -39,6 +39,17 @@ abstract class Format
         'license.url' => '',
     ];
 
+    /*
+     * blackList to omit the enum types for the given method
+     * */
+    protected array $blacklist = [
+        [
+            'namespace' => 'users',
+            'method' => 'getUsage',
+            'parameter' => 'provider'
+        ]
+    ];
+
     public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
     {
         $this->app = $app;
@@ -128,6 +139,31 @@ abstract class Format
                                 return  'ImageFormat';
                         }
                         break;
+                }
+                break;
+            case 'databases':
+                switch ($method) {
+                    case 'createRelationshipAttribute':
+                        switch ($param) {
+                            case 'type':
+                                return 'RelationshipType';
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'updateRelationshipAttribute':
+                        switch ($param) {
+                            case 'onDelete':
+                                return 'RelationMutate';
+                        }
+                        break;
+                    case 'createIndex':
+                        switch ($param) {
+                            case 'type':
+                                return 'IndexType';
+                            case 'orders':
+                                return 'OrderBy';
+                        }
                 }
                 break;
         }
