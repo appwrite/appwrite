@@ -373,7 +373,6 @@ class DatabasesCustomClientTest extends Scope
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
-                Permission::update(Role::user($userId)),
                 Permission::delete(Role::user($userId)),
             ]
         ]);
@@ -402,7 +401,6 @@ class DatabasesCustomClientTest extends Scope
             'permissions' => [
                 Permission::create(Role::user($userId)),
                 Permission::read(Role::user($userId)),
-                Permission::update(Role::user($userId)),
                 Permission::delete(Role::user($userId)),
             ]
         ]);
@@ -549,6 +547,51 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $parentDocument['headers']['status-code']);
+        // This is the point of the test. We should not need any authorization permission to update the document with same data.
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $collection1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::custom($collection1['body']['$id']),
+            'data' => [
+                'Title' => 'Captain America',
+                $collection2['body']['$id'] => [
+                    '$id' => $collection2['body']['$id'],
+                    'Rating' => '10',
+                    $collection3['body']['$id'] => [
+                        '$id' => $collection3['body']['$id'],
+                        'Rating' => '10',
+                        $collection4['body']['$id'] => [
+                            '$id' => $collection4['body']['$id'],
+                            'Rating' => '10',
+                            $collection5['body']['$id'] => [
+                                '$id' => $collection5['body']['$id'],
+                                'Rating' => '10'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($parentDocument['body'], $response['body']);
+
+        // Giving update permission of collection 3 to user. 
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/collection3', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::custom('collection3'),
+            'name' => ID::custom('collection3'),
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::user($userId)),
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ]
+        ]);
 
         // This is the point of this test. We should be allowed to do this action, and it should not fail on permission check
         $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $collection1['body']['$id'], array_merge([
