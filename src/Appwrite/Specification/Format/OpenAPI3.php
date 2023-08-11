@@ -351,6 +351,7 @@ class OpenAPI3 extends Format
                     case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Files':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
