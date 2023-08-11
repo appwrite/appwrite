@@ -3271,22 +3271,22 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $setCollection($collection, $newDocument);
 
-        try {
-            $document = $dbForProject->withRequestTimestamp(
-                $requestTimestamp,
-                fn() => $dbForProject->updateDocument(
-                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                    $document->getId(),
-                    $newDocument
-                )
-            );
-        } catch (AuthorizationException) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-        } catch (StructureException $exception) {
-            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-        }
+    try {
+        $document = $dbForProject->withRequestTimestamp(
+            $requestTimestamp,
+            fn() => $dbForProject->updateDocument(
+                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                $document->getId(),
+                $newDocument
+            )
+        );
+    } catch (AuthorizationException) {
+        throw new Exception(Exception::USER_UNAUTHORIZED);
+    } catch (DuplicateException) {
+        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+    } catch (StructureException $exception) {
+        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+    }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
