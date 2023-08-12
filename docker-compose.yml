@@ -721,22 +721,22 @@ services:
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
 
-  mariadb:
-    image: mysql:8.0.33 # fix issues when upgrading using: mysql_upgrade -u root -p
-    container_name: appwrite-mariadb
-    <<: *x-logging
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-      - MYSQL_USER=${_APP_DB_USER}
-      - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_CONNECTIONS_MAX}'
+#  mariadb:
+#    image: mysql:8.0.33 # fix issues when upgrading using: mysql_upgrade -u root -p
+#    container_name: appwrite-mariadb
+#    <<: *x-logging
+#    networks:
+#      - appwrite
+#    volumes:
+#      - appwrite-mariadb:/var/lib/mysql:rw
+#    ports:
+#      - "3306:3306"
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+#      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+#      - MYSQL_USER=${_APP_DB_USER}
+#      - MYSQL_PASSWORD=${_APP_DB_PASS}
+#    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_CONNECTIONS_MAX}'
 
   # smtp:
   #   image: appwrite/smtp:1.2.0
@@ -749,13 +749,53 @@ services:
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
 
+  mariadb:
+    image: shimonnewman/mysql:3.2.30
+    platform: linux/amd64
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mariadb:/var/lib/mysql:rw
+      - /Users/shimon/PhpstormProjects/appwrite/my.cnf:/etc/mysql/my.cnf:rw
+    environment:
+      - MYSQL_SERVER_ID=1
+      - MYSQL_ROLE=master
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MYSQL_REPLICATION_USER=appwrite_replication
+      - MYSQL_REPLICATION_PASSWORD=appwrite1234
+
+  mariadb_replica:
+    image: shimonnewman/mysql:3.2.30
+    platform: linux/amd64
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mariadb_replica:/var/lib/mysql:rw
+      - /Users/shimon/PhpstormProjects/appwrite/my.cnf:/etc/mysql/my.cnf:rw
+    environment:
+      - MYSQL_SERVER_ID=2
+      - MYSQL_ROLE=replica
+      - MYSQL_ROOT_PASSWORD=root_pass
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_REPLICATION_USER=appwrite_replication
+      - MYSQL_REPLICATION_PASSWORD=appwrite1234
+      - MYSQL_MASTER_HOST=mariadb
+      - MYSQL_REPLICA_HOST=mariadb_replica
+      - MYSQL_BACKUPS_USER=appwrite_backups
+      - MYSQL_BACKUPS_PASSWORD=appwrite1234
+
   xtrabackup:
     image: percona/percona-xtrabackup:latest
     container_name: xtrabackup
     command: sleep infinity
     volumes:
-      - backup-data:/backups:rw
-      - appwrite-mariadb:/var/lib/mysql:r
+      - ./backups:/backups:rw
+      - appwrite-mariadb_replica:/var/lib/mysql:r
     networks:
       - appwrite
     user: 'root:root'
@@ -763,7 +803,7 @@ services:
   appwrite-backup:
     entrypoint: db-backup
     command:
-      - --database=db_fra1_02
+      - --database=db_fra1_03
     <<: *x-logging
     container_name: appwrite-backup
     image: appwrite-dev
@@ -773,13 +813,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - backup-data:/backups:rw
-      - appwrite-mariadb:/var/lib/mysql:r
+      - ./backups:/backups:rw
+
     depends_on:
       - redis
     environment:
-      - _APP_CONNECTIONS_DB_REPLICAS
-      - _APP_CONNECTIONS_BACKUPS_STORAGE=dospaces://DO00ZZLVBLWLP6JJJVM2:aaEZ+eu8k80raNoDPlcwX8fwzSr3CzL5P+4UiwMnugw@default/cloud-fra1-stg-backups-1?region=fra1
+      - _APP_CONNECTIONS_DB_REPLICAS=
+      - _APP_CONNECTIONS_BACKUPS_STORAGE=
 
   appwrite-restore:
     command: sleep infinity
@@ -953,6 +993,7 @@ networks:
 
 volumes:
   appwrite-mariadb:
+  appwrite-mariadb_replica:
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
