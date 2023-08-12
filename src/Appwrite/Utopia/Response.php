@@ -85,6 +85,7 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\AppwriteException;
 
 /**
  * @method int getStatusCode()
@@ -111,6 +112,7 @@ class Response extends SwooleResponse
     public const MODEL_USAGE_FUNCTIONS = 'usageFunctions';
     public const MODEL_USAGE_FUNCTION = 'usageFunction';
     public const MODEL_USAGE_PROJECT = 'usageProject';
+    public const MODEL_APPWRITE_EXCEPTION = 'appwriteException';
 
     // Database
     public const MODEL_DATABASE = 'database';
@@ -250,6 +252,7 @@ class Response extends SwooleResponse
             ->setModel(new Any())
             ->setModel(new Error())
             ->setModel(new ErrorDev())
+            ->setModel(new AppwriteException())
             // Lists
             ->setModel(new BaseList('Documents List', self::MODEL_DOCUMENT_LIST, 'documents', self::MODEL_DOCUMENT))
             ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
