@@ -72,7 +72,6 @@ services:
       - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
-      - traefik.http.routers.appwrite_api_https.tls.certresolver=digitalocean
       - traefik.http.routers.appwrite_api_https.tls.domains[0].main=$_APP_DOMAIN_FUNCTIONS
       - traefik.http.routers.appwrite_api_https.tls.domains[0].sans=*.$_APP_DOMAIN_FUNCTIONS
     volumes:
@@ -758,14 +757,15 @@ services:
       - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
 
-  # appwrite-assistant:
-  #   container_name: appwrite-assistant
-  #   hostname: appwrite-assistant
-  #   image: appwrite/assistant:0.1.0
-  #   networks:
-  #     - appwrite
-  #   environment:
-  #     - OPENAI_API_KEY
+  appwrite-assistant:
+    container_name: appwrite-assistant
+    hostname: appwrite-assistant
+    image: appwrite/assistant:0.1.0
+    platform: linux/amd64
+    networks:
+      - appwrite
+    environment:
+      - _APP_ASSISTANT_OPENAI_API_KEY
 
   openruntimes-executor:
     container_name: openruntimes-executor
