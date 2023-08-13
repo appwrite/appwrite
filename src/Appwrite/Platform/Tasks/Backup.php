@@ -61,6 +61,7 @@ class Backup extends Action
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
             $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
         } catch (\Exception $e) {
+            var_dump($e);
             Console::error($e->getMessage());
             Console::exit();
         }
