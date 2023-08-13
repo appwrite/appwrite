@@ -2626,12 +2626,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "cef63e2d76156c2069c98ccd1430ebac5df3a35c"
+                "reference": "0c510a85509719a45cc6e7f9861d3bc1b4c0f1e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/cef63e2d76156c2069c98ccd1430ebac5df3a35c",
-                "reference": "cef63e2d76156c2069c98ccd1430ebac5df3a35c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/0c510a85509719a45cc6e7f9861d3bc1b4c0f1e0",
+                "reference": "0c510a85509719a45cc6e7f9861d3bc1b4c0f1e0",
                 "shasum": ""
             },
             "require": {
@@ -2673,7 +2673,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/feat-transfer"
             },
-            "time": "2023-08-08T08:09:59+00:00"
+            "time": "2023-08-12T10:18:42+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3530,16 +3530,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.7.2",
+            "version": "1.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "b2fe4d22a5426f38e014855322200b97b5362c0d"
+                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/b2fe4d22a5426f38e014855322200b97b5362c0d",
-                "reference": "b2fe4d22a5426f38e014855322200b97b5362c0d",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
+                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
                 "shasum": ""
             },
             "require": {
@@ -3582,9 +3582,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.2"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.3"
             },
-            "time": "2023-05-30T18:13:47+00:00"
+            "time": "2023-08-12T11:01:26+00:00"
         },
         {
             "name": "phpspec/prophecy",
