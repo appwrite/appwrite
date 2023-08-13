@@ -95,6 +95,7 @@ services:
       - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
       - _APP_ENV
+      - _APP_VERSION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
       - _APP_CONSOLE_WHITELIST_ROOT
