@@ -51,7 +51,7 @@ class Backup extends Action
     {
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
-
+        var_dump($this->dsn);
         if (is_null($this->dsn)) {
             Console::error('No DSN match');
             Console::exit();
@@ -283,11 +283,12 @@ class Backup extends Action
         $stdout = '';
         $stderr = '';
         Console::execute('docker ps -f "name=xtrabackup" --format "{{.ID}}"', '', $stdout, $stderr);
+        var_dump($stderr);
         if (!empty($stderr)) {
             Console::error('Error setting container Id: ' . $stderr);
             Console::exit();
         }
-        var_dump($stderr);
+
         $containerId = str_replace(PHP_EOL, '', $stdout);
         var_dump($containerId);
         if (empty($containerId)) {
