@@ -69,10 +69,8 @@ class Backup extends Action
         $max = 10;
         $sleep = 5;
 
-        var_dump(1);
         var_dump($pools->get('replica_' . $database)->pop());
-        var_dump(2);
-        exit;
+
         do {
             try {
                 $attempts++;
@@ -289,8 +287,9 @@ class Backup extends Action
             Console::error('Error setting container Id: ' . $stderr);
             Console::exit();
         }
-
+        var_dump($stderr);
         $containerId = str_replace(PHP_EOL, '', $stdout);
+        var_dump($containerId);
         if (empty($containerId)) {
             Console::error('Xtrabackup Container ID not found');
             Console::exit();
