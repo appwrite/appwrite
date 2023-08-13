@@ -19,11 +19,11 @@ class Backup extends Action
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
     public const COMPRESS_ALGORITHM = 'lz4';
     public const CONFIG_PATH = '/etc/my.cnf';
-    public const PROCESSORS = 4;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
+    protected int $processors = 1;
 
     /**
      * @throws Exception
@@ -61,7 +61,7 @@ class Backup extends Action
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE'));
             $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
         } catch (\Exception $e) {
-            Console::error($e->getMessage() . 'Invalid DSN.');
+            Console::error($e->getMessage());
             Console::exit();
         }
 
@@ -89,14 +89,9 @@ class Backup extends Action
                 sleep($sleep);
             }
         } while ($attempts < $max);
-        $containerId = shell_exec('docker ps -f "name=xtrabackup" --format "{{.ID}}"');
-        $containerId = str_replace(PHP_EOL, '', $containerId);
 
-        if (empty($containerId)) {
-            Console::error('Xtrabackup Container ID not found');
-            Console::exit();
-        }
-        $this->xtrabackupContainerId = $containerId;
+        $this->setProcessors();
+        $this->setContainerId();
 
         Console::loop(function () {
             $this->start();
@@ -152,9 +147,9 @@ class Backup extends Action
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . $target,
-            '--parallel=' . self::PROCESSORS,
+            '--parallel=' . $this->processors,
             '--compress=' . self::COMPRESS_ALGORITHM,
-            '--compress-threads=' . self::PROCESSORS,
+            '--compress-threads=' . $this->processors,
             '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             '2> ' . $logfile,
         ];
@@ -265,5 +260,40 @@ class Backup extends Action
             }
         }
         return null;
+    }
+
+    public function setProcessors()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('nproc', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting processors: ' . $stderr);
+            Console::exit();
+        }
+
+        $processors = str_replace(PHP_EOL, '', $stdout);
+        $processors = intval($processors);
+        $processors = $processors === 0 ? 1 : $processors;
+        $this->processors = $processors;
+    }
+
+    public function setContainerId()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker ps -f "name=xtrabackup" --format "{{.ID}}"', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting container Id: ' . $stderr);
+            Console::exit();
+        }
+
+        $containerId = str_replace(PHP_EOL, '', $stdout);
+        if (empty($containerId)) {
+            Console::error('Xtrabackup Container ID not found');
+            Console::exit();
+        }
+
+        $this->xtrabackupContainerId = $containerId;
     }
 }

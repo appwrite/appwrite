@@ -17,24 +17,17 @@ class Restore extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const DATADIR = '/var/lib/mysql';
-    public const PROCESSORS = 4;
     protected ?DSN $dsn = null;
     protected string $database;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
+    protected int $processors = 1;
 
     public function __construct()
     {
         $this->checkEnvVariables();
-
-        $containerId = shell_exec('docker ps -aqf "name=xtrabackup"');
-        $containerId = str_replace(PHP_EOL, '', $containerId);
-        if (empty($containerId)) {
-            Console::error('Xtrabackup Container ID not found');
-            Console::exit();
-        }
-
-        $this->xtrabackupContainerId = $containerId;
+        $this->setProcessors();
+        $this->setContainerId();
 
         $this
             ->desc('Restore a DB')
@@ -173,8 +166,8 @@ class Restore extends Action
             '--decompress',
             '--strict',
             '--remove-original', // Removes *.lz4 compressed files
-            '--parallel=' . self::PROCESSORS,
-            '--compress-threads=' . self::PROCESSORS,
+            '--parallel=' . $this->processors,
+            '--compress-threads=' . $this->processors,
             '--target-dir=' . $target,
             '2> ' . $logfile,
         ];
@@ -243,7 +236,7 @@ class Restore extends Action
             '--strict',
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
-            '--parallel=' . self::PROCESSORS,
+            '--parallel=' . $this->processors,
             '2> ' . $logfile,
         ];
 
@@ -289,5 +282,40 @@ class Restore extends Action
             }
         }
         return null;
+    }
+
+    public function setProcessors()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('nproc', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting processors: ' . $stderr);
+            Console::exit();
+        }
+
+        $processors = str_replace(PHP_EOL, '', $stdout);
+        $processors = intval($processors);
+        $processors = $processors === 0 ? 1 : $processors;
+        $this->processors = $processors;
+    }
+
+    public function setContainerId()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker ps -f "name=xtrabackup" --format "{{.ID}}"', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting container Id: ' . $stderr);
+            Console::exit();
+        }
+
+        $containerId = str_replace(PHP_EOL, '', $stdout);
+        if (empty($containerId)) {
+            Console::error('Xtrabackup Container ID not found');
+            Console::exit();
+        }
+
+        $this->xtrabackupContainerId = $containerId;
     }
 }
