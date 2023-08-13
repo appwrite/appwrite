@@ -750,7 +750,7 @@ services:
   #     - SMARTHOST_PORT=587
 
   xtrabackup:
-    image: percona/percona-xtrabackup:latest
+    image: percona/percona-xtrabackup:8.0.33
     container_name: xtrabackup
     command: sleep infinity
     volumes:

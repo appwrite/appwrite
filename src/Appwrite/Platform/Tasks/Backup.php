@@ -106,8 +106,7 @@ class Backup extends Action
         $start = microtime(true);
         $time = date('Y_m_d_H_i_s');
 
-        self::log('--- Backup Start --- ');
-        self::log('--- Creating backup ' . $time . '  --- ');
+        self::log('--- Backup Start ' . $time . ' --- ');
 
         $filename = $time . '.tar.gz';
         $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full/' . $time);
@@ -120,7 +119,7 @@ class Backup extends Action
         $this->tar($backups, $tarFile);
         $this->upload($tarFile, $local);
 
-        self::log('--- Backup End ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
+        self::log('--- Backup Finish ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
 
     public function fullBackup(string $target)
@@ -159,14 +158,13 @@ class Backup extends Action
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        self::log($cmd);
+        self::log('Xtrabackup start');
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        self::log($stderr);
 
         if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
-            Console::error('Backup failed');
+            Console::error(date('Y-m-d H:i:s') . ' Backup failed:' . $stderr);
             Console::exit();
         }
 
@@ -178,15 +176,14 @@ class Backup extends Action
 
     public function tar(string $directory, string $file)
     {
+        self::log('Tar start');
+
         $stdout = '';
         $stderr = '';
-
         $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' . && cd ' . getcwd();
-        self::log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
-        self::log($stdout);
         if (!empty($stderr)) {
-            Console::error($stderr);
+            Console::error(date('Y-m-d H:i:s') . ' Tar failed:' . $stderr);
             Console::exit();
         }
 
@@ -196,15 +193,15 @@ class Backup extends Action
         }
 
         $filesize = \filesize($file);
-        self::log('Tar file size is: ' . ceil($filesize / 1024 / 1024) . 'MB');
         if ($filesize < (2 * 1024 * 1024)) {
-            Console::error('File size is very small: ' . $file);
+            Console::error('Tar file size is very small: ' . $file);
             Console::exit();
         }
     }
 
     public function upload(string $file, Device $local)
     {
+        self::log('Upload start');
         $filename = basename($file);
 
         if (!$this->s3->exists('/')) {
@@ -213,7 +210,6 @@ class Backup extends Action
         }
 
         try {
-            self::log('Uploading: ' . $file);
             $destination = $this->s3->getRoot() . '/' . $filename;
 
             if (!$local->transfer($file, $destination, $this->s3)) {
