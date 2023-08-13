@@ -292,8 +292,9 @@ class Backup extends Action
         $containerId = str_replace(PHP_EOL, '', $stdout);
         var_dump($containerId);
         if (empty($containerId)) {
-            Console::error('Xtrabackup Container ID not found');
-            Console::exit();
+            //Console::error('Xtrabackup Container ID not found');
+            //Console::exit();
+            var_dump(1111);
         }
 
         $this->xtrabackupContainerId = $containerId;
