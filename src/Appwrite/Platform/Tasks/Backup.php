@@ -69,8 +69,10 @@ class Backup extends Action
         $max = 10;
         $sleep = 5;
 
+        var_dump(1);
         var_dump($pools->get('replica_' . $database)->pop());
-
+        var_dump(2);
+        exit;
         do {
             try {
                 $attempts++;
