@@ -119,6 +119,8 @@ class Restore extends Action
 
     public function download(string $file, Device $local)
     {
+        $this->log('Download start');
+
         $filename = basename($file);
         try {
             $path = $this->s3->getPath($filename);
@@ -127,8 +129,6 @@ class Restore extends Action
                 Console::error('File: ' . $path . ' does not exist on cloud');
                 Console::exit();
             }
-
-            $this->log('Downloading: ' . $file);
 
             if (!$this->s3->transfer($path, $file, $local)) {
                 Console::error('Error Downloading ' . $file);
@@ -142,10 +142,11 @@ class Restore extends Action
 
     public function untar(string $file, string $directory)
     {
+        $this->log('Untar Start');
+
         $stdout = '';
         $stderr = '';
         $cmd = 'tar -xzf ' . $file . ' -C ' . $directory;
-        $this->log($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         if (!empty($stderr)) {
             Console::error($stderr);
@@ -160,6 +161,8 @@ class Restore extends Action
 
     public function decompress(string $target)
     {
+        $this->log('Decompress start');
+
         $logfile = $target . '/../log.txt';
 
         $args = [
@@ -177,13 +180,11 @@ class Restore extends Action
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        $this->log($cmd);
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        $this->log($stderr);
 
-        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
+        if (!str_contains($stderr, 'completed OK!')) {
             Console::error('Decompress failed');
             Console::exit();
         }
@@ -191,6 +192,8 @@ class Restore extends Action
 
     public function prepare(string $target)
     {
+        $this->log('Prepare start');
+
         if (!file_exists($target)) {
             Console::error('prepare error directory not found: ' . $target);
             Console::exit();
@@ -210,20 +213,20 @@ class Restore extends Action
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        $this->log($cmd);
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        $this->log($stderr);
 
-        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
-            Console::error('Prepare failed');
+        if (!str_contains($stderr, 'completed OK!')) {
+            Console::error(date('Y-m-d H:i:s') . ' Prepare failed:' . $stderr);
             Console::exit();
         }
     }
 
     public function restore(string $target, bool $cloud, string $datadir)
     {
+        $this->log('Restore start');
+
         if (!file_exists($target)) {
             Console::error('restore error directory not found: ' . $target);
             Console::exit();
@@ -245,14 +248,12 @@ class Restore extends Action
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        $this->log($cmd);
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-        $this->log($stderr);
 
-        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
-            Console::error('Restore failed');
+        if (!str_contains($stderr, 'completed OK!')) {
+            Console::error(date('Y-m-d H:i:s') . ' Restore failed:' . $stderr);
             Console::exit();
         }
     }
@@ -281,7 +282,7 @@ class Restore extends Action
 
     public function getDsn(string $database): ?DSN
     {
-        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_REPLICAS')) as $project) {
+        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_REPLICAS', '')) as $project) {
             [$db, $dsn] = explode('=', $project);
             if ($db === $database) {
                 return new DSN($dsn);
