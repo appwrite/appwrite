@@ -10,8 +10,8 @@ use Utopia\CLI\Console;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 class Restore extends Action
 {
@@ -32,7 +32,7 @@ class Restore extends Action
         $this
             ->desc('Restore a DB')
             ->param('id', '', new Text(20), 'The backup identification')
-            ->param('cloud', null, new WhiteList(['true', 'false'], true), 'Download backup from cloud or use local directory')
+            ->param('cloud', null, new Boolean(true), 'Download backup from cloud or use local directory')
             ->param('database', null, new Text(10), 'The Database name for example db_fra1_01')
             ->callback(fn ($id, $cloud, $project) => $this->action($id, $cloud, $project));
     }
@@ -74,7 +74,7 @@ class Restore extends Action
 
         $filename = $id . '.tar.gz';
         $start = microtime(true);
-        $cloud = $cloud === 'true';
+        $cloud = $cloud === 'true' || $cloud === '1';
 
         if ($cloud) {
             $local = new Local(self::BACKUPS_PATH . '/downloads/' . $id);
