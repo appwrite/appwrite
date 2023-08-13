@@ -51,7 +51,6 @@ class Backup extends Action
     {
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
-        var_dump($this->dsn);
         if (is_null($this->dsn)) {
             Console::error('No DSN match');
             Console::exit();
@@ -61,7 +60,6 @@ class Backup extends Action
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
             $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
         } catch (\Exception $e) {
-            var_dump($e);
             Console::error($e->getMessage());
             Console::exit();
         }
@@ -70,7 +68,6 @@ class Backup extends Action
         $max = 10;
         $sleep = 5;
 
-        var_dump($pools->get('replica_' . $database));
 
         do {
             try {
@@ -284,18 +281,16 @@ class Backup extends Action
         $stdout = '';
         $stderr = '';
         Console::execute('docker ps -f "name=xtrabackup" --format "{{.ID}}"', '', $stdout, $stderr);
-        var_dump($stderr);
         if (!empty($stderr)) {
             Console::error('Error setting container Id: ' . $stderr);
             Console::exit();
         }
 
         $containerId = str_replace(PHP_EOL, '', $stdout);
-        var_dump($containerId);
+
         if (empty($containerId)) {
-            //Console::error('Xtrabackup Container ID not found');
-            //Console::exit();
-            var_dump(1111);
+            Console::error('Xtrabackup Container ID not found');
+            Console::exit();
         }
 
         $this->xtrabackupContainerId = $containerId;
