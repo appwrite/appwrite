@@ -65,10 +65,10 @@ class Restore extends Action
             Console::exit();
         }
 
-//        if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
-//            Console::error('Datadir ' . $datadir . ' must be empty!');
-//            Console::exit();
-//        }
+        if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
+            Console::error('Datadir ' . $datadir . ' must be empty!');
+            //Console::exit();
+        }
 
         $this->log('--- Restore Start ' . $id . ' --- ');
         $filename = $id . '.xbstream';
@@ -138,14 +138,13 @@ class Restore extends Action
         $args = [
             'xbstream -x < ' . $file,
             '--decompress',
-            '--parallel=' . $this->processors,
+            '--parallel=' . intval($this->processors / 2),
             '-C ' . $target,
         ];
 
         $stdout = '';
         $stderr = '';
         $cmd = 'docker exec -i ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        Console::success($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         if (!empty($stderr)) {
             Console::error('Xbstream Error: ' . $stderr);
@@ -223,9 +222,6 @@ class Restore extends Action
 
     public function checkEnvVariables(): void
     {
-
-        var_dump(self::getName());
-
         foreach (
             [
                 '_APP_CONNECTIONS_BACKUPS_STORAGE',
@@ -280,7 +276,7 @@ class Restore extends Action
     {
         $stdout = '';
         $stderr = '';
-        Console::execute('docker exec -i ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
+        Console::execute('docker exec ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
         if (!empty($stderr)) {
             Console::error('Error setting processors: ' . $stderr);
             Console::exit();
@@ -288,7 +284,12 @@ class Restore extends Action
 
         $processors = str_replace(PHP_EOL, '', $stdout);
         $processors = intval($processors);
-        $processors = $processors === 0 ? 1 : $processors;
+
+        if ($processors === 0) {
+            Console::error('Set Processors Error');
+            Console::exit();
+        }
+
         $this->processors = $processors;
     }
 }

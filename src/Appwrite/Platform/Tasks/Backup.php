@@ -157,7 +157,7 @@ class Backup extends Action
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
         shell_exec($cmd);
-
+        Console::success($cmd);
         $stderr = shell_exec('tail -1 ' . $log);
 
         if (!str_contains($stderr, 'completed OK!')) {
@@ -256,7 +256,7 @@ class Backup extends Action
     {
         $stdout = '';
         $stderr = '';
-        Console::execute('docker exec -i ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
+        Console::execute('docker exec ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
         if (!empty($stderr)) {
             Console::error('Error setting processors: ' . $stderr);
             Console::exit();
@@ -264,7 +264,12 @@ class Backup extends Action
 
         $processors = str_replace(PHP_EOL, '', $stdout);
         $processors = intval($processors);
-        $processors = $processors === 0 ? 1 : $processors;
+
+        if ($processors === 0) {
+            Console::error('Set Processors Error');
+            Console::exit();
+        }
+
         $this->processors = $processors;
     }
 }
