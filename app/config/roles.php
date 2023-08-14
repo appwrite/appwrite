@@ -51,6 +51,8 @@ $admins = [
     'functions.write',
     'execution.read',
     'execution.write',
+    'migrations.read',
+    'migrations.write',
 ];
 
 return [
