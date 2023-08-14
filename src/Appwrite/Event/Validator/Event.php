@@ -8,6 +8,11 @@ use Utopia\Validator;
 class Event extends Validator
 {
     /**
+     * @var string
+     */
+    protected string $message = 'Event is not valid.';
+
+    /**
      * Get Description.
      *
      * Returns validator description
@@ -16,7 +21,7 @@ class Event extends Validator
      */
     public function getDescription(): string
     {
-        return 'Event is not valid.';
+        return $this->message;
     }
 
     /**
@@ -40,6 +45,12 @@ class Event extends Validator
          * Identify all sections of the pattern.
          */
         $type = $parts[0] ?? false;
+
+        if ($type == 'functions') {
+            $this->message = 'Triggering a function on a function event is not allowed.';
+            return false;
+        }
+
         $resource = $parts[1] ?? false;
         $hasSubResource = $count > 3 && ($events[$type]['$resource'] ?? false) && ($events[$type][$parts[2]]['$resource'] ?? false);
         $hasSubSubResource = $count > 5 && $hasSubResource && ($events[$type][$parts[2]][$parts[4]]['$resource'] ?? false);

@@ -238,8 +238,6 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 
 - Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data).
 - MariaDB - for database storage and queries.
-- InfluxDB - for managing stats and time-series based data.
-- Statsd - for sending data over UDP protocol (using Telegraf).
 - ClamAV - for validating and scanning storage files.
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.

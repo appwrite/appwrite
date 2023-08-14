@@ -50,7 +50,7 @@ class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('databases.books'));
         $this->assertTrue($this->object->isValid('databases.books.collections.chapters'));
         $this->assertTrue($this->object->isValid('databases.books.collections.*'));
-        $this->assertTrue($this->object->isValid('functions.*'));
+        // $this->assertTrue($this->object->isValid('functions.*')); TODO @christyjacob4 : enable test once we allow functions.* events
         $this->assertTrue($this->object->isValid('buckets.*'));
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
