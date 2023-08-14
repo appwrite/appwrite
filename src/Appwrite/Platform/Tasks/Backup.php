@@ -91,6 +91,8 @@ class Backup extends Action
         $this->setProcessors();
         $this->setContainerId();
 
+        sleep(20);
+
         Console::loop(function () {
             $this->start();
         }, self::BACKUP_INTERVAL_SECONDS);
