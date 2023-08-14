@@ -68,7 +68,6 @@ class Backup extends Action
         $max = 10;
         $sleep = 5;
 
-
         do {
             try {
                 $attempts++;
