@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases;
 
+use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;

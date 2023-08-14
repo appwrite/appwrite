@@ -2908,7 +2908,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('List Documents')
-    ->groups(['api', 'database','timeout'])
+    ->groups(['api', 'database', 'timeout'])
     ->label('scope', 'documents.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
@@ -2921,12 +2921,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Request $request, Response $response, Database $dbForProject, string $mode) {
 
-        var_dump("inininininininni");
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
