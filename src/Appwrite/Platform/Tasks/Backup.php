@@ -31,8 +31,6 @@ class Backup extends Action
      */
     public function __construct()
     {
-        $this->checkEnvVariables();
-
         $this
             ->desc('Backup a database')
             ->param('database', null, new Text(20), 'Database name, for example db_fra1_01')
@@ -50,6 +48,8 @@ class Backup extends Action
      */
     public function action(string $database, Group $pools): void
     {
+        $this->checkEnvVariables();
+
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
         if (is_null($this->dsn)) {
@@ -88,8 +88,8 @@ class Backup extends Action
             }
         } while ($attempts < $max);
 
-        $this->setProcessors();
         $this->setContainerId();
+        $this->setProcessors();
 
         //sleep(20);
 
@@ -151,7 +151,6 @@ class Backup extends Action
             '--compress=' . self::COMPRESS_ALGORITHM,
             '--compress-threads=' . $this->processors,
             '--parallel=' . intval($this->processors / 2),
-            //'--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             '> ' . $file,
             '2> ' . $log,
         ];
@@ -234,22 +233,6 @@ class Backup extends Action
         return null;
     }
 
-    public function setProcessors()
-    {
-        $stdout = '';
-        $stderr = '';
-        Console::execute('nproc', '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error('Error setting processors: ' . $stderr);
-            Console::exit();
-        }
-
-        $processors = str_replace(PHP_EOL, '', $stdout);
-        $processors = intval($processors);
-        $processors = $processors === 0 ? 1 : $processors;
-        $this->processors = $processors;
-    }
-
     public function setContainerId()
     {
         $stdout = '';
@@ -261,12 +244,27 @@ class Backup extends Action
         }
 
         $containerId = str_replace(PHP_EOL, '', $stdout);
-
         if (empty($containerId)) {
             Console::error('Xtrabackup Container ID not found');
             Console::exit();
         }
 
         $this->xtrabackupContainerId = $containerId;
+    }
+
+    public function setProcessors()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker exec -i ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting processors: ' . $stderr);
+            Console::exit();
+        }
+
+        $processors = str_replace(PHP_EOL, '', $stdout);
+        $processors = intval($processors);
+        $processors = $processors === 0 ? 1 : $processors;
+        $this->processors = $processors;
     }
 }

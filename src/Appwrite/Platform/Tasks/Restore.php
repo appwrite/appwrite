@@ -25,10 +25,6 @@ class Restore extends Action
 
     public function __construct()
     {
-        $this->checkEnvVariables();
-        $this->setProcessors();
-        $this->setContainerId();
-
         $this
             ->desc('Restore a DB')
             ->param('id', '', new Text(20), 'The backup identification')
@@ -44,6 +40,10 @@ class Restore extends Action
 
     public function action(string $id, string $cloud, string $database): void
     {
+        $this->checkEnvVariables();
+        $this->setContainerId();
+        $this->setProcessors();
+
         $this->database = $database;
         $datadir = self::DATADIR;
         $this->dsn = $this->getDsn($database);
@@ -65,47 +65,45 @@ class Restore extends Action
             Console::exit();
         }
 
-        if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
-            Console::error('Datadir ' . $datadir . ' must be empty!');
-            Console::exit();
-        }
+//        if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
+//            Console::error('Datadir ' . $datadir . ' must be empty!');
+//            Console::exit();
+//        }
 
         $this->log('--- Restore Start ' . $id . ' --- ');
-
-        $filename = $id . '.tar.gz';
+        $filename = $id . '.xbstream';
         $start = microtime(true);
         $cloud = $cloud === 'true' || $cloud === '1';
+        $destination = new Local(self::BACKUPS_PATH . '/restore/' . $id);
+        $files = $destination->getRoot() . '/files';
 
-        if ($cloud) {
-            $local = new Local(self::BACKUPS_PATH . '/downloads/' . $id);
-
-            $files = $local->getRoot() . '/files';
-
-            if (!file_exists($files) && !mkdir($files, 0755, true)) {
-                Console::error('Error creating directory: ' . $files);
-                Console::exit();
-            }
-
-            $file = $local->getPath($filename);
-
-            if (!file_exists($file)) {
-                $this->download($file, $local);
-            }
-
-            $this->untar($file, $files);
-        } else {
-            $local = new Local(self::BACKUPS_PATH . '/' . $database . '/full/' . $id);
-            $files = $local->getRoot() . '/files';
-        }
-
-        if (!file_exists($files)) {
-            Console::error('Directory not found: ' . $files);
+        if (file_exists($files)) {
+            Console::error('Directory exist: ' . $files);
             Console::exit();
         }
 
-        $this->decompress($files);
+        if (!file_exists($files) && !mkdir($files, 0755, true)) {
+            Console::error('Error creating directory: ' . $files);
+            Console::exit();
+        }
+
+        if ($cloud) {
+            $stream = $destination->getPath($filename);
+            if (!file_exists($stream)) {
+                $this->download($stream, $destination);
+            }
+        } else {
+            $stream = self::BACKUPS_PATH . '/' . $database . '/full/' . $filename;
+        }
+
+        if (!file_exists($stream)) {
+            Console::error('File not found: ' . $stream);
+            Console::exit();
+        }
+
+        $this->decompress($stream, $files);
         $this->prepare($files);
-        $this->restore($files, $cloud, $datadir);
+        $this->restore($files, $datadir);
 
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
@@ -133,52 +131,24 @@ class Restore extends Action
         }
     }
 
-    public function untar(string $file, string $directory)
+    public function decompress(string $file, string $target)
     {
-        $this->log('Untar Start');
+        $this->log('Xbstream start');
+
+        $args = [
+            'xbstream -x < ' . $file,
+            '--decompress',
+            '--parallel=' . $this->processors,
+            '-C ' . $target,
+        ];
 
         $stdout = '';
         $stderr = '';
-        $cmd = 'tar -xzf ' . $file . ' -C ' . $directory;
+        $cmd = 'docker exec -i ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
+        Console::success($cmd);
         Console::execute($cmd, '', $stdout, $stderr);
         if (!empty($stderr)) {
-            Console::error($stderr);
-            Console::exit();
-        }
-
-        if (!file_exists($file)) {
-            Console::error('Restore file not found: ' . $file);
-            Console::exit();
-        }
-    }
-
-    public function decompress(string $target)
-    {
-        $this->log('Decompress start');
-
-        $logfile = $target . '/../log.txt';
-
-        $args = [
-            'xtrabackup',
-            '--user=' . $this->dsn->getUser(),
-            '--password=' . $this->dsn->getPassword(),
-            '--host=' . $this->dsn->getHost(),
-            '--decompress',
-            '--strict',
-            '--remove-original', // Removes *.lz4 compressed files
-            '--parallel=' . $this->processors,
-            '--compress-threads=' . $this->processors,
-            '--target-dir=' . $target,
-            '2> ' . $logfile,
-        ];
-
-        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        shell_exec($cmd);
-
-        $stderr = shell_exec('tail -1 ' . $logfile);
-
-        if (!str_contains($stderr, 'completed OK!')) {
-            Console::error('Decompress failed');
+            Console::error('Xbstream Error: ' . $stderr);
             Console::exit();
         }
     }
@@ -192,7 +162,7 @@ class Restore extends Action
             Console::exit();
         }
 
-        $logfile = $target . '/../log.txt';
+        $logfile = $target . '/../prepare.txt';
 
         $args = [
             'xtrabackup',
@@ -211,12 +181,12 @@ class Restore extends Action
         $stderr = shell_exec('tail -1 ' . $logfile);
 
         if (!str_contains($stderr, 'completed OK!')) {
-            Console::error(date('Y-m-d H:i:s') . ' Prepare failed:' . $stderr);
+            Console::error('Prepare error: ' . $stderr);
             Console::exit();
         }
     }
 
-    public function restore(string $target, bool $cloud, string $datadir)
+    public function restore(string $target, string $datadir)
     {
         $this->log('Restore start');
 
@@ -225,14 +195,14 @@ class Restore extends Action
             Console::exit();
         }
 
-        $logfile = $target . '/../log.txt';
+        $logfile = $target . '/../restore.txt';
 
         $args = [
             'xtrabackup',
             '--user=' . $this->dsn->getUser(),
             '--password=' . $this->dsn->getPassword(),
             '--host=' . $this->dsn->getHost(),
-            $cloud ? '--move-back' : '--copy-back',
+            '--move-back',
             '--strict',
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
@@ -253,6 +223,9 @@ class Restore extends Action
 
     public function checkEnvVariables(): void
     {
+
+        var_dump(self::getName());
+
         foreach (
             [
                 '_APP_CONNECTIONS_BACKUPS_STORAGE',
@@ -284,22 +257,6 @@ class Restore extends Action
         return null;
     }
 
-    public function setProcessors()
-    {
-        $stdout = '';
-        $stderr = '';
-        Console::execute('nproc', '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error('Error setting processors: ' . $stderr);
-            Console::exit();
-        }
-
-        $processors = str_replace(PHP_EOL, '', $stdout);
-        $processors = intval($processors);
-        $processors = $processors === 0 ? 1 : $processors;
-        $this->processors = $processors;
-    }
-
     public function setContainerId()
     {
         $stdout = '';
@@ -317,5 +274,21 @@ class Restore extends Action
         }
 
         $this->xtrabackupContainerId = $containerId;
+    }
+
+    public function setProcessors()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker exec -i ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting processors: ' . $stderr);
+            Console::exit();
+        }
+
+        $processors = str_replace(PHP_EOL, '', $stdout);
+        $processors = intval($processors);
+        $processors = $processors === 0 ? 1 : $processors;
+        $this->processors = $processors;
     }
 }
