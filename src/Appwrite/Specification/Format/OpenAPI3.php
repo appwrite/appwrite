@@ -9,6 +9,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
 use Utopia\Validator\Nullable;
+use Utopia\Config\Config;
 
 class OpenAPI3 extends Format
 {
@@ -482,7 +483,7 @@ class OpenAPI3 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error') {
+            if (!in_array($model->getType(), $usedModels) && $model->getType() !== 'error' && $model->getType() !== 'appwriteException') {
                 continue;
             }
 
@@ -510,6 +511,11 @@ class OpenAPI3 extends Format
                 $type = '';
                 $format = null;
                 $items = null;
+                $enum = null;
+
+                if (isset($rule['enum'])) {
+                    $enum = $rule['enum'];
+                }
 
                 switch ($rule['type']) {
                     case 'string':
@@ -593,6 +599,20 @@ class OpenAPI3 extends Format
                 }
                 if ($items) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                }
+                if ($enum) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = $enum;
+                }
+                if ($model->getType() == "appwriteException") {
+                    $types = [];
+                    foreach (Config::getParam('errors', []) as $error) {
+                        $types[] = [
+                            'type' => $error['name'],
+                            'code' => $error['code'],
+                            'message' => $error['description'],
+                        ];
+                    }
+                    $output['components']['schemas'][$model->getType()]['x-appwrite']['types'] = $types;
                 }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
