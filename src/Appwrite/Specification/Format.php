@@ -166,6 +166,16 @@ abstract class Format
                         }
                 }
                 break;
+            case 'projects':
+                switch ($method) {
+                    case 'createPlatform':
+                        switch ($param) {
+                            case 'type':
+                                return 'PlatformType';
+                        }
+                        break;
+                }
+                break;
         }
         return null;
     }
