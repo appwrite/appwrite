@@ -418,9 +418,11 @@ class OpenAPI3 extends Format
                         // Do not add the enum
                         $allowed = true;
                         foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') 
-                            && $blacklist['method'] == $route->getLabel('sdk.method', '') 
-                            && $blacklist['parameter'] == $name) {
+                            if (
+                                $blacklist['namespace'] == $route->getLabel('sdk.namespace', '')
+                                && $blacklist['method'] == $route->getLabel('sdk.method', '')
+                                && $blacklist['parameter'] == $name
+                            ) {
                                 $allowed = false;
                                 break;
                             }
