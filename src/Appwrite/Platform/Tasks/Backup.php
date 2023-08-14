@@ -18,12 +18,13 @@ class Backup extends Action
     public const BACKUPS_PATH = '/backups';
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
     public const COMPRESS_ALGORITHM = 'lz4';
-    public const CONFIG_PATH = '/etc/my.cnf';
+    protected string $filename;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
     protected int $processors = 1;
+
 
     /**
      * @throws Exception
@@ -90,7 +91,7 @@ class Backup extends Action
         $this->setProcessors();
         $this->setContainerId();
 
-        sleep(20);
+        //sleep(20);
 
         Console::loop(function () {
             $this->start();
@@ -100,26 +101,28 @@ class Backup extends Action
     public function start(): void
     {
         $start = microtime(true);
-        $time = date('Y_m_d_H_i_s');
+        $time = date('Y_m_d-H_i_s');
+        $this->filename = $time . '.xbstream';
 
         self::log('--- Backup Start ' . $time . ' --- ');
 
-        $filename = $time . '.tar.gz';
-        $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full/' . $time);
+        $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full');
         $local->setTransferChunkSize(5 * 1024 * 1024); // 5MB
 
-        $backups = $local->getRoot() . '/files';
-        $tarFile = $local->getPath($filename);
-
-        $this->fullBackup($backups);
-        $this->tar($backups, $tarFile);
-        $this->upload($tarFile, $local);
+        $this->fullBackup($local);
+        $this->upload($local);
 
         self::log('--- Backup Finish ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
 
-    public function fullBackup(string $target)
+    public function fullBackup(Device $device)
     {
+        self::log('Backup start');
+
+        $target = $device->getRoot();
+        $log = $device->getPath($this->filename . '.log');
+        $file = $device->getPath($this->filename);
+
         if (!file_exists(self::BACKUPS_PATH)) {
             Console::error('Mount directory does not exist');
             Console::exit();
@@ -130,8 +133,6 @@ class Backup extends Action
             Console::exit();
         }
 
-        $logfile = $target . '/../backup.log';
-
         $args = [
             'xtrabackup',
             '--user=' . $this->dsn->getUser(),
@@ -139,66 +140,43 @@ class Backup extends Action
             '--host=' . $this->dsn->getHost(),
             '--port=' . $this->dsn->getPort(),
             '--backup',
+            '--stream=xbstream',
             '--strict',
             '--history=' . $this->database, // logs PERCONA_SCHEMA.xtrabackup_history name attribute
             '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
-            '--target-dir=' . $target,
-            '--parallel=' . $this->processors,
+            '--target-dir=./',
             '--compress=' . self::COMPRESS_ALGORITHM,
             '--compress-threads=' . $this->processors,
-            '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
-            '2> ' . $logfile,
+            '--parallel=' . intval($this->processors / 2),
+            //'--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
+            '> ' . $file,
+            '2> ' . $log,
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        self::log('Xtrabackup start');
         shell_exec($cmd);
 
-        $stderr = shell_exec('tail -1 ' . $logfile);
+        $stderr = shell_exec('tail -1 ' . $log);
 
-        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
-            Console::error(date('Y-m-d H:i:s') . ' Backup failed:' . $stderr);
+        if (!str_contains($stderr, 'completed OK!')) {
+            Console::error('Backup failed: ' . $stderr);
             Console::exit();
         }
 
-        if (!unlink($logfile)) {
-            Console::error('Error deleting: ' . $logfile);
-            Console::exit();
-        }
-    }
-
-    public function tar(string $directory, string $file)
-    {
-        self::log('Tar start');
-
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' . && cd ' . getcwd();
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error(date('Y-m-d H:i:s') . ' Tar failed:' . $stderr);
-            Console::exit();
-        }
-
-        if (!file_exists($file)) {
-            Console::error('Can\'t find tar file: ' . $file);
-            Console::exit();
-        }
-
-        $filesize = \filesize($file);
-        if ($filesize < (2 * 1024 * 1024)) {
-            Console::error('Tar file size is very small: ' . $file);
+        if (!unlink($log)) {
+            Console::error('Error deleting: ' . $log);
             Console::exit();
         }
     }
 
-    public function upload(string $file, Device $local)
+    public function upload(Device $local)
     {
         self::log('Upload start');
-        $filename = basename($file);
+
+        $file = $local->getPath($this->filename);
 
         if (!$this->s3->exists('/')) {
             Console::error('Can\'t read s3 root directory');
@@ -206,7 +184,7 @@ class Backup extends Action
         }
 
         try {
-            $destination = $this->s3->getRoot() . '/' . $filename;
+            $destination = $this->s3->getRoot() . '/' . $this->filename;
 
             if (!$local->transfer($file, $destination, $this->s3)) {
                 Console::error('Error uploading to ' . $destination);
@@ -219,11 +197,6 @@ class Backup extends Action
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
-            Console::exit();
-        }
-
-        if (!unlink($file)) {
-            Console::error('Error deleting: ' . $file);
             Console::exit();
         }
     }
