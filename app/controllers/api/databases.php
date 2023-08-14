@@ -2926,6 +2926,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Request $request, Response $response, Database $dbForProject, string $mode) {
 
+        var_dump("inininininininni");
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
