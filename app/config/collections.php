@@ -1230,8 +1230,8 @@ $commonCollections = [
     ],
 
     'slowQueries' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'slowQueries',
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('slowQueries'),
         'name' => 'slowQueries',
         'attributes' => [
             [
