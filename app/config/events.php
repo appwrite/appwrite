@@ -44,6 +44,20 @@ return [
                 '$description' => 'This event triggers when a verification token for a user is validated.'
             ],
         ],
+        'targets' => [
+            '$model' => Response::MODEL_TARGET,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s target event.',
+            'create' => [
+                '$description' => 'This event triggers when a user\'s target is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a user\'s target is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a user\'s target is deleted.',
+            ],
+        ],
         'create' => [
             '$description' => 'This event triggers when a user is created.'
         ],
@@ -236,5 +250,50 @@ return [
         'update' => [
             '$description' => 'This event triggers when a function is updated.',
         ]
-    ]
+    ],
+    'messages' => [
+        '$model' => Response::MODEL_MESSAGE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any messaging event.',
+        'create' => [
+            '$description' => 'This event triggers when a message is created.',
+        ],
+        'providers' => [
+            '$model' => Response::MODEL_PROVIDER,
+            '$resource' => true,
+            '$description' => 'This event triggers on any provider event.',
+            'create' => [
+                '$description' => 'This event triggers when a provider is created.',
+            ],
+            'update' => [
+                '$description' => 'This event triggers when a provider is updated.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a provider is deleted.'
+            ],
+        ],
+        'topics' => [
+            '$model' => Response::MODEL_TOPIC,
+            '$resource' => true,
+            '$description' => 'This event triggers on any topic event.',
+            'create' => [
+                '$description' => 'This event triggers when a provider is created.',
+            ],
+            'delete' => [
+                '$description' => 'This event triggers when a provider is deleted.'
+            ],
+            'subscribers' => [
+                '$model' => Response::MODEL_SUBSCRIBER,
+                '$resource' => true,
+                '$description' => 'This event triggers on any subscriber event.',
+                'create' => [
+                    '$description' => 'This event triggers when a subscriber is created.',
+                ],
+                'delete' => [
+                    '$description' => 'This event triggers when a subscriber is deleted.'
+                ],
+            ],
+        ],
+
+    ],
 ];
