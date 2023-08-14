@@ -3,9 +3,13 @@
 namespace Tests\E2E\Services\Databases;
 
 use Tests\E2E\Client;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait DatabasesBase
@@ -311,6 +315,32 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['attributes'][7]['key'], $relationship['body']['key']);
 
         return $data;
+    }
+
+    /**
+     * @depends testCreateAttributes
+     */
+    public function testListAttributes(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => ['equal("type", "string")', 'limit(2)', 'cursorAfter(title)'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, \count($response['body']['attributes']));
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => ['select(["key"])'],
+        ]);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     /**
@@ -695,7 +725,6 @@ trait DatabasesBase
         $this->assertEquals(10, $attributes['body']['total']);
 
         $attributes = $attributes['body']['attributes'];
-
         $this->assertIsArray($attributes);
         $this->assertCount(10, $attributes);
 
@@ -1043,6 +1072,32 @@ trait DatabasesBase
         $this->assertStringContainsString('Index length is longer than the maximum', $tooLong['body']['message']);
 
         return $data;
+    }
+
+    /**
+     * @depends testCreateIndexes
+     */
+    public function testListIndexes(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => ['equal("type", "key")', 'limit(2)'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, \count($response['body']['indexes']));
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'queries' => ['select(["key"])'],
+        ]);
+        $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
     }
 
     /**
@@ -1405,7 +1460,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["title", "releaseYear"])',
+                'select(["title", "releaseYear", "$id"])',
             ],
         ]);
 
@@ -4125,10 +4180,9 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["libraries.*"])',
+                'select(["libraries.*", "$id"])',
             ],
         ]);
-
         $document = $response['body']['documents'][0];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $document);
@@ -4138,7 +4192,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                'select(["fullName"])'
+                'select(["fullName", "$id"])'
             ],
         ]);
 
