@@ -367,7 +367,7 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testTimeoutCollection
      */
-    public function testTimeouts(array $data): void
+    public function testTimeouts(array $data): array
     {
         for ($i = 0; $i <= 1; $i++) {
             $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
@@ -403,10 +403,12 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(408, $docs[3]['headers']['status-code']); // update
         $this->assertEquals(403, $docs[4]['headers']['status-code']); // update
         $this->assertEquals(403, $docs[5]['headers']['status-code']); // blocked
+
+        return $data;
     }
 
     /**
-     * @depends testTimeoutCollection
+     * @depends testTimeouts
      */
     public function testConsoleTimeouts($data): void
     {
@@ -424,7 +426,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals(1, $documents['body']['total']);
         $this->assertEquals(true, $documents['body']['documents'][0]['blocked']);
-        $this->assertEquals(2, $documents['body']['documents'][0]['count']);
+        $this->assertEquals(5, $documents['body']['documents'][0]['count']);
 
         $doc = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/slow-queries/' . $documents['body']['documents'][0]['$id'], array_merge([
             'content-type' => 'application/json',

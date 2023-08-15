@@ -3882,7 +3882,7 @@ App::get('/v1/databases/:databaseId/slow-queries')
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('databaseId', [$databaseId]);
 
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             $documentId = $cursor->getValue();
