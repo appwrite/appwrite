@@ -1750,7 +1750,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
 
-
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
