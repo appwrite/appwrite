@@ -6,7 +6,8 @@ use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
-use Utopia\Analytics\GoogleAnalytics;
+use Utopia\Analytics\Adapter\GoogleAnalytics;
+use Utopia\Analytics\Event;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Validator\Text;
@@ -14,6 +15,8 @@ use Utopia\Platform\Action;
 
 class Install extends Action
 {
+    protected string $path = '/usr/src/code/appwrite';
+
     public static function getName(): string
     {
         return 'install';
@@ -50,7 +53,6 @@ class Install extends Action
          * 6. Run data migration
          */
         $config = Config::getParam('variables');
-        $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         $vars = [];
@@ -70,19 +72,28 @@ class Install extends Action
         Console::success('Starting Appwrite installation...');
 
         // Create directory with write permissions
-        if (null !== $path && !\file_exists(\dirname($path))) {
-            if (!@\mkdir(\dirname($path), 0755, true)) {
-                Console::error('Can\'t create directory ' . \dirname($path));
+        if (null !== $this->path && !\file_exists(\dirname($this->path))) {
+            if (!@\mkdir(\dirname($this->path), 0755, true)) {
+                Console::error('Can\'t create directory ' . \dirname($this->path));
                 Console::exit(1);
             }
         }
 
-        $data = @file_get_contents($path . '/docker-compose.yml');
+        $data = @file_get_contents($this->path . '/docker-compose.yml');
 
         if ($data !== false) {
+            if ($interactive == 'Y' && Console::isInteractive()) {
+                $answer = Console::confirm('Previous installation found, do you want to overwrite it? (Y/n)');
+
+                if ($answer !== 'Y') {
+                    Console::info('No action taken.');
+                    return;
+                }
+            }
+
             $time = \time();
             Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
-            file_put_contents($path . '/docker-compose.yml.' . $time . '.backup', $data);
+            file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
@@ -116,11 +127,11 @@ class Install extends Action
                     }
                 }
 
-                $data = @file_get_contents($path . '/.env');
+                $data = @file_get_contents($this->path . '/.env');
 
                 if ($data !== false) { // Fetch all env vars from previous .env file
                     Console::info('Env file found, creating backup: .env.' . $time . '.backup');
-                    file_put_contents($path . '/.env.' . $time . '.backup', $data);
+                    file_put_contents($this->path . '/.env.' . $time . '.backup', $data);
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
@@ -198,8 +209,8 @@ class Install extends Action
             }
         }
 
-        $templateForCompose = new View(__DIR__ . '/../views/install/compose.phtml');
-        $templateForEnv = new View(__DIR__ . '/../views/install/env.phtml');
+        $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
+        $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
 
         $templateForCompose
             ->setParam('httpPort', $httpPort)
@@ -213,16 +224,24 @@ class Install extends Action
             ->setParam('vars', $input)
         ;
 
-        if (!file_put_contents($path . '/docker-compose.yml', $templateForCompose->render(false))) {
+        if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::error($message);
             Console::exit(1);
         }
 
-        if (!file_put_contents($path . '/.env', $templateForEnv->render(false))) {
+        if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::error($message);
             Console::exit(1);
         }
@@ -237,19 +256,27 @@ class Install extends Action
             }
         }
 
-        Console::log("Running \"docker compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
+        Console::log("Running \"docker compose -f {$this->path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("${env} docker compose -f {$path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("${env} docker compose -f {$this->path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';
-            $analytics->createEvent('install/server', 'install', APP_VERSION_STABLE . ' - ' . $message);
+            $event = new Event();
+            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
+                ->addProp('category', 'install/server')
+                ->addProp('action', 'install');
+            $analytics->createEvent($event);
             Console::success($message);
         }
     }

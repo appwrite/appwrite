@@ -95,6 +95,7 @@ App::post('/v1/projects')
         $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
         $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
         $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
+        $backups['database_db_fra1_06'] = ['from' => '16:30', 'to' => '17:15'];
 
         $databases = Config::getParam('pools-database', []);
 
@@ -118,7 +119,7 @@ App::post('/v1/projects')
             }
         }
 
-        if ($index = array_search('database_db_fra1_05', $databases)) {
+        if ($index = array_search('database_db_fra1_06', $databases)) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];

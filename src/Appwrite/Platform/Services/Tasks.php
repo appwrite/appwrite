@@ -24,6 +24,7 @@ use Appwrite\Platform\Tasks\VolumeSync;
 use Appwrite\Platform\Tasks\CalcUsersStats;
 use Appwrite\Platform\Tasks\CalcTierStats;
 use Appwrite\Platform\Tasks\PatchDeleteProjectCollections;
+use Appwrite\Platform\Tasks\Upgrade;
 
 class Tasks extends Service
 {
@@ -38,6 +39,7 @@ class Tasks extends Service
             ->addAction(Hamster::getName(), new Hamster())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
+            ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(PatchCreateMissingSchedules::getName(), new PatchCreateMissingSchedules())
             ->addAction(ClearCardCache::getName(), new ClearCardCache())

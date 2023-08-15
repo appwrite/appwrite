@@ -414,7 +414,7 @@ App::get('/v1/users/:userId')
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
-            throw new Exception('User not found', 404, Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $response->dynamic($user, Response::MODEL_USER);
