@@ -1086,16 +1086,23 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0, 0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+    ->param('encrypt', false, new Boolean(), 'Toggle encryption for the attribute. Encryption enhances security by not storing any plain text values in the database. However, encrypted attributes cannot be queried.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('database')
     ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size, 0);
         if (!is_null($default) && !$validator->isValid($default)) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, $validator->getDescription());
+        }
+
+        $filters = [];
+
+        if ($encrypt) {
+            $filters[] = 'encrypt';
         }
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
@@ -1105,6 +1112,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             'required' => $required,
             'default' => $default,
             'array' => $array,
+            'filters' => $filters,
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1509,6 +1517,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $database, Event $events) {
 
+        $filters[] = 'datetime';
+
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_DATETIME,
@@ -1516,7 +1526,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'required' => $required,
             'default' => $default,
             'array' => $array,
-            'filters' => ['datetime']
+            'filters' => $filters,
         ]), $response, $dbForProject, $database, $events);
 
         $response
@@ -1739,6 +1749,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
