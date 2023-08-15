@@ -169,7 +169,7 @@ services:
       - _APP_CONSOLE_GITHUB_SECRET
       - _APP_SLOW_QUERIES_MAX_HITS
       - _APP_SLOW_QUERIES_TIMEOUT
-      - _APP_SLOW_QUERIES
+     - _APP_SLOW_QUERIES_BLOCK
 
   appwrite-realtime:
     entrypoint: realtime
