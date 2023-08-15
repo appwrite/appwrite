@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
 class SlowQuery extends Model
@@ -60,7 +61,7 @@ class SlowQuery extends Model
      */
     public function getName(): string
     {
-        return 'Session';
+        return 'Slow Queries';
     }
 
     /**
@@ -70,6 +71,6 @@ class SlowQuery extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_SESSION;
+        return Response::MODEL_SLOW_QUERY;
     }
 }

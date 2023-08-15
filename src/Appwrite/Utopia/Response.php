@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia;
 
-use Appwrite\Utopia\Response\Model\SlowQuery;
 use Exception;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
@@ -86,6 +85,7 @@ use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\UsageStorage;
 use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\Variable;
+use Appwrite\Utopia\Response\Model\SlowQuery;
 
 /**
  * @method int getStatusCode()
@@ -365,7 +365,7 @@ class Response extends SwooleResponse
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
-            ->setMode(new SlowQuery())
+            ->setModel(new SlowQuery())
             // Verification
             // Recovery
             // Tests (keep last)

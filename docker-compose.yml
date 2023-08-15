@@ -169,7 +169,7 @@ services:
       - _APP_CONSOLE_GITHUB_SECRET
       - _APP_SLOW_QUERIES_MAX_HITS
       - _APP_SLOW_QUERIES_TIMEOUT
-     - _APP_SLOW_QUERIES_BLOCK
+      - _APP_SLOW_QUERIES_BLOCK
 
   appwrite-realtime:
     entrypoint: realtime
@@ -693,13 +693,13 @@ services:
       - _APP_CONNECTIONS_QUEUE
       - _APP_REGION
 
-  appwrite-assistant:
-    container_name: appwrite-assistant
-    image: appwrite/assistant:0.1.0
-    networks:
-      - appwrite
-    environment:
-      - OPENAI_API_KEY
+#  appwrite-assistant:
+#    container_name: appwrite-assistant
+#    image: appwrite/assistant:0.1.0
+#    networks:
+#      - appwrite
+#    environment:
+#      - OPENAI_API_KEY
 
   openruntimes-executor:
     container_name: openruntimes-executor
