@@ -8,7 +8,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Appwrite\Resque\Worker;
-use Executor\Executor;
 use Utopia\Storage\Device\Local;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -147,7 +146,8 @@ class DeletesV1 extends Worker
                 $project = $this->getConsoleDB()->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
-                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
+                    $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
 
@@ -155,7 +155,7 @@ class DeletesV1 extends Worker
 
                 if ($function->isEmpty()) {
                     $this->getConsoleDB()->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                    Console::success('Deleted schedule for function ' . $document->getAttribute('resourceId'));
                 }
             }
         );
@@ -255,6 +255,7 @@ class DeletesV1 extends Worker
     protected function deleteCollection(Document $document, Document $project): void
     {
         $collectionId = $document->getId();
+        $collectionInternalId = $document->getInternalId();
         $databaseId = $document->getAttribute('databaseId');
         $databaseInternalId = $document->getAttribute('databaseInternalId');
 
@@ -263,13 +264,13 @@ class DeletesV1 extends Worker
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
 
         $this->deleteByGroup('attributes', [
-            Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$collectionId])
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
         ], $dbForProject);
 
         $this->deleteByGroup('indexes', [
-            Query::equal('databaseId', [$databaseId]),
-            Query::equal('collectionId', [$collectionId])
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
         ], $dbForProject);
 
         $this->deleteAuditLogsByResource('database/' . $databaseId . '/collection/' . $collectionId, $project);
@@ -296,12 +297,21 @@ class DeletesV1 extends Worker
      */
     protected function deleteMemberships(Document $document, Document $project): void
     {
-        $teamId = $document->getAttribute('teamId', '');
+        $dbForProject = $this->getProjectDB($project);
+        $teamInternalId = $document->getInternalId();
 
         // Delete Memberships
-        $this->deleteByGroup('memberships', [
-            Query::equal('teamId', [$teamId])
-        ], $this->getProjectDB($project));
+        $this->deleteByGroup(
+            'memberships',
+            [
+                Query::equal('teamInternalId', [$teamInternalId])
+            ],
+            $dbForProject,
+            function (Document $membership) use ($dbForProject) {
+                $userId = $membership->getAttribute('userId');
+                $dbForProject->deleteCachedDocument('users', $userId);
+            }
+        );
     }
 
     /**
@@ -329,19 +339,20 @@ class DeletesV1 extends Worker
     protected function deleteUser(Document $document, Document $project): void
     {
         $userId = $document->getId();
+        $userInternalId = $document->getInternalId();
 
         $dbForProject = $this->getProjectDB($project);
 
         // Delete all sessions of this user from the sessions table and update the sessions field of the user record
         $this->deleteByGroup('sessions', [
-            Query::equal('userId', [$userId])
+            Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
 
         $dbForProject->deleteCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
-            Query::equal('userId', [$userId])
+            Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject, function (Document $document) use ($dbForProject) {
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
@@ -351,7 +362,7 @@ class DeletesV1 extends Worker
                         'teams',
                         $teamId,
                         // Ensure that total >= 0
-                            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
+                        $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
                     );
                 }
             }
@@ -359,7 +370,7 @@ class DeletesV1 extends Worker
 
         // Delete tokens
         $this->deleteByGroup('tokens', [
-            Query::equal('userId', [$userId])
+            Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
     }
 
@@ -474,13 +485,14 @@ class DeletesV1 extends Worker
         $projectId = $project->getId();
         $dbForProject = $this->getProjectDB($project);
         $functionId = $document->getId();
+        $functionInternalId = $document->getInternalId();
 
         /**
          * Delete Variables
          */
         Console::info("Deleting variables for function " . $functionId);
         $this->deleteByGroup('variables', [
-            Query::equal('functionId', [$functionId])
+            Query::equal('functionInternalId', [$functionInternalId])
         ], $dbForProject);
 
         /**
@@ -678,15 +690,25 @@ class DeletesV1 extends Worker
         $limit = 50;
         $results = [];
         $sum = $limit;
+        $cursor = null;
 
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            $mergedQueries = \array_merge([Query::limit($limit)], $queries);
+            if ($cursor instanceof Document) {
+                $mergedQueries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find($collection, $mergedQueries);
 
             $sum = count($results);
+
+            if ($sum > 0) {
+                $cursor = $results[$sum - 1];
+            }
 
             foreach ($results as $document) {
                 if (is_callable($callback)) {

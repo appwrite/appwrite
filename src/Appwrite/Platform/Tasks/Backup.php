@@ -16,7 +16,7 @@ use Utopia\Validator\Text;
 class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
-    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 1; // 4 hours;
     public const COMPRESS_ALGORITHM = 'lz4';
     public const CONFIG_PATH = '/etc/my.cnf';
     protected ?DSN $dsn = null;
@@ -55,6 +55,9 @@ class Backup extends Action
             Console::error('No DSN match');
             Console::exit();
         }
+
+        console::info('Trying to connect to ' . $this->dsn->getHost() . ':' . $this->dsn->getPort() .
+            'user:' . $this->dsn->getUser() . 'password:' . $this->dsn->getPassword());
 
         try {
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
