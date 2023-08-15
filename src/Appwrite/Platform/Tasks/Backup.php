@@ -56,8 +56,7 @@ class Backup extends Action
             Console::exit();
         }
 
-        console::info('Trying to connect to ' . $this->dsn->getHost() . ':' . $this->dsn->getPort() .
-            'user:' . $this->dsn->getUser() . 'password:' . $this->dsn->getPassword());
+        console::info('Trying to connect to ' . $this->dsn->getHost() . ' : ' . $this->dsn->getPort() . ' user: ' . $this->dsn->getUser() . ' password: ' . $this->dsn->getPassword());
 
         try {
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
