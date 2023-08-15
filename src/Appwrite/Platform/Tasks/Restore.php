@@ -17,8 +17,6 @@ class Restore extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const DATADIR = '/var/lib/mysql';
-    protected ?DSN $dsn = null;
-    protected string $database;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
     protected int $processors = 1;
@@ -44,13 +42,7 @@ class Restore extends Action
         $this->setContainerId();
         $this->setProcessors();
 
-        $this->database = $database;
         $datadir = self::DATADIR;
-        $this->dsn = $this->getDsn($database);
-        if (is_null($this->dsn)) {
-            Console::error('No DSN match');
-            Console::exit();
-        }
 
         try {
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
@@ -160,9 +152,6 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-            '--user=' . $this->dsn->getUser(),
-            '--password=' . $this->dsn->getPassword(),
-            '--host=' . $this->dsn->getHost(),
             '--decompress',
             '--strict',
             '--remove-original', // Removes *.lz4 compressed files
@@ -196,9 +185,6 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-            '--user=' . $this->dsn->getUser(),
-            '--password=' . $this->dsn->getPassword(),
-            '--host=' . $this->dsn->getHost(),
             '--prepare',
             '--strict',
             '--target-dir=' . $target,
@@ -229,9 +215,6 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-            '--user=' . $this->dsn->getUser(),
-            '--password=' . $this->dsn->getPassword(),
-            '--host=' . $this->dsn->getHost(),
             $cloud ? '--move-back' : '--copy-back',
             '--strict',
             '--target-dir=' . $target,
