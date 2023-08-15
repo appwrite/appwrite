@@ -3862,18 +3862,17 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     });
 
 App::get('/v1/databases/:databaseId/slow-queries')
-    ->desc('List Slow Queries Documents')
+    ->desc('List slow queries')
     ->groups(['api', 'database'])
     ->label('docs', false)
     ->label('scope', 'documents.read')
-    ->label('usage.metric', 'documents.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listSlowQueries')
     ->label('sdk.description', '/docs/references/databases/list-slow-queries.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT_LIST)
+    ->label('sdk.response.model', Response::MODEL_SLOW_QUERY_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('response')
@@ -3899,8 +3898,8 @@ App::get('/v1/databases/:databaseId/slow-queries')
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
-App::get('/v1/databases/:databaseId/slow-queries/:documentId')
-    ->desc('Get Slow Query Document')
+App::get('/v1/databases/:databaseId/slow-queries/:slowQueryId')
+    ->desc('Get slow query')
     ->groups(['api', 'database'])
     ->label('docs', false)
     ->label('scope', 'documents.read')
@@ -3911,22 +3910,23 @@ App::get('/v1/databases/:databaseId/slow-queries/:documentId')
     ->label('sdk.description', '/docs/references/databases/get-slow-query.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOCUMENT)
+    ->label('sdk.response.model', Response::MODEL_SLOW_QUERY)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('slowQueryId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $documentId, Response $response, Database $dbForProject) {
-        $document = $dbForProject->getDocument('slowQueries', $documentId);
+    ->action(function (string $databaseId, string $slowQueryId, Response $response, Database $dbForProject) {
+        $document = $dbForProject->getDocument('slowQueries', $slowQueryId);
+
         if ($document->isEmpty() || $document->getAttribute('databaseId') !== $databaseId) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $response->dynamic($document, Response::MODEL_DOCUMENT);
+        $response->dynamic($document, Response::MODEL_SLOW_QUERY);
     });
 
-App::delete('/v1/databases/:databaseId/slow-queries/:documentId')
-    ->desc('Delete Slow query Document')
+App::delete('/v1/databases/:databaseId/slow-queries/:slowQueryId')
+    ->desc('Delete slow query')
     ->desc('List  Documents')
     ->groups(['api', 'database'])
     ->label('docs', false)
@@ -3939,15 +3939,15 @@ App::delete('/v1/databases/:databaseId/slow-queries/:documentId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('documentId', '', new UID(), 'Document ID.')
+    ->param('slowQueryId', '', new UID(), 'Document ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $documentId, Response $response, Database $dbForProject) {
-        $document = $dbForProject->getDocument('slowQueries', $documentId);
+    ->action(function (string $databaseId, string $slowQueryId, Response $response, Database $dbForProject) {
+        $document = $dbForProject->getDocument('slowQueries', $slowQueryId);
         if ($document->isEmpty() || $document->getAttribute('databaseId') !== $databaseId) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
-        $dbForProject->deleteDocument('slowQueries', $documentId);
+        $dbForProject->deleteDocument('slowQueries', $slowQueryId);
 
         $response->noContent();
     });

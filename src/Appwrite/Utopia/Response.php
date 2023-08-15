@@ -2,8 +2,8 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Utopia\Response\Model\SlowQuery;
 use Exception;
-use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -58,11 +58,9 @@ use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
 use Appwrite\Utopia\Response\Model\Token;
@@ -124,6 +122,10 @@ class Response extends SwooleResponse
     public const MODEL_INDEX_LIST = 'indexList';
     public const MODEL_DOCUMENT = 'document';
     public const MODEL_DOCUMENT_LIST = 'documentList';
+
+    public const MODEL_SLOW_QUERY = 'slowQuery';
+
+    public const MODEL_SLOW_QUERY_LIST = 'slowQueryList';
 
     // Database Attributes
     public const MODEL_ATTRIBUTE = 'attribute';
@@ -290,6 +292,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
             ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
+            ->setModel(new BaseList('Slow Query List', self::MODEL_SLOW_QUERY_LIST, 'slowQueries', self::MODEL_SLOW_QUERY))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -362,6 +365,7 @@ class Response extends SwooleResponse
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
+            ->setMode(new SlowQuery())
             // Verification
             // Recovery
             // Tests (keep last)
