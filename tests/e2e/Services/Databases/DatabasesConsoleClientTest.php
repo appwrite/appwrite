@@ -15,7 +15,7 @@ class DatabasesConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    public function testCreateDatabase(): array
+    public function testCreateCollection(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
@@ -176,7 +176,7 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateDatabase
+     * @depends testCreateCollection
      */
     public function testGetDatabaseUsage(array $data)
     {
@@ -214,7 +214,7 @@ class DatabasesConsoleClientTest extends Scope
 
 
     /**
-     * @depends testCreateDatabase
+     * @depends testCreateCollection
      */
     public function testGetCollectionUsage(array $data)
     {
@@ -257,7 +257,7 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateDatabase
+     * @depends testCreateCollection
      */
     public function testGetCollectionLogs(array $data)
     {
@@ -312,7 +312,7 @@ class DatabasesConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateDatabase
+     * @depends testCreateCollection
      */
     public function testTimeoutCollection(array $data): array
     {
