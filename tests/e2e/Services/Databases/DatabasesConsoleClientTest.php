@@ -81,7 +81,19 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(201, $tvShows['headers']['status-code']);
         $this->assertEquals($tvShows['body']['name'], 'TvShows');
 
-        return ['moviesId' => $movies['body']['$id'], 'databaseId' => $databaseId, 'tvShowsId' => $tvShows['body']['$id']];
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Database Updated',
+            'enabled' => true,
+        ]);
+
+        return [
+            'moviesId' => $movies['body']['$id'],
+            'databaseId' => $databaseId,
+            'tvShowsId' => $tvShows['body']['$id']
+        ];
     }
 
     /**
