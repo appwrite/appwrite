@@ -17,8 +17,6 @@ class Restore extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const DATADIR = '/var/lib/mysql';
-    protected ?DSN $dsn = null;
-    protected string $database;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
     protected int $processors = 1;
@@ -44,13 +42,7 @@ class Restore extends Action
         $this->setContainerId();
         $this->setProcessors();
 
-        $this->database = $database;
         $datadir = self::DATADIR;
-        $this->dsn = $this->getDsn($database);
-        if (is_null($this->dsn)) {
-            Console::error('No DSN match');
-            Console::exit();
-        }
 
         try {
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
@@ -165,9 +157,9 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-            '--user=' . $this->dsn->getUser(),
-            '--password=' . $this->dsn->getPassword(),
-            '--host=' . $this->dsn->getHost(),
+//            '--user=' . $this->dsn->getUser(),
+//            '--password=' . $this->dsn->getPassword(),
+//            '--host=' . $this->dsn->getHost(),
             '--prepare',
             '--strict',
             '--target-dir=' . $target,
@@ -198,9 +190,9 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-            '--user=' . $this->dsn->getUser(),
-            '--password=' . $this->dsn->getPassword(),
-            '--host=' . $this->dsn->getHost(),
+//            '--user=' . $this->dsn->getUser(),
+//            '--password=' . $this->dsn->getPassword(),
+//            '--host=' . $this->dsn->getHost(),
             '--move-back',
             '--strict',
             '--target-dir=' . $target,
@@ -240,17 +232,6 @@ class Restore extends Action
         if (!empty($message)) {
             Console::log(date('Y-m-d H:i:s') . ' ' . $message);
         }
-    }
-
-    public function getDsn(string $database): ?DSN
-    {
-        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_REPLICAS', '')) as $project) {
-            [$db, $dsn] = explode('=', $project);
-            if ($db === $database) {
-                return new DSN($dsn);
-            }
-        }
-        return null;
     }
 
     public function setContainerId()
