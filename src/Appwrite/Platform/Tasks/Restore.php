@@ -25,10 +25,6 @@ class Restore extends Action
 
     public function __construct()
     {
-        $this->checkEnvVariables();
-        $this->setProcessors();
-        $this->setContainerId();
-
         $this
             ->desc('Restore a DB')
             ->param('id', '', new Text(20), 'The backup identification')
@@ -44,6 +40,10 @@ class Restore extends Action
 
     public function action(string $id, string $cloud, string $database): void
     {
+        $this->checkEnvVariables();
+        $this->setContainerId();
+        $this->setProcessors();
+
         $this->database = $database;
         $datadir = self::DATADIR;
         $this->dsn = $this->getDsn($database);
@@ -284,22 +284,6 @@ class Restore extends Action
         return null;
     }
 
-    public function setProcessors()
-    {
-        $stdout = '';
-        $stderr = '';
-        Console::execute('nproc', '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            Console::error('Error setting processors: ' . $stderr);
-            Console::exit();
-        }
-
-        $processors = str_replace(PHP_EOL, '', $stdout);
-        $processors = intval($processors);
-        $processors = $processors === 0 ? 1 : $processors;
-        $this->processors = $processors;
-    }
-
     public function setContainerId()
     {
         $stdout = '';
@@ -317,5 +301,26 @@ class Restore extends Action
         }
 
         $this->xtrabackupContainerId = $containerId;
+    }
+
+    public function setProcessors()
+    {
+        $stdout = '';
+        $stderr = '';
+        Console::execute('docker exec ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
+        if (!empty($stderr)) {
+            Console::error('Error setting processors: ' . $stderr);
+            Console::exit();
+        }
+
+        $processors = str_replace(PHP_EOL, '', $stdout);
+        $processors = intval($processors);
+
+        if ($processors === 0) {
+            Console::error('Set Processors Error');
+            Console::exit();
+        }
+
+        $this->processors = $processors;
     }
 }
