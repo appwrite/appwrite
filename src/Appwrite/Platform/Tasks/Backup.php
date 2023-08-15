@@ -17,14 +17,13 @@ class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
-    public const COMPRESS_ALGORITHM = 'lz4';
+    public const COMPRESS_ALGORITHM = 'LZ4'; // faster compression and decompression
     protected string $filename;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
     protected int $processors = 1;
-
 
     /**
      * @throws Exception
