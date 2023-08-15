@@ -16,7 +16,7 @@ use Utopia\Validator\Text;
 class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
-    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 1; // 4 hours;
     public const COMPRESS_ALGORITHM = 'lz4';
     public const CONFIG_PATH = '/etc/my.cnf';
     protected ?DSN $dsn = null;
