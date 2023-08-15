@@ -428,7 +428,7 @@ class OpenAPI3 extends Format
                             }
                         }
 
-                        if (!false) {
+                        if ($allowed) {
                                 $node['schema']['enum'] = $validator->getList();
                                 $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
                                 $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
