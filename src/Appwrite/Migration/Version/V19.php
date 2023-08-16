@@ -516,29 +516,32 @@ class V19 extends Migration
 
     protected function alterPermissionIndex($collectionName): void
     {
-        try {
-            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms`";
-            $this->pdo->prepare("
-                ALTER TABLE {$table}
-                DROP INDEX `_permission`, 
-                ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
-            ")->execute();
-        } catch (\Throwable $th) {
-            Console::warning($th->getMessage());
-        }
+        // try {
+        //     // $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms`";
+        //     // $this->pdo->prepare("
+        //     //     ALTER TABLE {$table}
+        //     //     DROP INDEX `_permission`,
+        //     //     ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
+        //     // ")->execute();
+        //     $this->projectDB->deleteIndex($collectionName, '_permission', ['_permission', '_type', '_document']);
+        //     $this->projectDB->createIndex($collectionName, '_permission', Database::INDEX_KEY, ['_permission', '_type', '_document'])
+        // } catch (\Throwable $th) {
+        //     Console::warning($th->getMessage());
+        // }
     }
 
     protected function alterUidType($collectionName): void
     {
-        try {
-            $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}`";
-            $this->pdo->prepare("
-            ALTER TABLE {$table}
-            CHANGE COLUMN `_uid` `_uid` VARCHAR(255) NOT NULL ;
-            ")->execute();
-        } catch (\Throwable $th) {
-            Console::warning($th->getMessage());
-        }
+        // try {
+        //     // $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}`";
+        //     // $this->pdo->prepare("
+        //     // ALTER TABLE {$table}
+        //     // CHANGE COLUMN `_uid` `_uid` VARCHAR(255) NOT NULL ;
+        //     // ")->execute();
+        //     $this->projectDB->updateAttribute($collectionName, '_uid', type: 'string', size: 255, required: true);
+        // } catch (\Throwable $th) {
+        //     Console::warning($th->getMessage());
+        // }
     }
 
     /**
