@@ -97,7 +97,7 @@ trait ProjectCustom
             'name' => 'Webhook Test',
             'events' => [
                 'databases.*',
-                'functions.*',
+                // 'functions.*', TODO @christyjacob4 : enable test once we allow functions.* events
                 'buckets.*',
                 'teams.*',
                 'users.*'
