@@ -28,6 +28,38 @@ class Firebase extends OAuth2
     ];
 
     /**
+     * @var array
+     */
+    protected array $iamPermissions = [
+        // Database
+        'datastore.databases.get',
+        'datastore.databases.list',
+        'datastore.entities.get',
+        'datastore.entities.list',
+        'datastore.indexes.get',
+        'datastore.indexes.list',
+        // Generic Firebase permissions
+        'firebase.projects.get',
+
+        // Auth
+        'firebaseauth.configs.get',
+        'firebaseauth.configs.getHashConfig',
+        'firebaseauth.configs.getSecret',
+        'firebaseauth.users.get',
+        'identitytoolkit.tenants.get',
+        'identitytoolkit.tenants.list',
+
+        // IAM Assignment
+        'iam.serviceAccounts.list',
+
+        // Storage
+        'storage.buckets.get',
+        'storage.buckets.list',
+        'storage.objects.get',
+        'storage.objects.list'
+    ];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -198,7 +230,7 @@ class Firebase extends OAuth2
     /*
         Be careful with the setIAMPolicy method, it will overwrite all existing policies
     **/
-    public function assignIAMRoles(string $accessToken, string $email, string $projectId)
+    public function assignIAMRole(string $accessToken, string $email, string $projectId, array $role)
     {
         // Get IAM Roles
         $iamRoles = $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/' . $projectId . ':getIamPolicy', [
@@ -209,14 +241,7 @@ class Firebase extends OAuth2
         $iamRoles = \json_decode($iamRoles, true);
 
         $iamRoles['bindings'][] = [
-            'role' => 'roles/identitytoolkit.admin',
-            'members' => [
-                'serviceAccount:' . $email
-            ]
-        ];
-
-        $iamRoles['bindings'][] = [
-            'role' => 'roles/firebase.admin',
+            'role' => $role['name'],
             'members' => [
                 'serviceAccount:' . $email
             ]
@@ -226,7 +251,7 @@ class Firebase extends OAuth2
         $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/' . $projectId . ':setIamPolicy', [
             'Authorization: Bearer ' . \urlencode($accessToken),
             'Content-Type: application/json'
-        ], json_encode([
+        ], \json_encode([
             'policy' => $iamRoles
         ]));
     }
@@ -242,6 +267,48 @@ class Firebase extends OAuth2
         return $randomString;
     }
 
+    public function createCustomRole(string $accessToken, string $projectId): array
+    {
+        // Check if role already exists
+        try {
+            $role = $this->request('GET', 'https://iam.googleapis.com/v1/projects/' . $projectId . '/roles/appwriteMigrations', [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . \urlencode($accessToken),
+            ]);
+
+            $role = \json_decode($role, true);
+
+            return $role;
+        } catch (\Exception $e) {
+            if ($e->getCode() !== 404) {
+                throw $e;
+            }
+        }
+
+        // Create role if doesn't exist or isn't correct
+        $role = $this->request(
+            'POST',
+            'https://iam.googleapis.com/v1/projects/' . $projectId . '/roles/',
+            [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . \urlencode($accessToken),
+            ],
+            \json_encode(
+                [
+                    'roleId' => 'appwriteMigrations',
+                    'role' => [
+                        'title' => 'Appwrite Migrations',
+                        'description' => 'A helper role for Appwrite Migrations',
+                        'includedPermissions' => $this->iamPermissions,
+                        'stage' => 'GA'
+                    ]
+                ]
+            )
+        );
+
+        return json_decode($role, true);
+    }
+
     public function createServiceAccount(string $accessToken, string $projectId): array
     {
         // Create Service Account
@@ -254,7 +321,7 @@ class Firebase extends OAuth2
                 'Authorization: Bearer ' . \urlencode($accessToken),
                 'Content-Type: application/json'
             ],
-            json_encode([
+            \json_encode([
                 'accountId' => 'appwrite-' . $uid,
                 'serviceAccount' => [
                     'displayName' => 'Appwrite Migrations ' . $uid
@@ -264,7 +331,12 @@ class Firebase extends OAuth2
 
         $response = json_decode($response, true);
 
-        $this->assignIAMRoles($accessToken, $response['email'], $projectId);
+        // Create and assign IAM Roles
+        $role = $this->createCustomRole($accessToken, $projectId);
+
+        \sleep(1); // Wait for IAM to propagate changes.
+
+        $this->assignIAMRole($accessToken, $response['email'], $projectId, $role);
 
         // Create Service Account Key
         $responseKey = $this->request(
@@ -286,10 +358,10 @@ class Firebase extends OAuth2
         // List Service Accounts
         $response = $this->request(
             'GET',
-            'https://iam.googleapis.com/v1/projects/'.$projectId.'/serviceAccounts',
+            'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts',
             [
-            'Authorization: Bearer ' . \urlencode($accessToken),
-            'Content-Type: application/json'
+                'Authorization: Bearer ' . \urlencode($accessToken),
+                'Content-Type: application/json'
             ]
         );
 

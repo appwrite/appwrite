@@ -562,7 +562,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
-        $firebase = new Firebase(array_merge($serviceAccount, ['project_id' => $projectId]));
+        $firebase = new Firebase($serviceAccount);
 
         $report = $firebase->report($resources);
 
