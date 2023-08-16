@@ -17,8 +17,7 @@ class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 1; // 4 hours;
-    public const COMPRESS_ALGORITHM = 'lz4';
-    public const CONFIG_PATH = '/etc/my.cnf';
+    public const COMPRESS_ALGORITHM = 'LZ4'; // faster compression and decompression
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
@@ -102,7 +101,8 @@ class Backup extends Action
     public function start(): void
     {
         $start = microtime(true);
-        $time = date('Y_m_d-H_i_s');
+        $time = date('Y_m_d_H_i_s');
+        $this->filename = $time . '.xbstream';
 
         self::log('--- Backup Start ' . $time . ' --- ');
 
@@ -142,7 +142,7 @@ class Backup extends Action
             '--port=' . $this->dsn->getPort(),
             '--backup',
             '--strict',
-            '--history=' . $this->database, // logs PERCONA_SCHEMA.xtrabackup_history name attribute
+            '--history="' . $this->database . '|' . pathinfo($this->filename, PATHINFO_FILENAME) . '"', // PERCONA_SCHEMA.xtrabackup_history
             '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
