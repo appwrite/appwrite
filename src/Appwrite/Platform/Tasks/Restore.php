@@ -209,7 +209,7 @@ class Restore extends Action
         $stderr = shell_exec('tail -1 ' . $logfile);
 
         if (!str_contains($stderr, 'completed OK!')) {
-            Console::error(date('Y-m-d H:i:s') . ' Restore failed:' . $stderr);
+            Console::error(date('Y-m-d H:i:s') . ' Restore failed: ' . $stderr);
             Console::exit();
         }
     }
