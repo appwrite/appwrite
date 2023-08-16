@@ -63,8 +63,9 @@ class Restore extends Action
         }
 
         $this->log('--- Restore Start ' . $id . ' --- ');
-        $filename = $id . '.xbstream';
+
         $start = microtime(true);
+        $filename = $id . '.xbstream';
         $cloud = $cloud === 'true' || $cloud === '1';
         $destination = new Local(self::BACKUPS_PATH . '/restore/' . $id);
         $files = $destination->getRoot() . '/files';
@@ -157,9 +158,6 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-//            '--user=' . $this->dsn->getUser(),
-//            '--password=' . $this->dsn->getPassword(),
-//            '--host=' . $this->dsn->getHost(),
             '--prepare',
             '--strict',
             '--target-dir=' . $target,
@@ -190,9 +188,6 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-//            '--user=' . $this->dsn->getUser(),
-//            '--password=' . $this->dsn->getPassword(),
-//            '--host=' . $this->dsn->getHost(),
             '--move-back',
             '--strict',
             '--target-dir=' . $target,
