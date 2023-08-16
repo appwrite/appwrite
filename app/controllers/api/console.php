@@ -53,12 +53,12 @@ App::post('/v1/console/assistant')
     ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
     ->label('abuse-limit', 15)
     ->label('abuse-key', 'userId:{userId}')
-    ->param('prompt', '', new Text(2000), 'Prompt')
+    ->param('query', '', new Text(2000), 'Query')
     ->inject('response')
-    ->action(function (string $prompt, Response $response) {
+    ->action(function (string $query, Response $response) {
         $ch = curl_init('http://appwrite-assistant:3003/');
         $responseHeaders = [];
-        $query = json_encode(['prompt' => $prompt]);
+        $query = json_encode(['prompt' => $query]);
         $headers = ['accept: text/event-stream'];
         $handleEvent = function ($ch, $data) use ($response) {
             $response->chunk($data);

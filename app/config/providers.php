@@ -1,5 +1,8 @@
 <?php
 
+// All names lowercase, but sentense is camelCase.
+// github must be all lowercased, but paypalSandbox should have uppercase S
+
 // Ordered by ABC.
 return [
     'amazon' => [

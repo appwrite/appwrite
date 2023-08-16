@@ -169,12 +169,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 continue;
             }
 
-            if ($external) {
-                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
-                $providerRepositoryName = $pullRequestResponse['head']['repo']['owner']['login'];
-                $providerRepositoryOwner = $pullRequestResponse['head']['repo']['name'];
-            }
-
             $deployment = $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
@@ -207,6 +201,8 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'activate' => $activate,
             ]));
 
+            $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
+
             if (!empty($providerCommitHash) && $function->getAttribute('providerSilentMode', false) === false) {
                 $functionName = $function->getAttribute('name');
                 $projectName = $project->getAttribute('name');
@@ -216,16 +212,25 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
                 $repositoryName = $github->getRepositoryName($providerRepositoryId);
                 $owner = $github->getOwnerName($providerInstallationId);
-
-                $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
+            }
+
+            $contribution = new Document([]);
+            if ($external) {
+                $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
+
+                $contribution->setAttribute('ownerName', $pullRequestResponse['head']['repo']['owner']['login']);
+                $contribution->setAttribute('repositoryName', $pullRequestResponse['head']['repo']['name']);
             }
 
             $buildEvent = new Build();
             $buildEvent
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
+                ->setProviderContribution($contribution)
                 ->setDeployment($deployment)
+                ->setProviderTargetUrl($providerTargetUrl)
+                ->setProviderCommitHash($providerCommitHash)
                 ->setProject($project)
                 ->trigger();
 
@@ -458,7 +463,9 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $providerRepositoryId, string $providerRootDirectory, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -527,7 +534,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
             $search = "";
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -660,7 +669,9 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $name, bool $private, GitHub $github, Document $user, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -750,7 +761,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $providerRepositoryId, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -795,7 +808,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $installationId, string $providerRepositoryId, GitHub $github, Response $response, Document $project, Database $dbForConsole) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -1058,7 +1073,9 @@ App::delete('/v1/vcs/installations/:installationId')
     ->inject('dbForConsole')
     ->inject('deletes')
     ->action(function (string $installationId, Response $response, Document $project, Database $dbForConsole, Delete $deletes) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -1094,7 +1111,9 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->inject('dbForConsole')
     ->inject('getProjectDB')
     ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
-        $installation = $dbForConsole->getDocument('installations', $installationId);
+        $installation = $dbForConsole->getDocument('installations', $installationId, [
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ]);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);

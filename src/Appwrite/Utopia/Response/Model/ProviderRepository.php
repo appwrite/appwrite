@@ -12,32 +12,32 @@ class ProviderRepository extends Model
         $this
             ->addRule('id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) repository ID.',
+                'description' => 'Git Repository ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) repository name.',
+                'description' => 'Repository Name.',
                 'default' => '',
                 'example' => 'appwrite',
             ])
             ->addRule('organization', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) organization name',
+                'description' => 'Installation organization.',
                 'default' => [],
                 'example' => 'appwrite',
                 'array' => false,
             ])
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) provider name.',
+                'description' => 'Repository Installation Pame.',
                 'default' => '',
                 'example' => 'github',
             ])
             ->addRule('private', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is VCS (Version Control System) repository private?',
+                'description' => 'Is repository private?',
                 'default' => false,
                 'example' => true,
             ])

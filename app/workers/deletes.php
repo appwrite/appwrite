@@ -125,6 +125,10 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($this->args['datetime']);
                 break;
+            case DELETE_TYPE_RUNTIMES:
+                $function = $this->args['function'] == null ? null : new Document($this->args['function']);
+                $this->deleteRuntimes($function, $project);
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;

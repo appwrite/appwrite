@@ -49,13 +49,16 @@ class BuildsV1 extends Worker
         $resource = new Document($this->args['resource'] ?? []);
         $deployment = new Document($this->args['deployment'] ?? []);
         $template = new Document($this->args['template'] ?? []);
+        $providerCommitHash = $this->args['providerCommitHash'] ?? '';
+        $providerTargetUrl = $this->args['providerTargetUrl'] ?? '';
+        $providerContribution = new Document($this->args['providerContribution'] ?? []);
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($this->getCache());
-                $this->buildDeployment($github, $project, $resource, $deployment, $template);
+                $this->buildDeployment($github, $project, $resource, $deployment, $template, $providerCommitHash, $providerTargetUrl, $providerContribution);
                 break;
 
             default:
@@ -69,7 +72,7 @@ class BuildsV1 extends Worker
      * @throws \Utopia\Database\Exception\Structure
      * @throws Throwable
      */
-    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template)
+    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template, string $providerCommitHash = '', string $providerTargetUrl = '', Document $providerContribution = null)
     {
         global $register;
 
@@ -146,7 +149,6 @@ class BuildsV1 extends Worker
         $source = $deployment->getAttribute('path', '');
         $installationId = $deployment->getAttribute('installationId', '');
         $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
-        $providerCommitHash = $deployment->getAttribute('providerCommitHash', '');
         $isVcsEnabled = $providerRepositoryId ? true : false;
         $owner = '';
         $repositoryName = '';
@@ -155,7 +157,9 @@ class BuildsV1 extends Worker
         try {
             if ($isNewBuild) {
                 if ($isVcsEnabled) {
-                    $installation = $dbForConsole->getDocument('installations', $installationId);
+                    $installation = $dbForConsole->getDocument('installations', $installationId, [
+                        Query::equal('projectInternalId', [$project->getInternalId()])
+                    ]);
                     $providerInstallationId = $installation->getAttribute('providerInstallationId');
 
                     $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
@@ -172,8 +176,8 @@ class BuildsV1 extends Worker
                     $owner = $github->getOwnerName($providerInstallationId);
                     $repositoryName = $github->getRepositoryName($providerRepositoryId);
 
-                    $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
-                    $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
+                    $cloneOwner = !empty($providerContribution) ?  $providerContribution->getAttribute('owner', $owner) : $owner;
+                    $cloneRepository = !empty($providerContribution) ?  $providerContribution->getAttribute('repository', $repositoryName) : $repositoryName;
 
                     $branchName = $deployment->getAttribute('providerBranch');
                     $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
@@ -276,7 +280,7 @@ class BuildsV1 extends Worker
                     $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
 
                     if ($isVcsEnabled) {
-                        $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                        $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $providerTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
                     }
                 }
             }
@@ -286,7 +290,7 @@ class BuildsV1 extends Worker
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('building', $github, $providerCommitHash, $owner, $repositoryName, $providerTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Trigger Webhook */
@@ -438,7 +442,7 @@ class BuildsV1 extends Worker
             $build->setAttribute('logs', $response['output']);
 
             if ($isVcsEnabled) {
-                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('ready', $github, $providerCommitHash, $owner, $repositoryName, $providerTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             Console::success("Build id: $buildId created");
@@ -470,7 +474,7 @@ class BuildsV1 extends Worker
             Console::error($th->getMessage());
 
             if ($isVcsEnabled) {
-                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
+                $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $providerTargetUrl, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
         } finally {
             $build = $dbForProject->updateDocument('builds', $buildId, $build);
@@ -506,7 +510,7 @@ class BuildsV1 extends Worker
             ->trigger();
     }
 
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
+    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, string $providerTargetUrl, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
     {
         if ($function->getAttribute('providerSilentMode', false) === true) {
             return;
@@ -534,12 +538,6 @@ class BuildsV1 extends Worker
             $projectName = $project->getAttribute('name');
 
             $name = "{$functionName} ({$projectName})";
-
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = App::getEnv('_APP_DOMAIN');
-            $functionId = $function->getId();
-            $projectId = $project->getId();
-            $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$projectId/functions/function-$functionId";
 
             $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, $state, $message, $providerTargetUrl, $name);
         }

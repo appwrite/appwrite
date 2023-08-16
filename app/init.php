@@ -168,6 +168,7 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
+const DELETE_TYPE_RUNTIMES = 'runtimes';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -186,8 +187,8 @@ const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 // Function headers
-const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length'];
-const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
+const FUNCTION_WHITELIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length'];
+const FUNCTION_WHITELIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';

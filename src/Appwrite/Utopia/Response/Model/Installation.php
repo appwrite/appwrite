@@ -30,21 +30,21 @@ class Installation extends Model
             ])
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) provider name.',
+                'description' => 'Installation provider.',
                 'default' => [],
                 'example' => 'github',
                 'array' => false,
             ])
             ->addRule('organization', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) organization name.',
+                'description' => 'Installation organization.',
                 'default' => [],
                 'example' => 'appwrite',
                 'array' => false,
             ])
             ->addRule('providerInstallationId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'VCS (Version Control System) installation ID.',
+                'description' => 'Provider installation ID.',
                 'default' => '',
                 'example' => '5322',
             ]);
