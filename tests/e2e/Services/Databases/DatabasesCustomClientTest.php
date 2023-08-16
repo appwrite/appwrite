@@ -468,53 +468,53 @@ class DatabasesCustomClientTest extends Scope
             'default' => null,
         ]);
 
-         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/attributes/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection2['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-         ]), [
+        ]), [
             'key' => "Rating",
             'size' => 100,
             'required' => false,
             'array' => false,
             'default' => null,
-         ]);
+        ]);
 
-         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection3['body']['$id'] . '/attributes/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection3['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-         ]), [
+        ]), [
             'key' => "Rating",
             'size' => 100,
             'required' => false,
             'array' => false,
             'default' => null,
-         ]);
+        ]);
 
-         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection4['body']['$id'] . '/attributes/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection4['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-         ]), [
+        ]), [
             'key' => "Rating",
             'size' => 100,
             'required' => false,
             'array' => false,
             'default' => null,
-         ]);
+        ]);
 
-         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection5['body']['$id'] . '/attributes/string', array_merge([
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection5['body']['$id'] . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-         ]), [
+        ]), [
             'key' => "Rating",
             'size' => 100,
             'required' => false,
             'array' => false,
             'default' => null,
-         ]);
+        ]);
 
         \sleep(2);
         // Creating parent document with a child reference to test the permissions
@@ -649,5 +649,87 @@ class DatabasesCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Removing update permission from collection 3.
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/collection3', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::custom('collection3'),
+            'name' => ID::custom('collection3'),
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::user($userId)),
+                Permission::read(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ]
+        ]);
+
+        // Giving update permission to collection 2.
+        $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/collection2', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::custom('collection2'),
+            'name' => ID::custom('collection2'),
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::create(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+                Permission::read(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ]
+        ]);
+
+        // Creating collection 3 new document
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collection3['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::custom('collection3Doc1'),
+            'data' => [
+                'Rating' => '20'
+            ]
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // We should be allowed to link a new document from collection 3 to collection 2.
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $collection1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'Title' => 'Captain America',
+                $collection2['body']['$id'] => [
+                    '$id' => ID::custom($collection2['body']['$id']),
+                    $collection3['body']['$id'] => 'collection3Doc1',
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+
+        // We should be allowed to link and create a new document from collection 3 to collection 2.
+        $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collection1['body']['$id'] . '/documents/' . $collection1['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'data' => [
+                'Title' => 'Captain America',
+                $collection2['body']['$id'] => [
+                    '$id' => ID::custom($collection2['body']['$id']),
+                    $collection3['body']['$id'] => [
+                        '$id' => ID::custom('collection3Doc2')
+                    ],
+                ]
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
 }
