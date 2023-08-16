@@ -3,8 +3,11 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 
 class V19 extends Migration
@@ -74,19 +77,28 @@ class V19 extends Migration
      */
     private function migrateCollections(): void
     {
-        foreach ($this->collections as $collection) {
+        $collectionType = match ($this->project->getInternalId()) {
+            'console' => 'console',
+            default => 'projects',
+        };
+        $collections = $this->collections[$collectionType];
+        foreach ($collections as $collection) {
             $id = $collection['$id'];
+
+            $internalProjectId = $this->project->getInternalId();
+
+            if ($id === 'schedules' && $internalProjectId === 'console') {
+                continue;
+            }
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            $this->projectDB->setNamespace("_$internalProjectId");
 
             switch ($id) {
                 case '_metadata':
-                    if ($this->project->getInternalId() === 'console') {
-                        $this->createCollection('schedules');
-                    }
-
+                    $this->createCollection('identities');
+                    $this->createCollection('migrations');
                     $this->createCollection('statsLogger');
                     break;
                 case 'attributes':
@@ -117,14 +129,6 @@ class V19 extends Migration
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'collections':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'enabled' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 case 'databases':
@@ -167,7 +171,32 @@ class V19 extends Migration
                     break;
                 case 'functions':
                     try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'live');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'installationId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'installationInternalId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'providerRepositoryId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'repositoryId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'repositoryInternalId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'providerBranch');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'providerRootDirectory');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'providerSilentMode');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'logging');
                         $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleInternalId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'scheduleId');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'version');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'entrypoint');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'commands');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_installationId');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_installationInternalId');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_providerRepositoryId');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_repositoryId');
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_repositoryInternalId');
+                        $this->createIndexFromCollection($this->projectDB, $id, 'asdf');
+                        $this->createIndexFromCollection($this->projectDB, $id, 'asdf');
+                        $this->createIndexFromCollection($this->projectDB, $id, 'asdf');
+                        $this->createIndexFromCollection($this->projectDB, $id, 'asdf');
+
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
@@ -203,6 +232,7 @@ class V19 extends Migration
                     break;
                 case 'projects':
                     try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'database');
                         $this->createAttributeFromCollection($this->projectDB, $id, 'smtp');
                         $this->createAttributeFromCollection($this->projectDB, $id, 'templates');
                         $this->projectDB->deleteCachedCollection($id);
@@ -210,27 +240,19 @@ class V19 extends Migration
                         Console::warning("'SMTP and Templates' from {$id}: {$th->getMessage()}");
                     }
                     break;
-                case 'schedules':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
                 case 'stats':
                     try {
                         $this->projectDB->updateAttribute($id, 'value', signed: true);
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'value' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->deleteAttribute($id, 'type');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
@@ -238,15 +260,7 @@ class V19 extends Migration
                         $this->createIndexFromCollection($this->projectDB, $id, '_key_metric_period_time');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'teams':
-                    try {
-                        $this->projectDB->updateAttribute($id, 'teamInternalId', required: true);
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 case 'users':
@@ -307,8 +321,6 @@ class V19 extends Migration
     {
         switch ($document->getCollection()) {
             case '_metadata':
-                // TODO: function schedules
-
                 // TODO: migrate statsLogger?
                 break;
             case 'builds':
@@ -339,11 +351,25 @@ class V19 extends Migration
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 break;
             case 'functions':
-                $deploymentId = $document->getAttribute('deploymentId');
+                $deploymentId = $document->getAttribute('deployment');
                 $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
+                $document->setAttribute('entrypoint', $deployment->getAttribute('entrypoint'));
 
                 // TODO: function schedule?
+                $schedule = $this->consoleDB->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                    'resourceType' => 'function',
+                    'resourceId' => $document->getId(),
+                    'resourceInternalId' => $document->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $this->project->getId(),
+                    'schedule'  => $document->getAttribute('schedule'),
+                    'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
+                ]));
+
+                $document->setAttribute('scheduleId', $schedule->getId());
+                $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
                 break;
             case 'projects':
                 /**
@@ -351,6 +377,10 @@ class V19 extends Migration
                  */
                 $document->setAttribute('version', '1.4.0');
 
+                $databases = Config::getParam('pools-database', []);
+                $database = $databases[0];
+
+                $document->setAttribute('database', $database);
                 $document->setAttribute('smtp', []);
                 $document->setAttribute('templates', []);
 
@@ -405,7 +435,7 @@ class V19 extends Migration
             $this->alterUidType($id);
 
             try {
-                $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId');
+                $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId', 'files');
                 $this->projectDB->deleteCachedCollection($id);
             } catch (\Throwable $th) {
                 Console::warning("'bucketInternalId' from {$id}: {$th->getMessage()}");
