@@ -25,7 +25,7 @@ class Restore extends Action
     {
         $this
             ->desc('Restore a DB')
-            ->param('id', '', new Text(20), 'The backup identification')
+            ->param('id', '', new Text(19), 'The backup identification')
             ->param('cloud', null, new Boolean(true), 'Download backup from cloud or use local directory')
             ->param('database', null, new Text(10), 'The Database name for example db_fra1_01')
             ->callback(fn ($id, $cloud, $project) => $this->action($id, $cloud, $project));
@@ -186,6 +186,7 @@ class Restore extends Action
         $args = [
             'xtrabackup',
             '--prepare',
+            '--parallel=' . intval($this->processors / 2),
             '--strict',
             '--target-dir=' . $target,
             '2> ' . $logfile,
@@ -217,9 +218,9 @@ class Restore extends Action
             'xtrabackup',
             $cloud ? '--move-back' : '--copy-back',
             '--strict',
+            '--parallel=' . intval($this->processors / 2),
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
-            '--parallel=' . $this->processors,
             '2> ' . $logfile,
         ];
 
@@ -229,7 +230,7 @@ class Restore extends Action
         $stderr = shell_exec('tail -1 ' . $logfile);
 
         if (!str_contains($stderr, 'completed OK!')) {
-            Console::error(date('Y-m-d H:i:s') . ' Restore failed:' . $stderr);
+            Console::error(date('Y-m-d H:i:s') . ' Restore failed: ' . $stderr);
             Console::exit();
         }
     }
