@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -30,6 +31,13 @@ App::get('/console/*')
     ->inject('request')
     ->inject('response')
     ->action(function (Request $request, Response $response) {
+        // Serve static files (console) only for main domain
+        $host = $request->getHostname() ?? '';
+        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        if ($host !== $mainDomain && $host !== 'localhost' && $host !== 'appwrite') {
+            throw new Exception(Exception::GENERAL_ROUTE_NOT_FOUND);
+        }
+
         $fallback = file_get_contents(__DIR__ . '/../../../console/index.html');
 
         // Card SSR

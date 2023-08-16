@@ -108,17 +108,11 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
-    $projectId = $project->getId();
-    $functionId = $function->getId();
-
-    $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
-
     $buildEvent = new Build();
     $buildEvent
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setProviderTargetUrl($providerTargetUrl)
         ->setTemplate($template)
         ->setProject($project)
         ->trigger();
@@ -178,9 +172,7 @@ App::post('/v1/functions')
                 ->setAttribute('branch', $templateBranch);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
-        ]);
+        $installation = $dbForConsole->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -639,9 +631,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $installation = $dbForConsole->getDocument('installations', $installationId, [
-            Query::equal('projectInternalId', [$project->getInternalId()])
-        ]);
+        $installation = $dbForConsole->getDocument('installations', $installationId);
 
         if (!empty($installationId) && $installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -1425,7 +1415,7 @@ App::post('/v1/functions/:functionId/executions')
 
         $headersFiltered = [];
         foreach ($headers as $key => $value) {
-            if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_REQUEST)) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
                 $headersFiltered[] = ['name' => $key, 'value' => $value];
             }
         }
@@ -1530,7 +1520,7 @@ App::post('/v1/functions/:functionId/executions')
 
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
-                if (\in_array(\strtolower($key), FUNCTION_WHITELIST_HEADERS_RESPONSE)) {
+                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
                     $headersFiltered[] = ['name' => $key, 'value' => $value];
                 }
             }
@@ -1576,11 +1566,11 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $headers = [];
-        foreach ($executionResponse['headers'] as $key => $value) {
+        foreach (($executionResponse['headers'] ?? []) as $key => $value) {
             $headers[] = ['name' => $key, 'value' => $value];
         }
 
-        $execution->setAttribute('responseBody', $executionResponse['body']);
+        $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
         $response
@@ -1725,7 +1715,7 @@ App::post('/v1/functions/:functionId/variables')
     ->label('sdk.response.model', Response::MODEL_VARIABLE)
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
-    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', false)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
@@ -1862,7 +1852,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
-    ->param('value', null, new Text(8192), 'Variable value. Max length: 8192 chars.', true)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')

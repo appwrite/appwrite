@@ -1263,6 +1263,7 @@ class RealtimeCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => ['users'],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 

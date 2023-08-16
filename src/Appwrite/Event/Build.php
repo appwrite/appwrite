@@ -11,9 +11,6 @@ class Build extends Event
     protected ?Document $resource = null;
     protected ?Document $deployment = null;
     protected ?Document $template = null;
-    protected string $providerCommitHash = '';
-    protected string $providerTargetUrl = '';
-    protected ?Document $providerContribution = null;
 
     public function __construct()
     {
@@ -33,32 +30,6 @@ class Build extends Event
         return $this;
     }
 
-     /**
-     * Sets commit SHA for the build event.
-     *
-     * @param string $providerCommitHash is the commit hash of the incoming commit
-     * @return self
-     */
-    public function setProviderCommitHash(string $providerCommitHash): self
-    {
-        $this->providerCommitHash = $providerCommitHash;
-
-        return $this;
-    }
-
-    /**
-     * Sets redirect target url for the deployment
-     *
-     * @param string $providerTargetUrl is the url that is to be set
-     * @return self
-     */
-    public function setProviderTargetUrl(string $providerTargetUrl): self
-    {
-        $this->providerTargetUrl = $providerTargetUrl;
-
-        return $this;
-    }
-
     /**
      * Sets resource document for the build event.
      *
@@ -68,19 +39,6 @@ class Build extends Event
     public function setResource(Document $resource): self
     {
         $this->resource = $resource;
-
-        return $this;
-    }
-
-    /**
-     * Sets custom owner and repository for VCS clone command during build
-     *
-     * @param Document $providerContribution
-     * @return self
-     */
-    public function setProviderContribution(Document $providerContribution): self
-    {
-        $this->providerContribution = $providerContribution;
 
         return $this;
     }
@@ -154,10 +112,7 @@ class Build extends Event
             'resource' => $this->resource,
             'deployment' => $this->deployment,
             'type' => $this->type,
-            'template' => $this->template,
-            'providerCommitHash' => $this->providerCommitHash,
-            'providerTargetUrl' => $this->providerTargetUrl,
-            'providerContribution' => $this->providerContribution
+            'template' => $this->template
         ]);
     }
 }
