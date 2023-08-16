@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Resque\Worker;
