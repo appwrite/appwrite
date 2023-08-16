@@ -135,6 +135,7 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
+const APP_INTERNAL_LOOPBACK_HOST = 'appwrite';
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
