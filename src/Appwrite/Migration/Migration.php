@@ -10,7 +10,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
 use Utopia\App;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);

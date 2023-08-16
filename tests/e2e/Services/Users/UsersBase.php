@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Users;
 
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 trait UsersBase
 {

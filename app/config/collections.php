@@ -3,7 +3,7 @@
 use Appwrite\Auth\Auth;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 $providers = Config::getParam('providers', []);
 $auth = Config::getParam('auth', []);

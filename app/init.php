@@ -41,7 +41,7 @@ use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Database\Query;

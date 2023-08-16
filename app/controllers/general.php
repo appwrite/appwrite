@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
