@@ -1246,17 +1246,6 @@ $commonCollections = [
         'name' => 'Providers',
         'attributes' => [
             [
-                '$id' => ID::custom('id'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1303,13 +1292,6 @@ $commonCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_id'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['id'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_provider'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['provider'],
@@ -1331,17 +1313,6 @@ $commonCollections = [
         '$id' => ID::custom('messages'),
         'name' => 'Messages',
         'attributes' => [
-            [
-                '$id' => ID::custom('id'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('providerId'),
                 'type' => Database::VAR_STRING,
@@ -1455,13 +1426,6 @@ $commonCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_id'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['id'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_providerId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['providerId'],
@@ -1490,17 +1454,6 @@ $commonCollections = [
         '$id' => ID::custom('topics'),
         'name' => 'Topics',
         'attributes' => [
-            [
-                '$id' => ID::custom('id'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('providerId'),
                 'type' => Database::VAR_STRING,
@@ -1548,13 +1501,6 @@ $commonCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_id'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['id'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_providerId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['providerId'],
@@ -1590,17 +1536,6 @@ $commonCollections = [
         '$id' => ID::custom('subscribers'),
         'name' => 'Subscribers',
         'attributes' => [
-            [
-                '$id' => ID::custom('id'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('userId'),
                 'type' => Database::VAR_STRING,
@@ -1670,13 +1605,6 @@ $commonCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_id'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['id'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_userId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userId'],
@@ -1726,17 +1654,6 @@ $commonCollections = [
         '$id' => ID::custom('targets'),
         'name' => 'Targets',
         'attributes' => [
-            [
-                '$id' => ID::custom('id'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('userId'),
                 'type' => Database::VAR_STRING,
@@ -1805,13 +1722,6 @@ $commonCollections = [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_id'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['id'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
             [
                 '$id' => ID::custom('_key_userId'),
                 'type' => Database::INDEX_KEY,
