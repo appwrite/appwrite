@@ -483,7 +483,7 @@ App::get('/v1/users/:userId/targets/:targetId')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-        
+
         $target = $user->find('$id', $targetId, 'targets');
 
         if (empty($target)) {
@@ -491,7 +491,7 @@ App::get('/v1/users/:userId/targets/:targetId')
         }
 
         $response->dynamic($target, Response::MODEL_TARGET);
-    });    
+    });
 
 App::get('/v1/users/:userId/sessions')
     ->desc('List User Sessions')
@@ -675,7 +675,7 @@ App::get('/v1/users/:userId/targets')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-        
+
         $targets = $user->getAttribute('targets', []);
         var_dump($user);
         $response->dynamic(new Document([
