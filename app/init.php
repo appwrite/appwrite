@@ -521,6 +521,19 @@ Database::addFilter(
     }
 );
 
+Database::addFilter(
+    'subQueryTargets',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('targets', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+    }
+);
 /**
  * DB Formats
  */
