@@ -20,7 +20,7 @@ use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Structure;
