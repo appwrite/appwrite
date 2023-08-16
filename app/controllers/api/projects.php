@@ -21,7 +21,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\DateTime;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
