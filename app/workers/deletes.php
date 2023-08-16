@@ -114,10 +114,10 @@ class DeletesV1 extends Worker
                 break;
 
             case DELETE_TYPE_CACHE_BY_RESOURCE:
-                $this->deleteCacheByResource($project->getId());
+                $this->deleteCacheByResource($project, $this->args['resource']);
                 break;
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
-                $this->deleteCacheByDate();
+                $this->deleteCacheByDate($this->args['datetime']);
                 break;
             default:
                 Console::error('No delete operation for type: ' . $type);
@@ -130,30 +130,55 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param string $projectId
+     * @param Document $project
+     * @param string $resource
+     * @throws Exception
      */
-    protected function deleteCacheByResource(string $projectId): void
+    protected function deleteCacheByResource(Document $project, string $resource): void
     {
-        $this->deleteCacheFiles([
-            Query::equal('resource', [$this->args['resource']]),
-        ]);
+        $projectId = $project->getId();
+        $dbForProject = $this->getProjectDB($projectId);
+
+        $cache = new Cache(
+            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+        );
+
+        $query = [
+            Query::equal('resource', [$resource])
+        ];
+
+        $this->deleteByGroup(
+            'cache',
+            $query,
+            $dbForProject,
+            function (Document $document) use ($cache, $projectId) {
+                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                if ($cache->purge($document->getId())) {
+                    Console::success('Deleting cache file: ' . $path);
+                } else {
+                    Console::error('Failed to delete cache file: ' . $path);
+                }
+            }
+        );
     }
 
-    protected function deleteCacheByDate(): void
+    /**
+     * @param string $datetime
+     * @throws Exception
+     */
+    protected function deleteCacheByDate(string $datetime): void
     {
-        $this->deleteCacheFiles([
-            Query::lessThan('accessedAt', $this->args['datetime']),
-        ]);
-    }
-
-    protected function deleteCacheFiles($query): void
-    {
-        $this->deleteForProjectIds(function (string $projectId) use ($query) {
+        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
 
             $dbForProject = $this->getProjectDB($projectId);
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
             );
+
+            $query = [
+                Query::lessThan('accessedAt', $datetime),
+            ];
 
             $this->deleteByGroup(
                 'cache',
