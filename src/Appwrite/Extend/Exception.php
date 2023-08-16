@@ -81,6 +81,7 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
+    public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';

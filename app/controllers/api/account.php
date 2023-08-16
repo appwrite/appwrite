@@ -1653,6 +1653,29 @@ App::get('/v1/account/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
+App::get('/v1/account/targets')
+    ->desc('List Account Targets')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'listTargets')
+    ->label('sdk.description', '/docs/references/account/list-targets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->inject('response')
+    ->inject('user')
+    ->action(function (Response $response, Document $user) {
+
+        $targets = $user->getAttribute('targets', []);
+
+        $response->dynamic(new Document([
+            'targets' => $targets,
+            'total' => count($targets),
+        ]), Response::MODEL_TARGET_LIST);
+    });
+
 App::get('/v1/account/sessions/:sessionId')
     ->desc('Get Session')
     ->groups(['api', 'account'])
@@ -1695,6 +1718,33 @@ App::get('/v1/account/sessions/:sessionId')
         }
 
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+    });
+
+App::get('/v1/account/targets/:targetId')
+    ->desc('Get Target')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getTarget')
+    ->label('sdk.description', '/docs/references/account/get-Target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('sdk.offline.model', '/account/targets')
+    ->label('sdk.offline.key', '{targetId}')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('response')
+    ->inject('user')
+    ->action(function (string $targetId, Response $response, Document $user) {
+
+        $target = $user->find('$id', $targetId, 'targets');
+
+        if (empty($target)) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $response->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::patch('/v1/account/name')

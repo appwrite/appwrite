@@ -230,6 +230,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_TARGET_NOT_FOUND => [
+        'name' => Exception::USER_TARGET_NOT_FOUND,
+        'description' => 'The current user target could not be found.',
+        'code' => 404,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

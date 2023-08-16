@@ -461,6 +461,38 @@ App::get('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
+App::get('/v1/users/:userId/targets/:targetId')
+    ->desc('Get User Target')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getTarget')
+    ->label('sdk.description', '/docs/references/users/get-user-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+        
+        $target = $user->find('$id', $targetId, 'targets');
+
+        if (empty($target)) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $response->dynamic($target, Response::MODEL_TARGET);
+    });    
+
 App::get('/v1/users/:userId/sessions')
     ->desc('List User Sessions')
     ->groups(['api', 'users'])
@@ -620,6 +652,36 @@ App::get('/v1/users/:userId/logs')
             'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/users/:userId/targets')
+    ->desc('List User Targets')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'listTargets')
+    ->label('sdk.description', '/docs/references/users/list-user-targets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+        
+        $targets = $user->getAttribute('targets', []);
+        var_dump($user);
+        $response->dynamic(new Document([
+            'targets' => $targets,
+            'total' => count($targets),
+        ]), Response::MODEL_TARGET_LIST);
     });
 
 App::patch('/v1/users/:userId/status')
