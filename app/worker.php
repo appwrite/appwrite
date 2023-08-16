@@ -37,7 +37,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     ;
 
     $adapter = new Database($database, $cache);
-    $adapter->setNamespace('console');
+    $adapter->setNamespace('_console');
 
     return $adapter;
 }, ['cache', 'register']);
