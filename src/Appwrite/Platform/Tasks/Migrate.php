@@ -7,10 +7,10 @@ use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
 use Utopia\Cache\Cache;
-use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
 class Migrate extends Action
@@ -26,20 +26,22 @@ class Migrate extends Action
             ->desc('Migrate Appwrite to new version')
             /** @TODO APP_VERSION_STABLE needs to be defined */
             ->param('version', APP_VERSION_STABLE, new Text(8), 'Version to migrate to.', true)
-            ->inject('register')
-            ->callback(fn ($version, $register) => $this->action($version, $register));
+            ->inject('cache')
+            ->inject('dbForConsole')
+            ->inject('getProjectDB')
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB) => $this->action($version, $cache, $dbForConsole, $getProjectDB));
     }
 
-    private function clearProjectsCache(Redis $redis, Document $project)
+    private function clearProjectsCache(Cache $cache, Document $project)
     {
         try {
-            $redis->del($redis->keys("cache-_{$project->getInternalId()}:*"));
+            $cache->purge("cache-_{$project->getInternalId()}:*");
         } catch (\Throwable $th) {
             Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
         }
     }
 
-    public function action(string $version, Registry $register)
+    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB)
     {
         Authorization::disable();
         if (!array_key_exists($version, Migration::$versions)) {
@@ -51,14 +53,6 @@ class Migrate extends Action
         $app = new App('UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
-
-        $dbPool = $register->get('dbPool', true);
-        $redis = $register->get('cache', true);
-
-        $cache = new Cache(new RedisCache($redis));
-
-        $dbForConsole = $dbPool->getDB('console', $cache);
-        $dbForConsole->setNamespace('_project_console');
 
         $console = $app->getResource('console');
 
@@ -79,6 +73,7 @@ class Migrate extends Action
         }
 
         $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
+        /** @var Migration $migration */
         $migration = new $class();
 
         while (!empty($projects)) {
@@ -90,11 +85,11 @@ class Migrate extends Action
                     continue;
                 }
 
-                $this->clearProjectsCache($redis, $project);
+                $this->clearProjectsCache($cache, $project);
 
                 try {
                     // TODO: Iterate through all project DBs
-                    $projectDB = $dbPool->getDB($project->getId(), $cache);
+                    $projectDB = $getProjectDB($project);
                     $migration
                         ->setProject($project, $projectDB, $dbForConsole)
                         ->execute();
@@ -103,11 +98,11 @@ class Migrate extends Action
                     throw $th;
                 }
 
-                $this->clearProjectsCache($redis, $project);
+                $this->clearProjectsCache($cache, $project);
             }
 
             $sum = \count($projects);
-            $projects = $dbForConsole->find('projects', limit: $limit, offset: $offset);
+            $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($offset)]);
 
             $offset = $offset + $limit;
             $count = $count + $sum;
@@ -115,7 +110,6 @@ class Migrate extends Action
             Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
         }
 
-        Swoole\Event::wait(); // Wait for Coroutines to finish
         Console::success('Data Migration Completed');
     }
 }
