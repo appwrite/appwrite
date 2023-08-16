@@ -1078,7 +1078,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['pools', 'cache']);

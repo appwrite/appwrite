@@ -58,7 +58,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('console');
+            $dbForConsole->setNamespace('_console');
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
