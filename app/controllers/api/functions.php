@@ -107,7 +107,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'search' => implode(' ', [$deploymentId, $entrypoint]),
         'activate' => true,
     ]));
-    
+
     $projectId = $project->getId();
     $functionId = $function->getId();
 

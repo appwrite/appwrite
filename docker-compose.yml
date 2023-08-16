@@ -627,7 +627,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
-      - ./vendor:/usr/src/code/tests
     depends_on:
       - mariadb
     environment:

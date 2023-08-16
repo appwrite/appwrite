@@ -231,9 +231,22 @@ class Firebase extends OAuth2
         ]));
     }
 
+    function generateRandomString($length = 10)
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[random_int(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
     public function createServiceAccount(string $accessToken, string $projectId): array
     {
         // Create Service Account
+        $uid = $this->generateRandomString();
+
         $response = $this->request(
             'POST',
             'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts',
@@ -242,9 +255,9 @@ class Firebase extends OAuth2
                 'Content-Type: application/json'
             ],
             json_encode([
-                'accountId' => 'appwrite-migrations',
+                'accountId' => 'appwrite-' . $uid,
                 'serviceAccount' => [
-                    'displayName' => 'Appwrite Migrations'
+                    'displayName' => 'Appwrite Migrations ' . $uid
                 ]
             ])
         );
@@ -266,5 +279,39 @@ class Firebase extends OAuth2
         $responseKey = json_decode($responseKey, true);
 
         return json_decode(base64_decode($responseKey['privateKeyData']), true);
+    }
+
+    public function cleanupServiceAccounts(string $accessToken, string $projectId)
+    {
+        // List Service Accounts
+        $response = $this->request(
+            'GET',
+            'https://iam.googleapis.com/v1/projects/'.$projectId.'/serviceAccounts',
+            [
+            'Authorization: Bearer ' . \urlencode($accessToken),
+            'Content-Type: application/json'
+            ]
+        );
+
+        $response = json_decode($response, true);
+
+        if (empty($response['accounts'])) {
+            return false;
+        }
+
+        foreach ($response['accounts'] as $account) {
+            if (strpos($account['email'], 'appwrite-') !== false) {
+                $this->request(
+                    'DELETE',
+                    'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts/' . $account['email'],
+                    [
+                        'Authorization: Bearer ' . \urlencode($accessToken),
+                        'Content-Type: application/json'
+                    ]
+                );
+            }
+        }
+
+        return true;
     }
 }
