@@ -197,6 +197,44 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      */
+    public function testGetDatabaseUsage(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        /**
+         * Test for FAILURE
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '32h'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(count($response['body']), 3);
+        $this->assertEquals($response['body']['range'], '24h');
+        $this->assertIsArray($response['body']['documentsTotal']);
+        $this->assertIsArray($response['body']['collectionsTotal']);
+    }
+
+
+    /**
+     * @depends testCreateCollection
+     */
     public function testGetCollectionUsage(array $data)
     {
         $databaseId = $data['databaseId'];
@@ -231,15 +269,10 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'range' => '24h'
         ]);
-
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 6);
+        $this->assertEquals(count($response['body']), 2);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsCount']);
-        $this->assertIsArray($response['body']['documentsCreate']);
-        $this->assertIsArray($response['body']['documentsRead']);
-        $this->assertIsArray($response['body']['documentsUpdate']);
-        $this->assertIsArray($response['body']['documentsDelete']);
+        $this->assertIsArray($response['body']['documentsTotal']);
     }
 
     /**

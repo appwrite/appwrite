@@ -32,6 +32,7 @@ class Exception extends \Exception
      * - Platform
      * - Domain
      * - GraphQL
+     * - Migrations
      */
 
     /** General */
@@ -51,6 +52,7 @@ class Exception extends \Exception
     public const GENERAL_CURSOR_NOT_FOUND          = 'general_cursor_not_found';
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
+    public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
 
     /** Users */
@@ -62,19 +64,25 @@ class Exception extends \Exception
     public const USER_PASSWORD_RESET_REQUIRED      = 'user_password_reset_required';
     public const USER_EMAIL_NOT_WHITELISTED        = 'user_email_not_whitelisted';
     public const USER_IP_NOT_WHITELISTED           = 'user_ip_not_whitelisted';
+    public const USER_INVALID_CODE                 = 'user_invalid_code';
     public const USER_INVALID_CREDENTIALS          = 'user_invalid_credentials';
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
     public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
+    public const USER_PASSWORD_PERSONAL_DATA       = 'password_personal_data';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
+    public const USER_IDENTITY_NOT_FOUND           = 'user_identity_not_found';
     public const USER_UNAUTHORIZED                 = 'user_unauthorized';
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
+    public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
+    public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -107,6 +115,7 @@ class Exception extends \Exception
     public const STORAGE_BUCKET_NOT_FOUND          = 'storage_bucket_not_found';
     public const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
+    public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
@@ -189,6 +198,7 @@ class Exception extends \Exception
     /** Domain */
     public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
     public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
+    public const DOMAIN_FORBIDDEN                  = 'domain_forbidden';
     public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
     public const DOMAIN_TARGET_INVALID             = 'domain_target_invalid';
 
@@ -196,7 +206,13 @@ class Exception extends \Exception
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
 
+    /** Migrations */
+    public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
+    public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
+    public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
+
     protected $type = '';
+    protected $errors = [];
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {

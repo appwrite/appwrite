@@ -81,18 +81,6 @@ class Func extends Model
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
-            ->addRule('scheduleNext', [
-                'type' => self::TYPE_DATETIME,
-                'description' => 'Function\'s next scheduled execution time in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
-            ->addRule('schedulePrevious', [
-                'type' => self::TYPE_DATETIME,
-                'description' => 'Function\'s previous scheduled execution time in ISO 8601 format.',
-                'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
-            ])
             ->addRule('timeout', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Function execution timeout in seconds.',
