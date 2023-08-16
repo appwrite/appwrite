@@ -68,15 +68,9 @@ class Restore extends Action
         $filename = $id . '.xbstream';
         $cloud = $cloud === 'true' || $cloud === '1';
         $destination = new Local(self::BACKUPS_PATH . '/restore/' . $id);
-        $files = $destination->getRoot() . '/files';
 
-        if (file_exists($files)) {
-            Console::error('Directory exist: ' . $files);
-            Console::exit();
-        }
-
-        if (!file_exists($files) && !mkdir($files, 0755, true)) {
-            Console::error('Error creating directory: ' . $files);
+        if (!file_exists($destination->getRoot()) && !mkdir($destination->getRoot(), 0755, true)) {
+            Console::error('Error creating directory: ' . $destination->getRoot());
             Console::exit();
         }
 
@@ -91,6 +85,18 @@ class Restore extends Action
 
         if (!file_exists($stream)) {
             Console::error('File not found: ' . $stream);
+            Console::exit();
+        }
+
+        $files = $destination->getRoot() . '/files';
+
+        if (file_exists($files)) {
+            Console::error('Directory exist: ' . $files);
+            Console::exit();
+        }
+
+        if (!file_exists($files) && !mkdir($files, 0755, true)) {
+            Console::error('Error creating directory: ' . $files);
             Console::exit();
         }
 
@@ -131,6 +137,7 @@ class Restore extends Action
         $args = [
             'xbstream -x < ' . $file,
             '--decompress',
+            '--decompress-threads=' . $this->processors,
             '--parallel=' . intval($this->processors / 2),
             '-C ' . $target,
         ];
