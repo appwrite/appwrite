@@ -166,6 +166,7 @@ class Restore extends Action
         $args = [
             'xtrabackup',
             '--prepare',
+            '--parallel=' . intval($this->processors / 2),
             '--strict',
             '--target-dir=' . $target,
             '2> ' . $logfile,
@@ -197,9 +198,9 @@ class Restore extends Action
             'xtrabackup',
             '--move-back',
             '--strict',
+            '--parallel=' . intval($this->processors / 2),
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
-            '--parallel=' . $this->processors,
             '2> ' . $logfile,
         ];
 

@@ -100,7 +100,7 @@ class Backup extends Action
     public function start(): void
     {
         $start = microtime(true);
-        $time = date('Y_m_d-H_i_s');
+        $time = date('Y_m_d_H_i_s');
         $this->filename = $time . '.xbstream';
 
         self::log('--- Backup Start ' . $time . ' --- ');
@@ -141,12 +141,12 @@ class Backup extends Action
             '--backup',
             '--stream=xbstream',
             '--strict',
-            '--history=' . $this->database, // logs PERCONA_SCHEMA.xtrabackup_history name attribute
+            '--history="' . $this->database . '|' . pathinfo($this->filename, PATHINFO_FILENAME) . '"', // PERCONA_SCHEMA.xtrabackup_history
             '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
-            '--target-dir=./',
+            '--target-dir=' . self::BACKUPS_PATH,
             '--compress=' . self::COMPRESS_ALGORITHM,
             '--compress-threads=' . $this->processors,
             '--parallel=' . intval($this->processors / 2),
