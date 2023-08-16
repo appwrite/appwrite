@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ff72579b1906a3ee181ec1209198c13f",
+    "content-hash": "402b06af46e74314d6a3c33d74a923df",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2622,16 +2622,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "dev-feat-transfer",
+            "version": "0.16.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "0c510a85509719a45cc6e7f9861d3bc1b4c0f1e0"
+                "reference": "c2d17614b8162d5c475b2194b849b2bf081cfed2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/0c510a85509719a45cc6e7f9861d3bc1b4c0f1e0",
-                "reference": "0c510a85509719a45cc6e7f9861d3bc1b4c0f1e0",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/c2d17614b8162d5c475b2194b849b2bf081cfed2",
+                "reference": "c2d17614b8162d5c475b2194b849b2bf081cfed2",
                 "shasum": ""
             },
             "require": {
@@ -2671,9 +2671,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/feat-transfer"
+                "source": "https://github.com/utopia-php/storage/tree/0.16.0"
             },
-            "time": "2023-08-12T10:18:42+00:00"
+            "time": "2023-08-15T16:32:52+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5522,18 +5522,9 @@
             "time": "2023-07-26T07:16:09+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/storage",
-            "version": "dev-feat-transfer",
-            "alias": "0.13.3",
-            "alias_normalized": "0.13.3.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/storage": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

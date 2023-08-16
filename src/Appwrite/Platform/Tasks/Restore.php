@@ -256,17 +256,6 @@ class Restore extends Action
         }
     }
 
-    public function getDsn(string $database): ?DSN
-    {
-        foreach (explode(',', App::getEnv('_APP_CONNECTIONS_DB_REPLICAS', '')) as $project) {
-            [$db, $dsn] = explode('=', $project);
-            if ($db === $database) {
-                return new DSN($dsn);
-            }
-        }
-        return null;
-    }
-
     public function setContainerId()
     {
         $stdout = '';
