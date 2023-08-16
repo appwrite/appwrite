@@ -414,6 +414,25 @@ class OpenAPI3 extends Format
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];
 
+                        //Iterate from the blackList. If it matches with the current one, then it is a blackList
+                        // Do not add the enum
+                        $allowed = true;
+                        foreach ($this->enumBlacklist as $blacklist) {
+                            if (
+                                $blacklist['namespace'] == $route->getLabel('sdk.namespace', '')
+                                && $blacklist['method'] == $route->getLabel('sdk.method', '')
+                                && $blacklist['parameter'] == $name
+                            ) {
+                                $allowed = false;
+                                break;
+                            }
+                        }
+
+                        if ($allowed) {
+                                $node['schema']['enum'] = $validator->getList();
+                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                        }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
@@ -443,6 +462,13 @@ class OpenAPI3 extends Format
                         'description' => $node['description'],
                         'x-example' => $node['schema']['x-example'] ?? null
                     ];
+
+                    if (isset($node['schema']['enum'])) {
+                        /// If the enum flag is Set, add the enum values to the body
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['enum'] = $node['schema']['enum'];
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-name'] = $node['schema']['x-enum-name'] ?? null;
+                        $body['content'][$consumes[0]]['schema']['properties'][$name]['x-enum-keys'] = $node['schema']['x-enum-keys'] ?? null;
+                    }
 
                     if ($node['schema']['x-upload-id'] ?? false) {
                         $body['content'][$consumes[0]]['schema']['properties'][$name]['x-upload-id'] = $node['schema']['x-upload-id'];
