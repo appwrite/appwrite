@@ -256,7 +256,7 @@ class Firebase extends OAuth2
         ]));
     }
 
-    function generateRandomString($length = 10)
+    private function generateRandomString($length = 10): string
     {
         $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
@@ -267,7 +267,7 @@ class Firebase extends OAuth2
         return $randomString;
     }
 
-    public function createCustomRole(string $accessToken, string $projectId): array
+    private function createCustomRole(string $accessToken, string $projectId): array
     {
         // Check if role already exists
         try {
