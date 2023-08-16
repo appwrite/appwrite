@@ -132,7 +132,7 @@ class Restore extends Action
 
     public function decompress(string $file, string $target)
     {
-        $this->log('Xbstream start');
+        $this->log('Xbstream decompress start');
 
         $args = [
             'xbstream -x < ' . $file,
