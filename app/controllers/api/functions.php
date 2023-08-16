@@ -1566,11 +1566,11 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         $headers = [];
-        foreach ($executionResponse['headers'] as $key => $value) {
+        foreach (($executionResponse['headers'] ?? []) as $key => $value) {
             $headers[] = ['name' => $key, 'value' => $value];
         }
 
-        $execution->setAttribute('responseBody', $executionResponse['body']);
+        $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
         $execution->setAttribute('responseHeaders', $headers);
 
         $response

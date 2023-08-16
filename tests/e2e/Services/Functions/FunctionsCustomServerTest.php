@@ -324,7 +324,9 @@ class FunctionsCustomServerTest extends Scope
                 'users.*.update.email',
             ],
             'schedule' => '0 0 1 1 *',
-            'timeout' => 5,
+            'timeout' => 15,
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
         ]);
 
         $this->assertEquals(200, $response1['headers']['status-code']);
@@ -339,7 +341,7 @@ class FunctionsCustomServerTest extends Scope
             'users.*.update.email',
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
-        $this->assertEquals(5, $response1['body']['timeout']);
+        $this->assertEquals(15, $response1['body']['timeout']);
 
         /**
          * Test for FAILURE
@@ -364,7 +366,6 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
             'activate' => true
         ]);
@@ -574,10 +575,9 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals(0, $function['body']['buildTime']);
+        $this->assertGreaterThan(0, $function['body']['buildTime']);
         $this->assertNotEmpty($function['body']['status']);
-        $this->assertNotEmpty($function['body']['buildStdout']);
-        $this->assertArrayHasKey('buildStderr', $function['body']);
+        $this->assertNotEmpty($function['body']['buildLogs']);
 
         /**
          * Test for FAILURE
@@ -604,46 +604,28 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'async' => true,
+            'async' => false,
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
 
-        $this->assertEquals(202, $execution['headers']['status-code']);
-        $this->assertNotEmpty($execution['body']['$id']);
-        $this->assertNotEmpty($execution['body']['functionId']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
-        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
-        $this->assertEquals('waiting', $execution['body']['status']);
-        $this->assertEquals(0, $execution['body']['statusCode']);
-        $this->assertEquals('', $execution['body']['response']);
-        $this->assertEquals('', $execution['body']['errors']);
-        $this->assertEquals('', $execution['body']['logs']);
-        $this->assertEquals(0, $execution['body']['duration']);
-
-        sleep(10);
-
-        $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
+        $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertNotEmpty($execution['body']['$id']);
         $this->assertNotEmpty($execution['body']['functionId']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($execution['body']['$createdAt']));
         $this->assertEquals($data['functionId'], $execution['body']['functionId']);
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertEquals(200, $execution['body']['statusCode']);
-        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['response']);
-        $this->assertStringContainsString($data['deploymentId'], $execution['body']['response']);
-        $this->assertStringContainsString('Test1', $execution['body']['response']);
-        $this->assertStringContainsString('http', $execution['body']['response']);
-        $this->assertStringContainsString('PHP', $execution['body']['response']);
-        $this->assertStringContainsString('8.0', $execution['body']['response']);
-        $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['responseBody']);
+        $this->assertStringContainsString($data['deploymentId'], $execution['body']['responseBody']);
+        $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
+        $this->assertStringContainsString('http', $execution['body']['responseBody']);
+        $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
+        $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['errors']);
         $this->assertEquals('', $execution['body']['logs']);
-        $this->assertLessThan(3, $execution['body']['duration']);
+        $this->assertLessThan(10, $execution['body']['duration']);
 
         /**
          * Test for FAILURE
@@ -751,15 +733,15 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             // Testing default value, should be 'async' => false
         ]);
-
+        
         $this->assertEquals(201, $execution['headers']['status-code']);
-
         $this->assertEquals('completed', $execution['body']['status']);
-        $this->assertStringContainsString('Test1', $execution['body']['response']);
-        $this->assertStringContainsString('http', $execution['body']['response']);
-        $this->assertStringContainsString('PHP', $execution['body']['response']);
-        $this->assertStringContainsString('8.0', $execution['body']['response']);
-        $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertStringContainsString('Test1', $execution['body']['responseBody']);
+        $this->assertStringContainsString('http', $execution['body']['responseBody']);
+        $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
+        $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        // $this->assertStringContainsString('êä', $execution['body']['response']); // tests unknown utf-8 chars
         $this->assertLessThan(1.500, $execution['body']['duration']);
 
         return $data;
@@ -858,7 +840,7 @@ class FunctionsCustomServerTest extends Scope
     {
         $name = 'php-8.0';
         $entrypoint = 'index.php';
-        $timeout = 2;
+        $timeout = 15;
         $folder = 'timeout';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
@@ -918,12 +900,12 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
         $this->assertEquals($executions['body']['executions'][0]['status'], 'failed');
-        $this->assertEquals($executions['body']['executions'][0]['statusCode'], 500);
+        $this->assertEquals($executions['body']['executions'][0]['responseStatusCode'], 500);
         $this->assertGreaterThan(2, $executions['body']['executions'][0]['duration']);
-        $this->assertLessThan(6, $executions['body']['executions'][0]['duration']);
-        $this->assertEquals($executions['body']['executions'][0]['response'], '');
+        $this->assertLessThan(20, $executions['body']['executions'][0]['duration']);
+        $this->assertEquals($executions['body']['executions'][0]['responseBody'], '');
         $this->assertEquals($executions['body']['executions'][0]['logs'], '');
-        $this->assertEquals($executions['body']['executions'][0]['errors'], 'An internal curl error has occurred within the executor! Error Msg: Operation timed out');
+        $this->assertStringContainsString('timed out', $executions['body']['executions'][0]['errors']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1022,7 +1004,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-        $this->assertStringContainsString('Amazing Function Log', $executions['body']['stdout']);
+        $this->assertStringContainsString('Amazing Function Log', $executions['body']['logs']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',

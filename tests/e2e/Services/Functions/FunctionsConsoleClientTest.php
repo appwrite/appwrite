@@ -106,13 +106,13 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertEquals(count($response['body']), 8);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['deployments']);
+        $this->assertIsArray($response['body']['deploymentsTotal']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
-        $this->assertIsArray($response['body']['builds']);
+        $this->assertIsArray($response['body']['buildsTotal']);
         $this->assertIsArray($response['body']['buildsStorage']);
-        $this->assertIsArray($response['body']['buildsCompute']);
-        $this->assertIsArray($response['body']['executions']);
-        $this->assertIsArray($response['body']['executionsCompute']);
+        $this->assertIsArray($response['body']['buildsTime']);
+        $this->assertIsArray($response['body']['executionsTotal']);
+        $this->assertIsArray($response['body']['executionsTime']);
     }
 
     /**
