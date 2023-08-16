@@ -281,15 +281,11 @@ App::init()
 
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    if ($bucket->isEmpty() || !$bucket->getAttribute('enabled')) {
-                        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-                        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-                        $isAdminMode = $mode === APP_MODE_ADMIN;
-                        $isConsole = $isAdminMode && $isPrivilegedUser;
+                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-                        if (!$isConsole && !$isAPIKey) {
-                            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-                        }
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);

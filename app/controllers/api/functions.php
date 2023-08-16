@@ -998,18 +998,13 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForFunctions')
     ->inject('queueForUsage')
     ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, string $mode, Func $queueForFunctions, Usage $queueForUsage) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isConsole = $isAdminMode && $isPrivilegedUser;
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-            if (!$isConsole && !$isAPIKey) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -1197,18 +1192,13 @@ App::get('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isConsole = $isAdminMode && $isPrivilegedUser;
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-            if (!$isConsole && !$isAPIKey) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $queries = Query::parseQueries($queries);
@@ -1274,18 +1264,13 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-            $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-            $isAdminMode = $mode === APP_MODE_ADMIN;
-            $isConsole = $isAdminMode && $isPrivilegedUser;
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-            if (!$isConsole && !$isAPIKey) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);
