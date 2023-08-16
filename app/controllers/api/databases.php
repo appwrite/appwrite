@@ -6,7 +6,6 @@ use Appwrite\Extend\Exception;
 use Utopia\Audit\Audit;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
 use Utopia\Database\Helpers\ID;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
@@ -21,6 +20,7 @@ use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Structure;
@@ -247,7 +247,7 @@ App::get('/v1/databases')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -572,7 +572,7 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -2014,7 +2014,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

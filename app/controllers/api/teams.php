@@ -143,7 +143,7 @@ App::get('/v1/teams')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -481,7 +481,7 @@ App::get('/v1/teams/:teamId/memberships')
         $queries[] = Query::equal('teamId', [$teamId]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
