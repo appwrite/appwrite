@@ -380,10 +380,9 @@ App::post('/v1/users/:userId/targets')
     ->param('providerId', '', new UID(), 'ID of the provider.', false)
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', false)
     ->inject('response')
-    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, string $providerId, string $identifier, Response $response, Document $project, Database $dbForProject, Event $events) {
+    ->action(function (string $targetId, string $userId, string $providerId, string $identifier, Response $response, Database $dbForProject, Event $events) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -415,6 +414,7 @@ App::post('/v1/users/:userId/targets')
             'userInternalId' => $user->getInternalId(),
             'identifier' => $identifier,
         ]));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
         $events
             ->setParam('userId', $userId)
             ->setParam('targetId', $targetId);
