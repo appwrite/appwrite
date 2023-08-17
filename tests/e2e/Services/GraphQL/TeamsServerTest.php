@@ -268,7 +268,7 @@ class TeamsServerTest extends Scope
 
         $this->assertIsArray($membership['body']['data']);
         $this->assertArrayNotHasKey('errors', $membership['body']);
-        $membership = $membership['body']['data']['teamsUpdateMembershipRoles'];
+        $membership = $membership['body']['data']['teamsUpdateMembership'];
         $this->assertEquals(['developer', 'admin'], $membership['roles']);
     }
 
