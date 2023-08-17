@@ -4,7 +4,6 @@ namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Helpers\ID;
 
 trait TeamsBaseServer
 {

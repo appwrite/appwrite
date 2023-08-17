@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca47a56f2285cea787de1f58a8ee968c",
+    "content-hash": "2098172fc4b71eb0d41dcdbfea2f5061",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1266,23 +1266,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.27.0",
+            "version": "0.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "d1115f5843e903ffaba9c23e450b33c0fe265ae0"
+                "reference": "d771c2c8d7d1237b1d04b5bf57b07a9b4736e627"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/d1115f5843e903ffaba9c23e450b33c0fe265ae0",
-                "reference": "d1115f5843e903ffaba9c23e450b33c0fe265ae0",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/d771c2c8d7d1237b1d04b5bf57b07a9b4736e627",
+                "reference": "d771c2c8d7d1237b1d04b5bf57b07a9b4736e627",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.38.*"
+                "utopia-php/database": "0.42.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1309,9 +1309,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.27.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.31.0"
             },
-            "time": "2023-07-15T00:53:50+00:00"
+            "time": "2023-08-11T01:17:15+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1361,21 +1361,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.29.0",
+            "version": "0.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "5318538f457bf73623629345c98ea06371ca5dd4"
+                "reference": "6fb82331c58c66cbdb8a419314a687fcb18a1d22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/5318538f457bf73623629345c98ea06371ca5dd4",
-                "reference": "5318538f457bf73623629345c98ea06371ca5dd4",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/6fb82331c58c66cbdb8a419314a687fcb18a1d22",
+                "reference": "6fb82331c58c66cbdb8a419314a687fcb18a1d22",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "0.38.*"
+                "utopia-php/database": "0.42.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1402,9 +1402,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.29.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.33.0"
             },
-            "time": "2023-07-15T00:51:10+00:00"
+            "time": "2023-08-11T01:17:28+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1557,16 +1557,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.38.0",
+            "version": "0.42.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "59e4684cf87e03c12dab9240158c1dfc6888e534"
+                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/59e4684cf87e03c12dab9240158c1dfc6888e534",
-                "reference": "59e4684cf87e03c12dab9240158c1dfc6888e534",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ff69a9b9eadc581771798833d423829c9d8cc90",
+                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90",
                 "shasum": ""
             },
             "require": {
@@ -1607,9 +1607,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.38.0"
+                "source": "https://github.com/utopia-php/database/tree/0.42.1"
             },
-            "time": "2023-07-14T07:49:38+00:00"
+            "time": "2023-08-14T16:09:09+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3092,16 +3092,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.16.0",
+            "version": "v4.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "19526a33fb561ef417e822e85f08a00db4059c17"
+                "reference": "a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/19526a33fb561ef417e822e85f08a00db4059c17",
-                "reference": "19526a33fb561ef417e822e85f08a00db4059c17",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d",
+                "reference": "a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d",
                 "shasum": ""
             },
             "require": {
@@ -3142,9 +3142,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.16.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.17.1"
             },
-            "time": "2023-06-25T14:52:30+00:00"
+            "time": "2023-08-13T19:53:39+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -3369,16 +3369,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.7.2",
+            "version": "1.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "b2fe4d22a5426f38e014855322200b97b5362c0d"
+                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/b2fe4d22a5426f38e014855322200b97b5362c0d",
-                "reference": "b2fe4d22a5426f38e014855322200b97b5362c0d",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
+                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
                 "shasum": ""
             },
             "require": {
@@ -3421,9 +3421,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.2"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.3"
             },
-            "time": "2023-05-30T18:13:47+00:00"
+            "time": "2023-08-12T11:01:26+00:00"
         },
         {
             "name": "phpspec/prophecy",

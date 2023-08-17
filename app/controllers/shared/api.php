@@ -256,10 +256,11 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
+        $calculateUsage = fn ($event, Document $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject);
+
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-        ;
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', $calculateUsage)
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', $calculateUsage);
 
         $useCache = $route->getLabel('cache', false);
 
