@@ -121,6 +121,7 @@ class Exception extends \Exception
     public const PROVIDER_REPOSITORY_NOT_FOUND       = 'provider_repository_not_found';
     public const REPOSITORY_NOT_FOUND                = 'repository_not_found';
     public const PROVIDER_CONTRIBUTION_CONFLICT      = 'provider_contribution_conflict';
+    public const GENERAL_PROVIDER_FAILURE            = 'general_provider_failure';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';

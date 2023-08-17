@@ -385,6 +385,11 @@ return [
         'description' => 'External contribution is already authorized.',
         'code' => 409,
     ],
+    Exception::GENERAL_PROVIDER_FAILURE => [
+        'name' => Exception::GENERAL_PROVIDER_FAILURE,
+        'description' => 'VCS (Version Control System) provider failed to proccess the request.',
+        'code' => 400,
+    ],
 
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [
