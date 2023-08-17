@@ -392,13 +392,13 @@ App::post('/v1/users/:userId/targets')
 
         $user = $dbForProject->getDocument('users', $userId);
 
-        if($user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $target = $dbForProject->getDocument('targets', $targetId);
 
-        if(!$target->isEmpty()) {
+        if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 

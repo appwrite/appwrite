@@ -548,8 +548,9 @@ Database::addFilter(
                 Query::select(['type']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
-        if($provider)
+        if ($provider) {
             return $provider->getAttribute('type');
+        }
         return null;
     }
 );
