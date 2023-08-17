@@ -454,7 +454,7 @@ App::get('/v1/migrations/appwrite/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($appwrite->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Throwable $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: '.$e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -480,7 +480,7 @@ App::get('/v1/migrations/firebase/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($firebase->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: '.$e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -567,7 +567,7 @@ App::get('/v1/migrations/firebase/report/oauth')
         try {
             $report = $firebase->report($resources);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: '.$e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
 
         $response
@@ -873,7 +873,7 @@ App::get('/v1/migrations/supabase/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: '.$e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -905,7 +905,7 @@ App::get('/v1/migrations/nhost/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: '.$e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
