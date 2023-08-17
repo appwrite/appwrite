@@ -7,7 +7,6 @@ use Utopia\Database\Document;
 use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
@@ -286,7 +285,7 @@ App::post('/v1/mock/tests/general/upload')
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
-            if (is_null($start) || is_null($end) || is_null($size)) {
+            if (is_null($start) || is_null($end) || is_null($size) || $end >= $size) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid content-range header');
             }
 
@@ -302,11 +301,11 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'All chunked request must have id header (except first)');
             }
 
-            if ($end !== $size && $end - $start + 1 !== $chunkSize) {
+            if ($end !== $size - 1 && $end - $start + 1 !== $chunkSize) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Chunk size must be 5MB (except last chunk)');
             }
 
-            if ($end !== $size && $file['size'] !== $chunkSize) {
+            if ($end !== $size - 1 && $file['size'] !== $chunkSize) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Wrong chunk size');
             }
 
@@ -314,11 +313,11 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'Chunk size must be 5MB or less');
             }
 
-            if ($end !== $size) {
+            if ($end !== $size - 1) {
                 $response->json([
                     '$id' => ID::custom('newfileid'),
-                    'chunksTotal' => $file['size'] / $chunkSize,
-                    'chunksUploaded' => $start / $chunkSize
+                    'chunksTotal' => (int) ceil($size / ($end + 1 - $start)),
+                    'chunksUploaded' => ceil($start / $chunkSize) + 1
                 ]);
             }
         } else {

@@ -16,79 +16,23 @@ class UsageStorage extends Model
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('storage', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for the occupied storage size (in bytes).',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesCount', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of files.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('bucketsCount', [
+            ->addRule('bucketsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of buckets.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('bucketsCreate', [
+            ->addRule('filesTotal', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for buckets created.',
+                'description' => 'Aggregated stats for total number of files.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('bucketsRead', [
+            ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for buckets read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('bucketsUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for buckets updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('bucketsDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for buckets deleted.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesCreate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesRead', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('filesDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for files deleted.',
+                'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
                 'example' => [],
                 'array' => true

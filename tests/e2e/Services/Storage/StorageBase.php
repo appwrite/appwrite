@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -100,7 +101,7 @@ trait StorageBase
         $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
@@ -144,7 +145,7 @@ trait StorageBase
         ];
         $id = '';
         $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', $this->getHeaders(), [
             'fileId' => $fileId,
             'file' => $curlFile,
@@ -240,6 +241,29 @@ trait StorageBase
 
         $this->assertEquals(400, $failedBucket['headers']['status-code']);
 
+        /**
+         * Test for FAILURE set x-appwrite-id to unique()
+         */
+        $source = realpath(__DIR__ . '/../../../resources/logo.png');
+        $totalSize = \filesize($source);
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . $size . '/' . $size,
+            'x-appwrite-id' => 'unique()',
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile($source, 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(400, $res['headers']['status-code']);
+        $this->assertEquals('The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().', $res['body']['message']);
+
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
@@ -283,8 +307,7 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
@@ -374,8 +397,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file1['headers']['status-code']);
         $this->assertNotEmpty($file1['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($file1['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file1['body']['$createdAt']));
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);

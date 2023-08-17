@@ -67,18 +67,23 @@ App::post('/v1/teams')
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
-        $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
-            '$id' => $teamId,
-            '$permissions' => [
-                Permission::read(Role::team($teamId)),
-                Permission::update(Role::team($teamId, 'owner')),
-                Permission::delete(Role::team($teamId, 'owner')),
-            ],
-            'name' => $name,
-            'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
-            'prefs' => new \stdClass(),
-            'search' => implode(' ', [$teamId, $name]),
-        ])));
+
+        try {
+            $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
+                '$id' => $teamId,
+                '$permissions' => [
+                    Permission::read(Role::team($teamId)),
+                    Permission::update(Role::team($teamId, 'owner')),
+                    Permission::delete(Role::team($teamId, 'owner')),
+                ],
+                'name' => $name,
+                'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
+                'prefs' => new \stdClass(),
+                'search' => implode(' ', [$teamId, $name]),
+            ])));
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::TEAM_ALREADY_EXISTS);
+        }
 
         if (!$isPrivilegedUser && !$isAppUser) { // Don't add user on server mode
             if (!\in_array('owner', $roles)) {
@@ -333,18 +338,6 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $memberships = $dbForProject->find('memberships', [
-            Query::equal('teamId', [$teamId]),
-            Query::limit(2000), // TODO fix members limit
-        ]);
-
-        // TODO delete all members individually from the user object
-        foreach ($memberships as $membership) {
-            if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership for team from DB');
-            }
-        }
-
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
@@ -542,6 +535,15 @@ App::post('/v1/teams/:teamId/memberships')
                 $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
                 $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
+
+                $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
+                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
+                if ($smtpEnabled && !empty($customTemplate)) {
+                    $body = $customTemplate['message'];
+                    $subject = $customTemplate['subject'];
+                    $from = $customTemplate['senderName'];
+                }
+
                 $body->setParam('{{owner}}', $user->getAttribute('name'));
                 $body->setParam('{{team}}', $team->getAttribute('name'));
 
@@ -571,9 +573,19 @@ App::post('/v1/teams/:teamId/memberships')
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
+                if (!empty($customTemplate)) {
+                    $message = $customTemplate['message'];
+                }
+
+                $message = $message->setParam('{{token}}', $url);
+                $message = $message->render();
+
                 $messaging
                     ->setRecipient($phone)
-                    ->setMessage($url)
+                    ->setMessage($message)
                     ->trigger();
             }
         }
@@ -843,7 +855,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($user->isEmpty()) {
-            $user = $dbForProject->getDocument('users', $userId); // Get user
+            $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
@@ -859,7 +871,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        $user = Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
         // Log user in
 
@@ -1038,7 +1050,7 @@ App::get('/v1/teams/:teamId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => $log['userId'],
+                'userId' => $log['data']['userId'],
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,

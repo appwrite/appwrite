@@ -88,6 +88,11 @@ return [
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
+    Exception::GENERAL_CODES_DISABLED => [
+        'name' => Exception::GENERAL_CODES_DISABLED,
+        'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
+        'code' => 500,
+    ],
     Exception::GENERAL_USAGE_DISABLED => [
         'name' => Exception::GENERAL_USAGE_DISABLED,
         'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
@@ -130,6 +135,11 @@ return [
         'description' => 'Console registration is restricted to specific emails. Contact your administrator for more information.',
         'code' => 401,
     ],
+    Exception::USER_INVALID_CODE => [
+        'name' => Exception::USER_INVALID_CODE,
+        'description' => 'The specified code is not valid. Contact your administrator for more information.',
+        'code' => 401,
+    ],
     Exception::USER_IP_NOT_WHITELISTED => [
         'name' => Exception::USER_IP_NOT_WHITELISTED,
         'description' => 'Console registration is restricted to specific IPs. Contact your administrator for more information.',
@@ -165,6 +175,16 @@ return [
         'description' => 'Passwords do not match. Please check the password and confirm password.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_RECENTLY_USED => [
+        'name' => Exception::USER_PASSWORD_RECENTLY_USED,
+        'description' => 'The password you are trying to use is similar to your previous password. Please choose a stronger password.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_PERSONAL_DATA => [
+        'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. Please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
@@ -194,6 +214,21 @@ return [
         'name' => Exception::USER_MISSING_ID,
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
+    ],
+    Exception::USER_OAUTH2_BAD_REQUEST => [
+        'name' => Exception::USER_OAUTH2_BAD_REQUEST,
+        'description' => 'OAuth2 provider rejected the bad request.',
+        'code' => 400,
+    ],
+    Exception::USER_OAUTH2_UNAUTHORIZED => [
+        'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
+        'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_PROVIDER_ERROR => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
+        'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
     ],
 
     /** Teams */
@@ -226,6 +261,11 @@ return [
         'name' => Exception::TEAM_INVITE_MISMATCH,
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
+    ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists.',
+        'code' => 409,
     ],
 
     /** Membership */
@@ -318,6 +358,11 @@ return [
         'description' => 'The requested range is not satisfiable. Please check the value of the Range header.',
         'code' => 416,
     ],
+    Exception::STORAGE_INVALID_APPWRITE_ID => [
+        'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
+        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().',
+        'code' => 400,
+    ],
 
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [
@@ -403,9 +448,14 @@ return [
         'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
         'code' => 400,
     ],
+    Exception::DOCUMENT_MISSING_DATA => [
+        'name' => Exception::DOCUMENT_MISSING_DATA,
+        'description' => 'The document data is missing. You must provide the document data.',
+        'code' => 400,
+    ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document payload is missing.',
+        'description' => 'The document data and permissions are missing. You must provide either the document data or permissions to be updated.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
@@ -539,6 +589,16 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::PROJECT_SMTP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
+        'description' => 'Provided SMTP config is invalid.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
+        'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
+        'description' => 'The default template for the project cannot be deleted.',
+        'code' => 401,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',
@@ -561,8 +621,13 @@ return [
     ],
     Exception::DOMAIN_ALREADY_EXISTS => [
         'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
+        'description' => 'The requested domain is currently in use by a project.',
         'code' => 409,
+    ],
+    Exception::DOMAIN_FORBIDDEN => [
+        'name' => Exception::DOMAIN_FORBIDDEN,
+        'description' => 'The requested domain cannot be used as a custom domain.',
+        'code' => 403,
     ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,

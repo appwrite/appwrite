@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -78,6 +79,17 @@ trait TeamsBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $teamId,
+            'name' => 'John'
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('team_already_exists', $response['body']['type']);
 
         return ['teamUid' => $teamUid, 'teamName' => $teamName];
     }
@@ -281,8 +293,7 @@ trait TeamsBase
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
 
         $response = $this->client->call(Client::METHOD_PUT, '/teams/' . $response['body']['$id'], array_merge([
             'content-type' => 'application/json',
@@ -297,8 +308,8 @@ trait TeamsBase
         $this->assertEquals('Demo New', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
         $this->assertIsInt($response['body']['total']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['$createdAt']));
         $this->assertArrayHasKey('prefs', $response['body']);
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['$createdAt']));
 
         /**
          * Test for FAILURE

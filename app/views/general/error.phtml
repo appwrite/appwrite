@@ -1,5 +1,6 @@
 <?php
 $development = $this->getParam('development', false);
+$type = $this->getParam('type', 'general_server_error');
 $code = $this->getParam('code', 500);
 $errorID = $this->getParam('errorID', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
 $message = $this->getParam('message', '');
@@ -13,25 +14,114 @@ $title = $this->getParam('title', '')
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $title; ?></title>
+    <meta charset="utf-8" />
+    <meta name="description" content="" />
+    <link rel="icon" href="/favicon.png" />
+    <link
+        rel="preload"
+        href="/fonts/inter/inter-v8-latin-600.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin />
+    <link
+        rel="preload"
+        href="/fonts/inter/inter-v8-latin-regular.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin />
+    <link
+        rel="preload"
+        href="/fonts/poppins/poppins-v19-latin-500.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin />
+    <link
+        rel="preload"
+        href="/fonts/poppins/poppins-v19-latin-600.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin />
+    <link
+        rel="preload"
+        href="/fonts/poppins/poppins-v19-latin-700.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin />
+    <link
+        rel="preload"
+        href="/fonts/source-code-pro/source-code-pro-v20-latin-regular.woff2"
+        as="font"
+        type="font/woff2"
+        crossorigin />
+
+    <link rel="stylesheet" href="https://unpkg.com/@appwrite.io/pink" />
+    <link rel="preload" as="style" type="text/css" href="/fonts/main.css" />
+    <link rel="stylesheet" href="/fonts/main.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="content-security-policy" content="">
+    <title><?php echo $this->print($title, self::FILTER_ESCAPE); ?></title>
+
+    <style>
+        @media(min-width:768px) {
+            article.card {
+                padding: 2rem !important;
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <div class="container u-margin-block-start-24">
+        <article class="card u-padding-16">
+            <div class="u-flex u-flex-vertical u-gap-16">
+                <h1 class="heading-level-4 u-trim-1">Error <?php echo $this->print($code, self::FILTER_ESCAPE); ?></h1>
+                <p class="text"><?php echo $this->print($message, self::FILTER_ESCAPE); ?></p>
+                <div class="u-flex u-flex-vertical u-gap-8">
+                    <p class="text">Type</p>
+                    <p><code class="inline-code"><?php echo $this->print($type, self::FILTER_ESCAPE); ?></code></p>
+                </div>
+                <?php if ($development) : ?>
+                    <h2 class="heading-level-5 u-trim-1">Error Trace</h2>
+                    <?php foreach ($trace as $log) : ?>
+                        <div class="table-with-scroll">
+  <div class="table-wrapper">
+                        <table class="table is-remove-outer-styles">
+                        <tbody class="table-tbody">
+                            <?php foreach ($log as $key => $value) : ?>
+                                <tr>
+                                    <td class="table-col" style="width: 120px"><?php echo $this->print($key, self::FILTER_ESCAPE); ?></td>
+                                    <td class="table-col"><code class="grid-code u-max-height-200 u-overflow-x-auto u-overflow-y-auto">
+                                        <?php if (is_array($value)) : ?>
+                                            
+                                            <pre><?php echo $this->print(var_export($value, true), self::FILTER_ESCAPE); ?></pre>
+                                        <?php else : ?>
+                                            <pre><?php echo $this->print($value, self::FILTER_ESCAPE); ?></pre>
+                                        <?php endif; ?>
+                                        </code>
+                                    </td>
+                                </tr>
 
-    <section>
-        <h1>Error <?php echo $code; ?></h1>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                                        </div>
+                                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </article>
+    </div>
+    <!--section>
+        <h1>Error <?php echo $this->print($code, self::FILTER_ESCAPE); ?></h1>
 
-        <p><?php echo $message; ?></p>
+        <p><?php echo $this->print($message, self::FILTER_ESCAPE); ?></p>
 
-        <small>Error ID: <?php echo $errorID; ?></small>
+        <small>Error ID: <?php echo $this->print($errorID, self::FILTER_ESCAPE); ?></small>
 
         <?php if (!empty($projectURL)) : ?>
             <hr />
 
-            <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener">Back to <?php echo $projectName; ?></a></p>
+            <p><a href="<?php echo $this->print($projectURL, self::FILTER_ESCAPE); ?>" rel="noopener">Back to <?php echo $this->print($projectName, self::FILTER_ESCAPE); ?></a></p>
         <?php endif; ?>
 
         <?php if ($development) : ?>
@@ -43,12 +133,12 @@ $title = $this->getParam('title', '')
                     <table>
                         <?php foreach ($log as $key => $value) : ?>
                             <tr>
-                                <td style="width: 120px"><?php echo $key; ?></td>
+                                <td style="width: 120px"><?php echo $this->print($key, self::FILTER_ESCAPE); ?></td>
                                 <td>
                                     <?php if (is_array($value)) : ?>
-                                        <?php var_dump($value); ?>
+                                        <?php echo $this->print(var_export($value, true), self::FILTER_ESCAPE); ?>
                                     <?php else : ?>
-                                        <?php echo $value; ?>
+                                        <?php echo $this->print($value, self::FILTER_ESCAPE); ?>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -59,7 +149,21 @@ $title = $this->getParam('title', '')
             </div>
         <?php endif; ?>
 
-    </section>
+    </section-->
+    <script type="text/javascript">
+        const app = (JSON.parse(localStorage.getItem('appwrite')) ?? {});
+        const theme = app.theme ?? 'auto';
+        if (theme === 'auto') {
+            const darkThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
+            if (darkThemeMq.matches) {
+                document.body.setAttribute('class', `theme-dark`);
+            } else {
+                document.body.setAttribute('class', `theme-light`);
+            }
+        } else {
+            document.body.setAttribute('class', `theme-${theme}`);
+        }
+    </script>
 </body>
 
 </html>
