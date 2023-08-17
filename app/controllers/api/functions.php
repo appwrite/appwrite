@@ -1273,7 +1273,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('dbForConsole')
     ->inject('project')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github) use ($redeployVcs) {
+    ->inject('events')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github, Event $events) use ($redeployVcs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1297,6 +1298,10 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $installation = $dbForConsole->getDocument('installations', $deployment->getAttribute('installationId', ''));
 
         $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]), $github);
+
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
 
         $response->noContent();
     });
