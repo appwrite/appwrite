@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cc47e3e005f035991e969d2d53a6b28a",
+    "content-hash": "d82e5cef6073d07a100c3281fdc5cad7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2182,34 +2182,37 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-add-batch-update-methods",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "794f5f2c9b73b1e6d9ebd56dca026df697c88c82"
+                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/794f5f2c9b73b1e6d9ebd56dca026df697c88c82",
-                "reference": "794f5f2c9b73b1e6d9ebd56dca026df697c88c82",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ff69a9b9eadc581771798833d423829c9d8cc90",
+                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90",
                 "shasum": ""
             },
             "require": {
+                "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
                 "utopia-php/framework": "0.*.*",
-                "utopia-php/mongo": "0.3.*"
+                "utopia-php/mongo": "0.2.*"
             },
             "require-dev": {
-                "ext-mongodb": "*",
-                "ext-redis": "*",
                 "fakerphp/faker": "^1.14",
+                "laravel/pint": "1.4.*",
                 "mongodb/mongodb": "1.8.0",
+                "pcov/clobber": "^2.0",
+                "phpstan/phpstan": "1.10.*",
                 "phpunit/phpunit": "^9.4",
+                "rregeer/phpunit-coverage-check": "^0.3.1",
                 "swoole/ide-helper": "4.8.0",
-                "utopia-php/cli": "^0.14.0",
-                "vimeo/psalm": "4.0.1"
+                "utopia-php/cli": "^0.14.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2220,7 +2223,7 @@
             "license": [
                 "MIT"
             ],
-            "description": "A simple library to manage application persistency using multiple database adapters",
+            "description": "A simple library to manage application persistence using multiple database adapters",
             "keywords": [
                 "database",
                 "framework",
@@ -2230,9 +2233,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/add-batch-update-methods"
+                "source": "https://github.com/utopia-php/database/tree/0.42.1"
             },
-            "time": "2023-08-15T15:40:04+00:00"
+            "time": "2023-08-14T16:09:09+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2585,16 +2588,16 @@
         },
         {
             "name": "utopia-php/mongo",
-            "version": "0.3.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/mongo.git",
-                "reference": "d94717db8489f6c235ec7d1f05bc9f56db179277"
+                "reference": "b6dfb31b93c07c59b8bbd62a3b52e3b97a407c09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/d94717db8489f6c235ec7d1f05bc9f56db179277",
-                "reference": "d94717db8489f6c235ec7d1f05bc9f56db179277",
+                "url": "https://api.github.com/repos/utopia-php/mongo/zipball/b6dfb31b93c07c59b8bbd62a3b52e3b97a407c09",
+                "reference": "b6dfb31b93c07c59b8bbd62a3b52e3b97a407c09",
                 "shasum": ""
             },
             "require": {
@@ -2639,9 +2642,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/mongo/issues",
-                "source": "https://github.com/utopia-php/mongo/tree/0.3.0"
+                "source": "https://github.com/utopia-php/mongo/tree/0.2.0"
             },
-            "time": "2023-08-14T17:20:27+00:00"
+            "time": "2023-03-22T10:44:29+00:00"
         },
         {
             "name": "utopia-php/orchestration",
@@ -5864,7 +5867,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-add-batch-update-methods",
+            "version": "dev-main",
             "alias": "0.28.0",
             "alias_normalized": "0.28.0.0"
         }
