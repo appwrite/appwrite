@@ -20,6 +20,8 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'targets.read',
+    'targets.write',
 ];
 
 $admins = [
@@ -51,6 +53,8 @@ $admins = [
     'functions.write',
     'execution.read',
     'execution.write',
+    'targets.read',
+    'targets.write',
 ];
 
 return [

@@ -363,6 +363,66 @@ App::post('/v1/users/scrypt-modified')
             ->dynamic($user, Response::MODEL_USER);
     });
 
+App::post('/v1/users/:userId/targets')
+    ->desc('Create User Target')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createTarget')
+    ->label('sdk.description', '/docs/references/users/create-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('targetId', '', new UID(), 'Target ID.', false)
+    ->param('userId', '', new UID(), 'ID of the user.', false)
+    ->param('providerId', '', new UID(), 'ID of the provider.', false)
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', false)
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $targetId, string $userId, string $providerId, string $identifier, Response $response, Document $project, Database $dbForProject, Event $events) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if(!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $target = $dbForProject->createDocument('targets', new Document([
+            '$id' => $targetId,
+            // TO DO: what permissions should be given when created a target.
+            '$permissions' => [
+                Permission::read(Role::any())
+            ],
+            'providerId' => $providerId,
+            'providerInternalId' => $provider->getInternalId(),
+            'providerType' => null,
+            'userId' => $userId,
+            'userInternalId' => $user->getInternalId(),
+            'identifier' => $identifier,
+        ]));
+        $events
+            ->setParam('userId', $userId)
+            ->setParam('targetId', $targetId);
+        $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($target, Response::MODEL_TARGET);
+    });
+
 App::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
@@ -677,10 +737,9 @@ App::get('/v1/users/:userId/targets')
         }
 
         $targets = $user->getAttribute('targets', []);
-        var_dump($user);
         $response->dynamic(new Document([
             'targets' => $targets,
-            'total' => count($targets),
+            'total' => \count($targets),
         ]), Response::MODEL_TARGET_LIST);
     });
 

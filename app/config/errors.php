@@ -232,7 +232,12 @@ return [
     ],
     Exception::USER_TARGET_NOT_FOUND => [
         'name' => Exception::USER_TARGET_NOT_FOUND,
-        'description' => 'The current user target could not be found.',
+        'description' => 'The target could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_TARGET_ALREADY_EXISTS => [
+        'name' => Exception::USER_TARGET_ALREADY_EXISTS,
+        'description' => 'A target with the same ID already exists.',
         'code' => 404,
     ],
 
@@ -662,6 +667,13 @@ return [
     Exception::GRAPHQL_TOO_MANY_QUERIES => [
         'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
         'description' => 'Too many queries.',
+        'code' => 400,
+    ],
+
+    /** Provider Errors */
+    Exception::PROVIDER_NOT_FOUND => [
+        'name' => Exception::PROVIDER_NOT_FOUND,
+        'description' => 'Provider with the request ID could not be found.',
         'code' => 400,
     ],
 ];

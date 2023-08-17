@@ -535,6 +535,25 @@ Database::addFilter(
             ]));
     }
 );
+
+Database::addFilter(
+    'subQueryProviderType',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $provider = Authorization::skip(fn() => $database
+            ->findOne('providers', [
+                Query::equal('$id', [$document->getAttribute('providerId')]),
+                Query::select(['type']),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+        if($provider)
+            return $provider->getAttribute('type');
+        return null;
+    }
+);
+
 /**
  * DB Formats
  */

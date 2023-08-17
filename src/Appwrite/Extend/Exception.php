@@ -82,7 +82,7 @@ class Exception extends \Exception
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
     public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
-
+    public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
     public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';
@@ -204,6 +204,9 @@ class Exception extends \Exception
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
+
+    /** Provider */
+    public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
 
     protected $type = '';
     protected $errors = [];

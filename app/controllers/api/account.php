@@ -1672,7 +1672,7 @@ App::get('/v1/account/targets')
 
         $response->dynamic(new Document([
             'targets' => $targets,
-            'total' => count($targets),
+            'total' => \count($targets),
         ]), Response::MODEL_TARGET_LIST);
     });
 
