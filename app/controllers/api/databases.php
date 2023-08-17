@@ -196,16 +196,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
         ->setCollection($collection)
-        ->setDocument($attribute)
-    ;
+        ->setDocument($attribute);
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId())
-    ;
+        ->setParam('attributeId', $attribute->getId());
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
@@ -682,13 +680,11 @@ App::delete('/v1/databases/:databaseId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($database)
-        ;
+            ->setDocument($database);
 
         $events
             ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, Response::MODEL_DATABASE))
-        ;
+            ->setPayload($response->output($database, Response::MODEL_DATABASE));
 
         $response->noContent();
     });
@@ -3250,28 +3246,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
-        $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
+        $data['$collection'] = $document->getAttribute('$collection'); // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization($permission);
-
-            $valid = $validator->isValid($collection->getPermissionsByType($permission));
-            if (!$documentSecurity && !$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
-
-            if ($permission === Database::PERMISSION_UPDATE) {
-                $valid = $valid || $validator->isValid($old->getPermissionsByType($permission));
-                if ($documentSecurity && !$valid) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
-            }
-
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3298,6 +3279,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($relations as &$relation) {
+                    // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
@@ -3311,21 +3293,20 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
+                        $relation->removeAttribute('$collectionId');
+                        $relation->removeAttribute('$databaseId');
+                        // Attribute $collection is required for Utopia.
+                        $relation->setAttribute(
+                            '$collection',
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
+                        );
 
                         if ($oldDocument->isEmpty()) {
-                            $type = Database::PERMISSION_CREATE;
-
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
-                        } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
-                            $relation->setAttribute('$collection', $relatedCollection->getId());
-                            $type = Database::PERMISSION_UPDATE;
                         }
-
-                        $checkPermissions($relatedCollection, $relation, $oldDocument, $type);
+                        $setCollection($relatedCollection, $relation);
                     }
                 }
 
@@ -3335,26 +3316,26 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
-        };
+        });
 
-        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+        $setCollection($collection, $newDocument);
 
-    try {
-        $document = $dbForProject->withRequestTimestamp(
-            $requestTimestamp,
-            fn() => $dbForProject->updateDocument(
-                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $document->getId(),
-                $newDocument
-            )
-        );
-    } catch (AuthorizationException) {
-        throw new Exception(Exception::USER_UNAUTHORIZED);
-    } catch (DuplicateException) {
-        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-    } catch (StructureException $exception) {
-        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-    }
+        try {
+            $document = $dbForProject->withRequestTimestamp(
+                $requestTimestamp,
+                fn() => $dbForProject->updateDocument(
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $document->getId(),
+                    $newDocument
+                )
+            );
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        } catch (StructureException $exception) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
