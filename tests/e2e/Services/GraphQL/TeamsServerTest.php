@@ -251,7 +251,7 @@ class TeamsServerTest extends Scope
     public function testUpdateTeamMembershipRoles($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$UPDATE_TEAM_MEMBERSHIP_ROLES);
+        $query = $this->getQuery(self::$UPDATE_TEAM_MEMBERSHIP);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
