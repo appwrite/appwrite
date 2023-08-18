@@ -330,14 +330,15 @@ class BuildsV1 extends Worker
 
             $vars = [];
 
-            // global vars
-            $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
+            // Global vars
+            $varsFromProject = $dbForProject->find('variables', [
                 Query::equal('resourceType', ['project']),
                 Query::limit(APP_LIMIT_SUBQUERY)
-            ]), function (array $carry, Document $var) {
-                $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-                return $carry;
-            }, []));
+            ]);
+            
+            foreach ($varsFromProject as $var) {
+                $vars[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
+            }
 
             // Function vars
             $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
@@ -454,12 +455,15 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $dbForConsole = $this->getConsoleDB();
             // Inform scheduler if function is still active
-            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
-            $schedule
-                ->setAttribute('resourceUpdatedAt', DateTime::now())
-                ->setAttribute('schedule', $function->getAttribute('schedule'))
-                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            $scheduleId = $function->getAttribute('scheduleId', '');
+            if (!empty($scheduleId)) {
+                $schedule = $dbForConsole->getDocument('schedules', $scheduleId);
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $function->getAttribute('schedule'))
+                    ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            }
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);

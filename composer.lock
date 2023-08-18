@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b87e28f6f096af1fd3b1ddee62fe2f13",
+    "content-hash": "e4934eff80bec5e9fe402528df07d72d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -727,16 +727,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.4",
+            "version": "6.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112"
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/74f6c4f6732b3ad6cdf25560746841d522969112",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
                 "shasum": ""
             },
             "require": {
@@ -792,7 +792,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-02T08:48:53+00:00"
+            "time": "2023-08-17T16:17:41+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -1963,16 +1963,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "8a1d4de19002e4c8eabf368edff6b653b6722880"
+                "reference": "af4233f4ff6a37982dad294033199ce29cafc00c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/8a1d4de19002e4c8eabf368edff6b653b6722880",
-                "reference": "8a1d4de19002e4c8eabf368edff6b653b6722880",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/af4233f4ff6a37982dad294033199ce29cafc00c",
+                "reference": "af4233f4ff6a37982dad294033199ce29cafc00c",
                 "shasum": ""
             },
             "require": {
@@ -2015,9 +2015,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.3.0"
+                "source": "https://github.com/utopia-php/migration/tree/0.3.1"
             },
-            "time": "2023-08-16T11:57:13+00:00"
+            "time": "2023-08-17T14:18:09+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2564,6 +2564,12 @@
                 "url": "https://github.com/utopia-php/vcs.git",
                 "reference": "fc9c38a3f84a4391470cc7184199dec6f953b144"
             },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/fc9c38a3f84a4391470cc7184199dec6f953b144",
+                "reference": "fc9c38a3f84a4391470cc7184199dec6f953b144",
+                "shasum": ""
+            },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
@@ -2582,25 +2588,7 @@
                     "Utopia\\Detector\\": "src/Detector"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/VCS"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test --config pint.json"
-                ],
-                "format": [
-                    "./vendor/bin/pint --config pint.json"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2611,6 +2599,10 @@
                 "utopia",
                 "vcs"
             ],
+            "support": {
+                "issues": "https://github.com/utopia-php/vcs/issues",
+                "source": "https://github.com/utopia-php/vcs/tree/0.1.0"
+            },
             "time": "2023-08-09T20:48:51+00:00"
         },
         {
@@ -2798,7 +2790,7 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-master",
+            "version": "0.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
@@ -2823,7 +2815,6 @@
                 "phpunit/phpunit": "^9.5.21",
                 "squizlabs/php_codesniffer": "^3.6"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -5409,18 +5400,9 @@
             "time": "2023-07-26T07:16:09+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "9999999-dev",
-            "alias": "0.33.99",
-            "alias_normalized": "0.33.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

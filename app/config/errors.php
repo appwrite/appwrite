@@ -363,6 +363,11 @@ return [
         'description' => 'The requested range is not satisfiable. Please check the value of the Range header.',
         'code' => 416,
     ],
+    Exception::STORAGE_INVALID_APPWRITE_ID => [
+        'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
+        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().',
+        'code' => 400,
+    ],
 
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
@@ -384,6 +389,11 @@ return [
         'name' => Exception::PROVIDER_CONTRIBUTION_CONFLICT,
         'description' => 'External contribution is already authorized.',
         'code' => 409,
+    ],
+    Exception::GENERAL_PROVIDER_FAILURE => [
+        'name' => Exception::GENERAL_PROVIDER_FAILURE,
+        'description' => 'VCS (Version Control System) provider failed to proccess the request.',
+        'code' => 400,
     ],
 
     /** Functions  */

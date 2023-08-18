@@ -36,6 +36,7 @@ use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
 use Utopia\Validator\Boolean;
 
+use function PHPUnit\Framework\throwException;
 use function Swoole\Coroutine\batch;
 
 $createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, callable $getProjectDB, Request $request) {
@@ -702,7 +703,11 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
                 $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
 
-            $repository = $oauth2->createRepository($accessToken, $name, $private);
+            try {
+                $repository = $oauth2->createRepository($accessToken, $name, $private);
+            } catch (Exception $exception) {
+                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "GitHub failed to process the request: " . $exception->getMessage());
+            }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
             $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
@@ -710,7 +715,11 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId);
 
-            $repository = $github->createRepository($owner, $name, $private);
+            try {
+                $repository = $github->createRepository($owner, $name, $private);
+            } catch (Exception $exception) {
+                throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "GitHub failed to process the request: " . $exception->getMessage());
+            }
         }
 
         if (isset($repository['message'])) {

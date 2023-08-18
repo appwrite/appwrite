@@ -142,7 +142,7 @@ App::post('/v1/functions')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->param('entrypoint', '', new Text(1028), 'Entrypoint File.')
-    ->param('commands', '', new Text(1028, 0), 'Build Commands.', true)
+    ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
@@ -165,7 +165,12 @@ App::post('/v1/functions')
 
         // build from template
         $template = new Document([]);
-        if (!empty($templateRepository) && !empty($templateOwner) && !empty($templateRootDirectory) && !empty($templateBranch)) {
+        if (
+            !empty($templateRepository)
+            && !empty($templateOwner)
+            && !empty($templateRootDirectory)
+            && !empty($templateBranch)
+        ) {
             $template->setAttribute('repositoryName', $templateRepository)
                 ->setAttribute('ownerName', $templateOwner)
                 ->setAttribute('rootDirectory', $templateRootDirectory)
@@ -609,7 +614,7 @@ App::put('/v1/functions/:functionId')
     ->param('enabled', true, new Boolean(), 'Is function enabled?', true)
     ->param('logging', true, new Boolean(), 'Do executions get logged?', true)
     ->param('entrypoint', '', new Text(1028), 'Entrypoint File.')
-    ->param('commands', '', new Text(1028, 0), 'Build Commands.', true)
+    ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
@@ -1273,7 +1278,8 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('dbForConsole')
     ->inject('project')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github) use ($redeployVcs) {
+    ->inject('events')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github, Event $events) use ($redeployVcs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1298,6 +1304,10 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]), $github);
 
+        $events
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
         $response->noContent();
     });
 
@@ -1318,7 +1328,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
-    ->param('headers', [], new Assoc(), 'HTP headers of execution. Defaults to empty.', true)
+    ->param('headers', [], new Assoc(), 'HTTP headers of execution. Defaults to empty.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1476,11 +1486,9 @@ App::post('/v1/functions/:functionId/executions')
         $vars = [];
 
         // Shared vars
-        $varsShared = $project->getAttribute('variables', []);
-        $vars = \array_merge($vars, \array_reduce($varsShared, function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-            return $carry;
-        }, []));
+        foreach ($project->getAttribute('variables', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
         // Function vars
         $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
@@ -1825,7 +1833,12 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+        if (
+            $variable === false ||
+            $variable->isEmpty() ||
+            $variable->getAttribute('resourceInternalId') !== $function->getInternalId() ||
+            $variable->getAttribute('resourceType') !== 'function'
+        ) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
