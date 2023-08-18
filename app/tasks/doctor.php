@@ -137,7 +137,6 @@ $cli
             }
         }
 
-
         try {
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
             if ($receiver != '') {
