@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a7de7a77dd4c58b74bc8fe9c0387979e",
+    "content-hash": "98cd1f694dc31ab2091b55110664a311",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -727,16 +727,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.4",
+            "version": "6.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112"
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/74f6c4f6732b3ad6cdf25560746841d522969112",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
                 "shasum": ""
             },
             "require": {
@@ -792,7 +792,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-02T08:48:53+00:00"
+            "time": "2023-08-17T16:17:41+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -2564,6 +2564,12 @@
                 "url": "https://github.com/utopia-php/vcs.git",
                 "reference": "fc9c38a3f84a4391470cc7184199dec6f953b144"
             },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/fc9c38a3f84a4391470cc7184199dec6f953b144",
+                "reference": "fc9c38a3f84a4391470cc7184199dec6f953b144",
+                "shasum": ""
+            },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
@@ -2582,25 +2588,7 @@
                     "Utopia\\Detector\\": "src/Detector"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\": "tests/VCS"
-                }
-            },
-            "scripts": {
-                "lint": [
-                    "./vendor/bin/pint --test --config pint.json"
-                ],
-                "format": [
-                    "./vendor/bin/pint --config pint.json"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level 8 -c phpstan.neon src tests"
-                ],
-                "test": [
-                    "./vendor/bin/phpunit --configuration phpunit.xml --debug"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2611,6 +2599,10 @@
                 "utopia",
                 "vcs"
             ],
+            "support": {
+                "issues": "https://github.com/utopia-php/vcs/issues",
+                "source": "https://github.com/utopia-php/vcs/tree/0.1.0"
+            },
             "time": "2023-08-09T20:48:51+00:00"
         },
         {
@@ -2798,7 +2790,7 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-master",
+            "version": "0.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
@@ -2823,7 +2815,6 @@
                 "phpunit/phpunit": "^9.5.21",
                 "squizlabs/php_codesniffer": "^3.6"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2844,7 +2835,7 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/master"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.34.0"
             },
             "time": "2023-07-25T01:15:31+00:00"
         },
@@ -3150,16 +3141,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.16.0",
+            "version": "v4.17.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "19526a33fb561ef417e822e85f08a00db4059c17"
+                "reference": "a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/19526a33fb561ef417e822e85f08a00db4059c17",
-                "reference": "19526a33fb561ef417e822e85f08a00db4059c17",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d",
+                "reference": "a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d",
                 "shasum": ""
             },
             "require": {
@@ -3200,9 +3191,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.16.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.17.1"
             },
-            "time": "2023-06-25T14:52:30+00:00"
+            "time": "2023-08-13T19:53:39+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -3427,16 +3418,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.7.2",
+            "version": "1.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "b2fe4d22a5426f38e014855322200b97b5362c0d"
+                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/b2fe4d22a5426f38e014855322200b97b5362c0d",
-                "reference": "b2fe4d22a5426f38e014855322200b97b5362c0d",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
+                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
                 "shasum": ""
             },
             "require": {
@@ -3479,9 +3470,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.2"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.3"
             },
-            "time": "2023-05-30T18:13:47+00:00"
+            "time": "2023-08-12T11:01:26+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -5409,18 +5400,9 @@
             "time": "2023-07-26T07:16:09+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "appwrite/sdk-generator",
-            "version": "9999999-dev",
-            "alias": "0.33.99",
-            "alias_normalized": "0.33.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

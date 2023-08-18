@@ -56,7 +56,7 @@ App::post('/v1/proxy/rules')
 
                 $message .= '.';
             } else {
-                $message = "Domain already assigned to different project.";
+                $message = 'Domain already assigned to different project.';
             }
 
             throw new Exception(Exception::RULE_ALREADY_EXISTS, $message);

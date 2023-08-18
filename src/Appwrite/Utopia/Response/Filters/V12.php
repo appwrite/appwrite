@@ -81,7 +81,6 @@ class V12 extends Filter
             case Response::MODEL_WEBHOOK_LIST:
             case Response::MODEL_KEY_LIST:
             case Response::MODEL_PLATFORM_LIST:
-            // case Response::MODEL_DOMAIN_LIST:
             case Response::MODEL_COUNTRY_LIST:
             case Response::MODEL_CONTINENT_LIST:
             case Response::MODEL_LANGUAGE_LIST:

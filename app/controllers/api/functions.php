@@ -165,7 +165,12 @@ App::post('/v1/functions')
 
         // build from template
         $template = new Document([]);
-        if (!empty($templateRepository) && !empty($templateOwner) && !empty($templateRootDirectory) && !empty($templateBranch)) {
+        if (
+            !empty($templateRepository)
+            && !empty($templateOwner)
+            && !empty($templateRootDirectory)
+            && !empty($templateBranch)
+        ) {
             $template->setAttribute('repositoryName', $templateRepository)
                 ->setAttribute('ownerName', $templateOwner)
                 ->setAttribute('rootDirectory', $templateRootDirectory)
@@ -1318,7 +1323,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
-    ->param('headers', [], new Assoc(), 'HTP headers of execution. Defaults to empty.', true)
+    ->param('headers', [], new Assoc(), 'HTTP headers of execution. Defaults to empty.', true)
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1476,11 +1481,9 @@ App::post('/v1/functions/:functionId/executions')
         $vars = [];
 
         // Shared vars
-        $varsShared = $project->getAttribute('variables', []);
-        $vars = \array_merge($vars, \array_reduce($varsShared, function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-            return $carry;
-        }, []));
+        foreach ($project->getAttribute('variables', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
         // Function vars
         $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
@@ -1825,7 +1828,12 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         }
 
         $variable = $dbForProject->getDocument('variables', $variableId);
-        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceInternalId') !== $function->getInternalId() || $variable->getAttribute('resourceType') !== 'function') {
+        if (
+            $variable === false ||
+            $variable->isEmpty() ||
+            $variable->getAttribute('resourceInternalId') !== $function->getInternalId() ||
+            $variable->getAttribute('resourceType') !== 'function'
+        ) {
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
