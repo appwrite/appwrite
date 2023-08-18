@@ -139,7 +139,7 @@ $cli
 
         try {
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-            if ($receiver != '') {
+            if (empty($receiver)) {
                 $mail->addAddress($receiver);
             } elseif ($interactive == "Y" || $interactive == "y") {
                 $receiver = Console::confirm('Enter your email address to test SMTP connection: ');
