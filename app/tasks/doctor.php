@@ -9,11 +9,13 @@ use Utopia\Storage\Storage;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;
+use Utopia\Validator\Text;
 
 $cli
     ->task('doctor')
     ->desc('Validate server health')
-    ->action(function () use ($register) {
+    ->param('interactive', 'n', new Text(1), 'Run an interactive session', true)
+    ->action(function ($interactive) use ($register) {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
@@ -133,10 +135,17 @@ $cli
             }
         }
 
+
         try {
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
+           
+            if ($interactive == "Y" || $interactive == "y") {
+                $receiver = Console::confirm('Enter your email address to test SMTP connection: ');
+                $mail->addAddress($receiver);
+            } else {
+                $mail->addAddress('demo@example.com', 'Example.com');
+            }
 
-            $mail->addAddress('demo@example.com', 'Example.com');
             $mail->Subject = 'Test SMTP Connection';
             $mail->Body = 'Hello World';
             $mail->AltBody = 'Hello World';
@@ -144,7 +153,7 @@ $cli
             $mail->send();
             Console::success('SMTP................connected 👍');
         } catch (\Throwable $th) {
-            Console::error('SMTP.............disconnected 👎');
+            Console::error('SMTP.............disconnected '.$th.'👎');
         }
 
         $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
