@@ -733,7 +733,7 @@ class FunctionsCustomServerTest extends Scope
         ], $this->getHeaders()), [
             // Testing default value, should be 'async' => false
         ]);
-        
+
         $this->assertEquals(201, $execution['headers']['status-code']);
         $this->assertEquals('completed', $execution['body']['status']);
         $this->assertEquals(200, $execution['body']['responseStatusCode']);
