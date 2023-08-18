@@ -120,7 +120,7 @@ trait Base
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
     public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
     public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    public static string $UPDATE_TEAM_MEMBERSHIP_ROLES = 'update_team_membership_roles';
+    public static string $UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
     public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
@@ -1296,9 +1296,9 @@ trait Base
                         roles
                     }
                 }';
-            case self::$UPDATE_TEAM_MEMBERSHIP_ROLES:
-                return 'mutation updateTeamMembershipRoles($teamId: String!, $membershipId: String!, $roles: [String!]!){
-                    teamsUpdateMembershipRoles(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
+            case self::$UPDATE_TEAM_MEMBERSHIP:
+                return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $roles: [String!]!){
+                    teamsUpdateMembership(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
                         _id
                         userId
                         teamId

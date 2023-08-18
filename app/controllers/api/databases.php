@@ -8,8 +8,10 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
+use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -194,16 +196,14 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         ->setType(DATABASE_TYPE_CREATE_ATTRIBUTE)
         ->setDatabase($db)
         ->setCollection($collection)
-        ->setDocument($attribute)
-    ;
+        ->setDocument($attribute);
 
     $events
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
         ->setParam('collectionId', $collection->getId())
-        ->setParam('attributeId', $attribute->getId())
-    ;
+        ->setParam('attributeId', $attribute->getId());
 
     $response->setStatusCode(Response::STATUS_CODE_CREATED);
 
@@ -680,13 +680,11 @@ App::delete('/v1/databases/:databaseId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($database)
-        ;
+            ->setDocument($database);
 
         $events
             ->setParam('databaseId', $database->getId())
-            ->setPayload($response->output($database, Response::MODEL_DATABASE))
-        ;
+            ->setPayload($response->output($database, Response::MODEL_DATABASE));
 
         $response->noContent();
     });
@@ -1628,9 +1626,10 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->label('sdk.response.model', Response::MODEL_ATTRIBUTE_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('queries', [], new Attributes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Attributes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1644,11 +1643,33 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $attributes = $collection->getAttribute('attributes');
+        $queries = Query::parseQueries($queries);
+
+        \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $attributeId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [
+                Query::equal('collectionId', [$collectionId]),
+                Query::equal('databaseId', [$databaseId]),
+                Query::equal('key', [$attributeId]),
+                Query::limit(1),
+            ]));
+            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$attributeId}' for the 'cursor' value not found.");
+            }
+            $cursor->setValue($cursorDocument[0]);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'total' => \count($attributes),
-            'attributes' => $attributes
+            'total' => $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT),
+            'attributes' => $dbForProject->find('attributes', $queries),
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
@@ -2432,26 +2453,50 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('sdk.response.model', Response::MODEL_INDEX_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
+    ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject) {
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
+
         $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
 
         if ($collection->isEmpty()) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $indexes = $collection->getAttribute('indexes');
+        $queries = Query::parseQueries($queries);
+        \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
+         // Get cursor document if there was a cursor query
+         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = reset($cursor);
+
+        if ($cursor) {
+            $indexId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [
+                Query::equal('collectionId', [$collectionId]),
+                Query::equal('databaseId', [$databaseId]),
+                Query::equal('key', [$indexId]),
+                Query::limit(1)
+            ]));
+
+            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Index '{$indexId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument[0]);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
         $response->dynamic(new Document([
-            'total' => \count($indexes),
-            'indexes' => $indexes,
+            'total' => $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT),
+            'indexes' => $dbForProject->find('indexes', $queries),
         ]), Response::MODEL_INDEX_LIST);
     });
 
@@ -3199,28 +3244,13 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         }
 
         $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
-        $data['$collection'] = $collection->getId();            // Make sure user doesn't switch collectionID
+        $data['$collection'] = $document->getAttribute('$collection'); // Make sure user doesn't switch collectionID
         $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
         $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, Document $old, string $permission) use (&$checkPermissions, $dbForProject, $database) {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization($permission);
-
-            $valid = $validator->isValid($collection->getPermissionsByType($permission));
-            if (!$documentSecurity && !$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
-
-            if ($permission === Database::PERMISSION_UPDATE) {
-                $valid = $valid || $validator->isValid($old->getPermissionsByType($permission));
-                if ($documentSecurity && !$valid) {
-                    throw new Exception(Exception::USER_UNAUTHORIZED);
-                }
-            }
-
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3247,6 +3277,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                 );
 
                 foreach ($relations as &$relation) {
+                    // If the relation is an array it can be either update or create a child document.
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
@@ -3260,21 +3291,20 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
+                        $relation->removeAttribute('$collectionId');
+                        $relation->removeAttribute('$databaseId');
+                        // Attribute $collection is required for Utopia.
+                        $relation->setAttribute(
+                            '$collection',
+                            'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId()
+                        );
 
                         if ($oldDocument->isEmpty()) {
-                            $type = Database::PERMISSION_CREATE;
-
                             if (isset($relation['$id']) && $relation['$id'] === 'unique()') {
                                 $relation['$id'] = ID::unique();
                             }
-                        } else {
-                            $relation->removeAttribute('$collectionId');
-                            $relation->removeAttribute('$databaseId');
-                            $relation->setAttribute('$collection', $relatedCollection->getId());
-                            $type = Database::PERMISSION_UPDATE;
                         }
-
-                        $checkPermissions($relatedCollection, $relation, $oldDocument, $type);
+                        $setCollection($relatedCollection, $relation);
                     }
                 }
 
@@ -3284,26 +3314,26 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
                     $document->setAttribute($relationship->getAttribute('key'), \reset($relations));
                 }
             }
-        };
+        });
 
-        $checkPermissions($collection, $newDocument, $document, Database::PERMISSION_UPDATE);
+        $setCollection($collection, $newDocument);
 
-    try {
-        $document = $dbForProject->withRequestTimestamp(
-            $requestTimestamp,
-            fn() => $dbForProject->updateDocument(
-                'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-                $document->getId(),
-                $newDocument
-            )
-        );
-    } catch (AuthorizationException) {
-        throw new Exception(Exception::USER_UNAUTHORIZED);
-    } catch (DuplicateException) {
-        throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-    } catch (StructureException $exception) {
-        throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
-    }
+        try {
+            $document = $dbForProject->withRequestTimestamp(
+                $requestTimestamp,
+                fn() => $dbForProject->updateDocument(
+                    'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
+                    $document->getId(),
+                    $newDocument
+                )
+            );
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        } catch (StructureException $exception) {
+            throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
+        }
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
