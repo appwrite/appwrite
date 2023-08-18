@@ -686,16 +686,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.4",
+            "version": "6.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112"
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/74f6c4f6732b3ad6cdf25560746841d522969112",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
                 "shasum": ""
             },
             "require": {
@@ -751,7 +751,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-02T08:48:53+00:00"
+            "time": "2023-08-17T16:17:41+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -1516,16 +1516,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.42.1",
+            "version": "0.42.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90"
+                "reference": "bc5ceb30c85fb685b0b5704d2f74886d813ebd41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ff69a9b9eadc581771798833d423829c9d8cc90",
-                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/bc5ceb30c85fb685b0b5704d2f74886d813ebd41",
+                "reference": "bc5ceb30c85fb685b0b5704d2f74886d813ebd41",
                 "shasum": ""
             },
             "require": {
@@ -1566,9 +1566,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.42.1"
+                "source": "https://github.com/utopia-php/database/tree/0.42.2"
             },
-            "time": "2023-08-14T16:09:09+00:00"
+            "time": "2023-08-17T19:04:37+00:00"
         },
         {
             "name": "utopia-php/domains",
