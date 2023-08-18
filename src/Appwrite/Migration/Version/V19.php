@@ -29,9 +29,6 @@ class V19 extends Migration
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-        $this->alterPermissionIndex('_metadata');
-        $this->alterUidType('_metadata');
-
         Console::info('Migrating Databases');
         $this->migrateDatabases();
 
@@ -58,14 +55,10 @@ class V19 extends Migration
 
             $databaseTable = "database_{$database->getInternalId()}";
 
-            $this->alterPermissionIndex($databaseTable);
-            $this->alterUidType($databaseTable);
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
-                $this->alterPermissionIndex($collectionTable);
-                $this->alterUidType($collectionTable);
             }
         }
     }
@@ -409,10 +402,6 @@ class V19 extends Migration
                 default:
                     break;
             }
-            if (!in_array($id, ['files', 'collections'])) {
-                $this->alterPermissionIndex($id);
-                $this->alterUidType($id);
-            }
 
             usleep(50000);
         }
@@ -505,43 +494,13 @@ class V19 extends Migration
                 break;
             case 'rules':
                 // TODO: convert domains
-                
+
                 break;
             default:
                 break;
         }
 
         return $document;
-    }
-
-    protected function alterPermissionIndex($collectionName): void
-    {
-        // try {
-        //     // $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}_perms`";
-        //     // $this->pdo->prepare("
-        //     //     ALTER TABLE {$table}
-        //     //     DROP INDEX `_permission`,
-        //     //     ADD INDEX `_permission` (`_permission`, `_type`, `_document`);
-        //     // ")->execute();
-        //     $this->projectDB->deleteIndex($collectionName, '_permission', ['_permission', '_type', '_document']);
-        //     $this->projectDB->createIndex($collectionName, '_permission', Database::INDEX_KEY, ['_permission', '_type', '_document'])
-        // } catch (\Throwable $th) {
-        //     Console::warning($th->getMessage());
-        // }
-    }
-
-    protected function alterUidType($collectionName): void
-    {
-        // try {
-        //     // $table = "`{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collectionName}`";
-        //     // $this->pdo->prepare("
-        //     // ALTER TABLE {$table}
-        //     // CHANGE COLUMN `_uid` `_uid` VARCHAR(255) NOT NULL ;
-        //     // ")->execute();
-        //     $this->projectDB->updateAttribute($collectionName, '_uid', type: 'string', size: 255, required: true);
-        // } catch (\Throwable $th) {
-        //     Console::warning($th->getMessage());
-        // }
     }
 
     /**
@@ -556,8 +515,6 @@ class V19 extends Migration
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $id = "bucket_{$bucket->getInternalId()}";
             Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
-            $this->alterPermissionIndex($id);
-            $this->alterUidType($id);
 
             try {
                 $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId', 'files');
