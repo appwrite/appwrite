@@ -60,7 +60,7 @@ class MigrationsV1 extends Worker
             return;
         }
 
-        $this->dbForProject = $this->getProjectDB(new Document($this->args['project']));
+        $this->dbForProject = $this->getProjectDB($project);
 
         $this->processMigration();
     }

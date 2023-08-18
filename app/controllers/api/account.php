@@ -940,7 +940,7 @@ App::delete('/v1/account/identities/:identityId')
     ->label('sdk.description', '/docs/references/account/delete-identity.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('identityId', [], new UID(), 'Identity ID.')
+    ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $identityId, Response $response, Database $dbForProject) {

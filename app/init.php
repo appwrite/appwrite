@@ -956,7 +956,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         } else {
             if ($project->getId() === 'console') {
                 $user = $dbForConsole->getDocument('users', Auth::$unique);
@@ -972,14 +972,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
     ) { // Validate user has valid login token
-        $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+        $user = new Document([]);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         }
     }
 
@@ -1002,7 +1002,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         }
     }
 

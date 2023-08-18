@@ -363,10 +363,6 @@ return [
         "name" => "Korean",
     ],
     [
-        "code" => "ko",
-        "name" => "Korean (Johab)",
-    ],
-    [
         "code" => "ku",
         "name" => "Kurdish",
     ],
