@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Target extends Model
+class Subscriber extends Model
 {
     /**
      * @var bool
@@ -17,7 +17,7 @@ class Target extends Model
         $this
             ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Target ID.',
+                'description' => 'Subscriber ID.',
                 'default' => '',
                 'example' => '259125845563242502',
             ])
@@ -27,24 +27,17 @@ class Target extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
-            ->addRule('providerId', [
+            ->addRule('targetId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider ID.',
-                'required' => false,
+                'description' => 'Target ID.',
                 'default' => '',
                 'example' => '259125845563242502',
             ])
-            ->addRule('providerType', [
+            ->addRule('topicId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The type of provider supported by this target.',
+                'description' => 'Topic ID.',
                 'default' => '',
-                'example' => 'sms',
-            ])
-            ->addRule('identifier', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The target identifier.',
-                'default' => '',
-                'example' => 'token',
+                'example' => '259125845563242502',
             ]);
     }
 
@@ -55,7 +48,7 @@ class Target extends Model
      */
     public function getName(): string
     {
-        return 'Target';
+        return 'Subscriber';
     }
 
     /**
@@ -65,6 +58,6 @@ class Target extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_TARGET;
+        return Response::MODEL_SUBSCRIBER;
     }
 }
