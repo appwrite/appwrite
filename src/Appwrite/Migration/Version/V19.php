@@ -55,7 +55,6 @@ class V19 extends Migration
 
             $databaseTable = "database_{$database->getInternalId()}";
 
-
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
