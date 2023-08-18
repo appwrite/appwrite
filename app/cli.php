@@ -74,7 +74,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $pools->get('console')->reclaim();
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts);
+    } while ($attempts < $maxAttempts && !$ready);
 
     if (!$ready) {
         throw new Exception("Console is not ready yet. Please try again later.");
