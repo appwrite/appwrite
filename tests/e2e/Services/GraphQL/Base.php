@@ -1383,8 +1383,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $events: [String], $schedule: String, $timeout: Int) {
-                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $runtime: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int, $entrypoint: String!) {
+                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout, entrypoint: $entrypoint) {
                         _id
                         name
                         runtime
