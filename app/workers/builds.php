@@ -335,7 +335,7 @@ class BuildsV1 extends Worker
                 Query::equal('resourceType', ['project']),
                 Query::limit(APP_LIMIT_SUBQUERY)
             ]);
-            
+
             foreach ($varsFromProject as $var) {
                 $vars[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
             }
