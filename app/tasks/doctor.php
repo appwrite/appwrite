@@ -153,7 +153,7 @@ $cli
             $mail->send();
             Console::success('SMTP................connected 👍');
         } catch (\Throwable $th) {
-            Console::error('SMTP.............disconnected '.$th.'👎');
+            Console::error('SMTP.............disconnected 👎');
         }
 
         $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
