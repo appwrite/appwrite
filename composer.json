@@ -76,7 +76,7 @@
         "webonyx/graphql-php": "14.11.*",
         "slickdeals/statsd": "3.1.0",
         "league/csv": "9.7.1",
-        "utopia-php/migration": "^0.2.0"
+        "utopia-php/migration": "^0.3.0"
     },
     "repositories": [
         {

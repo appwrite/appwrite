@@ -34,7 +34,7 @@ App::get('/console/*')
         // Serve static files (console) only for main domain
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== 'appwrite') {
+        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ROUTE_NOT_FOUND);
         }
 
