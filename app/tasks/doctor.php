@@ -10,12 +10,14 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;
 use Utopia\Validator\Text;
+use Utopia\Validator\Wildcard;
 
 $cli
     ->task('doctor')
     ->desc('Validate server health')
     ->param('interactive', 'n', new Text(1), 'Run an interactive session', true)
-    ->action(function ($interactive) use ($register) {
+    ->param('receiver', '', new Wildcard(), 'Send an email to this address to test SMTP', true)
+    ->action(function ($interactive, $receiver) use ($register) {
         Console::log("  __   ____  ____  _  _  ____  __  ____  ____     __  __  
  / _\ (  _ \(  _ \/ )( \(  _ \(  )(_  _)(  __)   (  )/  \ 
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
@@ -139,7 +141,10 @@ $cli
         try {
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
            
-            if ($interactive == "Y" || $interactive == "y") {
+            if ($receiver != '') {
+                $mail->addAddress($receiver);
+            }
+            else if ($interactive == "Y" || $interactive == "y") {
                 $receiver = Console::confirm('Enter your email address to test SMTP connection: ');
                 $mail->addAddress($receiver);
             } else {
