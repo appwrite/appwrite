@@ -1282,11 +1282,12 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github, Event $events) use ($redeployVcs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
+
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->isEmpty()) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
@@ -1298,11 +1299,22 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
-        // TODO: Somehow set commit SHA & ownerName & repoName for git deployments, and file path for manual. Redeploy should use exact same source code
+        $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
+            '$id' => ID::unique(),
+            'buildId' => '',
+            'buildInternalId' => '',
+            'entrypoint' => $function->getAttribute('entrypoint'),
+            'commands' => $function->getAttribute('commands', ''),
+        ]));
 
-        $installation = $dbForConsole->getDocument('installations', $deployment->getAttribute('installationId', ''));
+        $buildEvent = new Build();
 
-        $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document([]), $github);
+        $buildEvent
+            ->setType(BUILD_TYPE_DEPLOYMENT)
+            ->setResource($function)
+            ->setDeployment($deployment)
+            ->setProject($project)
+            ->trigger();
 
         $events
             ->setParam('functionId', $function->getId())
@@ -1513,13 +1525,13 @@ App::post('/v1/functions/:functionId/executions')
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
-                version: $function->getAttribute('version'),
                 body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
+                version: $function->getAttribute('version'),
                 path: $path,
                 method: $method,
                 headers: $headers,
