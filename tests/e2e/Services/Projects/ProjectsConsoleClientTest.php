@@ -2848,10 +2848,10 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /** 
+    /**
      * @depends testCreateDuplicateProjectDomain
      */
-    public function testCreateDuplicateProjectDomain($data): array 
+    public function testCreateDuplicateProjectDomain($data): array
     {
         $id = $data['projectId'] ?? '';
 
