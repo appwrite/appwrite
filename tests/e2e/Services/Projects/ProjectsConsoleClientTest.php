@@ -2843,6 +2843,28 @@ class ProjectsConsoleClientTest extends Scope
             'hostname' => \str_repeat("bestdomain", 25) . '.com' // 250 + 4 chars total (exactly above limit)
         ]);
 
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /** 
+     * @depends testCreateDuplicateProjectDomain
+     */
+    public function testCreateDuplicateProjectDomain($data): array 
+    {
+        $id = $data['projectId'] ?? '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/domains', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['key'],
+        ], $this->getHeaders()), [
+            'domain' => 'sub.example.com',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
         return $data;
     }
 
