@@ -2,7 +2,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.2
+    image: traefik:2.9
     container_name: appwrite-traefik
     command:
       - --log.level=DEBUG
@@ -351,7 +351,7 @@ services:
   #     - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
 
   redis:
-    image: redis:5.0
+    image: redis:7.0.10-alpine
     container_name: appwrite-redis
     restart: unless-stopped
     networks:
@@ -378,7 +378,7 @@ services:
       - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
-    image: appwrite/telegraf:1.1.0
+    image: appwrite/telegraf:1.4.0
     container_name: appwrite-telegraf
     restart: unless-stopped
     networks:

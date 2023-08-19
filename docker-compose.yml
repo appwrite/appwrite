@@ -14,7 +14,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.7
+    image: traefik:2.9
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -690,7 +690,7 @@ services:
   #     - SMARTHOST_PORT=587
   
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.0.10-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >
