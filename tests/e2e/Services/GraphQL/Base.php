@@ -1457,15 +1457,14 @@ trait Base
                     }
                 }';
             case self::$CREATE_DEPLOYMENT:
-                return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
-                    functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
+                return 'mutation createDeployment($functionId: String!, $code: InputFile!, $activate: Boolean!) {
+                    functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate) {
                         _id
                         buildId
                         entrypoint
                         size
                         status
-                        buildStdout
-                        buildStderr
+                        buildLogs
                     }
                 }';
             case self::$DELETE_DEPLOYMENT:
@@ -1479,7 +1478,8 @@ trait Base
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$GET_EXECUTIONS:
@@ -1489,16 +1489,18 @@ trait Base
                         executions {
                             _id
                             status
-                            stderr
+                            logs
+                            errors
                         }
                     }
                 }';
             case self::$CREATE_EXECUTION:
-                return 'mutation createExecution($functionId: String!, $data: String, $async: Boolean) {
-                    functionsCreateExecution(functionId: $functionId, data: $data, async: $async) {
+                return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
+                    functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$DELETE_EXECUTION:

@@ -88,7 +88,6 @@ class FunctionsClientTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'functionId' => $function['_id'],
-                    'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
                 ]
