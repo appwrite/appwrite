@@ -9,10 +9,10 @@ def main(context)
         'APPWRITE_FUNCTION_RUNTIME_NAME' => ENV['APPWRITE_FUNCTION_RUNTIME_NAME'] || '',
         'APPWRITE_FUNCTION_RUNTIME_VERSION' => ENV['APPWRITE_FUNCTION_RUNTIME_VERSION'] || '',
         'APPWRITE_FUNCTION_EVENT' => context.req.headers['x-appwrite-event'] || '',
-        'APPWRITE_FUNCTION_EVENT_DATA' => context.req.bodyRaw || '',
-        'APPWRITE_FUNCTION_DATA' => context.req.bodyRaw || '',
+        'APPWRITE_FUNCTION_EVENT_DATA' => context.req.body_raw || '',
+        'APPWRITE_FUNCTION_DATA' => context.req.body_raw || '',
         'APPWRITE_FUNCTION_USER_ID' => context.req.headers['x-appwrite-user-id'] || '',
-        'APPWRITE_FUNCTION_JWT' => context.req.headers['x-appwrite-user-jwt'] || ''
+        'APPWRITE_FUNCTION_JWT' => context.req.headers['x-appwrite-user-jwt'] || '',
         'APPWRITE_FUNCTION_PROJECT_ID' => ENV['APPWRITE_FUNCTION_PROJECT_ID'] || '',
         'CUSTOM_VARIABLE' => ENV['CUSTOM_VARIABLE'] || ''
     })

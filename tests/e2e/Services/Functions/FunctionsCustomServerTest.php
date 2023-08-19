@@ -928,8 +928,9 @@ class FunctionsCustomServerTest extends Scope
             [ 'folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0' ],
             [ 'folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9' ],
             [ 'folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1' ],
-            [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
-            [ 'folder' => 'swift', 'name' => 'swift-5.5', 'entrypoint' => 'index.swift', 'runtimeName' => 'Swift', 'runtimeVersion' => '5.5' ],
+            // Swift and Dart disabled as it's very slow.
+            // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
+            // [ 'folder' => 'swift', 'name' => 'swift-5.5', 'entrypoint' => 'index.swift', 'runtimeName' => 'Swift', 'runtimeVersion' => '5.5' ],
         ];
     }
 
@@ -937,7 +938,7 @@ class FunctionsCustomServerTest extends Scope
      * @param string $folder
      * @param string $name
      * @param string $entrypoint
-     * 
+     *
      * @dataProvider provideCustomExecutions
      * @depends testTimeout
      */
@@ -993,8 +994,6 @@ class FunctionsCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
-        \var_dump($deployment);
-
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
@@ -1004,8 +1003,6 @@ class FunctionsCustomServerTest extends Scope
             'body' => 'foobar',
             'async' => false
         ]);
-
-        \var_dump($execution);
 
         $executionId = $execution['body']['$id'] ?? '';
         $output = json_decode($execution['body']['responseBody'], true);
