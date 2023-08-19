@@ -1216,14 +1216,14 @@ $commonCollections = [
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['name'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_enabled'),
@@ -2078,7 +2078,7 @@ $projectCollections = array_merge([
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_name'),
@@ -2938,7 +2938,7 @@ $projectCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
-         ],
+        ],
         'indexes' => [
             [
                 '$id' => '_key_accessedAt',
@@ -3035,21 +3035,21 @@ $projectCollections = array_merge([
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_resourceId',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resourceId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => '_key_resourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
-                'lengths' => [100],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resourceId_resourceType',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceId', 'resourceType'],
+                'lengths' => [Database::LENGTH_KEY, 100],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_uniqueKey',
@@ -3607,7 +3607,7 @@ $consoleCollections = array_merge([
             [
                 '$id' => ID::custom('_key_region_resourceType_resourceUpdatedAt'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['region', 'resourceType','resourceUpdatedAt'],
+                'attributes' => ['region', 'resourceType', 'resourceUpdatedAt'],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -4213,7 +4213,7 @@ $consoleCollections = array_merge([
                 '$id' => '_key_resourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
-                'lengths' => [100],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
@@ -4849,7 +4849,7 @@ $bucketCollections = [
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_bucket'),

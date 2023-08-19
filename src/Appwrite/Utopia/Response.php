@@ -263,6 +263,8 @@ class Response extends SwooleResponse
     public const MODEL_PERMISSIONS = 'permissions';
     public const MODEL_RULE = 'rule';
     public const MODEL_TASK = 'task';
+    public const MODEL_DOMAIN = 'domain';
+    public const MODEL_DOMAIN_LIST = 'domainList';
 
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
