@@ -848,7 +848,7 @@ App::post('/v1/vcs/github/events')
             $parsedPayload = $github->getEvent($event, $payload);
 
             if ($event == $github::EVENT_PUSH) {
-                $providerBranchCreated = $parsedPayload["created"] ?? false;
+                $providerBranchCreated = $parsedPayload["branchCreated"] ?? false;
                 $providerBranch = $parsedPayload["branch"] ?? '';
                 $providerBranchUrl = $parsedPayload["branchUrl"] ?? '';
                 $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
