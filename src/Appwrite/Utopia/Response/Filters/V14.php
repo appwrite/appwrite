@@ -23,7 +23,7 @@ class V14 extends Filter
 
                 break;
             case Response::MODEL_DOCUMENT:
-            // case Response::MODEL_DOMAIN:
+            case Response::MODEL_DOMAIN:
             case Response::MODEL_FUNCTION:
             case Response::MODEL_TEAM:
             case Response::MODEL_MEMBERSHIP:
@@ -38,10 +38,10 @@ class V14 extends Filter
                 $parsedResponse = $this->parseRemoveAttributesList($content, 'documents', ['$createdAt', '$updatedAt']);
 
                 break;
-            // case Response::MODEL_DOMAIN_LIST:
-            //     $parsedResponse = $this->parseRemoveAttributesList($content, 'domains', ['$createdAt', '$updatedAt']);
+            case Response::MODEL_DOMAIN_LIST:
+                $parsedResponse = $this->parseRemoveAttributesList($content, 'domains', ['$createdAt', '$updatedAt']);
 
-            //     break;
+                break;
             case Response::MODEL_FUNCTION_LIST:
                 $parsedResponse = $this->parseRemoveAttributesList($content, 'functions', ['$createdAt', '$updatedAt']);
 
