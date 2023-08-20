@@ -111,6 +111,12 @@ class Func extends Model
                 'default' => '',
                 'example' => 'npm install',
             ])
+            ->addRule('version', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Version of Open Runtimes used for the function.',
+                'default' => 'v3',
+                'example' => 'v2',
+            ])
             ->addRule('installationId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Function VCS (Version Control System) installation id.',
