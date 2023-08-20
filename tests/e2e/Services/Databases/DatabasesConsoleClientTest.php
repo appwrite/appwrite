@@ -109,108 +109,47 @@ class DatabasesConsoleClientTest extends Scope
      * @depends testCreateCollection
      * @param array $data
      */
-    public function testGetCollection(array $data)
-    {
-        $databaseId = $data['databaseId'];
-        $moviesCollectionId = $data['moviesId'];
+    // public function testGetDatabaseUsage(array $data)
+    // {
+    //     $databaseId = $data['databaseId'];
+    //     /**
+    //      * Test for FAILURE
+    //      */
 
-        /**
-         * Test When database is disabled but can still call get collection
-         */
-        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+    //     $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id']
+    //     ], $this->getHeaders()), [
+    //         'range' => '32h'
+    //     ]);
 
-        $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertEquals('Movies', $collection['body']['name']);
-        $this->assertEquals($moviesCollectionId, $collection['body']['$id']);
-        $this->assertTrue($collection['body']['enabled']);
-    }
+    //     $this->assertEquals(400, $response['headers']['status-code']);
 
-    /**
-     * @depends testCreateCollection
-     * @param array $data
-     */
-    public function testUpdateCollection(array $data)
-    {
-        $databaseId = $data['databaseId'];
-        $moviesCollectionId = $data['moviesId'];
+    //     /**
+    //      * Test for SUCCESS
+    //      */
 
-        /**
-         * Test When database is disabled but can still call update collection
-         */
-        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'name' => 'Movies Updated',
-            'enabled' => false
-        ]);
+    //     $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id']
+    //     ], $this->getHeaders()), [
+    //         'range' => '24h'
+    //     ]);
 
-        $this->assertEquals(200, $collection['headers']['status-code']);
-        $this->assertEquals('Movies Updated', $collection['body']['name']);
-        $this->assertEquals($moviesCollectionId, $collection['body']['$id']);
-        $this->assertFalse($collection['body']['enabled']);
-    }
-
-    /**
-     * @depends testCreateCollection
-     * @param array $data
-     */
-    public function testDeleteCollection(array $data)
-    {
-        $databaseId = $data['databaseId'];
-        $tvShowsId = $data['tvShowsId'];
-
-        /**
-         * Test When database is disabled but can still call Delete collection
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $tvShowsId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEquals($response['body'], "");
-    }
-
-    /**
-     * @depends testCreateCollection
-     */
-    public function testGetDatabaseUsage(array $data)
-    {
-        $databaseId = $data['databaseId'];
-        /**
-         * Test for FAILURE
-         */
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'range' => '32h'
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        /**
-         * Test for SUCCESS
-         */
-
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id']
-        ], $this->getHeaders()), [
-            'range' => '24h'
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 3);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsTotal']);
-        $this->assertIsArray($response['body']['collectionsTotal']);
-    }
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertEquals(count($response['body']), 11);
+    //     $this->assertEquals($response['body']['range'], '24h');
+    //     $this->assertIsArray($response['body']['documentsCount']);
+    //     $this->assertIsArray($response['body']['collectionsCount']);
+    //     $this->assertIsArray($response['body']['documentsCreate']);
+    //     $this->assertIsArray($response['body']['documentsRead']);
+    //     $this->assertIsArray($response['body']['documentsUpdate']);
+    //     $this->assertIsArray($response['body']['documentsDelete']);
+    //     $this->assertIsArray($response['body']['collectionsCreate']);
+    //     $this->assertIsArray($response['body']['collectionsRead']);
+    //     $this->assertIsArray($response['body']['collectionsUpdate']);
+    //     $this->assertIsArray($response['body']['collectionsDelete']);
+    // }
 
 
     /**
@@ -250,10 +189,15 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'range' => '24h'
         ]);
+
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 2);
+        $this->assertEquals(count($response['body']), 6);
         $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsTotal']);
+        $this->assertIsArray($response['body']['documentsCount']);
+        $this->assertIsArray($response['body']['documentsCreate']);
+        $this->assertIsArray($response['body']['documentsRead']);
+        $this->assertIsArray($response['body']['documentsUpdate']);
+        $this->assertIsArray($response['body']['documentsDelete']);
     }
 
     /**

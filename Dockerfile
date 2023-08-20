@@ -92,6 +92,10 @@ ENV _APP_SERVER=swoole \
     _APP_DB_USER=root \
     _APP_DB_PASS=password \
     _APP_DB_SCHEMA=appwrite \
+    _APP_INFLUXDB_HOST=influxdb \
+    _APP_INFLUXDB_PORT=8086 \
+    _APP_STATSD_HOST=telegraf \
+    _APP_STATSD_PORT=8125 \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
@@ -161,6 +165,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/patch-delete-project-collections && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/volume-sync && \
+    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
@@ -180,8 +185,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-migrations && \
-    chmod +x /usr/local/bin/worker-usage
+    chmod +x /usr/local/bin/worker-migrations
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
