@@ -16,13 +16,13 @@ use Utopia\Validator\Text;
 class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
-    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 1; // 4 hours;
-    public const COMPRESS_ALGORITHM = 'LZ4'; // faster compression and decompression
+    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    public const COMPRESS_ALGORITHM = 'zstd'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
-    protected int $processors = 1;
+    protected int $processors;
 
     /**
      * @throws Exception
@@ -91,7 +91,7 @@ class Backup extends Action
         $this->setContainerId();
         $this->setProcessors();
 
-        sleep(20);
+        //sleep(20);
 
         Console::loop(function () {
             $this->start();
@@ -102,7 +102,6 @@ class Backup extends Action
     {
         $start = microtime(true);
         $time = date('Y_m_d_H_i_s');
-        $this->filename = $time . '.xbstream';
 
         self::log('--- Backup Start ' . $time . ' --- ');
 
@@ -132,6 +131,7 @@ class Backup extends Action
             Console::exit();
         }
 
+        $filename = basename($target);
         $logfile = $target . '/../backup.log';
 
         $args = [
@@ -142,15 +142,15 @@ class Backup extends Action
             '--port=' . $this->dsn->getPort(),
             '--backup',
             '--strict',
-            '--history="' . $this->database . '|' . pathinfo($this->filename, PATHINFO_FILENAME) . '"', // PERCONA_SCHEMA.xtrabackup_history
+            '--history="' . $this->database . '|' . pathinfo($filename, PATHINFO_FILENAME) . '"', // PERCONA_SCHEMA.xtrabackup_history
             '--slave-info',
             '--safe-slave-backup',
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . $target,
-            '--parallel=' . $this->processors,
             '--compress=' . self::COMPRESS_ALGORITHM,
-            '--compress-threads=' . $this->processors,
+            '--compress-threads=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             '2> ' . $logfile,
         ];
@@ -207,20 +207,20 @@ class Backup extends Action
             Console::exit();
         }
 
-        try {
-            $destination = $this->s3->getRoot() . '/' . $filename;
+        $destination = $this->s3->getRoot() . '/' . $filename;
 
+        try {
             if (!$local->transfer($file, $destination, $this->s3)) {
                 Console::error('Error uploading to ' . $destination);
                 Console::exit();
             }
-
-            if (!$this->s3->exists($destination)) {
-                Console::error('File not found in destination: ' . $destination);
-                Console::exit();
-            }
         } catch (Exception $e) {
             Console::error($e->getMessage());
+            Console::exit();
+        }
+
+        if (!$this->s3->exists($destination)) {
+            Console::error('File not found in destination: ' . $destination);
             Console::exit();
         }
 

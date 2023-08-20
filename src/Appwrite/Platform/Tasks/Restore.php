@@ -47,6 +47,7 @@ class Restore extends Action
         try {
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
             $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
+            $this->s3->setTransferChunkSize(40 * 1024 * 1024); // 5MB
         } catch (\Exception $e) {
             Console::error($e->getMessage() . 'Invalid DSN.');
             Console::exit();
@@ -59,7 +60,7 @@ class Restore extends Action
 
         if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
             Console::error('Datadir ' . $datadir . ' must be empty!');
-            Console::exit();
+            //Console::exit();
         }
 
         $this->log('--- Restore Start ' . $id . ' --- ');
@@ -97,7 +98,7 @@ class Restore extends Action
 
         $this->decompress($files);
         $this->prepare($files);
-        $this->restore($files, $cloud, $datadir);
+       // $this->restore($files, $cloud, $datadir);
 
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
@@ -154,9 +155,9 @@ class Restore extends Action
             'xtrabackup',
             '--decompress',
             '--strict',
-            '--remove-original', // Removes *.lz4 compressed files
+            '--remove-original',
             '--parallel=' . $this->processors,
-            '--compress-threads=' . $this->processors,
+            '--compress-threads=' . intval($this->processors / 2),
             '--target-dir=' . $target,
             '2> ' . $logfile,
         ];
@@ -186,7 +187,7 @@ class Restore extends Action
         $args = [
             'xtrabackup',
             '--prepare',
-            '--parallel=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '--strict',
             '--target-dir=' . $target,
             '2> ' . $logfile,
@@ -218,7 +219,7 @@ class Restore extends Action
             'xtrabackup',
             $cloud ? '--move-back' : '--copy-back',
             '--strict',
-            '--parallel=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
             '2> ' . $logfile,
