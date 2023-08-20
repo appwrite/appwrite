@@ -17,7 +17,7 @@ class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
-    public const COMPRESS_ALGORITHM = 'LZ4'; // faster compression and decompression
+    public const COMPRESS_ALGORITHM = 'ZSTD'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
     protected string $filename;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
@@ -148,8 +148,8 @@ class Backup extends Action
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . self::BACKUPS_PATH,
             '--compress=' . self::COMPRESS_ALGORITHM,
-            '--compress-threads=' . $this->processors,
-            '--parallel=' . intval($this->processors / 2),
+            '--compress-threads=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '> ' . $file,
             '2> ' . $log,
         ];

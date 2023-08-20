@@ -102,7 +102,7 @@ class Restore extends Action
 
         $this->decompress($stream, $files);
         $this->prepare($files);
-        $this->restore($files, $datadir);
+        //$this->restore($files, $datadir);
 
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }
@@ -137,8 +137,8 @@ class Restore extends Action
         $args = [
             'xbstream -x < ' . $file,
             '--decompress',
-            '--decompress-threads=' . $this->processors,
-            '--parallel=' . intval($this->processors / 2),
+            '--decompress-threads=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '-C ' . $target,
         ];
 
@@ -166,7 +166,7 @@ class Restore extends Action
         $args = [
             'xtrabackup',
             '--prepare',
-            '--parallel=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '--strict',
             '--target-dir=' . $target,
             '2> ' . $logfile,
@@ -198,7 +198,7 @@ class Restore extends Action
             'xtrabackup',
             '--move-back',
             '--strict',
-            '--parallel=' . intval($this->processors / 2),
+            '--parallel=' . $this->processors,
             '--target-dir=' . $target,
             '--datadir=' . $datadir,
             '2> ' . $logfile,
