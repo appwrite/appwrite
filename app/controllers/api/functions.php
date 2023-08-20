@@ -1299,12 +1299,15 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
+        $deploymentId = ID::unique();
+
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$id' => ID::unique(),
+            '$id' => $deploymentId,
             'buildId' => '',
             'buildInternalId' => '',
             'entrypoint' => $function->getAttribute('entrypoint'),
             'commands' => $function->getAttribute('commands', ''),
+            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
         ]));
 
         $buildEvent = new Build();
