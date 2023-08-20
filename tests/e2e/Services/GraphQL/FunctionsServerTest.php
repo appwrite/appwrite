@@ -25,6 +25,7 @@ class FunctionsServerTest extends Scope
             'variables' => [
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
+                'entrypoint' => 'index.php',
                 'runtime' => 'php-8.0',
                 'execute' => [Role::any()->toString()],
             ]

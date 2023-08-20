@@ -178,7 +178,9 @@ class Executor
         array $headers,
         string $runtimeEntrypoint = null,
     ) {
-        $headers['host'] = App::getEnv('_APP_DOMAIN', '');
+        if(empty($headers['host'])) {
+            $headers['host'] = App::getEnv('_APP_DOMAIN', '');
+        }
 
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/execution';

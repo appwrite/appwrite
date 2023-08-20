@@ -631,6 +631,11 @@ return [
         'description' => 'Host is not trusted. Add a custom domain to your project first.',
         'code' => 404,
     ],
+    Exception::ROUTER_DOMAIN_NOT_CONFIGURED => [
+        'name' => Exception::ROUTER_DOMAIN_NOT_CONFIGURED,
+        'description' => 'Please configure domain environment variables before using Appwrite outside of localhost.',
+        'code' => 500,
+    ],
     Exception::RULE_RESOURCE_NOT_FOUND => [
         'name' => Exception::RULE_RESOURCE_NOT_FOUND,
         'description' => 'Resource could not be found. Check resourceId and resourceType.',

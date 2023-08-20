@@ -177,7 +177,7 @@ class BuildsV1 extends Worker
                 $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
                 $stdout = '';
                 $stderr = '';
-                Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
@@ -196,7 +196,7 @@ class BuildsV1 extends Worker
 
                 if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
                     // Clone template repo
-                    $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
+                    $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
                     $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
                     $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
@@ -212,7 +212,7 @@ class BuildsV1 extends Worker
                     Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "security@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . $function->getAttribute('name', '') .  '\' function" && git push origin ' . $branchName, '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "security@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) .  '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -252,7 +252,7 @@ class BuildsV1 extends Worker
                     );
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . \escapeshellcmd($buildId) . '/code.tar.gz -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
@@ -267,7 +267,7 @@ class BuildsV1 extends Worker
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                Console::execute('rm -rf /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
 
                 $source = $path;
 
