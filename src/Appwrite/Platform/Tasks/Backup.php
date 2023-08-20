@@ -121,6 +121,9 @@ class Backup extends Action
 
     public function fullBackup(string $target)
     {
+        $start = microtime(true);
+        self::log('Xtrabackup start');
+
         if (!file_exists(self::BACKUPS_PATH)) {
             Console::error('Mount directory does not exist');
             Console::exit();
@@ -156,7 +159,6 @@ class Backup extends Action
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        self::log('Xtrabackup start');
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
@@ -170,10 +172,13 @@ class Backup extends Action
             Console::error('Error deleting: ' . $logfile);
             Console::exit();
         }
+
+        self::log('Xtrabackup end ' . (microtime(true) - $start) . ' seconds');
     }
 
     public function tar(string $directory, string $file)
     {
+        $start = microtime(true);
         self::log('Tar start');
 
         $stdout = '';
@@ -195,10 +200,13 @@ class Backup extends Action
             Console::error('Tar file size is very small: ' . $file);
             Console::exit();
         }
+
+        self::log('Tar took ' . (microtime(true) - $start) . ' seconds');
     }
 
     public function upload(string $file, Device $local)
     {
+        $start = microtime(true);
         self::log('Upload start');
         $filename = basename($file);
 
@@ -228,6 +236,8 @@ class Backup extends Action
             Console::error('Error deleting: ' . $file);
             Console::exit();
         }
+
+        self::log('Upload took ' . (microtime(true) - $start) . ' seconds');
     }
 
     public static function log(string $message): void
