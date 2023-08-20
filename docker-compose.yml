@@ -761,7 +761,7 @@ services:
   appwrite-assistant:
     container_name: appwrite-assistant
     hostname: appwrite-assistant
-    image: appwrite/assistant:0.1.2
+    image: appwrite/assistant:0.1.3
     networks:
       - appwrite
     environment:
