@@ -704,8 +704,6 @@ use Utopia\Database\Role;
 //             'async' => true,
 //         ]);
 
-        sleep(self::WAIT);
-
 //         sleep(10);
 
 //         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $execution['body']['$id'], $headers);
