@@ -61,7 +61,6 @@ return [
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
-            'none',
             'public',
             'home',
             'console',
@@ -77,22 +76,22 @@ return [
     ],
     Auth::USER_ROLE_USERS => [
         'label' => 'Users',
-        'scopes' => \array_merge($member, [ 'none' ]),
+        'scopes' => \array_merge($member),
     ],
     Auth::USER_ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => \array_merge($admins, [ 'none' ]),
+        'scopes' => \array_merge($admins),
     ],
     Auth::USER_ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => \array_merge($admins, [ 'none' ]),
+        'scopes' => \array_merge($admins),
     ],
     Auth::USER_ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => \array_merge($member, $admins, [ 'none' ]),
+        'scopes' => \array_merge($member, $admins),
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
-        'scopes' => ['health.read', 'graphql', 'none'],
+        'scopes' => ['health.read', 'graphql'],
     ],
 ];

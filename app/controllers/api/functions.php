@@ -761,6 +761,7 @@ App::put('/v1/functions/:functionId')
         $live = true;
 
         if (
+            $function->getAttribute('name') !== $name ||
             $function->getAttribute('entrypoint') !== $entrypoint ||
             $function->getAttribute('commands') !== $commands ||
             $function->getAttribute('providerRootDirectory') !== $providerRootDirectory ||
