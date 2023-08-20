@@ -47,6 +47,7 @@ class Restore extends Action
         try {
             $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
             $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
+            $this->s3->setTransferChunkSize(20 * 1024 * 1024); // 5MB is the minimum
         } catch (\Exception $e) {
             Console::error($e->getMessage() . 'Invalid DSN.');
             Console::exit();
@@ -109,20 +110,25 @@ class Restore extends Action
 
     public function download(string $file, Device $local)
     {
+        $filename = basename($file);
+
+        $tmp = $local->getRoot() . '/tmp_' . $filename;
+        if (file_exists($tmp)) { // todo: this should be taken care of in the lib, cleanup previous iteration
+            Console::error('Deleting: ' . $tmp);
+            $local->delete($tmp, true);
+        }
+
         $this->log('Download start');
 
-        $filename = basename($file);
+        $path = $this->s3->getPath($filename);
+        if (!$this->s3->exists($path)) {
+            Console::error('File: ' . $path . ' does not exist on cloud');
+            Console::exit();
+        }
+
         try {
-            $path = $this->s3->getPath($filename);
-
-            if (!$this->s3->exists($path)) {
-                Console::error('File: ' . $path . ' does not exist on cloud');
-                Console::exit();
-            }
-
             if (!$this->s3->transfer($path, $file, $local)) {
-                Console::error('Error Downloading ' . $file);
-                Console::exit();
+                throw new Exception('Transfer failed ' . $file);
             }
         } catch (Exception $e) {
             Console::error($e->getMessage());
