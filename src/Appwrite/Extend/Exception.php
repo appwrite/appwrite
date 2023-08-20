@@ -195,6 +195,7 @@ class Exception extends \Exception
 
     /** Router */
     public const ROUTER_HOST_NOT_FOUND             = 'router_host_not_found';
+    public const ROUTER_DOMAIN_NOT_CONFIGURED      = 'router_domain_not_configured';
 
     /** Proxy */
     public const RULE_RESOURCE_NOT_FOUND            = 'rule_resource_not_found';
