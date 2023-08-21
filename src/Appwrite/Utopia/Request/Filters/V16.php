@@ -23,24 +23,13 @@ class V16 extends Filter
                 unset($content['data']);
                 break;
             case 'projects.createDomain':
-                // TODO: How to handle this?
-                // This endpoint was deleted
-                break;
             case 'projects.listDomains':
-                // TODO: How to handle this?
-                // This endpoint was deleted
-                break;
             case 'projects.getDomain':
-                // TODO: How to handle this?
-                // This endpoint was deleted
-                break;
             case 'projects.updateDomainVerification':
-                // TODO: How to handle this?
-                // This endpoint was deleted
-                break;
             case 'projects.deleteDomain':
-                // TODO: How to handle this?
-                // This endpoint was deleted
+                // These endpoints were deleted and we're accepting
+                // the breaking change since the endpoint was only
+                // used internally.
                 break;
         }
 
