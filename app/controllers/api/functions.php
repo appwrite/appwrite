@@ -430,7 +430,7 @@ App::get('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -540,7 +540,7 @@ App::get('/v1/functions/:functionId/usage')
 
 App::get('/v1/functions/usage')
     ->desc('Get Functions Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -1604,7 +1604,6 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
-
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 

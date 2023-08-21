@@ -178,7 +178,7 @@ class Executor
         array $headers,
         string $runtimeEntrypoint = null,
     ) {
-        if(empty($headers['host'])) {
+        if (empty($headers['host'])) {
             $headers['host'] = App::getEnv('_APP_DOMAIN', '');
         }
 
