@@ -277,6 +277,11 @@ App::get('/v1/vcs/github/callback')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForConsole) {
+        if (empty($state)) {
+            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+        }
+
         $state = \json_decode($state, true);
         $projectId = $state['projectId'] ?? '';
 
@@ -285,24 +290,10 @@ App::get('/v1/vcs/github/callback')
             'failure' => $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/settings/git-installations",
         ];
 
-        $state = \array_merge($defaultState, $state);
+        $state = \array_merge($defaultState, $state ?? []);
 
         $redirectSuccess = $state['success'] ?? '';
         $redirectFailure = $state['failure'] ?? '';
-
-        if (empty($state)) {
-            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
-
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                return $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-            }
-
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
-        }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
