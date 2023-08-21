@@ -76,6 +76,12 @@ return [ // List of publicly visible scopes
     'health.read' => [
         'description' => 'Access to read your project\'s health status',
     ],
+    'migrations.read' => [
+        'description' => 'Access to read your project\'s migrations',
+    ],
+    'migrations.write' => [
+        'description' => 'Access to create, update, and delete your project\'s migrations.',
+    ],
     'providers.read' => [
         'description' => 'Access to read your project\'s providers',
     ],
@@ -105,5 +111,5 @@ return [ // List of publicly visible scopes
     ],
     'targets.write' => [
         'description' => 'Access to create, update, and delete your project\'s targets',
-    ],
+    ]
 ];

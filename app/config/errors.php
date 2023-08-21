@@ -190,6 +190,11 @@ return [
         'description' => 'The current user session could not be found.',
         'code' => 404,
     ],
+    Exception::USER_IDENTITY_NOT_FOUND => [
+        'name' => Exception::USER_IDENTITY_NOT_FOUND,
+        'description' => 'The identity could not be found.',
+        'code' => 404,
+    ],
     Exception::USER_UNAUTHORIZED => [
         'name' => Exception::USER_UNAUTHORIZED,
         'description' => 'The current user is not authorized to perform the requested action.',
@@ -670,10 +675,28 @@ return [
         'code' => 400,
     ],
 
+    /** Migrations */
+    Exception::MIGRATION_NOT_FOUND => [
+        'name' => Exception::MIGRATION_NOT_FOUND,
+        'description' => 'Migration with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_ALREADY_EXISTS => [
+        'name' => Exception::MIGRATION_ALREADY_EXISTS,
+        'description' => 'Migration with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::MIGRATION_IN_PROGRESS => [
+        'name' => Exception::MIGRATION_IN_PROGRESS,
+        'description' => 'Migration is already in progress.',
+        'code' => 409,
+    ],
+
     /** Provider Errors */
     Exception::PROVIDER_NOT_FOUND => [
         'name' => Exception::PROVIDER_NOT_FOUND,
         'description' => 'Provider with the request ID could not be found.',
         'code' => 400,
-    ],
+
+    ]
 ];

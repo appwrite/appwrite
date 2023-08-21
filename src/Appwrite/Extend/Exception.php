@@ -32,6 +32,7 @@ class Exception extends \Exception
      * - Platform
      * - Domain
      * - GraphQL
+     * - Migrations
      */
 
     /** General */
@@ -73,6 +74,7 @@ class Exception extends \Exception
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
+    public const USER_IDENTITY_NOT_FOUND           = 'user_identity_not_found';
     public const USER_UNAUTHORIZED                 = 'user_unauthorized';
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
@@ -204,6 +206,11 @@ class Exception extends \Exception
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
     public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
+
+    /** Migrations */
+    public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
+    public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
+    public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
 
     /** Provider */
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
