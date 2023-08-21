@@ -1368,8 +1368,7 @@ trait Base
                         total
                         deployments {
                             _id
-                            buildStdout
-                            buildStderr
+                            buildLogs
                         }
                     }
                 }';
@@ -1378,8 +1377,7 @@ trait Base
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
                         buildId
-                        buildStdout
-                        buildStderr
+                        buildLogs
                     }
                 }';
             case self::$CREATE_FUNCTION:
@@ -1392,8 +1390,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int) {
-                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String!, $entrypoint: String!, $events: [String], $schedule: String, $timeout: Int) {
+                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, entrypoint: $entrypoint, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
                         runtime

@@ -382,6 +382,8 @@ class FunctionsServerTest extends Scope
                 'functionId' => $function['_id'],
                 'name' => 'Test Function Updated',
                 'execute' => [Role::any()->toString()],
+                'entrypoint' => 'index.php',
+                'runtime' => 'php-8.0',
                 'vars' => [
                     'name' => 'John Doe',
                     'age' => 42,
