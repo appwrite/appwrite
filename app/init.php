@@ -32,6 +32,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -236,7 +237,6 @@ Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
-Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -770,6 +770,31 @@ $register->set('pools', function () {
     return $group;
 });
 
+$register->set('influxdb', function () {
+
+ // Register DB connection
+    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
+    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+
+    if (empty($host) || empty($port)) {
+        return;
+    }
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client->setDriver($driver);
+
+    return $client;
+});
+$register->set('statsd', function () {
+    // Register DB connection
+    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
+    $port = App::getEnv('_APP_STATSD_PORT', 8125);
+
+    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
+    $statsd = new \Domnikl\Statsd\Client($connection);
+
+    return $statsd;
+});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -873,9 +898,9 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
+App::setResource('usage', function ($register) {
+    return new Stats($register->get('statsd'));
+}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
