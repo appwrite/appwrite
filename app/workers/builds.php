@@ -174,7 +174,8 @@ class BuildsV1 extends Worker
                 $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
 
                 $branchName = $deployment->getAttribute('providerBranch');
-                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
+                $commitHash = $deployment->getAttribute('providerCommitHash', '');
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory, $commitHash);
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
