@@ -115,7 +115,8 @@ class V19 extends Migration
                 case '_metadata':
                     $this->createCollection('identities');
                     $this->createCollection('migrations');
-                    $this->createCollection('statsLogger'); // TODO: should we do this now?
+                    // Holding off on this until a future release
+                    // $this->createCollection('statsLogger');
                     break;
                 case 'attributes':
                 case 'indexes':
@@ -417,7 +418,6 @@ class V19 extends Migration
                     }
                     break;
                 case 'stats':
-                    // TODO: should we do this now?
                     try {
                         $this->projectDB->updateAttribute($id, 'value', signed: true);
                         $this->projectDB->deleteCachedCollection($id);
@@ -425,26 +425,27 @@ class V19 extends Migration
                         Console::warning("'value' from {$id}: {$th->getMessage()}");
                     }
 
-                    try {
-                        $this->projectDB->deleteAttribute($id, 'type');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'type' from {$id}: {$th->getMessage()}");
-                    }
+                    // Holding off on these until a future release
+                    // try {
+                    //     $this->projectDB->deleteAttribute($id, 'type');
+                    //     $this->projectDB->deleteCachedCollection($id);
+                    // } catch (\Throwable $th) {
+                    //     Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    // }
 
-                    try {
-                        $this->projectDB->deleteIndex($id, '_key_metric_period_time');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
-                    }
+                    // try {
+                    //     $this->projectDB->deleteIndex($id, '_key_metric_period_time');
+                    //     $this->projectDB->deleteCachedCollection($id);
+                    // } catch (\Throwable $th) {
+                    //     Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
+                    // }
 
-                    try {
-                        $this->createIndexFromCollection($this->projectDB, $id, '_key_metric_period_time');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
-                        Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
-                    }
+                    // try {
+                    //     $this->createIndexFromCollection($this->projectDB, $id, '_key_metric_period_time');
+                    //     $this->projectDB->deleteCachedCollection($id);
+                    // } catch (\Throwable $th) {
+                    //     Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
+                    // }
                     break;
                 case 'users':
                     try {
@@ -547,7 +548,6 @@ class V19 extends Migration
     {
         switch ($document->getCollection()) {
             case '_metadata':
-                // TODO: migrate statsLogger?
                 break;
             case 'attributes':
             case 'indexes':
