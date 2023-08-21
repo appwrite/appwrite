@@ -1398,10 +1398,11 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
+    ->inject('usage')
     ->inject('mode')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, string $mode, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1619,6 +1620,21 @@ App::post('/v1/functions/:functionId/executions')
             /** @var Document $execution */
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
+
+        // TODO revise this later using route label
+        $usage
+            ->setParam('functionId', $function->getId())
+            ->setParam('executions.{scope}.compute', 1)
+            ->setParam('executionStatus', $execution->getAttribute('status', ''))
+            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
+
+        // TODO revise this later using route label
+        $usage
+            ->setParam('functionId', $function->getId())
+            ->setParam('executions.{scope}.compute', 1)
+            ->setParam('executionStatus', $execution->getAttribute('status', ''))
+            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
+
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
