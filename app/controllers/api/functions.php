@@ -200,6 +200,7 @@ App::post('/v1/functions')
             'events' => $events,
             'schedule' => $schedule,
             'scheduleInternalId' => '',
+            'scheduleId' => '',
             'timeout' => $timeout,
             'entrypoint' => $entrypoint,
             'commands' => $commands,
@@ -214,6 +215,22 @@ App::post('/v1/functions')
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
         ]));
+
+        $schedule = Authorization::skip(
+            fn () => $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'resourceType' => 'function',
+                'resourceId' => $function->getId(),
+                'resourceInternalId' => $function->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $function->getAttribute('schedule'),
+                'active' => false,
+            ]))
+        );
+        
+        $function->setAttribute('scheduleId', $schedule->getId());
+        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
@@ -235,23 +252,11 @@ App::post('/v1/functions')
                 'providerPullRequestIds' => []
             ]));
 
-            $function = $dbForProject->updateDocument('functions', $function->getId(), $function
-                ->setAttribute('repositoryId', $repository->getId())
-                ->setAttribute('repositoryInternalId', $repository->getInternalId()));
+            $function->setAttribute('repositoryId', $repository->getId());
+            $function->setAttribute('repositoryInternalId', $repository->getInternalId());
         }
 
-        $schedule = Authorization::skip(
-            fn () => $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                'resourceType' => 'function',
-                'resourceId' => $function->getId(),
-                'resourceInternalId' => $function->getInternalId(),
-                'resourceUpdatedAt' => DateTime::now(),
-                'projectId' => $project->getId(),
-                'schedule'  => $function->getAttribute('schedule'),
-                'active' => false,
-            ]))
-        );
+        $function = $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
@@ -319,10 +324,6 @@ App::post('/v1/functions')
                 roles: $target['roles']
             );
         }
-
-        $function->setAttribute('scheduleId', $schedule->getId());
-        $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
-        $dbForProject->updateDocument('functions', $function->getId(), $function);
 
         $eventsInstance->setParam('functionId', $function->getId());
 
