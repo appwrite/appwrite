@@ -200,8 +200,22 @@ class V16Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    public function variableProvider(): array
+    {
+        return [
+            'functionId' => [
+                [
+                    'resourceId' => '5e5ea5c16897e',
+                ],
+                [
+                    'functionId' => '5e5ea5c16897e',
+                ],
+            ],
+        ];
+    }
+
     /**
-     * @dataProvider usageVariableProvider
+     * @dataProvider variableProvider
      */
     public function testVariable(array $content, array $expected): void
     {
