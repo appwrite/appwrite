@@ -36,17 +36,17 @@ App::get('/v1/messaging/providers')
     $cursor = reset($cursor);
 
     if ($cursor) {
-      $providerId = $cursor->getValue();
-      $cursorDocument = Authorization::skip(fn () => $dbForProject->find('providers', [
+        $providerId = $cursor->getValue();
+        $cursorDocument = Authorization::skip(fn () => $dbForProject->find('providers', [
         Query::equal('$id', [$providerId]),
         Query::limit(1),
       ]));
 
-      if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
-        throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
-      }
+        if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+            throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
+        }
 
-      $cursor->setValue($cursorDocument[0]);
+        $cursor->setValue($cursorDocument[0]);
     }
 
     $filterQueries = Query::groupByType($queries)['filters'];
@@ -74,7 +74,7 @@ App::get('/v1/messaging/providers/:id')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
 
     $response->dynamic($provider, Response::MODEL_PROVIDER);
@@ -137,29 +137,29 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'mailgun') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($apiKey || $domain) {
       // Check if all five variables are present
-      if ($apiKey && $domain) {
-        $provider->setAttribute('credentials', [
-          'apiKey' => $apiKey,
-          'domain' => $domain
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($apiKey && $domain) {
+            $provider->setAttribute('credentials', [
+            'apiKey' => $apiKey,
+            'domain' => $domain
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -221,22 +221,22 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'sendgrid') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($apiKey) {
-      $provider->setAttribute('credentials', [
+        $provider->setAttribute('credentials', [
         'apiKey' => $apiKey
-      ]);
+        ]);
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -304,29 +304,29 @@ App::patch('/v1/messaging/providers/:id/msg91')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'msg91') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($senderId || $authKey) {
       // Check if all five variables are present
-      if ($senderId && $authKey) {
-        $provider->setAttribute('credentials', [
-          'senderId' => $senderId,
-          'authKey' => $authKey
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($senderId && $authKey) {
+            $provider->setAttribute('credentials', [
+            'senderId' => $senderId,
+            'authKey' => $authKey
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -391,29 +391,29 @@ App::patch('/v1/messaging/providers/:id/telesign')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'telesign') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($username || $password) {
       // Check if all five variables are present
-      if ($username && $password) {
-        $provider->setAttribute('credentials', [
-          'username' => $username,
-          'password' => $password
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($username && $password) {
+            $provider->setAttribute('credentials', [
+            'username' => $username,
+            'password' => $password
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -478,29 +478,29 @@ App::patch('/v1/messaging/providers/:id/textmagic')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'text-magic') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($username || $apiKey) {
       // Check if all five variables are present
-      if ($username && $apiKey) {
-        $provider->setAttribute('credentials', [
-          'username' => $username,
-          'apiKey' => $apiKey
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($username && $apiKey) {
+            $provider->setAttribute('credentials', [
+            'username' => $username,
+            'apiKey' => $apiKey
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -565,29 +565,29 @@ App::patch('/v1/messaging/providers/:id/twilio')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'twilio') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($accountSid || $authToken) {
       // Check if all five variables are present
-      if ($accountSid && $authToken) {
-        $provider->setAttribute('credentials', [
-          'accountSid' => $accountSid,
-          'authToken' => $authToken,
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($accountSid && $authToken) {
+            $provider->setAttribute('credentials', [
+            'accountSid' => $accountSid,
+            'authToken' => $authToken,
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -652,29 +652,29 @@ App::patch('/v1/messaging/providers/:id/vonage')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'vonage') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($apiKey || $apiSecret) {
       // Check if all five variables are present
-      if ($apiKey && $apiSecret) {
-        $provider->setAttribute('credentials', [
-          'apiKey' => $apiKey,
-          'apiSecret' => $apiSecret,
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($apiKey && $apiSecret) {
+            $provider->setAttribute('credentials', [
+            'apiKey' => $apiKey,
+            'apiSecret' => $apiSecret,
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -739,20 +739,20 @@ App::patch('/v1/messaging/providers/:id/fcm')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'fcm') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($serverKey) {
-      $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
+        $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -826,32 +826,32 @@ App::patch('/v1/messaging/providers/:id/apns')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
     $providerAttr = $provider->getAttribute('provider');
 
     if ($providerAttr !== 'apns') {
-      throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
     }
 
     if ($name) {
-      $provider->setAttribute('name', $name);
+        $provider->setAttribute('name', $name);
     }
 
     if ($authKey || $authKeyId || $teamId || $bundleId || $endpoint) {
       // Check if all five variables are present
-      if ($authKey && $authKeyId && $teamId && $bundleId && $endpoint) {
-        $provider->setAttribute('credentials', [
-          'authKey' => $authKey,
-          'authKeyId' => $authKeyId,
-          'teamId' => $teamId,
-          'bundleId' => $bundleId,
-          'endpoint' => $endpoint,
-        ]);
-      } else {
-        // Not all credential params are present
-        throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-      }
+        if ($authKey && $authKeyId && $teamId && $bundleId && $endpoint) {
+            $provider->setAttribute('credentials', [
+            'authKey' => $authKey,
+            'authKeyId' => $authKeyId,
+            'teamId' => $teamId,
+            'bundleId' => $bundleId,
+            'endpoint' => $endpoint,
+            ]);
+        } else {
+          // Not all credential params are present
+            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+        }
     }
 
     $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -882,7 +882,7 @@ App::delete('/v1/messaging/providers/:id')
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
 
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
@@ -917,7 +917,7 @@ App::post('/v1/messaging/messages/email')
     $provider = $dbForProject->getDocument('providers', $providerId);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
 
     $message = $dbForProject->createDocument('messages', new Document([
