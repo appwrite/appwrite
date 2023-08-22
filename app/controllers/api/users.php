@@ -114,6 +114,7 @@ App::post('/v1/users')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
@@ -146,6 +147,7 @@ App::post('/v1/users/bcrypt')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createBcryptUser')
@@ -176,6 +178,7 @@ App::post('/v1/users/md5')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createMD5User')
@@ -206,6 +209,7 @@ App::post('/v1/users/argon2')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createArgon2User')
@@ -236,6 +240,7 @@ App::post('/v1/users/sha')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createSHAUser')
@@ -273,6 +278,7 @@ App::post('/v1/users/phpass')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createPHPassUser')
@@ -303,6 +309,7 @@ App::post('/v1/users/scrypt')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createScryptUser')
@@ -346,6 +353,7 @@ App::post('/v1/users/scrypt-modified')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.create')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createScryptModifiedUser')
@@ -376,6 +384,7 @@ App::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
@@ -396,7 +405,9 @@ App::get('/v1/users')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -422,6 +433,7 @@ App::get('/v1/users/:userId')
     ->desc('Get User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
@@ -447,6 +459,7 @@ App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
@@ -474,6 +487,7 @@ App::get('/v1/users/:userId/sessions')
     ->desc('List User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'listSessions')
@@ -515,6 +529,7 @@ App::get('/v1/users/:userId/memberships')
     ->desc('List User Memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'listMemberships')
@@ -554,6 +569,7 @@ App::get('/v1/users/:userId/logs')
     ->desc('List User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'listLogs')
@@ -656,7 +672,9 @@ App::get('/v1/users/identities')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -686,6 +704,7 @@ App::patch('/v1/users/:userId/status')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
@@ -721,7 +740,6 @@ App::put('/v1/users/:userId/labels')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -760,6 +778,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->label('scope', 'users.write')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePhoneVerification')
@@ -796,6 +815,7 @@ App::patch('/v1/users/:userId/name')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateName')
@@ -833,6 +853,7 @@ App::patch('/v1/users/:userId/password')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePassword')
@@ -897,6 +918,7 @@ App::patch('/v1/users/:userId/email')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateEmail')
@@ -952,6 +974,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePhone')
@@ -996,6 +1019,7 @@ App::patch('/v1/users/:userId/verification')
     ->label('audits.event', 'verification.update')
     ->label('audits.resource', 'user/{request.userId}')
     ->label('audits.userId', '{request.userId}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateEmailVerification')
@@ -1028,6 +1052,7 @@ App::patch('/v1/users/:userId/prefs')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
+    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
@@ -1063,6 +1088,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('scope', 'users.write')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{request.userId}')
+    ->label('usage.metric', 'sessions.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSession')
@@ -1106,6 +1132,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('scope', 'users.write')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
+    ->label('usage.metric', 'sessions.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteSessions')
@@ -1148,6 +1175,7 @@ App::delete('/v1/users/:userId')
     ->label('scope', 'users.write')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{request.userId}')
+    ->label('usage.metric', 'users.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'delete')
@@ -1226,59 +1254,96 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn ($value) => "oauth-" . $value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->action(function (string $range, string $provider, Response $response, Database $dbForProject) {
 
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            METRIC_USERS,
-            METRIC_SESSIONS,
-        ];
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric] = [];
-                foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '1h',
+                    'limit' => 24,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
             ];
-        }
-    }
 
-        $response->dynamic(new Document([
-            'range' => $range,
-            'usersTotal'   => $usage[$metrics[0]],
-            'sessionsTotal' => $usage[$metrics[1]],
-        ]), Response::MODEL_USAGE_USERS);
+            $metrics = [
+                'users.$all.count.total',
+                'users.$all.requests.create',
+                'users.$all.requests.read',
+                'users.$all.requests.update',
+                'users.$all.requests.delete',
+                'sessions.$all.requests.create',
+                'sessions.$all.requests.delete',
+                "sessions.$provider.requests.create",
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
+                    $requestDocs = $dbForProject->find('stats', [
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
+
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
+                            '1h' => 3600,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'usersCount' => $stats['users.$all.count.total'] ?? [],
+                'usersCreate' => $stats['users.$all.requests.create'] ?? [],
+                'usersRead' => $stats['users.$all.requests.read'] ?? [],
+                'usersUpdate' => $stats['users.$all.requests.update'] ?? [],
+                'usersDelete' => $stats['users.$all.requests.delete'] ?? [],
+                'sessionsCreate' => $stats['sessions.$all.requests.create'] ?? [],
+                'sessionsProviderCreate' => $stats["sessions.$provider.requests.create"] ?? [],
+                'sessionsDelete' => $stats['sessions.$all.requests.delete' ?? []]
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_USERS);
     });

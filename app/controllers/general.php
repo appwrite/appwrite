@@ -107,7 +107,8 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $headers = [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen($body),
-            'X-Appwrite-Project: ' . $projectId
+            'X-Appwrite-Project: ' . $projectId,
+            'Host: ' . $host,
         ];
 
         $ch = \curl_init();
@@ -759,6 +760,7 @@ include_once __DIR__ . '/shared/api/auth.php';
 
 App::wildcard()
     ->groups(['api'])
+    ->label('scope', 'public')
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });

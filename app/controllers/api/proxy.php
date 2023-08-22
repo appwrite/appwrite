@@ -43,7 +43,7 @@ App::post('/v1/proxy/rules')
     ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Event $events, Database $dbForConsole, Database $dbForProject) {
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain || $domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed for security reasons.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
         $document = $dbForConsole->findOne('rules', [
