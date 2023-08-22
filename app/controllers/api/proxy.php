@@ -45,7 +45,7 @@ App::post('/v1/proxy/rules')
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
-        if ($domain === $mainDomain || $domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
+        if ($domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please pick another one.');
         }
 
