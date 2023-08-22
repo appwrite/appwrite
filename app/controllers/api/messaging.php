@@ -11,8 +11,9 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 
 /**
- * Email Providers 
+ * Email Providers
  */
+
 App::post('/v1/messaging/providers/mailgun')
   ->desc('Create Mailgun Provider')
   ->groups(['api', 'messaging'])
@@ -69,7 +70,7 @@ App::post('/v1/messaging/messages/email')
     $provider = $dbForProject->getDocument('providers', $providerId);
 
     if ($provider->isEmpty()) {
-      throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        throw new Exception(Exception::PROVIDER_NOT_FOUND);
     }
 
     $message = $dbForProject->createDocument('messages', new Document([
