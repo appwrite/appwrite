@@ -35,6 +35,12 @@ class V16 extends Filter
             return 'dart pub get';
         } elseif (\str_starts_with($runtime, 'php')) {
             return 'composer update --no-interaction --ignore-platform-reqs --optimize-autoloader --prefer-dist --no-dev';
+        } elseif (\str_starts_with($runtime, 'ruby')) {
+            return 'bundle install';
+        } elseif (\str_starts_with($runtime, 'swift')) {
+            return 'swift package resolve';
+        } elseif (\str_starts_with($runtime, 'dotnet')) {
+            return 'dotnet restore';
         }
 
         return '';
