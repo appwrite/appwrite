@@ -26,6 +26,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -356,7 +357,7 @@ function updateAttribute(
         );
     }
 
-    $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
+    $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collection->getId());
 
     $events
@@ -471,7 +472,9 @@ App::get('/v1/databases')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             $databaseId = $cursor->getValue();
@@ -725,7 +728,7 @@ App::post('/v1/databases/:databaseId/collections')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -788,7 +791,7 @@ App::get('/v1/databases/:databaseId/collections')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -799,7 +802,9 @@ App::get('/v1/databases/:databaseId/collections')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -844,7 +849,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled')  && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -984,7 +989,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -1050,7 +1055,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled')  && $mode !== APP_MODE_ADMIN)) {
+        if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
@@ -1684,11 +1689,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         $queries = Query::parseQueries($queries);
 
-        \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
+        \array_push(
+            $queries,
+            Query::equal('collectionId', [$collectionId]),
+            Query::equal('databaseId', [$databaseId])
+        );
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
-        $cursor = reset($cursor);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
+
+        $cursor = \reset($cursor);
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
@@ -1698,17 +1710,22 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
                 Query::equal('key', [$attributeId]),
                 Query::limit(1),
             ]));
+
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Attribute '{$attributeId}' for the 'cursor' value not found.");
             }
+
             $cursor->setValue($cursorDocument[0]);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filters = Query::groupByType($queries)['filters'];
+
+        $attributes = $dbForProject->find('attributes', $queries);
+        $total = $dbForProject->count('attributes', $filters, APP_LIMIT_COUNT);
 
         $response->dynamic(new Document([
-            'total' => $dbForProject->count('attributes', $filterQueries, APP_LIMIT_COUNT),
-            'attributes' => $dbForProject->find('attributes', $queries),
+            'attributes' => $attributes,
+            'total' => $total,
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
@@ -2541,7 +2558,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
          // Get cursor document if there was a cursor query
-         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         });
          $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2720,16 +2739,17 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND);
-            }
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $allowedPermissions = [
@@ -2752,8 +2772,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles)) {
+        if (!$isAPIKey && !$isPrivilegedUser) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -2766,7 +2785,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         $permission->getDimension()
                     ))->toString();
                     if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
                     }
                 }
             }
@@ -2936,40 +2955,30 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
-
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-            if (!$collection->getAttribute('documentSecurity', false)) {
-                $validator = new Authorization(Database::PERMISSION_READ);
-                if (!$validator->isValid($collection->getRead())) {
-                    $collection = new Document();
-                }
-            }
-        }
-
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
-        }
-
-        // Validate queries
-        $queriesValidator = new Documents($collection->getAttribute('attributes'), $collection->getAttribute('indexes'));
-        $validQueries = $queriesValidator->isValid($queries);
-        if (!$validQueries) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
         }
 
         $queries = Query::parseQueries($queries);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
-        $cursor = reset($cursor);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
+
+        $cursor = \reset($cursor);
+
         if ($cursor) {
             $documentId = $cursor->getValue();
 
@@ -2982,13 +2991,19 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filters = Query::groupByType($queries)['filters'];
 
-        $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-        $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+        try {
+            $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filters, APP_LIMIT_COUNT);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
             if ($document->isEmpty()) {
                 return false;
             }
@@ -3033,12 +3048,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             }
 
             return true;
-        };
+        });
 
-        // The linter is forcing this indentation
-    foreach ($documents as $document) {
-        $processDocument($collection, $document);
-    }
+        foreach ($documents as $document) {
+            $processDocument($collection, $document);
+        }
 
         $response->dynamic(new Document([
             'total' => $total,
@@ -3070,31 +3084,30 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
-
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND);
-            }
-        }
-
-        // Validate queries
-        $queriesValidator = new DocumentQueriesValidator($collection->getAttribute('attributes'));
-        $validQueries = $queriesValidator->isValid($queries);
-        if (!$validQueries) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $queriesValidator->getDescription());
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         $queries = Query::parseQueries($queries);
 
-        $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+        try {
+            $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3285,16 +3298,17 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND);
-            }
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for update
@@ -3314,7 +3328,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         // Users can only manage their own roles, API keys and Admin users can manage any
         $roles = Authorization::getRoles();
-        if (!Auth::isAppUser($roles) && !Auth::isPrivilegedUser($roles) && !\is_null($permissions)) {
+        if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
                     $permission = Permission::parse($permission);
@@ -3337,10 +3351,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $permissions = $document->getPermissions() ?? [];
         }
 
-        $data = \array_merge($document->getArrayCopy(), $data); // Merge existing data with new data
-        $data['$collection'] = $document->getAttribute('$collection'); // Make sure user doesn't switch collectionID
-        $data['$createdAt'] = $document->getCreatedAt();        // Make sure user doesn't switch createdAt
-        $data['$id'] = $document->getId();                      // Make sure user doesn't switch document unique ID
+        $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
@@ -3505,19 +3516,19 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('deletes')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events, Delete $deletes, string $mode) {
-
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
         $collection = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
-        if ($collection->isEmpty() || !$collection->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::COLLECTION_NOT_FOUND);
-            }
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
@@ -3527,68 +3538,18 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $checkPermissions = function (Document $collection, Document $document) use (&$checkPermissions, $dbForProject, $database) {
-            $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization(Database::PERMISSION_DELETE);
-
-            $valid = $validator->isValid($collection->getDelete());
-            if (!$documentSecurity && !$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
-
-            $valid = $valid || $validator->isValid($document->getDelete());
-            if ($documentSecurity && !$valid) {
-                throw new Exception(Exception::USER_UNAUTHORIZED);
-            }
-
-            $relationships = \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            );
-
-            foreach ($relationships as $relationship) {
-                $related = $document->getAttribute($relationship->getAttribute('key'));
-
-                if (empty($related)) {
-                    continue;
-                }
-                if (!\is_array($related)) {
-                    $related = [$related];
-                }
-
-                $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
-                    fn() => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
-                );
-
-                foreach ($related as $relation) {
-                    if (
-                        $relation instanceof Document
-                        && $relationship->getAttribute('onDelete') === Database::RELATION_MUTATE_CASCADE
-                    ) {
-                        $checkPermissions($relatedCollection, $relation);
-                    }
-                }
-            }
-        };
-
-        $checkPermissions($collection, $document);
-
-        Authorization::skip(fn() => $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
+        $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $database, $collection, $documentId) {
             try {
                 $dbForProject->deleteDocument(
                     'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
                     $documentId
                 );
+            } catch (AuthorizationException) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
             } catch (RestrictedException) {
                 throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
             }
-        }));
-
-        $dbForProject->deleteCachedDocument(
-            'database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(),
-            $documentId
-        );
+        });
 
         // Add $collectionId and $databaseId for all documents
         $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {

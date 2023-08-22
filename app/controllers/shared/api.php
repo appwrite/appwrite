@@ -220,7 +220,10 @@ App::init()
 
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 

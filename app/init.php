@@ -293,7 +293,7 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
+        $formatOptions = \json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
@@ -363,7 +363,7 @@ Database::addFilter(
             ->find('indexes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit(64),
+                Query::limit($database->getLimitForIndexes()),
             ]);
     }
 );
