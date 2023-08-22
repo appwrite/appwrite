@@ -446,7 +446,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -455,14 +455,14 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(count($response['body']), 9);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('30d', $response['body']['range']);
-        $this->assertIsArray($response['body']['requestsTotal']);
+        $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
-        $this->assertIsArray($response['body']['executionsTotal']);
-        $this->assertIsArray($response['body']['documentsTotal']);
-        $this->assertIsArray($response['body']['databasesTotal']);
-        $this->assertIsArray($response['body']['bucketsTotal']);
-        $this->assertIsArray($response['body']['usersTotal']);
-        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertIsArray($response['body']['executions']);
+        $this->assertIsArray($response['body']['documents']);
+        $this->assertIsArray($response['body']['databases']);
+        $this->assertIsArray($response['body']['buckets']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertIsArray($response['body']['storage']);
 
         /**
          * Test for FAILURE
@@ -3126,171 +3126,6 @@ class ProjectsConsoleClientTest extends Scope
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/webhooks/error', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
-    }
-
-    // Domains
-
-    /**
-     * @depends testCreateProject
-     */
-    public function testCreateProjectDomain($data): array
-    {
-        $id = $data['projectId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/domains', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => 'sub.example.com',
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        // $this->assertIsInt($response['body']['updated']);
-        $this->assertEquals('sub.example.com', $response['body']['domain']);
-        $this->assertEquals('com', $response['body']['tld']);
-        $this->assertEquals('example.com', $response['body']['registerable']);
-        $this->assertEquals(false, $response['body']['verification']);
-
-        $data = array_merge($data, ['domainId' => $response['body']['$id']]);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'domain' => '123',
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/platforms', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'type' => 'web',
-            'name' => 'Too Long Hostname',
-            'hostname' => \str_repeat("bestdomain", 25) . '.com' // 250 + 4 chars total (exactly above limit)
-        ]);
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectDomain
-     */
-    public function testListProjectDomain($data): array
-    {
-        $id = $data['projectId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/domains', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectDomain
-     */
-    public function testGetProjectDomain($data): array
-    {
-        $id = $data['projectId'] ?? '';
-        $domainId = $data['domainId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/domains/' . $domainId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals($domainId, $response['body']['$id']);
-        // $this->assertIsInt($response['body']['updated']);
-        $this->assertEquals('sub.example.com', $response['body']['domain']);
-        $this->assertEquals('com', $response['body']['tld']);
-        $this->assertEquals('example.com', $response['body']['registerable']);
-        $this->assertEquals(false, $response['body']['verification']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/domains/error', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectDomain
-     */
-    public function testUpdateProjectDomain($data): array
-    {
-        $id = $data['projectId'] ?? '';
-        $domainId = $data['domainId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/domains/' . $domainId . '/verification', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        /**
-         * Test for FAILURE
-         */
-
-        return $data;
-    }
-
-    /**
-     * @depends testCreateProjectDomain
-     */
-    public function testDeleteProjectDomain($data): array
-    {
-        $id = $data['projectId'] ?? '';
-        $domainId = $data['domainId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/domains/' . $domainId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/domains/' . $domainId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $id . '/domains/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);

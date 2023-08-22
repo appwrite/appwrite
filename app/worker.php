@@ -4,10 +4,12 @@ require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
+use Appwrite\Usage\Stats;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -86,20 +88,14 @@ Server::setResource('queueForFunctions', function (Registry $register) {
     );
 }, ['register']);
 
-Server::setResource('queueForUsage', function (Registry $register) {
-    $pools = $register->get('pools');
-    return new Usage(
-        $pools
-            ->get('queue')
-            ->pop()
-            ->getResource()
-    );
-}, ['register']);
-
 Server::setResource('log', fn() => new Log());
 
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
+}, ['register']);
+
+Server::setResource('statsd', function ($register) {
+    return $register->get('statsd');
 }, ['register']);
 
 Server::setResource('pools', function ($register) {

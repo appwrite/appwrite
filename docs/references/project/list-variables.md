@@ -1,0 +1,1 @@
+Get a list of all project variables.

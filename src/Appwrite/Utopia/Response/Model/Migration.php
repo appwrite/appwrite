@@ -30,7 +30,7 @@ class Migration extends Model
             ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Migration status ( pending, processing, failed. completed ) ',
+                'description' => 'Migration status ( pending, processing, failed, completed ) ',
                 'default' => '',
                 'example' => 'pending',
             ])

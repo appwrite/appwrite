@@ -313,6 +313,11 @@ return [
     ],
 
     /** Storage */
+    Exception::STORAGE_FILE_ALREADY_EXISTS => [
+        'name' => Exception::STORAGE_FILE_ALREADY_EXISTS,
+        'description' => 'A storage file with the requested ID already exists.',
+        'code' => 409,
+    ],
     Exception::STORAGE_FILE_NOT_FOUND => [
         'name' => Exception::STORAGE_FILE_NOT_FOUND,
         'description' => 'The requested file could not be found.',
@@ -363,6 +368,38 @@ return [
         'description' => 'The requested range is not satisfiable. Please check the value of the Range header.',
         'code' => 416,
     ],
+    Exception::STORAGE_INVALID_APPWRITE_ID => [
+        'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
+        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().',
+        'code' => 400,
+    ],
+
+    /** VCS */
+    Exception::INSTALLATION_NOT_FOUND => [
+        'name' => Exception::INSTALLATION_NOT_FOUND,
+        'description' => 'Installation with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
+        'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REPOSITORY_NOT_FOUND => [
+        'name' => Exception::REPOSITORY_NOT_FOUND,
+        'description' => 'Repository with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
+        'name' => Exception::PROVIDER_CONTRIBUTION_CONFLICT,
+        'description' => 'External contribution is already authorized.',
+        'code' => 409,
+    ],
+    Exception::GENERAL_PROVIDER_FAILURE => [
+        'name' => Exception::GENERAL_PROVIDER_FAILURE,
+        'description' => 'VCS (Version Control System) provider failed to proccess the request.',
+        'code' => 400,
+    ],
 
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [
@@ -373,6 +410,11 @@ return [
     Exception::FUNCTION_RUNTIME_UNSUPPORTED => [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
         'description' => 'The requested runtime is either inactive or unsupported. Please check the value of the _APP_FUNCTIONS_RUNTIMES environment variable.',
+        'code' => 404,
+    ],
+    Exception::FUNCTION_ENTRYPOINT_MISSING => [
+        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'description' => 'Function entrypoint is not configured. Please specify it in function settings or when making deployment.',
         'code' => 404,
     ],
 
@@ -589,6 +631,36 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ROUTER_HOST_NOT_FOUND => [
+        'name' => Exception::ROUTER_HOST_NOT_FOUND,
+        'description' => 'Host is not trusted. Add a custom domain to your project first.',
+        'code' => 404,
+    ],
+    Exception::ROUTER_DOMAIN_NOT_CONFIGURED => [
+        'name' => Exception::ROUTER_DOMAIN_NOT_CONFIGURED,
+        'description' => 'Please configure domain environment variables before using Appwrite outside of localhost.',
+        'code' => 500,
+    ],
+    Exception::RULE_RESOURCE_NOT_FOUND => [
+        'name' => Exception::RULE_RESOURCE_NOT_FOUND,
+        'description' => 'Resource could not be found. Check resourceId and resourceType.',
+        'code' => 404,
+    ],
+    Exception::RULE_NOT_FOUND => [
+        'name' => Exception::RULE_NOT_FOUND,
+        'description' => 'Rule with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::RULE_ALREADY_EXISTS => [
+        'name' => Exception::RULE_ALREADY_EXISTS,
+        'description' => 'Domain already used.',
+        'code' => 409,
+    ],
+    Exception::RULE_VERIFICATION_FAILED => [
+        'name' => Exception::RULE_VERIFICATION_FAILED,
+        'description' => 'Domain verification failed. Please check your DNS records.',
+        'code' => 401,
+    ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
         'description' => 'Provided SMTP config is invalid.',
@@ -614,21 +686,6 @@ return [
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::DOMAIN_NOT_FOUND => [
-        'name' => Exception::DOMAIN_NOT_FOUND,
-        'description' => 'Domain with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::DOMAIN_ALREADY_EXISTS => [
-        'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'The requested domain is currently in use by a project.',
-        'code' => 409,
-    ],
-    Exception::DOMAIN_FORBIDDEN => [
-        'name' => Exception::DOMAIN_FORBIDDEN,
-        'description' => 'The requested domain cannot be used as a custom domain.',
-        'code' => 403,
-    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',
@@ -638,16 +695,6 @@ return [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
         'description' => 'Variable with the same ID already exists in your project.',
         'code' => 409,
-    ],
-    Exception::DOMAIN_VERIFICATION_FAILED => [
-        'name' => Exception::DOMAIN_VERIFICATION_FAILED,
-        'description' => 'Domain verification for the requested domain has failed.',
-        'code' => 401,
-    ],
-    Exception::DOMAIN_TARGET_INVALID => [
-        'name' => Exception::DOMAIN_TARGET_INVALID,
-        'description' => 'Your Appwrite instance is not publicly accessible. Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.',
-        'code' => 501,
     ],
     Exception::GRAPHQL_NO_QUERY => [
         'name' => Exception::GRAPHQL_NO_QUERY,

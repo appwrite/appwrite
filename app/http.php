@@ -20,9 +20,12 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
+use Swoole\Runtime;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
+
+Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL);
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -61,8 +64,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
-        $pools = $register->get('pools'); /** @var Group $pools */
-        App::setResource('pools', fn() => $pools);
+        $pools = $register->get('pools');
+        /** @var Group $pools */
+        App::setResource('pools', fn () => $pools);
 
         // wait for database to be ready
         $attempts = 0;
@@ -72,7 +76,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+                $dbForConsole = $app->getResource('dbForConsole');
+                /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -221,25 +226,33 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+    App::setResource('swooleRequest', fn () => $swooleRequest);
+    App::setResource('swooleResponse', fn () => $swooleResponse);
+
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-    if (Files::isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
+    // Serve static files (console) only for main domain
+    $host = $request->getHostname() ?? '';
+    $mainDomain = App::getEnv('_APP_DOMAIN', '');
+    if ($host === $mainDomain || $host === 'localhost') {
+        if (Files::isFileLoaded($request->getURI())) {
+            $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
-        $response
-            ->setContentType(Files::getFileMimeType($request->getURI()))
-            ->addHeader('Cache-Control', 'public, max-age=' . $time)
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send(Files::getFileContents($request->getURI()));
+            $response
+                ->setContentType(Files::getFileMimeType($request->getURI()))
+                ->addHeader('Cache-Control', 'public, max-age=' . $time)
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
+                ->send(Files::getFileContents($request->getURI()));
 
-        return;
+            return;
+        }
     }
 
     $app = new App('UTC');
 
     $pools = $register->get('pools');
-    App::setResource('pools', fn() => $pools);
+    App::setResource('pools', fn () => $pools);
 
     try {
         Authorization::cleanRoles();
@@ -259,7 +272,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             }
 
             $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
-            $route = $app->match($request);
+            $route = $app->getRoute();
 
             $log = new Utopia\Logger\Log();
 
