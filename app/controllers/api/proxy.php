@@ -45,7 +45,7 @@ App::post('/v1/proxy/rules')
         if ($domain === $mainDomain || $domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed for security reasons.');
         }
-        
+
         $document = $dbForConsole->findOne('rules', [
             Query::equal('domain', [$domain]),
         ]);

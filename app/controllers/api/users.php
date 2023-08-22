@@ -405,7 +405,9 @@ App::get('/v1/users')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -670,7 +672,9 @@ App::get('/v1/users/identities')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
