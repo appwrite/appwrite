@@ -9,7 +9,7 @@ use Utopia\Database\DateTime;
 
 class V16 extends Filter
 {
-    // Convert 1.4 Data format to 1.0 format
+    // Convert 1.4 Data format to 1.3 format
     public function parse(array $content, string $model): array
     {
         $parsedResponse = $content;
@@ -17,7 +17,7 @@ class V16 extends Filter
         switch ($model) {
             case Response::MODEL_DEPLOYMENT:
                 $parsedResponse = $this->parseDeployment($parsedResponse);
-                break; 
+                break;
             case Response::MODEL_PROXY_RULE:
                 // We won't be supporting the domain endpoints for older SDKs
                 // since these APIs are internal. As such, no filtering required
