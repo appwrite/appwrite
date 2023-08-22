@@ -189,7 +189,7 @@ return [
     'proxy' => [
         'key' => 'proxy',
         'name' => 'Proxy',
-        'subtitle' => 'The Proxy Service allows you configure actions for your domains beyond DNS configuration.',
+        'subtitle' => 'The Proxy Service allows you to configure actions for your domains beyond DNS configuration.',
         'description' => '/docs/services/proxy.md',
         'controller' => 'api/proxy.php',
         'sdk' => true,
@@ -241,7 +241,7 @@ return [
     'migrations' => [
         'key' => 'migrations',
         'name' => 'Migrations',
-        'subtitle' => 'The Migrations service allows you to migrate third-party data to your Appwrite server.',
+        'subtitle' => 'The Migrations service allows you to migrate third-party data to your Appwrite project.',
         'description' => '/docs/services/migrations.md',
         'controller' => 'api/migrations.php',
         'sdk' => true,

@@ -59,7 +59,7 @@ App::post('/v1/console/assistant')
     ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
     ->label('abuse-limit', 15)
     ->label('abuse-key', 'userId:{userId}')
-    ->param('prompt', '', new Text(2000), 'Prompt')
+    ->param('prompt', '', new Text(2000), 'Prompt. A string containing questions asked to the AI assistant.')
     ->inject('response')
     ->action(function (string $prompt, Response $response) {
         $ch = curl_init('http://appwrite-assistant:3003/');

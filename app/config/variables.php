@@ -116,7 +116,7 @@ return [
             ],
             [
                 'name' => '_APP_CONSOLE_ROOT_SESSION',
-                'description' => 'Domain policy for the Appwrite console session cookie. By default, set to \'disabled\', meaning the session cookie will be set to the domain of the Appwrite console (e.g. cloud.appwrite.io). When set to \'enabled\', the session cookie will be set to the registerable domain of the Appwrite server (e.g. appwrite.io).',
+                'description' => 'Domain policy for the Appwrite console session cookie. By default, set to \'disabled\', meaning the session cookie will be set to the domain of the Appwrite console, for example, "cloud.appwrite.io". When set to \'enabled\', the session cookie will be set to the registerable domain of the Appwrite server, for example, "appwrite.io".',
                 'introduction' => '',
                 'default' => 'disabled',
                 'required' => false,
@@ -161,7 +161,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container for better resource usage.',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container to reduce resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -170,7 +170,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_PROVIDER',
-                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, to enable the logger set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\'',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -823,7 +823,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'The docker network used for communication between the executor and runtimes.',
                 'introduction' => '1.2.0',
                 'default' => 'runtimes',
                 'required' => false,
@@ -865,7 +865,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_VCS_GITHUB_APP_NAME',
-                'description' => 'Name of your GitHub app. You can find it in URL of your GitHub application.',
+                'description' => 'Name of your GitHub app. This value should be set to your GitHub application\'s URL.',
                 'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,
