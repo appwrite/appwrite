@@ -66,7 +66,7 @@ class Comment
         }
 
         //TODO: Update link to documentation
-        $text .= "**Your function has automatically been deployed.** Learn more about Appwrite Function Deployments in our [documentation](https://appwrite.io/docs/functions).\n\n";
+        $text .= "**Your function has been automatically deployed.** Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n";
 
         foreach ($projects as $projectId => $project) {
             $text .= "**{$project['name']}** `{$projectId}`\n\n";
