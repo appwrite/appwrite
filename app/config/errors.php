@@ -112,7 +112,7 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same id, email, or phone already exists in your project.',
+        'description' => 'A user with the same id, email, or phone already exists in this project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
@@ -372,17 +372,17 @@ return [
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
         'name' => Exception::INSTALLATION_NOT_FOUND,
-        'description' => 'Installation with the requested ID could not be found.',
+        'description' => 'Installation with the requested ID could not be found. Check to see if the ID is correct, or create the installation.',
         'code' => 404,
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'VCS (Version Control System) repository with the requested ID could not be found.',
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found.',
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
@@ -392,7 +392,7 @@ return [
     ],
     Exception::GENERAL_PROVIDER_FAILURE => [
         'name' => Exception::GENERAL_PROVIDER_FAILURE,
-        'description' => 'VCS (Version Control System) provider failed to proccess the request.',
+        'description' => 'VCS (Version Control System) provider failed to proccess the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
         'code' => 400,
     ],
 
@@ -688,7 +688,7 @@ return [
     ],
     Exception::VARIABLE_ALREADY_EXISTS => [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
-        'description' => 'Variable with the same ID already exists in your project. Try again with a different ID.',
+        'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
     ],
     Exception::GRAPHQL_NO_QUERY => [
