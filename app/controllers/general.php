@@ -25,6 +25,7 @@ use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
+use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -107,8 +108,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $headers = [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen($body),
-            'X-Appwrite-Project: ' . $projectId,
-            'Host: ' . $host,
+            'X-Appwrite-Project: ' . $projectId
         ];
 
         $ch = \curl_init();
@@ -309,6 +309,9 @@ App::init()
                     break;
                 case version_compare($responseFormat, '0.15.3', '<='):
                     Response::setFilter(new ResponseV15());
+                    break;
+                case version_compare($responseFormat, '1.4.0', '<'):
+                    Response::setFilter(new ResponseV16());
                     break;
                 default:
                     Response::setFilter(null);
