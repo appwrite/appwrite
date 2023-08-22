@@ -213,7 +213,7 @@ class BuildsV1 extends Worker
                     Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "security@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) .  '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) .  '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
