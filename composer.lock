@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2098172fc4b71eb0d41dcdbfea2f5061",
+    "content-hash": "3c637b7058e55050f09ff2af72c11fdb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1557,19 +1557,20 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.42.1",
+            "version": "0.42.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90"
+                "reference": "ab0e2f8ad46884f69b354cd8ee84a1a75fee26d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ff69a9b9eadc581771798833d423829c9d8cc90",
-                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ab0e2f8ad46884f69b354cd8ee84a1a75fee26d1",
+                "reference": "ab0e2f8ad46884f69b354cd8ee84a1a75fee26d1",
                 "shasum": ""
             },
             "require": {
+                "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
@@ -1607,29 +1608,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.42.1"
+                "source": "https://github.com/utopia-php/database/tree/0.42.3"
             },
-            "time": "2023-08-14T16:09:09+00:00"
+            "time": "2023-08-22T02:15:28+00:00"
         },
         {
             "name": "utopia-php/domains",
-            "version": "v1.1.0",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
+                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
+                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.0",
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0"
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -1645,6 +1648,10 @@
                 {
                     "name": "Eldad Fux",
                     "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Wess Cope",
+                    "email": "wess@appwrite.io"
                 }
             ],
             "description": "Utopia Domains library is simple and lite library for parsing web domains. This library is aiming to be as simple and easy to learn and use.",
@@ -1661,9 +1668,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/master"
+                "source": "https://github.com/utopia-php/domains/tree/0.3.2"
             },
-            "time": "2020-02-23T07:40:02+00:00"
+            "time": "2023-07-19T16:39:24+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -5377,5 +5384,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
