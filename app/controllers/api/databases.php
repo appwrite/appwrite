@@ -3270,6 +3270,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             $permissions = $document->getPermissions() ?? [];
         }
 
+        $data['$id'] = $documentId;
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
