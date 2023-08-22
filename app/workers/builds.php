@@ -113,11 +113,10 @@ class BuildsV1 extends Worker
         $durationStart = \microtime(true);
 
         $buildId = $deployment->getAttribute('buildId', '');
-        $build = null;
 
         $isNewBuild = empty($buildId);
 
-        if (empty($buildId)) {
+        if ($isNewBuild) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
@@ -150,135 +149,132 @@ class BuildsV1 extends Worker
         $isVcsEnabled = $providerRepositoryId ? true : false;
         $owner = '';
         $repositoryName = '';
-        $branchName = '';
+
+        if ($isVcsEnabled) {
+            $installation = $dbForConsole->getDocument('installations', $installationId);
+            $providerInstallationId = $installation->getAttribute('providerInstallationId');
+            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+
+            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+        }
 
         try {
-            if ($isNewBuild) {
-                if ($isVcsEnabled) {
-                    $installation = $dbForConsole->getDocument('installations', $installationId);
-                    $providerInstallationId = $installation->getAttribute('providerInstallationId');
+            if ($isNewBuild && $isVcsEnabled) {
+                $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
+                $rootDirectory = $function->getAttribute('providerRootDirectory', '');
+                $rootDirectory = \rtrim($rootDirectory, '/');
+                $rootDirectory = \ltrim($rootDirectory, '.');
+                $rootDirectory = \ltrim($rootDirectory, '/');
 
-                    $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-                    $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+                $owner = $github->getOwnerName($providerInstallationId);
+                $repositoryName = $github->getRepositoryName($providerRepositoryId);
 
-                    $tmpDirectory = '/tmp/builds/' . $buildId . '/code';
-                    $rootDirectory = $function->getAttribute('providerRootDirectory', '');
-                    $rootDirectory = \rtrim($rootDirectory, '/');
-                    $rootDirectory = \ltrim($rootDirectory, '.');
-                    $rootDirectory = \ltrim($rootDirectory, '/');
+                $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
+                $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
 
-                    $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+                $branchName = $deployment->getAttribute('providerBranch');
+                $commitHash = $deployment->getAttribute('providerCommitHash', '');
+                $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory, $commitHash);
+                $stdout = '';
+                $stderr = '';
+                Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+                $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
-                    $owner = $github->getOwnerName($providerInstallationId);
-                    $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                if ($exit !== 0) {
+                    throw new \Exception('Unable to clone code repository: ' . $stderr);
+                }
 
-                    $cloneOwner = $deployment->getAttribute('providerRepositoryOwner', $owner);
-                    $cloneRepository = $deployment->getAttribute('providerRepositoryName', $repositoryName);
+                // Build from template
+                $templateRepositoryName = $template->getAttribute('repositoryName', '');
+                $templateOwnerName = $template->getAttribute('ownerName', '');
+                $templateBranch = $template->getAttribute('branch', '');
 
-                    $branchName = $deployment->getAttribute('providerBranch');
-                    $gitCloneCommand = $github->generateCloneCommand($cloneOwner, $cloneRepository, $branchName, $tmpDirectory, $rootDirectory);
-                    $stdout = '';
-                    $stderr = '';
-                    Console::execute('mkdir -p /tmp/builds/' . $buildId, '', $stdout, $stderr);
-                    $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
+                $templateRootDirectory =  $template->getAttribute('rootDirectory', '');
+                $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+                $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+
+                if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
+                    // Clone template repo
+                    $tmpTemplateDirectory = '/tmp/builds/' . \escapeshellcmd($buildId) . '/template';
+                    $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
+                    $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to clone code repository: ' . $stderr);
                     }
 
-                    // Build from template
-                    $templateRepositoryName = $template->getAttribute('repositoryName', '');
-                    $templateOwnerName = $template->getAttribute('ownerName', '');
-                    $templateBranch = $template->getAttribute('branch', '');
+                    // Ensure directories
+                    Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
+                    Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
-                    $templateRootDirectory =  $template->getAttribute('rootDirectory', '');
-                    $templateRootDirectory = \rtrim($templateRootDirectory, '/');
-                    $templateRootDirectory = \ltrim($templateRootDirectory, '.');
-                    $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+                    // Merge template into user repo
+                    Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
-                    if (!empty($templateRepositoryName) && !empty($templateOwnerName) && !empty($templateBranch)) {
-                        // Clone template repo
-                        $tmpTemplateDirectory = '/tmp/builds/' . $buildId . '/template';
-                        $gitCloneCommandForTemplate = $github->generateCloneCommand($templateOwnerName, $templateRepositoryName, $templateBranch, $tmpTemplateDirectory, $templateRootDirectory);
-                        $exit = Console::execute($gitCloneCommandForTemplate, '', $stdout, $stderr);
+                    // Commit and push
+                    $exit = Console::execute('git config --global user.email "security@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) .  '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
 
-                        if ($exit !== 0) {
-                            throw new \Exception('Unable to clone template repository: ' . $stderr);
-                        }
-
-                        // Ensure directories
-                        Console::execute('mkdir -p ' . $tmpTemplateDirectory . '/' . $templateRootDirectory, '', $stdout, $stderr);
-                        Console::execute('mkdir -p ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
-
-                        // Merge template into user repo
-                        Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
-
-                        // Commit and push
-                        $exit = Console::execute('git config --global user.email "security@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . $function->getAttribute('name', '') .  '\' function" && git push origin ' . $branchName, '', $stdout, $stderr);
-
-                        if ($exit !== 0) {
-                            throw new \Exception('Unable to push code repository: ' . $stderr);
-                        }
-
-                        $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
-
-                        if ($exit !== 0) {
-                            throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
-                        }
-
-                        $providerCommitHash = \trim($stdout);
-                        $authorUrl = "https://github.com/$cloneOwner";
-
-                        $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
-                        $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
-                        $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
-                        $deployment->setAttribute('providerCommitMessage', "Create '" .  $function->getAttribute('name', '') . "' function");
-                        $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
-                        $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-
-                        /**
-                         * Send realtime Event
-                         */
-                        $target = Realtime::fromPayload(
-                            // Pass first, most verbose event pattern
-                            event: $allEvents[0],
-                            payload: $build,
-                            project: $project
-                        );
-                        Realtime::send(
-                            projectId: 'console',
-                            payload: $build->getArrayCopy(),
-                            events: $allEvents,
-                            channels: $target['channels'],
-                            roles: $target['roles']
-                        );
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to push code repository: ' . $stderr);
                     }
 
-                    Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . $buildId . '/code.tar.gz -C /tmp/builds/' . $buildId . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                    $exit = Console::execute('cd ' . $tmpDirectory . ' && git rev-parse HEAD', '', $stdout, $stderr);
 
-                    $deviceFunctions = $this->getFunctionsDevice($project->getId());
-
-                    $fileName = 'code.tar.gz';
-                    $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
-
-                    $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-
-                    $result = $deviceFunctions->move($fileTmpName, $path);
-
-                    if (!$result) {
-                        throw new \Exception("Unable to move file");
+                    if ($exit !== 0) {
+                        throw new \Exception('Unable to get vcs commit SHA: ' . $stderr);
                     }
 
-                    Console::execute('rm -rf /tmp/builds/' . $buildId, '', $stdout, $stderr);
+                    $providerCommitHash = \trim($stdout);
+                    $authorUrl = "https://github.com/$cloneOwner";
 
-                    $source = $path;
+                    $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
+                    $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
+                    $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
+                    $deployment->setAttribute('providerCommitMessage', "Create '" .  $function->getAttribute('name', '') . "' function");
+                    $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
+                    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
-                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
-
-                    if ($isVcsEnabled) {
-                        $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
-                    }
+                    /**
+                     * Send realtime Event
+                     */
+                    $target = Realtime::fromPayload(
+                        // Pass first, most verbose event pattern
+                        event: $allEvents[0],
+                        payload: $build,
+                        project: $project
+                    );
+                    Realtime::send(
+                        projectId: 'console',
+                        payload: $build->getArrayCopy(),
+                        events: $allEvents,
+                        channels: $target['channels'],
+                        roles: $target['roles']
+                    );
                 }
+
+                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . \escapeshellcmd($buildId) . '/code.tar.gz -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+
+                $deviceFunctions = $this->getFunctionsDevice($project->getId());
+
+                $fileName = 'code.tar.gz';
+                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+
+                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+
+                $result = $deviceFunctions->move($fileTmpName, $path);
+
+                if (!$result) {
+                    throw new \Exception("Unable to move file");
+                }
+
+                Console::execute('rm -rf /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+
+                $source = $path;
+
+                $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('source', $source));
+
+                $this->runGitAction('processing', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
             }
 
             /** Request the executor to build the code... */
@@ -330,14 +326,15 @@ class BuildsV1 extends Worker
 
             $vars = [];
 
-            // global vars
-            $vars = \array_merge($vars, \array_reduce($dbForProject->find('variables', [
+            // Global vars
+            $varsFromProject = $dbForProject->find('variables', [
                 Query::equal('resourceType', ['project']),
                 Query::limit(APP_LIMIT_SUBQUERY)
-            ]), function (array $carry, Document $var) {
-                $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-                return $carry;
-            }, []));
+            ]);
+
+            foreach ($varsFromProject as $var) {
+                $vars[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
+            }
 
             // Function vars
             $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
@@ -368,11 +365,11 @@ class BuildsV1 extends Worker
                     Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                         try {
                             $response = $this->executor->createRuntime(
-                                projectId: $project->getId(),
                                 deploymentId: $deployment->getId(),
+                                projectId: $project->getId(),
                                 source: $source,
-                                version: $function->getAttribute('version'),
                                 image: $runtime['image'],
+                                version: $function->getAttribute('version'),
                                 remove: true,
                                 entrypoint: $deployment->getAttribute('entrypoint'),
                                 destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
@@ -386,8 +383,8 @@ class BuildsV1 extends Worker
                     Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
                         try {
                             $this->executor->getLogs(
-                                projectId: $project->getId(),
                                 deploymentId: $deployment->getId(),
+                                projectId: $project->getId(),
                                 callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
                                     if ($response === null) {
                                         $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
@@ -454,15 +451,12 @@ class BuildsV1 extends Worker
             /** Update function schedule */
             $dbForConsole = $this->getConsoleDB();
             // Inform scheduler if function is still active
-            $scheduleId = $function->getAttribute('scheduleId', '');
-            if (!empty($scheduleId)) {
-                $schedule = $dbForConsole->getDocument('schedules', $scheduleId);
-                $schedule
-                    ->setAttribute('resourceUpdatedAt', DateTime::now())
-                    ->setAttribute('schedule', $function->getAttribute('schedule'))
-                    ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-                Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-            }
+            $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('schedule', $function->getAttribute('schedule'))
+                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
@@ -471,6 +465,8 @@ class BuildsV1 extends Worker
             $build->setAttribute('status', 'failed');
             $build->setAttribute('logs', $th->getMessage());
             Console::error($th->getMessage());
+            Console::error($th->getFile() . ':' . $th->getLine());
+            Console::error($th->getTraceAsString());
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -482,7 +478,7 @@ class BuildsV1 extends Worker
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
@@ -494,22 +490,26 @@ class BuildsV1 extends Worker
                 channels: $target['channels'],
                 roles: $target['roles']
             );
-        }
 
-        /** Trigger usage queue */
-        $this
-            ->getUsageQueue()
-            ->setProject($project)
-            ->addMetric(METRIC_BUILDS, 1) // per project
-            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
-            ->trigger();
+            /** Update usage stats */
+            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+                $statsd = $register->get('statsd');
+                $usage = new Stats($statsd);
+                $usage
+                    ->setParam('projectInternalId', $project->getInternalId())
+                    ->setParam('projectId', $project->getId())
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('builds.{scope}.compute', 1)
+                    ->setParam('buildStatus', $build->getAttribute('status', ''))
+                    ->setParam('buildTime', $build->getAttribute('duration'))
+                    ->setParam('networkRequestSize', 0)
+                    ->setParam('networkResponseSize', 0)
+                    ->submit();
+            }
+        }
     }
 
-    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole)
+    protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
     {
         if ($function->getAttribute('providerSilentMode', false) === true) {
             return;
@@ -550,7 +550,7 @@ class BuildsV1 extends Worker
         if (!empty($commentId)) {
             $retries = 0;
 
-            while ($retries < 10) {
+            while (true) {
                 $retries++;
 
                 try {
@@ -562,26 +562,19 @@ class BuildsV1 extends Worker
                     if ($retries >= 9) {
                         throw $err;
                     }
-                }
 
-                \sleep(1);
+                    \sleep(1);
+                }
             }
 
-            // Wrap in try/catch to ensure lock file gets deleted
-            $error = null;
+            // Wrap in try/finally to ensure lock file gets deleted
             try {
                 $comment = new Comment();
                 $comment->parseComment($github->getComment($owner, $repositoryName, $commentId));
                 $comment->addBuild($project, $function, $status, $deployment->getId(), ['type' => 'logs']);
                 $github->updateComment($owner, $repositoryName, $commentId, $comment->generateComment());
-            } catch (\Exception $e) {
-                $error = $e;
             } finally {
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
-            }
-
-            if (!empty($error)) {
-                throw $error;
             }
         }
     }

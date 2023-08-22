@@ -787,7 +787,7 @@ trait StorageBase
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
 
-        $file = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'], array_merge([
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

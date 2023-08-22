@@ -120,7 +120,7 @@ trait Base
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
     public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
     public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    public static string $UPDATE_TEAM_MEMBERSHIP_ROLES = 'update_team_membership_roles';
+    public static string $UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
     public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
@@ -1296,9 +1296,9 @@ trait Base
                         roles
                     }
                 }';
-            case self::$UPDATE_TEAM_MEMBERSHIP_ROLES:
-                return 'mutation updateTeamMembershipRoles($teamId: String!, $membershipId: String!, $roles: [String!]!){
-                    teamsUpdateMembershipRoles(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
+            case self::$UPDATE_TEAM_MEMBERSHIP:
+                return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $roles: [String!]!){
+                    teamsUpdateMembership(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
                         _id
                         userId
                         teamId
@@ -1368,8 +1368,7 @@ trait Base
                         total
                         deployments {
                             _id
-                            buildStdout
-                            buildStderr
+                            buildLogs
                         }
                     }
                 }';
@@ -1378,13 +1377,12 @@ trait Base
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
                         buildId
-                        buildStdout
-                        buildStderr
+                        buildLogs
                     }
                 }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $events: [String], $schedule: String, $timeout: Int) {
-                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $runtime: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int, $entrypoint: String!) {
+                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout, entrypoint: $entrypoint) {
                         _id
                         name
                         runtime
@@ -1392,8 +1390,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int) {
-                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String!, $entrypoint: String!, $events: [String], $schedule: String, $timeout: Int) {
+                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, entrypoint: $entrypoint, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
                         runtime
@@ -1457,15 +1455,14 @@ trait Base
                     }
                 }';
             case self::$CREATE_DEPLOYMENT:
-                return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
-                    functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
+                return 'mutation createDeployment($functionId: String!, $code: InputFile!, $activate: Boolean!) {
+                    functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate) {
                         _id
                         buildId
                         entrypoint
                         size
                         status
-                        buildStdout
-                        buildStderr
+                        buildLogs
                     }
                 }';
             case self::$DELETE_DEPLOYMENT:
@@ -1479,7 +1476,8 @@ trait Base
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$GET_EXECUTIONS:
@@ -1489,16 +1487,18 @@ trait Base
                         executions {
                             _id
                             status
-                            stderr
+                            logs
+                            errors
                         }
                     }
                 }';
             case self::$CREATE_EXECUTION:
-                return 'mutation createExecution($functionId: String!, $data: String, $async: Boolean) {
-                    functionsCreateExecution(functionId: $functionId, data: $data, async: $async) {
+                return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
+                    functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$DELETE_EXECUTION:

@@ -26,6 +26,7 @@ class FunctionsClientTest extends Scope
                 'functionId' => ID::unique(),
                 'name' => 'Test Function',
                 'runtime' => 'php-8.0',
+                'entrypoint' => 'index.php',
                 'execute' => [Role::any()->toString()],
             ]
         ];
@@ -35,7 +36,6 @@ class FunctionsClientTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
-
 
         $this->assertIsArray($function['body']['data']);
         $this->assertArrayNotHasKey('errors', $function['body']);
@@ -88,7 +88,6 @@ class FunctionsClientTest extends Scope
                 'query' => $query,
                 'variables' => [
                     'functionId' => $function['_id'],
-                    'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
                 ]

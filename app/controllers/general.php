@@ -60,7 +60,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
 
         if ($mainDomain === 'localhost') {
-            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Please configure domain environment variables before using Appwrite outside of localhost.');
+            throw new AppwriteException(AppwriteException::ROUTER_DOMAIN_NOT_CONFIGURED);
         } else {
             throw new AppwriteException(AppwriteException::ROUTER_HOST_NOT_FOUND);
         }
@@ -191,7 +191,7 @@ App::init()
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== 'appwrite') {
+        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
@@ -204,7 +204,7 @@ App::init()
         Request::setRoute($route);
 
         if ($route === null) {
-            return $response->setStatusCode(404)->send("Not Found");
+            return $response->setStatusCode(404)->send('Not Found');
         }
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -319,7 +319,7 @@ App::init()
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost') { // Localhost allowed for proxy
+            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // Localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
                 }
@@ -489,7 +489,7 @@ App::options()
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== 'appwrite') {
+        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }

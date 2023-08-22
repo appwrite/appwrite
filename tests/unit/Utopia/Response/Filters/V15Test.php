@@ -562,39 +562,39 @@ class V15Test extends TestCase
         $this->assertEquals($expected, $result);
     }
 
-    // /**
-    //  * @dataProvider createdAtUpdatedAtProvider
-    //  */
-    // public function testDomain(array $content, array $expected): void
-    // {
-    //     $model = Response::MODEL_DOMAIN;
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testDomain(array $content, array $expected): void
+    {
+        $model = Response::MODEL_DOMAIN;
 
-    //     $result = $this->filter->parse($content, $model);
+        $result = $this->filter->parse($content, $model);
 
-    //     $this->assertEquals($expected, $result);
-    // }
+        $this->assertEquals($expected, $result);
+    }
 
-    // /**
-    //  * @dataProvider createdAtUpdatedAtProvider
-    //  */
-    // public function testDomainList(array $content, array $expected): void
-    // {
-    //     $model = Response::MODEL_DOMAIN_LIST;
+    /**
+     * @dataProvider createdAtUpdatedAtProvider
+     */
+    public function testDomainList(array $content, array $expected): void
+    {
+        $model = Response::MODEL_DOMAIN_LIST;
 
-    //     $content = [
-    //         'domains' => [$content],
-    //         'total' => 1,
-    //     ];
+        $content = [
+            'domains' => [$content],
+            'total' => 1,
+        ];
 
-    //     $expected = [
-    //         'domains' => [$expected],
-    //         'total' => 1,
-    //     ];
+        $expected = [
+            'domains' => [$expected],
+            'total' => 1,
+        ];
 
-    //     $result = $this->filter->parse($content, $model);
+        $result = $this->filter->parse($content, $model);
 
-    //     $this->assertEquals($expected, $result);
-    // }
+        $this->assertEquals($expected, $result);
+    }
 
     public function executionProvider(): array
     {

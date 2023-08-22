@@ -32,6 +32,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -135,6 +136,7 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
+const APP_HOSTNAME_INTERNAL = 'appwrite';
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
@@ -185,7 +187,7 @@ const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 // Function headers
-const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length'];
+const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Usage metrics
 const METRIC_TEAMS = 'teams';
@@ -235,7 +237,6 @@ Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
-Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -769,6 +770,31 @@ $register->set('pools', function () {
     return $group;
 });
 
+$register->set('influxdb', function () {
+
+ // Register DB connection
+    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
+    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+
+    if (empty($host) || empty($port)) {
+        return;
+    }
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client->setDriver($driver);
+
+    return $client;
+});
+$register->set('statsd', function () {
+    // Register DB connection
+    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
+    $port = App::getEnv('_APP_STATSD_PORT', 8125);
+
+    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
+    $statsd = new \Domnikl\Statsd\Client($connection);
+
+    return $statsd;
+});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -872,9 +898,9 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
+App::setResource('usage', function ($register) {
+    return new Stats($register->get('statsd'));
+}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -955,7 +981,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         } else {
             if ($project->getId() === 'console') {
                 $user = $dbForConsole->getDocument('users', Auth::$unique);
@@ -971,14 +997,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
     ) { // Validate user has valid login token
-        $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+        $user = new Document([]);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         }
     }
 
@@ -1001,7 +1027,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         }
     }
 

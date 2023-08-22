@@ -1216,14 +1216,14 @@ $commonCollections = [
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['name'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_enabled'),
@@ -1302,7 +1302,7 @@ $commonCollections = [
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 8,
-                'signed' => true,
+                'signed' => false,
                 'required' => true,
                 'default' => null,
                 'array' => false,
@@ -1330,6 +1330,17 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('type'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 1,
+                'signed' => false,
+                'required' => true,
+                'default' => 0, // 0 -> count, 1 -> sum
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1348,53 +1359,14 @@ $commonCollections = [
             ],
             [
                 '$id' => ID::custom('_key_metric_period_time'),
-                'type' => Database::INDEX_UNIQUE,
+                'type' => Database::INDEX_KEY,
                 'attributes' => ['metric', 'period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
         ],
     ],
-
-    'statsLogger' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('statsLogger'),
-        'name' => 'StatsLogger',
-        'attributes' => [
-            [
-                '$id' => ID::custom('time'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => ID::custom('metrics'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 5012,
-                'signed' => true,
-                'required' => false,
-                'default' => [],
-                'array' => false,
-                'filters' => ['json'],
-            ],
-        ],
-        'indexes' => [
-            [
-                '$id' => ID::custom('_key_time'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['time'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_DESC],
-            ],
-        ],
-    ],
-];
+ ];
 
 $projectCollections = array_merge([
     'databases' => [
@@ -2078,7 +2050,7 @@ $projectCollections = array_merge([
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_name'),
@@ -2938,7 +2910,7 @@ $projectCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
-         ],
+        ],
         'indexes' => [
             [
                 '$id' => '_key_accessedAt',
@@ -3035,21 +3007,21 @@ $projectCollections = array_merge([
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_resourceId',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resourceId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => '_key_resourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
-                'lengths' => [100],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resourceId_resourceType',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceId', 'resourceType'],
+                'lengths' => [Database::LENGTH_KEY, 100],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_uniqueKey',
@@ -3607,7 +3579,7 @@ $consoleCollections = array_merge([
             [
                 '$id' => ID::custom('_key_region_resourceType_resourceUpdatedAt'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['region', 'resourceType','resourceUpdatedAt'],
+                'attributes' => ['region', 'resourceType', 'resourceUpdatedAt'],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -4213,7 +4185,7 @@ $consoleCollections = array_merge([
                 '$id' => '_key_resourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType'],
-                'lengths' => [100],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
@@ -4849,7 +4821,7 @@ $bucketCollections = [
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
                 'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
+                'orders' => [],
             ],
             [
                 '$id' => ID::custom('_key_bucket'),

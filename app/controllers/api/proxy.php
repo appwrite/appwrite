@@ -33,14 +33,19 @@ App::post('/v1/proxy/rules')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-    ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function", or "redirect"')
-    ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api" or "url", leave empty. If resourceType is "function", provide ID of the function.', true)
+    ->param('resourceType', null, new WhiteList(['api', 'function']), 'Action definition for the rule. Possible values are "api", "function"')
+    ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api", leave empty. If resourceType is "function", provide ID of the function.', true)
     ->inject('response')
     ->inject('project')
     ->inject('events')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Event $events, Database $dbForConsole, Database $dbForProject) {
+        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        if ($domain === $mainDomain || $domain === 'localhost' || $domain === APP_HOSTNAME_INTERNAL) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed for security reasons.');
+        }
+
         $document = $dbForConsole->findOne('rules', [
             Query::equal('domain', [$domain]),
         ]);
@@ -56,7 +61,7 @@ App::post('/v1/proxy/rules')
 
                 $message .= '.';
             } else {
-                $message = "Domain already assigned to different project.";
+                $message = 'Domain already assigned to different project.';
             }
 
             throw new Exception(Exception::RULE_ALREADY_EXISTS, $message);

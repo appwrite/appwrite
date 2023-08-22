@@ -72,8 +72,6 @@ services:
       - traefik.http.routers.appwrite_api_https.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
-      - traefik.http.routers.appwrite_api_https.tls.domains[0].main=$_APP_DOMAIN_FUNCTIONS
-      - traefik.http.routers.appwrite_api_https.tls.domains[0].sans=*.$_APP_DOMAIN_FUNCTIONS
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -86,7 +84,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./dev:/usr/local/dev
+      - ./dev:/usr/src/code/dev
     depends_on:
       - mariadb
       - redis
@@ -140,6 +138,8 @@ services:
       - _APP_SMTP_PASSWORD
       - _APP_USERS_STATS_RECIPIENTS
       - _APP_USAGE_STATS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_STORAGE_ANTIVIRUS
@@ -156,6 +156,8 @@ services:
       - _APP_EXECUTOR_HOST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_STATSD_HOST
+      - _APP_STATSD_PORT
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -178,6 +180,7 @@ services:
       - _APP_VCS_GITHUB_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
+      - _APP_ASSISTANT_OPENAI_API_KEY
 
   appwrite-realtime:
     entrypoint: realtime
@@ -620,11 +623,13 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
-      - ./vendor:/usr/src/code/tests
     depends_on:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_CONNECTIONS_MAX
+      - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -688,18 +693,19 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
 
-  appwrite-worker-usage:
-    entrypoint: worker-usage
+  appwrite-usage:
+    entrypoint: usage
     <<: *x-logging
-    container_name: appwrite-worker-usage
+    container_name: appwrite-usage
     image: appwrite-dev
     networks:
       - appwrite
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+      - ./dev:/usr/local/dev
     depends_on:
-      - redis
+      - influxdb
       - mariadb
     environment:
       - _APP_ENV
@@ -712,6 +718,9 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+      - _APP_USAGE_AGGREGATION_INTERVAL
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -760,8 +769,7 @@ services:
   appwrite-assistant:
     container_name: appwrite-assistant
     hostname: appwrite-assistant
-    image: appwrite/assistant:0.1.1
-    platform: linux/amd64
+    image: appwrite/assistant:0.1.3
     networks:
       - appwrite
     environment:
@@ -772,7 +780,7 @@ services:
     hostname: executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.3.1
+    image: openruntimes/executor:0.3.3
     networks:
       - appwrite
       - runtimes
@@ -869,6 +877,26 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
+
+  influxdb:
+    image: appwrite/influxdb:1.5.0
+    container_name: appwrite-influxdb
+    <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-influxdb:/var/lib/influxdb:rw
+
+  telegraf:
+    image: appwrite/telegraf:1.4.0
+    container_name: appwrite-telegraf
+    <<: *x-logging
+    networks:
+      - appwrite
+    environment:
+      - _APP_INFLUXDB_HOST
+      - _APP_INFLUXDB_PORT
+
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
@@ -879,6 +907,7 @@ services:
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
   # RedisCommander - A nice UI for exploring Redis data
   # Resque - A nice UI for exploring Redis pub/sub, view the different queues workloads, pending and failed tasks
+  # Chronograf - A nice UI for exploring InfluxDB data
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 
   maildev: # used mainly for dev tests
@@ -941,6 +970,25 @@ services:
   #     - RESQUE_WEB_PORT=6379
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
+
+  # chronograf:
+  #   image: chronograf:1.6
+  #   container_name: appwrite-chronograf
+  #   networks:
+  #   - appwrite
+  #   volumes:
+  #   - appwrite-chronograf:/var/lib/chronograf
+  #   ports:
+  #   - "8888:8888"
+  #   environment:
+  #   - INFLUXDB_URL=http://influxdb:8086
+  #   - KAPACITOR_URL=http://kapacitor:9092
+  #   - AUTH_DURATION=48h
+  #   - TOKEN_SECRET=duperduper5674829!jwt
+  #   - GH_CLIENT_ID=d86f7145a41eacfc52cc
+  #   - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
+  #   - GH_ORGS=appwrite
+
   # webgrind:
   #   image: 'jokkedk/webgrind:latest'
   #   volumes:
@@ -976,6 +1024,8 @@ volumes:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:
+  appwrite-influxdb:
+  appwrite-config:
   appwrite-functions:
   appwrite-builds:
-  appwrite-config:
+  # appwrite-chronograf:

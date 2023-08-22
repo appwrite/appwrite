@@ -449,6 +449,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'execute' => [Role::any()->toString()],
             'vars' => [
                 'key1' => 'value1',

@@ -918,14 +918,33 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
+     *
+     * @return array<mixed>
+     */
+    public function provideCustomExecutions(): array
+    {
+        return [
+            [ 'folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0' ],
+            [ 'folder' => 'node', 'name' => 'node-18.0', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '18.0' ],
+            [ 'folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9' ],
+            [ 'folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1' ],
+            // Swift and Dart disabled as it's very slow.
+            // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
+            // [ 'folder' => 'swift', 'name' => 'swift-5.5', 'entrypoint' => 'index.swift', 'runtimeName' => 'Swift', 'runtimeVersion' => '5.5' ],
+        ];
+    }
+
+    /**
+     * @param string $folder
+     * @param string $name
+     * @param string $entrypoint
+     *
+     * @dataProvider provideCustomExecutions
      * @depends testTimeout
      */
-    public function testCreateCustomPHPExecution()
+    public function testCreateCustomExecution(string $folder, string $name, string $entrypoint, string $runtimeName, string $runtimeVersion)
     {
-        $name = 'php-8.0';
-        $entrypoint = 'index.php';
         $timeout = 2;
-        $folder = 'php-fn';
         $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
         $this->packageCode($folder);
 
@@ -944,6 +963,16 @@ class FunctionsCustomServerTest extends Scope
         $functionId = $function['body']['$id'] ?? '';
 
         $this->assertEquals(201, $function['headers']['status-code']);
+
+        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'CUSTOM_VARIABLE',
+            'value' => 'variable',
+        ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
 
         $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
             'content-type' => 'multipart/form-data',
@@ -958,7 +987,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Allow build step to run
-        sleep(20);
+        sleep(60);
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
@@ -971,268 +1000,30 @@ class FunctionsCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'data' => 'foobar',
-            'async' => true
+            'body' => 'foobar',
+            'async' => false
         ]);
 
         $executionId = $execution['body']['$id'] ?? '';
+        $output = json_decode($execution['body']['responseBody'], true);
 
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        sleep(20);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $output = json_decode($executions['body']['response'], true);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $executions['body']['status']);
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
         $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
         $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
         $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
         $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('PHP', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('8.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
+        $this->assertEquals($runtimeName, $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
+        $this->assertEquals($runtimeVersion, $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
         $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
-        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
-        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
-        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-        $this->assertStringContainsString('Amazing Function Log', $executions['body']['logs']);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['total'], 1);
-        $this->assertIsArray($executions['body']['executions']);
-        $this->assertCount(1, $executions['body']['executions']);
-        $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
-        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
-
-        // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
-
-
-    public function testCreateCustomNodeExecution()
-    {
-        $name = 'node-18.0';
-        $folder = 'node';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
-        $entrypoint = 'index.js';
-        $timeout = 2;
-
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
-            'name' => 'Test ' . $name,
-            'runtime' => $name,
-            'entrypoint' => $entrypoint,
-            'events' => [],
-            'timeout' => $timeout,
-        ]);
-
-        $functionId = $function['body']['$id'] ?? '';
-
-        $this->assertEquals(201, $function['headers']['status-code']);
-
-        // Create variable
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'key' => 'CUSTOM_VARIABLE',
-            'value' => 'variable',
-        ]);
-
-        $this->assertEquals(201, $variable['headers']['status-code']);
-
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'entrypoint' => $entrypoint,
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
-            'activate' => true,
-        ]);
-
-        $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        // Allow build step to run
-        sleep(20);
-
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => 'foobar',
-            'async' => true
-        ]);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        sleep(20);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $output = json_decode($executions['body']['response'], true);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $executions['body']['status']);
-        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
-        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('Node.js', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('18.0', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
-        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
-        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
-        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['total'], 1);
-        $this->assertIsArray($executions['body']['executions']);
-        $this->assertCount(1, $executions['body']['executions']);
-        $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
-        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
-
-        // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
-
-    public function testCreateCustomPythonExecution()
-    {
-        $name = 'python-3.9';
-        $folder = 'python';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
-        $entrypoint = 'main.py';
-        $timeout = 2;
-
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
-            'name' => 'Test ' . $name,
-            'runtime' => $name,
-            'entrypoint' => $entrypoint,
-            'events' => [],
-            'timeout' => $timeout,
-        ]);
-
-        $functionId = $function['body']['$id'] ?? '';
-
-        $this->assertEquals(201, $function['headers']['status-code']);
-
-        /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'key' => 'CUSTOM_VARIABLE',
-            'value' => 'variable',
-        ]);
-
-        $this->assertEquals(201, $variable['headers']['status-code']);
-
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'entrypoint' => $entrypoint,
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
-            'activate' => true,
-        ]);
-
-        $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        // Allow build step to run
-        sleep(60);
-
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => 'foobar',
-            'async' => true
-        ]);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        sleep(60);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $output = json_decode($executions['body']['response'], true);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $executions['body']['status']);
-        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
-        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('Python', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('3.9', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
         $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
         $this->assertEquals('variable', $output['CUSTOM_VARIABLE']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
+        $this->assertEmpty($output['APPWRITE_FUNCTION_USER_ID']);
         $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
         $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
+        $this->assertStringContainsString('Amazing Function Log', $execution['body']['logs']);
+        $this->assertEmpty($execution['body']['errors']);
 
         $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -1245,7 +1036,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertCount(1, $executions['body']['executions']);
         $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
         $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
+        $this->assertStringContainsString('Amazing Function Log', $executions['body']['executions'][0]['logs']);
 
         // Cleanup : Delete function
         $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -1256,338 +1047,6 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
-
-    public function testCreateCustomDartExecution()
-    {
-        $name = 'dart-2.15';
-        $folder = 'dart';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
-        $entrypoint = 'main.dart';
-        $timeout = 2;
-
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
-            'name' => 'Test ' . $name,
-            'runtime' => $name,
-            'entrypoint' => $entrypoint,
-            'events' => [],
-            'timeout' => $timeout,
-        ]);
-
-        $functionId = $function['body']['$id'] ?? '';
-
-        $this->assertEquals(201, $function['headers']['status-code']);
-
-        /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'key' => 'CUSTOM_VARIABLE',
-            'value' => 'variable',
-        ]);
-
-        $this->assertEquals(201, $variable['headers']['status-code']);
-
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'entrypoint' => $entrypoint,
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
-            'activate' => true,
-        ]);
-
-        $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        // Allow build step to run
-        sleep(80);
-
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => 'foobar',
-            'async' => true
-        ]);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        sleep(20);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $output = json_decode($executions['body']['response'], true);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $executions['body']['status']);
-        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
-        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('Dart', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('2.15', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
-        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
-        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
-        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['total'], 1);
-        $this->assertIsArray($executions['body']['executions']);
-        $this->assertCount(1, $executions['body']['executions']);
-        $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
-        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
-
-        // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
-
-    #[Retry(count: 1)]
-    public function testCreateCustomRubyExecution()
-    {
-        $name = 'ruby-3.1';
-        $folder = 'ruby';
-        $code = realpath(__DIR__ . '/../../../resources/functions') . "/$folder/code.tar.gz";
-        $this->packageCode($folder);
-
-        $entrypoint = 'main.rb';
-        $timeout = 2;
-
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
-            'name' => 'Test ' . $name,
-            'runtime' => $name,
-            'entrypoint' => $entrypoint,
-            'events' => [],
-            'timeout' => $timeout,
-        ]);
-
-        $functionId = $function['body']['$id'] ?? '';
-
-        $this->assertEquals(201, $function['headers']['status-code']);
-
-        /** Create Variables */
-        $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'key' => 'CUSTOM_VARIABLE',
-            'value' => 'variable',
-        ]);
-
-        $this->assertEquals(201, $variable['headers']['status-code']);
-
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
-            'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'entrypoint' => $entrypoint,
-            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
-            'activate' => true,
-        ]);
-
-        $deploymentId = $deployment['body']['$id'] ?? '';
-        $this->assertEquals(202, $deployment['headers']['status-code']);
-
-        // Allow build step to run
-        sleep(60);
-
-        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'data' => 'foobar',
-            'async' => true
-        ]);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        $executionId = $execution['body']['$id'] ?? '';
-
-        sleep(20);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $output = json_decode($executions['body']['response'], true);
-
-        $this->assertEquals(200, $executions['headers']['status-code']);
-        $this->assertEquals('completed', $executions['body']['status']);
-        $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-        $this->assertEquals('Test ' . $name, $output['APPWRITE_FUNCTION_NAME']);
-        $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
-        $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-        $this->assertEquals('Ruby', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-        $this->assertEquals('3.1', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
-        $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
-        $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
-        $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
-        $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-
-        $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals($executions['headers']['status-code'], 200);
-        $this->assertEquals($executions['body']['total'], 1);
-        $this->assertIsArray($executions['body']['executions']);
-        $this->assertCount(1, $executions['body']['executions']);
-        $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
-        $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-        $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
-
-        // Cleanup : Delete function
-        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], []);
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-    }
-
-    // public function testCreateCustomSwiftExecution()
-    // {
-    //     $name = 'swift-5.5';
-    //     $folder = 'swift';
-    //     $code = realpath(__DIR__ . '/../../../resources/functions'). "/$folder/code.tar.gz";
-    //     $this->packageCode($folder);
-
-    //     $entrypoint = 'index.swift';
-    //     $timeout = 5;
-
-    //     $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'functionId' => ID::unique(),
-    //         'name' => 'Test '.$name,
-    //         'runtime' => $name,
-    //         'vars' => [
-    //             'CUSTOM_VARIABLE' => 'variable',
-    //         ],
-    //         'events' => [],
-    //         'schedule' => '',
-    //         'timeout' => $timeout,
-    //     ]);
-
-    //     $functionId = $function['body']['$id'] ?? '';
-
-    //     $this->assertEquals(201, $function['headers']['status-code']);
-
-    //     $deployment = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/deployments', array_merge([
-    //         'content-type' => 'multipart/form-data',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'entrypoint' => $entrypoint,
-    //         'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
-    //         'activate' => true,
-    //     ]);
-
-    //     $deploymentId = $deployment['body']['$id'] ?? '';
-    //     $this->assertEquals(202, $deployment['headers']['status-code']);
-
-    //     // Allow (slow) build step to run
-    //     sleep(300);
-
-    //     $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$functionId.'/executions', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'data' => 'foobar',
-    //     ]);
-
-    //     $executionId = $execution['body']['$id'] ?? '';
-
-    //     $this->assertEquals(202, $execution['headers']['status-code']);
-
-    //     $executionId = $execution['body']['$id'] ?? '';
-
-    //     sleep(10);
-
-    //     $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions/'.$executionId, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
-
-    //     $output = json_decode($executions['body']['response'], true);
-
-    //     $this->assertEquals(200, $executions['headers']['status-code']);
-    //     $this->assertEquals('completed', $executions['body']['status']);
-    //     $this->assertEquals($functionId, $output['APPWRITE_FUNCTION_ID']);
-    //     $this->assertEquals('Test '.$name, $output['APPWRITE_FUNCTION_NAME']);
-    //     $this->assertEquals($deploymentId, $output['APPWRITE_FUNCTION_DEPLOYMENT']);
-    //     $this->assertEquals('http', $output['APPWRITE_FUNCTION_TRIGGER']);
-    //     $this->assertEquals('Swift', $output['APPWRITE_FUNCTION_RUNTIME_NAME']);
-    //     $this->assertEquals('5.5', $output['APPWRITE_FUNCTION_RUNTIME_VERSION']);
-    //     $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT']);
-    //     $this->assertEquals('', $output['APPWRITE_FUNCTION_EVENT_DATA']);
-    //     $this->assertEquals('foobar', $output['APPWRITE_FUNCTION_DATA']);
-    //     $this->assertEquals('variable', $output['CUSTOM_VARIABLE']);
-    //     $this->assertEquals('', $output['APPWRITE_FUNCTION_USER_ID']);
-    //     $this->assertEmpty($output['APPWRITE_FUNCTION_JWT']);
-    //     $this->assertEquals($this->getProject()['$id'], $output['APPWRITE_FUNCTION_PROJECT_ID']);
-
-    //     $executions = $this->client->call(Client::METHOD_GET, '/functions/'.$functionId.'/executions', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()));
-
-    //     $this->assertEquals($executions['headers']['status-code'], 200);
-    //     $this->assertEquals($executions['body']['total'], 1);
-    //     $this->assertIsArray($executions['body']['executions']);
-    //     $this->assertCount(1, $executions['body']['executions']);
-    //     $this->assertEquals($executions['body']['executions'][0]['$id'], $executionId);
-    //     $this->assertEquals($executions['body']['executions'][0]['trigger'], 'http');
-    //     $this->assertStringContainsString('foobar', $executions['body']['executions'][0]['response']);
-
-    //     // Cleanup : Delete function
-    //     $response = $this->client->call(Client::METHOD_DELETE, '/functions/'. $functionId, [
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //         'x-appwrite-key' => $this->getProject()['apiKey'],
-    //     ], []);
-
-    //     $this->assertEquals(204, $response['headers']['status-code']);
-    // }
 
     public function testGetRuntimes()
     {
