@@ -6,33 +6,37 @@ use Appwrite\Utopia\Request\Filter;
 
 class V16 extends Filter
 {
-    // Convert 1.0 params to 1.4
+    // Convert 1.3 params to 1.4
     public function parse(array $content, string $model): array
     {
         switch ($model) {
             case 'functions.create':
-                // TODO: How to handle this?
-                $content['entrypoint'] = ' ';
+                $content['commands'] = $this->getCommands($content['runtime']);
                 break;
             case 'functions.update':
-                // TODO: How to handle this?
-                $content['runtime'] = ' ';
+                $content['commands'] = $this->getCommands($content['runtime']);
                 break;
             case 'functions.createExecution':
                 $content['body'] = $content['data'];
                 unset($content['data']);
                 break;
-            case 'projects.createDomain':
-            case 'projects.listDomains':
-            case 'projects.getDomain':
-            case 'projects.updateDomainVerification':
-            case 'projects.deleteDomain':
-                // These endpoints were deleted and we're accepting
-                // the breaking change since the endpoint was only
-                // used internally.
-                break;
         }
 
         return $content;
+    }
+
+    private function getCommands(string $runtime): string
+    {
+        if (\str_starts_with($runtime, 'node')) {
+            return 'npm install';
+        } elseif (\str_starts_with($runtime, 'python')) {
+            return 'pip install --no-cache-dir -r requirements.txt';
+        } elseif (\str_starts_with($runtime, 'dart')) {
+            return 'dart pub get';
+        } elseif (\str_starts_with($runtime, 'php')) {
+            return 'composer update --no-interaction --ignore-platform-reqs --optimize-autoloader --prefer-dist --no-dev';
+        }
+
+        return '';
     }
 }
