@@ -780,7 +780,7 @@ services:
     hostname: executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.3.3
+    image: openruntimes/executor:0.3.4
     networks:
       - appwrite
       - runtimes
