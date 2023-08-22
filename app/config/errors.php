@@ -313,6 +313,11 @@ return [
     ],
 
     /** Storage */
+    Exception::STORAGE_FILE_ALREADY_EXISTS => [
+        'name' => Exception::STORAGE_FILE_ALREADY_EXISTS,
+        'description' => 'A storage file with the requested ID already exists.',
+        'code' => 409,
+    ],
     Exception::STORAGE_FILE_NOT_FOUND => [
         'name' => Exception::STORAGE_FILE_NOT_FOUND,
         'description' => 'The requested file could not be found.',
@@ -409,7 +414,7 @@ return [
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
-        'description' => 'Entrypoint missing. Specify it in function settings.',
+        'description' => 'Function entrypoint is not configured. Please specify it in function settings or when making deployment.',
         'code' => 404,
     ],
 

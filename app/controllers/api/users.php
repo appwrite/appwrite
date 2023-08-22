@@ -405,7 +405,9 @@ App::get('/v1/users')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -670,7 +672,9 @@ App::get('/v1/users/identities')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1001,42 +1005,6 @@ App::patch('/v1/users/:userId/phone')
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
-
-        $events->setParam('userId', $user->getId());
-
-        $response->dynamic($user, Response::MODEL_USER);
-    });
-
-App::patch('/v1/users/:userId/verification')
-    ->desc('Update Email Verification')
-    ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].update.verification')
-    ->label('scope', 'users.write')
-    ->label('audits.event', 'verification.update')
-    ->label('audits.resource', 'user/{request.userId}')
-    ->label('audits.userId', '{request.userId}')
-    ->label('usage.metric', 'users.{scope}.requests.update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateEmailVerification')
-    ->label('sdk.description', '/docs/references/users/update-user-email-verification.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('userId', '', new UID(), 'User ID.')
-    ->param('emailVerification', false, new Boolean(), 'User email verification status.')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $events) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', $emailVerification));
 
         $events->setParam('userId', $user->getId());
 

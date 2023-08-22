@@ -7,6 +7,12 @@ use Utopia\App;
 
 class Comment
 {
+    protected array $tips = [
+        'Appwrite has a Discord community with over 16 000 members. [Come join us!](https://appwrite.io/discord)',
+        'You can use [Avatars API](https://appwrite.io/docs/client/avatars?sdk=web-default#avatarsGetQR) to generate QR code for any text or URLs',
+        '[Cursor pagination](https://appwrite.io/docs/pagination#cursor-pagination) performs better than offset pagination when loading further pages',
+    ];
+
     protected string $statePrefix = '[appwrite]: #';
 
     /**
@@ -60,7 +66,7 @@ class Comment
         }
 
         //TODO: Update link to documentation
-        $text .= "**Your function has automatically been deployed.** Learn more about Appwrite Function Deployments in our [documentation](https://appwrite.io/docs/functions).\n\n";
+        $text .= "**Your function has been automatically deployed.** Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n";
 
         foreach ($projects as $projectId => $project) {
             $text .= "**{$project['name']}** `{$projectId}`\n\n";
@@ -71,12 +77,20 @@ class Comment
             $hostname = App::getEnv('_APP_DOMAIN');
 
             foreach ($project['functions'] as $functionId => $function) {
+                $generateImage = function (string $status) use ($protocol, $hostname) {
+                    $extention = $status === 'building' ? 'gif' : 'png';
+                    $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
+                    $imageUrl = '<picture><source media="(prefers-color-scheme: dark)" srcset="' . $imagesUrl . 'status-' . $status . '-dark.' . $extention . '"><img alt="' . $status . '" height="25" align="center" src="' . $imagesUrl . 'status-' . $status . '-light.' . $extention . '"></picture>';
+
+                    return $imageUrl;
+                };
+
                 $status = match ($function['status']) {
-                    'waiting' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-waiting.png" alt="Waiting" height="25" align="center"> Waiting to build',
-                    'processing' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-building.gif" alt="Processing" height="29" align="center"> Processing',
-                    'building' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-building.gif" alt="Building" height="29" align="center"> Building',
-                    'ready' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-success.png" alt="Ready" height="25" align="center"> Ready',
-                    'failed' => '<img src="' . $protocol . '://' . $hostname . '/images/vcs/status-failed.png" alt="Failed" height="25" align="center"> Failed',
+                    'waiting' => $generateImage('waiting') . ' Waiting to build',
+                    'processing' => $generateImage('processing') . ' Processing',
+                    'building' => $generateImage('building') . ' Building',
+                    'ready' => $generateImage('ready') . ' Ready',
+                    'failed' => $generateImage('failed') . ' Failed',
                 };
 
                 if ($function['action']['type'] === 'logs') {
@@ -91,7 +105,8 @@ class Comment
             $text .= "\n\n";
         }
         //TODO: Update did you know section
-        $text .= "> **💡 Did you know?** \n Appwrite has a Discord community with over 16 000 members. [Come join us!](https://appwrite.io/discord)\n\n";
+        $tip = $this->tips[array_rand($this->tips)];
+        $text .= "> **💡 Did you know?** \n " . $tip . "\n\n";
 
         return $text;
     }
