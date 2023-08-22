@@ -105,6 +105,7 @@ class Exception extends \Exception
     public const AVATAR_ICON_NOT_FOUND             = 'avatar_icon_not_found';
 
     /** Storage */
+    public const STORAGE_FILE_ALREADY_EXISTS     = 'storage_file_already_exists';
     public const STORAGE_FILE_NOT_FOUND            = 'storage_file_not_found';
     public const STORAGE_DEVICE_NOT_FOUND          = 'storage_device_not_found';
     public const STORAGE_FILE_EMPTY                = 'storage_file_empty';
