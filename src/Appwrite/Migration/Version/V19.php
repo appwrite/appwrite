@@ -9,6 +9,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
 
 class V19 extends Migration
 {
@@ -28,9 +29,6 @@ class V19 extends Migration
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
-
-        Console::info('Migrating Databases');
-        $this->migrateDatabases();
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
@@ -59,21 +57,23 @@ class V19 extends Migration
     }
 
     /**
-     * Migrate all Databases.
+     * Migrating all Bucket tables.
      *
      * @return void
      * @throws \Exception
+     * @throws \PDOException
      */
-    private function migrateDatabases(): void
+    protected function migrateBuckets(): void
     {
-        foreach ($this->documentsIterator('databases') as $database) {
-            Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
+        foreach ($this->documentsIterator('buckets') as $bucket) {
+            $id = "bucket_{$bucket->getInternalId()}";
+            Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
-            $databaseTable = "database_{$database->getInternalId()}";
-
-            foreach ($this->documentsIterator($databaseTable) as $collection) {
-                $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
-                Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
+            try {
+                $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId', 'files');
+                $this->projectDB->deleteCachedCollection($id);
+            } catch (\Throwable $th) {
+                Console::warning("'bucketInternalId' from {$id}: {$th->getMessage()}");
             }
         }
     }
@@ -82,6 +82,8 @@ class V19 extends Migration
      * Migrate all Collections.
      *
      * @return void
+     * @throws \Throwable
+     * @throws Exception
      */
     private function migrateCollections(): void
     {
@@ -93,7 +95,6 @@ class V19 extends Migration
         $collections = $this->collections[$collectionType];
         foreach ($collections as $collection) {
             $id = $collection['$id'];
-
 
             if ($id === 'schedules' && $internalProjectId === 'console') {
                 continue;
@@ -114,23 +115,23 @@ class V19 extends Migration
                 case 'indexes':
                     try {
                         $this->projectDB->updateAttribute($id, 'databaseInternalId', required: true);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'databaseInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->updateAttribute($id, 'collectionInternalId', required: true);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'collectionInternalId' from {$id}: {$th->getMessage()}");
                     }
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'error');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'error' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'buckets':
                     // Recreate indexes so they're the right size
@@ -140,7 +141,6 @@ class V19 extends Migration
                     foreach ($indexesToDelete as $index) {
                         try {
                             $this->projectDB->deleteIndex($id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -149,52 +149,59 @@ class V19 extends Migration
                     $indexesToCreate = [
                         ...$indexesToDelete
                     ];
+
                     foreach ($indexesToCreate as $index) {
                         try {
                             $this->createIndexFromCollection($this->projectDB, $id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'builds':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'certificates':
                     try {
                         $this->projectDB->renameAttribute($id, 'log', 'logs');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'errors' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->updateAttribute($id, 'logs', size: 1000000);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'errors' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'databases':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'enabled' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'deployments':
                     $attributesToCreate = [
@@ -205,7 +212,6 @@ class V19 extends Migration
                     foreach ($attributesToCreate as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("$attribute from {$id}: {$th->getMessage()}");
                         }
@@ -221,7 +227,6 @@ class V19 extends Migration
                     foreach ($indexesToDelete as $index) {
                         try {
                             $this->projectDB->deleteIndex($id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -235,47 +240,47 @@ class V19 extends Migration
                     foreach ($indexesToCreate as $index) {
                         try {
                             $this->createIndexFromCollection($this->projectDB, $id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'executions':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'functionInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'functionInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->renameAttribute($id, 'stderr', 'errors');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'errors' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->renameAttribute($id, 'stdout', 'logs');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->renameAttribute($id, 'statusCode', 'responseStatusCode');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'responseStatusCode' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'files':
                     // Recreate indexes so they're the right size
@@ -287,23 +292,22 @@ class V19 extends Migration
                     foreach ($indexesToDelete as $index) {
                         try {
                             $this->projectDB->deleteIndex($id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
 
-                    $indexesToCreate = [
-                        ...$indexesToDelete
-                    ];
+                    $indexesToCreate = $indexesToDelete;
                     foreach ($indexesToCreate as $index) {
                         try {
                             $this->createIndexFromCollection($this->projectDB, $id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'functions':
                     $attributesToCreate = [
@@ -327,7 +331,6 @@ class V19 extends Migration
                     foreach ($attributesToCreate as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                         }
@@ -342,7 +345,6 @@ class V19 extends Migration
                     foreach ($indexesToDelete as $index) {
                         try {
                             $this->projectDB->deleteIndex($id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
@@ -359,28 +361,34 @@ class V19 extends Migration
                     foreach ($indexesToCreate as $index) {
                         try {
                             $this->createIndexFromCollection($this->projectDB, $id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'memberships':
                     try {
                         $this->projectDB->updateAttribute($id, 'teamInternalId', required: true);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     // Intentional fall through to update memberships.userInternalId
                 case 'sessions':
                 case 'tokens':
                     try {
                         $this->projectDB->updateAttribute($id, 'userInternalId', required: true);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'domains':
                 case 'keys':
@@ -388,10 +396,12 @@ class V19 extends Migration
                 case 'webhooks':
                     try {
                         $this->projectDB->updateAttribute($id, 'projectInternalId', required: true);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'projectInternalId' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'projects':
                     $attributesToCreate = [
@@ -402,17 +412,18 @@ class V19 extends Migration
                     foreach ($attributesToCreate as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
                             Console::warning($th->getTraceAsString());
                         }
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'stats':
                     try {
                         $this->projectDB->updateAttribute($id, 'value', signed: true);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'value' from {$id}: {$th->getMessage()}");
                     }
@@ -438,25 +449,25 @@ class V19 extends Migration
                     // } catch (\Throwable $th) {
                     //     Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
                     // }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'users':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'labels');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'labels' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'accessedAt');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'accessedAt' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->updateAttribute($id, 'search', filters: ['userSearch']);
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'search' from {$id}: {$th->getMessage()}");
                     }
@@ -466,39 +477,37 @@ class V19 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'_key_accessedAt' from {$id}: {$th->getMessage()}");
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 case 'variables':
                     try {
                         $this->projectDB->deleteIndex($id, '_key_function');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'_key_function' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->deleteIndex($id, '_key_uniqueKey');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'_key_uniqueKey' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'resourceType');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'resourceType' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->renameAttribute($id, 'functionInternalId', 'resourceInternalId');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->renameAttribute($id, 'functionId', 'resourceId');
-                        $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'resourceId' from {$id}: {$th->getMessage()}");
                     }
@@ -512,11 +521,13 @@ class V19 extends Migration
                     foreach ($indexesToCreate as $index) {
                         try {
                             $this->createIndexFromCollection($this->projectDB, $id, $index);
-                            $this->projectDB->deleteCachedCollection($id);
                         } catch (\Throwable $th) {
                             Console::warning("'$index' from {$id}: {$th->getMessage()}");
                         }
                     }
+
+                    $this->projectDB->deleteCachedCollection($id);
+
                     break;
                 default:
                     break;
@@ -535,8 +546,6 @@ class V19 extends Migration
     protected function fixDocument(Document $document): Document
     {
         switch ($document->getCollection()) {
-            case '_metadata':
-                break;
             case 'attributes':
             case 'indexes':
                 $status = $document->getAttribute('status', '');
@@ -549,9 +558,10 @@ class V19 extends Migration
                 $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
 
-                // TODO: how to combine stderr & stdout > logs?
+                $stdout = $document->getAttribute('stdout', '');
+                $stderr = $document->getAttribute('stderr', '');
+                $document->setAttribute('logs', $stdout . PHP_EOL . $stderr);
                 break;
-            case 'collections':
             case 'databases':
                 $document->setAttribute('enabled', true);
                 break;
@@ -582,6 +592,7 @@ class V19 extends Migration
                 $document->setAttribute('logging', true);
                 $document->setAttribute('version', 'v2');
                 $deploymentId = $document->getAttribute('deployment');
+
                 if (!empty($deploymentId)) {
                     $deployment = $this->projectDB->getDocument('deployments', $deploymentId);
                     $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
@@ -603,9 +614,6 @@ class V19 extends Migration
                 $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
                 break;
             case 'projects':
-                /**
-                 * Bump version number.
-                 */
                 $document->setAttribute('version', '1.4.0');
 
                 $databases = Config::getParam('pools-database', []);
@@ -645,27 +653,5 @@ class V19 extends Migration
         }
 
         return $document;
-    }
-
-    /**
-     * Migrating all Bucket tables.
-     *
-     * @return void
-     * @throws \Exception
-     * @throws \PDOException
-     */
-    protected function migrateBuckets(): void
-    {
-        foreach ($this->documentsIterator('buckets') as $bucket) {
-            $id = "bucket_{$bucket->getInternalId()}";
-            Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
-
-            try {
-                $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId', 'files');
-                $this->projectDB->deleteCachedCollection($id);
-            } catch (\Throwable $th) {
-                Console::warning("'bucketInternalId' from {$id}: {$th->getMessage()}");
-            }
-        }
     }
 }

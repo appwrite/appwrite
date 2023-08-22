@@ -159,12 +159,12 @@ abstract class Migration
                         $old = $document->getArrayCopy();
                         $new = call_user_func($callback, $document);
 
-                        if (is_null($new) || !self::hasDifference($new->getArrayCopy(), $old)) {
+                        if (is_null($new) || $new->getArrayCopy() == $old) {
                             return;
                         }
 
                         try {
-                            $new = $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
                         } catch (\Throwable $th) {
                             Console::error('Failed to update document: ' . $th->getMessage());
                             return;
@@ -208,32 +208,6 @@ abstract class Migration
                 $nextDocument = end($documents);
             }
         } while (!is_null($nextDocument));
-    }
-
-    /**
-     * Checks 2 arrays for differences.
-     *
-     * @param array $array1
-     * @param array $array2
-     * @return bool
-     */
-    public static function hasDifference(array $array1, array $array2): bool
-    {
-        foreach ($array1 as $key => $value) {
-            if (is_array($value)) {
-                if (!isset($array2[$key]) || !is_array($array2[$key])) {
-                    return true;
-                } else {
-                    if (self::hasDifference($value, $array2[$key])) {
-                        return true;
-                    }
-                }
-            } elseif (!array_key_exists($key, $array2) || $array2[$key] !== $value) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -302,17 +276,22 @@ abstract class Migration
     public function createAttributeFromCollection(Database $database, string $collectionId, string $attributeId, string $from = null): void
     {
         $from ??= $collectionId;
+
         $collectionType = match ($this->project->getInternalId()) {
             'console' => 'console',
             default => 'projects',
         };
+
         if ($from === 'files') {
             $collectionType = 'buckets';
         }
+
         $collection = $this->collections[$collectionType][$from] ?? null;
+
         if (is_null($collection)) {
             throw new Exception("Collection {$from} not found");
         }
+
         $attributes = $collection['attributes'];
 
         $attributeKey = array_search($attributeId, array_column($attributes, '$id'));
@@ -355,15 +334,18 @@ abstract class Migration
     public function createIndexFromCollection(Database $database, string $collectionId, string $indexId, string $from = null): void
     {
         $from ??= $collectionId;
+
         $collectionType = match ($this->project->getInternalId()) {
             'console' => 'console',
             default => 'projects',
         };
+
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if (is_null($collection)) {
             throw new Exception("Collection {$collectionId} not found");
         }
+
         $indexes = $collection['indexes'];
 
         $indexKey = array_search($indexId, array_column($indexes, '$id'));
