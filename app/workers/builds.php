@@ -86,6 +86,10 @@ class BuildsV1 extends Worker
             throw new Exception('Deployment not found', 404);
         }
 
+        if (empty($deployment->getAttribute('entrypoint', ''))) {
+            throw new Exception('Function entrypoint is not configured. Please specify it in function settings or when making deployment.', 500);
+        }
+
         $runtimes = Config::getParam('runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
