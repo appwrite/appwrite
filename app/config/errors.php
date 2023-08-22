@@ -117,7 +117,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked.',
+        'description' => 'The current user has been blocked. You can unblock the user by making a request to the Account API\'s "Update Status" endpoint or in the Appwrite Console\'s Auth section.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -177,12 +177,12 @@ return [
     ],
     Exception::USER_PASSWORD_RECENTLY_USED => [
         'name' => Exception::USER_PASSWORD_RECENTLY_USED,
-        'description' => 'The password you are trying to use is similar to your previous password. Please choose a stronger password.',
+        'description' => 'The password you are trying to use is similar to your previous password. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
     Exception::USER_PASSWORD_PERSONAL_DATA => [
         'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
-        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. Please choose a different password and try again.',
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
     Exception::USER_SESSION_NOT_FOUND => [
@@ -192,7 +192,7 @@ return [
     ],
     Exception::USER_IDENTITY_NOT_FOUND => [
         'name' => Exception::USER_IDENTITY_NOT_FOUND,
-        'description' => 'The identity could not be found.',
+        'description' => 'The identity could not be found. [TODO @meldiron]',
         'code' => 404,
     ],
     Exception::USER_UNAUTHORIZED => [
@@ -254,7 +254,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid.',
+        'description' => 'The team invitation secret is invalid. Try requesting a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -269,7 +269,7 @@ return [
     ],
     Exception::TEAM_ALREADY_EXISTS => [
         'name' => Exception::TEAM_ALREADY_EXISTS,
-        'description' => 'Team with requested ID already exists.',
+        'description' => 'Team with requested ID already exists. Please choose a different ID and try again.',
         'code' => 409,
     ],
 
@@ -281,7 +281,7 @@ return [
     ],
     Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
         'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
-        'description' => 'Membership already confirmed',
+        'description' => 'Membership already confirmed.',
         'code' => 409,
     ],
 
@@ -345,7 +345,7 @@ return [
     ],
     Exception::STORAGE_BUCKET_ALREADY_EXISTS => [
         'name' => Exception::STORAGE_BUCKET_ALREADY_EXISTS,
-        'description' => 'A storage bucket with the requested ID already exists.',
+        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
         'code' => 409,
     ],
     Exception::STORAGE_BUCKET_NOT_FOUND => [
@@ -365,7 +365,7 @@ return [
     ],
     Exception::STORAGE_INVALID_APPWRITE_ID => [
         'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
-        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().',
+        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is a valid id and not unique().',
         'code' => 400,
     ],
 
@@ -409,7 +409,7 @@ return [
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
-        'description' => 'Entrypoint missing. Specify it in function settings.',
+        'description' => 'Entrypoint for your Appwrite Function is missing. Please update the entry point under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
 
@@ -465,7 +465,7 @@ return [
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists.',
+        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
         'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
@@ -487,17 +487,17 @@ return [
     ],
     Exception::DOCUMENT_MISSING_DATA => [
         'name' => Exception::DOCUMENT_MISSING_DATA,
-        'description' => 'The document data is missing. You must provide the document data.',
+        'description' => 'The document data is missing. Try again with document data populated',
         'code' => 400,
     ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document data and permissions are missing. You must provide either the document data or permissions to be updated.',
+        'description' => 'The document data and permissions are missing. You must provide either document data or permissions to be updated.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists.',
+        'description' => 'Document with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
         'code' => 409,
     ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
@@ -539,7 +539,7 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists.',
+        'description' => 'Attribute with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
@@ -571,7 +571,7 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested ID already exists.',
+        'description' => 'Index with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
         'code' => 409,
     ],
     Exception::INDEX_INVALID => [
@@ -588,7 +588,7 @@ return [
     ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
-        'description' => 'Project with the requested ID already exists.',
+        'description' => 'Project with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
         'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
@@ -628,37 +628,37 @@ return [
     ],
     Exception::ROUTER_HOST_NOT_FOUND => [
         'name' => Exception::ROUTER_HOST_NOT_FOUND,
-        'description' => 'Host is not trusted. Add a custom domain to your project first.',
+        'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
         'code' => 404,
     ],
     Exception::ROUTER_DOMAIN_NOT_CONFIGURED => [
         'name' => Exception::ROUTER_DOMAIN_NOT_CONFIGURED,
-        'description' => 'Please configure domain environment variables before using Appwrite outside of localhost.',
+        'description' => 'Domain environment variables not configured. Please configure domain environment variables before using Appwrite outside of localhost.',
         'code' => 500,
     ],
     Exception::RULE_RESOURCE_NOT_FOUND => [
         'name' => Exception::RULE_RESOURCE_NOT_FOUND,
-        'description' => 'Resource could not be found. Check resourceId and resourceType.',
+        'description' => 'Resource could not be found. Please check if the resourceId and resourceType are correct, or if the resource actually exists.',
         'code' => 404,
     ],
     Exception::RULE_NOT_FOUND => [
         'name' => Exception::RULE_NOT_FOUND,
-        'description' => 'Rule with the requested ID could not be found.',
+        'description' => 'Rule with the requested ID could not be found. Please check if the ID provided is correct or if the rule actually exists.',
         'code' => 404,
     ],
     Exception::RULE_ALREADY_EXISTS => [
         'name' => Exception::RULE_ALREADY_EXISTS,
-        'description' => 'Domain already used.',
+        'description' => 'Domain already used. Please try again with a different domain.',
         'code' => 409,
     ],
     Exception::RULE_VERIFICATION_FAILED => [
         'name' => Exception::RULE_VERIFICATION_FAILED,
-        'description' => 'Domain verification failed. Please check your DNS records.',
+        'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 401,
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
-        'description' => 'Provided SMTP config is invalid.',
+        'description' => 'Provided SMTP config is invalid. Please check the configured values and try again.',
         'code' => 400,
     ],
     Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
@@ -688,7 +688,7 @@ return [
     ],
     Exception::VARIABLE_ALREADY_EXISTS => [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
-        'description' => 'Variable with the same ID already exists in your project.',
+        'description' => 'Variable with the same ID already exists in your project. Try again with a different ID.',
         'code' => 409,
     ],
     Exception::GRAPHQL_NO_QUERY => [
@@ -705,17 +705,17 @@ return [
     /** Migrations */
     Exception::MIGRATION_NOT_FOUND => [
         'name' => Exception::MIGRATION_NOT_FOUND,
-        'description' => 'Migration with the requested ID could not be found.',
+        'description' => 'Migration with the requested ID could not be found. Please verify that the provided ID is correct and try again.',
         'code' => 404,
     ],
     Exception::MIGRATION_ALREADY_EXISTS => [
         'name' => Exception::MIGRATION_ALREADY_EXISTS,
-        'description' => 'Migration with the requested ID already exists.',
+        'description' => 'Migration with the requested ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
     Exception::MIGRATION_IN_PROGRESS => [
         'name' => Exception::MIGRATION_IN_PROGRESS,
-        'description' => 'Migration is already in progress.',
+        'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
     ],
 ];
