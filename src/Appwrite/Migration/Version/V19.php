@@ -39,21 +39,8 @@ class V19 extends Migration
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
 
-        try {
-            $this->projectDB->deleteAttribute('projects', 'domains');
-            $this->projectDB->deleteCachedCollection('projects');
-        } catch (\Throwable $th) {
-            Console::warning("'domains' from projects: {$th->getMessage()}");
-        }
-
-        try {
-            $this->projectDB->deleteAttribute('functions', 'schedule');
-            $this->projectDB->deleteCachedCollection('functions');
-        } catch (\Throwable $th) {
-            Console::warning("'schedule' from functions: {$th->getMessage()}");
-        }
-
-        // TODO: delete builds stderr and stdout
+        Console::log('Cleaning Up Collections');
+        $this->cleanCollections();
     }
 
     /**
@@ -124,6 +111,7 @@ class V19 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'collectionInternalId' from {$id}: {$th->getMessage()}");
                     }
+
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'error');
                     } catch (\Throwable $th) {
@@ -653,5 +641,38 @@ class V19 extends Migration
         }
 
         return $document;
+    }
+
+    private function cleanCollections(): void
+    {
+        try {
+            $this->projectDB->deleteAttribute('projects', 'domains');
+        } catch (\Throwable $th) {
+            Console::warning("'domains' from projects: {$th->getMessage()}");
+        }
+
+        $this->projectDB->deleteCachedCollection('projects');
+
+        try {
+            $this->projectDB->deleteAttribute('functions', 'schedule');
+        } catch (\Throwable $th) {
+            Console::warning("'schedule' from functions: {$th->getMessage()}");
+        }
+
+        $this->projectDB->deleteCachedCollection('functions');
+
+        try {
+            $this->projectDB->deleteAttribute('builds', 'stderr');
+        } catch (\Throwable $th) {
+            Console::warning("'stderr' from builds: {$th->getMessage()}");
+        }
+
+        try {
+            $this->projectDB->deleteAttribute('builds', 'stdout');
+        } catch (\Throwable $th) {
+            Console::warning("'stdout' from builds: {$th->getMessage()}");
+        }
+
+        $this->projectDB->deleteCachedCollection('builds');
     }
 }
