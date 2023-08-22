@@ -1029,6 +1029,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
+    ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
     ->inject('request')
@@ -1038,7 +1040,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -1047,7 +1049,14 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $entrypoint = $function->getAttribute('entrypoint', '');
+        if ($entrypoint === null) {
+            $entrypoint = $function->getAttribute('entrypoint', '');
+        }
+
+        if ($commands === null) {
+            $commands = $function->getAttribute('entrypoint', '');
+        }
+
         $commands = $function->getAttribute('commands', '');
 
         if (empty($entrypoint)) {
