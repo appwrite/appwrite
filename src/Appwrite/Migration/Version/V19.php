@@ -487,7 +487,7 @@ class V19 extends Migration
                         $this->projectDB->deleteIndex($id, '_key_uniqueKey');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'_key_function' from {$id}: {$th->getMessage()}");
+                        Console::warning("'_key_uniqueKey' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
@@ -508,12 +508,12 @@ class V19 extends Migration
                         $this->projectDB->renameAttribute($id, 'functionId', 'resourceId');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
-                        Console::warning("'resourceInternalId' from {$id}: {$th->getMessage()}");
+                        Console::warning("'resourceId' from {$id}: {$th->getMessage()}");
                     }
 
                     $indexesToCreate = [
                         '_key_resourceInternalId',
-                        '_key_resourceId',
+                        '_key_resourceId_resourceType',
                         '_key_resourceType',
                         '_key_uniqueKey',
                     ];
