@@ -25,7 +25,7 @@ use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
-use Appwrite\Utopia\Response\Filters\V15 as ResponseV16;
+use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
