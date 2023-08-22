@@ -696,7 +696,11 @@ return [
     Exception::PROVIDER_NOT_FOUND => [
         'name' => Exception::PROVIDER_NOT_FOUND,
         'description' => 'Provider with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_INCORRECT_TYPE => [
+        'name' => Exception::PROVIDER_INCORRECT_TYPE,
+        'description' => 'Provider with the request ID is of incorrect type: ',
         'code' => 400,
-
     ]
 ];

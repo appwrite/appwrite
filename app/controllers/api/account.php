@@ -3051,8 +3051,7 @@ App::post('/v1/account/targets')
         ]));
         $dbForProject->deleteCachedDocument('users', $user->getId());
         $events
-            ->setParam('userId', $userId)
-            ->setParam('targetId', $targetId);
+            ->setParam('userId', $userId);
         $response
         ->setStatusCode(Response::STATUS_CODE_CREATED)
         ->dynamic($target, Response::MODEL_TARGET);
@@ -3097,8 +3096,7 @@ App::patch('/v1/account/targets/:targetId/identifier')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
-            ->setParam('userId', $userId)
-            ->setParam('targetId', $targetId);
+            ->setParam('userId', $userId);
 
         $response
         ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3145,7 +3143,6 @@ App::delete('/v1/account/targets/:targetId')
 
         $events
             ->setParam('userId', $userId)
-            ->setParam('targetId', $targetId)
             ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();

@@ -214,6 +214,7 @@ class Exception extends \Exception
 
     /** Provider */
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
+    public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
 
     protected $type = '';
     protected $errors = [];
