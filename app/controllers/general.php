@@ -106,8 +106,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         $headers = [
             'Content-Type: application/json',
             'Content-Length: ' . \strlen($body),
-            'X-Appwrite-Project: ' . $projectId,
-            'Host: ' . $host,
+            'X-Appwrite-Project: ' . $projectId
         ];
 
         $ch = \curl_init();
