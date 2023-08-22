@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Hash\Sha;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -501,13 +502,20 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
+            $uploaded = $file->getAttribute('chunksUploaded', 0);
             $metadata = $file->getAttribute('metadata', []);
+
             if ($chunk === -1) {
                 $chunk = $chunks;
+            }
+
+            if ($uploaded === $chunks) {
+                throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
             }
         }
 
         $chunksUploaded = $deviceFiles->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
         }
