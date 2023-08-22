@@ -47,7 +47,7 @@ function getConsoleDB(): Database
 
     $database = new Database($dbAdapter, getCache());
 
-    $database->setNamespace('console');
+    $database->setNamespace('_console');
 
     return $database;
 }
