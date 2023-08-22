@@ -47,7 +47,7 @@ class MessagingV1 extends Worker
         };
     }
 
-    function push($record): ?PushAdapter
+    public function push($record): ?PushAdapter
     {
         $credentials = $record->getAttribute('credentials');
         return match ($record->getAttribute('provider')) {
@@ -106,7 +106,7 @@ class MessagingV1 extends Worker
       // Send the message using respective adapter
     }
 
-    function shutdown(): void
+    public function shutdown(): void
     {
     }
 }
