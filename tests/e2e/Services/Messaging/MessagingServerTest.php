@@ -65,7 +65,7 @@ class MessagingServerTest extends Scope
         $providers = [];
 
         foreach (\array_keys($providersParams) as $key) {
-            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/'.$key, [
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/' . $key, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -132,7 +132,7 @@ class MessagingServerTest extends Scope
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/'. $providers[$index]['$id'] . '/' . $key, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $providers[$index]['$id'] . '/' . $key, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -148,7 +148,8 @@ class MessagingServerTest extends Scope
     /**
      * @depends testUpdateProviders
      */
-    public function testListProviders(array $providers) {
+    public function testListProviders(array $providers)
+    {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -161,8 +162,9 @@ class MessagingServerTest extends Scope
     /**
      * @depends testUpdateProviders
      */
-    public function testGetProvider(array $providers) {
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' .$providers[0]['$id'], [
+    public function testGetProvider(array $providers)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -174,9 +176,10 @@ class MessagingServerTest extends Scope
     /**
      * @depends testUpdateProviders
      */
-    public function testDeleteProvider(array $providers) {
+    public function testDeleteProvider(array $providers)
+    {
         foreach ($providers as $provider) {
-            $response = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/'. $provider['$id'], [
+            $response = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $provider['$id'], [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
