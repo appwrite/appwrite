@@ -456,7 +456,7 @@ class FunctionsCustomClientTest extends Scope
             'data' => 'foobar'
         ]);
 
-        $this->assertEquals(200, $execution['headers']['status-code']);
+        $this->assertEquals(201, $execution['headers']['status-code']);
 
         $base = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
