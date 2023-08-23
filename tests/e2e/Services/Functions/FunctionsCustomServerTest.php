@@ -882,6 +882,8 @@ class FunctionsCustomServerTest extends Scope
             'activate' => true,
         ]);
 
+        $deploymentId = $deployment['body']['$id'] ?? '';
+
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
         // Poll until deployment is built
