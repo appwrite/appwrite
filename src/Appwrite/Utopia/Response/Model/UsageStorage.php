@@ -21,22 +21,23 @@ class UsageStorage extends Model
                 'description' => 'Aggregated stats for total number of buckets.',
                 'default' => [],
                 'example' => [],
-                'array' => true,
+                'array' => true
             ])
             ->addRule('filesTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of files.',
                 'default' => [],
                 'example' => [],
-                'array' => true,
+                'array' => true
             ])
             ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
                 'example' => [],
-                'array' => true,
-            ]);
+                'array' => true
+            ])
+        ;
     }
 
     /**

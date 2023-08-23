@@ -2,43 +2,43 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PasswordHistory;
-use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Response;
-use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Locale\Locale;
+use Appwrite\Extend\Exception;
+use Utopia\Database\Document;
+use Utopia\Database\DateTime;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Validator\UID;
+use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
-use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Text;
+use Utopia\Validator\Boolean;
+use MaxMind\Db\Reader;
+use Utopia\Validator\Integer;
+use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PersonalData;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $events): Document
@@ -46,14 +46,14 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
-    if (! empty($email)) {
+    if (!empty($email)) {
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
         $identityWithMatchingEmail = $dbForProject->findOne('identities', [
             Query::equal('providerEmail', [$email]),
         ]);
-        if ($identityWithMatchingEmail !== false && ! $identityWithMatchingEmail->isEmpty()) {
+        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
     }
@@ -65,12 +65,12 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
-            if (! $personalDataValidator->isValid($password)) {
+            if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
 
-        $password = (! empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
+        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = $dbForProject->createDocument('users', new Document([
             '$id' => $userId,
             '$permissions' => [
@@ -86,7 +86,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'labels' => [],
             'password' => $password,
             'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
-            'passwordUpdate' => (! empty($password)) ? DateTime::now() : null,
+            'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
             'registration' => DateTime::now(),
@@ -96,7 +96,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
-            'search' => implode(' ', [$userId, $email, $phone, $name]),
+            'search' => implode(' ', [$userId, $email, $phone, $name])
         ]));
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -131,6 +131,7 @@ App::post('/v1/users')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
+
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $events);
 
         $response
@@ -254,8 +255,8 @@ App::post('/v1/users/sha')
     ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
         $options = '{}';
 
-        if (! empty($passwordVersion)) {
-            $options = '{"version":"'.$passwordVersion.'"}';
+        if (!empty($passwordVersion)) {
+            $options = '{"version":"' . $passwordVersion . '"}';
         }
 
         $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $events);
@@ -328,7 +329,7 @@ App::post('/v1/users/scrypt')
             'costCpu' => $passwordCpu,
             'costMemory' => $passwordMemory,
             'costParallel' => $passwordParallel,
-            'length' => $passwordLength,
+            'length' => $passwordLength
         ];
 
         $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $events);
@@ -364,7 +365,7 @@ App::post('/v1/users/scrypt-modified')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Event $events) {
-        $user = createUser('scryptMod', '{"signerKey":"'.$passwordSignerKey.'","saltSeparator":"'.$passwordSaltSeparator.'","salt":"'.$passwordSalt.'"}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $events);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -405,7 +406,7 @@ App::post('/v1/users/:userId/targets')
 
         $target = $dbForProject->getDocument('targets', $targetId);
 
-        if (! $target->isEmpty()) {
+        if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -413,7 +414,7 @@ App::post('/v1/users/:userId/targets')
             '$id' => $targetId,
             // TO DO: what permissions should be given when created a target.
             '$permissions' => [
-                Permission::read(Role::any()),
+                Permission::read(Role::any())
             ],
             'providerId' => $providerId,
             'providerInternalId' => $provider->getInternalId(),
@@ -441,14 +442,15 @@ App::get('/v1/users')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER_LIST)
-    ->param('queries', [], new Users(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Users::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Users(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+
         $queries = Query::parseQueries($queries);
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -490,6 +492,7 @@ App::get('/v1/users/:userId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, Response $response, Database $dbForProject) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -514,6 +517,7 @@ App::get('/v1/users/:userId/prefs')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, Response $response, Database $dbForProject) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -541,6 +545,7 @@ App::get('/v1/users/:userId/targets/:targetId')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -572,6 +577,7 @@ App::get('/v1/users/:userId/sessions')
     ->inject('dbForProject')
     ->inject('locale')
     ->action(function (string $userId, Response $response, Database $dbForProject, Locale $locale) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -582,7 +588,8 @@ App::get('/v1/users/:userId/sessions')
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
-            $countryName = $locale->getText('countries.'.strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+            $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', false);
 
@@ -610,6 +617,7 @@ App::get('/v1/users/:userId/memberships')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, Response $response, Database $dbForProject) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -651,6 +659,7 @@ App::get('/v1/users/:userId/logs')
     ->inject('locale')
     ->inject('geodb')
     ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -669,7 +678,7 @@ App::get('/v1/users/:userId/logs')
         $output = [];
 
         foreach ($logs as $i => &$log) {
-            $log['userAgent'] = (! empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
@@ -693,14 +702,14 @@ App::get('/v1/users/:userId/logs')
                 'clientEngineVersion' => $client['clientEngineVersion'],
                 'deviceName' => $device['deviceName'],
                 'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel'],
+                'deviceModel' => $device['deviceModel']
             ]);
 
             $record = $geodb->get($log['ip']);
 
             if ($record) {
-                $output[$i]['countryCode'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
-                $output[$i]['countryName'] = $locale->getText('countries.'.strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
             } else {
                 $output[$i]['countryCode'] = '--';
                 $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
@@ -728,6 +737,7 @@ App::get('/v1/users/:userId/targets')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $userId, Response $response, Database $dbForProject) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -753,14 +763,15 @@ App::get('/v1/users/identities')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_IDENTITY_LIST)
-    ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Identities(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Identities::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
+
         $queries = Query::parseQueries($queries);
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -808,6 +819,7 @@ App::patch('/v1/users/:userId/status')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, bool $status, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -844,6 +856,7 @@ App::put('/v1/users/:userId/labels')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -880,6 +893,7 @@ App::patch('/v1/users/:userId/verification')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -914,6 +928,7 @@ App::patch('/v1/users/:userId/verification/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, bool $phoneVerification, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -949,6 +964,7 @@ App::patch('/v1/users/:userId/name')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $name, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -986,6 +1002,7 @@ App::patch('/v1/users/:userId/password')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -994,7 +1011,7 @@ App::patch('/v1/users/:userId/password')
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
-            if (! $personalDataValidator->isValid($password)) {
+            if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
@@ -1005,7 +1022,7 @@ App::patch('/v1/users/:userId/password')
         $history = $user->getAttribute('passwordHistory', []);
         if ($historyLimit > 0) {
             $validator = new PasswordHistory($history, $user->getAttribute('hash'), $user->getAttribute('hashOptions'));
-            if (! $validator->isValid($password)) {
+            if (!$validator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_RECENTLY_USED);
             }
 
@@ -1048,6 +1065,7 @@ App::patch('/v1/users/:userId/email')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $email, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1061,13 +1079,15 @@ App::patch('/v1/users/:userId/email')
             Query::equal('providerEmail', [$email]),
             Query::notEqual('userId', $user->getId()),
         ]);
-        if ($identityWithMatchingEmail !== false && ! $identityWithMatchingEmail->isEmpty()) {
+        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
         $user
             ->setAttribute('email', $email)
-            ->setAttribute('emailVerification', false);
+            ->setAttribute('emailVerification', false)
+        ;
+
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -1100,6 +1120,7 @@ App::patch('/v1/users/:userId/phone')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $number, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1108,7 +1129,8 @@ App::patch('/v1/users/:userId/phone')
 
         $user
             ->setAttribute('phone', $number)
-            ->setAttribute('phoneVerification', false);
+            ->setAttribute('phoneVerification', false)
+        ;
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
@@ -1142,6 +1164,7 @@ App::patch('/v1/users/:userId/verification')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1173,6 +1196,7 @@ App::patch('/v1/users/:userId/prefs')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1206,6 +1230,7 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $targetId, string $userId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1251,6 +1276,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, string $sessionId, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1292,6 +1318,7 @@ App::delete('/v1/users/:userId/sessions')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1334,6 +1361,7 @@ App::delete('/v1/users/:userId')
     ->inject('events')
     ->inject('deletes')
     ->action(function (string $userId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1374,6 +1402,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $targetId, string $userId, Response $response, Database $dbForProject, Event $events) {
+
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1420,6 +1449,7 @@ App::delete('/v1/users/identities/:identityId')
     ->inject('events')
     ->inject('deletes')
     ->action(function (string $identityId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+
         $identity = $dbForProject->getDocument('identities', $identityId);
 
         if ($identity->isEmpty()) {
@@ -1446,6 +1476,7 @@ App::get('/v1/users/usage')
     ->inject('dbForProject')
     ->inject('register')
     ->action(function (string $range, Response $response, Database $dbForProject) {
+
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
@@ -1478,22 +1509,22 @@ App::get('/v1/users/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        foreach ($metrics as $metric) {
-            $usage[$metric] = [];
-            $leap = time() - ($days['limit'] * $days['factor']);
-            while ($leap < time()) {
-                $leap += $days['factor'];
-                $formatDate = date($format, $leap);
-                $usage[$metric][] = [
-                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                    'date' => $formatDate,
-                ];
-            }
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
         }
+    }
 
         $response->dynamic(new Document([
             'range' => $range,
-            'usersTotal' => $usage[$metrics[0]],
+            'usersTotal'   => $usage[$metrics[0]],
             'sessionsTotal' => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_USERS);
     });

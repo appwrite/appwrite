@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/init.php';
+require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
@@ -12,26 +12,27 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
-use Utopia\Pools\Group;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
+use Utopia\Pools\Group;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 global $register;
 
-Server::setResource('register', fn () => $register);
+Server::setResource('register', fn() => $register);
 
 Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
     $pools = $register->get('pools');
     $database = $pools
         ->get('console')
         ->pop()
-        ->getResource();
+        ->getResource()
+    ;
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('console');
@@ -51,11 +52,11 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     $database = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource();
+        ->getResource()
+    ;
 
     $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_'.$project->getInternalId());
-
+    $adapter->setNamespace('_' . $project->getInternalId());
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
@@ -68,7 +69,8 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));
@@ -76,7 +78,6 @@ Server::setResource('cache', function (Registry $register) {
 
 Server::setResource('queueForFunctions', function (Registry $register) {
     $pools = $register->get('pools');
-
     return new Func(
         $pools
             ->get('queue')
@@ -87,7 +88,6 @@ Server::setResource('queueForFunctions', function (Registry $register) {
 
 Server::setResource('queueForUsage', function (Registry $register) {
     $pools = $register->get('pools');
-
     return new Usage(
         $pools
             ->get('queue')
@@ -96,7 +96,7 @@ Server::setResource('queueForUsage', function (Registry $register) {
     );
 }, ['register']);
 
-Server::setResource('log', fn () => new Log());
+Server::setResource('log', fn() => new Log());
 
 Server::setResource('logger', function ($register) {
     return $register->get('logger');
@@ -137,12 +137,12 @@ $server
         }
 
         if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
-            $log->setNamespace('appwrite-worker');
+            $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-'.App::getEnv('QUEUE'));
+            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());
@@ -155,11 +155,11 @@ $server
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
-            Console::info('Usage stats log pushed with status code: '.$responseCode);
+            Console::info('Usage stats log pushed with status code: ' . $responseCode);
         }
 
-        Console::error('[Error] Type: '.get_class($error));
-        Console::error('[Error] Message: '.$error->getMessage());
-        Console::error('[Error] File: '.$error->getFile());
-        Console::error('[Error] Line: '.$error->getLine());
+        Console::error('[Error] Type: ' . get_class($error));
+        Console::error('[Error] Message: ' . $error->getMessage());
+        Console::error('[Error] File: ' . $error->getFile());
+        Console::error('[Error] Line: ' . $error->getLine());
     });

@@ -21,7 +21,8 @@ class HealthAntivirus extends Model
                 'description' => 'Antivirus status. Possible values can are: `disabled`, `offline`, `online`',
                 'default' => '',
                 'example' => 'online',
-            ]);
+            ])
+        ;
     }
 
     /**

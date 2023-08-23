@@ -1,22 +1,19 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
-use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
-use Appwrite\Network\Validator\Email;
+use Utopia\Validator\Domain as DomainValidator;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Template\Template;
+use Utopia\Validator\URL;
 use Appwrite\Utopia\Database\Validator\ProjectId;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
-use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -24,22 +21,26 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Locale\Locale;
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Email;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Utopia\Cache\Cache;
 use Utopia\Pools\Group;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Appwrite\Template\Template;
+use Utopia\Locale\Locale;
+use PHPMailer\PHPMailer\PHPMailer;
 
 App::init()
     ->groups(['projects'])
@@ -63,7 +64,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => ! $config['disabled']))), 'Project Region.', true)
+    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -78,6 +79,8 @@ App::post('/v1/projects')
     ->inject('cache')
     ->inject('pools')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+
+
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -161,7 +164,7 @@ App::post('/v1/projects')
                 'domains' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
-                'database' => $database,
+                'database' => $database
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
@@ -198,7 +201,7 @@ App::post('/v1/projects')
                     'array' => $attribute['array'],
                     'filters' => $attribute['filters'],
                     'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? '',
+                    'format' => $attribute['format'] ?? ''
                 ]);
             }
 
@@ -229,14 +232,15 @@ App::get('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT_LIST)
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
+
         $queries = Query::parseQueries($queries);
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -277,6 +281,7 @@ App::get('/v1/projects/:projectId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -310,6 +315,7 @@ App::patch('/v1/projects/:projectId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -347,6 +353,7 @@ App::patch('/v1/projects/:projectId/team')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $teamId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -382,11 +389,12 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $service, bool $status, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -416,13 +424,14 @@ App::patch('/v1/projects/:projectId/service/all')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $status, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $allServices = array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']));
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
 
         $services = [];
         foreach ($allServices as $service) {
@@ -452,6 +461,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -461,15 +471,15 @@ App::patch('/v1/projects/:projectId/oauth2')
         $providers = $project->getAttribute('authProviders', []);
 
         if ($appId !== null) {
-            $providers[$provider.'Appid'] = $appId;
+            $providers[$provider . 'Appid'] = $appId;
         }
 
         if ($secret !== null) {
-            $providers[$provider.'Secret'] = $secret;
+            $providers[$provider . 'Secret'] = $secret;
         }
 
         if ($enabled !== null) {
-            $providers[$provider.'Enabled'] = $enabled;
+            $providers[$provider . 'Enabled'] = $enabled;
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
@@ -492,6 +502,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -522,6 +533,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $duration, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -548,11 +560,12 @@ App::patch('/v1/projects/:projectId/auth/:method')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: '.implode(',', \array_keys(Config::getParam('auth'))), false)
+    ->param('method', '', new WhiteList(\array_keys(Config::getParam('auth')), true), 'Auth Method. Possible values: ' . implode(',', \array_keys(Config::getParam('auth'))), false)
     ->param('status', false, new Boolean(true), 'Set the status of this auth method.')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $method, bool $status, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
         $auth = Config::getParam('auth')[$method] ?? [];
         $authKey = $auth['key'] ?? '';
@@ -581,10 +594,11 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is'.APP_LIMIT_USER_PASSWORD_HISTORY.'. Default value is 0')
+    ->param('limit', 0, new Range(0, APP_LIMIT_USER_PASSWORD_HISTORY), 'Set the max number of passwords to store in user history. User can\'t choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is' . APP_LIMIT_USER_PASSWORD_HISTORY . '. Default value is 0')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -615,6 +629,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -645,6 +660,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -671,10 +687,11 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-'.APP_LIMIT_USER_SESSIONS_MAX.'. Default is '.APP_LIMIT_USER_SESSIONS_DEFAULT)
+    ->param('limit', false, new Range(1, APP_LIMIT_USER_SESSIONS_MAX), 'Set the max number of users allowed in this project. Value allowed is between 1-' . APP_LIMIT_USER_SESSIONS_MAX . '. Default is ' . APP_LIMIT_USER_SESSIONS_DEFAULT)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, int $limit, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -713,9 +730,10 @@ App::delete('/v1/projects/:projectId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project);
+            ->setDocument($project)
+        ;
 
-        if (! $dbForConsole->deleteDocument('projects', $projectId)) {
+        if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
         }
 
@@ -736,7 +754,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' events are allowed.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -744,6 +762,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -793,6 +812,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -825,6 +845,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -856,7 +877,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' events are allowed.')
+    ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
@@ -864,6 +885,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -887,7 +909,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass);
+            ->setAttribute('httpPass', $httpPass)
+        ;
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
@@ -910,6 +933,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -947,6 +971,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -983,11 +1008,12 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.response.model', Response::MODEL_KEY)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' scopes are allowed.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1034,6 +1060,7 @@ App::get('/v1/projects/:projectId/keys')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1066,6 +1093,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1097,11 +1125,12 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' events are allowed.')
+    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1120,7 +1149,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('expire', $expire)
+        ;
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
@@ -1143,6 +1173,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1205,7 +1236,7 @@ App::post('/v1/projects/:projectId/platforms')
             'name' => $name,
             'key' => $key,
             'store' => $store,
-            'hostname' => $hostname,
+            'hostname' => $hostname
         ]);
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
@@ -1231,6 +1262,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1263,6 +1295,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1319,7 +1352,8 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             ->setAttribute('name', $name)
             ->setAttribute('key', $key)
             ->setAttribute('store', $store)
-            ->setAttribute('hostname', $hostname);
+            ->setAttribute('hostname', $hostname)
+        ;
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
@@ -1342,6 +1376,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1381,6 +1416,7 @@ App::post('/v1/projects/:projectId/domains')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domain, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1392,17 +1428,17 @@ App::post('/v1/projects/:projectId/domains')
         }
 
         $document = $dbForConsole->findOne('domains', [
-            Query::equal('domain', [$domain]),
+            Query::equal('domain', [$domain])
         ]);
 
-        if ($document && ! $document->isEmpty()) {
+        if ($document && !$document->isEmpty()) {
             throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
         }
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
-        if (! $target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target ('.$target->get().'). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
+        if (!$target->isKnown() || $target->isTest()) {
+            throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
         }
 
         $domain = new Domain($domain);
@@ -1447,6 +1483,7 @@ App::get('/v1/projects/:projectId/domains')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1479,6 +1516,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1512,6 +1550,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1529,8 +1568,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
 
         $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
-        if (! $target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target ('.$target->get().'), please use a domain with a public suffix.');
+        if (!$target->isKnown() || $target->isTest()) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
         }
 
         if ($domain->getAttribute('verification') === true) {
@@ -1539,9 +1578,10 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
 
         $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
-        if (! $validator->isValid($domain->getAttribute('domain', ''))) {
+        if (!$validator->isValid($domain->getAttribute('domain', ''))) {
             throw new Exception(Exception::DOMAIN_VERIFICATION_FAILED);
         }
+
 
         $dbForConsole->updateDocument('domains', $domain->getId(), $domain->setAttribute('verification', true));
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
@@ -1570,6 +1610,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->inject('dbForConsole')
     ->inject('deletes')
     ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1622,6 +1663,7 @@ App::patch('/v1/projects/:projectId/smtp')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, string $sender, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1639,7 +1681,7 @@ App::patch('/v1/projects/:projectId/smtp')
         $mail->SMTPAutoTLS = false;
         $valid = $mail->SmtpConnect();
 
-        if (! $valid) {
+        if (!$valid) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED);
         }
 
@@ -1670,10 +1712,11 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1681,11 +1724,11 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template = $templates['sms.'.$type.'-'.$locale] ?? null;
+        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             $template = [
-                'message' => Template::fromFile(__DIR__.'/../../config/locale/templates/sms-base.tpl')->render(),
+            'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
             ];
         }
 
@@ -1707,10 +1750,11 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1718,11 +1762,11 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template = $templates['email.'.$type.'-'.$locale] ?? null;
+        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
-            $message = Template::fromFile(__DIR__.'/../../config/locale/templates/email-base.tpl');
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
             $message = $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{name}}', '')
@@ -1737,12 +1781,12 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
                 ->render();
 
             $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));
-            $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')) : $from;
+            $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from;
             $template = [
                 'message' => $message,
-                'subject' => $localeObj->getText('emails.'.$type.'.subject'),
+                'subject' => $localeObj->getText('emails.' . $type . '.subject'),
                 'senderEmail' => App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', ''),
-                'senderName' => $from,
+                'senderName' => $from
             ];
         }
 
@@ -1764,11 +1808,12 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('message', '', new Text(0), 'Template message')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1776,8 +1821,8 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['sms.'.$type.'-'.$locale] = [
-            'message' => $message,
+        $templates['sms.' . $type . '-' . $locale] = [
+            'message' => $message
         ];
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
@@ -1801,7 +1846,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('senderName', '', new Text(255), 'Name of the email sender')
     ->param('senderEmail', '', new Email(), 'Email of the sender')
     ->param('subject', '', new Text(255), 'Email Subject')
@@ -1810,6 +1855,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, string $senderName, string $senderEmail, string $subject, string $message, string $replyTo, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1817,12 +1863,12 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['email.'.$type.'-'.$locale] = [
+        $templates['email.' . $type . '-' . $locale] = [
             'senderName' => $senderName,
             'senderEmail' => $senderEmail,
             'subject' => $subject,
             'replyTo' => $replyTo,
-            'message' => $message,
+            'message' => $message
         ];
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
@@ -1834,7 +1880,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
             'senderEmail' => $senderEmail,
             'subject' => $subject,
             'replyTo' => $replyTo,
-            'message' => $message,
+            'message' => $message
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
@@ -1850,10 +1896,11 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1861,20 +1908,20 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template = $templates['sms.'.$type.'-'.$locale] ?? null;
+        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
-        unset($template['sms.'.$type.'-'.$locale]);
+        unset($template['sms.' . $type . '-' . $locale]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
             'type' => $type,
             'locale' => $locale,
-            'message' => $template['message'],
+            'message' => $template['message']
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
@@ -1890,10 +1937,11 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1901,13 +1949,13 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template = $templates['email.'.$type.'-'.$locale] ?? null;
+        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         if (is_null($template)) {
             throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
-        unset($templates['email.'.$type.'-'.$locale]);
+        unset($templates['email.' . $type . '-' . $locale]);
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
@@ -1918,6 +1966,6 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
             'senderEmail' => $template['senderEmail'],
             'subject' => $template['subject'],
             'replyTo' => $template['replyTo'],
-            'message' => $template['message'],
+            'message' => $template['message']
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });

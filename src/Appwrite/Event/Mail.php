@@ -3,19 +3,15 @@
 namespace Appwrite\Event;
 
 use Resque;
+use Utopia\Database\Document;
 
 class Mail extends Event
 {
     protected string $recipient = '';
-
     protected string $from = '';
-
     protected string $name = '';
-
     protected string $subject = '';
-
     protected string $body = '';
-
     protected array $smtp = [];
 
     public function __construct()
@@ -26,7 +22,7 @@ class Mail extends Event
     /**
      * Sets subject for the mail event.
      *
-     * @param  string  $subject
+     * @param string $subject
      * @return self
      */
     public function setSubject(string $subject): self
@@ -49,7 +45,7 @@ class Mail extends Event
     /**
      * Sets recipient for the mail event.
      *
-     * @param  string  $recipient
+     * @param string $recipient
      * @return self
      */
     public function setRecipient(string $recipient): self
@@ -72,7 +68,7 @@ class Mail extends Event
     /**
      * Sets from for the mail event.
      *
-     * @param  string  $from
+     * @param string $from
      * @return self
      */
     public function setFrom(string $from): self
@@ -95,7 +91,7 @@ class Mail extends Event
     /**
      * Sets body for the mail event.
      *
-     * @param  string  $body
+     * @param string $body
      * @return self
      */
     public function setBody(string $body): self
@@ -118,7 +114,7 @@ class Mail extends Event
     /**
      * Sets name for the mail event.
      *
-     * @param  string  $name
+     * @param string $name
      * @return self
      */
     public function setName(string $name): self
@@ -141,13 +137,12 @@ class Mail extends Event
     /**
      * Set SMTP Host
      *
-     * @param  string  $host
+     * @param string $host
      * @return self
      */
     public function setSmtpHost(string $host): self
     {
         $this->smtp['host'] = $host;
-
         return $this;
     }
 
@@ -160,59 +155,54 @@ class Mail extends Event
     public function setSmtpPort(int $port): self
     {
         $this->smtp['port'] = $port;
-
         return $this;
     }
 
     /**
      * Set SMTP username
      *
-     * @param  string  $username
+     * @param string $username
      * @return self
      */
     public function setSmtpUsername(string $username): self
     {
         $this->smtp['username'];
-
         return $this;
     }
 
     /**
      * Set SMTP password
      *
-     * @param  string  $password
+     * @param string $password
      * @return self
      */
     public function setSmtpPassword(string $password): self
     {
         $this->smtp['password'];
-
         return $this;
     }
 
     /**
      * Set SMTP sender email
      *
-     * @param  string  $senderEmail
+     * @param string $senderEmail
      * @return self
      */
     public function setSmtpSenderEmail(string $senderEmail): self
     {
         $this->smtp['senderEmail'] = $senderEmail;
-
         return $this;
     }
 
     /**
      * Set SMTP reply to
      *
-     * @param  string  $replyTo
+     * @param string $replyTo
      * @return self
      */
     public function setSmtpReplyTo(string $replyTo): self
     {
         $this->smtp['replyTo'] = $replyTo;
-
         return $this;
     }
 
@@ -229,7 +219,7 @@ class Mail extends Event
     /**
      * Get SMTP port
      *
-     * @return int
+     * @return integer
      */
     public function getSmtpPort(): int
     {
@@ -280,7 +270,6 @@ class Mail extends Event
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
-     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -292,7 +281,7 @@ class Mail extends Event
             'subject' => $this->subject,
             'body' => $this->body,
             'smtp' => $this->smtp,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
 }

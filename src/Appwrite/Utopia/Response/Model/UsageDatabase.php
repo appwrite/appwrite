@@ -21,15 +21,16 @@ class UsageDatabase extends Model
                 'description' => 'Aggregated stats for total number of collections.',
                 'default' => [],
                 'example' => [],
-                'array' => true,
+                'array' => true
             ])
             ->addRule('documentsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
                 'example' => [],
-                'array' => true,
-            ]);
+                'array' => true
+            ])
+        ;
     }
 
     /**

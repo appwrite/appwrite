@@ -15,7 +15,8 @@ class HealthQueue extends Model
                 'description' => 'Amount of actions in the queue.',
                 'default' => 0,
                 'example' => 8,
-            ]);
+            ])
+        ;
     }
 
     /**

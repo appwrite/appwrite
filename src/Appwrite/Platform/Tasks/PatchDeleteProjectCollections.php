@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
+use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Validator\Numeric;
 
@@ -31,6 +31,7 @@ class PatchDeleteProjectCollections extends Action
 
     public function __construct()
     {
+
         $this
             ->desc('Delete unnecessary project collections')
             ->param('offset', 0, new Numeric(), 'Resume deletion from param pos', true)
@@ -47,7 +48,7 @@ class PatchDeleteProjectCollections extends Action
         //docker compose exec -t appwrite patch-delete-project-collections
 
         Console::title('Delete project collections V1');
-        Console::success(APP_NAME.' delete project collections has started');
+        Console::success(APP_NAME . ' delete project collections has started');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
@@ -62,8 +63,9 @@ class PatchDeleteProjectCollections extends Action
         $limit = 50;
         $sum = 50;
         $offset = $offset;
-        while (! empty($projects)) {
+        while (!empty($projects)) {
             foreach ($projects as $project) {
+
                 /**
                  * Skip user projects with id 'console'
                  */
@@ -82,7 +84,7 @@ class PatchDeleteProjectCollections extends Action
 
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
-                    $dbForProject->setNamespace('_'.$project->getInternalId());
+                    $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     foreach ($this->names as $name) {
                         if (empty($name)) {
@@ -90,14 +92,14 @@ class PatchDeleteProjectCollections extends Action
                         }
                         if ($dbForProject->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
                             if ($dbForProject->deleteCollection($name)) {
-                                Console::log('Deleted '.$name);
+                                Console::log('Deleted ' . $name);
                             } else {
-                                Console::error('Failed to delete '.$name);
+                                Console::error('Failed to delete ' . $name);
                             }
                         }
                     }
                 } catch (\Throwable $th) {
-                    Console::error('Failed  on project ("'.$project->getId().'") version with error: '.$th->getMessage());
+                    Console::error('Failed  on project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
                 } finally {
                     $pools
                         ->get($db)
@@ -112,14 +114,14 @@ class PatchDeleteProjectCollections extends Action
                 Query::offset($offset),
             ]);
 
-            if (! empty($projects)) {
-                Console::log('Querying..... offset='.$offset.' , limit='.$limit.', count='.$count);
+            if (!empty($projects)) {
+                Console::log('Querying..... offset=' . $offset . ' , limit=' . $limit  . ', count=' . $count);
             }
 
             $offset = $offset + $limit;
             $count = $count + $sum;
         }
-        Console::log('Iterated through '.$count - 1 .'/'.$totalProjects.' projects...');
+        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects...');
         $pools
             ->get('console')
             ->reclaim();

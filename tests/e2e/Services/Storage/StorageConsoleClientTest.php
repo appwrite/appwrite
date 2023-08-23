@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Storage;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 
@@ -21,9 +21,9 @@ class StorageConsoleClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/storage/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'range' => '32h',
+            'range' => '32h'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -33,9 +33,9 @@ class StorageConsoleClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_GET, '/storage/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'range' => '24h',
+            'range' => '24h'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -55,7 +55,7 @@ class StorageConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'bucketId' => ID::unique(),
             'name' => 'Test Bucket',
-            'permission' => 'file',
+            'permission' => 'file'
         ]);
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $bucketId = $bucket['body']['$id'];
@@ -63,11 +63,12 @@ class StorageConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/storage/'.$bucketId.'/usage', array_merge([
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId . '/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'range' => '32h',
+            'range' => '32h'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -76,9 +77,9 @@ class StorageConsoleClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/randomBucketId/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'range' => '24h',
+            'range' => '24h'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 404);
@@ -86,11 +87,11 @@ class StorageConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/storage/'.$bucketId.'/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/storage/' . $bucketId .  '/usage', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()), [
-            'range' => '24h',
+            'range' => '24h'
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);

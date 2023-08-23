@@ -10,11 +10,12 @@ class Buckets extends Base
         'fileSecurity',
         'maximumFileSize',
         'encryption',
-        'antivirus',
+        'antivirus'
     ];
 
     /**
      * Expression constructor
+     *
      */
     public function __construct()
     {

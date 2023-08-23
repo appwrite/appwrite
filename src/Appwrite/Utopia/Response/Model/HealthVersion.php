@@ -15,7 +15,8 @@ class HealthVersion extends Model
                 'description' => 'Version of the Appwrite instance.',
                 'default' => '',
                 'example' => '0.11.0',
-            ]);
+            ])
+        ;
     }
 
     /**

@@ -73,7 +73,8 @@ class Platform extends Model
                 'description' => 'HTTP basic authentication password.',
                 'default' => '',
                 'example' => 'password',
-            ]);
+            ])
+        ;
     }
 
     /**

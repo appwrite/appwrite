@@ -12,11 +12,12 @@ class Functions extends Base
         'schedule',
         'scheduleNext',
         'schedulePrevious',
-        'timeout',
+        'timeout'
     ];
 
     /**
      * Expression constructor
+     *
      */
     public function __construct()
     {

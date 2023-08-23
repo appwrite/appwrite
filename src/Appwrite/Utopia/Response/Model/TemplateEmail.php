@@ -33,7 +33,8 @@ class TemplateEmail extends Template
                 'description' => 'Email subject',
                 'default' => '',
                 'example' => 'Please verify your email address',
-            ]);
+            ])
+        ;
     }
 
     /**

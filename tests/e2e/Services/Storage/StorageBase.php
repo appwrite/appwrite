@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -25,7 +26,7 @@ trait StorageBase
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
-            'allowedFileExtensions' => ['jpg', 'png'],
+            'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -38,12 +39,12 @@ trait StorageBase
 
         $bucketId = $bucket['body']['$id'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -57,7 +58,7 @@ trait StorageBase
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertTrue(md5_file(realpath(__DIR__.'/../../../resources/logo.png')) == $file['body']['signature']);
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
         /**
          * Test for Large File above 20MB
          * This should also validate the test for when Bucket encryption
@@ -84,26 +85,27 @@ trait StorageBase
         /**
          * Chunked Upload
          */
-        $source = __DIR__.'/../../../resources/disk-a/large-file.mp4';
+
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
         $chunkSize = 5 * 1024 * 1024;
-        $handle = @fopen($source, 'rb');
+        $handle = @fopen($source, "rb");
         $fileId = 'unique()';
         $mimeType = mime_content_type($source);
         $counter = 0;
         $size = filesize($source);
         $headers = [
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ];
         $id = '';
-        while (! feof($handle)) {
-            $curlFile = new \CURLFile('data://'.$mimeType.';base64,'.base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-            $headers['content-range'] = 'bytes '.($counter * $chunkSize).'-'.min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1).'/'.$size;
-            if (! empty($id)) {
+        while (!feof($handle)) {
+            $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+            if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
-            $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucket2['body']['$id'].'/files', array_merge($headers, $this->getHeaders()), [
+            $largeFile = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', array_merge($headers, $this->getHeaders()), [
                 'fileId' => $fileId,
                 'file' => $curlFile,
                 'permissions' => [
@@ -123,28 +125,28 @@ trait StorageBase
         $this->assertEquals('large-file.mp4', $largeFile['body']['name']);
         $this->assertEquals('video/mp4', $largeFile['body']['mimeType']);
         $this->assertEquals($totalSize, $largeFile['body']['sizeOriginal']);
-        $this->assertEquals(md5_file(realpath(__DIR__.'/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
+        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), $largeFile['body']['signature']); // should validate that the file is not encrypted
 
         /**
          * Failure
          * Test for Chunk above 5MB
          */
-        $source = __DIR__.'/../../../resources/disk-a/large-file.mp4';
+        $source = __DIR__ . "/../../../resources/disk-a/large-file.mp4";
         $totalSize = \filesize($source);
         $chunkSize = 6 * 1024 * 1024;
-        $handle = @fopen($source, 'rb');
+        $handle = @fopen($source, "rb");
         $fileId = 'unique()';
         $mimeType = mime_content_type($source);
         $counter = 0;
         $size = filesize($source);
         $headers = [
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $this->getProject()['$id']
         ];
         $id = '';
-        $curlFile = new \CURLFile('data://'.$mimeType.';base64,'.base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-        $headers['content-range'] = 'bytes '.($counter * $chunkSize).'-'.min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1).'/'.$size;
-        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucket2['body']['$id'].'/files', $this->getHeaders(), [
+        $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', $this->getHeaders(), [
             'fileId' => $fileId,
             'file' => $curlFile,
             'permissions' => [
@@ -157,15 +159,17 @@ trait StorageBase
 
         $this->assertEquals(413, $res['headers']['status-code']);
 
+
         /**
          * Test for FAILURE unknown Bucket
          */
+
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/empty/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -177,12 +181,13 @@ trait StorageBase
         /**
          * Test for FAILURE file above bucket's file size limit
          */
-        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -196,12 +201,13 @@ trait StorageBase
         /**
          * Test for FAILURE unsupported bucket file extension
          */
-        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -224,7 +230,7 @@ trait StorageBase
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'maximumFileSize' => 200000000, //200MB
-            'allowedFileExtensions' => ['jpg', 'png'],
+            'allowedFileExtensions' => ["jpg", "png"],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
@@ -238,12 +244,12 @@ trait StorageBase
         /**
          * Test for FAILURE set x-appwrite-id to unique()
          */
-        $source = realpath(__DIR__.'/../../../resources/logo.png');
+        $source = realpath(__DIR__ . '/../../../resources/logo.png');
         $totalSize = \filesize($source);
-        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'content-range' => 'bytes 0-'.$size.'/'.$size,
+            'content-range' => 'bytes 0-' . $size . '/' . $size,
             'x-appwrite-id' => 'unique()',
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
@@ -272,7 +278,7 @@ trait StorageBase
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
-            'allowedFileExtensions' => ['jpg', 'png'],
+            'allowedFileExtensions' => ["jpg", "png"],
             'compression' => 'zstd',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -287,12 +293,12 @@ trait StorageBase
 
         $bucketId = $bucket['body']['$id'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -305,7 +311,7 @@ trait StorageBase
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertTrue(md5_file(realpath(__DIR__.'/../../../resources/logo.png')) == $file['body']['signature']);
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
 
         return ['bucketId' => $bucketId];
     }
@@ -318,7 +324,7 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$data['bucketId'].'/files', array_merge([
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -326,38 +332,38 @@ trait StorageBase
         $this->assertGreaterThan(0, $files['body']['total']);
         $this->assertGreaterThan(0, count($files['body']['files']));
 
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$data['bucketId'].'/files', array_merge([
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)'],
+            'queries' => [ 'limit(1)' ]
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(1, count($files['body']['files']));
 
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$data['bucketId'].'/files', array_merge([
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)'],
+            'queries' => [ 'offset(1)' ]
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(0, count($files['body']['files']));
 
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$data['bucketId'].'/files', array_merge([
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("mimeType", "image/png")'],
+            'queries' => [ 'equal("mimeType", "image/png")' ]
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(1, count($files['body']['files']));
 
-        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$data['bucketId'].'/files', array_merge([
+        $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("mimeType", "image/jpeg")'],
+            'queries' => [ 'equal("mimeType", "image/jpeg")' ]
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
         $this->assertEquals(0, count($files['body']['files']));
@@ -365,6 +371,7 @@ trait StorageBase
         /**
          * Test for FAILURE unknown Bucket
          */
+
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -383,7 +390,7 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
-        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'], array_merge([
+        $file1 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -397,7 +404,7 @@ trait StorageBase
         $this->assertIsArray($file1['body']['$permissions']);
         $this->assertCount(3, $file1['body']['$permissions']);
 
-        $file2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/preview', array_merge([
+        $file2 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -407,7 +414,7 @@ trait StorageBase
         $this->assertNotEmpty($file2['body']);
 
         //new image preview features
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/preview', array_merge([
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -425,13 +432,13 @@ trait StorageBase
 
         $image = new \Imagick();
         $image->readImageBlob($file3['body']);
-        $original = new \Imagick(__DIR__.'/../../../resources/logo-after.png');
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
 
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
 
-        $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/preview', array_merge([
+        $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -448,13 +455,13 @@ trait StorageBase
 
         $image = new \Imagick();
         $image->readImageBlob($file4['body']);
-        $original = new \Imagick(__DIR__.'/../../../resources/logo-after.jpg');
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
 
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('JPEG', $image->getImageFormat());
 
-        $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/download', array_merge([
+        $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -465,13 +472,13 @@ trait StorageBase
         $this->assertNotEmpty($file5['body']);
 
         // Test ranged download
-        $file51 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/download', array_merge([
+        $file51 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'Range' => 'bytes=0-99',
         ], $this->getHeaders()));
 
-        $path = __DIR__.'/../../../resources/logo.png';
+        $path = __DIR__ . '/../../../resources/logo.png';
         $originalChunk = \file_get_contents($path, false, null, 0, 100);
 
         $this->assertEquals(206, $file51['headers']['status-code']);
@@ -481,7 +488,7 @@ trait StorageBase
         $this->assertEquals($originalChunk, $file51['body']);
 
         // Test ranged download - with invalid range
-        $file52 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/download', array_merge([
+        $file52 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'Range' => 'bytes=0-',
@@ -490,7 +497,7 @@ trait StorageBase
         $this->assertEquals(206, $file52['headers']['status-code']);
 
         // Test ranged download - with invalid range
-        $file53 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/download', array_merge([
+        $file53 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'Range' => 'bytes=988',
@@ -499,7 +506,7 @@ trait StorageBase
         $this->assertEquals(416, $file53['headers']['status-code']);
 
         // Test ranged download - with invalid range
-        $file54 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/download', array_merge([
+        $file54 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'Range' => 'bytes=-988',
@@ -507,7 +514,7 @@ trait StorageBase
 
         $this->assertEquals(416, $file54['headers']['status-code']);
 
-        $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/view', array_merge([
+        $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -517,7 +524,7 @@ trait StorageBase
         $this->assertNotEmpty($file6['body']);
 
         // Test for negative angle values in fileGetPreview
-        $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$data['fileId'].'/preview', array_merge([
+        $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -535,7 +542,7 @@ trait StorageBase
 
         $image = new \Imagick();
         $image->readImageBlob($file7['body']);
-        $original = new \Imagick(__DIR__.'/../../../resources/logo-after.png');
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
 
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
@@ -544,7 +551,7 @@ trait StorageBase
         /**
          * Test large files decompress successfully
          */
-        $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$data['largeBucketId'].'/files/'.$data['largeFileId'].'/download', array_merge([
+        $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['largeBucketId'] . '/files/' . $data['largeFileId'] . '/download', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -553,16 +560,17 @@ trait StorageBase
         $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
         $this->assertEquals('video/mp4', $file7['headers']['content-type']);
         $this->assertNotEmpty($fileData);
-        $this->assertEquals(md5_file(realpath(__DIR__.'/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
+        $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
 
         /**
          * Test for FAILURE unknown Bucket
          */
-        $file8 = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files/'.$data['fileId'], array_merge([
+
+        $file8 = $this->client->call(Client::METHOD_GET, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 2,
+            'limit' => 2
         ]);
 
         $this->assertEquals(404, $file8['headers']['status-code']);
@@ -577,12 +585,12 @@ trait StorageBase
     {
         $bucketId = $data['bucketId'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::custom('testcache'),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -595,7 +603,7 @@ trait StorageBase
         $fileId = $file['body']['$id'];
 
         //get image preview
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$fileId.'/preview', array_merge([
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -614,7 +622,7 @@ trait StorageBase
         $imageBefore = new \Imagick();
         $imageBefore->readImageBlob($file3['body']);
 
-        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/'.$data['bucketId'].'/files/'.$fileId, array_merge([
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -623,12 +631,12 @@ trait StorageBase
         $this->assertEmpty($file['body']);
         sleep(1);
         //upload again using the same ID
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::custom('testcache'),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -639,7 +647,7 @@ trait StorageBase
         $this->assertNotEmpty($file['body']['$id']);
 
         //get image preview after
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$fileId.'/preview', array_merge([
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -670,12 +678,12 @@ trait StorageBase
     {
         $bucketId = $data['bucketId'];
 
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -688,7 +696,7 @@ trait StorageBase
         $fileId = $file['body']['$id'];
 
         //get image preview
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/'.$bucketId.'/files/'.$fileId.'/preview', array_merge([
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -715,7 +723,7 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
-        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/'.$data['bucketId'].'/files/'.$data['fileId'], array_merge([
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -724,7 +732,7 @@ trait StorageBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ],
+            ]
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
@@ -746,7 +754,8 @@ trait StorageBase
         /**
          * Test for FAILURE unknown Bucket
          */
-        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/empty/files/'.$data['fileId'], array_merge([
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/empty/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -754,7 +763,7 @@ trait StorageBase
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
                 Permission::delete(Role::user($this->getUser()['$id'])),
-            ],
+            ]
         ]);
 
         $this->assertEquals(404, $file['headers']['status-code']);
@@ -770,7 +779,7 @@ trait StorageBase
         /**
          * Test for SUCCESS
          */
-        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/'.$data['bucketId'].'/files/'.$data['fileId'], array_merge([
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -778,7 +787,7 @@ trait StorageBase
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
 
-        $file = $this->client->call(Client::METHOD_GET, '/storage/files/'.$data['fileId'], array_merge([
+        $file = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

@@ -2,10 +2,10 @@
 
 namespace Appwrite\Specification;
 
-use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Route;
+use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
@@ -22,11 +22,8 @@ abstract class Format
     protected array $models;
 
     protected array $services;
-
     protected array $keys;
-
     protected int $authCount;
-
     protected array $params = [
         'name' => '',
         'description' => '',
@@ -49,8 +46,8 @@ abstract class Format
         [
             'namespace' => 'users',
             'method' => 'getUsage',
-            'parameter' => 'provider',
-        ],
+            'parameter' => 'provider'
+        ]
     ];
 
     public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
@@ -86,8 +83,9 @@ abstract class Format
      *
      * Set param value
      *
-     * @param  string  $key
-     * @param  string  $value
+     * @param string $key
+     * @param string $value
+     *
      * @return self
      */
     public function setParam(string $key, string $value): self
@@ -102,8 +100,9 @@ abstract class Format
      *
      * Get param value
      *
-     * @param  string  $key
-     * @param  string  $default
+     * @param string $key
+     * @param string $default
+     *
      * @return string
      */
     public function getParam(string $key, string $default = ''): string
@@ -178,10 +177,8 @@ abstract class Format
                 }
                 break;
         }
-
         return null;
     }
-
     public function getEnumKeys(string $service, string $method, string $param): array
     {
         $values = [];
@@ -193,21 +190,18 @@ abstract class Format
                         foreach ($codes as $code => $value) {
                             $values[] = $value['name'];
                         }
-
                         return $values;
                     case 'getCreditCard':
                         $codes = Config::getParam('avatar-credit-cards');
                         foreach ($codes as $code => $value) {
                             $values[] = $value['name'];
                         }
-
                         return $values;
                     case 'getFlag':
                         $codes = Config::getParam('avatar-flags');
                         foreach ($codes as $code => $value) {
                             $values[] = $value['name'];
                         }
-
                         return $values;
                 }
                 break;
@@ -217,8 +211,7 @@ abstract class Format
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-
+                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
                         return $values;
                 }
                 break;
@@ -228,7 +221,6 @@ abstract class Format
                     case 'getFunctionUsage':
                         // Range Enum Keys
                         $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-
                         return $values;
                 }
                 break;
@@ -239,7 +231,6 @@ abstract class Format
                         // Range Enum Keys
                         if ($param == 'range') {
                             $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-
                             return $values;
                         }
                 }
@@ -250,11 +241,9 @@ abstract class Format
                     case 'getBucketUsage':
                         // Range Enum Keys
                         $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-
                         return $values;
                 }
         }
-
         return $values;
     }
 }

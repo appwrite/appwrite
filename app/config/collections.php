@@ -16,6 +16,7 @@ $auth = Config::getParam('auth', []);
  * attributes => list of attributes
  * indexes => list of indexes
  */
+
 $commonCollections = [
     'users' => [
         '$collection' => ID::custom(Database::METADATA),
@@ -252,7 +253,7 @@ $commonCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -409,7 +410,7 @@ $commonCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -1277,7 +1278,7 @@ $commonCollections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-        ],
+        ]
     ],
 
     'stats' => [
@@ -1453,7 +1454,7 @@ $commonCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['json', 'encrypt'],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -1469,7 +1470,7 @@ $commonCollections = [
                 'attributes' => ['name'],
                 'lengths' => [128],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
@@ -1810,7 +1811,7 @@ $commonCollections = [
                 'attributes' => ['topicInternalId'],
                 'lengths' => [],
                 'orders' => [],
-            ],
+            ]
         ],
     ],
 
@@ -1923,7 +1924,7 @@ $commonCollections = [
                 'orders' => [],
             ],
         ],
-    ],
+    ]
 ];
 
 $projectCollections = array_merge([
@@ -2666,7 +2667,7 @@ $projectCollections = array_merge([
                 'default' => false,
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -2857,7 +2858,7 @@ $projectCollections = array_merge([
                 'default' => '',
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -2866,7 +2867,7 @@ $projectCollections = array_merge([
                 'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
@@ -3101,7 +3102,7 @@ $projectCollections = array_merge([
                 'required' => true,
                 'default' => null,
                 'array' => false,
-                'filters' => ['encrypt'],
+                'filters' => [ 'encrypt' ]
             ],
             [
                 '$id' => ID::custom('search'),
@@ -3185,7 +3186,7 @@ $projectCollections = array_merge([
                 'array' => false,
                 'filters' => [],
             ],
-        ],
+         ],
         'indexes' => [
             [
                 '$id' => '_key_accessedAt',
@@ -3307,7 +3308,7 @@ $projectCollections = array_merge([
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -3337,7 +3338,7 @@ $projectCollections = array_merge([
                 'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [],
-            ],
+            ]
         ],
     ],
 ], $commonCollections);
@@ -3747,7 +3748,7 @@ $consoleCollections = array_merge([
             [
                 '$id' => ID::custom('_key_region_resourceType_resourceUpdatedAt'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['region', 'resourceType', 'resourceUpdatedAt'],
+                'attributes' => ['region', 'resourceType','resourceUpdatedAt'],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -3842,7 +3843,7 @@ $consoleCollections = array_merge([
                 'default' => null,
                 'array' => false,
                 'filters' => [],
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -4184,7 +4185,7 @@ $consoleCollections = array_merge([
                 'attributes' => ['projectInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ],
+            ]
         ],
     ],
 
@@ -4311,7 +4312,7 @@ $consoleCollections = array_merge([
                 'default' => null,
                 'array' => false,
                 'filters' => [], //TODO: use json filter
-            ],
+            ]
         ],
         'indexes' => [
             [
@@ -4321,7 +4322,7 @@ $consoleCollections = array_merge([
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
             ],
-        ],
+        ]
     ],
 ], $commonCollections);
 
@@ -4587,7 +4588,7 @@ $bucketCollections = [
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
-        ],
+        ]
     ],
 ];
 
@@ -4710,14 +4711,15 @@ $dbCollections = [
                 'orders' => [Database::ORDER_ASC],
             ],
         ],
-    ],
+    ]
 ];
+
 
 $collections = [
     'projects' => $projectCollections,
-    'console' => $consoleCollections,
+    'console'  => $consoleCollections,
     'buckets' => $bucketCollections,
-    'databases' => $dbCollections,
+    'databases' => $dbCollections
 ];
 
 return $collections;

@@ -60,17 +60,18 @@ class Key extends Model
             ])
             ->addRule('accessedAt', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after '.APP_KEY_ACCCESS / 60 / 60 .' hours.',
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_KEY_ACCCESS / 60 / 60 . ' hours.',
                 'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE,
+                'example' => self::TYPE_DATETIME_EXAMPLE
             ])
             ->addRule('sdks', [
                 'type' => self::TYPE_STRING,
                 'description' => 'List of SDK user agents that used this key.',
                 'default' => null,
                 'example' => 'appwrite:flutter',
-                'array' => true,
-            ]);
+                'array' => true
+            ])
+        ;
     }
 
     /**

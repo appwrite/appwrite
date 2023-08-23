@@ -2,14 +2,14 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\Platform\Action;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Database;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
 
 class PatchCreateMissingSchedules extends Action
 {
@@ -36,7 +36,7 @@ class PatchCreateMissingSchedules extends Action
         Authorization::setDefaultStatus(false);
 
         Console::title('PatchCreateMissingSchedules V1');
-        Console::success(APP_NAME.' PatchCreateMissingSchedules v1 has started');
+        Console::success(APP_NAME . ' PatchCreateMissingSchedules v1 has started');
 
         $limit = 100;
         $projectCursor = null;
@@ -52,7 +52,7 @@ class PatchCreateMissingSchedules extends Action
             }
 
             foreach ($projects as $project) {
-                Console::log('Checking Project '.$project->getAttribute('name').' ('.$project->getId().')');
+                Console::log("Checking Project " . $project->getAttribute('name') . " (" . $project->getId() . ")");
                 $dbForProject = $getProjectDB($project);
                 $functionCursor = null;
 
@@ -79,11 +79,11 @@ class PatchCreateMissingSchedules extends Action
                                 'resourceId' => $functionId,
                                 'resourceUpdatedAt' => DateTime::now(),
                                 'projectId' => $project->getId(),
-                                'schedule' => $function->getAttribute('schedule'),
-                                'active' => ! empty($function->getAttribute('schedule')) && ! empty($function->getAttribute('deployment')),
+                                'schedule'  => $function->getAttribute('schedule'),
+                                'active' => !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')),
                             ]));
 
-                            Console::success('Recreated schedule for function '.$functionId);
+                            Console::success('Recreated schedule for function ' . $functionId);
                         }
                     }
 

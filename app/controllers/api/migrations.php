@@ -28,7 +28,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-include_once __DIR__.'/../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
@@ -110,7 +110,7 @@ App::post('/v1/migrations/firebase/oauth')
         $firebase = new OAuth2Firebase(
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
-            $request->getProtocol().'://'.$request->getHostname().'/v1/migrations/firebase/redirect'
+            $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
         $identity = $dbForConsole->findOne('identities', [
@@ -141,7 +141,7 @@ App::post('/v1/migrations/firebase/oauth')
             $identity = $identity
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $firebase->getAccessTokenExpiry('')));
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
@@ -167,7 +167,7 @@ App::post('/v1/migrations/firebase/oauth')
             'resources' => $resources,
             'statusCounters' => '{}',
             'resourceData' => '{}',
-            'errors' => [],
+            'errors' => []
         ]));
 
         $events->setParam('migrationId', $migration->getId());
@@ -368,14 +368,14 @@ App::get('/v1/migrations')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_LIST)
-    ->param('queries', [], new Migrations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Migrations::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Migrations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Migrations::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
         $queries = Query::parseQueries($queries);
 
-        if (! empty($search)) {
+        if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
@@ -505,7 +505,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             $firebase = new OAuth2Firebase(
                 App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
                 App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
-                $request->getProtocol().'://'.$request->getHostname().'/v1/migrations/firebase/redirect'
+                $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
             );
 
             $identity = $dbForConsole->findOne('identities', [
@@ -536,7 +536,7 @@ App::get('/v1/migrations/firebase/report/oauth')
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $firebase->getAccessTokenExpiry('')));
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
                 $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
@@ -597,7 +597,7 @@ App::get('/v1/migrations/firebase/connect')
         $oauth2 = new OAuth2Firebase(
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
-            $request->getProtocol().'://'.$request->getHostname().'/v1/migrations/firebase/redirect'
+            $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
         $url = $oauth2->getLoginURL();
 
@@ -611,7 +611,7 @@ App::get('/v1/migrations/firebase/redirect')
     ->desc('Capture and receive data on Firebase authorization')
     ->groups(['api', 'migrations'])
     ->label('scope', 'public')
-    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->param('code', '', new Text(2048), 'OAuth2 code.', true)
     ->inject('user')
     ->inject('project')
@@ -635,7 +635,7 @@ App::get('/v1/migrations/firebase/redirect')
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if (empty($redirect)) {
-            $redirect = $request->getProtocol().'://'.$request->getHostname().'/console/project-$projectId/settings/migrations';
+            $redirect = $request->getProtocol() . '://' . $request->getHostname() . '/console/project-$projectId/settings/migrations';
         }
 
         if ($project->isEmpty()) {
@@ -648,11 +648,11 @@ App::get('/v1/migrations/firebase/redirect')
         }
 
         // OAuth Authroization
-        if (! empty($code)) {
+        if (!empty($code)) {
             $oauth2 = new OAuth2Firebase(
                 App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
                 App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
-                $request->getProtocol().'://'.$request->getHostname().'/v1/migrations/firebase/redirect'
+                $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
             );
 
             $accessToken = $oauth2->getAccessToken($code);
@@ -678,17 +678,17 @@ App::get('/v1/migrations/firebase/redirect')
                 Query::equal('providerEmail', [$email]),
             ]);
 
-            if ($identity !== false && ! $identity->isEmpty()) {
+            if ($identity !== false && !$identity->isEmpty()) {
                 if ($identity->getAttribute('userInternalId', '') !== $user->getInternalId()) {
                     throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
                 }
             }
 
-            if ($identity !== false && ! $identity->isEmpty()) {
+            if ($identity !== false && !$identity->isEmpty()) {
                 $identity = $identity
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry));
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry));
 
                 $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             } else {
@@ -706,7 +706,7 @@ App::get('/v1/migrations/firebase/redirect')
                     'providerEmail' => $email,
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
                 ]));
             }
         } else {
@@ -738,7 +738,7 @@ App::get('/v1/migrations/firebase/projects')
         $firebase = new OAuth2Firebase(
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
-            $request->getProtocol().'://'.$request->getHostname().'/v1/migrations/firebase/redirect'
+            $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
         $identity = $dbForConsole->findOne('identities', [
@@ -781,7 +781,7 @@ App::get('/v1/migrations/firebase/projects')
             $identity = $identity
                 ->setAttribute('providerAccessToken', $accessToken)
                 ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $firebase->getAccessTokenExpiry('')));
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
 
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
@@ -964,7 +964,7 @@ App::delete('/v1/migrations/:migrationId')
             throw new Exception(Exception::MIGRATION_NOT_FOUND);
         }
 
-        if (! $dbForProject->deleteDocument('migrations', $migration->getId())) {
+        if (!$dbForProject->deleteDocument('migrations', $migration->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove migration from DB', 500);
         }
 

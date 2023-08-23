@@ -21,7 +21,8 @@ class LocaleCode extends Model
                 'description' => 'Locale name',
                 'default' => '',
                 'example' => 'US',
-            ]);
+            ])
+        ;
     }
 
     /**

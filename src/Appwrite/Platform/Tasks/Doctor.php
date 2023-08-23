@@ -2,16 +2,16 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\ClamAV\Network;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
-use Utopia\Domains\Domain;
+use Appwrite\ClamAV\Network;
 use Utopia\Logger\Logger;
-use Utopia\Platform\Action;
-use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\Config\Config;
+use Utopia\Domains\Domain;
+use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
 
 class Doctor extends Action
 {
@@ -35,24 +35,24 @@ class Doctor extends Action
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
 \_/\_/(__)  (__)  (_/\_)(__\_)(__) (__) (____)(_)(__)\__/ ");
 
-        Console::log("\n".'👩‍⚕️ Running '.APP_NAME.' Doctor for version '.App::getEnv('_APP_VERSION', 'UNKNOWN').' ...'."\n");
+        Console::log("\n" . '👩‍⚕️ Running ' . APP_NAME . ' Doctor for version ' . App::getEnv('_APP_VERSION', 'UNKNOWN') . ' ...' . "\n");
 
         Console::log('[Settings]');
 
         $domain = new Domain(App::getEnv('_APP_DOMAIN'));
 
-        if (! $domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 Hostname has no public suffix ('.$domain->get().')');
+        if (!$domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 Hostname has no public suffix (' . $domain->get() . ')');
         } else {
-            Console::log('🟢 Hostname has a public suffix ('.$domain->get().')');
+            Console::log('🟢 Hostname has a public suffix (' . $domain->get() . ')');
         }
 
         $domain = new Domain(App::getEnv('_APP_DOMAIN_TARGET'));
 
-        if (! $domain->isKnown() || $domain->isTest()) {
-            Console::log('🔴 CNAME target has no public suffix ('.$domain->get().')');
+        if (!$domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 CNAME target has no public suffix (' . $domain->get() . ')');
         } else {
-            Console::log('🟢 CNAME target has a public suffix ('.$domain->get().')');
+            Console::log('🟢 CNAME target has a public suffix (' . $domain->get() . ')');
         }
 
         if (App::getEnv('_APP_OPENSSL_KEY_V1') === 'your-secret-key' || empty(App::getEnv('_APP_OPENSSL_KEY_V1'))) {
@@ -96,21 +96,22 @@ class Doctor extends Action
         $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
-        if (empty($providerName) || empty($providerConfig) || ! Logger::hasProvider($providerName)) {
+        if (empty($providerName) || empty($providerConfig) || !Logger::hasProvider($providerName)) {
             Console::log('🔴 Logging adapter is disabled');
         } else {
-            Console::log('🟢 Logging adapter is enabled ('.$providerName.')');
+            Console::log('🟢 Logging adapter is enabled (' . $providerName . ')');
         }
 
         \sleep(0.2);
 
         try {
-            Console::log("\n".'[Connectivity]');
+            Console::log("\n" . '[Connectivity]');
         } catch (\Throwable $th) {
             //throw $th;
         }
 
         $pools = $register->get('pools'); /** @var \Utopia\Pools\Group $pools */
+
         $configs = [
             'Console.DB' => Config::getParam('pools-console'),
             'Projects.DB' => Config::getParam('pools-database'),
@@ -122,12 +123,12 @@ class Doctor extends Action
                     $adapter = $pools->get($database)->pop()->getResource();
 
                     if ($adapter->ping()) {
-                        Console::success('🟢 '.str_pad("{$key}({$database})", 50, '.').'connected');
+                        Console::success('🟢 ' . str_pad("{$key}({$database})", 50, '.') . 'connected');
                     } else {
-                        Console::error('🔴 '.str_pad("{$key}({$database})", 47, '.').'disconnected');
+                        Console::error('🔴 ' . str_pad("{$key}({$database})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
-                    Console::error('🔴 '.str_pad("{$key}.({$database})", 47, '.').'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}.({$database})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -145,12 +146,12 @@ class Doctor extends Action
                     $adapter = $pools->get($pool)->pop()->getResource();
 
                     if ($adapter->ping()) {
-                        Console::success('🟢 '.str_pad("{$key}({$pool})", 50, '.').'connected');
+                        Console::success('🟢 ' . str_pad("{$key}({$pool})", 50, '.') . 'connected');
                     } else {
-                        Console::error('🔴 '.str_pad("{$key}({$pool})", 47, '.').'disconnected');
+                        Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
                     }
                 } catch (\Throwable $th) {
-                    Console::error('🔴 '.str_pad("{$key}({$pool})", 47, '.').'disconnected');
+                    Console::error('🔴 ' . str_pad("{$key}({$pool})", 47, '.') . 'disconnected');
                 }
             }
         }
@@ -163,12 +164,12 @@ class Doctor extends Action
                 );
 
                 if ((@$antivirus->ping())) {
-                    Console::success('🟢 '.str_pad('Antivirus', 50, '.').'connected');
+                    Console::success('🟢 ' . str_pad("Antivirus", 50, '.') . 'connected');
                 } else {
-                    Console::error('🔴 '.str_pad('Antivirus', 47, '.').'disconnected');
+                    Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
                 }
             } catch (\Throwable $th) {
-                Console::error('🔴 '.str_pad('Antivirus', 47, '.').'disconnected');
+                Console::error('🔴 ' . str_pad("Antivirus", 47, '.') . 'disconnected');
             }
         }
 
@@ -181,9 +182,9 @@ class Doctor extends Action
             $mail->AltBody = 'Hello World';
 
             $mail->send();
-            Console::success('🟢 '.str_pad('SMTP', 50, '.').'connected');
+            Console::success('🟢 ' . str_pad("SMTP", 50, '.') . 'connected');
         } catch (\Throwable $th) {
-            Console::error('🔴 '.str_pad('SMTP', 47, '.').'disconnected');
+            Console::error('🔴 ' . str_pad("SMTP", 47, '.') . 'disconnected');
         }
 
         \sleep(0.2);
@@ -193,24 +194,24 @@ class Doctor extends Action
 
         foreach (
             [
-                'Uploads' => APP_STORAGE_UPLOADS,
-                'Cache' => APP_STORAGE_CACHE,
-                'Config' => APP_STORAGE_CONFIG,
-                'Certs' => APP_STORAGE_CERTIFICATES,
+            'Uploads' => APP_STORAGE_UPLOADS,
+            'Cache' => APP_STORAGE_CACHE,
+            'Config' => APP_STORAGE_CONFIG,
+            'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);
 
             if (\is_readable($device->getRoot())) {
-                Console::success('🟢 '.$key.' Volume is readable');
+                Console::success('🟢 ' . $key . ' Volume is readable');
             } else {
-                Console::error('🔴 '.$key.' Volume is unreadable');
+                Console::error('🔴 ' . $key . ' Volume is unreadable');
             }
 
             if (\is_writable($device->getRoot())) {
-                Console::success('🟢 '.$key.' Volume is writeable');
+                Console::success('🟢 ' . $key . ' Volume is writeable');
             } else {
-                Console::error('🔴 '.$key.' Volume is unwriteable');
+                Console::error('🔴 ' . $key . ' Volume is unwriteable');
             }
         }
 
@@ -221,10 +222,10 @@ class Doctor extends Action
 
         foreach (
             [
-                'Uploads' => APP_STORAGE_UPLOADS,
-                'Cache' => APP_STORAGE_CACHE,
-                'Config' => APP_STORAGE_CONFIG,
-                'Certs' => APP_STORAGE_CERTIFICATES,
+            'Uploads' => APP_STORAGE_UPLOADS,
+            'Cache' => APP_STORAGE_CACHE,
+            'Config' => APP_STORAGE_CONFIG,
+            'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);
@@ -232,32 +233,32 @@ class Doctor extends Action
             $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
             / $device->getPartitionTotalSpace()) * 100;
 
-            $message = $key.' Volume has '.Storage::human($device->getPartitionFreeSpace()).' free space ('.\round($percentage, 2).'% used)';
+            $message = $key . ' Volume has ' . Storage::human($device->getPartitionFreeSpace()) . ' free space (' . \round($percentage, 2) . '% used)';
 
             if ($percentage < 80) {
-                Console::success('🟢 '.$message);
+                Console::success('🟢 ' . $message);
             } else {
-                Console::error('🔴 '.$message);
+                Console::error('🔴 ' . $message);
             }
         }
 
         try {
             if (App::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
+                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/v1/health/version'), true);
 
                 if ($version && isset($version['version'])) {
                     if (\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {
-                        Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
+                        Console::info('You are running the latest version of ' . APP_NAME . '! 🥳');
                     } else {
-                        Console::info('A new version ('.$version['version'].') is available! 🥳'."\n");
+                        Console::info('A new version (' . $version['version'] . ') is available! 🥳' . "\n");
                     }
                 } else {
-                    Console::error('Failed to check for a newer version'."\n");
+                    Console::error('Failed to check for a newer version' . "\n");
                 }
             }
         } catch (\Throwable $th) {
-            Console::error('Failed to check for a newer version'."\n");
+            Console::error('Failed to check for a newer version' . "\n");
         }
     }
 }

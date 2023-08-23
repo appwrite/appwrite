@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
+use Utopia\CLI\Console;
+use Utopia\Database\Query;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Pools\Group;
 
 class PatchDeleteScheduleUpdatedAtAttribute extends Action
@@ -35,7 +35,7 @@ class PatchDeleteScheduleUpdatedAtAttribute extends Action
         Authorization::setDefaultStatus(false);
 
         Console::title('PatchDeleteScheduleUpdatedAtAttribute V1');
-        Console::success(APP_NAME.' PatchDeleteScheduleUpdatedAtAttribute v1 has started');
+        Console::success(APP_NAME . ' PatchDeleteScheduleUpdatedAtAttribute v1 has started');
 
         $limit = 100;
         $projectCursor = null;
@@ -51,7 +51,7 @@ class PatchDeleteScheduleUpdatedAtAttribute extends Action
             }
 
             foreach ($projects as $project) {
-                Console::log('Checking Project '.$project->getAttribute('name').' ('.$project->getId().')');
+                Console::log("Checking Project " . $project->getAttribute('name') . " (" . $project->getId() . ")");
                 $dbForProject = $getProjectDB($project);
 
                 try {

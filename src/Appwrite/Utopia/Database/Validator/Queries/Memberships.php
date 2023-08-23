@@ -9,11 +9,12 @@ class Memberships extends Base
         'teamId',
         'invited',
         'joined',
-        'confirm',
+        'confirm'
     ];
 
     /**
      * Expression constructor
+     *
      */
     public function __construct()
     {

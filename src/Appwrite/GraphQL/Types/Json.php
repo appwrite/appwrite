@@ -15,7 +15,6 @@ use GraphQL\Type\Definition\ScalarType;
 class Json extends ScalarType
 {
     public $name = 'Json';
-
     public $description = 'The `JSON` scalar type represents JSON values as specified by
         [ECMA-404](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).';
 
@@ -44,9 +43,8 @@ class Json extends ScalarType
                     $value[$field->name->value] =
                         $this->parseLiteral($field->value);
                 }
-
                 return $value;
-            case $valueNode instanceof ListValueNode:
+            case ($valueNode instanceof ListValueNode):
                 return array_map([$this, 'parseLiteral'], $valueNode->values);
             default:
                 return null;

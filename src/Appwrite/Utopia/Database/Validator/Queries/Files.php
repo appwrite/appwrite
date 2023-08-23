@@ -10,11 +10,12 @@ class Files extends Base
         'mimeType',
         'sizeOriginal',
         'chunksTotal',
-        'chunksUploaded',
+        'chunksUploaded'
     ];
 
     /**
      * Expression constructor
+     *
      */
     public function __construct()
     {

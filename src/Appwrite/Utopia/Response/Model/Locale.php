@@ -51,7 +51,8 @@ class Locale extends Model
                 'description' => 'Currency code in [ISO 4217-1](http://en.wikipedia.org/wiki/ISO_4217) three-character format',
                 'default' => '',
                 'example' => 'USD',
-            ]);
+            ])
+        ;
     }
 
     /**

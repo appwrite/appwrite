@@ -135,7 +135,8 @@ class Log extends Model
                 'description' => 'Country name.',
                 'default' => '',
                 'example' => 'United States',
-            ]);
+            ])
+        ;
     }
 
     /**

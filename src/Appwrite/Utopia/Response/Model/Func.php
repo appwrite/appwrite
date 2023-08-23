@@ -4,6 +4,8 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use stdClass;
+use Utopia\Database\Document;
 
 class Func extends Model
 {
@@ -64,7 +66,7 @@ class Func extends Model
                 'description' => 'Function variables.',
                 'default' => [],
                 'example' => [],
-                'array' => true,
+                'array' => true
             ])
             ->addRule('events', [
                 'type' => self::TYPE_STRING,
@@ -84,7 +86,8 @@ class Func extends Model
                 'description' => 'Function execution timeout in seconds.',
                 'default' => 15,
                 'example' => 15,
-            ]);
+            ])
+        ;
     }
 
     /**

@@ -6,20 +6,20 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Resque\Worker;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Executor\Executor;
+use Utopia\Database\DateTime;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Database\Document;
+use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Storage\Storage;
 
-require_once __DIR__.'/../init.php';
+require_once __DIR__ . '/../init.php';
 
 Console::title('Builds V1 Worker');
-Console::success(APP_NAME.' build worker v1 has started');
+Console::success(APP_NAME . ' build worker v1 has started');
 
 // TODO: Executor should return appropriate response codes.
 class BuildsV1 extends Worker
@@ -28,7 +28,7 @@ class BuildsV1 extends Worker
 
     public function getName(): string
     {
-        return 'builds';
+        return "builds";
     }
 
     public function init(): void
@@ -46,7 +46,7 @@ class BuildsV1 extends Worker
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
-                Console::info('Creating build for deployment: '.$deployment->getId());
+                Console::info('Creating build for deployment: ' . $deployment->getId());
                 $this->buildDeployment($project, $resource, $deployment);
                 break;
 
@@ -81,7 +81,7 @@ class BuildsV1 extends Worker
         $key = $function->getAttribute('runtime');
         $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
         if (\is_null($runtime)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
         $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', ''); /** @TODO : move this to the registry or someplace else */
@@ -90,7 +90,7 @@ class BuildsV1 extends Worker
             $dsn = new DSN($connection);
             $device = $dsn->getScheme();
         } catch (\Exception $e) {
-            Console::error($e->getMessage().'Invalid DSN. Defaulting to Local device.');
+            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
         $buildId = $deployment->getAttribute('buildId', '');
@@ -111,7 +111,7 @@ class BuildsV1 extends Worker
                 'stdout' => '',
                 'stderr' => '',
                 'endTime' => null,
-                'duration' => 0,
+                'duration' => 0
             ]));
             $deployment->setAttribute('buildId', $build->getId());
             $deployment->setAttribute('buildInternalId', $build->getInternalId());
@@ -150,7 +150,7 @@ class BuildsV1 extends Worker
         /** Trigger Realtime */
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
             'functionId' => $function->getId(),
-            'deploymentId' => $deployment->getId(),
+            'deploymentId' => $deployment->getId()
         ]);
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
@@ -171,7 +171,6 @@ class BuildsV1 extends Worker
 
         $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-
             return $carry;
         }, []);
 
@@ -184,12 +183,12 @@ class BuildsV1 extends Worker
                 remove: true,
                 entrypoint: $deployment->getAttribute('entrypoint'),
                 workdir: '/usr/code',
-                destination: APP_STORAGE_BUILDS."/app-{$project->getId()}",
+                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                 variables: $vars,
                 commands: [
                     'sh', '-c',
                     'tar -zxf /tmp/code.tar.gz -C /usr/code && \
-                    cd /usr/local/src/ && ./build.sh',
+                    cd /usr/local/src/ && ./build.sh'
                 ]
             );
 
@@ -223,7 +222,8 @@ class BuildsV1 extends Worker
 
             $schedule
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
-                ->setAttribute('active', ! empty($function->getAttribute('schedule')) && ! empty($function->getAttribute('deployment')));
+                ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
+
 
             Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
@@ -261,11 +261,12 @@ class BuildsV1 extends Worker
             ->setProject($project)
             ->addMetric(METRIC_BUILDS, 1) // per project
             ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
-            ->addMetric(METRIC_BUILDS_COMPUTE, (int) $build->getAttribute('duration', 0) * 1000)
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int) $build->getAttribute('duration', 0) * 1000)
-            ->trigger();
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+            ->trigger()
+        ;
     }
 
     public function shutdown(): void

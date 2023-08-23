@@ -4,6 +4,8 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
+use Exception;
+use PDO;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -31,7 +33,7 @@ class V15 extends Migration
         $this->providers = \array_merge(
             ['email', 'anonymous'],
             \array_map(
-                fn ($value) => 'oauth-'.$value,
+                fn ($value) => "oauth-" . $value,
                 \array_keys(Config::getParam('authProviders', []))
             )
         );
@@ -47,7 +49,7 @@ class V15 extends Migration
             );
         }
 
-        Console::log('Migrating Project: '.$this->project->getAttribute('name').' ('.$this->project->getId().')');
+        Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         Console::info('Migrating Stats');
         $this->migrateStatsMetric('requests', 'project.$all.network.requests');
         $this->migrateStatsMetric('network', 'project.$all.network.bandwidth');
@@ -74,7 +76,6 @@ class V15 extends Migration
      * Migrating all Bucket tables.
      *
      * @return void
-     *
      * @throws \Exception
      * @throws \PDOException
      */
@@ -107,7 +108,7 @@ class V15 extends Migration
                 addCreatePermission: true
             );
 
-            if (! is_null($bucket->getAttribute('permission'))) {
+            if (!is_null($bucket->getAttribute('permission'))) {
                 $bucket->setAttribute('fileSecurity', $bucket->getAttribute('permissions') === 'document');
             }
 
@@ -151,7 +152,6 @@ class V15 extends Migration
      * Migrating all Database and Collection tables.
      *
      * @return void
-     *
      * @throws \Exception
      * @throws \PDOException
      */
@@ -229,7 +229,7 @@ class V15 extends Migration
                     addCreatePermission: true
                 );
 
-                if (! is_null($collection->getAttribute('permission'))) {
+                if (!is_null($collection->getAttribute('permission'))) {
                     $collection->setAttribute('documentSecurity', $collection->getAttribute('permissions') === 'document');
                 }
 
@@ -249,10 +249,9 @@ class V15 extends Migration
                 $requiredAttributes = array_reduce($collection->getAttribute('attributes', []), function (array $carry, Document $item) {
                     if ($item->getAttribute('required', false)) {
                         $carry = array_merge($carry, [
-                            $item->getAttribute('key') => $item->getAttribute('default'),
+                            $item->getAttribute('key') => $item->getAttribute('default')
                         ]);
                     }
-
                     return $carry;
                 }, []);
 
@@ -290,7 +289,7 @@ class V15 extends Migration
     /**
      * Removes all 'write' permissions from a table.
      *
-     * @param  string  $table
+     * @param string $table
      * @return void
      */
     protected function removeWritePermissions(string $table): void
@@ -305,9 +304,8 @@ class V15 extends Migration
     /**
      * Returns all columns from the Table.
      *
-     * @param  string  $table
+     * @param string $table
      * @return array
-     *
      * @throws \Exception
      * @throws \PDOException
      */
@@ -327,7 +325,6 @@ class V15 extends Migration
      * Migrates all Integer colums for timestamps to DateTime.
      *
      * @return void
-     *
      * @throws \Exception
      */
     protected function migrateDateTimeAttribute(string $table, string $attribute): void
@@ -355,7 +352,7 @@ class V15 extends Migration
         /**
          * Skip adding filter on internal attributes.
          */
-        if (! str_starts_with($attribute, '_')) {
+        if (!str_starts_with($attribute, '_')) {
             try {
                 /**
                  * Add datetime filter.
@@ -381,9 +378,8 @@ class V15 extends Migration
     /**
      * Create the '_permissions' column to a table.
      *
-     * @param  string  $table
+     * @param string $table
      * @return void
-     *
      * @throws \Exception
      * @throws \PDOException
      */
@@ -391,7 +387,7 @@ class V15 extends Migration
     {
         $columns = $this->getSQLColumnTypes($table);
 
-        if (! array_key_exists('_permissions', $columns)) {
+        if (!array_key_exists('_permissions', $columns)) {
             try {
                 $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
             } catch (\Throwable $th) {
@@ -403,11 +399,10 @@ class V15 extends Migration
     /**
      * Populate '$permissions' from '$read' and '$write'.
      *
-     * @param  \Utopia\Database\Document  $document
-     * @param  null|string  $table
-     * @param  bool  $addCreatePermission
+     * @param \Utopia\Database\Document $document
+     * @param null|string $table
+     * @param bool $addCreatePermission
      * @return void
-     *
      * @throws \Exception
      * @throws \PDOException
      */
@@ -448,7 +443,7 @@ class V15 extends Migration
     /**
      * Migrates a permission string
      *
-     * @param  string  $permission
+     * @param string $permission
      * @return string
      */
     protected function migratePermission(string $permission): string
@@ -735,7 +730,7 @@ class V15 extends Migration
 
                     foreach ($this->documentsIterator($id) as $function) {
                         $vars = $function->getAttribute('vars', []);
-                        if (! is_array($vars)) {
+                        if (!is_array($vars)) {
                             continue;
                         }
 
@@ -756,7 +751,7 @@ class V15 extends Migration
                                 'functionInternalId' => $function->getInternalId(),
                                 'key' => (string) $key,
                                 'value' => (string) $value,
-                                'search' => implode(' ', [$variableId, $key, $function->getId()]),
+                                'search' => implode(' ', [$variableId, $key, $function->getId()])
                             ]);
                             $this->projectDB->createDocument('variables', $variable);
                         }
@@ -1228,7 +1223,7 @@ class V15 extends Migration
     /**
      * Fix run on each document
      *
-     * @param  \Utopia\Database\Document  $document
+     * @param \Utopia\Database\Document $document
      * @return \Utopia\Database\Document
      */
     protected function fixDocument(Document $document)
@@ -1479,14 +1474,14 @@ class V15 extends Migration
 
             $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
         } catch (\Throwable $th) {
-            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:".$th->getMessage());
+            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
     }
 
     /**
      * Filter from the 'encrypt' filter.
      *
-     * @param  string  $value
+     * @param string $value
      * @return string|false
      */
     protected function encryptFilter(string $value): string

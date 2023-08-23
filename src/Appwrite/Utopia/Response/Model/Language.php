@@ -27,7 +27,8 @@ class Language extends Model
                 'description' => 'Language native name.',
                 'default' => '',
                 'example' => 'Italiano',
-            ]);
+            ])
+        ;
     }
 
     /**

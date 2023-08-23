@@ -83,7 +83,8 @@ class Execution extends Model
                 'description' => 'The script execution duration in seconds.',
                 'default' => 0,
                 'example' => 0.400,
-            ]);
+            ])
+        ;
     }
 
     /**

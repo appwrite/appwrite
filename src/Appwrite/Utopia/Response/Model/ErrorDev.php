@@ -34,7 +34,8 @@ class ErrorDev extends Error
                 'default' => [],
                 'example' => '',
                 'array' => true,
-            ]);
+            ])
+        ;
     }
 
     /**

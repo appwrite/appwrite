@@ -1,10 +1,11 @@
 <?php
 
-require_once __DIR__.'/../worker.php';
+require_once __DIR__ . '/../worker.php';
 
+use Appwrite\Event\Usage;
+use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Executor;
@@ -15,12 +16,11 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
-use Utopia\Queue\Message;
 use Utopia\Queue\Server;
+use Utopia\Database\Helpers\Role;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
@@ -74,8 +74,8 @@ Server::setResource('execute', function () {
         /** Check if  runtime is supported */
         $runtimes = Config::getParam('runtimes', []);
 
-        if (! \array_key_exists($function->getAttribute('runtime'), $runtimes)) {
-            throw new Exception('Runtime "'.$function->getAttribute('runtime', '').'" is not supported');
+        if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
+            throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
@@ -109,6 +109,7 @@ Server::setResource('execute', function () {
             /**
              * Usage
              */
+
             $queueForUsage
                 ->addMetric(METRIC_EXECUTIONS, 1) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
@@ -119,7 +120,6 @@ Server::setResource('execute', function () {
 
         $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
             $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-
             return $carry;
         }, []);
 
@@ -164,7 +164,7 @@ Server::setResource('execute', function () {
         } catch (\Throwable $th) {
             $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
             $execution
-                ->setAttribute('duration', (float) $interval->format('%s.%f'))
+                ->setAttribute('duration', (float)$interval->format('%s.%f'))
                 ->setAttribute('status', 'failed')
                 ->setAttribute('statusCode', $th->getCode())
                 ->setAttribute('stderr', $th->getMessage());
@@ -195,7 +195,7 @@ Server::setResource('execute', function () {
         /** Trigger realtime event */
         $allEvents = Event::generateEvents('functions.[functionId].executions.[executionId].update', [
             'functionId' => $function->getId(),
-            'executionId' => $execution->getId(),
+            'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(
             // Pass first, most verbose event pattern
@@ -220,9 +220,10 @@ Server::setResource('execute', function () {
         /** Trigger usage queue */
         $queueForUsage
             ->setProject($project)
-            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int) ($execution->getAttribute('duration') * 1000))// per project
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int) ($execution->getAttribute('duration') * 1000))
-            ->trigger();
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+            ->trigger()
+        ;
     };
 });
 
@@ -252,7 +253,7 @@ $server->job()
             return;
         }
 
-        if (! empty($events)) {
+        if (!empty($events)) {
             $limit = 30;
             $sum = 30;
             $offset = 0;
@@ -261,19 +262,19 @@ $server->job()
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
                     Query::limit($limit),
-                    Query::offset($offset),
+                    Query::offset($offset)
                 ]);
 
                 $sum = \count($functions);
                 $offset = $offset + $limit;
 
-                Console::log('Fetched '.$sum.' functions...');
+                Console::log('Fetched ' . $sum . ' functions...');
 
                 foreach ($functions as $function) {
-                    if (! array_intersect($events, $function->getAttribute('events', []))) {
+                    if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
-                    Console::success('Iterating function: '.$function->getAttribute('name'));
+                    Console::success('Iterating function: ' . $function->getAttribute('name'));
                     try {
                         $execute(
                             log: $log,
@@ -290,13 +291,12 @@ $server->job()
                             executionId: null,
                             jwt: null
                         );
-                        Console::success('Triggered function: '.$events[0]);
+                        Console::success('Triggered function: ' . $events[0]);
                     } catch (\Throwable $th) {
-                        Console::error('Failed to execute '.$function->getId().' with error: '.$th->getMessage());
+                        Console::error("Failed to execute " . $function->getId() . " with error: " . $th->getMessage());
                     }
                 }
             }
-
             return;
         }
 

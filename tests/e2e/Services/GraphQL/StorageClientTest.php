@@ -33,7 +33,7 @@ class StorageClientTest extends Scope
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-            ],
+            ]
         ];
 
         $bucket = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -70,12 +70,12 @@ class StorageClientTest extends Scope
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                ],
+                ]
             ]),
             'map' => \json_encode([
-                '0' => ['variables.file'],
+                '0' => ["variables.file"]
             ]),
-            '0' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            '0' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -91,10 +91,8 @@ class StorageClientTest extends Scope
 
     /**
      * @depends testCreateBucket
-     *
      * @param $bucket
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetFiles($bucket): array
@@ -105,7 +103,7 @@ class StorageClientTest extends Scope
             'query' => $query,
             'variables' => [
                 'bucketId' => $bucket['_id'],
-            ],
+            ]
         ];
 
         $files = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -124,11 +122,9 @@ class StorageClientTest extends Scope
     /**
      * @depends testCreateBucket
      * @depends testCreateFile
-     *
      * @param $bucket
      * @param $file
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetFile($bucket, $file)
@@ -140,7 +136,7 @@ class StorageClientTest extends Scope
             'variables' => [
                 'bucketId' => $bucket['_id'],
                 'fileId' => $file['_id'],
-            ],
+            ]
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -156,10 +152,8 @@ class StorageClientTest extends Scope
 
     /**
      * @depends testCreateFile
-     *
      * @param $file
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetFilePreview($file)
@@ -173,7 +167,7 @@ class StorageClientTest extends Scope
                 'fileId' => $file['_id'],
                 'width' => 100,
                 'height' => 100,
-            ],
+            ]
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -188,10 +182,8 @@ class StorageClientTest extends Scope
 
     /**
      * @depends testCreateFile
-     *
      * @param $file
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetFileDownload($file)
@@ -203,7 +195,7 @@ class StorageClientTest extends Scope
             'variables' => [
                 'bucketId' => $file['bucketId'],
                 'fileId' => $file['_id'],
-            ],
+            ]
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -216,10 +208,8 @@ class StorageClientTest extends Scope
 
     /**
      * @depends testCreateFile
-     *
      * @param $file
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetFileView($file): void
@@ -231,7 +221,7 @@ class StorageClientTest extends Scope
             'variables' => [
                 'bucketId' => $file['bucketId'],
                 'fileId' => $file['_id'],
-            ],
+            ]
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -244,10 +234,8 @@ class StorageClientTest extends Scope
 
     /**
      * @depends testCreateFile
-     *
      * @param $file
      * @return array
-     *
      * @throws \Exception
      */
     public function testUpdateFile($file): array
@@ -264,7 +252,7 @@ class StorageClientTest extends Scope
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-            ],
+            ]
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -282,9 +270,7 @@ class StorageClientTest extends Scope
 
     /**
      * @depends testCreateFile
-     *
      * @param $file
-     *
      * @throws \Exception
      */
     public function testDeleteFile($file): void
@@ -296,7 +282,7 @@ class StorageClientTest extends Scope
             'variables' => [
                 'bucketId' => $file['bucketId'],
                 'fileId' => $file['_id'],
-            ],
+            ]
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

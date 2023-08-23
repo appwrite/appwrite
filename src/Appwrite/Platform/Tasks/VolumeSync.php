@@ -27,10 +27,11 @@ class VolumeSync extends Action
 
     public function action(string $source, string $destination, int $interval)
     {
-        Console::title('RSync V1');
-        Console::success(APP_NAME.' rsync process v1 has started');
 
-        if (! file_exists($source)) {
+        Console::title('RSync V1');
+        Console::success(APP_NAME . ' rsync process v1 has started');
+
+        if (!file_exists($source)) {
             Console::error('Source directory does not exist. Exiting ... ');
             Console::exit(0);
         }
@@ -41,15 +42,14 @@ class VolumeSync extends Action
             Console::info("[{$time}] Executing rsync every {$interval} seconds");
             Console::info("Syncing between $source and $destination");
 
-            if (! file_exists($source)) {
+            if (!file_exists($source)) {
                 Console::error('Source directory does not exist. Skipping ... ');
-
                 return;
             }
 
-            $stdin = '';
-            $stdout = '';
-            $stderr = '';
+            $stdin = "";
+            $stdout = "";
+            $stderr = "";
 
             Console::execute("rsync -av $source $destination", $stdin, $stdout, $stderr);
             Console::success($stdout);

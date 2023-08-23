@@ -99,7 +99,6 @@ class V12 extends Filter
     protected function parseError(array $content)
     {
         unset($content['type']);
-
         return $content;
     }
 
@@ -125,7 +124,6 @@ class V12 extends Filter
         $content['sessions'] = $parsedResponse;
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
@@ -148,7 +146,6 @@ class V12 extends Filter
         $content['files'] = $parsedResponse;
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
@@ -156,7 +153,6 @@ class V12 extends Filter
     {
         $content['tag'] = $content['deployment'];
         unset($content['deployment']);
-
         return $content;
     }
 
@@ -170,7 +166,6 @@ class V12 extends Filter
         $content['functions'] = $parsedResponse;
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
@@ -178,7 +173,6 @@ class V12 extends Filter
     {
         $content['functionId'] = $content['resourceId'];
         $content['command'] = $content['entrypoint'];
-
         return $content;
     }
 
@@ -192,14 +186,12 @@ class V12 extends Filter
         $content['deployments'] = $parsedResponse;
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
     protected function parseUsageBuckets(array $content)
     {
         unset($content['filesStorage']);
-
         return $content;
     }
 
@@ -245,7 +237,6 @@ class V12 extends Filter
         $content['executions'] = $parsedResponse;
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
@@ -253,7 +244,6 @@ class V12 extends Filter
     {
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
@@ -267,7 +257,6 @@ class V12 extends Filter
         $content['teams'] = $parsedResponse;
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 
@@ -275,7 +264,6 @@ class V12 extends Filter
     {
         $content['sum'] = $content['total'];
         unset($content['total']);
-
         return $content;
     }
 }

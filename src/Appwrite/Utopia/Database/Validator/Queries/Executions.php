@@ -8,11 +8,12 @@ class Executions extends Base
         'trigger',
         'status',
         'statusCode',
-        'duration',
+        'duration'
     ];
 
     /**
      * Expression constructor
+     *
      */
     public function __construct()
     {

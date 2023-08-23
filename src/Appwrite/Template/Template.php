@@ -17,17 +17,18 @@ class Template extends View
      *
      * Creates a new Template() from the file at $path
      *
-     * @param  string  $path
+     * @param string $path
+     *
      * @return self
+     *
      */
     public static function fromFile(string $path): self
     {
-        if (! \is_readable($path)) {
+        if (!\is_readable($path)) {
             throw new Exception("$path view template is not readable.");
         }
 
         $template = new Template();
-
         return $template->setPath($path);
     }
 
@@ -36,8 +37,10 @@ class Template extends View
      *
      * Creates a new Template() using a raw string
      *
-     * @param  string  $content
+     * @param string $content
+     *
      * @return self
+     *
      */
     public static function fromString(string $content): self
     {
@@ -47,7 +50,6 @@ class Template extends View
 
         $template = new Template();
         $template->content = $content;
-
         return $template;
     }
 
@@ -69,10 +71,10 @@ class Template extends View
 
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
-        } elseif (! empty($this->content)) {
+        } elseif (!empty($this->content)) {
             $template = $this->print($this->content, self::FILTER_NL2P);
         } else {
-            throw new Exception('"'.$this->path.'" template is not readable or not found');
+            throw new Exception('"' . $this->path . '" template is not readable or not found');
         }
 
         // First replace the variables inside the params. Then replace the variables in the template
@@ -88,6 +90,7 @@ class Template extends View
      * Parse URL string to array
      *
      * @param $url
+     *
      * @return mixed On seriously malformed URLs, parse_url() may return FALSE.
      */
     public static function parseURL($url)
@@ -101,24 +104,25 @@ class Template extends View
      * Convert PHP array to query string
      *
      * @param $url
+     *
      * @return string
      */
     public static function unParseURL(array $url)
     {
-        $scheme = isset($url['scheme']) ? $url['scheme'].'://' : '';
+        $scheme = isset($url['scheme']) ? $url['scheme'] . '://' : '';
         $host = isset($url['host']) ? $url['host'] : '';
-        $port = isset($url['port']) ? ':'.$url['port'] : '';
+        $port = isset($url['port']) ? ':' . $url['port'] : '';
 
         $user = isset($url['user']) ? $url['user'] : '';
-        $pass = isset($url['pass']) ? ':'.$url['pass'] : '';
+        $pass = isset($url['pass']) ? ':' . $url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
 
         $path = isset($url['path']) ? $url['path'] : '';
-        $query = isset($url['query']) && ! empty($url['query']) ? '?'.$url['query'] : '';
+        $query = isset($url['query']) && !empty($url['query']) ? '?' . $url['query'] : '';
 
-        $fragment = isset($url['fragment']) ? '#'.$url['fragment'] : '';
+        $fragment = isset($url['fragment']) ? '#' . $url['fragment'] : '';
 
-        return $scheme.$user.$pass.$host.$port.$path.$query.$fragment;
+        return $scheme . $user . $pass . $host . $port . $path . $query . $fragment;
     }
 
     /**
@@ -127,7 +131,8 @@ class Template extends View
      * Merge array of params to query string
      *
      * @param $query1
-     * @param  array  $query2
+     * @param array $query2
+     *
      * @return string
      */
     public static function mergeQuery($query1, array $query2)
@@ -144,7 +149,7 @@ class Template extends View
     /**
      * From Camel Case
      *
-     * @var string
+     * @var string $input
      *
      * @return string
      */
@@ -162,7 +167,7 @@ class Template extends View
     /**
      * From Camel Case to Dash Case
      *
-     * @var string
+     * @var string $input
      *
      * @return string
      */

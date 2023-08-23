@@ -46,7 +46,8 @@ class Variable extends Model
                 'description' => 'Function ID.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
-            ]);
+            ])
+        ;
     }
 
     /**

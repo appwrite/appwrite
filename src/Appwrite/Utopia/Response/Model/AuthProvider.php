@@ -43,7 +43,8 @@ class AuthProvider extends Model
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Auth Provider is active and can be used to create session.',
                 'example' => '',
-            ]);
+            ])
+        ;
     }
 
     /**

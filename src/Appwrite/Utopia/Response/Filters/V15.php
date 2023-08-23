@@ -210,13 +210,11 @@ class V15 extends Filter
             if (array_key_exists($attribute, $content)) {
                 if (empty($content[$attribute])) {
                     $content[$attribute] = 0;
-
                     continue;
                 }
                 $content[$attribute] = strtotime($content[$attribute]);
             }
         }
-
         return $content;
     }
 
@@ -227,20 +225,18 @@ class V15 extends Filter
         unset($content['hashOptions']);
 
         $content = $this->parseDatetimeAttributes($content, ['registration', 'passwordUpdate', '$createdAt', '$updatedAt']);
-
         return $content;
     }
 
     protected function parseMetric(array $content)
     {
         $content = $this->parseDatetimeAttributes($content, ['date']);
-
         return $content;
     }
 
     protected function parsePermissions(array $content)
     {
-        if (! isset($content['$permissions'])) {
+        if (!isset($content['$permissions'])) {
             return $content;
         }
 
@@ -252,10 +248,10 @@ class V15 extends Filter
             $permission = Permission::parse($permission);
             $permission_value = $permission->getRole();
             if ($permission->getIdentifier()) {
-                $permission_value .= ':'.$permission->getIdentifier();
+                $permission_value .= ':' . $permission->getIdentifier();
             }
             if ($permission->getDimension()) {
-                $permission_value .= '/'.$permission->getDimension();
+                $permission_value .= '/' . $permission->getDimension();
             }
 
             // Old type permissions meant that 'write' is equivalent to 'create', 'update' and 'delete'
@@ -309,7 +305,6 @@ class V15 extends Filter
         unset($content['documentSecurity']);
         $content = $this->parsePermissions($content);
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
-
         return $content;
     }
 
@@ -317,7 +312,6 @@ class V15 extends Filter
     {
         $content = $this->parsePermissions($content);
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
-
         return $content;
     }
 
@@ -331,7 +325,6 @@ class V15 extends Filter
         unset($content['$databaseId']);
 
         $content = $this->parsePermissionsCreatedAtUpdatedAt($content);
-
         return $content;
     }
 
@@ -361,7 +354,6 @@ class V15 extends Filter
     private function parseCreatedAtUpdatedAt($content)
     {
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt']);
-
         return $content;
     }
 
@@ -394,28 +386,24 @@ class V15 extends Filter
     private function parseKey($content)
     {
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'expire']);
-
         return $content;
     }
 
     private function parseLog($content)
     {
         $content = $this->parseDatetimeAttributes($content, ['time']);
-
         return $content;
     }
 
     private function parseMembership($content)
     {
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', '$updatedAt', 'invited', 'joined']);
-
         return $content;
     }
 
     private function parseSession($content)
     {
         $content = $this->parseDatetimeAttributes($content, ['$createdAt', 'expire', 'providerAccessTokenExpiry']);
-
         return $content;
     }
 

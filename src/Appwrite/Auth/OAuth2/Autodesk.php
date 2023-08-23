@@ -36,17 +36,18 @@ class Autodesk extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://developer.api.autodesk.com/authentication/v1/authorize?'.\http_build_query([
+        return 'https://developer.api.autodesk.com/authentication/v1/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
             'redirect_uri' => $this->callback,
-            'response_type' => 'code',
+            'response_type' => 'code'
         ]);
     }
 
     /**
-     * @param  string  $code
+     * @param string $code
+     *
      * @return array
      */
     protected function getTokens(string $code): array
@@ -62,7 +63,7 @@ class Autodesk extends OAuth2
                     'redirect_uri' => $this->callback,
                     'client_secret' => $this->appSecret,
                     'code' => $code,
-                    'grant_type' => 'authorization_code',
+                    'grant_type' => 'authorization_code'
                 ])
             );
 
@@ -73,7 +74,8 @@ class Autodesk extends OAuth2
     }
 
     /**
-     * @param  string  $refreshToken
+     * @param string $refreshToken
+     *
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -103,7 +105,8 @@ class Autodesk extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -114,7 +117,8 @@ class Autodesk extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -129,7 +133,8 @@ class Autodesk extends OAuth2
      *
      * @link https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user
      *
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -144,7 +149,8 @@ class Autodesk extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -155,13 +161,14 @@ class Autodesk extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer '.\urlencode($accessToken)];
+            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
             $user = $this->request('GET', 'https://developer.api.autodesk.com/userprofile/v1/users/@me', $headers);
             $this->user = \json_decode($user, true);
         }

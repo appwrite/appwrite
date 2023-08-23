@@ -17,7 +17,8 @@ use Appwrite\Auth\Hash;
 class Scrypt extends Hash
 {
     /**
-     * @param  string  $password Input password to hash
+     * @param string $password Input password to hash
+     *
      * @return string hash
      */
     public function hash(string $password): string
@@ -28,9 +29,10 @@ class Scrypt extends Hash
     }
 
     /**
-     * @param  string  $password Input password to validate
-     * @param  string  $hash Hash to verify password against
-     * @return bool true if password matches hash
+     * @param string $password Input password to validate
+     * @param string $hash Hash to verify password against
+     *
+     * @return boolean true if password matches hash
      */
     public function verify(string $password, string $hash): bool
     {
@@ -44,6 +46,6 @@ class Scrypt extends Hash
      */
     public function getDefaultOptions(): array
     {
-        return ['costCpu' => 8, 'costMemory' => 14, 'costParallel' => 1, 'length' => 64];
+        return [ 'costCpu' => 8, 'costMemory' => 14, 'costParallel' => 1, 'length' => 64 ];
     }
 }

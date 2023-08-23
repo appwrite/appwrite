@@ -34,7 +34,8 @@ class AlgoArgon2 extends Model
                 'description' => 'Number of threads used to compute hash.',
                 'default' => '',
                 'example' => 3,
-            ]);
+            ])
+        ;
     }
 
     /**

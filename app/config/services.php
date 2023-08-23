@@ -66,8 +66,8 @@ return [
         'optional' => true,
         'icon' => '/images/services/databases.png',
         'globalAttributes' => [
-            'databaseId',
-        ],
+            'databaseId'
+        ]
     ],
     'locale' => [
         'key' => 'locale',
@@ -237,5 +237,5 @@ return [
         'tests' => false,
         'optional' => true,
         'icon' => '/images/services/messaging.png',
-    ],
+    ]
 ];

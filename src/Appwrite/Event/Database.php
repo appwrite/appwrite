@@ -8,11 +8,8 @@ use Utopia\Database\Document;
 class Database extends Event
 {
     protected string $type = '';
-
     protected ?Document $database = null;
-
     protected ?Document $collection = null;
-
     protected ?Document $document = null;
 
     public function __construct()
@@ -23,7 +20,7 @@ class Database extends Event
     /**
      * Sets the type for this database event (use the constants starting with DATABASE_TYPE_*).
      *
-     * @param  string  $type
+     * @param string $type
      * @return self
      */
     public function setType(string $type): self
@@ -35,7 +32,6 @@ class Database extends Event
 
     /**
      * Returns the set type for the database event.
-     *
      * @return string
      */
     public function getType(): string
@@ -46,20 +42,19 @@ class Database extends Event
     /**
      * Set the database for this event
      *
-     * @param  Document  $database
+     * @param Document $database
      * @return self
      */
     public function setDatabase(Document $database): self
     {
         $this->database = $database;
-
         return $this;
     }
 
     /**
      * Set the collection for this database event.
      *
-     * @param  Document  $collection
+     * @param Document $collection
      * @return self
      */
     public function setCollection(Document $collection): self
@@ -82,7 +77,7 @@ class Database extends Event
     /**
      * Set the document for this database event.
      *
-     * @param  Document  $document
+     * @param Document $document
      * @return self
      */
     public function setDocument(Document $document): self
@@ -94,7 +89,6 @@ class Database extends Event
 
     /**
      * Returns set document for this database event.
-     *
      * @return null|Document
      */
     public function getDocument(): ?Document
@@ -106,7 +100,6 @@ class Database extends Event
      * Executes the event and send it to the database worker.
      *
      * @return string|bool
-     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -118,7 +111,7 @@ class Database extends Event
             'collection' => $this->collection,
             'document' => $this->document,
             'database' => $this->database,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
 }

@@ -7,9 +7,7 @@ use Appwrite\Extend\Exception as AppwriteException;
 class Exception extends AppwriteException
 {
     protected string $response = '';
-
     protected string $error = '';
-
     protected string $errorDescription = '';
 
     public function __construct(string $response = '', int $code = 0, \Throwable $previous = null)
@@ -21,11 +19,11 @@ class Exception extends AppwriteException
             if (\is_array($decoded['error'])) {
                 $this->error = $decoded['error']['status'];
                 $this->errorDescription = $decoded['error']['message'];
-                $this->message = $this->error.': '.$this->errorDescription;
+                $this->message =  $this->error . ': ' . $this->errorDescription;
             } else {
                 $this->error = $decoded['error'];
                 $this->errorDescription = $decoded['error_description'];
-                $this->message = $this->error.': '.$this->errorDescription;
+                $this->message =  $this->error . ': ' . $this->errorDescription;
             }
         }
         $type = match ($code) {

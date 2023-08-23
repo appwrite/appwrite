@@ -12,7 +12,7 @@ class Service
     protected $service = [];
 
     /**
-     * @var string
+     * @var string $path
      */
     public function __construct(array $service)
     {
@@ -54,8 +54,7 @@ class Service
     public function getImageVersion(): string
     {
         $image = $this->getImage();
-
-        return substr($image, ((int) strpos($image, ':')) + 1);
+        return substr($image, ((int)strpos($image, ':')) + 1);
     }
 
     /**

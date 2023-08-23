@@ -55,7 +55,6 @@ class V13 extends Filter
             $parsedResponse[] = $this->parseExecution($document);
         }
         $content['executions'] = $parsedResponse;
-
         return $content;
     }
 
@@ -75,7 +74,6 @@ class V13 extends Filter
             $parsedResponse[] = $this->parseProject($document);
         }
         $content['projects'] = $parsedResponse;
-
         return $content;
     }
 
@@ -100,7 +98,6 @@ class V13 extends Filter
             $parsedResponse[] = $this->parseMembership($document);
         }
         $content['memberships'] = $parsedResponse;
-
         return $content;
     }
 }

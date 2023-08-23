@@ -125,10 +125,10 @@ class TeamsServerTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'teamId' => $team['_id'],
+                'teamId' =>  $team['_id'],
                 'prefs' => [
-                    'key' => 'value',
-                ],
+                    'key' => 'value'
+                ]
             ],
         ];
 
@@ -156,7 +156,7 @@ class TeamsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'teamId' => $team['_id'],
-            ],
+            ]
         ];
 
         $prefs = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

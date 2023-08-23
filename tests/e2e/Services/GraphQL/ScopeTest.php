@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\GraphQL;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 
@@ -24,7 +25,7 @@ class ScopeTest extends Scope
             'variables' => [
                 'databaseId' => ID::unique(),
                 'name' => 'Actors',
-            ],
+            ]
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -48,7 +49,7 @@ class ScopeTest extends Scope
             'variables' => [
                 'databaseId' => ID::unique(),
                 'name' => 'Actors',
-            ],
+            ]
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', [

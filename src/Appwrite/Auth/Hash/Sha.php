@@ -16,7 +16,8 @@ use Appwrite\Auth\Hash;
 class Sha extends Hash
 {
     /**
-     * @param  string  $password Input password to hash
+     * @param string $password Input password to hash
+     *
      * @return string hash
      */
     public function hash(string $password): string
@@ -27,9 +28,10 @@ class Sha extends Hash
     }
 
     /**
-     * @param  string  $password Input password to validate
-     * @param  string  $hash Hash to verify password against
-     * @return bool true if password matches hash
+     * @param string $password Input password to validate
+     * @param string $hash Hash to verify password against
+     *
+     * @return boolean true if password matches hash
      */
     public function verify(string $password, string $hash): bool
     {
@@ -43,6 +45,6 @@ class Sha extends Hash
      */
     public function getDefaultOptions(): array
     {
-        return ['version' => 'sha3-512'];
+        return [ 'version' => 'sha3-512' ];
     }
 }

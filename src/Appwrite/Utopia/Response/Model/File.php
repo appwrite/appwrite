@@ -76,7 +76,8 @@ class File extends Model
                 'description' => 'Total number of chunks uploaded',
                 'default' => 0,
                 'example' => 17890,
-            ]);
+            ])
+        ;
     }
 
     /**

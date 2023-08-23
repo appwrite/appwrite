@@ -21,7 +21,8 @@ class Country extends Model
                 'description' => 'Country two-character ISO 3166-1 alpha code.',
                 'default' => '',
                 'example' => 'US',
-            ]);
+            ])
+        ;
     }
 
     /**

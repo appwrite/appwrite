@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Utopia\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
@@ -20,23 +21,23 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
+
     $code = \strtolower($code);
     $type = \strtolower($type);
-    $set = Config::getParam('avatar-'.$type, []);
+    $set = Config::getParam('avatar-' . $type, []);
 
     if (empty($set)) {
         throw new Exception(Exception::AVATAR_SET_NOT_FOUND);
     }
 
-    if (! \array_key_exists($code, $set)) {
+    if (!\array_key_exists($code, $set)) {
         throw new Exception(Exception::AVATAR_NOT_FOUND);
     }
 
-    if (! \extension_loaded('imagick')) {
+    if (!\extension_loaded('imagick')) {
         throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
     }
 
@@ -44,8 +45,8 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $path = $set[$code]['path'];
     $type = 'png';
 
-    if (! \is_readable($path)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File not readable in '.$path);
+    if (!\is_readable($path)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File not readable in ' . $path);
     }
 
     $image = new Image(\file_get_contents($path));
@@ -53,7 +54,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     $output = (empty($output)) ? $type : $output;
     $data = $image->output($output, $quality);
     $response
-        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
         ->setContentType('image/png')
         ->file($data);
     unset($image);
@@ -82,12 +83,12 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         $accessTokenExpiry = $gitHubSession->getAttribute('providerAccessTokenExpiry');
         $refreshToken = $gitHubSession->getAttribute('providerRefreshToken');
 
-        $appId = $project->getAttribute('authProviders', [])[$provider.'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider.'Secret'] ?? '{}';
+        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
 
-        $className = 'Appwrite\\Auth\\OAuth2\\'.\ucfirst($provider);
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
-        if (! \class_exists($className)) {
+        if (!\class_exists($className)) {
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
@@ -104,13 +105,13 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                 $verificationId = $oauth2->getUserID($accessToken);
 
                 if (empty($verificationId)) {
-                    throw new \Exception('Locked tokens.'); // Race codition, handeled in catch
+                    throw new \Exception("Locked tokens."); // Race codition, handeled in catch
                 }
 
                 $gitHubSession
                     ->setAttribute('providerAccessToken', $accessToken)
                     ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')));
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
                 Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
@@ -149,7 +150,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
         return [
             'name' => $githubUser,
-            'id' => $githubId,
+            'id' => $githubId
         ];
     } catch (Exception $error) {
         if ($logger) {
@@ -176,7 +177,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
-            Console::info('GitHub error log pushed with status code: '.$responseCode);
+            Console::info('GitHub error log pushed with status code: ' . $responseCode);
         }
 
         Console::warning("Failed: {$error->getMessage()}");
@@ -201,12 +202,12 @@ App::get('/v1/avatars/credit-cards/:code')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_IMAGE_PNG)
-    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
+    ->param('code', '', new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))), 'Credit Card Code. Possible values: ' . \implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))) . '.')
     ->param('width', 100, new Range(0, 2000), 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, new Range(0, 2000), 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, new Range(0, 100), 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->inject('response')
-    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
+    ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
@@ -266,17 +267,18 @@ App::get('/v1/avatars/image')
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->inject('response')
     ->action(function (string $url, int $width, int $height, Response $response) {
+
         $quality = 80;
         $output = 'png';
         $type = 'png';
 
-        if (! \extension_loaded('imagick')) {
+        if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
         $fetch = @\file_get_contents($url, false);
 
-        if (! $fetch) {
+        if (!$fetch) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
         }
 
@@ -291,7 +293,7 @@ App::get('/v1/avatars/image')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -313,13 +315,14 @@ App::get('/v1/avatars/favicon')
     ->param('url', '', new URL(['http', 'https']), 'Website URL which you want to fetch the favicon from.')
     ->inject('response')
     ->action(function (string $url, Response $response) {
+
         $width = 56;
         $height = 56;
         $quality = 80;
         $output = 'png';
         $type = 'png';
 
-        if (! \extension_loaded('imagick')) {
+        if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
@@ -341,7 +344,7 @@ App::get('/v1/avatars/favicon')
 
         \curl_close($curl);
 
-        if (! $html) {
+        if (!$html) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
@@ -392,7 +395,7 @@ App::get('/v1/avatars/favicon')
         if (empty($outputHref) || empty($outputExt)) {
             $default = \parse_url($url);
 
-            $outputHref = $default['scheme'].'://'.$default['host'].'/favicon.ico';
+            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
             $outputExt = 'ico';
         }
 
@@ -403,14 +406,14 @@ App::get('/v1/avatars/favicon')
                 throw new Exception(Exception::AVATAR_ICON_NOT_FOUND, 'Favicon not found');
             }
             $response
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
                 ->setContentType('image/x-icon')
                 ->file($data);
         }
 
         $fetch = @\file_get_contents($outputHref, false);
 
-        if (! $fetch) {
+        if (!$fetch) {
             throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
         }
 
@@ -420,7 +423,7 @@ App::get('/v1/avatars/favicon')
         $data = $image->output($output, $quality);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30).' GMT')
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType('image/png')
             ->file($data);
         unset($image);
@@ -443,6 +446,7 @@ App::get('/v1/avatars/qr')
     ->param('download', false, new Boolean(true), 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->inject('response')
     ->action(function (string $text, int $size, int $margin, bool $download, Response $response) {
+
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
         $options = new QROptions([
             'addQuietzone' => true,
@@ -460,7 +464,7 @@ App::get('/v1/avatars/qr')
         $image->crop((int) $size, (int) $size);
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
             ->send($image->output('png', 9));
     });
@@ -484,16 +488,17 @@ App::get('/v1/avatars/initials')
     ->inject('response')
     ->inject('user')
     ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
+
         $themes = [
             ['background' => '#FFA1CE'], // Default (Pink)
             ['background' => '#FDC584'], // Orange
             ['background' => '#94DBD1'], // Green
             ['background' => '#A1C4FF'], // Blue
             ['background' => '#FFA1CE'], // Pink
-            ['background' => '#CBB1FC'], // Purple
+            ['background' => '#CBB1FC'] // Purple
         ];
 
-        $name = (! empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
+        $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
         $words = \explode(' ', \strtoupper($name));
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
@@ -515,7 +520,7 @@ App::get('/v1/avatars/initials')
         // Wrap rand value to avoid out of range
         $rand = ($rand > \count($themes) - 1) ? $rand % \count($themes) : $rand;
 
-        $background = (! empty($background)) ? '#'.$background : $themes[$rand]['background'];
+        $background = (!empty($background)) ? '#' . $background : $themes[$rand]['background'];
 
         $image = new \Imagick();
         $punch = new \Imagick();
@@ -524,8 +529,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__.'/../../assets/fonts/poppins-v9-latin-500.ttf');
-        $image->setFont(__DIR__.'/../../assets/fonts/poppins-v9-latin-500.ttf');
+        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
@@ -537,13 +542,13 @@ App::get('/v1/avatars/initials')
         $punch->negateImage(true, Imagick::CHANNEL_ALPHA);
 
         $image->newImage($width, $height, $background);
-        $image->setImageFormat('png');
+        $image->setImageFormat("png");
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
 
         //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
             ->file($image->getImageBlob());
     });
@@ -577,7 +582,7 @@ App::get('/v1/cards/cloud')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if (! $mock) {
+        if (!$mock) {
             $name = $user->getAttribute('name', 'Anonymous');
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
@@ -597,9 +602,9 @@ App::get('/v1/cards/cloud')
                 $createdAt = new \DateTime($employees[$email]['memberSince'] ?? '');
             }
 
-            if (! $isEmployee && ! empty($githubName)) {
+            if (!$isEmployee && !empty($githubName)) {
                 $employeeGitHub = \array_search(\strtolower($githubName), \array_map(fn ($employee) => \strtolower($employee['gitHub']) ?? '', $employees));
-                if (! empty($employeeGitHub)) {
+                if (!empty($employeeGitHub)) {
                     $isEmployee = true;
                     $employeeNumber = $isEmployee ? $employees[$employeeGitHub]['spot'] : '';
                     $createdAt = new \DateTime($employees[$employeeGitHub]['memberSince'] ?? '');
@@ -640,20 +645,20 @@ App::get('/v1/cards/cloud')
 
         $isGolden = $isEmployee || $isHero || $isContributor;
         $isPlatinum = $isGolden ? false : $isPlatinum;
-        $memberSince = \strtoupper('Member since '.$createdAt->format('M').' '.$createdAt->format('d').', '.$createdAt->format('o'));
+        $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
         $imagePath = $isGolden ? 'front-golden.png' : ($isPlatinum ? 'front-platinum.png' : 'front.png');
 
-        $baseImage = new \Imagick(__DIR__.'/../../../public/images/cards/cloud/'.$imagePath);
+        $baseImage = new \Imagick(__DIR__ . '/../../../public/images/cards/cloud/' . $imagePath);
 
         if ($isEmployee) {
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/employee.png');
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/employee.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 793, 35);
 
             $text = new \ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_CENTER);
-            $text->setFont(__DIR__.'/../../../public/fonts/Inter-Bold.ttf');
+            $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
             $text->setFillColor(new \ImagickPixel('#FFFADF'));
             $text->setFontSize(\strlen($employeeNumber) <= 2 ? 54 : 48);
             $text->setFontWeight(700);
@@ -661,7 +666,7 @@ App::get('/v1/cards/cloud')
 
             $hashtag = new \ImagickDraw();
             $hashtag->setTextAlignment(Imagick::ALIGN_CENTER);
-            $hashtag->setFont(__DIR__.'/../../../public/fonts/Inter-Bold.ttf');
+            $hashtag->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
             $hashtag->setFillColor(new \ImagickPixel('#FFFADF'));
             $hashtag->setFontSize(28);
             $hashtag->setFontWeight(700);
@@ -684,25 +689,25 @@ App::get('/v1/cards/cloud')
         }
 
         if ($isContributor) {
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/contributor.png');
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/contributor.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 793, 34);
         }
 
         if ($isHero) {
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/hero.png');
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/hero.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 793, 34);
         }
 
-        setlocale(LC_ALL, 'en_US.utf8');
+        setlocale(LC_ALL, "en_US.utf8");
         // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
         // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
         // $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__.'/../../../public/fonts/Poppins-Bold.ttf');
+        $text->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
         $text->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -721,17 +726,17 @@ App::get('/v1/cards/cloud')
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__.'/../../../public/fonts/Inter-SemiBold.ttf');
+        $text->setFont(__DIR__ . '/../../../public/fonts/Inter-SemiBold.ttf');
         $text->setFillColor(new \ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
         $text->setFontSize(27);
         $text->setFontWeight(600);
         $text->setTextKerning(1.08);
         $baseImage->annotateImage($text, 512, 541, 0, \strtoupper($memberSince));
 
-        if (! empty($githubName)) {
+        if (!empty($githubName)) {
             $text = new \ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_CENTER);
-            $text->setFont(__DIR__.'/../../../public/fonts/Inter-Regular.ttf');
+            $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Regular.ttf');
             $text->setFillColor(new \ImagickPixel('#FFFFFF'));
             $text->setFontSize($scalingDown ? 28 : 32);
             $text->setFontWeight(400);
@@ -739,18 +744,18 @@ App::get('/v1/cards/cloud')
 
             $baseImage->annotateImage($text, 512 + 20 + 4, 373 + ($scalingDown ? 2 : 0), 0, $githubName);
 
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/github.png');
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github.png');
             $image->setGravity(Imagick::GRAVITY_CENTER);
             $precisionFix = 5;
             $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2) - 20 - 4, 373 - ($metrics['textHeight'] - $precisionFix));
         }
 
-        if (! empty($width) || ! empty($height)) {
+        if (!empty($width) || !empty($height)) {
             $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
@@ -784,7 +789,7 @@ App::get('/v1/cards/cloud-back')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if (! $mock) {
+        if (!$mock) {
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
@@ -804,31 +809,31 @@ App::get('/v1/cards/cloud-back')
             $isPlatinum = $mock === 'platinum';
         }
 
-        $userId = 'UID '.$userId;
+        $userId = 'UID ' . $userId;
 
         $isPlatinum = $isGolden ? false : $isPlatinum;
 
         $imagePath = $isGolden ? 'back-golden.png' : ($isPlatinum ? 'back-platinum.png' : 'back.png');
 
-        $baseImage = new \Imagick(__DIR__.'/../../../public/images/cards/cloud/'.$imagePath);
+        $baseImage = new \Imagick(__DIR__ . '/../../../public/images/cards/cloud/' . $imagePath);
 
-        setlocale(LC_ALL, 'en_US.utf8');
+        setlocale(LC_ALL, "en_US.utf8");
         // $userId = \iconv("utf-8", "ascii//TRANSLIT", $userId);
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__.'/../../../public/fonts/SourceCodePro-Regular.ttf');
+        $text->setFont(__DIR__ . '/../../../public/fonts/SourceCodePro-Regular.ttf');
         $text->setFillColor(new \ImagickPixel($isGolden ? '#664A1E' : ($isPlatinum ? '#555555' : '#E8E9F0')));
         $text->setFontSize(28);
         $text->setFontWeight(400);
         $baseImage->annotateImage($text, 512, 596, 0, $userId);
 
-        if (! empty($width) || ! empty($height)) {
+        if (!empty($width) || !empty($height)) {
             $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });
@@ -862,7 +867,7 @@ App::get('/v1/cards/cloud-og')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if (! $mock) {
+        if (!$mock) {
             $internalId = $user->getInternalId();
             $bgVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
             $cardVariation = $internalId % 3 === 0 ? '1' : ($internalId % 3 === 1 ? '2' : '3');
@@ -886,9 +891,9 @@ App::get('/v1/cards/cloud-og')
                 $createdAt = new \DateTime($employees[$email]['memberSince'] ?? '');
             }
 
-            if (! $isEmployee && ! empty($githubName)) {
+            if (!$isEmployee && !empty($githubName)) {
                 $employeeGitHub = \array_search(\strtolower($githubName), \array_map(fn ($employee) => \strtolower($employee['gitHub']) ?? '', $employees));
-                if (! empty($employeeGitHub)) {
+                if (!empty($employeeGitHub)) {
                     $isEmployee = true;
                     $employeeNumber = $isEmployee ? $employees[$employeeGitHub]['spot'] : '';
                     $createdAt = new \DateTime($employees[$employeeGitHub]['memberSince'] ?? '');
@@ -935,17 +940,17 @@ App::get('/v1/cards/cloud-og')
 
         $isGolden = $isEmployee || $isHero || $isContributor;
         $isPlatinum = $isGolden ? false : $isPlatinum;
-        $memberSince = \strtoupper('Member since '.$createdAt->format('M').' '.$createdAt->format('d').', '.$createdAt->format('o'));
+        $memberSince = \strtoupper('Member since ' . $createdAt->format('M') . ' ' . $createdAt->format('d') . ', ' . $createdAt->format('o'));
 
-        $baseImage = new \Imagick(__DIR__."/../../../public/images/cards/cloud/og-background{$bgVariation}.png");
+        $baseImage = new \Imagick(__DIR__ . "/../../../public/images/cards/cloud/og-background{$bgVariation}.png");
 
         $cardType = $isGolden ? '-golden' : ($isPlatinum ? '-platinum' : '');
 
-        $image = new Imagick(__DIR__."/../../../public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
+        $image = new Imagick(__DIR__ . "/../../../public/images/cards/cloud/og-card{$cardType}{$cardVariation}.png");
         $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 1008 / 2 - $image->getImageWidth() / 2, 1008 / 2 - $image->getImageHeight() / 2);
 
-        $imageLogo = new Imagick(__DIR__.'/../../../public/images/cards/cloud/og-background-logo.png');
-        $imageShadow = new Imagick(__DIR__."/../../../public/images/cards/cloud/og-shadow{$cardType}.png");
+        $imageLogo = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/og-background-logo.png');
+        $imageShadow = new Imagick(__DIR__ . "/../../../public/images/cards/cloud/og-shadow{$cardType}.png");
         if ($cardVariation === '1') {
             $baseImage->compositeImage($imageLogo, Imagick::COMPOSITE_OVER, 32, 1008 - $imageLogo->getImageHeight() - 32);
             $baseImage->compositeImage($imageShadow, Imagick::COMPOSITE_OVER, -450, 700);
@@ -959,19 +964,19 @@ App::get('/v1/cards/cloud-og')
 
         if ($isEmployee) {
             $file = $cardVariation === '3' ? 'employee-skew.png' : 'employee.png';
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/'.$file);
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/' . $file);
             $image->setGravity(Imagick::GRAVITY_CENTER);
 
             $hashtag = new \ImagickDraw();
             $hashtag->setTextAlignment(Imagick::ALIGN_LEFT);
-            $hashtag->setFont(__DIR__.'/../../../public/fonts/Inter-Bold.ttf');
+            $hashtag->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
             $hashtag->setFillColor(new \ImagickPixel('#FFFADF'));
             $hashtag->setFontSize(20);
             $hashtag->setFontWeight(700);
 
             $text = new \ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_LEFT);
-            $text->setFont(__DIR__.'/../../../public/fonts/Inter-Bold.ttf');
+            $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
             $text->setFillColor(new \ImagickPixel('#FFFADF'));
             $text->setFontSize(\strlen($employeeNumber) <= 1 ? 36 : 28);
             $text->setFontWeight(700);
@@ -1045,7 +1050,7 @@ App::get('/v1/cards/cloud-og')
 
         if ($isContributor) {
             $file = $cardVariation === '3' ? 'contributor-skew.png' : 'contributor.png';
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/'.$file);
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/' . $file);
             $image->setGravity(Imagick::GRAVITY_CENTER);
 
             if ($cardVariation === '1') {
@@ -1063,7 +1068,7 @@ App::get('/v1/cards/cloud-og')
 
         if ($isHero) {
             $file = $cardVariation === '3' ? 'hero-skew.png' : 'hero.png';
-            $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/'.$file);
+            $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/' . $file);
             $image->setGravity(Imagick::GRAVITY_CENTER);
 
             if ($cardVariation === '1') {
@@ -1079,14 +1084,14 @@ App::get('/v1/cards/cloud-og')
             }
         }
 
-        setlocale(LC_ALL, 'en_US.utf8');
+        setlocale(LC_ALL, "en_US.utf8");
         // $name = \iconv("utf-8", "ascii//TRANSLIT", $name);
         // $memberSince = \iconv("utf-8", "ascii//TRANSLIT", $memberSince);
         // $githubName = \iconv("utf-8", "ascii//TRANSLIT", $githubName);
 
         $textName = new \ImagickDraw();
         $textName->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textName->setFont(__DIR__.'/../../../public/fonts/Poppins-Bold.ttf');
+        $textName->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
         $textName->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -1123,7 +1128,7 @@ App::get('/v1/cards/cloud-og')
 
         $textMember = new \ImagickDraw();
         $textMember->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textMember->setFont(__DIR__.'/../../../public/fonts/Inter-Medium.ttf');
+        $textMember->setFont(__DIR__ . '/../../../public/fonts/Inter-Medium.ttf');
         $textMember->setFillColor(new \ImagickPixel($isGolden || $isPlatinum ? '#FFFFFF' : '#FFB9CC'));
         $textMember->setFontWeight(500);
         $textMember->setTextKerning(1.12);
@@ -1153,10 +1158,10 @@ App::get('/v1/cards/cloud-og')
             $baseImage->drawImage($textMember);
         }
 
-        if (! empty($githubName)) {
+        if (!empty($githubName)) {
             $text = new \ImagickDraw();
             $text->setTextAlignment(Imagick::ALIGN_LEFT);
-            $text->setFont(__DIR__.'/../../../public/fonts/Inter-Regular.ttf');
+            $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Regular.ttf');
             $text->setFillColor(new \ImagickPixel('#FFFFFF'));
             $text->setFontSize($scalingDown ? 16 : 20);
             $text->setFontWeight(400);
@@ -1167,7 +1172,7 @@ App::get('/v1/cards/cloud-og')
                 $group = new Imagick();
                 $groupWidth = $metrics['textWidth'] + 32 + 4;
                 $group->newImage($groupWidth, $metrics['textHeight'] + 10, '#00000000');
-                $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/github.png');
+                $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $image->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
                 $precisionFix = -1;
@@ -1185,7 +1190,7 @@ App::get('/v1/cards/cloud-og')
                 $group = new Imagick();
                 $groupWidth = $metrics['textWidth'] + 32 + 4;
                 $group->newImage($groupWidth, $metrics['textHeight'] + 10, '#00000000');
-                $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/github.png');
+                $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $image->resizeImage(32, 32, Imagick::FILTER_LANCZOS, 1);
                 $precisionFix = -1;
@@ -1205,7 +1210,7 @@ App::get('/v1/cards/cloud-og')
                 $text->annotation(320 + 15 + 2, 640, $githubName);
                 $metrics = $baseImage->queryFontMetrics($text, $githubName);
 
-                $image = new Imagick(__DIR__.'/../../../public/images/cards/cloud/github-skew.png');
+                $image = new Imagick(__DIR__ . '/../../../public/images/cards/cloud/github-skew.png');
                 $image->setGravity(Imagick::GRAVITY_CENTER);
                 $baseImage->compositeImage($image, Imagick::COMPOSITE_OVER, 512 - ($metrics['textWidth'] / 2), 518 + \strlen($githubName) * 1.3);
 
@@ -1213,12 +1218,12 @@ App::get('/v1/cards/cloud-og')
             }
         }
 
-        if (! empty($width) || ! empty($height)) {
+        if (!empty($width) || !empty($height)) {
             $baseImage->resizeImage($width, $height, Imagick::FILTER_LANCZOS, 1);
         }
 
         $response
-            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
             ->file($baseImage->getImageBlob());
     });

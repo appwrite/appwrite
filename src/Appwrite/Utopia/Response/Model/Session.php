@@ -159,7 +159,8 @@ class Session extends Model
                 'description' => 'Returns true if this the current user session.',
                 'default' => false,
                 'example' => true,
-            ]);
+            ])
+        ;
     }
 
     /**

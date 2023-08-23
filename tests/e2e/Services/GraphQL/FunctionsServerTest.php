@@ -27,7 +27,7 @@ class FunctionsServerTest extends Scope
                 'name' => 'Test Function',
                 'runtime' => 'php-8.0',
                 'execute' => [Role::any()->toString()],
-            ],
+            ]
         ];
 
         $function = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -55,7 +55,7 @@ class FunctionsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $functionId,
-            ],
+            ]
         ];
 
         $variables = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -72,17 +72,15 @@ class FunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testCreateDeployment($function): array
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_DEPLOYMENT);
-        $code = realpath(__DIR__.'/../../../resources/functions').'/php/code.tar.gz';
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php/code.tar.gz";
         $gqlPayload = [
             'operations' => \json_encode([
                 'query' => $query,
@@ -91,10 +89,10 @@ class FunctionsServerTest extends Scope
                     'entrypoint' => 'index.php',
                     'activate' => true,
                     'code' => null,
-                ],
+                ]
             ]),
             'map' => \json_encode([
-                'code' => ['variables.code'],
+                'code' => ["variables.code"]
             ]),
             'code' => new CURLFile($code, 'application/gzip', 'code.tar.gz'),
         ];
@@ -115,10 +113,8 @@ class FunctionsServerTest extends Scope
     /**
      * * @depends testCreateFunction
      * @depends testCreateDeployment
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testCreateExecution($function): array
@@ -129,7 +125,7 @@ class FunctionsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ],
+            ]
         ];
 
         $execution = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -146,11 +142,9 @@ class FunctionsServerTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testGetDeployment
-     *
      * @param $function
      * @param $deployment
      * @return array
-     *
      * @throws \Exception
      */
     public function testCreateRetryBuild($function, $deployment): void
@@ -163,7 +157,7 @@ class FunctionsServerTest extends Scope
                 'functionId' => $function['_id'],
                 'deploymentId' => $deployment['_id'],
                 'buildId' => $deployment['buildId'],
-            ],
+            ]
         ];
 
         $retryBuild = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -172,7 +166,7 @@ class FunctionsServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($retryBuild['body']['errors']);
-        $this->assertEquals('Build not failed', $retryBuild['body']['errors'][0]['message']);
+        $this->assertEquals("Build not failed", $retryBuild['body']['errors'][0]['message']);
     }
 
     public function testGetFunctions(): array
@@ -198,10 +192,8 @@ class FunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetFunction($function): array
@@ -212,7 +204,7 @@ class FunctionsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ],
+            ]
         ];
 
         $function = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -251,10 +243,8 @@ class FunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetDeployments($function)
@@ -265,7 +255,7 @@ class FunctionsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ],
+            ]
         ];
 
         $deployments = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -284,10 +274,8 @@ class FunctionsServerTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testCreateDeployment
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetDeployment($function, $deployment)
@@ -299,7 +287,7 @@ class FunctionsServerTest extends Scope
             'variables' => [
                 'functionId' => $function['_id'],
                 'deploymentId' => $deployment['_id'],
-            ],
+            ]
         ];
 
         $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -317,10 +305,8 @@ class FunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetExecutions($function): array
@@ -331,7 +317,7 @@ class FunctionsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ],
+            ]
         ];
 
         $executions = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -350,11 +336,9 @@ class FunctionsServerTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testCreateExecution
-     *
      * @param $function
      * @param $execution
      * @return array
-     *
      * @throws \Exception
      */
     public function testGetExecution($function, $execution): array
@@ -366,7 +350,7 @@ class FunctionsServerTest extends Scope
             'variables' => [
                 'functionId' => $function['_id'],
                 'executionId' => $execution['_id'],
-            ],
+            ]
         ];
 
         $execution = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -384,10 +368,8 @@ class FunctionsServerTest extends Scope
 
     /**
      * @depends testCreateFunction
-     *
      * @param $function
      * @return array
-     *
      * @throws \Exception
      */
     public function testUpdateFunction($function): array
@@ -404,7 +386,7 @@ class FunctionsServerTest extends Scope
                     'name' => 'John Doe',
                     'age' => 42,
                 ],
-            ],
+            ]
         ];
 
         $function = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -423,10 +405,8 @@ class FunctionsServerTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testCreateDeployment
-     *
      * @param $function
      * @param $deployment
-     *
      * @throws \Exception
      */
     public function testDeleteDeployment($function, $deployment): void
@@ -438,7 +418,7 @@ class FunctionsServerTest extends Scope
             'variables' => [
                 'functionId' => $function['_id'],
                 'deploymentId' => $deployment['_id'],
-            ],
+            ]
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -453,9 +433,7 @@ class FunctionsServerTest extends Scope
     /**
      * @depends testCreateFunction
      * @depends testDeleteDeployment
-     *
      * @param $function
-     *
      * @throws \Exception
      */
     public function testDeleteFunction($function): void
@@ -466,7 +444,7 @@ class FunctionsServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'functionId' => $function['_id'],
-            ],
+            ]
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

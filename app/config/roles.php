@@ -25,7 +25,7 @@ $member = [
     'providers.write',
     'providers.read',
     'messages.write',
-    'messages.read',
+    'messages.read'
 ];
 
 $admins = [
@@ -64,7 +64,7 @@ $admins = [
     'providers.write',
     'providers.read',
     'messages.write',
-    'messages.read',
+    'messages.read'
 ];
 
 return [

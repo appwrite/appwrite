@@ -5,14 +5,12 @@ namespace Appwrite\Resque;
 use Appwrite\Event\Usage;
 use Exception;
 use Utopia\App;
-use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -20,6 +18,8 @@ use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
+use Utopia\Database\Validator\Authorization;
+use Utopia\DSN\DSN;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
 
@@ -43,12 +43,11 @@ abstract class Worker
      * Function for identifying the worker needs to be set to unique name
      *
      * @return string
-     *
      * @throws Exception
      */
     public function getName(): string
     {
-        throw new Exception('Please implement getName method in worker');
+        throw new Exception("Please implement getName method in worker");
     }
 
     /**
@@ -56,12 +55,11 @@ abstract class Worker
      * Can include any preparations, such as connecting to external services or loading files
      *
      * @return void
-     *
      * @throws \Exception|\Throwable
      */
     public function init(): void
     {
-        throw new Exception('Please implement init method in worker');
+        throw new Exception("Please implement init method in worker");
     }
 
     /**
@@ -69,12 +67,11 @@ abstract class Worker
      * You can access $args here, it will contain event information
      *
      * @return void
-     *
      * @throws \Exception|\Throwable
      */
     public function run(): void
     {
-        throw new Exception('Please implement run method in worker');
+        throw new Exception("Please implement run method in worker");
     }
 
     /**
@@ -82,23 +79,20 @@ abstract class Worker
      * You can do cleanup here, such as disconnecting from services or removing temp files
      *
      * @return void
-     *
      * @throws \Exception|\Throwable
      */
     public function shutdown(): void
     {
-        throw new Exception('Please implement shutdown method in worker');
+        throw new Exception("Please implement shutdown method in worker");
     }
 
     public const DATABASE_PROJECT = 'project';
-
     public const DATABASE_CONSOLE = 'console';
 
     /**
      * A wrapper around 'init' function with non-worker-specific code
      *
      * @return void
-     *
      * @throws \Exception|\Throwable
      */
     public function setUp(): void
@@ -107,7 +101,7 @@ abstract class Worker
             $this->init();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
-                $errorCallback($error, 'init', $this->getName());
+                $errorCallback($error, "init", $this->getName());
             }
 
             throw $error;
@@ -118,7 +112,6 @@ abstract class Worker
      * A wrapper around 'run' function with non-worker-specific code
      *
      * @return void
-     *
      * @throws \Exception|\Throwable
      */
     public function perform(): void
@@ -132,7 +125,7 @@ abstract class Worker
             $this->run();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
-                $errorCallback($error, 'run', $this->getName(), $this->args);
+                $errorCallback($error, "run", $this->getName(), $this->args);
             }
 
             throw $error;
@@ -143,7 +136,6 @@ abstract class Worker
      * A wrapper around 'shutdown' function with non-worker-specific code
      *
      * @return void
-     *
      * @throws \Exception|\Throwable
      */
     public function tearDown(): void
@@ -157,17 +149,17 @@ abstract class Worker
             $this->shutdown();
         } catch (\Throwable $error) {
             foreach (self::$errorCallbacks as $errorCallback) {
-                $errorCallback($error, 'shutdown', $this->getName());
+                $errorCallback($error, "shutdown", $this->getName());
             }
 
             throw $error;
         }
     }
 
+
     /**
      * Register callback. Will be executed when error occurs.
-     *
-     * @param  callable  $callback
+     * @param callable $callback
      * @return void
      */
     public static function error(callable $callback): void
@@ -177,10 +169,8 @@ abstract class Worker
 
     /**
      * Get internal project database
-     *
-     * @param  Document  $project
+     * @param Document $project
      * @return Database
-     *
      * @throws Exception
      */
     protected static $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
@@ -190,6 +180,7 @@ abstract class Worker
         global $register;
 
         $pools = $register->get('pools'); /** @var Group $pools */
+
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $this->getConsoleDB();
         }
@@ -198,30 +189,28 @@ abstract class Worker
 
         if (isset(self::$databases[$databaseName])) {
             $database = self::$databases[$databaseName];
-            $database->setNamespace('_'.$project->getInternalId());
-
+            $database->setNamespace('_' . $project->getInternalId());
             return $database;
         }
 
         $dbAdapter = $pools
             ->get($project->getAttribute('database'))
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
 
         $database = new Database($dbAdapter, $this->getCache());
 
         self::$databases[$databaseName] = $database;
 
-        $database->setNamespace('_'.$project->getInternalId());
+        $database->setNamespace('_' . $project->getInternalId());
 
         return $database;
     }
 
     /**
      * Get console database
-     *
      * @return Database
-     *
      * @throws Exception
      */
     protected function getConsoleDB(): Database
@@ -229,19 +218,20 @@ abstract class Worker
         global $register;
 
         $pools = $register->get('pools'); /** @var Group $pools */
+
         $databaseName = 'console';
 
         if (isset(self::$databases[$databaseName])) {
             $database = self::$databases[$databaseName];
             $database->setNamespace('console');
-
             return $database;
         }
 
         $dbAdapter = $pools
             ->get('console')
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
 
         $database = new Database($dbAdapter, $this->getCache());
 
@@ -252,9 +242,9 @@ abstract class Worker
         return $database;
     }
 
+
     /**
      * Get Cache
-     *
      * @return Cache
      */
     protected function getCache(): Cache
@@ -262,6 +252,7 @@ abstract class Worker
         global $register;
 
         $pools = $register->get('pools'); /** @var Group $pools */
+
         $list = Config::getParam('pools-cache', []);
         $adapters = [];
 
@@ -269,7 +260,8 @@ abstract class Worker
             $adapters[] = $pools
                 ->get($value)
                 ->pop()
-                ->getResource();
+                ->getResource()
+            ;
         }
 
         return new Cache(new Sharding($adapters));
@@ -277,9 +269,7 @@ abstract class Worker
 
     /**
      * Get usage queue
-     *
      * @return Usage
-     *
      * @throws Exception
      */
     protected function getUsageQueue(): Usage
@@ -297,46 +287,42 @@ abstract class Worker
 
     /**
      * Get Functions Storage Device
-     *
-     * @param  string  $projectId of the project
+     * @param string $projectId of the project
      * @return Device
      */
     protected function getFunctionsDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
+        return $this->getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     }
 
     /**
      * Get Files Storage Device
-     *
-     * @param  string  $projectId of the project
+     * @param string $projectId of the project
      * @return Device
      */
     protected function getFilesDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_UPLOADS.'/app-'.$projectId);
+        return $this->getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     }
 
     /**
      * Get Builds Storage Device
-     *
-     * @param  string  $projectId of the project
+     * @param string $projectId of the project
      * @return Device
      */
     protected function getBuildsDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_BUILDS.'/app-'.$projectId);
+        return $this->getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
     }
 
     protected function getCacheDevice(string $projectId): Device
     {
-        return $this->getDevice(APP_STORAGE_CACHE.'/app-'.$projectId);
+        return $this->getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
     }
 
     /**
      * Get Device based on selected storage environment
-     *
-     * @param  string  $root path of the device
+     * @param string $root path of the device
      * @return Device
      */
     public function getDevice(string $root): Device
@@ -357,7 +343,7 @@ abstract class Worker
             $bucket = $dsn->getPath();
             $region = $dsn->getParam('region');
         } catch (\Exception $e) {
-            Console::error($e->getMessage().'Invalid DSN. Defaulting to Local device.');
+            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
         switch ($device) {

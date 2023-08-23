@@ -26,6 +26,7 @@ abstract class Template extends Model
                 'description' => 'Template message',
                 'default' => '',
                 'example' => 'Click on the link to verify your account.',
-            ]);
+            ])
+        ;
     }
 }

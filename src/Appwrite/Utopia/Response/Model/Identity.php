@@ -69,7 +69,8 @@ class Identity extends Model
                 'description' => 'Identity Provider Refresh Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
-            ]);
+            ])
+        ;
     }
 
     /**

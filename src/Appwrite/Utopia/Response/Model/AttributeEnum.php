@@ -42,12 +42,13 @@ class AttributeEnum extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'element',
-            ]);
+            ])
+        ;
     }
 
     public array $conditions = [
         'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_ENUM,
+        'format' => \APP_DATABASE_ATTRIBUTE_ENUM
     ];
 
     /**

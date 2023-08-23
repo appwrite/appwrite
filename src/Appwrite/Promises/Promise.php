@@ -5,9 +5,7 @@ namespace Appwrite\Promises;
 abstract class Promise
 {
     protected const STATE_PENDING = 1;
-
     protected const STATE_FULFILLED = 0;
-
     protected const STATE_REJECTED = -1;
 
     protected int $state = self::STATE_PENDING;
@@ -39,7 +37,7 @@ abstract class Promise
     /**
      * Create a new promise from the given callable.
      *
-     * @param  callable  $promise
+     * @param callable $promise
      * @return self
      */
     public static function create(callable $promise): self
@@ -50,7 +48,7 @@ abstract class Promise
     /**
      * Resolve promise with given value.
      *
-     * @param  mixed  $value
+     * @param mixed $value
      * @return self
      */
     public static function resolve(mixed $value): self
@@ -63,7 +61,7 @@ abstract class Promise
     /**
      * Rejects the promise with the given reason.
      *
-     * @param  mixed  $value
+     * @param mixed $value
      * @return self
      */
     public static function reject(mixed $value): self
@@ -76,7 +74,7 @@ abstract class Promise
     /**
      * Catch any exception thrown by the executor.
      *
-     * @param  callable  $onRejected
+     * @param callable $onRejected
      * @return self
      */
     public function catch(callable $onRejected): self
@@ -87,8 +85,8 @@ abstract class Promise
     /**
      * Execute the promise.
      *
-     * @param  callable|null  $onFulfilled
-     * @param  callable|null  $onRejected
+     * @param callable|null $onFulfilled
+     * @param callable|null $onRejected
      * @return self
      */
     public function then(
@@ -101,15 +99,13 @@ abstract class Promise
         if ($this->isFulfilled() && $onFulfilled === null) {
             return $this;
         }
-
         return self::create(function (callable $resolve, callable $reject) use ($onFulfilled, $onRejected) {
             while ($this->isPending()) {
                 usleep(25000);
             }
             $callable = $this->isFulfilled() ? $onFulfilled : $onRejected;
-            if (! \is_callable($callable)) {
+            if (!\is_callable($callable)) {
                 $resolve($this->result);
-
                 return;
             }
             try {
@@ -123,7 +119,7 @@ abstract class Promise
     /**
      * Returns a promise that completes when all passed in promises complete.
      *
-     * @param  iterable|self[]  $promises
+     * @param iterable|self[] $promises
      * @return self
      */
     abstract public static function all(iterable $promises): self;
@@ -131,14 +127,13 @@ abstract class Promise
     /**
      * Set resolved result
      *
-     * @param  mixed  $value
+     * @param mixed $value
      * @return void
      */
     protected function setResult(mixed $value): void
     {
-        if (! \is_callable([$value, 'then'])) {
+        if (!\is_callable([$value, 'then'])) {
             $this->result = $value;
-
             return;
         }
 
@@ -151,7 +146,7 @@ abstract class Promise
 
         $value->then($callable, $callable);
 
-        while (! $resolved) {
+        while (!$resolved) {
             usleep(25000);
         }
     }
@@ -159,7 +154,7 @@ abstract class Promise
     /**
      * Change promise state
      *
-     * @param  int  $state
+     * @param integer $state
      * @return void
      */
     protected function setState(int $state): void
@@ -170,7 +165,7 @@ abstract class Promise
     /**
      * Promise is pending
      *
-     * @return bool
+     * @return boolean
      */
     protected function isPending(): bool
     {
@@ -180,7 +175,7 @@ abstract class Promise
     /**
      * Promise is fulfilled
      *
-     * @return bool
+     * @return boolean
      */
     protected function isFulfilled(): bool
     {
@@ -190,7 +185,7 @@ abstract class Promise
     /**
      * Promise is rejected
      *
-     * @return bool
+     * @return boolean
      */
     protected function isRejected(): bool
     {

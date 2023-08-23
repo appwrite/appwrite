@@ -15,7 +15,8 @@ class Mock extends Model
                 'description' => 'Result message.',
                 'default' => '',
                 'example' => 'Success',
-            ]);
+            ])
+        ;
     }
 
     /**

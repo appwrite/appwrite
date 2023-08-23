@@ -39,7 +39,6 @@ class Phpass extends Hash
      * Alphabet used in itoa64 conversions.
      *
      * @var    string
-     *
      * @since  0.1.0
      */
     protected string $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -60,7 +59,8 @@ class Phpass extends Hash
     }
 
     /**
-     * @param  string  $password Input password to hash
+     * @param string $password Input password to hash
+     *
      * @return string hash
      */
     public function hash(string $password): string
@@ -68,7 +68,7 @@ class Phpass extends Hash
         $options = $this->getDefaultOptions();
 
         $random = '';
-        if (CRYPT_BLOWFISH === 1 && ! $options['portable_hashes']) {
+        if (CRYPT_BLOWFISH === 1 && !$options['portable_hashes']) {
             $random = $this->getRandomBytes(16, $options);
             $hash = crypt($password, $this->gensaltBlowfish($random, $options));
             if (strlen($hash) === 60) {
@@ -92,9 +92,10 @@ class Phpass extends Hash
     }
 
     /**
-     * @param  string  $password Input password to validate
-     * @param  string  $hash Hash to verify password against
-     * @return bool true if password matches hash
+     * @param string $password Input password to validate
+     * @param string $hash Hash to verify password against
+     *
+     * @return boolean true if password matches hash
      */
     public function verify(string $password, string $hash): bool
     {
@@ -113,16 +114,15 @@ class Phpass extends Hash
     }
 
     /**
-     * @param  int  $count
-     * @return string $output
+     * @param  int $count
      *
+     * @return String $output
      * @since 0.1.0
-     *
      * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
      */
     protected function getRandomBytes(int $count, array $options): string
     {
-        if (! is_int($count) || $count < 1) {
+        if (!is_int($count) || $count < 1) {
             throw new \Exception('Argument count must be a positive integer');
         }
         $output = '';
@@ -135,7 +135,7 @@ class Phpass extends Hash
             $output = '';
 
             for ($i = 0; $i < $count; $i += 16) {
-                $options['iteration_count_log2'] = md5(microtime().$options['iteration_count_log2']);
+                $options['iteration_count_log2'] = md5(microtime() . $options['iteration_count_log2']);
                 $output .= md5($options['iteration_count_log2'], true);
             }
 
@@ -146,48 +146,47 @@ class Phpass extends Hash
     }
 
     /**
-     * @param  string  $input
-     * @param  int  $count
-     * @return string $output
+     * @param  String $input
+     * @param  int $count
      *
+     * @return String $output
      * @since 0.1.0
-     *
      * @throws Exception Thows an Exception if the $count parameter is not a positive integer.
      */
     protected function encode64($input, $count)
     {
-        if (! is_int($count) || $count < 1) {
+        if (!is_int($count) || $count < 1) {
             throw new \Exception('Argument count must be a positive integer');
         }
         $output = '';
         $i = 0;
         do {
             $value = ord($input[$i++]);
-            $output .= $this->itoa64[$value & 0x3F];
+            $output .= $this->itoa64[$value & 0x3f];
             if ($i < $count) {
                 $value |= ord($input[$i]) << 8;
             }
-            $output .= $this->itoa64[($value >> 6) & 0x3F];
+            $output .= $this->itoa64[($value >> 6) & 0x3f];
             if ($i++ >= $count) {
                 break;
             }
             if ($i < $count) {
                 $value |= ord($input[$i]) << 16;
             }
-            $output .= $this->itoa64[($value >> 12) & 0x3F];
+            $output .= $this->itoa64[($value >> 12) & 0x3f];
             if ($i++ >= $count) {
                 break;
             }
-            $output .= $this->itoa64[($value >> 18) & 0x3F];
+            $output .= $this->itoa64[($value >> 18) & 0x3f];
         } while ($i < $count);
 
         return $output;
     }
 
     /**
-     * @param  string  $input
-     * @return string $output
+     * @param  String $input
      *
+     * @return String $output
      * @since 0.1.0
      */
     private function gensaltPrivate($input, $options)
@@ -200,10 +199,10 @@ class Phpass extends Hash
     }
 
     /**
-     * @param  string  $password
-     * @param  string  $setting
-     * @return string $output
+     * @param  String $password
+     * @param  String $setting
      *
+     * @return String $output
      * @since 0.1.0
      */
     private function cryptPrivate($password, $setting)
@@ -234,9 +233,9 @@ class Phpass extends Hash
          * consequently in lower iteration counts and hashes that are
          * quicker to crack (by non-PHP code).
          */
-        $hash = md5($salt.$password, true);
+        $hash = md5($salt . $password, true);
         do {
-            $hash = md5($hash.$password, true);
+            $hash = md5($hash . $password, true);
         } while (--$count);
         $output = substr($setting, 0, 12);
         $output .= $this->encode64($hash, 16);
@@ -245,9 +244,9 @@ class Phpass extends Hash
     }
 
     /**
-     * @param  string  $input
-     * @return string $output
+     * @param  String $input
      *
+     * @return String $output
      * @since 0.1.0
      */
     private function gensaltBlowfish($input, $options)
@@ -279,11 +278,11 @@ class Phpass extends Hash
             $c2 = ord($input[$i++]);
             $c1 |= $c2 >> 4;
             $output .= $itoa64[$c1];
-            $c1 = ($c2 & 0x0F) << 2;
+            $c1 = ($c2 & 0x0f) << 2;
             $c2 = ord($input[$i++]);
             $c1 |= $c2 >> 6;
             $output .= $itoa64[$c1];
-            $output .= $itoa64[$c2 & 0x3F];
+            $output .= $itoa64[$c2 & 0x3f];
         } while (1);
 
         return $output;

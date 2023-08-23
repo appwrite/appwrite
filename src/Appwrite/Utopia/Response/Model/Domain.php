@@ -62,7 +62,8 @@ class Domain extends Model
                 'description' => 'Certificate ID.',
                 'default' => '',
                 'example' => '6ejea5c13377e',
-            ]);
+            ])
+        ;
     }
 
     /**

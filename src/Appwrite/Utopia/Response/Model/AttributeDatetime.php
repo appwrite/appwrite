@@ -37,11 +37,12 @@ class AttributeDatetime extends Attribute
                 'example' => self::TYPE_DATETIME_EXAMPLE,
                 'array' => false,
                 'required' => false,
-            ]);
+            ])
+        ;
     }
 
     public array $conditions = [
-        'type' => self::TYPE_DATETIME,
+        'type' => self::TYPE_DATETIME
     ];
 
     /**

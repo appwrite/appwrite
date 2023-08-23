@@ -7,21 +7,13 @@ use Exception;
 class Client
 {
     public const METHOD_GET = 'GET';
-
     public const METHOD_POST = 'POST';
-
     public const METHOD_PUT = 'PUT';
-
     public const METHOD_PATCH = 'PATCH';
-
     public const METHOD_DELETE = 'DELETE';
-
     public const METHOD_HEAD = 'HEAD';
-
     public const METHOD_OPTIONS = 'OPTIONS';
-
     public const METHOD_CONNECT = 'CONNECT';
-
     public const METHOD_TRACE = 'TRACE';
 
     /**
@@ -60,7 +52,8 @@ class Client
      *
      * Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.
      *
-     * @param  string  $value
+     * @param string $value
+     *
      * @return self $this
      */
     public function setProject(string $value): self
@@ -75,7 +68,8 @@ class Client
      *
      * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
      *
-     * @param  string  $value
+     * @param string $value
+     *
      * @return self $this
      */
     public function setKey(string $value): self
@@ -88,7 +82,8 @@ class Client
     /**
      * Set Locale
      *
-     * @param  string  $value
+     * @param string $value
+     *
      * @return self $this
      */
     public function setLocale(string $value): self
@@ -101,7 +96,8 @@ class Client
     /**
      * Set Mode
      *
-     * @param  string  $value
+     * @param string $value
+     *
      * @return self $this
      */
     public function setMode(string $value): self
@@ -112,7 +108,7 @@ class Client
     }
 
     /**
-     * @param  bool  $status true
+     * @param bool $status true
      * @return self $this
      */
     public function setSelfSigned(bool $status = true): self
@@ -123,7 +119,7 @@ class Client
     }
 
     /**
-     * @param  string  $endpoint
+     * @param string $endpoint
      * @return self $this
      */
     public function setEndpoint(string $endpoint): self
@@ -142,8 +138,9 @@ class Client
     }
 
     /**
-     * @param  string  $key
-     * @param  string  $value
+     * @param string $key
+     * @param string $value
+     *
      * @return self $this
      */
     public function addHeader(string $key, string $value): self
@@ -158,20 +155,19 @@ class Client
      *
      * Make an API call
      *
-     * @param  string  $method
-     * @param  string  $path
-     * @param  array  $params
-     * @param  array  $headers
-     * @param  bool  $decode
+     * @param string $method
+     * @param string $path
+     * @param array $params
+     * @param array $headers
+     * @param bool $decode
      * @return array
-     *
      * @throws Exception
      */
     public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true): array
     {
-        $headers = array_merge($this->headers, $headers);
-        $ch = curl_init($this->endpoint.$path.(($method == self::METHOD_GET && ! empty($params)) ? '?'.http_build_query($params) : ''));
-        $responseHeaders = [];
+        $headers            = array_merge($this->headers, $headers);
+        $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
+        $responseHeaders    = [];
 
         $query = match ($headers['content-type']) {
             'application/json' => json_encode($params),
@@ -181,7 +177,7 @@ class Client
         };
 
         foreach ($headers as $i => $header) {
-            $headers[] = $i.':'.$header;
+            $headers[] = $i . ':' . $header;
             unset($headers[$i]);
         }
 
@@ -216,15 +212,15 @@ class Client
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
 
-        $responseBody = curl_exec($ch);
-        $responseType = $responseHeaders['content-type'] ?? '';
+        $responseBody   = curl_exec($ch);
+        $responseType   = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($decode && substr($responseType, 0, strpos($responseType, ';')) == 'application/json') {
             $json = json_decode($responseBody, true);
 
             if ($json === null) {
-                throw new Exception('Failed to parse response: '.$responseBody);
+                throw new Exception('Failed to parse response: ' . $responseBody);
             }
 
             $responseBody = $json;
@@ -232,7 +228,7 @@ class Client
         }
 
         if ((curl_errno($ch))) {
-            throw new Exception(curl_error($ch).' with status code '.$responseStatus, $responseStatus);
+            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
         }
 
         curl_close($ch);
@@ -240,19 +236,19 @@ class Client
         $responseHeaders['status-code'] = $responseStatus;
 
         if ($responseStatus === 500) {
-            echo 'Server error('.$method.': '.$path.'. Params: '.json_encode($params).'): '.json_encode($responseBody)."\n";
+            echo 'Server error(' . $method . ': ' . $path . '. Params: ' . json_encode($params) . '): ' . json_encode($responseBody) . "\n";
         }
 
         return [
             'headers' => $responseHeaders,
-            'body' => $responseBody,
+            'body' => $responseBody
         ];
     }
 
     /**
      * Parse Cookie String
      *
-     * @param  string  $cookie
+     * @param string $cookie
      * @return array
      */
     public function parseCookie(string $cookie): array
@@ -267,8 +263,8 @@ class Client
     /**
      * Flatten params array to PHP multiple format
      *
-     * @param  array  $data
-     * @param  string  $prefix
+     * @param array $data
+     * @param string $prefix
      * @return array
      */
     protected function flatten(array $data, string $prefix = ''): array

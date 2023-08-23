@@ -7,11 +7,12 @@ class Collections extends Base
     public const ALLOWED_ATTRIBUTES = [
         'name',
         'enabled',
-        'documentSecurity',
+        'documentSecurity'
     ];
 
     /**
      * Expression constructor
+     *
      */
     public function __construct()
     {

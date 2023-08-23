@@ -4,8 +4,8 @@
  * List of Appwrite Cloud Functions supported runtimes
  */
 
-use Appwrite\Runtimes\Runtimes;
 use Utopia\App;
+use Appwrite\Runtimes\Runtimes;
 
 $runtimes = new Runtimes('v2');
 

@@ -10,7 +10,6 @@ use Utopia\Database\Document;
 class Migration extends Event
 {
     protected string $type = '';
-
     protected ?Document $migration = null;
 
     public function __construct()
@@ -21,7 +20,7 @@ class Migration extends Event
     /**
      * Sets migration document for the migration event.
      *
-     * @param  Document  $migration
+     * @param Document $migration
      * @return self
      */
     public function setMigration(Document $migration): self
@@ -44,7 +43,8 @@ class Migration extends Event
     /**
      * Sets migration type for the migration event.
      *
-     * @param  string  $type
+     * @param string $type
+     *
      * @return self
      */
     public function setType(string $type): self
@@ -68,7 +68,6 @@ class Migration extends Event
      * Executes the migration event and sends it to the migrations worker.
      *
      * @return string|bool
-     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -76,16 +75,15 @@ class Migration extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'migration' => $this->migration,
+            'migration' => $this->migration
         ]);
     }
 
     /**
      * Schedules the migration event and schedules it in the migrations worker queue.
      *
-     * @param  \DateTime|int  $at
+     * @param \DateTime|int $at
      * @return void
-     *
      * @throws \Resque_Exception
      * @throws \ResqueScheduler_InvalidTimestampException
      */
@@ -94,7 +92,7 @@ class Migration extends Event
         ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'migration' => $this->migration,
+            'migration' => $this->migration
         ]);
     }
 }

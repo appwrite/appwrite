@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\Platform\Action;
 use Appwrite\Event\Certificate;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Platform\Action;
 use Utopia\Validator\Hostname;
 
 class SSL extends Action
@@ -26,11 +26,11 @@ class SSL extends Action
 
     public function action(string $domain): void
     {
-        Console::success('Scheduling a job to issue a TLS certificate for domain: '.$domain);
+        Console::success('Scheduling a job to issue a TLS certificate for domain: ' . $domain);
 
         (new Certificate())
             ->setDomain(new Document([
-                'domain' => $domain,
+                'domain' => $domain
             ]))
             ->setSkipRenewCheck(true)
             ->trigger();

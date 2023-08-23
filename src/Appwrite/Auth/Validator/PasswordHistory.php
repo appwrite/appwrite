@@ -12,9 +12,7 @@ use Appwrite\Auth\Auth;
 class PasswordHistory extends Password
 {
     protected array $history;
-
     protected string $algo;
-
     protected array $algoOptions;
 
     public function __construct(array $history, string $algo, array $algoOptions = [])
@@ -39,7 +37,8 @@ class PasswordHistory extends Password
     /**
      * Is valid.
      *
-     * @param  mixed  $value
+     * @param mixed $value
+     *
      * @return bool
      */
     public function isValid($value): bool
@@ -49,7 +48,6 @@ class PasswordHistory extends Password
                 return false;
             }
         }
-
         return true;
     }
 

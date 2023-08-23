@@ -23,7 +23,8 @@ class AttributeString extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'default',
-            ]);
+            ])
+        ;
     }
 
     public array $conditions = [

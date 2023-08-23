@@ -36,16 +36,17 @@ class Github extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://github.com/login/oauth/authorize?'.\http_build_query([
+        return 'https://github.com/login/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state),
+            'state' => \json_encode($this->state)
         ]);
     }
 
     /**
-     * @param  string  $code
+     * @param string $code
+     *
      * @return array
      */
     protected function getTokens(string $code): array
@@ -59,7 +60,7 @@ class Github extends OAuth2
                     'client_id' => $this->appID,
                     'redirect_uri' => $this->callback,
                     'client_secret' => $this->appSecret,
-                    'code' => $code,
+                    'code' => $code
                 ])
             );
 
@@ -72,7 +73,8 @@ class Github extends OAuth2
     }
 
     /**
-     * @param  string  $refreshToken
+     * @param string $refreshToken
+     *
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -85,7 +87,7 @@ class Github extends OAuth2
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken,
+                'refresh_token' => $refreshToken
             ])
         );
 
@@ -101,7 +103,8 @@ class Github extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -112,7 +115,8 @@ class Github extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -127,7 +131,8 @@ class Github extends OAuth2
      *
      * @link https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user
      *
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -142,7 +147,8 @@ class Github extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -153,7 +159,8 @@ class Github extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserSlug(string $accessToken): string
@@ -164,15 +171,16 @@ class Github extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return array
      */
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
 
-            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]);
+            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
 
             $emails = \json_decode($emails, true);
 
@@ -189,10 +197,10 @@ class Github extends OAuth2
                 }
             }
 
-            if (! empty($primaryEmail)) {
+            if (!empty($primaryEmail)) {
                 $this->user['email'] = $primaryEmail['email'];
                 $this->user['verified'] = $primaryEmail['verified'];
-            } elseif (! empty($verifiedEmail)) {
+            } elseif (!empty($verifiedEmail)) {
                 $this->user['email'] = $verifiedEmail['email'];
                 $this->user['verified'] = $verifiedEmail['verified'];
             }

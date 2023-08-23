@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Utopia\Platform\Action;
+use Utopia\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -15,10 +17,8 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
-use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
-use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Specs extends Action
@@ -177,15 +177,15 @@ class Specs extends Action
                         $sdkPlaforms[] = APP_PLATFORM_CLIENT;
                     }
 
-                    if (! $route->getLabel('docs', true)) {
+                    if (!$route->getLabel('docs', true)) {
                         continue;
                     }
 
-                    if ($route->getLabel('sdk.mock', false) && ! $mocks) {
+                    if ($route->getLabel('sdk.mock', false) && !$mocks) {
                         continue;
                     }
 
-                    if (! $route->getLabel('sdk.mock', false) && $mocks) {
+                    if (!$route->getLabel('sdk.mock', false) && $mocks) {
                         continue;
                     }
 
@@ -193,7 +193,7 @@ class Specs extends Action
                         continue;
                     }
 
-                    if ($platform !== APP_PLATFORM_CONSOLE && ! \in_array($platforms[$platform], $sdkPlaforms)) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlaforms)) {
                         continue;
                     }
 
@@ -203,10 +203,10 @@ class Specs extends Action
 
             foreach (Config::getParam('services', []) as $service) {
                 if (
-                    ! isset($service['docs']) // Skip service if not part of the public API
-                    || ! isset($service['sdk'])
-                    || ! $service['docs']
-                    || ! $service['sdk']
+                    !isset($service['docs']) // Skip service if not part of the public API
+                    || !isset($service['sdk'])
+                    || !$service['docs']
+                    || !$service['sdk']
                 ) {
                     continue;
                 }
@@ -221,7 +221,7 @@ class Specs extends Action
             $models = $response->getModels();
 
             foreach ($models as $key => $value) {
-                if ($platform !== APP_PLATFORM_CONSOLE && ! $value->isPublic()) {
+                if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
                     unset($models[$key]);
                 }
             }
@@ -231,7 +231,7 @@ class Specs extends Action
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
                     'open-api3' => new OpenAPI3(...$arguments),
-                    default => throw new Exception('Format not found: '.$format)
+                    default => throw new Exception('Format not found: ' . $format)
                 };
 
                 $specs = new Specification($formatInstance);
@@ -243,36 +243,36 @@ class Specs extends Action
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
                     ->setParam('endpoint', 'https://HOSTNAME/v1')
                     ->setParam('version', APP_VERSION_STABLE)
-                    ->setParam('terms', $endpoint.'/policy/terms')
+                    ->setParam('terms', $endpoint . '/policy/terms')
                     ->setParam('support.email', $email)
-                    ->setParam('support.url', $endpoint.'/support')
-                    ->setParam('contact.name', APP_NAME.' Team')
+                    ->setParam('support.url', $endpoint . '/support')
+                    ->setParam('contact.name', APP_NAME . ' Team')
                     ->setParam('contact.email', $email)
-                    ->setParam('contact.url', $endpoint.'/support')
+                    ->setParam('contact.url', $endpoint . '/support')
                     ->setParam('license.name', 'BSD-3-Clause')
                     ->setParam('license.url', 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE')
                     ->setParam('docs.description', 'Full API docs, specs and tutorials')
-                    ->setParam('docs.url', $endpoint.'/docs');
+                    ->setParam('docs.url', $endpoint . '/docs');
 
                 if ($mocks) {
-                    $path = __DIR__.'/../config/specs/'.$format.'-mocks-'.$platform.'.json';
+                    $path = __DIR__ . '/../config/specs/' . $format . '-mocks-' . $platform . '.json';
 
-                    if (! file_put_contents($path, json_encode($specs->parse()))) {
-                        throw new Exception('Failed to save mocks spec file: '.$path);
+                    if (!file_put_contents($path, json_encode($specs->parse()))) {
+                        throw new Exception('Failed to save mocks spec file: ' . $path);
                     }
 
-                    Console::success('Saved mocks spec file: '.realpath($path));
+                    Console::success('Saved mocks spec file: ' . realpath($path));
 
                     continue;
                 }
 
-                $path = __DIR__.'/../../../../app/config/specs/'.$format.'-'.$version.'-'.$platform.'.json';
+                $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
-                if (! file_put_contents($path, json_encode($specs->parse()))) {
-                    throw new Exception('Failed to save spec file: '.$path);
+                if (!file_put_contents($path, json_encode($specs->parse()))) {
+                    throw new Exception('Failed to save spec file: ' . $path);
                 }
 
-                Console::success('Saved spec file: '.realpath($path));
+                Console::success('Saved spec file: ' . realpath($path));
             }
         }
     }

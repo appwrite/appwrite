@@ -2,6 +2,8 @@
 
 namespace Appwrite\Auth\OAuth2;
 
+use Appwrite\Auth\OAuth2\Tradeshift;
+
 class TradeshiftBox extends Tradeshift
 {
     protected string $environment = 'sandbox';

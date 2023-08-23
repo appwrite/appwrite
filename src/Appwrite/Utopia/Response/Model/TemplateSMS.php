@@ -10,7 +10,6 @@ class TemplateSMS extends Template
     {
         parent::__construct();
     }
-
     /**
      * Get Name
      *

@@ -2,24 +2,24 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
+use Appwrite\Extend\Exception;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Filter;
+use Utopia\Database\Validator\Query\Order;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Database\Validator\Query\Filter;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
-use Utopia\Database\Validator\Query\Order;
 
 class Base extends Queries
 {
     /**
      * Expression constructor
      *
-     * @param  string  $collection
-     * @param  string[]  $allowedAttributes
-     *
+     * @param string $collection
+     * @param string[] $allowedAttributes
      * @throws \Exception
      */
     public function __construct(string $collection, array $allowedAttributes)
@@ -36,7 +36,7 @@ class Base extends Queries
         $attributes = [];
         foreach ($collection['attributes'] as $attribute) {
             $key = $attribute['$id'];
-            if (! isset($allowedAttributesLookup[$key])) {
+            if (!isset($allowedAttributesLookup[$key])) {
                 continue;
             }
 

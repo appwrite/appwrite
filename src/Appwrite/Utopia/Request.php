@@ -10,7 +10,6 @@ use Utopia\Swoole\Request as UtopiaRequest;
 class Request extends UtopiaRequest
 {
     private static ?Filter $filter = null;
-
     private static ?Route $route = null;
 
     public function __construct(SwooleRequest $request)
@@ -19,14 +18,14 @@ class Request extends UtopiaRequest
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function getParams(): array
     {
         $parameters = parent::getParams();
 
         if (self::hasFilter() && self::hasRoute()) {
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown').'.'.self::getRoute()->getLabel('sdk.method', 'unknown');
+            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
             $parameters = self::getFilter()->parse($parameters, $endpointIdentifier);
         }
 
@@ -36,7 +35,8 @@ class Request extends UtopiaRequest
     /**
      * Function to set a response filter
      *
-     * @param  Filter|null  $filter Filter the response filter to set
+     * @param Filter|null $filter Filter the response filter to set
+     *
      * @return void
      */
     public static function setFilter(?Filter $filter): void
@@ -67,7 +67,8 @@ class Request extends UtopiaRequest
     /**
      * Function to set a request route
      *
-     * @param  Route|null  $route the request route to set
+     * @param Route|null $route the request route to set
+     *
      * @return void
      */
     public static function setRoute(?Route $route): void

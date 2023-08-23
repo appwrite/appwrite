@@ -7,7 +7,6 @@ use Resque;
 class Phone extends Event
 {
     protected string $recipient = '';
-
     protected string $message = '';
 
     public function __construct()
@@ -18,7 +17,7 @@ class Phone extends Event
     /**
      * Sets recipient for the messaging event.
      *
-     * @param  string  $recipient
+     * @param string $recipient
      * @return self
      */
     public function setRecipient(string $recipient): self
@@ -41,7 +40,7 @@ class Phone extends Event
     /**
      * Sets url for the messaging event.
      *
-     * @param  string  $message
+     * @param string $message
      * @return self
      */
     public function setMessage(string $message): self
@@ -65,7 +64,6 @@ class Phone extends Event
      * Executes the event and sends it to the messaging worker.
      *
      * @return string|bool
-     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -76,7 +74,7 @@ class Phone extends Event
             'payload' => $this->payload,
             'recipient' => $this->recipient,
             'message' => $this->message,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams()),
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
 }

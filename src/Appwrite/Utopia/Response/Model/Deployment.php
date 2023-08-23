@@ -87,7 +87,8 @@ class Deployment extends Model
                 'description' => 'The current build time in seconds.',
                 'default' => 0,
                 'example' => 128,
-            ]);
+            ])
+        ;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace Appwrite\Docker;
 
+use Exception;
+
 class Env
 {
     /**
@@ -10,7 +12,7 @@ class Env
     protected $vars = [];
 
     /**
-     * @var string
+     * @var string $data
      */
     public function __construct(string $data)
     {
@@ -28,8 +30,9 @@ class Env
     }
 
     /**
-     * @param  string  $key
-     * @param  mixed  $value
+     * @param string $key
+     * @param mixed  $value
+     *
      * @return $this
      */
     public function setVar(string $key, $value): self
@@ -40,7 +43,8 @@ class Env
     }
 
     /**
-     * @param  string  $key
+     * @param string $key
+     *
      * @return string
      */
     public function getVar(string $key): string
@@ -66,7 +70,7 @@ class Env
         $output = '';
 
         foreach ($this->vars as $key => $value) {
-            $output .= $key.'='.$value."\n";
+            $output .= $key . '=' . $value . "\n";
         }
 
         return $output;

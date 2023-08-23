@@ -4,15 +4,15 @@ namespace Appwrite\Platform\Tasks;
 
 use Exception;
 use League\Csv\CannotInsertRecord;
-use League\Csv\Writer;
-use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
+use League\Csv\Writer;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 
@@ -44,13 +44,11 @@ class CalcTierStats extends Action
     ];
 
     protected string $directory = '/usr/local';
-
     protected string $path;
-
     protected string $date;
 
     private array $usageStats = [
-        'project.$all.network.requests' => 'Requests',
+        'project.$all.network.requests'  => 'Requests',
         'project.$all.network.bandwidth' => 'Bandwidth',
 
     ];
@@ -62,6 +60,7 @@ class CalcTierStats extends Action
 
     public function __construct()
     {
+
         $this
             ->desc('Get stats for projects')
             ->inject('pools')
@@ -82,7 +81,7 @@ class CalcTierStats extends Action
         //docker compose exec -t appwrite calc-tier-stats
 
         Console::title('Cloud free tier  stats calculation V1');
-        Console::success(APP_NAME.' cloud free tier  stats calculation has started');
+        Console::success(APP_NAME . ' cloud free tier  stats calculation has started');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
@@ -103,8 +102,9 @@ class CalcTierStats extends Action
         $limit = 30;
         $sum = 30;
         $offset = 0;
-        while (! empty($projects)) {
+        while (!empty($projects)) {
             foreach ($projects as $project) {
+
                 /**
                  * Skip user projects with id 'console'
                  */
@@ -123,18 +123,18 @@ class CalcTierStats extends Action
 
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setDefaultDatabase('appwrite');
-                    $dbForProject->setNamespace('_'.$project->getInternalId());
+                    $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     /** Get Project ID */
                     $stats['Project ID'] = $project->getId();
 
-                    $stats['Organization ID'] = $project->getAttribute('teamId', null);
+                    $stats['Organization ID']   = $project->getAttribute('teamId', null);
 
                     /** Get Total Members */
                     $teamInternalId = $project->getAttribute('teamInternalId', null);
                     if ($teamInternalId) {
                         $stats['Organization Members'] = $dbForConsole->count('memberships', [
-                            Query::equal('teamInternalId', [$teamInternalId]),
+                            Query::equal('teamInternalId', [$teamInternalId])
                         ]);
                     } else {
                         $stats['Organization Members'] = 0;
@@ -195,7 +195,7 @@ class CalcTierStats extends Action
                     });
 
                     foreach ($tmp as $key => $value) {
-                        $stats[$metrics[$key]] = $value;
+                        $stats[$metrics[$key]]  = $value;
                     }
 
                     try {
@@ -208,27 +208,27 @@ class CalcTierStats extends Action
                     }
 
                     try {
-                        /** Get Api keys */
+                    /** Get Api keys */
                         $stats['Api keys'] = $dbForConsole->count('keys', [
-                            Query::equal('projectInternalId', [$project->getInternalId()]),
+                        Query::equal('projectInternalId', [$project->getInternalId()]),
                         ]);
                     } catch (\Throwable) {
                         $stats['Api keys'] = 0;
                     }
 
                     try {
-                        /** Get Webhooks */
+                    /** Get Webhooks */
                         $stats['Webhooks'] = $dbForConsole->count('webhooks', [
-                            Query::equal('projectInternalId', [$project->getInternalId()]),
+                        Query::equal('projectInternalId', [$project->getInternalId()]),
                         ]);
                     } catch (\Throwable) {
                         $stats['Webhooks'] = 0;
                     }
 
                     try {
-                        /** Get Platforms */
+                    /** Get Platforms */
                         $stats['Platforms'] = $dbForConsole->count('platforms', [
-                            Query::equal('projectInternalId', [$project->getInternalId()]),
+                        Query::equal('projectInternalId', [$project->getInternalId()]),
                         ]);
                     } catch (\Throwable) {
                         $stats['Platforms'] = 0;
@@ -242,26 +242,28 @@ class CalcTierStats extends Action
                     try {
                         $buckets = $dbForProject->find('buckets', []);
                         foreach ($buckets as $bucket) {
-                            $file = $dbForProject->findOne('bucket_'.$bucket->getInternalId(), [Query::orderDesc('sizeOriginal')]);
+                            $file = $dbForProject->findOne('bucket_' . $bucket->getInternalId(), [Query::orderDesc('sizeOriginal'),]);
                             if (empty($file)) {
                                 continue;
                             }
-                            $filesSum += $dbForProject->sum('bucket_'.$bucket->getInternalId(), 'sizeOriginal', [], 0);
-                            $filesCount += $dbForProject->count('bucket_'.$bucket->getInternalId(), []);
+                            $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
+                            $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
                             if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
                                 $maxFileSize = $file->getAttribute('sizeOriginal');
                             }
                             $counter++;
                         }
                     } catch (\Throwable) {
+                        ;
                     }
                     $stats['Buckets'] = $counter;
                     $stats['Files'] = $filesCount;
                     $stats['Storage (bytes)'] = $filesSum;
                     $stats['Max File Size (bytes)'] = $maxFileSize;
 
+
                     try {
-                        /** Get Total Functions */
+                    /** Get Total Functions */
                         $stats['Databases'] = $dbForProject->count('databases', []);
                     } catch (\Throwable) {
                         $stats['Databases'] = 0;
@@ -290,7 +292,7 @@ class CalcTierStats extends Action
 
                     $csv->insertOne(array_values($stats));
                 } catch (\Throwable $th) {
-                    Console::error('Failed on project ("'.$project->getId().'") version with error on File: '.$th->getFile().'  line no: '.$th->getline().' with message: '.$th->getMessage());
+                    Console::error('Failed on project ("' . $project->getId() . '") version with error on File: ' . $th->getFile() . '  line no: ' . $th->getline() . ' with message: ' . $th->getMessage());
                 } finally {
                     $pools
                         ->get($db)
@@ -309,7 +311,7 @@ class CalcTierStats extends Action
             $count = $count + $sum;
         }
 
-        Console::log('Iterated through '.$count - 1 .'/'.$totalProjects.' projects...');
+        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects...');
 
         $pools
             ->get('console')
@@ -339,7 +341,7 @@ class CalcTierStats extends Action
 
             /** Content */
             $mail->Subject = "Cloud Report for {$this->date}";
-            $mail->Body = 'Please find the daily cloud report atttached';
+            $mail->Body = "Please find the daily cloud report atttached";
             $mail->send();
             Console::success('Email has been sent!');
         } catch (Exception $e) {

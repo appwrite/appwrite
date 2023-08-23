@@ -23,7 +23,7 @@ class Gitlab extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'read_user',
+        'read_user'
     ];
 
     /**
@@ -39,17 +39,18 @@ class Gitlab extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return $this->getEndpoint().'/oauth/authorize?'.\http_build_query([
+        return $this->getEndpoint() . '/oauth/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
-            'response_type' => 'code',
+            'response_type' => 'code'
         ]);
     }
 
     /**
-     * @param  string  $code
+     * @param string $code
+     *
      * @return array
      */
     protected function getTokens(string $code): array
@@ -57,12 +58,12 @@ class Gitlab extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->getEndpoint().'/oauth/token?'.\http_build_query([
+                $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
                     'client_secret' => $this->getAppSecret()['clientSecret'],
                     'redirect_uri' => $this->callback,
-                    'grant_type' => 'authorization_code',
+                    'grant_type' => 'authorization_code'
                 ])
             ), true);
         }
@@ -71,18 +72,19 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * @param  string  $refreshToken
+     * @param string $refreshToken
+     *
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->getEndpoint().'/oauth/token?'.\http_build_query([
+            $this->getEndpoint() . '/oauth/token?' . \http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->getAppSecret()['clientSecret'],
-                'grant_type' => 'refresh_token',
+                'grant_type' => 'refresh_token'
             ])
         ), true);
 
@@ -94,7 +96,8 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -109,7 +112,8 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -124,7 +128,8 @@ class Gitlab extends OAuth2
      *
      * @link https://docs.gitlab.com/ee/api/users.html#list-current-user-for-normal-users
      *
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -139,7 +144,8 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -150,13 +156,14 @@ class Gitlab extends OAuth2
     }
 
     /**
-     * @param  string  $accessToken
+     * @param string $accessToken
+     *
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', $this->getEndpoint().'/api/v4/user?access_token='.\urlencode($accessToken));
+            $user = $this->request('GET', $this->getEndpoint() . '/api/v4/user?access_token=' . \urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
 
@@ -175,9 +182,9 @@ class Gitlab extends OAuth2
         } catch (\Throwable $th) {
             throw new \Exception('Invalid secret');
         }
-
         return $secret;
     }
+
 
     /**
      * Extracts the Tenant Id from the JSON stored in appSecret. Defaults to 'common' as a fallback
@@ -189,7 +196,6 @@ class Gitlab extends OAuth2
         $defaultEndpoint = 'https://gitlab.com';
         $secret = $this->getAppSecret();
         $endpoint = $secret['endpoint'] ?? $defaultEndpoint;
-
         return empty($endpoint) ? $defaultEndpoint : $endpoint;
     }
 }

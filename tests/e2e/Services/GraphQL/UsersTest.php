@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 class UsersTest extends Scope
 {
@@ -26,7 +27,7 @@ class UsersTest extends Scope
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Project User',
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -55,7 +56,7 @@ class UsersTest extends Scope
                     'limit(100)',
                     'offset(0)',
                 ],
-            ],
+            ]
         ];
 
         $users = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -77,7 +78,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -99,7 +100,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -120,7 +121,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -141,7 +142,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -162,7 +163,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -184,7 +185,7 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $this->getUser()['$id'],
                 'status' => true,
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -207,7 +208,7 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $this->getUser()['$id'],
                 'emailVerification' => true,
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -229,7 +230,7 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $this->getUser()['$id'],
                 'phoneVerification' => true,
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -252,7 +253,7 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $this->getUser()['$id'],
                 'name' => 'Updated Name',
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -274,7 +275,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-                'email' => 'newemail@appwrite.io',
+                'email' => 'newemail@appwrite.io'
             ],
         ];
 
@@ -297,7 +298,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-                'password' => 'newpassword',
+                'password' => 'newpassword'
             ],
         ];
 
@@ -319,7 +320,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-                'number' => '+123456789',
+                'number' => '+123456789'
             ],
         ];
 
@@ -343,8 +344,8 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $this->getUser()['$id'],
                 'prefs' => [
-                    'key' => 'value',
-                ],
+                    'key' => 'value'
+                ]
             ],
         ];
 
@@ -367,7 +368,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -391,7 +392,7 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $this->getUser()['$id'],
                 'sessionId' => $this->getUser()['sessionId'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -414,7 +415,7 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'userId' => $this->getUser()['$id'],
-            ],
+            ]
         ];
 
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

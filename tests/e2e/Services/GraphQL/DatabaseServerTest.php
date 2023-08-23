@@ -27,7 +27,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => 'actors',
                 'name' => 'Actors',
-            ],
+            ]
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -63,7 +63,7 @@ class DatabaseServerTest extends Scope
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
                 ],
-            ],
+            ]
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -89,7 +89,7 @@ class DatabaseServerTest extends Scope
                     Permission::update(Role::users()),
                     Permission::delete(Role::users()),
                 ],
-            ],
+            ]
         ];
 
         $collection2 = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -111,7 +111,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateStringAttribute($data): array
@@ -126,7 +125,7 @@ class DatabaseServerTest extends Scope
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -143,7 +142,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateStringAttribute
-     *
      * @throws Exception
      */
     public function testUpdateStringAttribute($data): array
@@ -161,7 +159,7 @@ class DatabaseServerTest extends Scope
                 'key' => 'name',
                 'required' => false,
                 'default' => 'Default Value',
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -180,7 +178,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateIntegerAttribute($data): array
@@ -196,7 +193,7 @@ class DatabaseServerTest extends Scope
                 'min' => 18,
                 'max' => 150,
                 'required' => true,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -213,7 +210,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateIntegerAttribute
-     *
      * @throws Exception
      */
     public function testUpdateIntegerAttribute($data): array
@@ -232,8 +228,8 @@ class DatabaseServerTest extends Scope
                 'required' => false,
                 'min' => 12,
                 'max' => 160,
-                'default' => 50,
-            ],
+                'default' => 50
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -254,7 +250,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateBooleanAttribute($data): array
@@ -268,7 +263,7 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'alive',
                 'required' => true,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -285,7 +280,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateBooleanAttribute
-     *
      * @throws Exception
      */
     public function testUpdateBooleanAttribute($data): array
@@ -302,8 +296,8 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'alive',
                 'required' => false,
-                'default' => true,
-            ],
+                'default' => true
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -322,7 +316,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateFloatAttribute($data): array
@@ -339,7 +332,7 @@ class DatabaseServerTest extends Scope
                 'max' => 999999.99,
                 'default' => 1000.0,
                 'required' => false,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -356,7 +349,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateFloatAttribute
-     *
      * @throws Exception
      */
     public function testUpdateFloatAttribute($data): array
@@ -375,8 +367,8 @@ class DatabaseServerTest extends Scope
                 'required' => false,
                 'min' => 100.0,
                 'max' => 1000000.0,
-                'default' => 2500.0,
-            ],
+                'default' => 2500.0
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -397,7 +389,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateEmailAttribute($data): array
@@ -411,7 +402,7 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'email',
                 'required' => true,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -428,7 +419,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateEmailAttribute
-     *
      * @throws Exception
      */
     public function testUpdateEmailAttribute($data): array
@@ -446,7 +436,7 @@ class DatabaseServerTest extends Scope
                 'key' => 'email',
                 'required' => false,
                 'default' => 'torsten@appwrite.io',
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -465,7 +455,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateEnumAttribute($data): array
@@ -484,7 +473,7 @@ class DatabaseServerTest extends Scope
                     'guest',
                 ],
                 'required' => true,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -499,9 +488,9 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+
     /**
      * @depends testCreateEnumAttribute
-     *
      * @throws Exception
      */
     public function testUpdateEnumAttribute($data): array
@@ -521,10 +510,10 @@ class DatabaseServerTest extends Scope
                 'elements' => [
                     'crew',
                     'tech',
-                    'actor',
+                    'actor'
                 ],
-                'default' => 'tech',
-            ],
+                'default' => 'tech'
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -545,7 +534,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateDatetimeAttribute($data): array
@@ -559,7 +547,7 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'dob',
                 'required' => true,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -576,7 +564,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDatetimeAttribute
-     *
      * @throws Exception
      */
     public function testUpdateDatetimeAttribute($data): array
@@ -593,8 +580,8 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'dob',
                 'required' => false,
-                'default' => '2000-01-01T00:00:00Z',
-            ],
+                'default' => '2000-01-01T00:00:00Z'
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -627,8 +614,8 @@ class DatabaseServerTest extends Scope
                 'type' => Database::RELATION_ONE_TO_MANY,
                 'twoWay' => true,
                 'key' => 'actors',
-                'twoWayKey' => 'movie',
-            ],
+                'twoWayKey' => 'movie'
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -659,7 +646,7 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection2']['_id'],
                 'key' => 'actors',
                 'onDelete' => Database::RELATION_MUTATE_CASCADE,
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -676,7 +663,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateIPAttribute($data): array
@@ -691,7 +677,7 @@ class DatabaseServerTest extends Scope
                 'key' => 'ip',
                 'required' => false,
                 'default' => '::1',
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -708,7 +694,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateIPAttribute
-     *
      * @throws Exception
      */
     public function testUpdateIPAttribute($data): array
@@ -725,8 +710,8 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'ip',
                 'required' => false,
-                'default' => '127.0.0.1',
-            ],
+                'default' => '127.0.0.1'
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -745,7 +730,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testCreateURLAttribute($data): array
@@ -760,7 +744,7 @@ class DatabaseServerTest extends Scope
                 'key' => 'url',
                 'required' => false,
                 'default' => 'https://appwrite.io',
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -777,7 +761,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateURLAttribute
-     *
      * @throws Exception
      */
     public function testUpdateURLAttribute($data): void
@@ -794,8 +777,8 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'url',
                 'required' => false,
-                'default' => 'https://cloud.appwrite.io',
-            ],
+                'default' => 'https://cloud.appwrite.io'
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -813,7 +796,6 @@ class DatabaseServerTest extends Scope
     /**
      * @depends testUpdateStringAttribute
      * @depends testUpdateIntegerAttribute
-     *
      * @throws Exception
      */
     public function testCreateIndex($data): array
@@ -831,7 +813,7 @@ class DatabaseServerTest extends Scope
                     'name',
                     'age',
                 ],
-            ],
+            ]
         ];
 
         $index = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -855,7 +837,6 @@ class DatabaseServerTest extends Scope
      * @depends testUpdateIntegerAttribute
      * @depends testUpdateBooleanAttribute
      * @depends testUpdateEnumAttribute
-     *
      * @throws Exception
      */
     public function testCreateDocument($data): array
@@ -882,7 +863,7 @@ class DatabaseServerTest extends Scope
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-            ],
+            ]
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -963,7 +944,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDatabase
-     *
      * @throws Exception
      */
     public function testGetDatabase($database): void
@@ -974,7 +954,7 @@ class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-            ],
+            ]
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -989,7 +969,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testGetCollections($data): void
@@ -1000,7 +979,7 @@ class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $data['database']['_id'],
-            ],
+            ]
         ];
 
         $collections = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1015,7 +994,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testGetCollection($data): void
@@ -1027,7 +1005,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-            ],
+            ]
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1043,7 +1021,6 @@ class DatabaseServerTest extends Scope
     /**
      * @depends testUpdateStringAttribute
      * @depends testUpdateIntegerAttribute
-     *
      * @throws Exception
      */
     public function testGetAttributes($data): void
@@ -1055,7 +1032,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-            ],
+            ]
         ];
 
         $attributes = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1070,7 +1047,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testGetAttribute($data): void
@@ -1083,7 +1059,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'name',
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1098,7 +1074,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateIndex
-     *
      * @throws Exception
      */
     public function testGetIndexes($data): void
@@ -1110,7 +1085,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-            ],
+            ]
         ];
 
         $indices = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1125,7 +1100,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateIndex
-     *
      * @throws Exception
      */
     public function testGetIndex($data): void
@@ -1138,7 +1112,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'key' => $data['index']['key'],
-            ],
+            ]
         ];
 
         $index = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1153,7 +1127,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testGetDocuments($data): void
@@ -1165,7 +1138,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-            ],
+            ]
         ];
 
         $documents = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1180,7 +1153,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDocument
-     *
      * @throws Exception
      */
     public function testGetDocument($data): void
@@ -1193,7 +1165,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'documentId' => $data['document']['_id'],
-            ],
+            ]
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1255,7 +1227,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDatabase
-     *
      * @throws Exception
      */
     public function testUpdateDatabase($database)
@@ -1267,7 +1238,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $database['_id'],
                 'name' => 'New Database Name',
-            ],
+            ]
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1282,7 +1253,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testUpdateCollection($data)
@@ -1296,7 +1266,7 @@ class DatabaseServerTest extends Scope
                 'collectionId' => $data['collection']['_id'],
                 'name' => 'New Collection Name',
                 'documentSecurity' => false,
-            ],
+            ]
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1311,7 +1281,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDocument
-     *
      * @throws Exception
      */
     public function testUpdateDocument($data): void
@@ -1327,7 +1296,7 @@ class DatabaseServerTest extends Scope
                 'data' => [
                     'name' => 'New Document Name',
                 ],
-            ],
+            ]
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1372,7 +1341,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDocument
-     *
      * @throws Exception
      */
     public function testDeleteDocument($data): void
@@ -1385,7 +1353,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'documentId' => $data['document']['_id'],
-            ],
+            ]
         ];
 
         $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1423,7 +1391,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testUpdateStringAttribute
-     *
      * @throws Exception
      */
     public function testDeleteAttribute($data): void
@@ -1436,7 +1403,7 @@ class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
                 'key' => 'name',
-            ],
+            ]
         ];
 
         $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1450,7 +1417,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateCollection
-     *
      * @throws Exception
      */
     public function testDeleteCollection($data)
@@ -1462,7 +1428,7 @@ class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $data['database']['_id'],
                 'collectionId' => $data['collection']['_id'],
-            ],
+            ]
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
@@ -1476,7 +1442,6 @@ class DatabaseServerTest extends Scope
 
     /**
      * @depends testCreateDatabase
-     *
      * @throws Exception
      */
     public function testDeleteDatabase($database)
@@ -1487,7 +1452,7 @@ class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-            ],
+            ]
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([

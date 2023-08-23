@@ -8,7 +8,6 @@ use Utopia\Database\Document;
 class Certificate extends Event
 {
     protected bool $skipRenewCheck = false;
-
     protected ?Document $domain = null;
 
     public function __construct()
@@ -19,7 +18,7 @@ class Certificate extends Event
     /**
      * Set domain for this certificates event.
      *
-     * @param  Document  $domain
+     * @param Document $domain
      * @return self
      */
     public function setDomain(Document $domain): self
@@ -42,7 +41,7 @@ class Certificate extends Event
     /**
      * Set if the certificate needs to be validated.
      *
-     * @param  bool  $skipRenewCheck
+     * @param bool $skipRenewCheck
      * @return self
      */
     public function setSkipRenewCheck(bool $skipRenewCheck): self
@@ -66,7 +65,6 @@ class Certificate extends Event
      * Executes the event and sends it to the certificates worker.
      *
      * @return string|bool
-     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -74,7 +72,7 @@ class Certificate extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'domain' => $this->domain,
-            'skipRenewCheck' => $this->skipRenewCheck,
+            'skipRenewCheck' => $this->skipRenewCheck
         ]);
     }
 }

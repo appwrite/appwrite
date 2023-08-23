@@ -43,7 +43,8 @@ class AttributeFloat extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 2.5,
-            ]);
+            ])
+        ;
     }
 
     public array $conditions = [

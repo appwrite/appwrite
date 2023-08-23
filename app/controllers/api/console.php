@@ -15,6 +15,7 @@ App::init()
         }
     });
 
+
 App::get('/v1/console/variables')
     ->desc('Get Variables')
     ->groups(['api', 'projects'])
@@ -28,6 +29,7 @@ App::get('/v1/console/variables')
     ->label('sdk.response.model', Response::MODEL_CONSOLE_VARIABLES)
     ->inject('response')
     ->action(function (Response $response) {
+
         $variables = new Document([
             '_APP_DOMAIN_TARGET' => App::getEnv('_APP_DOMAIN_TARGET'),
             '_APP_STORAGE_LIMIT' => +App::getEnv('_APP_STORAGE_LIMIT'),
@@ -37,6 +39,7 @@ App::get('/v1/console/variables')
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
     });
+
 
 App::post('/v1/console/assistant')
     ->desc('Ask Query')

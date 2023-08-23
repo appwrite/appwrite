@@ -2,23 +2,23 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Func;
 use Cron\CronExpression;
-use function Swoole\Coroutine\run;
 use Swoole\Timer;
 use Utopia\App;
+use Utopia\Platform\Action;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Platform\Action;
+use Utopia\Database\Database;
 use Utopia\Pools\Group;
+use Appwrite\Event\Func;
+
+use function Swoole\Coroutine\run;
 
 class Schedule extends Action
 {
     public const FUNCTION_UPDATE_TIMER = 10; //seconds
-
     public const FUNCTION_ENQUEUE_TIMER = 60; //seconds
 
     public static function getName(): string
@@ -40,17 +40,16 @@ class Schedule extends Action
      * 1. Load all documents from 'schedules' collection to create local copy
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutime sleeps until exact time before sending request to worker.
-     */
+    */
     public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         Console::title('Scheduler V1');
-        Console::success(APP_NAME.' Scheduler v1 has started');
+        Console::success(APP_NAME . ' Scheduler v1 has started');
 
         /**
          * Extract only nessessary attributes to lower memory used.
          *
          * @var Document $schedule
-         *
          * @return  array
          */
         $getSchedule = function (Document $schedule) use ($dbForConsole, $getProjectDB): array {
@@ -93,14 +92,14 @@ class Schedule extends Action
                 $schedules[$document['resourceId']] = $getSchedule($document);
             }
 
-            $latestDocument = ! empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
+            $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
         }
 
         $pools->reclaim();
 
-        Console::success("{$total} functions were loaded in ".(microtime(true) - $loadStart).' seconds');
+        Console::success("{$total} functions were loaded in " . (microtime(true) - $loadStart) . " seconds");
 
-        Console::success('Starting timers at '.DateTime::now());
+        Console::success("Starting timers at " . DateTime::now());
 
         run(
             function () use ($dbForConsole, &$schedules, &$lastSyncUpdate, $getSchedule, $pools) {
@@ -121,7 +120,7 @@ class Schedule extends Action
                     while ($sum === $limit) {
                         $paginationQueries = [Query::limit($limit)];
                         if ($latestDocument !== null) {
-                            $paginationQueries[] = Query::cursorAfter($latestDocument);
+                            $paginationQueries[] =  Query::cursorAfter($latestDocument);
                         }
                         $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                             Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
@@ -145,7 +144,7 @@ class Schedule extends Action
                                 $schedules[$document['resourceId']] = $getSchedule($document);
                             }
                         }
-                        $latestDocument = ! empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
+                        $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
                     }
 
                     $lastSyncUpdate = $time;
@@ -153,7 +152,7 @@ class Schedule extends Action
 
                     $pools->reclaim();
 
-                    Console::log("Sync tick: {$total} schedules were updated in ".($timerEnd - $timerStart).' seconds');
+                    Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
                 });
 
                 /**
@@ -180,7 +179,7 @@ class Schedule extends Action
 
                         $currentTick = $next < $timeFrame;
 
-                        if (! $currentTick) {
+                        if (!$currentTick) {
                             continue;
                         }
 
@@ -190,7 +189,7 @@ class Schedule extends Action
                         $executionStart = $nextDate->getTimestamp(); // in seconds
                         $delay = $executionStart - $promiseStart; // Time to wait from now until execution needs to be queued
 
-                        if (! isset($delayedExecutions[$delay])) {
+                        if (!isset($delayedExecutions[$delay])) {
                             $delayedExecutions[$delay] = [];
                         }
 
@@ -206,7 +205,7 @@ class Schedule extends Action
 
                             foreach ($scheduleKeys as $scheduleKey) {
                                 // Ensure schedule was not deleted
-                                if (! isset($schedules[$scheduleKey])) {
+                                if (!isset($schedules[$scheduleKey])) {
                                     return;
                                 }
 
@@ -227,10 +226,10 @@ class Schedule extends Action
 
                     $timerEnd = \microtime(true);
                     $lastEnqueueUpdate = $timerStart;
-                    Console::log("Enqueue tick: {$total} executions were enqueued in ".($timerEnd - $timerStart).' seconds');
+                    Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
                 };
 
-                Timer::tick(self::FUNCTION_ENQUEUE_TIMER * 1000, fn () => $enqueueFunctions());
+                Timer::tick(self::FUNCTION_ENQUEUE_TIMER * 1000, fn() => $enqueueFunctions());
                 $enqueueFunctions();
             }
         );

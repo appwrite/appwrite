@@ -27,7 +27,8 @@ class HealthTime extends Model
                 'description' => 'Difference of unix remote and local timestamps in milliseconds.',
                 'default' => 0,
                 'example' => 93,
-            ]);
+            ])
+        ;
     }
 
     /**

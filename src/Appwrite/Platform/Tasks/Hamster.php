@@ -4,17 +4,17 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Network\Validator\Origin;
 use Exception;
-use Utopia\Analytics\Adapter\Mixpanel;
-use Utopia\Analytics\Event;
 use Utopia\App;
+use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
+use Utopia\Analytics\Adapter\Mixpanel;
+use Utopia\Analytics\Event;
+use Utopia\Config\Config;
+use Utopia\Database\Document;
 use Utopia\Pools\Group;
 
 class Hamster extends Action
@@ -67,8 +67,7 @@ class Hamster extends Action
              * Skip user projects with id 'console'
              */
             if ($project->getId() === 'console') {
-                Console::info('Skipping project console');
-
+                Console::info("Skipping project console");
                 return;
             }
 
@@ -83,7 +82,7 @@ class Hamster extends Action
 
                 $dbForProject = new Database($adapter, $cache);
                 $dbForProject->setDefaultDatabase('appwrite');
-                $dbForProject->setNamespace('_'.$project->getInternalId());
+                $dbForProject->setNamespace('_' . $project->getInternalId());
 
                 $statsPerProject = [];
 
@@ -102,7 +101,7 @@ class Hamster extends Action
                 $statsPerProject['custom_functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
 
                 foreach (\array_keys(Config::getParam('runtimes')) as $runtime) {
-                    $statsPerProject['custom_functions_'.$runtime] = $dbForProject->count('functions', [
+                    $statsPerProject['custom_functions_' . $runtime] = $dbForProject->count('functions', [
                         Query::equal('runtime', [$runtime]),
                     ], APP_LIMIT_COUNT);
                 }
@@ -117,7 +116,7 @@ class Hamster extends Action
                 $teamInternalId = $project->getAttribute('teamInternalId', null);
                 if ($teamInternalId) {
                     $statsPerProject['custom_organization_members'] = $dbForConsole->count('memberships', [
-                        Query::equal('teamInternalId', [$teamInternalId]),
+                        Query::equal('teamInternalId', [$teamInternalId])
                     ], APP_LIMIT_COUNT);
                 } else {
                     $statsPerProject['custom_organization_members'] = 0;
@@ -129,8 +128,8 @@ class Hamster extends Action
                         Query::equal('teamInternalId', [$teamInternalId]),
                     ]);
 
-                    if (! $membership || $membership->isEmpty()) {
-                        throw new Exception('Membership not found. Skipping project : '.$project->getId());
+                    if (!$membership || $membership->isEmpty()) {
+                        throw new Exception('Membership not found. Skipping project : ' . $project->getId());
                     }
 
                     $userInternalId = $membership->getAttribute('userInternalId', null);
@@ -147,42 +146,42 @@ class Hamster extends Action
                 /** Get Domains */
                 $statsPerProject['custom_domains'] = $dbForConsole->count('domains', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT),
+                    Query::limit(APP_LIMIT_COUNT)
                 ]);
 
                 /** Get Platforms */
                 $platforms = $dbForConsole->find('platforms', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT),
+                    Query::limit(APP_LIMIT_COUNT)
                 ]);
 
-                $statsPerProject['custom_platforms_web'] = count(array_filter($platforms, function ($platform) {
+                $statsPerProject['custom_platforms_web'] = sizeof(array_filter($platforms, function ($platform) {
                     return $platform['type'] === 'web';
                 }));
 
-                $statsPerProject['custom_platforms_android'] = count(array_filter($platforms, function ($platform) {
+                $statsPerProject['custom_platforms_android'] = sizeof(array_filter($platforms, function ($platform) {
                     return $platform['type'] === 'android';
                 }));
 
-                $statsPerProject['custom_platforms_apple'] = count(array_filter($platforms, function ($platform) {
+                $statsPerProject['custom_platforms_apple'] = sizeof(array_filter($platforms, function ($platform) {
                     return str_contains($platform['type'], 'apple');
                 }));
 
-                $statsPerProject['custom_platforms_flutter'] = count(array_filter($platforms, function ($platform) {
+                $statsPerProject['custom_platforms_flutter'] = sizeof(array_filter($platforms, function ($platform) {
                     return str_contains($platform['type'], 'flutter');
                 }));
 
                 $flutterPlatforms = [Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_FLUTTER_LINUX];
 
                 foreach ($flutterPlatforms as $flutterPlatform) {
-                    $statsPerProject['custom_platforms_'.$flutterPlatform] = count(array_filter($platforms, function ($platform) use ($flutterPlatform) {
+                    $statsPerProject['custom_platforms_' . $flutterPlatform] = sizeof(array_filter($platforms, function ($platform) use ($flutterPlatform) {
                         return $platform['type'] === $flutterPlatform;
                     }));
                 }
 
                 $statsPerProject['custom_platforms_api_keys'] = $dbForConsole->count('keys', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT),
+                    Query::limit(APP_LIMIT_COUNT)
                 ]);
 
                 /** Get Usage $statsPerProject */
@@ -210,17 +209,17 @@ class Hamster extends Action
                                 Query::orderDesc('time'),
                             ]);
 
-                            $statsPerProject[$key.'_'.$periodKey] = [];
+                            $statsPerProject[$key . '_' . $periodKey] = [];
                             foreach ($requestDocs as $requestDoc) {
-                                $statsPerProject[$key.'_'.$periodKey][] = [
+                                $statsPerProject[$key . '_' . $periodKey][] = [
                                     'value' => $requestDoc->getAttribute('value'),
                                     'date' => $requestDoc->getAttribute('time'),
                                 ];
                             }
 
-                            $statsPerProject[$key.'_'.$periodKey] = array_reverse($statsPerProject[$key.'_'.$periodKey]);
+                            $statsPerProject[$key . '_' . $periodKey] = array_reverse($statsPerProject[$key . '_' . $periodKey]);
                             // Calculate aggregate of each metric
-                            $statsPerProject[$key.'_'.$periodKey] = array_sum(array_column($statsPerProject[$key.'_'.$periodKey], 'value'));
+                            $statsPerProject[$key . '_' . $periodKey] = array_sum(array_column($statsPerProject[$key . '_' . $periodKey], 'value'));
                         }
                     }
                 });
@@ -229,11 +228,11 @@ class Hamster extends Action
                     /** Send data to mixpanel */
                     $res = $this->mixpanel->createProfile($statsPerProject['email'], '', [
                         'name' => $statsPerProject['name'],
-                        'email' => $statsPerProject['email'],
+                        'email' => $statsPerProject['email']
                     ]);
 
-                    if (! $res) {
-                        Console::error('Failed to create user profile for project: '.$project->getId());
+                    if (!$res) {
+                        Console::error('Failed to create user profile for project: ' . $project->getId());
                     }
 
                     $event = new Event();
@@ -241,12 +240,12 @@ class Hamster extends Action
                         ->setName('Project Daily Usage')
                         ->setProps($statsPerProject);
                     $res = $this->mixpanel->createEvent($event);
-                    if (! $res) {
-                        Console::error('Failed to create event for project: '.$project->getId());
+                    if (!$res) {
+                        Console::error('Failed to create event for project: ' . $project->getId());
                     }
                 }
             } catch (Exception $e) {
-                Console::error('Failed to send stats for project: '.$project->getId());
+                Console::error('Failed to send stats for project: ' . $project->getId());
                 Console::error($e->getMessage());
             } finally {
                 $pools
@@ -258,8 +257,9 @@ class Hamster extends Action
 
     public function action(Group $pools, Cache $cache, Database $dbForConsole): void
     {
+
         Console::title('Cloud Hamster V1');
-        Console::success(APP_NAME.' cloud hamster process has started');
+        Console::success(APP_NAME . ' cloud hamster process has started');
 
         $sleep = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
@@ -278,7 +278,7 @@ class Hamster extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        Console::log('['.$now->format('Y-m-d H:i:s.v').'] Delaying for '.$delay.' setting loop to ['.$next->format('Y-m-d H:i:s.v').']');
+        Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
 
         Console::loop(function () use ($pools, $cache, $dbForConsole, $sleep) {
             $now = date('d-m-Y H:i:s', time());
@@ -325,12 +325,12 @@ class Hamster extends Action
 
             $results = $dbForConsole->find($collection, \array_merge([
                 Query::limit($limit),
-                Query::offset($count),
+                Query::offset($count)
             ]));
 
             $sum = count($results);
 
-            Console::log('Processing chunk #'.$chunk.'. Found '.$sum.' documents');
+            Console::log('Processing chunk #' . $chunk . '. Found ' . $sum . ' documents');
 
             foreach ($results as $document) {
                 call_user_func($callback, $dbForConsole, $document);
@@ -340,11 +340,12 @@ class Hamster extends Action
 
         $executionEnd = \microtime(true);
 
-        Console::log("Processed {$count} document by group in ".($executionEnd - $executionStart).' seconds');
+        Console::log("Processed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
     protected function getStatsPerOrganization(Database $dbForConsole)
     {
+
         $this->calculateByGroup('teams', $dbForConsole, function (Database $dbForConsole, Document $document) {
             try {
                 $statsPerOrganization = [];
@@ -357,8 +358,8 @@ class Hamster extends Action
                     Query::equal('teamInternalId', [$document->getInternalId()]),
                 ]);
 
-                if (! $membership || $membership->isEmpty()) {
-                    throw new Exception('Membership not found. Skipping organization : '.$document->getId());
+                if (!$membership || $membership->isEmpty()) {
+                    throw new Exception('Membership not found. Skipping organization : ' . $document->getId());
                 }
 
                 $userInternalId = $membership->getAttribute('userInternalId', null);
@@ -379,11 +380,11 @@ class Hamster extends Action
                 /** Number of projects in this organization */
                 $statsPerOrganization['projects'] = $dbForConsole->count('projects', [
                     Query::equal('teamId', [$document->getId()]),
-                    Query::limit(APP_LIMIT_COUNT),
+                    Query::limit(APP_LIMIT_COUNT)
                 ]);
 
-                if (! isset($statsPerOrganization['email'])) {
-                    throw new Exception('Email not found. Skipping organization : '.$document->getId());
+                if (!isset($statsPerOrganization['email'])) {
+                    throw new Exception('Email not found. Skipping organization : ' . $document->getId());
                 }
 
                 $event = new Event();
@@ -391,8 +392,8 @@ class Hamster extends Action
                     ->setName('Organization Daily Usage')
                     ->setProps($statsPerOrganization);
                 $res = $this->mixpanel->createEvent($event);
-                if (! $res) {
-                    throw new Exception('Failed to create event for organization : '.$document->getId());
+                if (!$res) {
+                    throw new Exception('Failed to create event for organization : ' . $document->getId());
                 }
             } catch (Exception $e) {
                 Console::error($e->getMessage());
@@ -418,11 +419,11 @@ class Hamster extends Action
                 /** Number of teams this user is a part of */
                 $statsPerUser['memberships'] = $dbForConsole->count('memberships', [
                     Query::equal('userInternalId', [$document->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT),
+                    Query::limit(APP_LIMIT_COUNT)
                 ]);
 
-                if (! isset($statsPerUser['email'])) {
-                    throw new Exception('User has no email: '.$document->getId());
+                if (!isset($statsPerUser['email'])) {
+                    throw new Exception('User has no email: ' . $document->getId());
                 }
 
                 /** Send data to mixpanel */
@@ -432,8 +433,8 @@ class Hamster extends Action
                     ->setProps($statsPerUser);
                 $res = $this->mixpanel->createEvent($event);
 
-                if (! $res) {
-                    throw new Exception('Failed to create user profile for user: '.$document->getId());
+                if (!$res) {
+                    throw new Exception('Failed to create user profile for user: ' . $document->getId());
                 }
             } catch (Exception $e) {
                 Console::error($e->getMessage());

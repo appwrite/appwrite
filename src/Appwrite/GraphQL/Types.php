@@ -22,7 +22,6 @@ class Types
         }
         $type = new Json();
         Registry::set(Json::class, $type);
-
         return $type;
     }
 
@@ -38,7 +37,6 @@ class Types
         }
         $type = new Assoc();
         Registry::set(Assoc::class, $type);
-
         return $type;
     }
 
@@ -54,7 +52,6 @@ class Types
         }
         $type = new InputFile();
         Registry::set(InputFile::class, $type);
-
         return $type;
     }
 }
