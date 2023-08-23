@@ -1256,7 +1256,7 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
 
         $events
             ->setParam('userId', $userId)
-            ->setParam ('targetId', $targetId);
+            ->setParam('targetId', $targetId);
 
         $response
         ->dynamic($target, Response::MODEL_TARGET);

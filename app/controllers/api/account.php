@@ -1906,7 +1906,7 @@ App::get('/v1/account/targets/:targetId')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('user')
     ->inject('response')
-    ->action(function (string $targetId,  Document $user, Response $response) {
+    ->action(function (string $targetId, Document $user, Response $response) {
 
         $target = $user->find('$id', $targetId, 'targets');
 

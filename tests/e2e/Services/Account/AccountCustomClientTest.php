@@ -119,7 +119,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testCreateAccountSession
      */
-    public function testCreateAccountTarget(array $data): array 
+    public function testCreateAccountTarget(array $data): array
     {
         $session = $data['session'] ?? '';
         $apiKey = $this->getProject()['apiKey'];
@@ -156,7 +156,7 @@ class AccountCustomClientTest extends Scope
     {
         $session = $data['session'] ?? '';
         $target = $data['target'];
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/targets/' . $target['$id'] .'/identifier', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/targets/' . $target['$id'] . '/identifier', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -193,7 +193,7 @@ class AccountCustomClientTest extends Scope
         $session = $data['session'] ?? '';
         $target = $data['target'];
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/targets/' .$target['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/account/targets/' . $target['$id'], array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -211,7 +211,7 @@ class AccountCustomClientTest extends Scope
         $session = $data['session'] ?? '';
         $target = $data['target'];
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/account/targets/' .$target['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/targets/' . $target['$id'], array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -1214,7 +1214,7 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
-    public function testCreateUserTarget(array $data): array 
+    public function testCreateUserTarget(array $data): array
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
             'content-type' => 'application/json',
@@ -1239,13 +1239,13 @@ trait UsersBase
         $this->assertEquals('my-token', $response['body']['identifier']);
         return $response['body'];
     }
-    
+
     /**
      * @depends testCreateUserTarget
      */
     public function testUpdateUserTarget(array $data): array
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'] .'/identifier', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'] . '/identifier', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1256,7 +1256,7 @@ trait UsersBase
         $this->assertEquals('my-updated-token', $response['body']['identifier']);
         return $response['body'];
     }
-    
+
     /**
      * @depends testGetUser
      */
@@ -1276,7 +1276,7 @@ trait UsersBase
      */
     public function testGetUserTarget(array $data)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets/' .$data['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1290,7 +1290,7 @@ trait UsersBase
      */
     public function testDeleteUserTarget(array $data)
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' .$data['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
