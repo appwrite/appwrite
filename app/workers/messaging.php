@@ -130,7 +130,6 @@ class MessagingV1 extends Worker
             'subject' => $subject,
             'body' => $body,
         ];
-        return $message;
     }
 
     private function buildSMSMessage($data): array
