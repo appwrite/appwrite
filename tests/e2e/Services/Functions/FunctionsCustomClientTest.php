@@ -115,8 +115,25 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        // Wait for deployment to be built.
-        sleep(20);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -229,10 +246,25 @@ class FunctionsCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        // Wait for deployment to be built.
-        sleep(20);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
-        $this->assertEquals(202, $deployment['headers']['status-code']);
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -341,10 +373,25 @@ class FunctionsCustomClientTest extends Scope
 
         $deploymentId = $deployment['body']['$id'] ?? '';
 
-        // Wait for deployment to be built.
-        sleep(20);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
-        $this->assertEquals(202, $deployment['headers']['status-code']);
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         // Why do we have to do this?
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
@@ -406,13 +453,10 @@ class FunctionsCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'data' => 'foobar',
-            'async' => true
+            'data' => 'foobar'
         ]);
 
-        $this->assertEquals(202, $execution['headers']['status-code']);
-
-        sleep(20);
+        $this->assertEquals(200, $execution['headers']['status-code']);
 
         $base = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
             'content-type' => 'application/json',
@@ -574,14 +618,31 @@ class FunctionsCustomClientTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        // Wait for deployment to be built.
-        sleep(20);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apikey,
-        ], []);
+        ]);
 
         $this->assertEquals(200, $function['headers']['status-code']);
 

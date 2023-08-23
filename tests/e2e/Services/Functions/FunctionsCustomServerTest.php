@@ -377,8 +377,26 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($deployment['body']['$createdAt']));
         $this->assertEquals('index.php', $deployment['body']['entrypoint']);
 
-        // Wait for deployment to build.
-        sleep(60);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
@@ -627,12 +645,6 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('', $execution['body']['logs']);
         $this->assertLessThan(10, $execution['body']['duration']);
 
-        /**
-         * Test for FAILURE
-         */
-
-        sleep(20);
-
         return array_merge($data, ['executionId' => $executionId]);
     }
 
@@ -872,8 +884,25 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        // Allow build step to run
-        sleep(40);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $this->assertEquals('ready', $deployment['body']['status']);
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
@@ -986,8 +1015,23 @@ class FunctionsCustomServerTest extends Scope
         $deploymentId = $deployment['body']['$id'] ?? '';
         $this->assertEquals(202, $deployment['headers']['status-code']);
 
-        // Allow build step to run
-        sleep(60);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
 
         $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',
