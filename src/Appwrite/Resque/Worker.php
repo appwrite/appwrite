@@ -340,12 +340,12 @@ abstract class Worker
             try {
                 $dsn = new DSN($connection);
                 $device = $dsn->getScheme();
-                $accessKey = $dsn->getUser();
-                $accessSecret = $dsn->getPassword();
-                $bucket = $dsn->getPath();
+                $accessKey = $dsn->getUser() ?? '';
+                $accessSecret = $dsn->getPassword() ?? '';
+                $bucket = $dsn->getPath() ?? '';
                 $region = $dsn->getParam('region');
             } catch (\Exception $e) {
-                Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+                Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
             }
 
             switch ($device) {
@@ -364,7 +364,7 @@ abstract class Worker
                     return new Local($root);
             }
         } else {
-            switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
+            switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
                 case Storage::DEVICE_LOCAL:
                 default:
                     return new Local($root);

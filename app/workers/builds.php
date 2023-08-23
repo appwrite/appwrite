@@ -97,16 +97,6 @@ class BuildsV1 extends Worker
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
-        /** @TODO : move this to the registry or someplace else */
-        $device = Storage::DEVICE_LOCAL;
-        try {
-            $dsn = new DSN($connection);
-            $device = $dsn->getScheme();
-        } catch (\Exception $e) {
-            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
-        }
-
         // Realtime preparation
         $allEvents = Event::generateEvents('functions.[functionId].deployments.[deploymentId].update', [
             'functionId' => $function->getId(),

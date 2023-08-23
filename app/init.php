@@ -589,14 +589,15 @@ $register->set('logger', function () {
 $register->set('pools', function () {
     $group = new Group();
 
-    $fallbackForDB = AppwriteURL::unparse([
+    $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => 'mariadb',
         'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => App::getEnv('_APP_DB_PORT', '3306'),
         'user' => App::getEnv('_APP_DB_USER', ''),
         'pass' => App::getEnv('_APP_DB_PASS', ''),
+        'path' => App::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-    $fallbackForRedis = AppwriteURL::unparse([
+    $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
@@ -1200,12 +1201,12 @@ function getDevice($root): Device
         try {
             $dsn = new DSN($connection);
             $device = $dsn->getScheme();
-            $accessKey = $dsn->getUser();
-            $accessSecret = $dsn->getPassword();
-            $bucket = $dsn->getPath();
+            $accessKey = $dsn->getUser() ?? '';
+            $accessSecret = $dsn->getPassword() ?? '';
+            $bucket = $dsn->getPath() ?? '';
             $region = $dsn->getParam('region');
         } catch (\Exception $e) {
-            Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
         switch ($device) {
@@ -1224,7 +1225,7 @@ function getDevice($root): Device
                 return new Local($root);
         }
     } else {
-        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL))) {
+        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
             case Storage::DEVICE_LOCAL:
             default:
                 return new Local($root);
