@@ -14,6 +14,7 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -107,7 +108,7 @@ $connection = $pools->get('queue')->pop()->getResource();
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 if (empty(App::getEnv('QUEUE'))) {
-    throw new Exception('Please configure "QUEUE" environemnt variable.');
+    throw new Exception('Please configure "QUEUE" environment variable.');
 }
 
 $adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
@@ -145,7 +146,7 @@ $server
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+            $log->addExtra('roles', Authorization::getRoles());
 
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
