@@ -7,7 +7,6 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 class V15Test extends TestCase
 {

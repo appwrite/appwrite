@@ -64,6 +64,7 @@ abstract class Migration
         '1.3.6' => 'V18',
         '1.3.7' => 'V18',
         '1.3.8' => 'V18',
+        '1.4.0' => 'V19',
     ];
 
     /**
@@ -105,8 +106,6 @@ abstract class Migration
     {
         $this->project = $project;
         $this->projectDB = $projectDB;
-        $this->projectDB->setNamespace('_' . $this->project->getId());
-
         $this->consoleDB = $consoleDB;
 
         return $this;
