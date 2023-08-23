@@ -1016,4 +1016,31 @@ return [
             ],
         ],
     ],
+    [
+        'category' => 'Migrations',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_ID',
+                'description' => 'Google OAuth client ID. You can find it in your GCP application settings.',
+                'introduction' => '1.4.0',
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
+                'description' => 'Google OAuth client secret. You can generate secrets in your GCP application settings.',
+                'introduction' => '1.4.0',
+            ]
+        ]
+    ],
+    [
+        'category' => 'Assistant',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
+                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
+                'introduction' => '1.4.0',
+            ]
+        ]
+    ]
 ];
