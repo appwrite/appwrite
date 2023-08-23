@@ -51,13 +51,13 @@ class Func extends Model
             ])
             ->addRule('live', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is function live (deployed with latest config)?',
+                'description' => 'Is the function deployed with the latest configuration? This is set to false if you\'ve changed an environment variables, entrypoint, commands, or other settings that needs redeploy to be applied. When the value is false, redeploy the function to update it with the latest configuration.',
                 'default' => true,
                 'example' => false,
             ])
             ->addRule('logging', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Function logging.',
+                'description' => 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.',
                 'default' => true,
                 'example' => false,
             ])
